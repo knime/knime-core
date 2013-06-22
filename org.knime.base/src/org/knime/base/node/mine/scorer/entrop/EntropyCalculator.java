@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.scorer.entrop;
 
@@ -75,6 +75,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
@@ -93,7 +94,7 @@ import org.knime.core.util.MutableInteger;
 /**
  * Utility class that allows to calculate some entropy and quality values for
  * clustering results given a reference clustering.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class EntropyCalculator {
@@ -115,7 +116,7 @@ public final class EntropyCalculator {
 
     /**
      * Creates new instance.
-     * 
+     *
      * @param reference the reference table, i.e. the clusters that should be
      *            found
      * @param clustering the table containing the clustering to judge
@@ -125,7 +126,7 @@ public final class EntropyCalculator {
      *            contains the cluster membership
      * @param exec the execution monitor for canceling and progress
      * @throws CanceledExecutionException if canceled
-     * 
+     *
      */
     public EntropyCalculator(final DataTable reference,
             final DataTable clustering, final int referenceCol,
@@ -138,7 +139,7 @@ public final class EntropyCalculator {
 
     /**
      * Creates new instance given the maps of clustering and reference.
-     * 
+     *
      * @param referenceMap the reference clustering, mapping ID -&gt; cluster
      *            name
      * @param clusteringMap the clustering to score, cluster name -&gt; cluster
@@ -228,7 +229,7 @@ public final class EntropyCalculator {
     public DataTable getScoreTable() {
         return m_scoreTable;
     }
-    
+
     /** @return Table spec to {@link #getScoreTable()}. */
     public static DataTableSpec getScoreTableSpec() {
         return new DataTableSpec("Entropy Scores", NAMES, TYPES);
@@ -237,11 +238,19 @@ public final class EntropyCalculator {
     /**
      * Map of Cluster name -&gt; cluster members (in a set) as given in the
      * clustering to score.
-     * 
+     *
      * @return the clusteringMap
      */
     public Map<RowKey, Set<RowKey>> getClusteringMap() {
         return m_clusteringMap;
+    }
+
+    /** Discards the internal table.
+     * @since 2.8 */
+    public void dispose() {
+        if (m_scoreTable instanceof ContainerTable) {
+            ((ContainerTable)m_scoreTable).clear();
+        }
     }
 
     private static final String FILE_SCORER_TABLE = "scorer_table.zip";
@@ -268,7 +277,7 @@ public final class EntropyCalculator {
 
     /**
      * Saves the structure of this objec to the target directory.
-     * 
+     *
      * @param dir to save to
      * @param exec for progress/cancel
      * @throws IOException if that fails
@@ -305,7 +314,7 @@ public final class EntropyCalculator {
     /**
      * Factory method to restore this object given a directory in which the
      * content is saved.
-     * 
+     *
      * @param dir the dir to read from
      * @param exec for cancellation.
      * @return a new object as read from dir
@@ -331,7 +340,7 @@ public final class EntropyCalculator {
         int nrClusters = config.getInt(CFG_NR_CLUSTER);
         int nrReferences = config.getInt(CFG_NR_REFERENCES);
         NodeSettingsRO subConfig = config.getNodeSettings(CFG_CLUSTERING_MAP);
-        LinkedHashMap<RowKey, Set<RowKey>> map 
+        LinkedHashMap<RowKey, Set<RowKey>> map
             = new LinkedHashMap<RowKey, Set<RowKey>>();
         for (String key : subConfig.keySet()) {
             exec.checkCanceled();
@@ -356,7 +365,7 @@ public final class EntropyCalculator {
             map.put(keyCell, rowKeys);
         }
         return new EntropyCalculator(entropy, quality, patternsInCluster,
-                nrClusters, patternsInReference, nrReferences, scorerTable, 
+                nrClusters, patternsInReference, nrReferences, scorerTable,
                 map);
     }
 
@@ -415,7 +424,7 @@ public final class EntropyCalculator {
         while (clusteringMap.containsKey(clusterID)) {
             clusterID = new RowKey("Overall (#" + (uniquifier++) + ")");
         }
-        
+
         DefaultRow row = new DefaultRow(clusterID, size, entropyCell,
                 normEntropy, qualityCell);
         container.addRowToTable(row);
@@ -424,9 +433,9 @@ public final class EntropyCalculator {
     }
 
     private static HashMap<RowKey, Set<RowKey>> getClusterMap(
-            final DataTable table, final int colIndex, 
+            final DataTable table, final int colIndex,
             final ExecutionMonitor ex) throws CanceledExecutionException {
-        HashMap<RowKey, Set<RowKey>> result 
+        HashMap<RowKey, Set<RowKey>> result
             = new LinkedHashMap<RowKey, Set<RowKey>>();
         int rowCount = -1;
         if (table instanceof BufferedDataTable) {
@@ -454,11 +463,11 @@ public final class EntropyCalculator {
         }
         return result;
     }
-    
+
     private static HashMap<RowKey, RowKey> getMap(final DataTable table,
             final int colIndex, final ExecutionMonitor ex)
             throws CanceledExecutionException {
-        HashMap<RowKey, RowKey> result 
+        HashMap<RowKey, RowKey> result
             = new LinkedHashMap<RowKey, RowKey>();
         int rowCount = -1;
         if (table instanceof BufferedDataTable) {
@@ -492,7 +501,7 @@ public final class EntropyCalculator {
      * For further details see Bernd Wiswedel, Michael R. Berthold, <b>Fuzzy
      * Clustering in Parallel Universes</b>, <i>International Journal of
      * Approximate Reasoning</i>, 2006.
-     * 
+     *
      * @param reference the reference clustering, maps patterns to cluster ID.
      *            The reference map is supposed to contain all data (if there
      *            are noise objects, that should be contained and have an own).
@@ -509,7 +518,7 @@ public final class EntropyCalculator {
             return 1.0;
         }
         // get the number of different clusters in the reference set
-        int refClusterCount = 
+        int refClusterCount =
             new HashSet<RowKey>(reference.values()).size();
         // normalizing value (such that the maximum value for the entropy is 1
         double normalizer = Math.log(refClusterCount) / Math.log(2.0);
@@ -536,7 +545,7 @@ public final class EntropyCalculator {
      * Get entropy according to reference clustering, the entropy value is not
      * normalized, i.e. the result is in the range of
      * <code>[0, log<sub>2</sub>(|cluster|)</code>.
-     * 
+     *
      * @param reference the reference clustering to compare to
      * @param clusterMap the clustering to judge
      * @return entropy value
@@ -561,7 +570,7 @@ public final class EntropyCalculator {
 
     /**
      * Get entropy for one single cluster.
-     * 
+     *
      * @param ref the reference clustering
      * @param pats the single cluster to score
      * @return the (not-normalized) entropy of <code>pats</code> wrt.
@@ -570,7 +579,7 @@ public final class EntropyCalculator {
     public static double entropy(final Map<RowKey, RowKey> ref,
             final Set<RowKey> pats) {
         // that will map the "original" cluster ID to a counter.
-        HashMap<RowKey, MutableInteger> refClusID2Count 
+        HashMap<RowKey, MutableInteger> refClusID2Count
             = new HashMap<RowKey, MutableInteger>();
         for (RowKey pat : pats) {
             RowKey origCluster = ref.get(pat);

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 13, 2006 (wiswedel): created
  */
@@ -72,7 +72,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
 
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 class EntropyNodeModel extends NodeModel {
@@ -109,7 +109,7 @@ class EntropyNodeModel extends NodeModel {
     /**
      * Get the hilite handler that the view talks to. So far only needed to
      * trigger hilite events (unless there are duplicate views).
-     * 
+     *
      * @return the hilite handler for the view
      */
     public HiLiteHandler getViewHiliteHandler() {
@@ -184,8 +184,22 @@ class EntropyNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_calculator = null;
+        disposeCalculator();
         m_translator.setMapper(null);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void onDispose() {
+        super.onDispose();
+        disposeCalculator();
+    }
+
+    private void disposeCalculator() {
+        if (m_calculator != null) {
+            m_calculator.dispose();
+        }
+        m_calculator = null;
     }
 
     /**
@@ -215,19 +229,19 @@ class EntropyNodeModel extends NodeModel {
         }
         return new DataTableSpec[0];
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void setInHiLiteHandler(final int inIndex, 
+    protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         if (inIndex == 1) {
             m_translator.removeAllToHiliteHandlers();
             m_translator.addToHiLiteHandler(hiLiteHdl);
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
