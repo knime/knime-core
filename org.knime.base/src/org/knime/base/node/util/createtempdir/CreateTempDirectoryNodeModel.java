@@ -159,8 +159,11 @@ final class CreateTempDirectoryNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void onDispose() {
+        /* This node is not deleting the created dir after its disposal. The server requires the temp dir to stay when
+         * the flow is swapped out (which disposes of this node). Trust that the workflow manager or server delete all
+         * temporary directories and files.
+        */
         super.onDispose();
-        reset();
     }
 
     /** {@inheritDoc} */
