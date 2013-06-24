@@ -272,7 +272,8 @@ public final class RepositoryFactory {
         String pluginID =
                 element.getDeclaringExtension().getNamespaceIdentifier();
         boolean locked =
-                (element.getAttribute("locked") == null) || Boolean.parseBoolean(element.getAttribute("locked"));
+            Boolean.parseBoolean(element.getAttribute("locked"))
+                || ((element.getAttribute("locked") == null) && pluginID.matches("^(?:org|com)\\.knime\\..+"));
 
         Category cat = new Category(id, str(element.getAttribute("name"), "!name is missing!"), pluginID, locked);
         cat.setPluginID(pluginID);
