@@ -698,9 +698,9 @@ public final class SingleNodeContainer extends NodeContainer {
     }
 
     /** Enable (or disable) queuing of underlying node for execution. This
-     * really only changes the state of the node and once all pre-conditions
-     * for execution are fulfilled (e.g. configuration succeeded and all
-     * ingoing objects are available) the node will be actually queued.
+     * really only changes the state of the node. If flag==true and when all
+     * pre-conditions for execution are fulfilled (e.g. configuration succeeded
+     * and all ingoing objects are available) the node will be actually queued.
      *
      * @param flag determines if node is marked or unmarked for execution
      * @throws IllegalStateException in case of illegal entry state.
@@ -775,7 +775,7 @@ public final class SingleNodeContainer extends NodeContainer {
             case CONFIGURED_QUEUED:
             case EXECUTED_QUEUED:
                 // m_executionFuture has not yet started or if it has started,
-                // it will not hand off to node implementation (otherwise it
+                // it will not hand of to node implementation (otherwise it
                 // would be executing)
                 getProgressMonitor().setExecuteCanceled();
                 NodeExecutionJob job = getExecutionJob();

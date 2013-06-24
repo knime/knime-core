@@ -1629,6 +1629,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * Reset the mark when nodes have been set to be executed. Skip
      * nodes which are already queued or executing.
      *
+     * Note: we assume this is wrapped in calls which updates the metanode status.
+     *
      * @param id ...
      */
     private void disableNodeForExecution(final NodeID id) {
@@ -1659,27 +1661,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (nc instanceof SingleNodeContainer) {
                     ((SingleNodeContainer)nc).markForExecution(false);
                     disableSuccessorsForExecution(id, -1);
-                } else {
-                    if (inportIndex == -1) {
-                        ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(false);
-                        disableSuccessorsForExecution(id, -1);
-                    } else {
-                        // automatically unmarks connected successors of this metanode/port as well.
-                        assert id.equals(nc.getID());
-                        ((WorkflowManager)nc).disableSuccessorsForExecution(nc.getID(), inportIndex);
-                    }
+                    break;
                 }
-                break;
+                assert !(nc instanceof SingleNodeContainer);
+                // (treat MARKED and EXECUTING metanodes the same - both can contain MARKED nodes!)
             case EXECUTING:
                 // bug "fix" (workaround) 3913
-                // this is only relevant for WorkflowManagers (it may still contain some MARKED... nodes)
+                // this is only relevant for WorkflowManagers (it may still contain some MARKED nodes)
                 if (!(nc instanceof SingleNodeContainer)) {
                     if (inportIndex == -1) {
                         ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(false);
                         disableSuccessorsForExecution(id, -1);
                     } else {
                         // automatically unmarks connected successors of this metanode/port as well.
-                        ((WorkflowManager)nc).disableSuccessorsForExecution(nc.getID(), inportIndex);
+                        ((WorkflowManager)nc).disableInportSuccessorsForExecution(inportIndex);
                     }
                 }
                 break;
@@ -1689,9 +1684,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     disableSuccessorsForExecution(id, -1);
                 } else {
                     if (inportIndex == -1) {
+                        ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(false);
                         disableSuccessorsForExecution(id, -1);
                     } else {
-                        ((WorkflowManager)nc).disableSuccessorsForExecution(nc.getID(), inportIndex);
+                        ((WorkflowManager)nc).disableInportSuccessorsForExecution(inportIndex);
                     }
                 }
             }
@@ -1699,36 +1695,59 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             assert getID().equals(id);
             if (inportIndex == -1) {
                 this.markForExecutionAllNodesInWorkflow(false);
-                // unmark successors of this metanode
-                getParent().disableNodeForExecution(this.getID());
+                // unmark successors (on all ports) of this metanode
+                getParent().disableSuccessorsForExecution(this.getID(), -1);
             } else {
                 // automatically unmarks connected successors of this metanode as well.
                 this.disableSuccessorsForExecution(id, inportIndex);
+                checkForNodeStateChanges(true);
             }
         }
     }
 
-    /** Disable (unmark!) all successors of the given node connected the given outport.
+    /** Disable (unmark!) all successors of the given node connected to the given outport.
      *
      * @param id the node
      * @param outportIndex the node's outport
      */
     private void disableSuccessorsForExecution(final NodeID id, final int outportIndex) {
-        if ((id.equals(this.getID())) || (hasSuccessorInProgress(id))) {
-        for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
-            if ((outportIndex) == -1 || (cc.getSourcePort() == outportIndex)) {
-                NodeID succId = cc.getDest();
-                if (succId.equals(this.getID())) {
-                    // unmark successors of this metanode
-                    getParent().disableSuccessorsForExecution(this.getID(), cc.getDestPort());
-                } else {
-                    // handle normal node
-                    disableNodeForExecution(succId, cc.getDestPort());
+        assert !this.getID().equals(id);
+        if (hasSuccessorInProgress(id)) {
+            // is it a node inside this wfm with successors worth exploring
+            for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
+                if ((outportIndex) == -1 || (cc.getSourcePort() == outportIndex)) {
+                    NodeID succId = cc.getDest();
+                    if (succId.equals(this.getID())) {
+                        // unmark successors of this metanode
+                        getParent().disableSuccessorsForExecution(this.getID(), cc.getDestPort());
+                    } else {
+                        // handle normal node
+                        disableNodeForExecution(succId, cc.getDestPort());
+                    }
                 }
             }
         }
     }
-    }
+
+    /** Disable (unmark!) all successors of the given input port if this WFM.
+     *
+     * @param inportIndex this node's inport
+     */
+   private void disableInportSuccessorsForExecution(final int inportIndex) {
+       for (ConnectionContainer cc : m_workflow.getConnectionsBySource(this.getID())) {
+           if ((inportIndex) == -1 || (cc.getSourcePort() == inportIndex)) {
+               NodeID succId = cc.getDest();
+               if (succId.equals(this.getID())) {
+                   // unmark successors of this metanode
+                   getParent().disableSuccessorsForExecution(this.getID(), cc.getDestPort());
+               } else {
+                   // handle normal node
+                   disableNodeForExecution(succId, cc.getDestPort());
+               }
+           }
+       }
+       checkForNodeStateChanges(false);
+   }
 
     /**
      * Reset all nodes in this workflow. Make sure the reset is propagated
@@ -2245,8 +2264,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @return true if we found executable predecessor
      */
-    private boolean markAndQueueNodeAndPredecessors(final NodeID id,
-            final int outPortIndex) {
+    private boolean markAndQueueNodeAndPredecessors(final NodeID id, final int outPortIndex) {
         assert !id.equals(this.getID());
         synchronized (m_workflowMutex) {
             NodeContainer nc = getNodeContainer(id);
@@ -2276,12 +2294,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // 4) now we check if we are dealing with a source (there is no
             //   need to traverse further up then and we can cancel the
             //   operation if the source is in a non-executable condition.
-            Set<ConnectionContainer> predConn =
-                m_workflow.getConnectionsByDest(id);
+            Set<ConnectionContainer> predConn = m_workflow.getConnectionsByDest(id);
             if (nc.getNrInPorts() == 0) {
                 assert predConn.size() == 0;
                 if (canExecuteNode(nc.getID())) {
                     nc.markForExecution(true);
+                    // no need to go through "official" route for SNC as the following queuing will update
+                    // state and also state of encapsulating metanode!
                     assert nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC)
                         : "NodeContainer " + nc + " in unexpected state:" + nc.getInternalState();
                     nc.queue(new PortObject[0]);
@@ -2296,8 +2315,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             //    (whereby unconnected optional inputs are ok)
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(id);
             for (int i = 0; i < predPorts.length; i++) {
-                if (predPorts[i] == null
-                        && !nc.getInPort(i).getPortType().isOptional()) {
+                if (predPorts[i] == null && !nc.getInPort(i).getPortType().isOptional()) {
                     return false;
                 }
             }
@@ -2309,22 +2327,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeID predID = cc.getSource();
                 if (predID.equals(getID())) {
                     // connection coming from outside this WFM
-                    assert cc.getType().equals(
-                            ConnectionContainer.ConnectionType.WFMIN);
-                    NodeOutPort realPort = getInPort(cc.getSourcePort())
-                                .getUnderlyingPort();
+                    assert cc.getType().equals(ConnectionContainer.ConnectionType.WFMIN);
+                    NodeOutPort realPort = getInPort(cc.getSourcePort()).getUnderlyingPort();
                     if (!realPort.getNodeState().equals(InternalNodeContainerState.EXECUTED)
                             && !realPort.getNodeState().isExecutionInProgress()) {
                         // the real predecessor node is not already marked/done:
                         // we have to mark the predecessor in the parent flow
-                        if (!getParent().markAndQueuePredecessors(predID,
-                                cc.getSourcePort())) {
+                        if (!getParent().markAndQueuePredecessors(predID, cc.getSourcePort())) {
                             return false;
                         }
                     }
                 } else {
-                    if (!markAndQueueNodeAndPredecessors(predID,
-                            cc.getSourcePort())) {
+                    if (!markAndQueueNodeAndPredecessors(predID, cc.getSourcePort())) {
                         return false;
                     }
                 }
@@ -2786,7 +2800,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             } else {
                 // configure of tailNode failed! Abort execution of loop:
                 // unqueue head node
-                headNode.markForExecution(false);
+                headSNC.markForExecution(false);
                 // and bail:
                 throw new IllegalLoopException("Loop end node could not be executed."
                            + " This is likely due to a failure in the loop's body. Aborting Loop execution.");
@@ -3958,7 +3972,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // any other reasons for "non reset-ability" are ignored until
             // now (Mar 2012) - not sure if there could be others?
-        	return;
+            return;
         }
         // clean context - that is make sure all loops affected by
         // this reset-"chain" are completely reset/configured!
@@ -5062,8 +5076,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // (for both: active and inactive loops)
                     FlowLoopContext slc = scsc.peek(FlowLoopContext.class);
                     if (slc == null) {
-                    	// no head found - ignore during configure!
-                    	snc.getNode().setLoopStartNode(null);
+                        // no head found - ignore during configure!
+                        snc.getNode().setLoopStartNode(null);
                     } else {
                     	// loop seems to be correctly wired - set head
 	                    NodeContainer headNode = m_workflow.getNode(slc.getOwner());
