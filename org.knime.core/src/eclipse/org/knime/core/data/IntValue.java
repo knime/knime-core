@@ -106,5 +106,13 @@ public interface IntValue extends DataValue {
         public String getName() {
             return "Integer numbers";
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getGroupName() {
+            return "Basic";
+        }
     }
 }

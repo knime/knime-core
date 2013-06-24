@@ -105,5 +105,13 @@ public interface LongValue extends DataValue {
         public String getName() {
             return "Long numbers";
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getGroupName() {
+            return "Basic";
+        }
     }
 }

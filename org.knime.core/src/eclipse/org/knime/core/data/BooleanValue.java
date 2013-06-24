@@ -110,5 +110,13 @@ public interface BooleanValue extends DataValue {
         public String getName() {
             return "Boolean values";
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getGroupName() {
+            return "Basic";
+        }
     }
 }

@@ -102,4 +102,12 @@ public class DateAndTimeUtility extends ExtensibleUtilityFactory {
     public String getName() {
         return "Dates and Times";
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getGroupName() {
+        return "Basic";
+    }
 }

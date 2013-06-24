@@ -108,5 +108,13 @@ public interface StringValue extends DataValue {
         public String getName() {
             return "Strings";
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getGroupName() {
+            return "Basic";
+        }
     }
 }

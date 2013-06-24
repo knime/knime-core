@@ -107,5 +107,13 @@ public interface DoubleValue extends DataValue {
         public String getName() {
             return "Real numbers";
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getGroupName() {
+            return "Basic";
+        }
     }
 }
