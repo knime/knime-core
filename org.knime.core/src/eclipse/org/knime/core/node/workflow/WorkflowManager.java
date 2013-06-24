@@ -8121,22 +8121,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
 
         /** @return Name of the workflow author (person). Null when not saved yet. */
-        String getAuthor() {
+        public String getAuthor() {
             return m_author;
         }
 
         /** @return Date when the workflow was saved the first time. Can be null. */
-        Date getAuthoredDate() {
+        public Date getAuthoredDate() {
             return m_authoredDate;
         }
 
         /** @return Name of the person who edited the workflow last (on last save). Null when not saved yet. */
-        String getLastEditor() {
+        public String getLastEditor() {
             return m_lastEditor;
         }
 
         /** @return Date when workflow was saved last. */
-        Date getLastEditDate() {
+        public Date getLastEditDate() {
             return m_lastEditDate;
         }
     }
