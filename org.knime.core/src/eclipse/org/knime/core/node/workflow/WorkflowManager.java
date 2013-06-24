@@ -6354,7 +6354,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         File rootDir = new File(KNIMEConstants.getKNIMETempDir());
         File tempDir;
         try {
-            tempDir = FileUtil.createTempDir(FileUtil.getValidFileName(getName(), 20) + "_TEMP_", rootDir);
+            tempDir = FileUtil.createTempDir("knime_" + FileUtil.getValidFileName(getName(), 15), rootDir);
         } catch (IOException e) {
             throw new IllegalStateException("Can't create temp folder in " + rootDir.getAbsolutePath(), e);
         }
