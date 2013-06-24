@@ -60,10 +60,13 @@ import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.forms.events.ExpansionAdapter;
+import org.eclipse.ui.forms.events.ExpansionEvent;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
@@ -137,11 +140,29 @@ public class PreferredRendererPreferencePage extends FieldEditorPreferencePage i
         Collections.sort(groupNames);
 
         for (String group : groupNames) {
-            Section sectionExpander =
+            final Section sectionExpander =
                 new Section(getFieldEditorParent(), ExpandableComposite.TWISTIE | ExpandableComposite.CLIENT_INDENT);
             sectionExpander.setText(group);
-            Composite section = new Composite(sectionExpander, SWT.NONE);
+            final Composite section = new Composite(sectionExpander, SWT.NONE);
             sectionExpander.setClient(section);
+            sectionExpander.addExpansionListener(new ExpansionAdapter() {
+                @Override
+                public void expansionStateChanged(final ExpansionEvent e) {
+                    Composite comp = section;
+                    while (!(comp instanceof ScrolledComposite)) {
+                        comp = comp.getParent();
+                    }
+                    // this is to fix a bug in Eclipse, no scrollbar is shown when this is true
+                    ((ScrolledComposite)comp).setExpandVertical(false);
+
+                    comp = section;
+                    while (!(comp instanceof ScrolledComposite)) {
+                        comp.setSize(comp.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+                        comp.layout();
+                        comp = comp.getParent();
+                    }
+                }
+            });
 
             List<ExtensibleUtilityFactory> utilityFactories = groupedUtilityFactories.get(group);
             Collections.sort(utilityFactories, utilityFactoryComparator);
