@@ -56,9 +56,12 @@ import org.eclipse.swt.SWTError;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.svgexport.WorkflowSVGExport;
 import org.knime.workbench.core.util.ThreadsafeImageRegistry;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * The main plugin class for the editor.
@@ -72,6 +75,9 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
 
     // The shared instance.
     private static KNIMEEditorPlugin plugin;
+
+    /** SVG service provided by *.editor.svgexport fragment, see #start method. */
+    private ServiceRegistration<WorkflowSVGExport> m_registerService;
 
     /**
      * The constructor.
@@ -93,6 +99,27 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
         // TODO: temporary hug for preference page, to ensure that the
         // MasterKeySupplier is set correctly before the editor is started
         KNIMEUIPlugin.getDefault().getPreferenceStore();
+
+        // the svg export is provided by the *.editor.svgexport fragment. Fragments can't have bundle activators
+        // so this host plugin does it (not sure what the eclipse standard way is)
+        Class<?> svgExportClass = null;
+        final String className = "org.knime.workbench.editor.svgexport.exportservice.WorkflowSVGExportImpl";
+        try {
+            svgExportClass = Class.forName(className);
+        } catch (ClassNotFoundException cnfe) {
+            NodeLogger.getLogger(getClass()).debug("Workflow SVG export not available, unable to instantiate \""
+                + className + "\"");
+        }
+        if (svgExportClass != null) {
+            try {
+                Object instance = svgExportClass.newInstance();
+                WorkflowSVGExport service = (WorkflowSVGExport)instance;
+                m_registerService = context.registerService(WorkflowSVGExport.class, service, null);
+            } catch (Exception e) {
+                NodeLogger.getLogger(getClass()).error("Unable to register " + WorkflowSVGExport.class.getName()
+                    + " service", e);
+            }
+        }
     }
 
     /**
@@ -105,6 +132,8 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
     @Override
     public void stop(final BundleContext context) throws Exception {
         super.stop(context);
+        m_registerService.unregister();
+        m_registerService = null;
         plugin = null;
     }
 
@@ -135,4 +164,5 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
         //and the workbench is not created.
         throw new SWTError(SWT.ERROR_THREAD_INVALID_ACCESS);
     }
+
 }

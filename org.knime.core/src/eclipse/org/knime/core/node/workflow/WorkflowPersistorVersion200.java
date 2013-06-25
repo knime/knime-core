@@ -68,17 +68,21 @@ import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
+import org.knime.core.internal.CorePlugin;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
+import org.knime.core.node.workflow.svgexport.SVGExportException;
+import org.knime.core.node.workflow.svgexport.WorkflowSVGExport;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LockFailedException;
 
@@ -662,10 +666,35 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             if (workflowDirRef.equals(wm.getNodeContainerDirectory())) {
                 wm.unsetDirty();
             }
+            if (wm.isProject()) {
+                saveSVGImage(wm, workflowDir);
+            }
             execMon.setProgress(1.0);
             return fName;
         } finally {
             workflowDirRef.fileUnlockRootForVM();
+        }
+    }
+
+    private static void saveSVGImage(final WorkflowManager wm, final File workflowDir) {
+        // If SVGExporter available try to export
+        WorkflowSVGExport svgExporter = CorePlugin.getInstance().getWorkflowSVGExport();
+        if (svgExporter != null) {
+            Role r = wm.getTemplateInformation().getRole();
+            // SVG file is in workflow root directory
+            File svgWorkflowFile = new File(workflowDir, Role.Template.equals(r)
+                ? SVG_TEMPLATE_FILE : SVG_WORKFLOW_FILE);
+            try {
+                svgExporter.exportToSVG(wm, svgWorkflowFile);
+            } catch (Exception e) {
+                if (e instanceof SVGExportException
+                        && SVGExportException.NO_EDITOR_OPEN_MSG.equals(e.getMessage())) {
+                    NodeLogger.getLogger(WorkflowPersistorVersion200.class).debug(
+                        "Could not save workflow SVG - no editor open");
+                } else {
+                    NodeLogger.getLogger(WorkflowPersistorVersion200.class).error("Could not save workflow SVG", e);
+                }
+            }
         }
     }
 

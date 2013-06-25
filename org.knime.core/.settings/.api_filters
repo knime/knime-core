@@ -214,6 +214,18 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistor.java" type="org.knime.core.node.workflow.WorkflowPersistor">
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="SVG_TEMPLATE_FILE"/>
+            </message_arguments>
+        </filter>
+        <filter comment="added svg export fields in non api interface" id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="SVG_WORKFLOW_FILE"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor changes" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
