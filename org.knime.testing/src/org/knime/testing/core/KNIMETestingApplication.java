@@ -37,8 +37,6 @@ import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.swing.SwingUtilities;
-
 import junit.framework.Test;
 import junit.framework.TestFailure;
 import junit.framework.TestResult;
@@ -52,6 +50,7 @@ import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.core.KNIMECorePlugin;
@@ -114,7 +113,7 @@ public class KNIMETestingApplication implements IApplication {
             // if no (or not enough) command line arguments were specified:
 
             final AtomicBoolean okayBoolean = new AtomicBoolean(false);
-            SwingUtilities.invokeAndWait(new Runnable() {
+            ViewUtils.invokeAndWaitInEDT(new Runnable() {
                 @Override
                 public void run() {
                     okayBoolean.set(getParametersFromUser());
