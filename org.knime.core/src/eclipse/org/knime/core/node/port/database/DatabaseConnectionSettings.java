@@ -82,6 +82,7 @@ import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.util.KnimeEncryption;
+import org.knime.core.util.ThreadUtils;
 
 /**
  *
@@ -104,7 +105,7 @@ public class DatabaseConnectionSettings {
             "database_urls");
 
     private static final ExecutorService CONNECTION_CREATOR_EXECUTOR =
-        Executors.newCachedThreadPool();
+            ThreadUtils.executorServiceWithContext(Executors.newCachedThreadPool());
 
     /**
      * DriverManager login timeout for database connection; not implemented/

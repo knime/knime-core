@@ -52,6 +52,7 @@ package org.knime.core.node.workflow;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
+import static org.hamcrest.core.IsSame.sameInstance;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -60,8 +61,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -69,6 +76,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -77,6 +85,9 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.ThreadUtils;
+import org.knime.core.util.ThreadUtils.CallableWithContext;
+import org.knime.core.util.ThreadUtils.RunnableWithContext;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -87,6 +98,8 @@ import org.osgi.framework.FrameworkUtil;
  */
 public class NodeContextTest {
     private static WorkflowManager wfm;
+
+    private static ExecutorService executorService;
 
     /**
      * Unpack and load testflow.
@@ -106,6 +119,15 @@ public class NodeContextTest {
             throw new IOException("Error while loading workflow: " + res.getMessage());
         }
         wfm = res.getWorkflowManager();
+        executorService = Executors.newSingleThreadExecutor();
+    }
+
+    /**
+     * Shuts the executor service down.
+     */
+    @AfterClass
+    public static void teardownClass() {
+        executorService.shutdown();
     }
 
     /**
@@ -115,14 +137,13 @@ public class NodeContextTest {
     public void checkForEmptyContextStackBefore() {
         NodeContext currentContext = NodeContext.getContext();
 
-        // this is just to clean up if a test method leaves a filled stack so that the next method has an empty stack
+        // this cleans up if a test method accidently leaves a filled stack so that the next method has an empty stack
         while (NodeContext.getContext() != null) {
             NodeContext.removeLastContext();
         }
 
         assertThat("Node context stack not empty before test", currentContext, is(nullValue()));
     }
-
 
     /**
      * Check that the node context stack is empty after each test method.
@@ -208,31 +229,6 @@ public class NodeContextTest {
         NodeContext.removeLastContext();
         assertThat("Unexpected node container on top of context stack", NodeContext.getContext().getNodeContainer(),
                    is(containers.get(0)));
-        NodeContext.removeLastContext();
-    }
-
-    /**
-     * Test context inheritance to new threads.
-     *
-     * @throws InterruptedException if an error occurs
-     */
-    @Test
-    public void testContextInheritance() throws InterruptedException {
-        final AtomicReference<NodeContext> threadContext = new AtomicReference<NodeContext>();
-        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
-
-        NodeContext.pushContext(containers.get(0)); // Table Creator
-        Thread t = new Thread() {
-            @Override
-            public void run() {
-                threadContext.set(NodeContext.getContext());
-            }
-        };
-        t.start();
-        t.join();
-
-        assertThat("Context inheritance to new thread does now work properly", threadContext.get(),
-                   is(NodeContext.getContext()));
         NodeContext.removeLastContext();
     }
 
@@ -347,6 +343,243 @@ public class NodeContextTest {
 
         NodeContext.removeLastContext();
         NodeContext.removeLastContext();
+        NodeContext.removeLastContext();
+    }
+
+    /**
+     * Checks if {@link ThreadUtils#runnableWithContext(Runnable)} works as expected.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testRunnableWithContext() throws Exception {
+        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+
+        NodeContext.pushContext(containers.get(0)); // Table Creator
+        final AtomicReference<NodeContext> ref = new AtomicReference<NodeContext>();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                ref.set(NodeContext.getContext());
+            }
+        };
+
+        Thread t = new Thread(ThreadUtils.runnableWithContext(runnable));
+        t.start();
+        t.join();
+
+        assertThat("Context inheritance to runnable does now work properly", ref.get(), is(NodeContext.getContext()));
+        NodeContext.removeLastContext();
+
+        Runnable runnableWithContext = new RunnableWithContext() {
+            @Override
+            protected void internalRun() {
+                // do nothing
+            }
+        };
+
+        assertThat("RunnableWithContext wrapped again by runnableWithContext",
+                   ThreadUtils.runnableWithContext(runnableWithContext), is(sameInstance(runnableWithContext)));
+
+        assertThat("Runnable wrapped by runnableWithContext although not context is available",
+                   ThreadUtils.runnableWithContext(runnable), is(sameInstance(runnable)));
+    }
+
+    /**
+     * Checks if {@link ThreadUtils#callableWithContext(Callable)} works as expected.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testCallableWithContext() throws Exception {
+        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+
+        NodeContext.pushContext(containers.get(0)); // Table Creator
+        Callable<NodeContext> callable = new Callable<NodeContext>() {
+            @Override
+            public NodeContext call() {
+                return NodeContext.getContext();
+            }
+        };
+
+        Future<NodeContext> future = executorService.submit(ThreadUtils.callableWithContext(callable));
+
+        assertThat("Context inheritance to callable does now work properly", future.get(), is(NodeContext.getContext()));
+        NodeContext.removeLastContext();
+
+        Callable<Object> callableWithContext = new CallableWithContext<Object>() {
+            @Override
+            protected Object internalCall() {
+                return null;
+            }
+        };
+
+        assertThat("CallableWithContext wrapped again by callableWithContext",
+                   ThreadUtils.callableWithContext(callableWithContext), is(sameInstance(callableWithContext)));
+
+        assertThat("Callable wrapped by callableWithContext although not context is available",
+                   ThreadUtils.callableWithContext(callable), is(sameInstance(callable)));
+    }
+
+    /**
+     * Checks if {@link ThreadUtils#threadWithContext(Runnable)} and
+     * {@link ThreadUtils#threadWithContext(Runnable, String)} work as expected.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testThreadWithContext() throws Exception {
+        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+
+        NodeContext.pushContext(containers.get(0)); // Table Creator
+        final AtomicReference<NodeContext> ref = new AtomicReference<NodeContext>();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                ref.set(NodeContext.getContext());
+            }
+        };
+
+        Thread t = ThreadUtils.threadWithContext(runnable);
+        t.start();
+        t.join();
+
+        assertThat("Context inheritance via threadWithContext does now work properly", ref.get(),
+                   is(NodeContext.getContext()));
+
+        ref.set(null);
+        t = ThreadUtils.threadWithContext(runnable, "Thread's name");
+        t.start();
+        t.join();
+
+        assertThat("Context inheritance via threadWithContext does now work properly", ref.get(),
+                   is(NodeContext.getContext()));
+        NodeContext.removeLastContext();
+    }
+
+    /**
+     * Checks if {@link ThreadUtils#executorWithContext(java.util.concurrent.Executor)} works as expected.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testExecutorWithContext() throws Exception {
+        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+
+        NodeContext.pushContext(containers.get(0)); // Table Creator
+        final AtomicReference<NodeContext> ref = new AtomicReference<NodeContext>();
+        final ReentrantLock lock = new ReentrantLock();
+        final Condition condition = lock.newCondition();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                ref.set(NodeContext.getContext());
+                lock.lock();
+                try {
+                    condition.signalAll();
+                } finally {
+                    lock.unlock();
+                }
+            }
+        };
+
+        Executor executor = ThreadUtils.executorWithContext(executorService);
+        lock.lock();
+        try {
+            executor.execute(runnable);
+            condition.await();
+        } finally {
+            lock.unlock();
+        }
+
+        assertThat("Context inheritance via wrapped Executor does now work properly", ref.get(),
+                   is(NodeContext.getContext()));
+        NodeContext.removeLastContext();
+    }
+
+    /**
+     * Checks if {@link ThreadUtils#executorServiceWithContext(ExecutorService)} works as expected.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void testExecutorServiceWithContext() throws Exception {
+        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+
+        NodeContext.pushContext(containers.get(0)); // Table Creator
+        final AtomicReference<NodeContext> ref = new AtomicReference<NodeContext>();
+
+        final ReentrantLock lock = new ReentrantLock();
+        final Condition condition = lock.newCondition();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                ref.set(NodeContext.getContext());
+                lock.lock();
+                try {
+                    condition.signalAll();
+                } finally {
+                    lock.unlock();
+                }
+            }
+        };
+
+        ExecutorService executor = ThreadUtils.executorServiceWithContext(executorService);
+        lock.lock();
+        try {
+            executor.execute(runnable);
+            condition.await();
+        } finally {
+            lock.unlock();
+        }
+
+        assertThat("Context inheritance via wrapped ExecutorService.execute does now work properly", ref.get(),
+                   is(NodeContext.getContext()));
+
+        runnable = new Runnable() {
+            @Override
+            public void run() {
+                ref.set(NodeContext.getContext());
+            }
+        };
+
+        executor.submit(runnable).get();
+        assertThat("Context inheritance via wrapped ExecutorService.submit(Runnable) does now work properly",
+                   ref.get(), is(NodeContext.getContext()));
+
+
+        executor.submit(runnable, new Integer(1)).get();
+        assertThat("Context inheritance via wrapped ExecutorService.submit(Runnable) does now work properly",
+                   ref.get(), is(NodeContext.getContext()));
+
+
+        Callable<NodeContext> callable = new Callable<NodeContext>() {
+            @Override
+            public NodeContext call() {
+                return NodeContext.getContext();
+            }
+        };
+
+        Future<NodeContext> future = executor.submit(callable);
+        assertThat("Context inheritance via wrapped ExecutorService.submit(Callable) does now work properly",
+                   future.get(), is(NodeContext.getContext()));
+
+        future = executor.invokeAll(Collections.singletonList(callable)).get(0);
+        assertThat("Context inheritance via wrapped ExecutorService.invokeAll does now work properly", future.get(),
+                   is(NodeContext.getContext()));
+
+        future = executor.invokeAll(Collections.singletonList(callable), 1, TimeUnit.SECONDS).get(0);
+        assertThat("Context inheritance via wrapped ExecutorService.invokeAll does now work properly", future.get(),
+                   is(NodeContext.getContext()));
+
+        NodeContext ctx = executor.invokeAny(Collections.singletonList(callable));
+        assertThat("Context inheritance via wrapped ExecutorService.invokeAny does now work properly", ctx,
+                   is(NodeContext.getContext()));
+
+        ctx = executor.invokeAny(Collections.singletonList(callable), 1, TimeUnit.SECONDS);
+        assertThat("Context inheritance via wrapped ExecutorService.invokeAny does now work properly", ctx,
+                   is(NodeContext.getContext()));
+
         NodeContext.removeLastContext();
     }
 

@@ -83,7 +83,6 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
-import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * Utility class to do some basic file handling that is not available through
@@ -804,9 +803,7 @@ public final class FileUtil {
                 rootDir = workflowContext.getTempLocation();
                 if (!rootDir.isDirectory()) {
                     LOGGER.error("Temp folder \"" + rootDir.getAbsolutePath() + "\" does not exist (associated "
-                            + "with NodeContext \"" + nodeContext + "\" - live WFMs follow on DEBUG");
-                    String wfmOut = WorkflowManager.ROOT.printNodeSummary(WorkflowManager.ROOT.getID(), 0);
-                    printToLoggerDEBUG(wfmOut);
+                            + "with NodeContext \"" + nodeContext + "\")");
                 }
             }
         }

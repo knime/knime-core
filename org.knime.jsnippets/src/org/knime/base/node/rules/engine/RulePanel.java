@@ -77,7 +77,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -106,7 +105,9 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.util.ThreadUtils;
 
 /**
  * A Rule panel with a {@link RuleMainPanel} with further controls for output.
@@ -163,8 +164,8 @@ abstract class RulePanel extends JPanel {
 
     private DataTableSpec m_spec;
 
-    private static final ExecutorService threadPool = new ThreadPoolExecutor(1, 4, 4, TimeUnit.SECONDS,
-            new ArrayBlockingQueue<Runnable>(16));
+    private static final ExecutorService threadPool = ThreadUtils.executorServiceWithContext(new ThreadPoolExecutor(1,
+        4, 4, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(16)));
 
     private Map<String, FlowVariable> m_flowVariables;
 
@@ -430,7 +431,7 @@ abstract class RulePanel extends JPanel {
                     }
                     ++i;
                 }
-                SwingUtilities.invokeLater(new Runnable() {
+                ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
                     @Override
                     public void run() {
                         setOutputMarkers(startDate, outputTypes);
@@ -492,7 +493,7 @@ abstract class RulePanel extends JPanel {
                     final DataType outputType =
                             RuleEngineNodeModel.computeOutputType(m_spec, rules, defaultLabelColumnIndex, defaultLabel,
                                                                   preferredDefaultType);
-                    SwingUtilities.invokeLater(new Runnable() {
+                    ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
                         @Override
                         public void run() {
                             setOutputType(startDate, outputType);

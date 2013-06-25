@@ -64,6 +64,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.MutableBoolean;
+import org.knime.core.util.ThreadUtils;
 
 /**
  * Wraps a Java runtime process. Supports cancellations and progress messages
@@ -264,18 +265,18 @@ public class CommandExecution extends Observable {
 
             // create a thread that periodically checks for user cancellation
             final MutableBoolean procDone = new MutableBoolean(false);
-            new Thread(new CheckCanceledRunnable(proc, procDone, exec)).start();
+            ThreadUtils.threadWithContext(new CheckCanceledRunnable(proc, procDone, exec)).start();
 
             // pick up the output to std err from the executable
             Thread stdErrThread =
-                    new Thread(new StdErrCatchRunnable(proc, exec,
+                    ThreadUtils.threadWithContext(new StdErrCatchRunnable(proc, exec,
                             m_extErrout));
             stdErrThread.setName("ExtTool StdErr collector");
             stdErrThread.start();
 
             // pick up the output to std out from the executable
             Thread stdOutThread =
-                    new Thread(new StdOutCatchRunnable(proc, exec,
+                    ThreadUtils.threadWithContext(new StdOutCatchRunnable(proc, exec,
                             m_extOutput));
             stdOutThread.setName("ExtTool StdOut collector");
             stdOutThread.start();

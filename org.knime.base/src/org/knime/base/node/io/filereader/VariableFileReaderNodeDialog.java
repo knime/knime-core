@@ -109,6 +109,7 @@ import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.util.MutableBoolean;
+import org.knime.core.util.ThreadUtils;
 import org.knime.core.util.tokenizer.Comment;
 import org.knime.core.util.tokenizer.Delimiter;
 import org.knime.core.util.tokenizer.SettingsStatus;
@@ -1539,7 +1540,8 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
 
         String threadName = "FileReaderAnalyze";
         // go!
-        new Thread(new Runnable() {
+        ThreadUtils.threadWithContext(new Runnable() {
+            @Override
             public void run() {
 
                 try {
@@ -1630,8 +1632,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
 
                 }
 
-            };
-
+            }
         }, threadName).start();
 
     }

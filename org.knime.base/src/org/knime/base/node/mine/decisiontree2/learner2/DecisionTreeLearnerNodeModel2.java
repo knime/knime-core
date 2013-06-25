@@ -103,6 +103,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.util.ThreadUtils.ThreadWithContext;
 
 /**
  * Implements a decision tree induction algorithm based on C4.5 and SPRINT.
@@ -1059,7 +1060,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         return m_decisionTree;
     }
 
-    private final class ParallelBuilding extends Thread {
+    private final class ParallelBuilding extends ThreadWithContext {
 
         private final InMemoryTable m_table;
 
@@ -1095,7 +1096,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
          * {@inheritDoc}
          */
         @Override
-        public void run() {
+        protected void internalRun() {
             try {
                 m_resultNode = buildTree(m_table, m_exec, m_depth,
                         (SplitQualityMeasure) m_splitQM.clone(),

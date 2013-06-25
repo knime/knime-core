@@ -260,7 +260,7 @@ public abstract class MultiThreadWorker<In, Out> {
                 if (executor == null) {
                     KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(task);
                 } else {
-                    executor.execute(task);
+                    executor.execute(ThreadUtils.runnableWithContext(task));
                 }
                 m_nextSubmittedIndex += 1L;
             }

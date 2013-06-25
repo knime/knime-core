@@ -69,7 +69,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContext;
 
 /**
  * Implements a sophisticated thread pool.
@@ -77,20 +76,17 @@ import org.knime.core.node.workflow.NodeContext;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ThreadPool {
-
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(ThreadPool.class);
 
     private class MyFuture<T> extends FutureTask<T> {
         private final CountDownLatch m_startWaiter = new CountDownLatch(1);
-        private final NodeContext m_nodeContext;
 
         /**
          * @see FutureTask#FutureTask(Callable)
          */
         public MyFuture(final Callable<T> callable) {
-            super(callable);
-            m_nodeContext = NodeContext.getContext();
+            super(ThreadUtils.callableWithContext(callable, false));
         }
 
         /**
@@ -106,8 +102,7 @@ public class ThreadPool {
          * @throws NullPointerException if runnable is null
          */
         public MyFuture(final Runnable runnable, final T result) {
-            super(runnable, result);
-            m_nodeContext = NodeContext.getContext();
+            super(ThreadUtils.runnableWithContext(runnable, false), result);
         }
 
         /**
@@ -125,12 +120,7 @@ public class ThreadPool {
         @Override
         public void run() {
             m_startWaiter.countDown();
-            NodeContext.pushContext(m_nodeContext);
-            try {
-                super.run();
-            } finally {
-                NodeContext.removeLastContext();
-            }
+            super.run();
         }
 
         /**

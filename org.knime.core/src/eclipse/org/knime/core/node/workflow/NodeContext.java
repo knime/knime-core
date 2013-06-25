@@ -49,6 +49,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -60,8 +61,8 @@ import org.knime.core.node.NodeLogger;
  * for internal purposes, node implementors should not use this class.<br />
  * The node context is local to the current thread and is set by the workflow manager or the node container in which a
  * node is contained. Each thread has a stack of {@link NodeContext} objects, only the last set context can be retrieved
- * via {@link #getContext()}. You must absolutly make sure that if you push a new context that you remove it afterwards.
- * Therefore the common usage pattern is a follows:
+ * via {@link #getContext()}. You must absolutely make sure that if you push a new context that you remove it
+ * afterwards. Therefore the common usage pattern is a follows:
  *
  * <pre>
  * NodeContext.pushContext(nodeContainer);
@@ -79,16 +80,9 @@ import org.knime.core.node.NodeLogger;
 public final class NodeContext {
     private static final NodeLogger logger = NodeLogger.getLogger(NodeContext.class);
 
-    private static final ThreadLocal<Deque<NodeContext>> threadLocal =
-        new InheritableThreadLocal<Deque<NodeContext>>() {
-            @Override
-            protected Deque<NodeContext> childValue(final Deque<NodeContext> parentValue) {
-                // make sure that child threads get a copy of the context stack and do not operate on the same stack!
-                return new ArrayDeque<NodeContext>(parentValue);
-            }
-        };
+    private static final ThreadLocal<Deque<NodeContext>> threadLocal = new ThreadLocal<Deque<NodeContext>>();
 
-    private final NodeContainer m_nodeContainer;
+    private final WeakReference<NodeContainer> m_nodeContainerRef;
 
     private static final NodeContext NO_CONTEXT = new NodeContext(null);
 
@@ -96,36 +90,45 @@ public final class NodeContext {
     private StackTraceElement[] m_callStack; // only used for debugging
 
     private NodeContext(final NodeContainer nodeContainer) {
-        m_nodeContainer = nodeContainer;
+        m_nodeContainerRef = new WeakReference<NodeContainer>(nodeContainer);
         if (KNIMEConstants.ASSERTIONS_ENABLED) {
-            m_callStack = new Throwable().getStackTrace();
+            m_callStack = Thread.currentThread().getStackTrace();
         }
     }
 
     /**
-     * Returns the workflow manager which currently does an operation on a node.
+     * Returns the workflow manager which currently does an operation on a node. The result may be <code>null</code> if
+     * the workflow manager does not exist any more, i.e. its workflow has been closed. This is very likely an
+     * implementation error because nobody should hold a node context for a closed workflow.
      *
-     * @return the workflow manager associated with the current node
+     * @return the workflow manager associated with the current node or <code>null</code>
      */
     public WorkflowManager getWorkflowManager() {
+        NodeContainer cont = getNodeContainer();
+        if (cont == null) {
+            return null;
+        }
+
         // find the actual workflow and not the meta node the container may be in
-        WorkflowManager manager =
-            (m_nodeContainer instanceof WorkflowManager) ? (WorkflowManager)m_nodeContainer : m_nodeContainer
-                .getParent();
+        WorkflowManager manager = (cont instanceof WorkflowManager) ? (WorkflowManager)cont : cont.getParent();
         while (!manager.isProject()) {
             manager = manager.getParent();
         }
         return manager;
     }
 
-
     /**
-     * Returns the node container which is currently executing something.
+     * Returns the node container which is currently executing something. The result may be <code>null</code> if the
+     * node container does not exist any more, i.e. its workflow has been closed. This is very likely an implementation
+     * error because nobody should hold a node context for a closed workflow.
      *
-     * @return a node container
+     * @return a node container or <code>null</code>
      */
     public NodeContainer getNodeContainer() {
-        return m_nodeContainer;
+        NodeContainer cont = m_nodeContainerRef.get();
+        logger.assertLog(cont != null,
+            "Node container has been garbage collected, you should not have such a context available");
+        return cont;
     }
 
     /**
@@ -204,6 +207,15 @@ public final class NodeContext {
      */
     @Override
     public String toString() {
-        return (m_nodeContainer == null) ? "NO CONTEXT" : m_nodeContainer.toString();
+        if (this == NO_CONTEXT) {
+            return "NO CONTEXT";
+        } else {
+            NodeContainer cont = m_nodeContainerRef.get();
+            if (cont == null) {
+                return "Node Container (garbage collected)";
+            } else {
+                return cont.toString();
+            }
+        }
     }
 }
