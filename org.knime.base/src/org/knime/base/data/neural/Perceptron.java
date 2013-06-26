@@ -50,6 +50,8 @@
  */
 package org.knime.base.data.neural;
 
+import java.util.Random;
+
 /**
  * Abstract class defining the behaviour of a perceptron in a neural network.
  *
@@ -90,6 +92,27 @@ public abstract class Perceptron {
     }
 
     /**
+     * Construct a perceptron with given number of weights. Weights and
+     * threshold are randomly initialized using the given random number generator.
+     *
+     * @param nrInputs number of inputs for the new perceptron
+     * @param random a random number generator for re-producible results
+     * @since 2.8
+     */
+    public Perceptron(final int nrInputs, final Random random) {
+        if (nrInputs < 1) {
+            throw new IllegalArgumentException(
+                    "Cannot create Perceptron without weights");
+        }
+        m_weights = new double[nrInputs];
+        for (int i = 0; i < m_weights.length; i++) {
+            m_weights[i] = 2 * (random.nextDouble() - 0.5);
+        }
+        setThreshold(2 * (random.nextDouble() - 0.5));
+    }
+
+
+    /**
      * Construct an empty perceptron (cannot be used properly unless the weights
      * are set).
      */
@@ -107,8 +130,25 @@ public abstract class Perceptron {
             throw new IllegalArgumentException(
                     "Cannot create Perceptron without weights");
         }
-        m_weights = weights;
+        m_weights = weights.clone();
         setThreshold(random());
+    }
+
+
+    /**
+     * Construct a perceptron with given weights. The threshold is initialized using the given random number generator.
+     *
+     * @param weights weights for the new perceptron
+     * @param random a random number generator for re-producible results
+     * @since 2.8
+     */
+    public Perceptron(final double[] weights, final Random random) {
+        if (weights.length < 1) {
+            throw new IllegalArgumentException(
+                    "Cannot create Perceptron without weights");
+        }
+        m_weights = weights;
+        setThreshold(2 * (random.nextDouble() - 0.5));
     }
 
     /**
@@ -137,7 +177,7 @@ public abstract class Perceptron {
         if (this.m_weights != null && this.m_weights.length != weights.length) {
             throw new IllegalArgumentException("Wrong array length.");
         } else {
-            this.m_weights = weights;
+            this.m_weights = weights.clone();
         }
     }
 

@@ -52,6 +52,7 @@ package org.knime.base.data.neural;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
@@ -143,7 +144,7 @@ public class MultiLayerPerceptron {
         if (layers.length < 1) {
             throw new IllegalArgumentException("MLP needs at least one layer");
         }
-        m_layers = layers;
+        m_layers = layers.clone();
     }
 
     /**
@@ -160,6 +161,26 @@ public class MultiLayerPerceptron {
                     (i == m_layers.length - 1) ? m_architecture
                             .getNrOutputNeurons() : m_architecture
                             .getNrHiddenNeurons());
+        }
+    }
+
+    /**
+     * Constructs a net with a given architecture. The weights and threshold are initialized using the given random
+     * number generator.
+     *
+     * @param a architecture for the new net
+     * @param random a random number generator for re-producible results
+     * @since 2.8
+     */
+    public MultiLayerPerceptron(final Architecture a, final Random random) {
+        m_architecture = a;
+        m_layers = new Layer[m_architecture.getNrHiddenLayers() + 2];
+        m_layers[0] = new InputLayer(m_architecture.getNrInputNeurons());
+        for (int i = 1; i < m_layers.length; i++) {
+            m_layers[i] = new HiddenLayer(m_layers[i - 1],
+                    (i == m_layers.length - 1) ? m_architecture
+                            .getNrOutputNeurons() : m_architecture
+                            .getNrHiddenNeurons(), random);
         }
     }
 
@@ -257,7 +278,7 @@ public class MultiLayerPerceptron {
             throw new IllegalArgumentException(
                     "Cannot set layers, inappropriate array length");
         } else {
-            m_layers = layers;
+            m_layers = layers.clone();
         }
     }
 

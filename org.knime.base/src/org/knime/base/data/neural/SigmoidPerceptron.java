@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,15 +44,17 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   26.10.2005 (cebron): created
  */
 package org.knime.base.data.neural;
 
+import java.util.Random;
+
 /**
  * A hidden layer perceptron with a sigmoid activation function.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public class SigmoidPerceptron extends Perceptron {
@@ -64,7 +66,7 @@ public class SigmoidPerceptron extends Perceptron {
 
     /**
      * Constructs a perceptron with given weights and predecessors.
-     * 
+     *
      * @param weights the weights for the perceptron
      * @param predecessors the predecessor perceptrons
      */
@@ -75,17 +77,49 @@ public class SigmoidPerceptron extends Perceptron {
             throw new IllegalArgumentException(
                     "Number of weights and predecessors must be equal");
         }
-        m_predecessors = predecessors;
+        m_predecessors = predecessors.clone();
+    }
+
+
+    /**
+     * Constructs a perceptron with given weights and predecessors. The threshold is initialized using the given random
+     * number generator.
+     *
+     * @param weights the weights for the perceptron
+     * @param predecessors the predecessor perceptrons
+     * @param random a random number generator for re-producible results
+     * @since 2.8
+     */
+    public SigmoidPerceptron(final double[] weights, final Perceptron[] predecessors, final Random random) {
+        super(weights, random);
+        if (weights.length != predecessors.length) {
+            throw new IllegalArgumentException("Number of weights and predecessors must be equal");
+        }
+        m_predecessors = predecessors.clone();
     }
 
     /**
      * Constructs a perceptron with given predecessors, weights initialized
      * randomly.
-     * 
+     *
      * @param predecessors the predecessor perceptrons
      */
     public SigmoidPerceptron(final Perceptron[] predecessors) {
         super(predecessors.length);
+        m_predecessors = predecessors.clone();
+    }
+
+
+    /**
+     * Constructs a perceptron with given predecessors, weights initialized
+     * randomly using the given random number generator.
+     *
+     * @param predecessors the predecessor perceptrons
+     * @param random a random number generator for re-producible results
+     * @since 2.8
+     */
+    public SigmoidPerceptron(final Perceptron[] predecessors, final Random random) {
+        super(predecessors.length, random);
         m_predecessors = predecessors;
     }
 
@@ -98,7 +132,7 @@ public class SigmoidPerceptron extends Perceptron {
 
     /**
      * Returns the predecessors.
-     * 
+     *
      * @return predecessors of the perceptron
      */
     public Perceptron[] getPredecessors() {
@@ -107,7 +141,7 @@ public class SigmoidPerceptron extends Perceptron {
 
     /**
      * Returns the predecessor at a given position.
-     * 
+     *
      * @param i position
      * @return Predecessor at position <code>i</code>
      */
@@ -117,7 +151,7 @@ public class SigmoidPerceptron extends Perceptron {
 
     /**
      * Sets the predecessors.
-     * 
+     *
      * @param predecessors new predecessors for the perceptron
      */
     public void setPredecessors(final Perceptron[] predecessors) {
@@ -126,13 +160,13 @@ public class SigmoidPerceptron extends Perceptron {
             throw new IllegalArgumentException(
                     "Cannot set predecessors, inappropriate array length");
         } else {
-            m_predecessors = predecessors;
+            m_predecessors = predecessors.clone();
         }
     }
 
     /**
      * Set predecessor at a given position.
-     * 
+     *
      * @param i position
      * @param predecessor new predecessor for position <code>i</code>
      */
@@ -147,7 +181,7 @@ public class SigmoidPerceptron extends Perceptron {
 
     /**
      * Returns the output.
-     * 
+     *
      * @return output
      */
     @Override
@@ -161,7 +195,7 @@ public class SigmoidPerceptron extends Perceptron {
 
     /**
      * Sigmoid activation function, computes the sigmoid value of its argument.
-     * 
+     *
      * @param in argument to compute
      * @return 1/(1+e^<code>-in</code>)
      */

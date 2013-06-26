@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,11 +44,16 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   26.10.2005 (cebron): created
  */
 package org.knime.base.node.mine.neural.rprop;
+
+import java.util.Random;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
@@ -56,13 +61,14 @@ import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * The RPropNodeDialog allows to configure the settings (nr. of training
  * iterations and architecture of the neural net).
- * 
+ *
  * @author Nicolas, University of Konstanz
  */
 public class RPropNodeDialog extends DefaultNodeSettingsPane {
@@ -78,7 +84,7 @@ public class RPropNodeDialog extends DefaultNodeSettingsPane {
         /* config-name: */RPropNodeModel.MAXITER_KEY,
         /* default */20,
         /* min: */1,
-        /* max: */RPropNodeModel.MAXNRITERATIONS), 
+        /* max: */RPropNodeModel.MAXNRITERATIONS),
         /* label: */"Maximum number of iterations: ",
         /* step */1));
         this.addDialogComponent(new DialogComponentNumber(
@@ -94,7 +100,7 @@ public class RPropNodeDialog extends DefaultNodeSettingsPane {
         /* config-name: */RPropNodeModel.NRHNEURONS_KEY,
         /* default */5,
         /* min: */1,
-        /* max: */100), 
+        /* max: */100),
         /* label: */"Number of hidden neurons per layer: ",
         /* step */ 1));
         this.addDialogComponent(new DialogComponentColumnNameSelection(
@@ -103,11 +109,25 @@ public class RPropNodeDialog extends DefaultNodeSettingsPane {
         /* label: */"class column: ",
         /* columns from which port?: */RPropNodeModel.INDATA,
         /* column-type filter: */DataValue.class));
-        
+
         this.addDialogComponent(new DialogComponentBoolean(
                 new SettingsModelBoolean(
         /* config-name: */RPropNodeModel.IGNOREMV_KEY,
         /* default */ false),
         /* label: */"Ignore Missing Values"));
+
+        final SettingsModelBoolean useRandomSeed = new SettingsModelBoolean(RPropNodeModel.USE_SEED_KEY, false);
+        final SettingsModelInteger randomSeed = new SettingsModelInteger(RPropNodeModel.SEED_KEY, new Random().nextInt());
+        randomSeed.setEnabled(useRandomSeed.getBooleanValue());
+
+        useRandomSeed.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                randomSeed.setEnabled(useRandomSeed.getBooleanValue());
+            }
+        });
+
+        this.addDialogComponent(new DialogComponentBoolean(useRandomSeed, "Use seed for random initialization"));
+        this.addDialogComponent(new DialogComponentNumber(randomSeed, "Random seed", 1));
     }
 }

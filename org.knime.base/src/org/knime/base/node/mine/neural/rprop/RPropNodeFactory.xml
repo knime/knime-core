@@ -39,6 +39,12 @@
 	If this checkbox is set, rows with missing values will not be used for 
 	training.
     </option>
+    <option name="Use seed for random initialization">
+    If this checkbox is set, a seed (see next field) can be set for initializing the weights and thresholds can be set.
+    </option>
+    <option name="Random seed">
+    Seed for the random number generator.
+    </option>
     </fullDescription>
     <ports>
 		<inPort index="0" name = "Training Data">Datatable with training data</inPort>

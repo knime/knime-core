@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,15 +44,17 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   26.10.2005 (cebron): created
  */
 package org.knime.base.data.neural;
 
+import java.util.Random;
+
 /**
  * This class represents a hidden layer in a MultiLayerPerceptron.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public class HiddenLayer extends Layer {
@@ -64,7 +66,7 @@ public class HiddenLayer extends Layer {
     /**
      * Constructs a layer with given predecessor layer and given number of
      * hidden neurons.
-     * 
+     *
      * @param predLayer predecessor layer
      * @param nrHiddenNeurons number of hidden neurons
      */
@@ -82,9 +84,32 @@ public class HiddenLayer extends Layer {
     }
 
     /**
+     * Constructs a layer with given predecessor layer and given number of hidden neurons. The weights and threshold are
+     * initialized using the given random number generator.
+     *
+     * @param predLayer predecessor layer
+     * @param nrHiddenNeurons number of hidden neurons
+     * @param random a random number generator for re-producible results
+     * @since 2.8
+     */
+    public HiddenLayer(final Layer predLayer, final int nrHiddenNeurons, final Random random) {
+        if (nrHiddenNeurons < 1) {
+            throw new IllegalArgumentException(
+                    "Layer must contain at least one neuron");
+        }
+        m_predLayer = predLayer;
+        Perceptron[] perceptrons = new Perceptron[nrHiddenNeurons];
+        for (int i = 0; i < perceptrons.length; i++) {
+            perceptrons[i] = new SigmoidPerceptron(predLayer.getPerceptrons(), random);
+        }
+        setPerceptrons(perceptrons);
+    }
+
+
+    /**
      * Constructs a hidden layer with the given predecessor layer and the given
      * neurons.
-     * 
+     *
      * @param predLayer predecessor layer
      * @param neurons neurons in the hidden layer
      */
@@ -95,7 +120,7 @@ public class HiddenLayer extends Layer {
 
     /**
      * Returns the predecessor layer for the current layer.
-     * 
+     *
      * @return predecessor layer
      */
     public Layer getPredLayer() {
@@ -104,7 +129,7 @@ public class HiddenLayer extends Layer {
 
     /**
      * Sets the predecessor layer.
-     * 
+     *
      * @param predLayer predecessor layer to set
      */
     public void setPredLayer(final Layer predLayer) {

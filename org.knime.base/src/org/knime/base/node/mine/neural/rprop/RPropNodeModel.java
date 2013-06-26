@@ -56,11 +56,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
-import java.util.Vector;
 
 import org.knime.base.data.neural.Architecture;
 import org.knime.base.data.neural.MultiLayerPerceptron;
@@ -82,6 +83,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
@@ -151,6 +153,19 @@ public class RPropNodeModel extends NodeModel {
      */
     public static final String CLASSCOL_KEY = "classcol";
 
+    /**
+     * Key to store if the random seed should be used.
+     * @since 2.8
+     */
+    public static final String USE_SEED_KEY = "useRandomSeed";
+
+    /**
+     * Key to store the random seed.
+     * @since 2.8
+     */
+    public static final String SEED_KEY = "randomSeed";
+
+
     /*
      * Number of iterations.
      */
@@ -194,6 +209,9 @@ public class RPropNodeModel extends NodeModel {
     /* config-name: */RPropNodeModel.IGNOREMV_KEY,
     /* default */false);
 
+    private final SettingsModelBoolean m_useRandomSeed = new SettingsModelBoolean(USE_SEED_KEY, false);
+    private final SettingsModelInteger m_randomSeed = new SettingsModelInteger(SEED_KEY, new Random().nextInt());
+
     /*
      * Flag for regression
      */
@@ -208,16 +226,6 @@ public class RPropNodeModel extends NodeModel {
      * The architecture of the Neural Network.
      */
     private final Architecture m_architecture;
-
-    /*
-     * Maps the values from the classes to the output neurons.
-     */
-    private HashMap<DataCell, Integer> m_classmap;
-
-    /*
-     * Maps the values from the inputs to the input neurons.
-     */
-    private HashMap<String, Integer> m_inputmap;
 
     /*
      * Used to plot the error.
@@ -355,7 +363,8 @@ public class RPropNodeModel extends NodeModel {
         // sure that the inputs are double values.
         int nrInputs = 0;
         int nrOutputs = 0;
-        m_inputmap = new HashMap<String, Integer>();
+        HashMap<String, Integer> inputmap = new HashMap<String, Integer>();
+        HashMap<DataCell, Integer> classMap = new HashMap<DataCell, Integer>();
         for (DataColumnSpec colspec : posSpec) {
             // check for class column
             if (colspec.getName().toString().compareTo(
@@ -379,8 +388,8 @@ public class RPropNodeModel extends NodeModel {
                         }
                     }
                     nrOutputs = 1;
-                    m_classmap = new HashMap<DataCell, Integer>();
-                    m_classmap.put(new StringCell(colspec.getName()), 0);
+                    classMap = new HashMap<DataCell, Integer>();
+                    classMap.put(new StringCell(colspec.getName()), 0);
                     m_regression = true;
                 } else {
                     m_regression = false;
@@ -388,9 +397,9 @@ public class RPropNodeModel extends NodeModel {
                     if (domain.hasValues()) {
                         Set<DataCell> allvalues = domain.getValues();
                         int outputneuron = 0;
-                        m_classmap = new HashMap<DataCell, Integer>();
+                        classMap = new HashMap<DataCell, Integer>();
                         for (DataCell value : allvalues) {
-                            m_classmap.put(value, outputneuron);
+                            classMap.put(value, outputneuron);
                             outputneuron++;
                         }
                         nrOutputs = allvalues.size();
@@ -404,7 +413,7 @@ public class RPropNodeModel extends NodeModel {
                 if (!colspec.getType().isCompatible(DoubleValue.class)) {
                     throw new Exception("Only double columns for input");
                 }
-                m_inputmap.put(colspec.getName(), nrInputs);
+                inputmap.put(colspec.getName(), nrInputs);
                 learningCols.add(colspec.getName());
                 nrInputs++;
             }
@@ -415,7 +424,13 @@ public class RPropNodeModel extends NodeModel {
         m_architecture.setNrHiddenNeurons(m_nrHiddenNeuronsperLayer
                 .getIntValue());
         m_architecture.setNrOutputNeurons(nrOutputs);
-        m_mlp = new MultiLayerPerceptron(m_architecture);
+
+        Random random = new Random();
+        if (m_useRandomSeed.getBooleanValue()) {
+            random.setSeed(m_randomSeed.getIntValue());
+        }
+
+        m_mlp = new MultiLayerPerceptron(m_architecture, random);
         if (m_regression) {
             m_mlp.setMode(MultiLayerPerceptron.REGRESSION_MODE);
         } else {
@@ -424,8 +439,8 @@ public class RPropNodeModel extends NodeModel {
         // Convert inputs to double arrays. Values from the class column are
         // encoded as bitvectors.
         int classColNr = posSpec.findColumnIndex(m_classcol.getStringValue());
-        Vector<Double[]> samples = new Vector<Double[]>();
-        Vector<Double[]> outputs = new Vector<Double[]>();
+        List<Double[]> samples = new ArrayList<Double[]>();
+        List<Double[]> outputs = new ArrayList<Double[]>();
         Double[] sample = new Double[nrInputs];
         Double[] output = new Double[nrOutputs];
         final RowIterator rowIt = ((BufferedDataTable)inData[INDATA]).iterator();
@@ -466,7 +481,7 @@ public class RPropNodeModel extends NodeModel {
                         output[0] = dc.getDoubleValue();
                     } else {
                         for (int j = 0; j < nrOutputs; j++) {
-                            if (m_classmap.get(row.getCell(i)) == j) {
+                            if (classMap.get(row.getCell(i)) == j) {
                                 output[j] = new Double(1.0);
                             } else {
                                 output[j] = new Double(0.0);
@@ -488,8 +503,8 @@ public class RPropNodeModel extends NodeModel {
             outputsarr[i] = outputs.get(i);
         }
         // Now finally train the network.
-        m_mlp.setClassMapping(m_classmap);
-        m_mlp.setInputMapping(m_inputmap);
+        m_mlp.setClassMapping(classMap);
+        m_mlp.setInputMapping(inputmap);
         RProp myrprop = new RProp();
         m_errors = new double[m_nrIterations.getIntValue()];
         for (int iteration = 0; iteration < m_nrIterations.getIntValue();
@@ -544,6 +559,8 @@ public class RPropNodeModel extends NodeModel {
         m_nrHiddenNeuronsperLayer.saveSettingsTo(settings);
         m_classcol.saveSettingsTo(settings);
         m_ignoreMV.saveSettingsTo(settings);
+        m_useRandomSeed.saveSettingsTo(settings);
+        m_randomSeed.saveSettingsTo(settings);
     }
 
     /**
@@ -557,6 +574,7 @@ public class RPropNodeModel extends NodeModel {
         m_nrHiddenNeuronsperLayer.validateSettings(settings);
         m_classcol.validateSettings(settings);
         m_ignoreMV.validateSettings(settings);
+        // randomSeed was introduced with 2.8
     }
 
     /**
@@ -571,6 +589,8 @@ public class RPropNodeModel extends NodeModel {
         m_nrHiddenNeuronsperLayer.loadSettingsFrom(settings);
         m_classcol.loadSettingsFrom(settings);
         m_ignoreMV.loadSettingsFrom(settings);
+        m_useRandomSeed.loadSettingsFrom(settings);
+        m_randomSeed.loadSettingsFrom(settings);
     }
 
     /**
