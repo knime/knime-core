@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,11 +44,13 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   17.07.2006 (cebron): created
  */
 package org.knime.base.node.mine.cluster.fuzzycmeans;
+
+import java.util.Random;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -59,25 +61,25 @@ import org.knime.core.node.ExecutionContext;
 
 /**
  * The Fuzzy c-means algorithm.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public class FCMAlgorithmMemory extends FCMAlgorithm {
-  
+
     /*
      * Data to be clustered
      */
     private double[][] m_data;
-    
+
     /*
      * Rowkeys assigned to each position of the double data array
      */
     private RowKey[] m_keys;
-   
+
 
     /**
      * Constructor for a Fuzzy c-means algorithm (with no noise detection).
-     * 
+     *
      * @param nrClusters the number of cluster prototypes to use
      * @param fuzzifier allows the clusters to overlap
      */
@@ -91,7 +93,7 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
      * automatically or if it should be calculated automatically. The last
      * parameter specifies either the delta value or the lambda value, depending
      * on the boolean flag in the parameter before.
-     * 
+     *
      * @param nrClusters the number of clusters to use
      * @param fuzzifier the fuzzifier, controls how much the clusters can
      *            overlap
@@ -108,7 +110,7 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
     /**
      * Inits the cluster centers and the weight matrix. Must be called before
      * the iterations are carried out.
-     * 
+     *
      * @param nrRows number of rows in the DataTable
      * @param dimension the dimension of the table
      * @param table the table to use.
@@ -116,25 +118,56 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
     @Override
     public void init(final int nrRows, final int dimension,
             final DataTable table) {
-       super.init(nrRows, dimension, table);
-       initData(table);
-        // TODO: checks on table: only double columns, nrRows, dimension
+       init(nrRows, dimension, table, new Random());
     }
-    
+
     /**
      * Inits the cluster centers and the weight matrix. Must be called before
      * the iterations are carried out.
-     * 
+     *
+     * @param nrRows number of rows in the DataTable
+     * @param dimension the dimension of the table
+     * @param table the table to use
+     * @param random a random number generator for initializing the cluster centers
+     * @since 2.8
+     */
+    @Override
+    public void init(final int nrRows, final int dimension,
+            final DataTable table, final Random random) {
+       super.init(nrRows, dimension, table, random);
+       initData(table);
+        // TODO: checks on table: only double columns, nrRows, dimension
+    }
+
+
+    /**
+     * Inits the cluster centers and the weight matrix. Must be called before
+     * the iterations are carried out.
+     *
      * @param keys the RowKeys for each data row.
      * @param data the DaaTable as 2 dimensional double array.
      */
     public void init(final RowKey[] keys, final double[][] data) {
+       init(keys, data, new Random());
+    }
+
+
+    /**
+     * Inits the cluster centers and the weight matrix. Must be called before
+     * the iterations are carried out.
+     *
+     * @param keys the RowKeys for each data row
+     * @param data the DaaTable as 2 dimensional double array
+     * @param random a random number generator for initializing the cluster centers
+     * @since 2.8
+     */
+    public void init(final RowKey[] keys, final double[][] data, final Random random) {
        assert (keys.length == data.length);
-       super.init(data.length, data[0].length, null);
+       super.init(data.length, data[0].length, null, random);
        m_data = data;
        m_keys = keys;
     }
-    
+
     /*
      * Reads the data from the given DataTable in the doublearray m_data
      */
@@ -156,11 +189,11 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
             curRow++;
         }
     }
-    
+
     /**
      * Please make sure to call init() first in order to guarantee that
      * the DataTable is converted.
-     * 
+     *
      * @return the input DataTable converted as a double array. If it has not
      * been produced yet, null is returned.
      */
@@ -168,20 +201,31 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
         assert m_data != null : "Please initialize first";
         return m_data;
     }
-    
+
     /**
      * @param table DataTable to convert.
      * @return two-dimensional double array.
      */
     public double[][] getConvertedData(final DataTable table) {
-        init(table);
+        return getConvertedData(table, new Random());
+    }
+
+    /**
+     * @param table DataTable to convert
+     * @return two-dimensional double array
+     * @param random a random number generator for initializing the cluster centers
+     * @since 2.8
+     */
+    public double[][] getConvertedData(final DataTable table, final Random random) {
+        init(table, random);
         return m_data;
     }
-    
+
+
     /**
      * Please make sure to call init() first in order to guarantee that
      * the DataTable is converted.
-     * 
+     *
      * @return the RowKeys assigned to each position of the produced
      * double array
      * @see #getConvertedData()
@@ -190,11 +234,11 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
         assert m_keys != null : "Please initialize first";
         return m_keys;
     }
-    
+
     /**
      * Does one iteration in the Fuzzy c-means algorithm. First, the weight
      * matrix is updated and then the cluster prototypes are recalculated.
-     * 
+     *
      * @param exec execution context to cancel the execution
      * @return the total change in the cluster prototypes. Allows to decide
      *         whether the algorithm can be stopped.
@@ -285,7 +329,7 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
 
     /*
      * Helper method for the quadratic distance between two double-arrays.
-     * 
+     *
      */
     private double getDistance(final double[] vector1, final double[] vector2) {
         double distance = 0.0;
@@ -314,11 +358,8 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
         double sumupdate = 0;
         // for each cluster center
         for (int c = 0; c < nrClusters; c++) {
-            if (noise) {
-                // stop updating at noise cluster position.
-                if (c == nrClusters - 1) {
-                    break;
-                }
+            if (noise && (c == nrClusters - 1)) {
+                break;
             }
             for (int j = 0; j < dimension; j++) {
                 sumNumerator[j] = 0;
@@ -330,11 +371,11 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
                 double[] row = data[currentRow];
                 // for all attributes in X
                 for (int j = 0; j < dimension; j++) {
-                  
+
                             sumNumerator[j] += Math.pow(weightMatrix[i][c],
                                     fuzzifier)
                                     * row[j];
-                     
+
                 }
                 sumDenominator += Math.pow(weightMatrix[i][c], fuzzifier);
                 i++;
@@ -359,6 +400,6 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
 
     } // end update cluster centers
 
-    
-    
+
+
 }

@@ -54,6 +54,7 @@ import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -140,6 +141,12 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
     private final JCheckBox m_memoryCB;
 
     private final JCheckBox m_measuresCB;
+
+    private final JCheckBox m_useRandomSeed = new JCheckBox("Use seed for random initialization");
+
+    private final JSpinner m_randomSeed = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE,
+        1));
+
     /*
      * The tab's name.
      */
@@ -224,6 +231,23 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         gbl.setConstraints(m_fuzzifierSpinner, c);
         clusterPropPane.add(fuzzifierLabel);
         clusterPropPane.add(m_fuzzifierSpinner);
+
+
+
+        c.gridx = 0;
+        c.gridy++;
+        m_useRandomSeed.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                m_randomSeed.setEnabled(m_useRandomSeed.isSelected());
+            }
+        });
+        clusterPropPane.add(m_useRandomSeed, c);
+        c.gridx++;
+        clusterPropPane.add(m_randomSeed, c);
+
+
+
         JPanel noisePropPane = new JPanel();
         noisePropPane.setLayout(gbl);
         Border border2 = BorderFactory.createTitledBorder("Noise Clustering");
@@ -447,6 +471,12 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                 // nothing to do here.
             }
         }
+
+        boolean useSeed = settings.getBoolean(FuzzyClusterNodeModel.USE_SEED_KEY, false);
+        m_useRandomSeed.setSelected(useSeed);
+        int seed = settings.getInt(FuzzyClusterNodeModel.SEED_KEY, new Random().nextInt());
+        m_randomSeed.setValue(seed);
+        m_randomSeed.setEnabled(useSeed);
     }
 
     /**
@@ -510,6 +540,9 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                 .isSelected());
         settings.addBoolean(FuzzyClusterNodeModel.MEASURES_KEY, m_measuresCB
                 .isSelected());
+
+        settings.addBoolean(FuzzyClusterNodeModel.USE_SEED_KEY, m_useRandomSeed.isSelected());
+        settings.addInt(FuzzyClusterNodeModel.SEED_KEY, (Integer) m_randomSeed.getValue());
 
     }
 }

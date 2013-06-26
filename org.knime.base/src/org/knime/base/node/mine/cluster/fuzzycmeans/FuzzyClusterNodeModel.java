@@ -59,6 +59,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import org.knime.base.node.mine.cluster.PMMLClusterTranslator;
 import org.knime.base.node.mine.cluster.PMMLClusterTranslator.ComparisonMeasure;
@@ -153,8 +154,12 @@ public class FuzzyClusterNodeModel extends NodeModel {
     /** Config key to keep all columns in include list. */
     public static final String CFGKEY_KEEPALL = "keep_all_columns";
 
+    static final String USE_SEED_KEY = "useRandomSeed";
+
+    static final String SEED_KEY = "randomSeed";
+
     /** List contains the columns to include. */
-    private ArrayList<String> m_list;
+    private List<String> m_list;
 
     private boolean m_keepAll = false;
 
@@ -210,11 +215,6 @@ public class FuzzyClusterNodeModel extends NodeModel {
     private double m_delta;
 
     /*
-     * DataTableSpec of the input datatable.
-     */
-    private DataTableSpec m_spec;
-
-    /*
      * Lambda value for automatic update process of noise delta.
      */
     private double m_lambda;
@@ -267,6 +267,11 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * Flag indicating whether cluster quality measures should be calculated.
      */
     private boolean m_measures;
+
+
+    private boolean m_useRandomSeed;
+
+    private int m_randomSeed;
 
     /**
      * Constructor, remember parent and initialize status.
@@ -328,8 +333,8 @@ public class FuzzyClusterNodeModel extends NodeModel {
         }
 
         int nrRows = indata.getRowCount();
-        m_spec = indata.getDataTableSpec();
-        int nrCols = m_spec.getNumColumns();
+        DataTableSpec spec = indata.getDataTableSpec();
+        int nrCols = spec.getNumColumns();
 
         List<String> learningCols = new LinkedList<String>();
         List<String> ignoreCols = new LinkedList<String>();
@@ -338,7 +343,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
         final int[] columns = new int[m_list.size()];
         for (int i = 0; i < nrCols; i++) {
             // if include does contain current column name
-            String colname = m_spec.getColumnSpec(i).getName();
+            String colname = spec.getColumnSpec(i).getName();
             if (m_list.contains(colname)) {
                 columns[z] = i;
                 z++;
@@ -348,7 +353,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
             }
         }
 
-        ColumnRearranger colre = new ColumnRearranger(m_spec);
+        ColumnRearranger colre = new ColumnRearranger(spec);
         colre.keepOnly(columns);
 
         BufferedDataTable filteredtable =
@@ -357,7 +362,13 @@ public class FuzzyClusterNodeModel extends NodeModel {
 
         // get dimension of feature space
         int dimension = filteredtable.getDataTableSpec().getNumColumns();
-        m_fcmAlgo.init(nrRows, dimension, filteredtable);
+
+        Random random = new Random();
+        if (m_useRandomSeed) {
+            random.setSeed(m_randomSeed);
+        }
+
+        m_fcmAlgo.init(nrRows, dimension, filteredtable, random);
 
         // main loop - until clusters stop changing or maxNrIterations reached
         int currentIteration = 0;
@@ -399,7 +410,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
                             m_fcmAlgo.getweightMatrix(), data, m_fuzzifier);
         }
 
-        ColumnRearranger colRearranger = new ColumnRearranger(m_spec);
+        ColumnRearranger colRearranger = new ColumnRearranger(spec);
         CellFactory membershipFac = new ClusterMembershipFactory(m_fcmAlgo);
         colRearranger.append(membershipFac);
         BufferedDataTable result =
@@ -426,9 +437,9 @@ public class FuzzyClusterNodeModel extends NodeModel {
             inPMMLSpec = inPMMLPort.getSpec();
         }
         PMMLPortObjectSpec pmmlOutSpec
-                = createPMMLPortObjectSpec(inPMMLSpec, m_spec, learningCols);
+                = createPMMLPortObjectSpec(inPMMLSpec, spec, learningCols);
         PMMLPortObject outPMMLPort
-                = new PMMLPortObject(pmmlOutSpec, inPMMLPort, m_spec);
+                = new PMMLPortObject(pmmlOutSpec, inPMMLPort, spec);
         outPMMLPort.addModelTranslater(new PMMLClusterTranslator(
                 ComparisonMeasure.squaredEuclidean, m_nrClusters,
                         clustercentres, null, new LinkedHashSet<String>(
@@ -479,6 +490,9 @@ public class FuzzyClusterNodeModel extends NodeModel {
         }
         settings.addBoolean(MEMORY_KEY, m_memory);
         settings.addBoolean(MEASURES_KEY, m_measures);
+
+        settings.addBoolean(USE_SEED_KEY, m_useRandomSeed);
+        settings.addInt(SEED_KEY, m_randomSeed);
     }
 
     /**
@@ -517,6 +531,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
                           + "\'Used Attributes\' in the dialog");
             }
         }
+        // random seed was introduced with 2.8, therefore not checks possible
     }
 
     /**
@@ -568,6 +583,9 @@ public class FuzzyClusterNodeModel extends NodeModel {
             m_measures = settings.getBoolean(MEASURES_KEY);
         }
         m_keepAll = settings.getBoolean(CFGKEY_KEEPALL, false);
+
+        m_useRandomSeed = settings.getBoolean(USE_SEED_KEY, false);
+        m_randomSeed = settings.getInt(SEED_KEY, new Random().nextInt());
     }
 
     /**

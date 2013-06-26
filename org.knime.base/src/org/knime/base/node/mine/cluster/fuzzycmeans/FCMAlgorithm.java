@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   17.07.2006 (cebron): created
  */
@@ -64,11 +64,11 @@ import org.knime.core.node.ExecutionContext;
 
 /**
  * The Fuzzy c-means algorithm.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public class FCMAlgorithm {
-    
+
     // dimension of input space
     private int m_dimension;
 
@@ -119,7 +119,7 @@ public class FCMAlgorithm {
      * Distance object to calculate distance
      */
     private Distance m_distance;
-    
+
     /*
      * Total change in the cluster prototypes
      */
@@ -127,7 +127,7 @@ public class FCMAlgorithm {
 
     /**
      * Constructor for a Fuzzy c-means algorithm (with no noise detection).
-     * 
+     *
      * @param nrClusters the number of cluster prototypes to use
      * @param fuzzifier allows the clusters to overlap
      */
@@ -145,7 +145,7 @@ public class FCMAlgorithm {
      * automatically or if it should be calculated automatically. The last
      * parameter specifies either the delta value or the lambda value, depending
      * on the boolean flag in the parameter before.
-     * 
+     *
      * @param nrClusters the number of clusters to use
      * @param fuzzifier the fuzzifier, controls how much the clusters can
      *            overlap
@@ -170,13 +170,29 @@ public class FCMAlgorithm {
     /**
      * Inits the cluster centers and the weight matrix. Must be called before
      * the iterations are carried out.
-     * 
+     *
      * @param nrRows number of rows in the DataTable
      * @param dimension the dimension of the table
      * @param table the table to use.
      */
     public void init(final int nrRows, final int dimension,
             final DataTable table) {
+        init(nrRows, dimension, table, new Random());
+    }
+
+
+    /**
+     * Inits the cluster centers and the weight matrix. Must be called before
+     * the iterations are carried out.
+     *
+     * @param nrRows number of rows in the DataTable
+     * @param dimension the dimension of the table
+     * @param table the table to use.
+     * @param random a random number generator for initializing the cluster centers
+     * @since 2.8
+     */
+    public void init(final int nrRows, final int dimension,
+            final DataTable table, final Random random) {
         m_nrRows = nrRows;
         m_dimension = dimension;
 
@@ -184,11 +200,10 @@ public class FCMAlgorithm {
         m_weightMatrix = new double[m_nrRows][m_nrClusters];
 
         m_clusters = new double[m_nrClusters][];
-        Random rand = new Random();
         for (int c = 0; c < m_nrClusters; c++) {
             m_clusters[c] = new double[m_dimension];
             for (int i = 0; i < m_clusters[c].length; i++) {
-                m_clusters[c][i] = rand.nextDouble();
+                m_clusters[c][i] = random.nextDouble();
             }
         }
         m_table = table;
@@ -198,10 +213,23 @@ public class FCMAlgorithm {
     /**
      * An easier initialization, the rowcount and dimension are determined by
      * iterating over the table.
-     * 
+     *
      * @param table the table to use.
      */
     public void init(final DataTable table) {
+        init(table, new Random());
+    }
+
+
+    /**
+     * An easier initialization, the rowcount and dimension are determined by
+     * iterating over the table.
+     *
+     * @param table the table to use
+     * @param random a random number generator for initializing the cluster centers
+     * @since 2.8
+     */
+    public void init(final DataTable table, final Random random) {
         int nrdimensions = table.getDataTableSpec().getNumColumns();
         int nrRows = 0;
         Iterator<?> it = table.iterator();
@@ -209,13 +237,13 @@ public class FCMAlgorithm {
             it.next();
             nrRows++;
         }
-        init(nrRows, nrdimensions, table);
+        init(nrRows, nrdimensions, table, random);
     }
 
     /**
      * Does one iteration in the Fuzzy c-means algorithm. First, the weight
      * matrix is updated and then the cluster prototypes are recalculated.
-     * 
+     *
      * @param exec execution context to cancel the execution
      * @return the total change in the cluster prototypes. Allows to decide
      * whether the algorithm can be stopped.
@@ -309,7 +337,7 @@ public class FCMAlgorithm {
     /*
      * Helper method for the quadratic distance between a double-array and a
      * DataRow
-     * 
+     *
      */
     private double getDistance(final double[] vector1, final DataRow vector2) {
         double distance = 0.0;
@@ -335,11 +363,9 @@ public class FCMAlgorithm {
         double sumupdate = 0;
         // for each cluster center
         for (int c = 0; c < m_nrClusters; c++) {
-            if (m_noise) {
+            if (m_noise && (c == m_nrClusters - 1)) {
                 // stop updating at noise cluster position.
-                if (c == m_nrClusters - 1) {
-                    break;
-                }
+                break;
             }
             for (int j = 0; j < m_dimension; j++) {
                 sumNumerator[j] = 0;
@@ -423,11 +449,11 @@ public class FCMAlgorithm {
         }
         return max;
     }
-   
+
     ///////////////////////////////////////////////
-    // protected getted and setters 
+    // protected getted and setters
     ///////////////////////////////////////////////
-    
+
     /**
      * @return dimension of input space
      */
@@ -462,7 +488,7 @@ public class FCMAlgorithm {
      * @param column the column
      * @param value the value to set.
      */
-    protected void setClusterValue(final int cluster, 
+    protected void setClusterValue(final int cluster,
             final int column, final double value) {
         m_clusters[cluster][column] = value;
     }
@@ -476,7 +502,7 @@ public class FCMAlgorithm {
 
     /**
      * Sets a value in the weight matrix.
-     * 
+     *
      * @param row the row.
      * @param column the column.
      * @param value the value to set.
@@ -513,7 +539,7 @@ public class FCMAlgorithm {
     protected double getDelta() {
         return m_delta;
     }
-    
+
     /**
      * @param delta new delta value.
      */
@@ -541,7 +567,7 @@ public class FCMAlgorithm {
     protected void addTotalChange(final double change) {
         m_totalChange += change;
     }
-    
+
     /**
      * @param value ne wvalue for total change in prototypes.
      */
@@ -549,5 +575,5 @@ public class FCMAlgorithm {
         m_totalChange = value;
     }
 
-    
+
 }

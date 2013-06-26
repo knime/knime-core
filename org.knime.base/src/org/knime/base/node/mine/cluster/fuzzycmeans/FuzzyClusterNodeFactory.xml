@@ -37,6 +37,9 @@
     <option name="Fuzzifier">
     Indicates how much the clusters are allowed to overlap.
     </option>
+    <option name="Use seed for random initialization">
+    If this checkbox is set, a seed can be set for initializing the cluster prototypes.
+    </option>
     <option name="Induce noise cluster">
     Whether to induce a noise cluster or not.
     </option>
