@@ -61,12 +61,14 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipFile;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -111,6 +113,21 @@ public class BatchExecutorTestcase {
     @Before
     public void beforeEachTest() throws IOException {
         csvOut.delete();
+    }
+
+    /**
+     * Executed after each test, checks that there are no open workflows dangling around.
+     */
+    @After
+    public void afterEachTest() {
+        Collection<NodeContainer> openWorkflows = WorkflowManager.ROOT.getNodeContainers();
+        if (openWorkflows.size() > 1) {
+            throw new AssertionError(openWorkflows.size() + " dangling workflows detected: " + openWorkflows);
+        } else if (openWorkflows.size() == 1) {
+            if (!openWorkflows.iterator().next().getName().contains("MetaNode Repository")) {
+                throw new AssertionError(openWorkflows.size() + " dangling workflows detected: " + openWorkflows);
+            }
+        }
     }
 
     /**

@@ -130,6 +130,7 @@ public class NodeContextTest {
      */
     @AfterClass
     public static void teardownClass() {
+        wfm.getParent().removeProject(wfm.getID());
         executorService.shutdown();
     }
 
@@ -155,6 +156,7 @@ public class NodeContextTest {
     public void checkForEmptyContextStackAfter() {
         assertThat("Node context stack not empty after test", NodeContext.getContext(), is(nullValue()));
     }
+
 
     /**
      * Tests basic operations on the context stack.
