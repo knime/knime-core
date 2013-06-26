@@ -56,12 +56,10 @@ import java.net.URI;
 import java.net.URL;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.svgexport.WorkflowSVGExport;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Plugin class that is initialized when the plugin project is started. It will
@@ -122,21 +120,7 @@ public class CorePlugin implements BundleActivator {
         return m_isWrapColumnHeaderInTableViews;
     }
 
-    private ServiceTracker<WorkflowSVGExport, WorkflowSVGExport> m_svgExportServiceTracker;
-
-    /** The service instance to save a workflow as svg. Needed during workflow-saving. The returned instance is null
-     * if no such service is registered (editor.svgexport plugin not installed or running in headless mode).
-     * @return The service instance or null.
-     * @since 2.8
-     */
-    public WorkflowSVGExport getWorkflowSVGExport() {
-        if (m_svgExportServiceTracker != null) {
-            return m_svgExportServiceTracker.getService();
-        }
-        return null;
-    }
-
-    /**
+        /**
      * {@inheritDoc}
      */
     @Override
@@ -144,9 +128,6 @@ public class CorePlugin implements BundleActivator {
         throws Exception {
 
         instance = this;
-        m_svgExportServiceTracker = new ServiceTracker<WorkflowSVGExport, WorkflowSVGExport>(context,
-                WorkflowSVGExport.class, null);
-        m_svgExportServiceTracker.open();
 
         try {
             Class.forName("org.eclipse.core.runtime.Platform");
@@ -173,8 +154,6 @@ public class CorePlugin implements BundleActivator {
     @Override
     public void stop(final BundleContext context) throws Exception {
         instance = null;
-        m_svgExportServiceTracker.close();
-        m_svgExportServiceTracker = null;
     }
 
     /**

@@ -171,7 +171,10 @@ import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200;
+import org.knime.core.node.workflow.svgexport.WorkflowSVGExport;
 import org.knime.core.util.Pointer;
+import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.core.nodeprovider.NodeProvider.EventListener;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
@@ -1204,8 +1207,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         // this flag is evaluated at the end of this method
         boolean wasInProgress = false;
         try {
-            final File file = new File(new File(fileResource),
-                    WorkflowPersistor.WORKFLOW_FILE);
+            final File workflowDir = new File(fileResource);
+            final File file = new File(workflowDir, WorkflowPersistor.WORKFLOW_FILE);
 
             // If something fails an empty workflow is created
             // except when cancellation occurred
@@ -1219,6 +1222,17 @@ public class WorkflowEditor extends GraphicalEditor implements
             wasInProgress = state.isExecutionInProgress() && !state.isExecutingRemotely();
 
             ps.run(true, false, saveWorflowRunnable);
+            // this code is usually (always?) run in the UI thread but in case it's not we schedule in UI thread
+            // (SVG export always in UI thread)
+            Display.getDefault().syncExec(new Runnable() {
+                @Override
+                public void run() {
+                    if (m_manager.isProject()) {
+                        final File svgFile = new File(workflowDir, WorkflowPersistor.SVG_WORKFLOW_FILE);
+                        saveSVGImage(svgFile);
+                    }
+                }
+            });
             // after saving the workflow, check for the import marker
             // and delete it
 
@@ -1300,6 +1314,19 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
         }
     }
+
+    private void saveSVGImage(final File svgFile) {
+        // If SVGExporter available try to export
+        WorkflowSVGExport svgExporter = KNIMEEditorPlugin.getDefault().getSvgExport();
+        if (svgExporter != null) {
+            try {
+                svgExporter.exportToSVG(this, svgFile);
+            } catch (Exception e) {
+                NodeLogger.getLogger(WorkflowPersistorVersion200.class).error("Could not save workflow SVG", e);
+            }
+        }
+    }
+
 
     /** {@inheritDoc} */
     @Override

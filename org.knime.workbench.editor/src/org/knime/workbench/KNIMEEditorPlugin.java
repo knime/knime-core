@@ -61,7 +61,6 @@ import org.knime.core.node.workflow.svgexport.WorkflowSVGExport;
 import org.knime.workbench.core.util.ThreadsafeImageRegistry;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
 /**
  * The main plugin class for the editor.
@@ -77,7 +76,7 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
     private static KNIMEEditorPlugin plugin;
 
     /** SVG service provided by *.editor.svgexport fragment, see #start method. */
-    private ServiceRegistration<WorkflowSVGExport> m_registerService;
+    private WorkflowSVGExport m_svgExport;
 
     /**
      * The constructor.
@@ -113,11 +112,10 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
         if (svgExportClass != null) {
             try {
                 Object instance = svgExportClass.newInstance();
-                WorkflowSVGExport service = (WorkflowSVGExport)instance;
-                m_registerService = context.registerService(WorkflowSVGExport.class, service, null);
+                m_svgExport = (WorkflowSVGExport)instance;
             } catch (Exception e) {
-                NodeLogger.getLogger(getClass()).error("Unable to register " + WorkflowSVGExport.class.getName()
-                    + " service", e);
+                NodeLogger.getLogger(getClass()).error(
+                    "Unable to instantiate" + WorkflowSVGExport.class.getName() + " implementation", e);
             }
         }
     }
@@ -132,8 +130,6 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
     @Override
     public void stop(final BundleContext context) throws Exception {
         super.stop(context);
-        m_registerService.unregister();
-        m_registerService = null;
         plugin = null;
     }
 
@@ -144,6 +140,14 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
      */
     public static KNIMEEditorPlugin getDefault() {
         return plugin;
+    }
+
+    /**
+     * @return the svgExport used to put SVG thumbnail in workflow folder when flow is saved. Might be null if
+     * *.editor.svgexport fragment is not available.
+     */
+    public WorkflowSVGExport getSvgExport() {
+        return m_svgExport;
     }
 
     /**

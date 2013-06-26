@@ -49,30 +49,31 @@
  */
 package org.knime.core.node.workflow.svgexport;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.knime.core.node.workflow.WorkflowManager;
-
 /**
- * Exports workflows into SVGs.
+ * Exception if the workflow SVG export did fail.
  *
  * <p>No public API.
  *
  * @author Bernd Wiswedel, Patrick Winter, KNIME.com, Zurich, Switzerland
  * @since 2.8
  */
-public interface WorkflowSVGExport {
+public final class SVGExportException extends Exception {
 
-    /**
-     * Export an SVG to the given workflow.
-     *
-     * @param wfm Workflow manager to the workflow that should be exported
-     * @param svgOutputFile The file where the SVG will be saved
-     * @throws IOException If an I/O error occurs
-     * @throws SVGExportException If the workflow could not be exported
+    /** Serial version UID. */
+    private static final long serialVersionUID = 9177867648521655424L;
+
+    /** Create an exception based on a message.
+     * @param message The message
      */
-    public void exportToSVG(final WorkflowManager wfm, final File svgOutputFile) throws IOException,
-        SVGExportException;
+    public SVGExportException(final String message) {
+        super(message);
+    }
+
+    /** Create an exception based on another exception.
+     * @param exception The exception
+     */
+    public SVGExportException(final Exception exception) {
+        super(exception);
+    }
 
 }
