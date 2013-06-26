@@ -119,14 +119,13 @@ public class BatchExecutorTestcase {
      * Executed after each test, checks that there are no open workflows dangling around.
      */
     @After
-    public void afterEachTest() {
+    public void checkDanglingWorkflows() {
         Collection<NodeContainer> openWorkflows = WorkflowManager.ROOT.getNodeContainers();
         if (openWorkflows.size() > 1) {
             throw new AssertionError(openWorkflows.size() + " dangling workflows detected: " + openWorkflows);
-        } else if (openWorkflows.size() == 1) {
-            if (!openWorkflows.iterator().next().getName().contains("MetaNode Repository")) {
-                throw new AssertionError(openWorkflows.size() + " dangling workflows detected: " + openWorkflows);
-            }
+        } else if ((openWorkflows.size() == 1)
+            && !openWorkflows.iterator().next().getName().contains("MetaNode Repository")) {
+            throw new AssertionError(openWorkflows.size() + " dangling workflows detected: " + openWorkflows);
         }
     }
 
