@@ -57,8 +57,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.svgexport.WorkflowSVGExport;
 import org.knime.workbench.core.util.ThreadsafeImageRegistry;
+import org.knime.workbench.editor2.svgexport.WorkflowSVGExport;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.osgi.framework.BundleContext;
 

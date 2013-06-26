@@ -47,7 +47,7 @@
  *
  * Created on Jun 24, 2013 by Patrick Winter
  */
-package org.knime.core.node.workflow.svgexport;
+package org.knime.workbench.editor2.svgexport;
 
 /**
  * Exception if the workflow SVG export did fail.
