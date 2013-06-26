@@ -418,7 +418,7 @@ public final class ThreadUtils {
     public static <V> Callable<V> callableWithContext(final Callable<V> callable, final boolean logUnnecessaryCalls) {
         if (callable instanceof CallableWithContext) {
             if (logUnnecessaryCalls) {
-                logger.debug("Unnecessary call to callableWithContext, because not context is available",
+                logger.debug("Unnecessary call to callableWithContext, because it is already a CallableWithContext",
                     new UnnecessaryCallException());
             }
             return callable;
