@@ -1096,7 +1096,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
          * {@inheritDoc}
          */
         @Override
-        protected void internalRun() {
+        protected void runWithContext() {
             try {
                 m_resultNode = buildTree(m_table, m_exec, m_depth,
                         (SplitQualityMeasure) m_splitQM.clone(),

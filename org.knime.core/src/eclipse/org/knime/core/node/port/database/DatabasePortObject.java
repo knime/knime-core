@@ -65,7 +65,6 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.SwingWorker;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.node.BufferedDataTable;
@@ -80,6 +79,7 @@ import org.knime.core.node.port.PortObjectZipOutputStream;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.BufferedDataTableView;
 import org.knime.core.node.workflow.CredentialsProvider;
+import org.knime.core.util.SwingWorkerWithContext;
 
 /**
  * Class used as database port object holding a {@link BufferedDataTable}
@@ -240,15 +240,15 @@ public class DatabasePortObject implements PortObject {
                         + " rows from database..."), BorderLayout.NORTH);
                 panels[0].repaint();
                 panels[0].revalidate();
-                new SwingWorker<DataTable, Void>() {
+                new SwingWorkerWithContext<DataTable, Void>() {
                     /** {@inheritDoc} */
                     @Override
-                    protected DataTable doInBackground() throws Exception {
+                    protected DataTable doInBackgroundWithContext() throws Exception {
                         return getDataTable(value.get());
                     }
                     /** {@inheritDoc} */
                     @Override
-                    protected void done() {
+                    protected void doneWithContext() {
                         DataTable dt = null;
                         try {
                             dt = super.get();

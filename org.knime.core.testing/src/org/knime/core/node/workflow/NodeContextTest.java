@@ -73,6 +73,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.swing.SwingWorker;
+
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.junit.After;
@@ -85,6 +87,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.SwingWorkerWithContext;
 import org.knime.core.util.ThreadUtils;
 import org.knime.core.util.ThreadUtils.CallableWithContext;
 import org.knime.core.util.ThreadUtils.RunnableWithContext;
@@ -373,7 +376,7 @@ public class NodeContextTest {
 
         Runnable runnableWithContext = new RunnableWithContext() {
             @Override
-            protected void internalRun() {
+            protected void runWithContext() {
                 // do nothing
             }
         };
@@ -409,7 +412,7 @@ public class NodeContextTest {
 
         Callable<Object> callableWithContext = new CallableWithContext<Object>() {
             @Override
-            protected Object internalCall() {
+            protected Object callWithContext() {
                 return null;
             }
         };
@@ -547,11 +550,9 @@ public class NodeContextTest {
         assertThat("Context inheritance via wrapped ExecutorService.submit(Runnable) does now work properly",
                    ref.get(), is(NodeContext.getContext()));
 
-
         executor.submit(runnable, new Integer(1)).get();
         assertThat("Context inheritance via wrapped ExecutorService.submit(Runnable) does now work properly",
                    ref.get(), is(NodeContext.getContext()));
-
 
         Callable<NodeContext> callable = new Callable<NodeContext>() {
             @Override
@@ -580,6 +581,71 @@ public class NodeContextTest {
         assertThat("Context inheritance via wrapped ExecutorService.invokeAny does now work properly", ctx,
                    is(NodeContext.getContext()));
 
+        NodeContext.removeLastContext();
+    }
+
+    /**
+     * Tests if {@link SwingWorkerWithContext} works as expected.
+     *
+     * @throws Exception if something goes wrong
+     */
+    @Test
+    public void testSwingWorkerWithContext() throws Exception {
+        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+
+        NodeContext.pushContext(containers.get(0)); // Table Creator
+        final AtomicReference<NodeContext> refInBackground = new AtomicReference<NodeContext>();
+        final AtomicReference<NodeContext> refInDone = new AtomicReference<NodeContext>();
+        final AtomicReference<NodeContext> refInProcess = new AtomicReference<NodeContext>();
+        final ReentrantLock lock = new ReentrantLock();
+        final Condition condition = lock.newCondition();
+
+        SwingWorker<NodeContext, NodeContext> worker = new SwingWorkerWithContext<NodeContext, NodeContext>() {
+            @Override
+            protected NodeContext doInBackgroundWithContext() throws Exception {
+                refInBackground.set(NodeContext.getContext());
+                publish(NodeContext.getContext());
+                return NodeContext.getContext();
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            protected void doneWithContext() {
+                lock.lock();
+                try {
+                    refInDone.set(NodeContext.getContext());
+                    condition.signalAll();
+                } finally {
+                    lock.unlock();
+                }
+
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            protected void processWithContext(final List<NodeContext> chunks) {
+                refInProcess.set(NodeContext.getContext());
+            }
+        };
+
+        lock.lock();
+        try {
+            worker.execute();
+            condition.await();
+        } finally {
+            lock.unlock();
+        }
+
+        assertThat("Wrong node context in doInBackgroundWithContext", refInBackground.get(),
+                   is(sameInstance(NodeContext.getContext())));
+        assertThat("Wrong node context in doneWithContext", refInDone.get(),
+                   is(sameInstance(NodeContext.getContext())));
+        assertThat("Wrong node context in processWithContext", refInProcess.get(),
+                   is(sameInstance(NodeContext.getContext())));
         NodeContext.removeLastContext();
     }
 

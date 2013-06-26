@@ -75,6 +75,103 @@ public final class ThreadUtils {
     private ThreadUtils() {
     }
 
+    private static final class ExecutorServiceWithContext implements ExecutorService{
+        private final ExecutorService m_executorService;
+
+        ExecutorServiceWithContext(final ExecutorService executorService) {
+            m_executorService = executorService;
+        }
+
+        @Override
+        public void execute(final Runnable command) {
+            m_executorService.execute(runnableWithContext(command));
+        }
+
+        @Override
+        public <T> Future<T> submit(final Runnable task, final T result) {
+            return m_executorService.submit(runnableWithContext(task), result);
+        }
+
+        @Override
+        public Future<?> submit(final Runnable task) {
+            return m_executorService.submit(runnableWithContext(task));
+        }
+
+        @Override
+        public <T> Future<T> submit(final Callable<T> task) {
+            return m_executorService.submit(callableWithContext(task));
+        }
+
+        @Override
+        public List<Runnable> shutdownNow() {
+            return m_executorService.shutdownNow();
+        }
+
+        @Override
+        public void shutdown() {
+            m_executorService.shutdown();
+        }
+
+        @Override
+        public boolean isTerminated() {
+            return m_executorService.isTerminated();
+        }
+
+        @Override
+        public boolean isShutdown() {
+            return m_executorService.isShutdown();
+        }
+
+        @Override
+        public <T> T invokeAny(final Collection<? extends Callable<T>> tasks, final long timeout,
+            final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            List<Callable<T>> wrappedTasks = new ArrayList<Callable<T>>();
+            for (Callable<T> t : tasks) {
+                wrappedTasks.add(callableWithContext(t));
+            }
+
+            return m_executorService.invokeAny(wrappedTasks, timeout, unit);
+        }
+
+        @Override
+        public <T> T invokeAny(final Collection<? extends Callable<T>> tasks) throws InterruptedException,
+            ExecutionException {
+            List<Callable<T>> wrappedTasks = new ArrayList<Callable<T>>();
+            for (Callable<T> t : tasks) {
+                wrappedTasks.add(callableWithContext(t));
+            }
+
+            return m_executorService.invokeAny(wrappedTasks);
+        }
+
+        @Override
+        public <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks, final long timeout,
+            final TimeUnit unit) throws InterruptedException {
+            List<Callable<T>> wrappedTasks = new ArrayList<Callable<T>>();
+            for (Callable<T> t : tasks) {
+                wrappedTasks.add(callableWithContext(t));
+            }
+
+            return m_executorService.invokeAll(wrappedTasks, timeout, unit);
+        }
+
+        @Override
+        public <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks)
+            throws InterruptedException {
+            List<Callable<T>> wrappedTasks = new ArrayList<Callable<T>>();
+            for (Callable<T> t : tasks) {
+                wrappedTasks.add(callableWithContext(t));
+            }
+
+            return m_executorService.invokeAll(wrappedTasks);
+        }
+
+        @Override
+        public boolean awaitTermination(final long timeout, final TimeUnit unit) throws InterruptedException {
+            return m_executorService.awaitTermination(timeout, unit);
+        }
+    }
+
     @SuppressWarnings("serial")
     private static final class UnnecessaryCallException extends Exception {
         // empty on purpose, this exception class is only for getting a stacktrace for the log
@@ -86,7 +183,7 @@ public final class ThreadUtils {
      *
      * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
      */
-    public static abstract class RunnableWithContext implements Runnable {
+    public abstract static class RunnableWithContext implements Runnable {
         private final NodeContext m_nodeContext;
 
         /**
@@ -107,7 +204,7 @@ public final class ThreadUtils {
         public final void run() {
             NodeContext.pushContext(m_nodeContext);
             try {
-                internalRun();
+                runWithContext();
             } finally {
                 NodeContext.removeLastContext();
             }
@@ -116,7 +213,7 @@ public final class ThreadUtils {
         /**
          * This method should do the same as {@link Runnable#run()}.
          */
-        protected abstract void internalRun();
+        protected abstract void runWithContext();
     }
 
     /**
@@ -126,7 +223,7 @@ public final class ThreadUtils {
      * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
      * @param <V> the result type of method <tt>call</tt>
      */
-    public static abstract class CallableWithContext<V> implements Callable<V> {
+    public abstract static class CallableWithContext<V> implements Callable<V> {
         private final NodeContext m_nodeContext;
 
         /**
@@ -147,7 +244,7 @@ public final class ThreadUtils {
         public final V call() throws Exception {
             NodeContext.pushContext(m_nodeContext);
             try {
-                return internalCall();
+                return callWithContext();
             } finally {
                 NodeContext.removeLastContext();
             }
@@ -160,7 +257,7 @@ public final class ThreadUtils {
          * @throws Exception if unable to compute a result
          * @see Callable#call()
          */
-        protected abstract V internalCall() throws Exception;
+        protected abstract V callWithContext() throws Exception;
     }
 
     /**
@@ -169,7 +266,7 @@ public final class ThreadUtils {
      *
      * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
      */
-    public static abstract class ThreadWithContext extends Thread {
+    public abstract static class ThreadWithContext extends Thread {
         private final NodeContext m_nodeContext;
 
         /**
@@ -207,7 +304,7 @@ public final class ThreadUtils {
         public final void run() {
             NodeContext.pushContext(m_nodeContext);
             try {
-                internalRun();
+                runWithContext();
             } finally {
                 NodeContext.removeLastContext();
             }
@@ -216,10 +313,10 @@ public final class ThreadUtils {
         /**
          * This method should do the same as {@link Thread#run()}.
          */
-        protected abstract void internalRun();
+        protected abstract void runWithContext();
     }
 
-    private final static class RunnableWithContextImpl extends RunnableWithContext {
+    private static final class RunnableWithContextImpl extends RunnableWithContext {
         private final Runnable m_origRunnable;
 
         RunnableWithContextImpl(final Runnable origRunnable) {
@@ -230,12 +327,12 @@ public final class ThreadUtils {
          * {@inheritDoc}
          */
         @Override
-        protected void internalRun() {
+        protected void runWithContext() {
             m_origRunnable.run();
         }
     }
 
-    private final static class CallableWithContextImpl<V> extends CallableWithContext<V> {
+    private static final class CallableWithContextImpl<V> extends CallableWithContext<V> {
         private final Callable<V> m_origCallable;
 
         CallableWithContextImpl(final Callable<V> origRunnable) {
@@ -246,7 +343,7 @@ public final class ThreadUtils {
          * {@inheritDoc}
          */
         @Override
-        protected V internalCall() throws Exception {
+        protected V callWithContext() throws Exception {
             return m_origCallable.call();
         }
     }
@@ -298,6 +395,7 @@ public final class ThreadUtils {
      * executed by a new thread or an {@link ExecutorService} where the executing thread does not have a node context.
      *
      * @param callable any callable
+     * @param <V> the Callable's return type
      * @return a {@link Callable} that wraps the original {@link Callable} and sets the node context
      */
     public static <V> Callable<V> callableWithContext(final Callable<V> callable) {
@@ -313,6 +411,7 @@ public final class ThreadUtils {
      * @param logUnnecessaryCalls <code>true</code> if unnecessary calls to this method should be logged. A call is
      *            unnecessary if the runnable is already a {@link RunnableWithContext} or if no {@link NodeContext} is
      *            available
+     * @param <V> the Callable's return type
      *
      * @return a {@link Callable} that wraps the original {@link Callable} and sets the node context
      */
@@ -352,102 +451,13 @@ public final class ThreadUtils {
 
     /**
      * Wraps the given executor service and ensures that the runnable is run within the context of the caller of the
-     * varioues execute, submit and invoke methods.
+     * various execute, submit and invoke methods.
      *
      * @param executorService any {@link ExecutorService}
      * @return an {@link ExecutorService} that wraps the original executor service
      */
     public static ExecutorService executorServiceWithContext(final ExecutorService executorService) {
-        return new ExecutorService() {
-            @Override
-            public void execute(final Runnable command) {
-                executorService.execute(runnableWithContext(command));
-            }
-
-            @Override
-            public <T> Future<T> submit(final Runnable task, final T result) {
-                return executorService.submit(runnableWithContext(task), result);
-            }
-
-            @Override
-            public Future<?> submit(final Runnable task) {
-                return executorService.submit(runnableWithContext(task));
-            }
-
-            @Override
-            public <T> Future<T> submit(final Callable<T> task) {
-                return executorService.submit(callableWithContext(task));
-            }
-
-            @Override
-            public List<Runnable> shutdownNow() {
-                return executorService.shutdownNow();
-            }
-
-            @Override
-            public void shutdown() {
-                executorService.shutdown();
-            }
-
-            @Override
-            public boolean isTerminated() {
-                return executorService.isTerminated();
-            }
-
-            @Override
-            public boolean isShutdown() {
-                return executorService.isShutdown();
-            }
-
-            @Override
-            public <T> T invokeAny(final Collection<? extends Callable<T>> tasks, final long timeout,
-                final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-                List<Callable<T>> wrappedTasks = new ArrayList<Callable<T>>();
-                for (Callable<T> t : tasks) {
-                    wrappedTasks.add(callableWithContext(t));
-                }
-
-                return executorService.invokeAny(wrappedTasks, timeout, unit);
-            }
-
-            @Override
-            public <T> T invokeAny(final Collection<? extends Callable<T>> tasks) throws InterruptedException,
-                ExecutionException {
-                List<Callable<T>> wrappedTasks = new ArrayList<Callable<T>>();
-                for (Callable<T> t : tasks) {
-                    wrappedTasks.add(callableWithContext(t));
-                }
-
-                return executorService.invokeAny(wrappedTasks);
-            }
-
-            @Override
-            public <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks, final long timeout,
-                final TimeUnit unit) throws InterruptedException {
-                List<Callable<T>> wrappedTasks = new ArrayList<Callable<T>>();
-                for (Callable<T> t : tasks) {
-                    wrappedTasks.add(callableWithContext(t));
-                }
-
-                return executorService.invokeAll(wrappedTasks, timeout, unit);
-            }
-
-            @Override
-            public <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks)
-                throws InterruptedException {
-                List<Callable<T>> wrappedTasks = new ArrayList<Callable<T>>();
-                for (Callable<T> t : tasks) {
-                    wrappedTasks.add(callableWithContext(t));
-                }
-
-                return executorService.invokeAll(wrappedTasks);
-            }
-
-            @Override
-            public boolean awaitTermination(final long timeout, final TimeUnit unit) throws InterruptedException {
-                return executorService.awaitTermination(timeout, unit);
-            }
-        };
+        return new ExecutorServiceWithContext(executorService);
     }
 
     /**
@@ -459,7 +469,7 @@ public final class ThreadUtils {
     public static Thread threadWithContext(final Runnable runnable) {
         return new ThreadWithContext() {
             @Override
-            protected void internalRun() {
+            protected void runWithContext() {
                 runnable.run();
             }
         };
@@ -475,7 +485,7 @@ public final class ThreadUtils {
     public static Thread threadWithContext(final Runnable runnable, final String name) {
         return new ThreadWithContext(name) {
             @Override
-            protected void internalRun() {
+            protected void runWithContext() {
                 runnable.run();
             }
         };

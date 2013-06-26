@@ -82,7 +82,6 @@ import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -102,6 +101,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.util.SwingWorkerWithContext;
 
 /**
  * The view of the Decision Tree to Image node.
@@ -552,7 +552,7 @@ final class TreeEnsembleRegressionLearnerNodeView extends
     }
     /////////////////////////////////////////////////////
 
-    private final class UpdateTreeWorker extends SwingWorker<DecisionTreeNode, Void> {
+    private final class UpdateTreeWorker extends SwingWorkerWithContext<DecisionTreeNode, Void> {
 
         private final TreeEnsembleModel m_model;
         private final int m_index;
@@ -569,7 +569,7 @@ final class TreeEnsembleRegressionLearnerNodeView extends
 
         /** {@inheritDoc} */
         @Override
-        protected DecisionTreeNode doInBackground() throws Exception {
+        protected DecisionTreeNode doInBackgroundWithContext() throws Exception {
             if (m_model == null || m_index < 0
                     || m_index >= m_model.getNrModels()) {
                 return null;
@@ -581,7 +581,7 @@ final class TreeEnsembleRegressionLearnerNodeView extends
 
         /** {@inheritDoc} */
         @Override
-        protected void done() {
+        protected void doneWithContext() {
             if (!isCancelled()) {
                 DecisionTreeNode root = null;
                 try {

@@ -52,7 +52,6 @@ package org.knime.core.util;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -60,7 +59,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.MalformedURLException;
@@ -811,19 +809,6 @@ public final class FileUtil {
             rootDir = new File(KNIMEConstants.getKNIMETempDir());
         }
         return rootDir;
-    }
-
-    private static final void printToLoggerDEBUG(final String str) {
-        try {
-            BufferedReader r =  new BufferedReader(new StringReader(str));
-            String line;
-            while ((line = r.readLine()) != null) {
-                LOGGER.debug(line);
-            }
-            r.close();
-        } catch (IOException e) {
-            LOGGER.error("Error printing string to DEBUG log", e);
-        }
     }
 
     /**
