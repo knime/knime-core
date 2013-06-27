@@ -1287,6 +1287,14 @@ public final class Node implements NodeModelWarningListener {
         }
     }
 
+    /** Getter for the currently set node warning message in the corresponding
+     * NodeModel.
+     * @return The currently set warning message (may be null).
+     */
+    public String getWarningMessageFromModel() {
+        return m_model.getWarningMessage();
+    }
+
     /**
      * Resets this node without re-configuring it.
      */
