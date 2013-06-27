@@ -177,18 +177,23 @@ public class FilterViewContributionItem extends ControlContribution implements
             update = true;
         }
 
-        if (str.length() == 0) {
-            m_viewer.collapseAll();
-            shouldExpand = false;
-            update = true;
-        }
-        m_filter.setQueryString(str);
-
-        if (update) {
-            m_viewer.refresh();
-            if (shouldExpand) {
-                m_viewer.expandAll();
+        m_viewer.getControl().setRedraw(false);
+        try {
+            if (str.length() == 0) {
+                m_viewer.collapseAll();
+                shouldExpand = false;
+                update = true;
             }
+            m_filter.setQueryString(str);
+
+            if (update) {
+                m_viewer.refresh();
+                if (shouldExpand) {
+                    m_viewer.expandAll();
+                }
+            }
+        } finally {
+            m_viewer.getControl().setRedraw(true);
         }
     }
 
