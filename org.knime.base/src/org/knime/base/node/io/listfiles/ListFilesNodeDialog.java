@@ -100,8 +100,6 @@ public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener 
 
     private static final int PANEL_WIDTH = 585;
 
-    private final JPanel m_outerpanel;
-
     private JComboBox m_locations;
 
     private JComboBox m_extensionField;
@@ -122,10 +120,8 @@ public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener 
      * Creates a new List FilesNodeDialog.
      */
     protected ListFilesNodeDialog() {
-        super();
-        m_outerpanel = createPanel();
         super.removeTab("Options");
-        super.addTabAt(0, "Options", m_outerpanel);
+        super.addTabAt(0, "Options", createPanel());
     }
 
     private JPanel createPanel() {
@@ -246,8 +242,7 @@ public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener 
                 // sets the path in the file text field.
                 String[] newFile = popupFileChooser();
                 if (newFile != null) {
-                    m_locations.getEditor().setItem(getStringForBox(newFile));
-
+                    m_locations.setSelectedItem(getStringForBox(newFile));
                 }
             }
         });
@@ -316,7 +311,18 @@ public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener 
      * @return Array containing the File locations
      **/
     protected String[] popupFileChooser() {
-        String startingDir = "";
+        Object selection = m_locations.getSelectedItem();
+        String startingDir;
+        if (selection != null) {
+            String[] parts = selection.toString().split(";");
+            if (parts.length == 1) {
+                startingDir = parts[0];
+            } else {
+                startingDir = new File(parts[0]).getParent();
+            }
+        } else {
+            startingDir = "";
+        }
         JFileChooser chooser;
         chooser = new JFileChooser(startingDir);
         chooser.setMultiSelectionEnabled(true);
@@ -368,7 +374,7 @@ public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener 
                     currentFile = new File(URIUtil.decode(s));
                 } catch (URIException ex) {
                     throw new InvalidSettingsException("\"" + s
-                            + "\" does not exist or is not a directory");
+                            + "\" does not exist or is not a directory", ex);
                 }
                 if (!currentFile.isDirectory()) {
                     throw new InvalidSettingsException("\"" + s
@@ -383,7 +389,7 @@ public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener 
         set.setRecursive(m_recursive.isSelected());
         set.setCaseSensitive(m_caseSensitive.isSelected());
         String extensions = m_extensionField.getEditor().getItem().toString();
-        set.setExtensionsString(extensions.toString());
+        set.setExtensionsString(extensions);
 
         // save the selected radio-Button
         Filter filter;
@@ -401,7 +407,7 @@ public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener 
                 Pattern.compile(pattern);
             } catch (PatternSyntaxException pse) {
                 throw new InvalidSettingsException("Error in pattern: ('"
-                        + pse.getMessage());
+                        + pse.getMessage(), pse);
             }
             filter = Filter.RegExp;
         } else if (m_filterWildCardsRadio.isSelected()) {
@@ -416,7 +422,7 @@ public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener 
                 Pattern.compile(pattern);
             } catch (PatternSyntaxException pse) {
                 throw new InvalidSettingsException("Error in pattern: '"
-                        + pse.getMessage());
+                        + pse.getMessage(), pse);
             }
             filter = Filter.Wildcards;
         } else { // one button must be selected though
@@ -434,9 +440,9 @@ public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener 
      * @return
      */
     private String getStringForBox(final String[] fileurls) {
-        StringBuffer buff = new StringBuffer();
+        StringBuilder buff = new StringBuilder();
         for (int i = 0; i < fileurls.length; i++) {
-            buff.append(fileurls[i] + ";");
+            buff.append(fileurls[i]).append(';');
         }
         return buff.toString();
     }
