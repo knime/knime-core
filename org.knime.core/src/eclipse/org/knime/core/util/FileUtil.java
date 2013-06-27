@@ -355,7 +355,14 @@ public final class FileUtil {
         }
         // now that we tried to clear the directory out, we can try to delete it
         // again
-        return dirWithCanonicalParent.delete();
+        if (dirWithCanonicalParent.delete()) {
+            // remove from temporary files, if they are in the list
+            TEMP_FILES.remove(dir);
+            TEMP_FILES.remove(dirWithCanonicalParent);
+            return true;
+        } else {
+            return false;
+        }
     } // deleteRecursively(File)
 
     // size of read buffer when reading/writing from/to a zip stream
