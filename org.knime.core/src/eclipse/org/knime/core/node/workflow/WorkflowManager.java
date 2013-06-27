@@ -779,7 +779,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // connection enters a meta node
                     // (can't have optional ins -- no reset required)
                     WorkflowManager destWFM = (WorkflowManager)destNC;
-                    destWFM.configureNodesConnectedToPortInWFM(destPort);
+                    destWFM.configureNodesConnectedToPortInWFM(Collections.singleton(destPort));
                     Set<Integer> outPorts = destWFM.getWorkflow().connectedOutPorts(destPort);
                     configureNodeAndPortSuccessors(dest, outPorts,
                         /* do not configure dest itself */false, true);
@@ -1073,7 +1073,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             } else if (destNC instanceof WorkflowManager) {
                 // connection entered a meta node
                 WorkflowManager destWFM = (WorkflowManager)destNC;
-                destWFM.configureNodesConnectedToPortInWFM(destPort);
+                destWFM.configureNodesConnectedToPortInWFM(Collections.singleton(destPort));
                 // also configure successors (too broad again, see above)
                 configureNodeAndSuccessors(dest, false);
             } else {
@@ -5181,39 +5181,29 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 //        return configurationChanged == configurationChanged;
     }
 
-    /** Configure the nodes in WorkflowManager, connected to a specific port.
-     * If index == -1, configure all nodes.
+    /** Configure the nodes in WorkflowManager, connected to a specific set of ports.
+     * If ports == null, configure all nodes.
      * Note that this routine does NOT configure any nodes connected in
      * the parent WFM.
      *
      * @param wfm the WorkflowManager
-     * @param inportIndex index of incoming port (or -1 if not known)
+     * @param inportIndeces indeces of incoming ports (or null if not known)
      */
-    private void configureNodesConnectedToPortInWFM(final int inportIndex) {
+    private void configureNodesConnectedToPortInWFM(final Set<Integer> inportIndeces) {
         synchronized (m_workflowMutex) {
-            // configure node only if it's not yet completely executed.
-            // we can not avoid this: WFM with only WFM_THROUGH connections
-            // will act as "EXECUTED" after reset and hence not configure.
-//            if (this.getState().equals(State.EXECUTED)) {
-//                return;
-//            }
-            // TODO: we can put our own
-            // objects onto the stack here (to clean up later)?
-            LOGGER.debug("Attempting to configure meta node " + this.getID()
-                    + " port " + inportIndex + " successors.");
-            LOGGER.debug("List=" + m_workflow.getConnectionsBySource(getID()));
-            for (ConnectionContainer cc
-                                : m_workflow.getConnectionsBySource(getID())) {
-                if ((inportIndex < 0) || (cc.getSourcePort() == inportIndex)) {
-                    NodeID succNode = cc.getDest();
-                    if (!cc.getType().isLeavingWorkflow()) {
-                        LOGGER.debug("Attempting to configure node "
-                                + succNode);
-                        configureNodeAndPortSuccessors(succNode, null, true, false);
-                    }
+            ArrayList<NodeAndInports> nodes = m_workflow.findAllConnectedNodes(inportIndeces);
+            for (NodeAndInports nai : nodes) {
+                NodeContainer nc = m_workflow.getNode(nai.getID());
+                assert nc != null;
+                if (nc instanceof SingleNodeContainer) {
+                    configureSingleNodeContainer((SingleNodeContainer)nc, false);
+                } else {
+                    ((WorkflowManager)nc).configureNodesConnectedToPortInWFM(nai.getInports());
                 }
             }
-            // and finalize stuff
+            // and finalize state
+            // (note that we must call this even if no node was configured since a predecessor
+            // and a THROUGH_Connetion can affect that state of this node, too.)
             checkForNodeStateChanges(true);
             // TODO: clean up flow object stack after we leave WFM?
         }
@@ -5293,7 +5283,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 } else {
                     assert nc instanceof WorkflowManager;
-                    ((WorkflowManager)nc).configureNodesConnectedToPortInWFM(-1);
+                    ((WorkflowManager)nc).configureNodesConnectedToPortInWFM(null);
                     freshlyConfiguredNodes.add(nc.getID());
                 }
             }
