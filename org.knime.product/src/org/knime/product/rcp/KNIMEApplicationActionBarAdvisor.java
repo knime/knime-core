@@ -169,7 +169,6 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     public KNIMEApplicationActionBarAdvisor(
             final IActionBarConfigurer configurer) {
         super(configurer);
-        configurer.getMenuManager().remove("org.eclipse.ui.run");
     }
 
     /**
