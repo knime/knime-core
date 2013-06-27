@@ -210,7 +210,9 @@ public class RPropNodeModel extends NodeModel {
     /* default */false);
 
     private final SettingsModelBoolean m_useRandomSeed = new SettingsModelBoolean(USE_SEED_KEY, false);
-    private final SettingsModelInteger m_randomSeed = new SettingsModelInteger(SEED_KEY, new Random().nextInt());
+
+    private final SettingsModelInteger m_randomSeed = new SettingsModelInteger(SEED_KEY,
+        (int)(2 * (Math.random() - 0.5) * Integer.MAX_VALUE));
 
     /*
      * Flag for regression
@@ -589,8 +591,18 @@ public class RPropNodeModel extends NodeModel {
         m_nrHiddenNeuronsperLayer.loadSettingsFrom(settings);
         m_classcol.loadSettingsFrom(settings);
         m_ignoreMV.loadSettingsFrom(settings);
-        m_useRandomSeed.loadSettingsFrom(settings);
-        m_randomSeed.loadSettingsFrom(settings);
+
+        // new in 2.8
+        try {
+            m_useRandomSeed.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            // use current/default value
+        }
+        try {
+            m_randomSeed.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            // use current/default value
+        }
     }
 
     /**
