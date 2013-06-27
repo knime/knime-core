@@ -10,13 +10,13 @@
             <head>
                 <title>
                     Node description for
-                    <xsl:value-of select="name" />
+                    <xsl:value-of select="t:name" />
                 </title>
                 <style type="text/css"><xsl:value-of select="$css" /></style>
             </head>
             <body>
                 <h1>
-                    <xsl:value-of select="name" />
+                    <xsl:value-of select="t:name" />
                 </h1>
                 
                 <xsl:if test="@deprecated = 'true'">
