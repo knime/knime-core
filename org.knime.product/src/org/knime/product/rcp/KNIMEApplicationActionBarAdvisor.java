@@ -308,7 +308,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         // 3. View menu
         menuBar.add(viewMenu);
         // Add a group marker indicating where action set menus will appear.
-        menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        GroupMarker marker = new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS);
+        marker.setVisible(false);
+        menuBar.add(marker);
         // last: Help menu
         menuBar.add(helpMenu);
 
@@ -376,7 +378,6 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
                 }
             }
         });
-
     }
 
     /**

@@ -52,10 +52,14 @@ package org.knime.product.rcp;
 
 import org.eclipse.core.runtime.IProduct;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.eclipse.ui.internal.WorkbenchWindow;
 import org.eclipse.ui.internal.ide.IDEInternalPreferences;
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin;
 
@@ -111,6 +115,24 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         // dependency to org.eclipse.ui.ide (otherwise we don't see our
         // Resources)
         org.eclipse.ui.ide.IDE.registerAdapters();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void postWindowOpen() {
+        super.postWindowOpen();
+        IWorkbenchWindow workbenchWindow =  PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        IMenuManager menuManager =  ((WorkbenchWindow)workbenchWindow).getMenuBarManager();
+        menuManager.remove("org.eclipse.search.menu");
+        menuManager.remove("org.eclipse.ui.run");
+        menuManager.remove("org.eclipse.ui.run"); // yes, it's in there twice
+        menuManager.remove("navigate");
+        menuManager.updateAll(true);
+//        for (IContributionItem item : menuManager.getItems()) {
+//            System.out.println(item.getId() + " " + item.isVisible());
+//        }
     }
 
     @SuppressWarnings("restriction")
