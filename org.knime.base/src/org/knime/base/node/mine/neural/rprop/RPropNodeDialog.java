@@ -50,8 +50,6 @@
  */
 package org.knime.base.node.mine.neural.rprop;
 
-import java.util.Random;
-
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -117,7 +115,8 @@ public class RPropNodeDialog extends DefaultNodeSettingsPane {
         /* label: */"Ignore Missing Values"));
 
         final SettingsModelBoolean useRandomSeed = new SettingsModelBoolean(RPropNodeModel.USE_SEED_KEY, false);
-        final SettingsModelInteger randomSeed = new SettingsModelInteger(RPropNodeModel.SEED_KEY, new Random().nextInt());
+        final SettingsModelInteger randomSeed =
+            new SettingsModelInteger(RPropNodeModel.SEED_KEY, (int)(2 * (Math.random() - 0.5) * Integer.MAX_VALUE));
         randomSeed.setEnabled(useRandomSeed.getBooleanValue());
 
         useRandomSeed.addChangeListener(new ChangeListener() {

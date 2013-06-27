@@ -54,7 +54,6 @@ import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -474,7 +473,8 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
 
         boolean useSeed = settings.getBoolean(FuzzyClusterNodeModel.USE_SEED_KEY, false);
         m_useRandomSeed.setSelected(useSeed);
-        int seed = settings.getInt(FuzzyClusterNodeModel.SEED_KEY, new Random().nextInt());
+        int seed =
+            settings.getInt(FuzzyClusterNodeModel.SEED_KEY, (int)(2 * (Math.random() - 0.5) * Integer.MAX_VALUE));
         m_randomSeed.setValue(seed);
         m_randomSeed.setEnabled(useSeed);
     }

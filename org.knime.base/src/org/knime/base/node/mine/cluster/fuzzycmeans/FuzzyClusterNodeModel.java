@@ -585,7 +585,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
         m_keepAll = settings.getBoolean(CFGKEY_KEEPALL, false);
 
         m_useRandomSeed = settings.getBoolean(USE_SEED_KEY, false);
-        m_randomSeed = settings.getInt(SEED_KEY, new Random().nextInt());
+        m_randomSeed = settings.getInt(SEED_KEY, (int)(2 * (Math.random() - 0.5) * Integer.MAX_VALUE));
     }
 
     /**
