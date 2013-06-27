@@ -113,6 +113,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.FileUtil;
@@ -154,7 +155,7 @@ public final class JavaSnippet {
     private JavaSnippetFields m_fields;
 
 
-    private File m_tempClassPathDir;
+    private final File m_tempClassPathDir;
 
     private NodeLogger m_logger;
 
@@ -164,6 +165,16 @@ public final class JavaSnippet {
      */
     public JavaSnippet() {
         m_fields = new JavaSnippetFields();
+        File tempDir;
+        try {
+            tempDir = FileUtil.createTempDir("knime_javasnippet");
+        } catch (IOException ex) {
+            NodeLogger.getLogger(getClass()).error(
+                "Could not create temporary directory for Java Snippet: " + ex.getMessage(), ex);
+            // use the standard temp directory instead
+            tempDir = new File(KNIMEConstants.getKNIMETempDir());
+        }
+        m_tempClassPathDir = tempDir;
     }
 
 
@@ -300,12 +311,9 @@ public final class JavaSnippet {
      * Create the java-file of the snippet.
      */
     private JavaFileObject createJSnippetFile() throws IOException {
-        m_tempClassPathDir = FileUtil.createTempDir("knime_javasnippet");
-        m_tempClassPathDir.deleteOnExit();
-        m_snippetFile = new File(m_tempClassPathDir.getPath()
-                + File.separator + "JSnippet.java");
+        m_snippetFile = new File(m_tempClassPathDir, "JSnippet.java");
         FileOutputStream fos = new FileOutputStream(m_snippetFile);
-        OutputStreamWriter out = new OutputStreamWriter(fos);
+        OutputStreamWriter out = new OutputStreamWriter(fos, Charset.forName("UTF-8"));
         try {
             try {
                 Document doc = getDocument();
@@ -342,15 +350,8 @@ public final class JavaSnippet {
      * @throws IOException if jar file cannot be created
      */
     private File createJSnippetJarFile() throws IOException {
-
-            File tempClassPathDir = FileUtil
-                    .createTempDir("knime_javasnippet");
-            tempClassPathDir.deleteOnExit();
-            File jarFile = new File(tempClassPathDir.getPath()
-                    + File.separator + "jsnippet.jar");
-            jarFile.deleteOnExit();
-            FileOutputStream out = new FileOutputStream(jarFile);
-            JarOutputStream jar = new JarOutputStream(out);
+            File jarFile = new File(m_tempClassPathDir, "jsnippet.jar");
+            JarOutputStream jar = new JarOutputStream(new FileOutputStream(jarFile));
 
             Collection<Object> classes = new ArrayList<Object>();
             classes.add(AbstractJSnippet.class);
@@ -366,11 +367,8 @@ public final class JavaSnippet {
             DefaultMutableTreeNode root = createTree(classes);
             try {
                 createJar(root, jar, null);
-            } catch (IOException ioe) {
-                throw ioe;
             } finally {
                 jar.close();
-                out.close();
             }
 
 
@@ -486,8 +484,7 @@ public final class JavaSnippet {
 
     /** Create the document with the default skeleton. */
     private GuardedDocument createDocument() {
-        GuardedDocument doc = new JavaSnippetDocument();
-        return doc;
+        return new JavaSnippetDocument();
     }
 
     /** Initialize document with information from the settings. */
@@ -890,7 +887,7 @@ public final class JavaSnippet {
      * @param jarFiles the jar files
      */
     public void setJarFiles(final String[] jarFiles) {
-        m_jarFiles = jarFiles;
+        m_jarFiles = jarFiles.clone();
         // reset cache
         m_jarFileCache = null;
     }
@@ -931,12 +928,10 @@ public final class JavaSnippet {
             for (Diagnostic<? extends JavaFileObject> d
                     : digsCollector.getDiagnostics()) {
                 boolean isSnippet = this.isSnippetSource(d.getSource());
-                if (isSnippet) {
-                    if (d.getKind().equals(javax.tools.Diagnostic.Kind.ERROR)) {
-                        msg.append("Error: ");
-                        msg.append(d.getMessage(Locale.US));
-                        msg.append('\n');
-                    }
+                if (isSnippet && d.getKind().equals(javax.tools.Diagnostic.Kind.ERROR)) {
+                    msg.append("Error: ");
+                    msg.append(d.getMessage(Locale.US));
+                    msg.append('\n');
                 }
             }
 
@@ -975,6 +970,14 @@ public final class JavaSnippet {
         m_logger = logger;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        FileUtil.deleteRecursively(m_tempClassPathDir);
+        super.finalize();
+    }
 }
 
 
