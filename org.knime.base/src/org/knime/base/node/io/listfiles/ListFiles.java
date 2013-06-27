@@ -101,10 +101,6 @@ public class ListFiles {
     /** counter for the all ready read Files. */
     private int m_analyzedFiles;
 
-    /** Help flag to allow entering the first Folder,
-     *  if recursive is not checked. */
-    private boolean m_firstLocation = true;
-
     /** extensions in case of extension filter. */
     private String[] m_extensions;
 
@@ -162,9 +158,8 @@ public class ListFiles {
         }
         m_analyzedFiles = 0;
         m_currentRowID = 0;
-        m_firstLocation = true;
         for (File f : locations) {
-            addLocation(f, exec);
+            addLocation(f, exec, true);
         }
 
         m_dc.close();
@@ -177,21 +172,20 @@ public class ListFiles {
      * @param loc folder to be analyzed
      * @throws CanceledExecutionException if user canceld.
      */
-    private void addLocation(final File location, final ExecutionContext exec)
+    private void addLocation(final File location, final ExecutionContext exec, final boolean isRootDir)
             throws CanceledExecutionException {
         m_analyzedFiles++;
         exec.setProgress(m_analyzedFiles + " file(s) analyzed");
         exec.checkCanceled();
 
         if (location.isDirectory()) {
-            if (m_settings.isRecursive() || m_firstLocation) {
-                m_firstLocation = false;
+            if (m_settings.isRecursive() || isRootDir) {
                 // if location has further files
                 File[] listFiles = location.listFiles();
                 if (listFiles != null) {
                     for (File loc : listFiles) {
                         // recursive
-                        addLocation(loc, exec);
+                        addLocation(loc, exec, false);
                     }
                 }
             }
