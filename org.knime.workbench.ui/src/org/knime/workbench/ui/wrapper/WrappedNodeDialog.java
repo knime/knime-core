@@ -160,10 +160,12 @@ public class WrappedNodeDialog extends Dialog {
                 NodeContext.pushContext(m_nodeContainer);
             }
         });
+        NodeContext.pushContext(m_nodeContainer);
         try {
             m_dialogPane.onOpen();
             return super.open();
         } finally {
+            NodeContext.removeLastContext();
             ViewUtils.invokeAndWaitInEDT(new Runnable() {
                 @Override
                 public void run() {
