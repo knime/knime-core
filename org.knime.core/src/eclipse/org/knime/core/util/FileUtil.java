@@ -94,7 +94,7 @@ public final class FileUtil {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(FileUtil.class);
 
-    private static final Set<File> TEMP_FILES = new HashSet<File>();
+    private static final Set<File> TEMP_FILES = Collections.synchronizedSet(new HashSet<File>());
 
     private static final Random RANDOM = new Random();
 
