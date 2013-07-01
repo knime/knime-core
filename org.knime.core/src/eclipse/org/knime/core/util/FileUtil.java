@@ -65,10 +65,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
 import java.util.Stack;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -93,7 +94,9 @@ public final class FileUtil {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(FileUtil.class);
 
-    private static final List<File> TEMP_FILES;
+    private static final Set<File> TEMP_FILES = new HashSet<File>();
+
+    private static final Random RANDOM = new Random();
 
     // timeout when connecting to or reading from URLs
     private static int urlTimeout = 1000;
@@ -102,7 +105,6 @@ public final class FileUtil {
             .startsWith("Windows");
 
     static {
-        TEMP_FILES = new ArrayList<File>();
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
@@ -115,7 +117,7 @@ public final class FileUtil {
                         f.delete();
                     } else if (f.isDirectory()) {
                         try {
-                            deleteRecursively(f);
+                            deleteRecursively(f, false);
                         } catch (Exception ex) {
                             LOGGER.error(ex.getMessage(), ex);
                         }
@@ -300,6 +302,10 @@ public final class FileUtil {
      * @return If that was successful.
      */
     public static boolean deleteRecursively(final File dir) {
+        return deleteRecursively(dir, true);
+    }
+
+    private static boolean deleteRecursively(final File dir, final boolean removeFromTempfiles) {
         String name = dir.getName();
         File dirWithCanonicalParent = dir;
         File parentFile = dir.getParentFile();
@@ -343,22 +349,21 @@ public final class FileUtil {
                 // empty, we want to try to delete the link before we try
                 // anything
                 boolean deleted = file.delete();
-                if (!deleted) {
+                if (!deleted && file.isDirectory()) {
                     // deleting the file failed, so maybe it's a non-empty
-                    // directory
-                    if (file.isDirectory()) {
-                        deleteRecursively(file);
-                    }
-                    // otherwise, there's nothing else we can do
+                    // directory; otherwise, there's nothing else we can do
+                    deleteRecursively(file, removeFromTempfiles);
                 }
             }
         }
         // now that we tried to clear the directory out, we can try to delete it
         // again
         if (dirWithCanonicalParent.delete()) {
-            // remove from temporary files, if they are in the list
-            TEMP_FILES.remove(dir);
-            TEMP_FILES.remove(dirWithCanonicalParent);
+            if (removeFromTempfiles) {
+                // remove from temporary files, if they are in the list
+                TEMP_FILES.remove(dir);
+                TEMP_FILES.remove(dirWithCanonicalParent);
+            }
             return true;
         } else {
             return false;
@@ -540,10 +545,9 @@ public final class FileUtil {
             final ZipOutputStream zout, final File f, final String entryName,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        InputStream in = null;
+        InputStream in = new FileInputStream(f);
         try {
             exec.setProgress("Adding file " + entryName);
-            in = new FileInputStream(f);
             zout.putNextEntry(new ZipEntry(entryName));
             int read;
             while ((read = in.read(buf)) >= 0) {
@@ -561,9 +565,7 @@ public final class FileUtil {
             return false;
         } finally {
             zout.closeEntry();
-            if (in != null) {
-                in.close();
-            }
+            in.close();
         }
         return true;
     }
@@ -577,7 +579,7 @@ public final class FileUtil {
      * {@link #ZIP_INCLUDEALL_FILTER}
      *
      */
-    public static interface ZipFileFilter {
+    public interface ZipFileFilter {
         /**
          * Called with each file in the to-be-zipped directory.
          *
@@ -585,7 +587,7 @@ public final class FileUtil {
          * @return true, if the file should be added to the zip file, false, if
          *         it should be skipped/excluded.
          */
-        public boolean include(final File f);
+        boolean include(final File f);
     }
 
     /**
@@ -717,19 +719,20 @@ public final class FileUtil {
             } else {
                 File f = new File(dir, name);
                 File parentDir = f.getParentFile();
-                if (!parentDir.exists()) {
-                    if (!parentDir.mkdirs()) {
-                        throw new IOException("Could not create directory '"
-                                + parentDir.getAbsolutePath() + "'.");
-                    }
+                if (!parentDir.exists() && !parentDir.mkdirs()) {
+                    throw new IOException("Could not create directory '"
+                            + parentDir.getAbsolutePath() + "'.");
                 }
 
                 OutputStream out = new FileOutputStream(f);
-                int read;
-                while ((read = zipStream.read(buf)) >= 0) {
-                    out.write(buf, 0, read);
+                try {
+                    int read;
+                    while ((read = zipStream.read(buf)) >= 0) {
+                        out.write(buf, 0, read);
+                    }
+                } finally {
+                    out.close();
                 }
-                out.close();
             }
         }
         zipStream.close();
@@ -789,7 +792,8 @@ public final class FileUtil {
         }
         File tempDir;
         do {
-            tempDir = new File(rootDir, prefix + System.currentTimeMillis() + TEMP_FILES.size());
+            tempDir =
+                new File(rootDir, prefix + Long.toHexString(Thread.currentThread().hashCode() ^ RANDOM.nextLong()));
         } while (tempDir.exists());
         if (!tempDir.mkdirs()) {
             throw new IOException("Cannot create temporary directory '" + tempDir.getCanonicalPath() + "'.");
@@ -894,15 +898,11 @@ public final class FileUtil {
         boolean b = true;
 
         // if the x on a directory is removed recursion must happen first
-        if (executable != null && !executable.booleanValue()) {
-            if (f.isDirectory()) {
-                File[] dirList = f.listFiles(); // null if no read permissions
-                if (dirList != null) {
-                    for (File entry : dirList) {
-                        b &=
-                                chmod(entry, readable, writable, executable,
-                                        ownerOnly);
-                    }
+        if ((executable != null) && !executable.booleanValue() && f.isDirectory()) {
+            File[] dirList = f.listFiles(); // null if no read permissions
+            if (dirList != null) {
+                for (File entry : dirList) {
+                    b &= chmod(entry, readable, writable, executable, ownerOnly);
                 }
             }
         }
@@ -998,7 +998,7 @@ public final class FileUtil {
             File file = new File(loc);
             if (!file.exists()) {
                 throw new InvalidSettingsException(
-                        "No such file or URL: " + loc);
+                        "No such file or URL: " + loc, mue);
             }
             stream = new FileInputStream(file);
         }
