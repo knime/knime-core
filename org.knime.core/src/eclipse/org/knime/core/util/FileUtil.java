@@ -785,7 +785,7 @@ public final class FileUtil {
      * @return an abstract pathname denoting a newly-created empty directory
      * @throws IOException if the directory could not be created
      */
-    public static synchronized File createTempDir(final String prefix, final File dir) throws IOException {
+    public static File createTempDir(final String prefix, final File dir) throws IOException {
         File rootDir = dir;
         if (rootDir == null) {
             rootDir = getTmpDir();
@@ -832,8 +832,8 @@ public final class FileUtil {
      * @throws IOException see {@link File#createTempFile(String, String)}
      * @since 2.8
      */
-    public static synchronized File
-        createTempFile(final String prefix, final String suffix, final boolean deleteOnExit) throws IOException {
+    public static File createTempFile(final String prefix, final String suffix, final boolean deleteOnExit)
+        throws IOException {
         File tmpFile = File.createTempFile(prefix, suffix, getTmpDir());
         if (deleteOnExit) {
             TEMP_FILES.add(tmpFile);
@@ -851,7 +851,7 @@ public final class FileUtil {
      * @throws IOException see {@link #createTempFile(String, String)}
      * @since 2.8
      */
-    public static synchronized File createTempFile(final String prefix, final String suffix) throws IOException {
+    public static File createTempFile(final String prefix, final String suffix) throws IOException {
         return createTempFile(prefix, suffix, true);
     }
 
