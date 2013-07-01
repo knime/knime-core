@@ -52,6 +52,7 @@ package org.knime.product.rcp;
 
 import org.eclipse.core.runtime.IProduct;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.action.CoolBarManager;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -120,19 +121,24 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("restriction")
     @Override
     public void postWindowOpen() {
         super.postWindowOpen();
         IWorkbenchWindow workbenchWindow =  PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-        IMenuManager menuManager =  ((WorkbenchWindow)workbenchWindow).getMenuBarManager();
+        IMenuManager menuManager = ((WorkbenchWindow)workbenchWindow).getMenuBarManager();
         menuManager.remove("org.eclipse.search.menu");
         menuManager.remove("org.eclipse.ui.run");
         menuManager.remove("org.eclipse.ui.run"); // yes, it's in there twice
         menuManager.remove("navigate");
         menuManager.updateAll(true);
-//        for (IContributionItem item : menuManager.getItems()) {
-//            System.out.println(item.getId() + " " + item.isVisible());
-//        }
+
+
+        CoolBarManager toolbarManager = ((WorkbenchWindow)workbenchWindow).getCoolBarManager();
+        toolbarManager.remove("org.eclipse.debug.ui.launchActionSet");
+        toolbarManager.remove("org.eclipse.ui.edit.text.actionSet.annotationNavigation");
+        toolbarManager.remove("org.eclipse.ui.edit.text.actionSet.navigation");
+        toolbarManager.update(true);
     }
 
     @SuppressWarnings("restriction")
