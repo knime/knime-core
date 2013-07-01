@@ -45,7 +45,6 @@
         		<xs:enumeration value="Predictor" />
         		<xs:enumeration value="Manipulator" />
         		<xs:enumeration value="Visualizer" />
-        		<xs:enumeration value="Meta" />
         		<xs:enumeration value="LoopStart" />
         		<xs:enumeration value="LoopEnd" />
         		<xs:enumeration value="QuickForm" />
