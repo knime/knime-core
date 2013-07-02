@@ -85,7 +85,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.commons.io.FileUtils;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -4426,7 +4425,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {
                     @Override
                     public void run() {
-                        FileUtils.deleteQuietly(m_tmpDir);
+                        FileUtil.deleteRecursively(m_tmpDir);
                     }
                 });
             }
