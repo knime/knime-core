@@ -6,9 +6,11 @@
     
     <fullDescription>
         <intro>
-        This nodes takes the data either from one of the input port or
-        concatenates the two (or three) tables if more than one branch
-        contains data.
+        This nodes forwards the input from the first port if the execution was
+        successful. If execution on the top branch failed (and a matching try
+        node was connected before the failing node!) then the input from the
+        second port will be forwarded and the second variable outport will contain
+        information about the observed error.
         </intro>
     </fullDescription>
     
