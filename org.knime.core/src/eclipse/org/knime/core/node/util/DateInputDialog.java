@@ -71,14 +71,17 @@ import com.toedter.calendar.JDateChooser;
 /**
  * This class supplies a GUI-Component (JPanel) which allows the input of an Date. The dialog itself is quite flexible
  * as it allows the date to be optional as well as the time-fields hour, minute and second. To enable easy saving and
- * loading of the options, the selected date as well as the current status ( status code (getIntForStatus) has to be
- * saved only. The date will be returned in UTC-Time.
- **
+ * loading of the options, the selected date as well as the current status (status code (getIntForStatus) has to be
+ * saved only.
+ *
+ * The date will be returned in UTC-Time.
+ *
  *
  * @author Sebastian Peter, University of Konstanz
  * @since 2.8
  */
 public class DateInputDialog extends JPanel {
+
     public static enum Mode {
         NODATE, NOTIME, HOURS, MINUTES, SECONDS
     };
@@ -139,7 +142,7 @@ public class DateInputDialog extends JPanel {
      * Returns how the dialog is configured, meaning which fields are displayed in it.
      *
      *
-     * @return Mode Enum, describing the visible fields of the dialog.
+     * @return Mode enum, describing the visible fields of the dialog.
      */
     public Mode getIntitalMode() {
         return m_usedMode;
@@ -164,7 +167,7 @@ public class DateInputDialog extends JPanel {
     /**
      * This method should be called during the loading of the Dialog, if the last used date should be displayed again.
      * Therefore the date is needed in the timesInMillies format additionally the Mode (the status of the selected time
-     * fields is needed).
+     * fields) is needed.
      *
      * @param date Time in milliseconds
      * @param mode Enum to specify which fields of the dialog are enabled and selected
@@ -196,12 +199,13 @@ public class DateInputDialog extends JPanel {
 
         switch (mode) {
             case NODATE:
-                m_useDate.setSelected(false);
                 m_useDate.setEnabled(true);
                 if (m_isOptional) {
+                    m_useDate.setSelected(false);
                     m_startDate.setEnabled(false);
                     m_useHours.setEnabled(false);
                 } else {
+                    m_useDate.setSelected(true);
                     m_startDate.setEnabled(true);
                     m_useHours.setEnabled(true);
                 }
@@ -283,7 +287,7 @@ public class DateInputDialog extends JPanel {
     /**
      * Constructs a new optional DateInputDialog, displaying the fields according to the mode.
      *
-     * @param mode Specifys the visible time fields in the dialog
+     * @param mode Specifies the visible time fields in the dialog
      */
     public DateInputDialog(final Mode mode) {
         this(mode, true);
@@ -293,7 +297,7 @@ public class DateInputDialog extends JPanel {
      * Constructs a new DateInputDialog, displaying the fields according to the mode. Furthermore the date can be
      * mandatory (optional = false) or or optional (optional = true) in this case the user can skip specify a Date.
      *
-     * @param mode Enum specifying the visible time fields in the dialog
+     * @param mode enum specifying the visible time fields in the dialog
      * @param optional true, if no date has to be specified by the user.
      */
     public DateInputDialog(final Mode mode, final boolean optional) {
@@ -320,7 +324,7 @@ public class DateInputDialog extends JPanel {
     }
 
     /**
-     * Creates a new DateInpitDialog, displaying all Fields (date, hour, minute, second) and the date is optional.
+     * Creates a new DateInputDialog, displaying all Fields (date, hour, minute, second) and the date is optional.
      *
      */
     public DateInputDialog() {
@@ -333,7 +337,7 @@ public class DateInputDialog extends JPanel {
     }
 
     /**
-     * This Method returns false if no date is specified, in case the component is optional.
+     * This method returns false if no date is specified, in case the component is optional.
      *
      *
      * @return true if an date is selected, else false
@@ -350,7 +354,7 @@ public class DateInputDialog extends JPanel {
      * fields in the Date object are set to .
      *
      *
-     * @return the specified date, or null iff optional & no date selected.
+     * @return the specified date, or null if optional and no date selected.
      */
     public Date getSelectedDate() {
         int hours = 0;
@@ -377,7 +381,7 @@ public class DateInputDialog extends JPanel {
 
     /**
      *
-     * This method converts the status code to the according Enum representation.
+     * This method converts the status code to the according enum representation.
      *
      * @param status - Status to convert
      * @return Enum representation for the given status code.
@@ -405,7 +409,7 @@ public class DateInputDialog extends JPanel {
      * 0: no Date selected 1: Date but not hours 2: Date and Hours, no Minutes... 3: Date, hours and Minutes 4:
      * Everything is selected
      *
-     * The status code can then be converted in the Mode Enum via getModeForStatus-Method.
+     * The status code can then be converted in the Mode enum via getModeForStatus-Method.
      *
      * @return status code for the currently selected fields
      */
