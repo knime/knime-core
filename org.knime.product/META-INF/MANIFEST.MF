@@ -24,6 +24,7 @@ Require-Bundle: org.apache.xerces;bundle-version="[2.9.0,2.10.0)",
  org.knime.workbench.editor;bundle-version="[2.5.0,3.0.0)",
  org.knime.workbench.repository;bundle-version="[2.5.0,3.0.0)",
  org.knime.workbench.ui;bundle-version="[2.5.0,3.0.0)",
+ org.knime.workbench.explorer.view;bundle-version="[5.0.0,6.0.0)",
  org.eclipse.swt;bundle-version="[3.6.1,4.0.0)",
  org.eclipse.jface;bundle-version="[3.6.1,4.0.0)",
  org.eclipse.ui.workbench;bundle-version="[3.6.1,4.0.0)",
@@ -37,6 +38,7 @@ Require-Bundle: org.apache.xerces;bundle-version="[2.9.0,2.10.0)",
  org.eclipse.equinox.p2.core;bundle-version="[2.0.0,3.0.0)",
  org.eclipse.equinox.p2.operations;bundle-version="[2.0.0,3.0.0)",
  org.eclipse.equinox.p2.ui;bundle-version="[2.0.0,3.0.0)",
- org.eclipse.equinox.p2.engine;bundle-version="[2.0.0,3.0.0)"
+ org.eclipse.equinox.p2.engine;bundle-version="[2.0.0,3.0.0)",
+ org.eclipse.core.filesystem;bundle-version="[1.3.100,2.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

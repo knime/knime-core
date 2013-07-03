@@ -56,13 +56,17 @@ import java.util.Properties;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.intro.IIntroManager;
 import org.eclipse.ui.intro.IIntroPart;
 import org.eclipse.ui.intro.IIntroSite;
 import org.eclipse.ui.intro.config.IIntroAction;
+import org.knime.workbench.explorer.ExplorerMountTable;
+import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
+import org.knime.workbench.explorer.localworkspace.LocalWorkspaceFileStore;
+import org.knime.workbench.explorer.view.AbstractContentProvider;
+import org.knime.workbench.explorer.view.actions.NewWorkflowWizard;
 import org.knime.workbench.ui.wizards.project.NewProjectWizard;
 
 /**
@@ -99,10 +103,21 @@ public class NewProjectWizardIntroAction implements IIntroAction {
                                     InterruptedException {
                                 try {
                                     // call static method on NewProjectWizard
-                                    NewProjectWizard.doFinish(new Path(
-                                            "KNIME_project"), monitor);
+                                    AbstractExplorerFileStore workspaceRoot = null;
+                                    for (AbstractContentProvider cp : ExplorerMountTable.getMountedContent().values()) {
+                                        if (cp.getFileStore("/") instanceof LocalWorkspaceFileStore) {
+                                            workspaceRoot = cp.getFileStore("/");
+                                            break;
+                                        }
+                                    }
+                                    if (workspaceRoot == null) {
+                                        throw new IllegalArgumentException("Could not find workspace");
+                                    }
+
+                                    AbstractExplorerFileStore newWorkflow = workspaceRoot.getChild("KNIME_project");
+                                    NewWorkflowWizard.createNewWorkflow(newWorkflow, monitor);
                                 } catch (CoreException ce) {
-                                    throw new RuntimeException(ce);
+                                    throw new InvocationTargetException(ce);
                                 }
                             }
                         });
