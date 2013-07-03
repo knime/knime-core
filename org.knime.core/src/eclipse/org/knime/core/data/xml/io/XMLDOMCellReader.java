@@ -52,6 +52,7 @@ package org.knime.core.data.xml.io;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -80,11 +81,11 @@ import org.xml.sax.SAXException;
  * @author Heiko Hofer
  */
 class XMLDOMCellReader implements XMLCellReader {
-    private final InputStream m_in;
+    private final InputSource m_in;
 
     private final DocumentBuilder m_builder;
 
-    private boolean m_first;
+    private boolean m_first = true;
 
     private static final DocumentBuilderFactory PARSER_FAC;
 
@@ -103,20 +104,35 @@ class XMLDOMCellReader implements XMLCellReader {
         }
     }
 
+
+    private XMLDOMCellReader(final InputSource is) throws ParserConfigurationException {
+        m_in = is;
+        m_builder = PARSER_FAC.newDocumentBuilder();
+    }
+
     /**
-     * Create a new instance of a @link{XMLCellReader} to read a single cell
-     * from given @link{InputStream}.
+     * Create a new instance of a {@link XMLCellReader} to read a single cell
+     * from given {@link InputStream}.
      *
      * @param is the resource to read from
      * @throws ParserConfigurationException when the factory object for DOMs
-     *             could not be created.
+     *             could not be created
      */
     public XMLDOMCellReader(final InputStream is)
             throws ParserConfigurationException {
-        this.m_in = is;
+        this(new InputSource(is));
+    }
 
-        m_builder = PARSER_FAC.newDocumentBuilder();
-        m_first = true;
+    /**
+     * Create a new instance of a {@link XMLCellReader} to read a single cell
+     * from given {@link Reader}.
+     *
+     * @param reader the resource to read from
+     * @throws ParserConfigurationException when the factory object for DOMs
+     *             could not be created
+     */
+    public XMLDOMCellReader(final Reader reader) throws ParserConfigurationException {
+        this(new InputSource(reader));
     }
 
     /**
@@ -127,19 +143,14 @@ class XMLDOMCellReader implements XMLCellReader {
         if (m_first) {
             m_first = false;
 
-            InputSource source = null;
-
-            source = new InputSource(m_in);
-
             Document doc;
             try {
-                doc = m_builder.parse(source);
+                doc = m_builder.parse(m_in);
             } catch (SAXException e) {
                 throw new IOException(e);
             }
             removeEmptyTextRecursive(doc, new LinkedList<Boolean>());
-            XMLValue cell = (XMLValue)XMLCellFactory.create(doc);
-            return cell;
+            return (XMLValue)XMLCellFactory.create(doc);
         } else {
             return null;
         }
@@ -150,7 +161,11 @@ class XMLDOMCellReader implements XMLCellReader {
      */
     @Override
     public void close() throws IOException {
-        m_in.close();
+        if (m_in.getByteStream() != null) {
+            m_in.getByteStream().close();
+        } else if (m_in.getCharacterStream() != null) {
+            m_in.getCharacterStream().close();
+        }
     }
 
     /**

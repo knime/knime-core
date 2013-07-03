@@ -53,7 +53,6 @@ package org.knime.core.data.xml;
 import java.io.IOException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLStreamException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
@@ -102,8 +101,6 @@ public class XMLBlobCell extends BlobDataCell implements XMLValue, StringValue {
             } catch (ParserConfigurationException e) {
                 throw new IOException(e.getMessage(), e);
             } catch (SAXException e) {
-                throw new IOException(e.getMessage(), e);
-            } catch (XMLStreamException e) {
                 throw new IOException(e.getMessage(), e);
             }
         }

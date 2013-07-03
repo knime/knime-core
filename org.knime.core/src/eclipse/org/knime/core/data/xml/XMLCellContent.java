@@ -50,10 +50,10 @@
  */
 package org.knime.core.data.xml;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.lang.ref.SoftReference;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -77,7 +77,6 @@ import org.xml.sax.SAXException;
 public class XMLCellContent implements XMLValue {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(XMLCellContent.class);
-
     private final String m_xmlString;
 
     private SoftReference<Document> m_content;
@@ -92,18 +91,28 @@ public class XMLCellContent implements XMLValue {
      * @throws IOException If any IO errors occur.
      * @throws ParserConfigurationException If {@link DocumentBuilder} cannot be
      *             created.
-     * @throws SAXException If xmlString cannot be parsed
-     * @throws XMLStreamException
+     * @throws SAXException if the xml string cannot be parsed
      */
     XMLCellContent(final String xmlString, final boolean checkXML)
-            throws IOException, ParserConfigurationException, SAXException,
-            XMLStreamException {
+            throws IOException, ParserConfigurationException, SAXException {
         if (checkXML) {
-            // check if XML string is valid XML
-            Document doc = parse(xmlString);
-            // store the normalized string as cell content
-            m_xmlString = serialize(doc);
-            m_content = new SoftReference<Document>(doc);
+            try {
+                // check if XML string is valid XML
+                Document doc = parse(xmlString);
+                // store the normalized string as cell content
+                m_xmlString = serialize(doc);
+                m_content = new SoftReference<Document>(doc);
+            } catch (IOException ex) {
+                Throwable cause = ex;
+                while ((cause.getCause() != cause) && (cause.getCause() != null)) {
+                    cause = cause.getCause();
+                }
+                if (cause instanceof SAXException) {
+                    throw ex;
+                } else {
+                    throw ex;
+                }
+            }
         } else {
             m_xmlString = xmlString;
             m_content = new SoftReference<Document>(null);
@@ -118,14 +127,25 @@ public class XMLCellContent implements XMLValue {
      * @throws IOException If any IO errors occur.
      * @throws ParserConfigurationException If {@link DocumentBuilder} cannot be
      *             created.
-     * @throws SAXException If xmlString cannot be parsed.
-     * @throws XMLStreamException
+     * @throws SAXException if the XML document from the input stream cannot be parsed
      */
     XMLCellContent(final InputStream is) throws IOException,
             ParserConfigurationException, SAXException, XMLStreamException {
-        Document doc = parse(is);
-        m_content = new SoftReference<Document>(doc);
-        m_xmlString = serialize(doc);
+        try {
+            Document doc = parse(is);
+            m_content = new SoftReference<Document>(doc);
+            m_xmlString = serialize(doc);
+        } catch (IOException ex) {
+            Throwable cause = ex;
+            while ((cause.getCause() != cause) && (cause.getCause() != null)) {
+                cause = cause.getCause();
+            }
+            if (cause instanceof SAXException) {
+                throw ex;
+            } else {
+                throw ex;
+            }
+        }
     }
 
     /**
@@ -194,9 +214,8 @@ public class XMLCellContent implements XMLValue {
 
     private static Document parse(final String xmlString) throws IOException,
             ParserConfigurationException {
-        ByteArrayInputStream is =
-                new ByteArrayInputStream(xmlString.getBytes("UTF-8"));
-        return parse(is);
+        return XMLCellReaderFactory.createXMLCellReader(new StringReader(xmlString)).readXML()
+                .getDocument();
     }
 
     private static Document parse(final InputStream is) throws IOException,

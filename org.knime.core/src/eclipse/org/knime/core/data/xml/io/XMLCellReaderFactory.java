@@ -51,24 +51,25 @@
 package org.knime.core.data.xml.io;
 
 import java.io.InputStream;
+import java.io.Reader;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
 
 /**
- * Factory class for @link{XMLCellReader}.
- *  
+ * Factory class for {@link XMLCellReader}.
+ *
  * @author Heiko Hofer
  */
 public class XMLCellReaderFactory {
 	/**
-	 * Creates a @link{XMLCellReader} to read a single cell from given 
+	 * Creates a {@link XMLCellReader} to read a single cell from given
 	 * @link{InputStream}
-	 * 
+	 *
 	 * @param is the xml document
-	 * @return @link{XMLCellReader} to read a single cell from given 
-	 * @link{InputStream}
-	 * @throws ParserConfigurationException when the factory object for 
+	 * @return {@link XMLCellReader} to read a single cell from given
+	 * {@link InputStream}
+	 * @throws ParserConfigurationException when the factory object for
 	 * DOMs could not be created.
 	 */
 	public static XMLCellReader createXMLCellReader(final InputStream is)
@@ -76,19 +77,36 @@ public class XMLCellReaderFactory {
 		return new XMLDOMCellReader(is);
 	}
 
+   /**
+     * Creates a {@link XMLCellReader} to read a single cell from given
+     * {@link Reader}
+     *
+     * @param reader a reader for the xml document
+     * @return @link{XMLCellReader} to read a single cell from given
+     * @link{InputStream}
+     * @throws ParserConfigurationException when the factory object for
+     * DOMs could not be created.
+     * @since 2.8
+     */
+    public static XMLCellReader createXMLCellReader(final Reader reader)
+            throws ParserConfigurationException {
+        return new XMLDOMCellReader(reader);
+    }
+
+
 	/**
-	 * Creates a @link{XMLCellReader} to read nodes matching the given limited
-	 * XPath. Every node is read in a single DataCell whereas namespaces, 
+	 * Creates a {@link XMLCellReader} to read nodes matching the given limited
+	 * XPath. Every node is read in a single DataCell whereas namespaces,
 	 * xml:base, xml:space and xml:lang definitions are retained.
-	 * 
+	 *
 	 * @param is the xml document
 	 * @param xpathMatcher Only nodes that match are read
-	 * @return @link{XMLCellReader} to read nodes matching the given limited
+	 * @return {@link XMLCellReader} to read nodes matching the given limited
 	 * XPath. Every node is read in a single DataCell.
-	 * @throws ParserConfigurationException when the factory object for 
+	 * @throws ParserConfigurationException when the factory object for
 	 * DOMs could not be created.
 	 * @throws XMLStreamException when parser could not be configured
-	 */	
+	 */
 	public static XMLCellReader createXPathXMLCellReader(final InputStream is,
 			final LimitedXPathMatcher xpathMatcher)
 			throws ParserConfigurationException, XMLStreamException {
