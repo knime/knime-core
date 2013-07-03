@@ -143,6 +143,7 @@ public class ThreadsafeImageRegistry extends ImageRegistry {
      * @since 3.1
      */
     public ThreadsafeImageRegistry(final ResourceManager manager) {
+        super(manager);
         Assert.isNotNull(manager);
         Device dev = manager.getDevice();
         if (dev instanceof Display) {
