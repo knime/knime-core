@@ -60,7 +60,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.TreeMap;
 
 import org.knime.core.node.NodeLogger;
@@ -1327,61 +1326,6 @@ class Workflow {
        return null;
     }
 
-    /** Return matching LoopEnd node for the given LoopStart.
-     *
-     * @param id The requested start node (instanceof LoopStart)
-     * @throws IllegalLoopException if loop setup is wrong
-     * @throws IllegalArgumentException if argument is not a LoopStart node
-     * @return id of end node or null if no such node was found.
-     */
-    NodeID getMatchingLoopEndOLD(final NodeID id) throws IllegalLoopException {
-        NodeContainer nc = getNode(id);
-        if (!(nc instanceof SingleNodeContainer)) {
-            throw new IllegalArgumentException("Not a Loop Start Node " + id);
-        }
-        SingleNodeContainer snc = (SingleNodeContainer)nc;
-        if (!snc.isModelCompatibleTo(LoopStartNode.class)) {
-            throw new IllegalArgumentException("Not a Loop Start Node " + id);
-        }
-        NodeID foundEnd = null;
-        // create stack for Breitensuche: also store the level of loop nesting
-        Stack<Pair<NodeID, Integer>> st = new Stack<Pair<NodeID, Integer>>();
-        st.push(new Pair<NodeID, Integer>(id, 0));
-        while (!st.isEmpty()) {
-            Pair<NodeID, Integer> p = st.pop();
-            NodeID currentID = p.getFirst();
-            int currentDepth = p.getSecond();
-            for (ConnectionContainer cc : m_connectionsBySource.get(currentID)) {
-                assert currentID.equals(cc.getSource());
-                NodeID destID = cc.getDest();
-                if (this.getID().equals(destID)) {
-                    throw new IllegalLoopException("Loops can not leave workflow!");
-                }
-                NodeContainer destNC = getNode(destID);
-                if (destNC instanceof SingleNodeContainer) {
-                    SingleNodeContainer destSNC = (SingleNodeContainer)destNC;
-                    if (destSNC.isModelCompatibleTo(LoopEndNode.class)) {
-                        if (currentDepth == 0) {
-                            if ((foundEnd != null) && (!foundEnd.equals(destID))) {
-                                // we can reach it twice but we should never reach another end node!
-                                throw new IllegalLoopException("Loops can not connect to more than one End Node!");
-                            }
-                            foundEnd = destID;
-                            continue;
-                        } else {
-                            currentDepth--;
-                        }
-                    }
-                    if (destSNC.isModelCompatibleTo(LoopStartNode.class)) {
-                        currentDepth++;
-                    }
-                }
-                st.push(new Pair<NodeID, Integer>(destID, currentDepth));
-            }
-        }
-        return foundEnd;
-    }
-
     /** Return matching LoopStart node for the given LoopEnd.
     *
     * @param id The requested end node (instanceof LoopEnd)
@@ -1414,65 +1358,6 @@ class Workflow {
        }
        assert false : "Failed to find NodeGraphAnnotation for node from this very workflow.";
        return null;
-    }
-
-    /** Return matching LoopStart node for the given LoopEnd.
-     *
-     * @param id The requested end node (instanceof LoopEnd)
-     * @throws IllegalLoopException if loop setup is wrong
-     * @throws IllegalArgumentException if argument is not a LoopEnd node
-     * @return id of start node or null if no such node was found.
-     */
-    NodeID getMatchingLoopStartOLD(final NodeID id) throws IllegalLoopException {
-        NodeContainer nc = getNode(id);
-        if (!(nc instanceof SingleNodeContainer)) {
-            throw new IllegalArgumentException("Not a Loop End Node " + id);
-        }
-        SingleNodeContainer snc = (SingleNodeContainer)nc;
-        if (!snc.isModelCompatibleTo(LoopEndNode.class)) {
-            throw new IllegalArgumentException("Not a Loop End Node " + id);
-        }
-        NodeID foundStart = null;
-        // create stack for Breitensuche: also store the level of loop nesting
-        Stack<Pair<NodeID, Integer>> st = new Stack<Pair<NodeID, Integer>>();
-        st.push(new Pair<NodeID, Integer>(id, 0));
-        while (!st.isEmpty()) {
-            Pair<NodeID, Integer> p = st.pop();
-            NodeID currentID = p.getFirst();
-            for (ConnectionContainer cc : m_connectionsByDest.get(currentID)) {
-                assert currentID.equals(cc.getDest());
-                int currentDepth = p.getSecond();
-                NodeID srcID = cc.getSource();
-                if (this.getID().equals(srcID)) {
-                    // ignore connections from outside the workflow (they
-                    // can still feed data into an existing loop but the
-                    // head of the loop can not be outside this WFM!).
-                    continue;
-                }
-                NodeContainer srcNC = getNode(srcID);
-                if (srcNC instanceof SingleNodeContainer) {
-                    SingleNodeContainer srcSNC = (SingleNodeContainer)srcNC;
-                    if (srcSNC.isModelCompatibleTo(LoopStartNode.class)) {
-                        if (currentDepth == 0) {
-                            if ((foundStart != null) && (!foundStart.equals(srcID))) {
-                                // we can reach it twice but we should never
-                                // reach another end node!
-                                throw new IllegalLoopException("Loops can not have more than one Start Node!");
-                            }
-                            foundStart = srcID;
-                            continue;
-                        } else {
-                            currentDepth--;
-                        }
-                    }
-                    if (srcSNC.isModelCompatibleTo(LoopEndNode.class)) {
-                        currentDepth++;
-                    }
-                }
-                st.push(new Pair<NodeID, Integer>(srcID, currentDepth));
-            }
-        }
-        return foundStart;
     }
 
     /** Create list of nodes (id)s that are part of a loop body. Note that
