@@ -279,23 +279,32 @@ public final class RepositoryManager {
             public int compare(final IConfigurationElement o1,
                     final IConfigurationElement o2) {
                 String element1 = o1.getAttribute("path");
-                if ((element1 == null) || element1.equals("/")) {
-                    return -1;
-                }
                 String element2 = o2.getAttribute("path");
-                if ((element2 == null) || element2.equals("/")) {
-                    return +1;
+                if (element1 == element2) {
+                    return 0;
+                } else if (element1 == null) {
+                    return -1;
+                } else if (element2 == null) {
+                    return 1;
+                } else if (element1.equals(element2)) {
+                    return 0;
+                } else if ("/".equals(element1)) {
+                    return -1;
+                } else if ("/".equals(element2)) {
+                    return 1;
+                } else {
+                    int countSlashes1 = 0;
+                    for (int i = 0; i < element1.length(); i++) {
+                        if (element1.charAt(i) == '/') { countSlashes1++; }
+                    }
+
+                    int countSlashes2 = 0;
+                    for (int i = 0; i < element2.length(); i++) {
+                        if (element2.charAt(i) == '/') { countSlashes2++; }
+                    }
+                    return countSlashes1 - countSlashes2;
                 }
-
-                int countSlashes1 =
-                        element1.length() - element1.replace("/", "").length();
-
-                int countSlashes2 =
-                        element2.length() - element2.replace("/", "").length();
-
-                return countSlashes1 - countSlashes2;
             }
-
         });
 
         for (IConfigurationElement e : allElements) {
