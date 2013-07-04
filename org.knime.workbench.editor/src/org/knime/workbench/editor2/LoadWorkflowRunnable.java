@@ -261,8 +261,9 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             // (empty workflow file)
             if (createEmptyWorkflow) {
                 WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
-                creationHelper.setWorkflowContext(new WorkflowContext.Factory(m_workflowFile.getParentFile())
-                    .createContext());
+                WorkflowContext.Factory fac = new WorkflowContext.Factory(m_workflowFile.getParentFile());
+                fac.setMountpointRoot(m_mountpointRoot);
+                creationHelper.setWorkflowContext(fac.createContext());
 
                 m_editor.setWorkflowManager(WorkflowManager.ROOT
                         .createAndAddProject(name, creationHelper));
