@@ -140,7 +140,7 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
             }
             for (IWorkflowImportElement wf : m_workflows) {
                 if (!m_copy) {
-                        handleLinkedProject(wf, monitor);
+                    handleLinkedProject(wf, monitor);
                 } else {
                     provider = handleCopyProject(wf, monitor);
                 }
@@ -151,7 +151,7 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
             // clean up afterwards
             m_missingMetaInfoLocations.clear();
             ResourcesPlugin.getWorkspace().getRoot().refreshLocal(
-                    IResource.DEPTH_INFINITE, new NullProgressMonitor());
+                    IResource.DEPTH_ZERO, new NullProgressMonitor());
             final IResource result = ResourcesPlugin.getWorkspace().getRoot()
                 .findMember(m_targetPath);
             if (result != null) {
@@ -208,6 +208,10 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
             // if we created a project -> set the correct nature
             if (Path.ROOT.equals(m_targetPath)) {
                 setProjectNature(importElement);
+            }
+            IResource newProject = ResourcesPlugin.getWorkspace().getRoot().findMember(destination);
+            if (newProject != null) {
+                newProject.refreshLocal(IResource.DEPTH_INFINITE, monitor);
             }
             monitor.worked(1);
         }
