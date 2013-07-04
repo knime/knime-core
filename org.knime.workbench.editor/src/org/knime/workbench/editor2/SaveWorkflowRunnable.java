@@ -127,9 +127,9 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
             IResource r =
                 KnimeResourceUtil.getResourceForURI(workflowPath.toURI());
             if (r != null) {
-                String pName = r.getProject().getName();
+                String pName = r.getName();
                 pm.setTaskName("Refreshing " + pName + "...");
-                r.getProject().refreshLocal(IResource.DEPTH_INFINITE, pm);
+                r.refreshLocal(IResource.DEPTH_INFINITE, pm);
             }
         } catch (FileNotFoundException fnfe) {
             LOGGER.fatal("File not found", fnfe);
