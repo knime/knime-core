@@ -50,6 +50,18 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
+import java.awt.Color;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Collection;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
+import org.knime.base.node.viz.histogram.util.BinningUtil;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -66,20 +78,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.port.PortObjectSpec;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
-import org.knime.base.node.viz.histogram.util.BinningUtil;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-
-import java.awt.Color;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Collection;
 
 
 /**
@@ -95,8 +95,8 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
     /**The number of bins configuration key.*/
     protected static final String CFGKEY_NO_OF_BINS = "noOfBins";
 
-    private final SettingsModelInteger m_noOfBins = new SettingsModelInteger(
-            CFGKEY_NO_OF_BINS, AbstractHistogramVizModel.DEFAULT_NO_OF_BINS);
+    private final SettingsModelInteger m_noOfBins = new SettingsModelIntegerBounded(
+            CFGKEY_NO_OF_BINS, AbstractHistogramVizModel.DEFAULT_NO_OF_BINS, 1, Integer.MAX_VALUE);
     /**The data model on which the plotter based on.*/
     private FixedHistogramDataModel m_model;
 

@@ -170,6 +170,7 @@ public abstract class AbstractHistogramVizModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public Rectangle2D calculateHiliteShape(final AggregationValModel
                 <AggregationValSubModel<Rectangle2D, Rectangle2D>,
                 Rectangle2D, Rectangle2D> model) {
@@ -217,6 +218,7 @@ public abstract class AbstractHistogramVizModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public Rectangle2D calculateHiliteShape(
                 final AggregationValSubModel<Rectangle2D, Rectangle2D> model) {
             if (!supportsHiliting()) {
@@ -467,8 +469,7 @@ public abstract class AbstractHistogramVizModel {
      * Calculates the current preferred width of the bars.
      */
     private void checkBinWidth() {
-        if (m_drawingSpace == null || (m_drawingSpace.getHeight() <= 0
-                && m_drawingSpace.getWidth() <= 0)) {
+        if (m_drawingSpace == null || m_drawingSpace.getHeight() <= 0 || m_drawingSpace.getWidth() <= 0) {
             return;
         }
         int binWidth = m_binWidth;
@@ -500,8 +501,7 @@ public abstract class AbstractHistogramVizModel {
      * Calculates the maximum width per bar for the current display settings.
      */
     private void calculateMaxBinWidth() {
-        if (m_drawingSpace == null || (m_drawingSpace.getHeight() <= 0
-                && m_drawingSpace.getWidth() <= 0)) {
+        if (m_drawingSpace == null || m_drawingSpace.getHeight() <= 0 || m_drawingSpace.getWidth() <= 0) {
             return;
         }
         //we have to use the getBinCaptions method which checks if the missing
@@ -579,23 +579,10 @@ public abstract class AbstractHistogramVizModel {
             m_maxNoOfBins = values.size();
             return;
         }
-        if (m_drawingSpace == null || (m_drawingSpace.getHeight() <= 0
-                && m_drawingSpace.getWidth() <= 0)) {
-            //if no drawing space is defined we set the maximum number
-            //of bins to the current number of bins
-            m_maxNoOfBins = m_bins.size();
-            return;
-        }
-        int maxNoOfBins = (int)(m_drawingSpace.getWidth()
-                / (AbstractHistogramVizModel.MIN_BIN_WIDTH
-                        + AbstractHistogramVizModel.SPACE_BETWEEN_BINS));
-        if (isShowMissingValBin() && containsMissingValueBin()) {
-            maxNoOfBins--;
-        }
         //handle integer values special
         final DataColumnSpec xColSpec = getXColumnSpec();
-        maxNoOfBins =
-            BinningUtil.calculateIntegerMaxNoOfBins(maxNoOfBins, xColSpec);
+        int maxNoOfBins =
+            BinningUtil.calculateIntegerMaxNoOfBins(Integer.MAX_VALUE, xColSpec);
         // avoid rounding errors and display at least one bar
         if (maxNoOfBins < 1) {
             maxNoOfBins = 1;

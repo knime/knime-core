@@ -62,7 +62,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -169,142 +168,125 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      */
     private void registerPropertiesChangeListener() {
         if (m_histoProps == null) {
-            throw new IllegalStateException(
-                    "Properties panel must not be null");
+            throw new IllegalStateException("Properties panel must not be null");
         }
         m_histoProps.addShowGridChangedListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
-                setShowGridLines(
-                        e.getStateChange() == ItemEvent.SELECTED);
+                setShowGridLines(e.getStateChange() == ItemEvent.SELECTED);
             }
         });
         m_histoProps.addShowBinOutlineChangedListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
-                final AbstractHistogramVizModel vizModel =
-                    getHistogramVizModel();
+                final AbstractHistogramVizModel vizModel = getHistogramVizModel();
                 if (vizModel != null) {
-                    vizModel.setShowBinOutline(
-                            e.getStateChange() == ItemEvent.SELECTED);
-                    final HistogramDrawingPane histoDrawingPane =
-                        getHistogramDrawingPane();
+                    vizModel.setShowBinOutline(e.getStateChange() == ItemEvent.SELECTED);
+                    final HistogramDrawingPane histoDrawingPane = getHistogramDrawingPane();
                     histoDrawingPane.repaint();
                 }
             }
         });
         m_histoProps.addShowBarOutlineChangedListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
-                final AbstractHistogramVizModel vizModel =
-                    getHistogramVizModel();
+                final AbstractHistogramVizModel vizModel = getHistogramVizModel();
                 if (vizModel != null) {
-                    vizModel.setShowBarOutline(
-                            e.getStateChange() == ItemEvent.SELECTED);
-                    final HistogramDrawingPane histoDrawingPane =
-                        getHistogramDrawingPane();
+                    vizModel.setShowBarOutline(e.getStateChange() == ItemEvent.SELECTED);
+                    final HistogramDrawingPane histoDrawingPane = getHistogramDrawingPane();
                     histoDrawingPane.repaint();
                 }
             }
         });
         m_histoProps.addShowElementOutlineChangedListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
-                final AbstractHistogramVizModel vizModel =
-                    getHistogramVizModel();
+                final AbstractHistogramVizModel vizModel = getHistogramVizModel();
                 if (vizModel != null) {
-                    vizModel.setShowElementOutline(
-                            e.getStateChange() == ItemEvent.SELECTED);
-                    final HistogramDrawingPane histoDrawingPane =
-                        getHistogramDrawingPane();
+                    vizModel.setShowElementOutline(e.getStateChange() == ItemEvent.SELECTED);
+                    final HistogramDrawingPane histoDrawingPane = getHistogramDrawingPane();
                     histoDrawingPane.repaint();
                 }
             }
         });
         m_histoProps.addLabelOrientationListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
-                final AbstractHistogramVizModel vizModel =
-                    getHistogramVizModel();
+                final AbstractHistogramVizModel vizModel = getHistogramVizModel();
                 if (vizModel != null) {
-                    final AbstractHistogramProperties histoProps =
-                        getHistogramPropertiesPanel();
+                    final AbstractHistogramProperties histoProps = getHistogramPropertiesPanel();
                     if (histoProps != null) {
-                        vizModel.setShowLabelVertical(
-                                histoProps.isShowLabelVertical());
-                        final HistogramDrawingPane histoDrawingPane =
-                            getHistogramDrawingPane();
+                        vizModel.setShowLabelVertical(histoProps.isShowLabelVertical());
+                        final HistogramDrawingPane histoDrawingPane = getHistogramDrawingPane();
                         histoDrawingPane.repaint();
                     }
                 }
             }
         });
         m_histoProps.addLabelDisplayListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
-                final AbstractHistogramVizModel vizModel =
-                    getHistogramVizModel();
+                final AbstractHistogramVizModel vizModel = getHistogramVizModel();
                 if (vizModel != null) {
-                    final AbstractHistogramProperties histoProps =
-                        getHistogramPropertiesPanel();
+                    final AbstractHistogramProperties histoProps = getHistogramPropertiesPanel();
                     if (histoProps != null) {
-                        vizModel.setLabelDisplayPolicy(
-                                histoProps.getLabelDisplayPolicy());
-                        final HistogramDrawingPane histoDrawingPane =
-                            getHistogramDrawingPane();
+                        vizModel.setLabelDisplayPolicy(histoProps.getLabelDisplayPolicy());
+                        final HistogramDrawingPane histoDrawingPane = getHistogramDrawingPane();
                         histoDrawingPane.repaint();
                     }
                 }
             }
         });
         m_histoProps.addLayoutListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
-                final AbstractHistogramProperties histoProps =
-                    getHistogramPropertiesPanel();
+                final AbstractHistogramProperties histoProps = getHistogramPropertiesPanel();
                 if (histoProps != null) {
                     setHistogramLayout(histoProps.getHistogramLayout());
                 }
             }
         });
         m_histoProps.addBinWidthChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
-                final JSlider source = (JSlider)e.getSource();
-                final int binWidth = source.getValue();
+                final int binWidth = m_histoProps.getBinWidth();
                 updateBinWidth(binWidth);
             }
         });
         m_histoProps.addNoOfBinsChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
-                final JSlider source = (JSlider)e.getSource();
-                //react only if the slider is in is final position
-                if (!source.getValueIsAdjusting()) {
-                    final int noOfBins = source.getValue();
-                    if (setNumberOfBins(noOfBins)) {
-                        updatePaintModel();
-                    }
+                final int noOfBins = m_histoProps.getNoOfBins();
+                if (setNumberOfBins(noOfBins)) {
+                    updatePaintModel();
                 }
             }
         });
         m_histoProps.addAggrMethodListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 final String methodName = e.getActionCommand();
                 if (!AggregationMethod.valid(methodName)) {
-                    throw new IllegalArgumentException(
-                            "No valid aggregation method");
+                    throw new IllegalArgumentException("No valid aggregation method");
                 }
-                final AggregationMethod aggrMethod =
-                    AggregationMethod.getMethod4Command(methodName);
+                final AggregationMethod aggrMethod = AggregationMethod.getMethod4Command(methodName);
                 if (setAggregationMethod(aggrMethod)) {
                     updatePaintModel();
                 }
             }
         });
         m_histoProps.addShowEmptyBinListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
-                if (setShowEmptyBins(
-                        e.getStateChange() == ItemEvent.SELECTED)) {
+                if (setShowEmptyBins(e.getStateChange() == ItemEvent.SELECTED)) {
                     updatePaintModel();
                 }
             }
         });
         m_histoProps.addShowMissingValBinListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
-                if (setShowMissingValBin(
-                        e.getStateChange() == ItemEvent.SELECTED)) {
+                if (setShowMissingValBin(e.getStateChange() == ItemEvent.SELECTED)) {
                     updatePaintModel();
                 }
             }
@@ -600,8 +582,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (vizModel.setNoOfBins(noOfBins)) {
             setXCoordinates();
             setYCoordinates();
-            //set the current hilited keys in the new bins
-            vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
+            if (vizModel.supportsHiliting()) {
+                //set the current hilited keys in the new bins
+                vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
+            }
             if (HistogramLayout.SIDE_BY_SIDE.equals(
                     vizModel.getHistogramLayout())
                     && (vizModel.getAggrColumns() != null
@@ -1114,6 +1098,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void unHiLiteAll(final KeyEvent event) {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
         if (vizModel == null || !vizModel.supportsHiliting()) {

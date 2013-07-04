@@ -66,9 +66,8 @@ import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.def.IntCell;
 
 /**
  * This class provides methods to create the bins of numerical bars.
@@ -418,26 +417,12 @@ public final class BinningUtil {
         final Set<DataCell> values;
         //check if we have the values
         if (domain.getValues() == null) {
-            //check if it's an integer
-//            if (!colSpec.getType().isCompatible(IntValue.class)) {
-                throw new IllegalArgumentException(
-                    "No domain values defined for nominal binning column. "
-                    + "Please use DomainCalculator or ColumnFilter node "
-                    + "to set the domain values.");
-//            }
-//            final int lowerBound =
-//                ((IntValue)domain.getLowerBound()).getIntValue();
-//            final int upperBound =
-//                ((IntValue)domain.getUpperBound()).getIntValue();
-//            values =
-//                new LinkedHashSet<DataCell>(upperBound - lowerBound + 1);
-//            for (int i = lowerBound; i <= upperBound; i++) {
-//                values.add(new IntCell(i));
-//            }
+            throw new IllegalArgumentException(
+                "No domain values defined for nominal binning column. "
+                + "Please use DomainCalculator or ColumnFilter node "
+                + "to set the domain values.");
         }
-//        else {
-            values = colSpec.getDomain().getValues();
-//        }
+        values = colSpec.getDomain().getValues();
         return values;
     }
 
@@ -620,13 +605,13 @@ public final class BinningUtil {
             //it's not numerical
             return true;
         }
-        if (dataType.isCompatible(IntValue.class)) {
+        if (dataType.isCompatible(LongValue.class)) {
             //it's an integer...
             final DataColumnDomain domain = colSpec.getDomain();
-            final int lowerBound =
-                ((IntValue)domain.getLowerBound()).getIntValue();
-            final int upperBound =
-                ((IntValue)domain.getUpperBound()).getIntValue();
+            final long lowerBound =
+                ((LongValue)domain.getLowerBound()).getLongValue();
+            final long upperBound =
+                ((LongValue)domain.getUpperBound()).getLongValue();
             if (upperBound - lowerBound <= noOfBins) {
                 //... and should be binned nominal to have for each value
                 //an own bin
@@ -693,18 +678,25 @@ public final class BinningUtil {
             final DataColumnSpec xColSpec) {
         int result = noOfBins;
         if (xColSpec != null
-                && xColSpec.getType().isCompatible(IntValue.class)) {
+                && xColSpec.getType().isCompatible(LongValue.class)) {
             final DataColumnDomain domain = xColSpec.getDomain();
             if (domain != null) {
-                final IntCell lowerBound =
-                    (IntCell)domain.getLowerBound();
-                final IntCell upperBound =
-                    (IntCell)domain.getUpperBound();
-                final int range =
-                    upperBound.getIntValue() - lowerBound.getIntValue()
-                    + 1;
+                final LongValue lowerBound =
+                    (LongValue)domain.getLowerBound();
+                final LongValue upperBound =
+                    (LongValue)domain.getUpperBound();
+                double range =
+                    (double)upperBound.getLongValue() - (double)lowerBound.getLongValue()
+                    + 1.0;
+                if (range > Integer.MAX_VALUE) {
+                    range = Integer.MAX_VALUE;
+                }
+                if (range <= 0) {
+                    //we need at least one bin
+                    range = 1;
+                }
                 if (result > range) {
-                    result = range;
+                    result = (int)range;
                 }
             }
         }
