@@ -57,6 +57,14 @@ import java.util.Map;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.workflow.NodeID;
@@ -71,7 +79,9 @@ import org.knime.workbench.explorer.dialogs.SpaceResourceSelectionDialog.Selecti
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileInfo;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 import org.knime.workbench.explorer.filesystem.ExplorerFileSystem;
+import org.knime.workbench.explorer.filesystem.LocalExplorerFileStore;
 import org.knime.workbench.explorer.view.AbstractContentProvider;
+import org.knime.workbench.explorer.view.AbstractContentProvider.LinkType;
 import org.knime.workbench.explorer.view.ContentObject;
 
 /**
@@ -79,6 +89,109 @@ import org.knime.workbench.explorer.view.ContentObject;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
+    private static class DestinationSelectionDialog extends SpaceResourceSelectionDialog {
+        private Button m_absoluteLink;
+        private Button m_mountpointRelativeLink;
+        private Button m_workflowRelativeLink;
+
+        private final AbstractContentProvider m_mountpoint;
+        private LinkType m_linkType = LinkType.Absolute;
+
+        DestinationSelectionDialog(final Shell parentShell, final String[] mountIDs,
+            final ContentObject initialSelection, final WorkflowManager metaNode) {
+            super(parentShell, mountIDs, initialSelection);
+
+            WorkflowManager wfm = metaNode;
+            while (!wfm.isProject()) {
+                wfm = wfm.getParent();
+            }
+
+            LocalExplorerFileStore fs = ExplorerFileSystem.INSTANCE.fromLocalFile(wfm.getContext().getMountpointRoot());
+            if (fs != null) {
+                m_mountpoint = fs.getContentProvider();
+            } else {
+                m_mountpoint = null;
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected Control createDialogArea(final Composite parent) {
+            Control contents = super.createDialogArea(parent);
+            createLinkTypeSection((Composite)contents);
+            return contents;
+        }
+
+
+        private void createLinkTypeSection(final Composite parent) {
+            Composite group = new Composite(parent, SWT.FILL);
+            group.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+            group.setLayout(new GridLayout(1, true));
+
+            m_absoluteLink = new Button(group, SWT.RADIO);
+            m_absoluteLink.setText("Create absolute link");
+            m_absoluteLink.setSelection(true);
+            m_absoluteLink.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(final SelectionEvent e) {
+                    m_linkType = LinkType.Absolute;
+                }
+            });
+
+            m_mountpointRelativeLink = new Button(group, SWT.RADIO);
+            m_mountpointRelativeLink.setText("Create mountpoint-relative link");
+            m_mountpointRelativeLink.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(final SelectionEvent e) {
+                    m_linkType = LinkType.MountpointRelative;
+                }
+            });
+
+            m_workflowRelativeLink = new Button(group, SWT.RADIO);
+            m_workflowRelativeLink.setText("Create workflow-relative link");
+            m_workflowRelativeLink.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(final SelectionEvent e) {
+                    m_linkType = LinkType.WorkflowRelative;
+                }
+            });
+        }
+
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected void updateResultPanel() {
+            super.updateResultPanel();
+            if ((m_absoluteLink != null) && (getSelection() != null)) {
+                if (getSelection().getContentProvider().equals(m_mountpoint)) {
+                    m_mountpointRelativeLink.setEnabled(true);
+                    m_workflowRelativeLink.setEnabled(true);
+                } else {
+                    m_absoluteLink.setSelection(true);
+                    m_mountpointRelativeLink.setEnabled(false);
+                    m_mountpointRelativeLink.setSelection(false);
+                    m_workflowRelativeLink.setEnabled(false);
+                    m_workflowRelativeLink.setSelection(false);
+                }
+            }
+        }
+
+        /**
+         * Returns the link type for the meta node template which the user has selected in the dialog.
+         *
+         * @return a link type
+         */
+        public LinkType getDesiredLinkType() {
+            return m_linkType;
+        }
+    }
+
+
+
     /** Action ID. */
     public static final String ID = "knime.action.meta_node_save_as_template";
 
@@ -162,7 +275,8 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
 //        Workbench.getInstance().getActiveWorkbenchWindow().getActivePage().findView(ID)
         for (Map.Entry<String, AbstractContentProvider> entry
                 : ExplorerMountTable.getMountedContent().entrySet()) {
-            if (entry.getValue().canHostMetaNodeTemplates()) {
+            AbstractContentProvider contentProvider = entry.getValue();
+            if (contentProvider.isWritable() && contentProvider.canHostMetaNodeTemplates()) {
                 validMountPointList.add(entry.getKey());
             }
         }
@@ -173,8 +287,10 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
         String[] validMountPoints = validMountPointList.toArray(new String[0]);
         final Shell shell = Display.getCurrent().getActiveShell();
         ContentObject defSel = getDefaultSaveLocation(wm);
-        SpaceResourceSelectionDialog dialog =
-            new SpaceResourceSelectionDialog(shell, validMountPoints, defSel);
+        DestinationSelectionDialog dialog =
+            new DestinationSelectionDialog(shell, validMountPoints, defSel, wm);
+        dialog.setTitle("Save As Meta Node Template");
+        dialog.setHeader("Select destination workflow group for meta node template");
         dialog.setValidator(new SelectionValidator() {
             @Override
             public String isValid(
@@ -191,7 +307,7 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
         }
         AbstractExplorerFileStore target = dialog.getSelection();
         AbstractContentProvider contentProvider = target.getContentProvider();
-        contentProvider.saveMetaNodeTemplate(wm, target);
+        contentProvider.saveMetaNodeTemplate(wm, target, dialog.getDesiredLinkType());
     }
 
     private ContentObject getDefaultSaveLocation(
