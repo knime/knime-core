@@ -9,9 +9,8 @@
 	
 	<fullDescription>
 		<intro>		
-	    The first input port contains the test data while the second contains 
-	    the PNN Model that is applied to the test data. The output data 
-	    has then one additional column containing the predicted class attribute
+	    The first port contains the PNN Model that is applied to the test data contained in the second input port.
+	    The output data has then one additional column containing the predicted class attribute
 	    which is the best match for all rules.
 		</intro>
 		
