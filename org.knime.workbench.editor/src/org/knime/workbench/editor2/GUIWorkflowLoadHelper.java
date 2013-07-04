@@ -70,7 +70,15 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
     private final Display m_display;
     private final String m_workflowName;
 
-    private final WorkflowContext m_workflowContext;
+    private static WorkflowContext createWorkflowContext(final File workflowDirectory, final File mountpointRoot) {
+        if (workflowDirectory == null) {
+          return null;
+        } else {
+            WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowDirectory);
+            fac.setMountpointRoot(mountpointRoot);
+            return fac.createContext();
+        }
+    }
 
     /**
      * @param display Display host.
@@ -93,16 +101,9 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
      */
     GUIWorkflowLoadHelper(final Display display, final String workflowName, final File workflowDirectory, final File mountpointRoot,
             final boolean isTemplate) {
-        super(isTemplate);
+        super(isTemplate, createWorkflowContext(workflowDirectory, mountpointRoot));
         m_display = display;
         m_workflowName = workflowName;
-        if (workflowDirectory == null) {
-            m_workflowContext = null;
-        } else {
-            WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowDirectory);
-            fac.setMountpointRoot(mountpointRoot);
-            m_workflowContext = fac.createContext();
-        }
     }
 
     /** @return the display */
@@ -162,13 +163,5 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
             }
         });
         return result.get();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WorkflowContext getWorkflowContext() {
-        return m_workflowContext;
     }
 }

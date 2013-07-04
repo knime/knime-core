@@ -103,6 +103,20 @@ public class WorkflowLoadHelper {
         m_workflowContext = workflowContext;
     }
 
+
+    /**
+     * Creates a new load helper with the given workflow context.
+     *
+     * @param isTemplate whether this is a template loader
+     * @param workflowContext a workflow context
+     * @since 2.8
+     */
+    protected WorkflowLoadHelper(final boolean isTemplate, final WorkflowContext workflowContext) {
+        m_isTemplate = isTemplate;
+        m_workflowContext = workflowContext;
+    }
+
+
     /** @param isTemplate whether this is a template loader */
     public WorkflowLoadHelper(final boolean isTemplate) {
         m_isTemplate = isTemplate;
