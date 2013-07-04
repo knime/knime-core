@@ -225,7 +225,9 @@ public final class KNIMEConstants {
      * @since 2.6 */
     public static final String PROPERTY_DATABASE_BATCH_WRITE_SIZE = "knime.database.batch_write_size";
 
-    /** Java property used to switch off database access to same database connection, default is on.
+    /** Java property to switch on/off the database connection access (applies only for the same database connection).
+     * Default is true, that is all database accesses are synchronized based on single connection; false means off,
+     * that is, the access is not synchronized and may lead to database errors.
      * @since 2.8 */
     public static final String PROPERTY_DATABASE_CONCURRENCY = "knime.database.enable.concurrency";
 

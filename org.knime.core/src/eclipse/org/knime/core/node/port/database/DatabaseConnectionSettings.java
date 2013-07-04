@@ -135,9 +135,9 @@ public class DatabaseConnectionSettings {
         return timeout;
     }
 
-    /**
-     * Used to control access to database driver. If <code>true</code> (default) the access to database driver
-     * is synchronized based on the database connection, otherwise false.
+    /** Used to switch on/off the database connection access (applies only for the same database connection).
+     * Default is true, that is all database accesses are synchronized based on single connection; false means off,
+     * that is, the access is not synchronized and may lead to database errors.
      */
     private static final boolean SQL_CONCURRENCY = initSQLConcurrency();
     private static boolean initSQLConcurrency() {
