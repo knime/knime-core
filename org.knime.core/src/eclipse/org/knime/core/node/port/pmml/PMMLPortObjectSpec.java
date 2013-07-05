@@ -246,15 +246,34 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
  /**
   *
   * @return those columns used for preprocessing and learning the model
+  * @deprecated used {@link #getActiveColumnList()}
   */
+  @Deprecated
   public List<DataColumnSpec> getActiveCols() {
       Set<String> activeFields = getActiveFields();
       List<DataColumnSpec> activeCols = new LinkedList<DataColumnSpec>();
       for (String field : activeFields) {
-        activeCols.add(m_dataTableSpec.getColumnSpec(field));
+          activeCols.add(m_dataTableSpec.getColumnSpec(field));
       }
       return Collections.unmodifiableList(activeCols);
   }
+
+    /**
+     * Returns a list of <code>DataColumnSpec</code> containing all column used for preprocessing an training, no null
+     * elements.
+     * @return those columns used for preprocessing and learning the model
+     * @since 2.8
+     */
+    public List<DataColumnSpec> getActiveColumnList() {
+        Set<String> activeFields = getActiveFields();
+        List<DataColumnSpec> activeCols = new LinkedList<DataColumnSpec>();
+        for (String field : activeFields) {
+            if (m_dataTableSpec.containsName(field)) {
+                activeCols.add(m_dataTableSpec.getColumnSpec(field));
+            }
+        }
+        return Collections.unmodifiableList(activeCols);
+    }
 
 
     // **************** Persistence methods*****************/
@@ -278,8 +297,6 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
 
         pmmlDoc.setHeader(header);
     }
-
-
 
     private static final String DTS_KEY = "DataTableSpec";
 
@@ -395,7 +412,7 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
     @Override
     public JComponent[] getViews() {
         DataTableSpec activeTableSpec = new DataTableSpec(
-                getActiveCols().toArray(new DataColumnSpec[0]));
+                getActiveColumnList().toArray(new DataColumnSpec[0]));
         return new JComponent[]{new DataTableSpecView(activeTableSpec)};
     }
 
