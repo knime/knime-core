@@ -349,11 +349,20 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
             return;
         }
         try {
-            // this also validates the settings
             NodeSettings modelSettings = loadModelSettings(settingsForNode);
-            m_sncSettings.setModelSettings(modelSettings);
             if (modelSettings != null) { // null if the node never had settings - no reason to load them
+                // this also validates the settings
                 m_node.loadModelSettingsFrom(modelSettings);
+
+                // previous versions of KNIME (2.7 and before) kept the model settings only in the node;
+                // NodeModel#saveSettingsTo was always called before the dialog was opened (some dialog implementations
+                // rely on the exact structure of the NodeSettings ... which may change between versions).
+                // We wash the settings through the node so that the model settings are updated (they possibly
+                // no longer map to the variable settings loaded further down below - if so, the inconsistency
+                // is warned later during configuration)
+                NodeSettings washedSettings = new NodeSettings("model");
+                m_node.saveModelSettingsTo(washedSettings);
+                m_sncSettings.setModelSettings(washedSettings);
             }
         } catch (Exception e) {
             final String error;
