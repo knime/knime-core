@@ -1231,24 +1231,20 @@ public final class SingleNodeContainer extends NodeContainer {
                         + " persistor object, got "
                         + nodePersistor.getClass().getSimpleName());
             }
-            SingleNodeContainerPersistor persistor =
-                (SingleNodeContainerPersistor)nodePersistor;
+            SingleNodeContainerPersistor persistor = (SingleNodeContainerPersistor)nodePersistor;
             InternalNodeContainerState state = persistor.getMetaPersistor().getState();
             setInternalState(state, false);
             if (state.equals(InternalNodeContainerState.EXECUTED)) {
-                m_node.putOutputTablesIntoGlobalRepository(getParent()
-                        .getGlobalTableRepository());
+                m_node.putOutputTablesIntoGlobalRepository(getParent().getGlobalTableRepository());
             }
             final FlowObjectStack outgoingStack = new FlowObjectStack(getID());
             for (FlowObject s : persistor.getFlowObjects()) {
                 outgoingStack.push(s);
             }
             setFlowObjectStack(inStack, outgoingStack);
-            SingleNodeContainerSettings sncSettings =
-                persistor.getSNCSettings();
+            SingleNodeContainerSettings sncSettings = persistor.getSNCSettings();
             if (sncSettings == null) {
-                LOGGER.coding(
-                        "SNC settings from persistor are null, using default");
+                LOGGER.coding("SNC settings from persistor are null, using default");
                 sncSettings = new SingleNodeContainerSettings();
             }
             m_settings = sncSettings;
@@ -1324,8 +1320,7 @@ public final class SingleNodeContainer extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     void saveSettings(final NodeSettingsWO settings) {
-        super.saveSettings(settings);
-        saveSNCSettings(settings, false);
+        saveSettings(settings, false);
     }
 
     /** Saves config from super NodeContainer (job manager) and the model settings and the variable settings.
@@ -1758,18 +1753,23 @@ public final class SingleNodeContainer extends NodeContainer {
         // if-statement fixes bug 1777: ensureOpen can cause trouble if there
         // is a deep hierarchy of BDTs
         if (!isDirty()) {
-            try {
-                m_node.ensureOutputDataIsRead();
-            } catch (Exception e) {
-                LOGGER.error("Unable to read output data", e);
-            }
-            IFileStoreHandler fileStoreHandler = m_node.getFileStoreHandler();
-            if (fileStoreHandler instanceof IWriteFileStoreHandler) {
+            NodeContext.pushContext(this);
+            try { // only for node context push
                 try {
-                    ((IWriteFileStoreHandler)fileStoreHandler).ensureOpenAfterLoad();
-                } catch (IOException e) {
-                    LOGGER.error("Unable to open file store handler " + fileStoreHandler, e);
+                    m_node.ensureOutputDataIsRead();
+                } catch (Exception e) {
+                    LOGGER.error("Unable to read output data", e);
                 }
+                IFileStoreHandler fileStoreHandler = m_node.getFileStoreHandler();
+                if (fileStoreHandler instanceof IWriteFileStoreHandler) {
+                    try {
+                        ((IWriteFileStoreHandler)fileStoreHandler).ensureOpenAfterLoad();
+                    } catch (IOException e) {
+                        LOGGER.error("Unable to open file store handler " + fileStoreHandler, e);
+                    }
+                }
+            } finally {
+                NodeContext.removeLastContext();
             }
         }
         super.setDirty();
