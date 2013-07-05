@@ -18,7 +18,8 @@
 	</fullDescription>
 
 	<ports>
-	    <inPort index="0" name="Input Data">The data to predict</inPort>
+	    <inPort index="0" name="Model">Tree Ensemble Model as produced by Tree Ensemble Learner (Regression) node.</inPort>
+	    <inPort index="1" name="Input Data">The data to predict</inPort>
 		<outPort index="0" name="Tree Ensemble Model">The trained model.</outPort>
 	</ports>
 </knimeNode>
