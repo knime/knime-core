@@ -119,7 +119,6 @@ import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
 import org.knime.core.node.workflow.ScopeEndNode;
 import org.knime.core.node.workflow.ScopeStartNode;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
 import org.knime.core.util.FileUtil;
@@ -512,6 +511,30 @@ public final class Node implements NodeModelWarningListener {
 //        return nc;
 //    }
 
+    /**
+     * Calls {@link NodeModel#loadSettingsFrom(NodeSettingsRO)}. Only used by 3rd party executors
+     * to clone node.<br />
+     * <b>Note:</b> The KNIME core is using {@link #loadModelSettingsFrom(NodeSettingsRO)}.
+     *
+     * @param modelSettings a settings object
+     * @throws InvalidSettingsException if an expected setting is missing
+     */
+    public void loadSettingsFrom(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
+        // does not assume NodeContext to be set.
+        try {
+            // settings were always wrapped in a child named "model"
+            NodeSettingsRO model = modelSettings.getNodeSettings("model");
+            m_model.validateSettings(model);
+            m_model.loadSettingsFrom(model);
+        } catch (InvalidSettingsException e) {
+            throw e;
+        } catch (Throwable t) {
+            String msg = "Loading model settings failed, caught \""
+                    + t.getClass().getSimpleName() + "\": " + t.getMessage();
+            m_logger.coding(msg, t);
+            throw new InvalidSettingsException(msg, t);
+        }
+    }
     /**
      * Loads the settings (but not the data) from the given settings object.
      *
@@ -1022,7 +1045,6 @@ public final class Node implements NodeModelWarningListener {
      * @see #invokeNodeModelExecute(ExecutionContext, PortObject[])
      * @since 2.6
      */
-    @Deprecated
     public PortObject[] invokeNodeModelExecute(final ExecutionContext exec,
               final PortObject[] inData) throws Exception {
         return invokeNodeModelExecute(exec, new ExecutionEnvironment(), inData);
@@ -1040,9 +1062,7 @@ public final class Node implements NodeModelWarningListener {
      */
     public PortObject[] invokeNodeModelExecute(final ExecutionContext exec, final ExecutionEnvironment exEnv,
             final PortObject[] inData) throws Exception {
-        m_logger.assertLog(NodeContext.getContext() != null,
-            "No node context available, please check call hierarchy and fix it");
-
+        // this may not have a NodeContext set (when run through 3rd party executor)
         return m_model.executeModel(inData, exEnv, exec);
     }
 
@@ -1789,7 +1809,7 @@ public final class Node implements NodeModelWarningListener {
      * @param settings The current settings of this node. The settings object
      *        will also contain the settings of the outer SNC.
      * @param isWriteProtected Whether write protected, see
-     *        {@link WorkflowManager#isWriteProtected()}.
+     *        {@link org.knime.core.node.workflow.WorkflowManager#isWriteProtected()}.
      * @return The dialog pane which holds all the settings' components. In
      *         addition this method loads the settings from the model into the
      *         dialog pane.
@@ -1895,6 +1915,25 @@ public final class Node implements NodeModelWarningListener {
             }
         }
         return m_dialogPane;
+    }
+
+    /**
+     * Calls {@link NodeModel#saveSettingsTo(NodeSettingsWO)}. Used by 3rd party executor to clone nodes.
+     * <b>Note:</b> The KNIME core code is using {@link #saveModelSettingsTo(NodeSettingsWO)} instead.
+     *
+     * @param modelSettings a settings object to save to (contains
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public void saveSettingsTo(final NodeSettingsWO modelSettings) {
+        // do no assume NodeContext to be set.
+        NodeSettingsWO model = modelSettings.addNodeSettings("model"); // was always wrapped in "model" child
+        try {
+            m_model.saveSettingsTo(model);
+        } catch (Exception e) {
+            m_logger.error("Could not save model", e);
+        } catch (Throwable t) {
+            m_logger.fatal("Could not save model", t);
+        }
     }
 
     /**
@@ -2281,7 +2320,7 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.6
      */
     public LoopEndNode getLoopEndNode() {
-    	return m_model.getLoopEndNode();
+        return m_model.getLoopEndNode();
     }
 
     /**
