@@ -170,14 +170,10 @@ public abstract class AbstractAggregationPanel
 
         private void maybeShowContextMenu(final MouseEvent e) {
             if (e.isPopupTrigger()) {
-                JPopupMenu menu = createTablePopupMenu();
+                final JPopupMenu menu = createTablePopupMenu();
                 if (menu != null) {
-                    menu.show(e.getComponent(),
-                            e.getX(), e.getY());
-                } else {
-                    menu = new JPopupMenu();
+                    menu.show(e.getComponent(), e.getX(), e.getY());
                 }
-                appendMissingValuesEntry(menu);
             }
         }
     }
@@ -293,17 +289,14 @@ public abstract class AbstractAggregationPanel
      * entry in
      */
     protected void appendMissingValuesEntry(final JPopupMenu menu) {
-        if (!tableRowsSelected()
-                || getTableModel().getMissingCellOptionColIdx() < 0) {
+        if (!tableRowsSelected() || getTableModel().getMissingCellOptionColIdx() < 0) {
             //show this option only if at least one row is selected and
             //the table contains the missing option
             return;
         }
       //add the select all columns entry
-        final JMenuItem toggleMissing =
-            new JMenuItem("Toggle missing cell option");
-        toggleMissing.setToolTipText(
-                "Changes the include missing cell option");
+        final JMenuItem toggleMissing = new JMenuItem("Toggle missing cell option");
+        toggleMissing.setToolTipText("Changes the include missing cell option");
         toggleMissing.addActionListener(new ActionListener() {
             /**
              * {@inheritDoc}

@@ -110,7 +110,8 @@ ColumnAggregator, DataColumnSpec> {
             return menu;
         }
         createColumnSelectionMenu(menu);
-        createMissingValuesMenu(menu);
+        menu.addSeparator();
+        appendMissingValuesEntry(menu);
         menu.addSeparator();
         createAggregationSection(menu);
         return menu;
@@ -220,32 +221,6 @@ ColumnAggregator, DataColumnSpec> {
             }
         });
         menu.add(selectAll);
-    }
-
-    /**
-     * @param menu
-     */
-    private void createMissingValuesMenu(final JPopupMenu menu) {
-        if (getSelectedRows().length <= 0) {
-            //show this option only if at least one row is selected
-            return;
-        }
-        menu.addSeparator();
-      //add the select all columns entry
-        final JMenuItem toggleMissing =
-            new JMenuItem("Toggle missing cell option");
-        toggleMissing.setToolTipText(
-                "Changes the include missing cell option");
-        toggleMissing.addActionListener(new ActionListener() {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                toggleMissingCellOption();
-            }
-        });
-        menu.add(toggleMissing);
     }
 
     /**
