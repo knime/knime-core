@@ -115,7 +115,7 @@ public class ParallelProcessing {
      *
      */
     public synchronized void isThreadAvailableBlocking() {
-        synchronized(m_lock) {
+        synchronized (m_lock) {
             if (m_currentThreadsInUse < m_maxNumberThreads) {
                 // do nothing
             } else {
@@ -137,7 +137,7 @@ public class ParallelProcessing {
      * @return whether a thread is available
      */
     public boolean isThreadAvailable() {
-        synchronized(m_lock) {
+        synchronized (m_lock) {
             if (m_currentThreadsInUse < m_maxNumberThreads) {
                 m_currentThreadsInUse++;
                 return true;
@@ -152,7 +152,7 @@ public class ParallelProcessing {
      * invoke this method to allow other threads to continue.
      */
     public void threadTaskFinished() {
-        synchronized(m_lock) {
+        synchronized (m_lock) {
             m_currentThreadsInUse--;
             m_lock.notify();
         }

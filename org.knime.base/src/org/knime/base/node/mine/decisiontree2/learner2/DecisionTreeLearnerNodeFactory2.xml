@@ -42,6 +42,11 @@
 			Available is the "Minimal Description Length" (MDL) pruning or
 			it can also be switched off.
 		</option>
+        <option name="Reduced Error Pruning">
+			If checked (default), a simple pruning method is used to cut the tree in a post-processing step: Starting at the leaves, each node is 
+			replaced with its most popular class, but only if the prediction accuracy doesn't decrease. Reduced error pruning has the advantage of 
+			simplicity and speed.
+		</option>
 		<option name="Min number records per node">
 			To select the minimum number of records at least required in each node. If 
 			the number of records is smaller or equal to this number the tree
@@ -52,10 +57,9 @@
 			The records are necessary to enable highlighting.
 		</option>
 		<option name="Average split point">
-			If checked, the split value for numeric attributes is determined according to the mean
+			If checked (default), the split value for numeric attributes is determined according to the mean
 			value of the two attribute values that separate the two partitions.
-			If unchecked the split value is set to the largest
-			value of the lower partition (like C4.5).
+			If unchecked, the split value is set to the largest value of the lower partition (like C4.5).
 		</option>
 		<option name="Number threads">
             This node can exploit multiple threads and thus multiple processors

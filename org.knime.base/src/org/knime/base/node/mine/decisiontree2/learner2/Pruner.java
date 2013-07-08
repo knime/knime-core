@@ -59,7 +59,7 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplit;
  * Class implementing pruning schemes.
  *
  * @author Christoph Sieb, University of Konstanz
- * 
+ *
  * @since 2.6
  */
 public final class Pruner {
@@ -234,7 +234,7 @@ public final class Pruner {
             DecisionTreeNodeLeaf newLeaf =
                     new DecisionTreeNodeLeaf(node.getOwnIndex(), node
                             .getMajorityClass(), node.getClassCounts());
-            newLeaf.setParent((DecisionTreeNode)node.getParent());
+            newLeaf.setParent(node.getParent());
             newLeaf.setPrefix(node.getPrefix());
             returnNode = newLeaf;
             returnCost = leafCost;
@@ -329,7 +329,7 @@ public final class Pruner {
             DecisionTreeNodeLeaf newLeaf =
                     new DecisionTreeNodeLeaf(node.getOwnIndex(), node
                             .getMajorityClass(), node.getClassCounts());
-            newLeaf.setParent((DecisionTreeNode)node.getParent());
+            newLeaf.setParent(node.getParent());
             newLeaf.setPrefix(node.getPrefix());
             returnNode = newLeaf;
             returnError = leafError;

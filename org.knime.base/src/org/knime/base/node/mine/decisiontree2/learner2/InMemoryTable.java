@@ -674,29 +674,28 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
      *
      * @return the index of the element in the middle
      */
-    private int partition(int left, int right, final int attributeIndex) {
-        double pivot = m_rows[(left + right) >>> 1].getValue(attributeIndex);
-        while (left < right) {
-            while ((m_rows[left].getValue(attributeIndex) < pivot)
-                    && (left < right)) {
-                left++;
+    private int partition(final int left, final int right, final int attributeIndex) {
+        int ileft = left;
+        int iright = right;
+        final double pivot = m_rows[(ileft + iright) >>> 1].getValue(attributeIndex);
+        while (ileft < iright) {
+            while ((m_rows[ileft].getValue(attributeIndex) < pivot) && (ileft < iright)) {
+                ileft++;
             }
-            while ((m_rows[right].getValue(attributeIndex) > pivot)
-                    && (left < right)) {
-                right--;
+            while ((m_rows[iright].getValue(attributeIndex) > pivot) && (ileft < iright)) {
+                iright--;
             }
-            if (left < right) {
-                DataRowWeighted temp = m_rows[left];
-                m_rows[left] = m_rows[right];
-                m_rows[right] = temp;
-                left++;
-                right--;
+            if (ileft < iright) {
+                DataRowWeighted temp = m_rows[ileft];
+                m_rows[ileft] = m_rows[iright];
+                m_rows[iright] = temp;
+                ileft++;
+                iright--;
             }
         }
-        if ((left == right)
-                && (m_rows[right].getValue(attributeIndex) > pivot)) {
-            right--;
+        if ((ileft == iright) && (m_rows[iright].getValue(attributeIndex) > pivot)) {
+            iright--;
         }
-        return right;
+        return iright;
     }
 }

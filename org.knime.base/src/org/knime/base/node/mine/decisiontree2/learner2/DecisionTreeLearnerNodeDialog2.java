@@ -102,16 +102,18 @@ public class DecisionTreeLearnerNodeDialog2 extends DefaultNodeSettingsPane {
                  DecisionTreeLearnerNodeModel2.PRUNING_MDL};
                  // DecisionTreeLearnerNodeModel.PRUNING_ESTIMATED_ERROR};
         this.addDialogComponent(new DialogComponentStringSelection(
-                createSettingsPruningMethod(),
-                "Pruning method", methods));
+                createSettingsPruningMethod(), "Pruning method", methods));
+
+        this.addDialogComponent(new DialogComponentBoolean(
+            createSettingsReducedErrorPruning(), "Reduced Error Pruning"));
+
 
         // confidence value threshold for c4.5 pruning
 //        this.addDialogComponent(new DialogComponentNumber(
 //              createSettingsConfidenceValue(),
 //              "Confidence threshold (estimated error)", 0.01, 7));
 
-        // min number records for a node
-        // also used for determine whether a partition is useful
+        // min number records for a node also used for determine whether a partition is useful
         // both are closely related
         this.addDialogComponent(new DialogComponentNumber(
             createSettingsMinNumRecords(), "Min number records per node", 1));
@@ -234,6 +236,17 @@ public class DecisionTreeLearnerNodeDialog2 extends DefaultNodeSettingsPane {
         return new SettingsModelString(
                     DecisionTreeLearnerNodeModel2.KEY_PRUNING_METHOD,
                     DecisionTreeLearnerNodeModel2.DEFAULT_PRUNING_METHOD);
+    }
+
+    /**
+     * Create a new settings model boolean to switch on/off the reduced error pruning option, default is true.
+     * @return a new settings model for reduced error pruning
+     * @since 2.8
+     */
+    static SettingsModelBoolean createSettingsReducedErrorPruning() {
+        return new SettingsModelBoolean(
+                   DecisionTreeLearnerNodeModel2.KEY_REDUCED_ERROR_PRUNING,
+                   DecisionTreeLearnerNodeModel2.DEFAULT_REDUCED_ERROR_PRUNING);
     }
 
     /**

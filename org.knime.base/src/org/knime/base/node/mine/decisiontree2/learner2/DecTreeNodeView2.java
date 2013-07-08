@@ -72,7 +72,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * view.
  *
  * @author mb, University of Konstanz
- * 
+ *
  * @since 2.6
  */
 public class DecTreeNodeView2 extends NodeView<DecisionTreeLearnerNodeModel2> {
@@ -198,6 +198,7 @@ public class DecTreeNodeView2 extends NodeView<DecisionTreeLearnerNodeModel2> {
                 + " Branch");
         item.setMnemonic('S');
         item.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 assert (m_hiLiteHdl != null);
                 changeSelectedHiLite(true);
@@ -207,6 +208,7 @@ public class DecTreeNodeView2 extends NodeView<DecisionTreeLearnerNodeModel2> {
         item = new JMenuItem(HiLiteHandler.UNHILITE_SELECTED + " Branch");
         item.setMnemonic('U');
         item.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 assert (m_hiLiteHdl != null);
                 changeSelectedHiLite(false);
@@ -216,6 +218,7 @@ public class DecTreeNodeView2 extends NodeView<DecisionTreeLearnerNodeModel2> {
         item = new JMenuItem(HiLiteHandler.CLEAR_HILITE);
         item.setMnemonic('C');
         item.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 assert (m_hiLiteHdl != null);
                 m_hiLiteHdl.fireClearHiLiteEvent();

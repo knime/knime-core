@@ -60,6 +60,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -137,11 +138,13 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
      */
     public static final String KEY_PRUNING_METHOD = "pruningMethod";
 
+    /** Key to switch on/off error pruning method, default true. */
+    public static final String KEY_REDUCED_ERROR_PRUNING = "enableReducedErrorPruning";
+
     /**
      * Key to store the split quality measure in the settings.
      */
-    public static final String KEY_SPLIT_QUALITY_MEASURE =
-            "splitQualityMeasure";
+    public static final String KEY_SPLIT_QUALITY_MEASURE = "splitQualityMeasure";
 
     /**
      * Key to store the memory option (memory build or on disk).
@@ -161,14 +164,12 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
     /**
      * Key to store the minimum number of records per node.
      */
-    public static final String KEY_MIN_NUMBER_RECORDS_PER_NODE =
-            "minNumberRecordsPerNode";
+    public static final String KEY_MIN_NUMBER_RECORDS_PER_NODE = "minNumberRecordsPerNode";
 
     /**
      * Key to store whether to use the binary nominal split mode.
      */
-    public static final String KEY_BINARY_NOMINAL_SPLIT_MODE =
-            "binaryNominalSplit";
+    public static final String KEY_BINARY_NOMINAL_SPLIT_MODE = "binaryNominalSplit";
 
     /**
      * Key to store whether nominal columns without domain values should be
@@ -210,10 +211,8 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
      */
     public static final int DEFAULT_MIN_NUM_RECORDS_PER_NODE = 2;
 
-    /**
-     * The default whether to use the average as the split point is false.
-     */
-    public static final boolean DEFAULT_SPLIT_AVERAGE = false;
+    /** The default whether to use the average as the split point is true. */
+    public static final boolean DEFAULT_SPLIT_AVERAGE = true;
 
     /**
      * The constant for mdl pruning.
@@ -245,11 +244,14 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
      */
     public static final String DEFAULT_PRUNING_METHOD = PRUNING_NO;
 
+    /** The default flag for reduced error pruning, is true. 
+     * @since 2.8 */
+    public static final boolean DEFAULT_REDUCED_ERROR_PRUNING = true;
+
     /**
      * The default split quality measure.
      */
-    public static final String DEFAULT_SPLIT_QUALITY_MEASURE =
-            SPLIT_QUALITY_GINI;
+    public static final String DEFAULT_SPLIT_QUALITY_MEASURE = SPLIT_QUALITY_GINI;
 
     /**
      * The default confidence threshold for pruning.
@@ -319,13 +321,17 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
      * The pruning method used for pruning.
      */
     private final SettingsModelString m_pruningMethod =
-        DecisionTreeLearnerNodeDialog2.createSettingsPruningMethod();
+            DecisionTreeLearnerNodeDialog2.createSettingsPruningMethod();
+
+    /** The reduced error pruning option. */
+    private final SettingsModelBoolean m_reducedErrorPruning =
+            DecisionTreeLearnerNodeDialog2.createSettingsReducedErrorPruning();
 
     /**
      * The quality measure to determine the split point.
      */
     private final SettingsModelString m_splitQualityMeasureType =
-        DecisionTreeLearnerNodeDialog2.createSettingsQualityMeasure();
+            DecisionTreeLearnerNodeDialog2.createSettingsQualityMeasure();
 
     /**
      * The number of records stored for the view.
@@ -505,7 +511,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         if (isBinaryNominal && isFilterInvalidAttributeValues) {
             // traverse tree nodes and remove from the children the attribute
             // values that were filtered out further up in the tree. "Bug" 3124
-            root.filterIllegalAttributes(Collections.EMPTY_MAP);
+            root.filterIllegalAttributes(Collections.<String, Set<String>>emptyMap());
         }
 
         // the decision tree model saved as PMML at the second out-port
@@ -519,8 +525,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         m_decisionTree.setColorColumn(colorColumn);
 
         // prune the tree
-        exec.setMessage("Prune tree with "
-                + m_pruningMethod.getStringValue() + "...");
+        exec.setMessage("Prune tree with " + m_pruningMethod.getStringValue() + "...");
         pruneTree();
 
         // add highlight patterns and color information
@@ -613,11 +618,14 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
     }
 
     private void pruneTree() {
-        // the tree is pruned according to the training error any way
-        // i.e. if the error rate in the subtree is as high as the error
-        // rate in a given node, the subtree is pruned (this means if there
-        // is no improvement according to the training data)
-        Pruner.trainingErrorPruning(m_decisionTree);
+        // switch on/off reduced error pruning; added with 2.8
+        if (m_reducedErrorPruning.getBooleanValue()) {
+            // the tree is pruned according to the training error any way
+            // i.e. if the error rate in the subtree is as high as the error
+            // rate in a given node, the subtree is pruned (this means if there
+            // is no improvement according to the training data)
+            Pruner.trainingErrorPruning(m_decisionTree);
+        }
 
         // now prune according to the selected pruning method
         if (m_pruningMethod.getStringValue().equals(PRUNING_MDL)) {
@@ -881,8 +889,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
                         + " attribute for classification.");
             }
         }
-        return new PortObjectSpec[]{createPMMLPortObjectSpec(modelSpec,
-                inSpec)};
+        return new PortObjectSpec[]{createPMMLPortObjectSpec(modelSpec, inSpec)};
     }
 
     /**
@@ -901,6 +908,11 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         m_numberRecordsStoredForView.loadSettingsFrom(settings);
         m_minNumberRecordsPerNode.loadSettingsFrom(settings);
         m_pruningMethod.loadSettingsFrom(settings);
+        try {
+            m_reducedErrorPruning.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            // add with KNIME 2.8
+        }
         m_splitQualityMeasureType.loadSettingsFrom(settings);
         m_averageSplitpoint.loadSettingsFrom(settings);
         m_parallelProcessing.loadSettingsFrom(settings);
@@ -943,6 +955,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         m_numberRecordsStoredForView.saveSettingsTo(settings);
         m_minNumberRecordsPerNode.saveSettingsTo(settings);
         m_pruningMethod.saveSettingsTo(settings);
+        m_reducedErrorPruning.saveSettingsTo(settings);
         m_splitQualityMeasureType.saveSettingsTo(settings);
         m_averageSplitpoint.saveSettingsTo(settings);
         m_parallelProcessing.saveSettingsTo(settings);
@@ -978,6 +991,11 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         m_averageSplitpoint.validateSettings(settings);
         m_binaryNominalSplitMode.validateSettings(settings);
         m_pruningMethod.validateSettings(settings);
+        try {
+            m_reducedErrorPruning.validateSettings(settings);
+        } catch (InvalidSettingsException ise) {
+            // add with KNIME 2.8
+        }
         m_numberRecordsStoredForView.validateSettings(settings);
         // m_pruningConfidenceThreshold.validateSettings(settings);
         m_minNumberRecordsPerNode.validateSettings(settings);
@@ -1076,7 +1094,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
 
         private final SplitQualityMeasure m_splitQM;
 
-        private final ParallelProcessing m_parallelProcessing;
+        private final ParallelProcessing m_parallelProcessingInner;
 
         private ParallelBuilding(final String name, final InMemoryTable table,
                 final ExecutionContext exec, final int depth,
@@ -1089,7 +1107,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
             m_resultNode = null;
             m_threadIndex = threadIndex;
             m_splitQM = splitQM;
-            m_parallelProcessing = parallelProcessing;
+            m_parallelProcessingInner = parallelProcessing;
         }
 
         /**
@@ -1100,13 +1118,13 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
             try {
                 m_resultNode = buildTree(m_table, m_exec, m_depth,
                         (SplitQualityMeasure) m_splitQM.clone(),
-                        m_parallelProcessing);
+                        m_parallelProcessingInner);
                 LOGGER.debug("Thread: " + getName() + " finished");
             } catch (Exception e) {
                 m_exception = e;
             }
 
-            m_parallelProcessing.threadTaskFinished();
+            m_parallelProcessingInner.threadTaskFinished();
             synchronized (this) {
                 notifyAll();
             }

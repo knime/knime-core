@@ -54,10 +54,10 @@ package org.knime.base.node.mine.decisiontree2.learner2;
  * The abstract class for split quality measures like gini or gain ratio.
  *
  * @author Christoph Sieb, University of Konstanz
- * 
+ *
  * @since 2.6
  */
-public abstract class SplitQualityMeasure implements Cloneable{
+public abstract class SplitQualityMeasure implements Cloneable {
 
     /**
      * Calculates the quality for a given split.

@@ -567,16 +567,6 @@ public class SplitNominalBinary extends SplitNominal {
         }
 
         /**
-         * Returns the position of this counter. The position is the number of
-         * increments that have been taken place so far.
-         *
-         * @return current position of this counter
-         */
-        public long getNumIncrements() {
-            return m_incrementCounter;
-        }
-
-        /**
          * Increments this gray counter according to the gray code properties.
          */
         public void increment() {
@@ -625,19 +615,5 @@ public class SplitNominalBinary extends SplitNominal {
             return shiftCount;
         }
     }
-
-    /**
-     * Main. Small test for GrayCodeCounter.
-     *
-     * @param args command line arguments
-     */
-    public static void main(final String[] args) {
-        GrayCodeCounter counter = new GrayCodeCounter(4, false);
-        while (counter.hasNext()) {
-            System.out.print(counter.getLastChangedGrayCodeBitIndex() + ":"
-                    + counter.lastBitSetTrue() + ":");
-            System.out.println(Long.toBinaryString(counter.getGrayCode()));
-            counter.increment();
-        }
-    }
+    
 }
