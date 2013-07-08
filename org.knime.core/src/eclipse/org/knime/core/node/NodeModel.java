@@ -532,8 +532,6 @@ public abstract class NodeModel {
             final ExecutionContext exec) throws Exception {
         assert (data != null && data.length == getNrInPorts());
         assert (exec != null);
-        m_logger.assertLog(NodeContext.getContext() != null,
-                "No node context available, please check call hierarchy and fix it");
 
         setWarningMessage(null);
 
@@ -694,8 +692,6 @@ public abstract class NodeModel {
      */
     protected PortObject[] execute(final PortObject[] inObjects,
             final ExecutionContext exec) throws Exception {
-        m_logger.assertLog(NodeContext.getContext() != null,
-                "No node context available, please check call hierarchy and fix it");
 
         // default implementation: the standard version needs to hold: all
         // ports are data ports!
