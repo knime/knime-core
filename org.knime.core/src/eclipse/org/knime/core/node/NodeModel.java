@@ -442,9 +442,6 @@ public abstract class NodeModel {
      */
     final void loadSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_logger.assertLog(NodeContext.getContext() != null,
-                "No node context available, please check call hierarchy and fix it");
-
         // validate the settings before loading them
         validateSettings(settings);
         // load settings into the model
