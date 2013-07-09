@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Manipulator" icon="./rule_engine_splitter.png">
-	<name>Rule Engine Splitter</name>
+	<name>Rule-based Splitter</name>
 	<shortDescription>
 		 Splits the input table based on user-defined business rules
 	</shortDescription>
