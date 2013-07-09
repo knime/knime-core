@@ -1550,6 +1550,8 @@ public final class Node implements NodeModelWarningListener {
      */
     public boolean configure(final PortObjectSpec[] rawInSpecs, final NodeConfigureHelper postConfigure) {
         boolean success = false;
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
         synchronized (m_configureLock) {
             // reset message object
             clearNodeMessageAndNotify();
@@ -1650,11 +1652,7 @@ public final class Node implements NodeModelWarningListener {
      * @return The output of node
      * @throws InvalidSettingsException An exception thrown by the client.
      * @since 2.6 */
-    public PortObjectSpec[] invokeNodeModelConfigure(
-            final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        m_logger.assertLog(NodeContext.getContext() != null,
-            "No node context available, please check call hierarchy and fix it");
-
+    public PortObjectSpec[] invokeNodeModelConfigure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         PortObjectSpec[] newOutSpec;
         newOutSpec = m_model.configureModel(inSpecs);
         return newOutSpec;

@@ -763,9 +763,6 @@ public abstract class NodeModel {
      * views about the changes.
      */
     final void resetModel() {
-        m_logger.assertLog(NodeContext.getContext() != null,
-                "No node context available, please check call hierarchy and fix it");
-
         try {
             setWarningMessage(null);
             // reset in derived model
@@ -983,8 +980,6 @@ public abstract class NodeModel {
     final PortObjectSpec[] configureModel(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         assert inSpecs.length == getNrInPorts();
-        m_logger.assertLog(NodeContext.getContext() != null,
-                "No node context available, please check call hierarchy and fix it");
 
         setWarningMessage(null);
 
@@ -1061,8 +1056,6 @@ public abstract class NodeModel {
      */
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
     throws InvalidSettingsException {
-        m_logger.assertLog(NodeContext.getContext() != null,
-                "No node context available, please check call hierarchy and fix it");
 
         // default implementation: the standard version needs to hold: all
         // ports are data ports!
@@ -1804,8 +1797,6 @@ public abstract class NodeModel {
     public PortObjectSpec[] computeFinalOutputSpecs(
             final StreamableOperatorInternals internals,
             final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        m_logger.assertLog(NodeContext.getContext() != null,
-            "No node context available, please check call hierarchy and fix it");
         return configure(inSpecs);
     }
 
