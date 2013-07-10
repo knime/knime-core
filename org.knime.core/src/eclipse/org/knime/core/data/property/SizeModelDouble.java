@@ -217,13 +217,13 @@ public class SizeModelDouble implements SizeModel {
         }
         if (mapping.equals(Mapping.SQUARE_ROOT)) {
             if (min < 0.0 || max < 0.0) {
-                throw new IllegalArgumentException("min=" + min + " or max=" + max + " must not be less "
+                throw new IllegalArgumentException("min=" + min + " or max=" + max + " must not be less"
                         + " than 0 if square root scaling is applied.");
             }
         }
         if (mapping.equals(Mapping.LOGARITHMIC)) {
             if (min <= 0.0 || max <= 0.0) {
-                throw new IllegalArgumentException("min=" + min + " or max=" + max + " must not be less "
+                throw new IllegalArgumentException("min=" + min + " or max=" + max + " must not be less"
                         + " or equal than 0 if logarithmic scaling is applied.");
             }
         }
@@ -239,7 +239,6 @@ public class SizeModelDouble implements SizeModel {
      * @return size in percent or -1 if cell type invalid or out of range
      *
      * @deprecated use {@link #getSizeFactor(DataCell)} instead.
-     * @see SizeHandler#getSize(DataCell)
      */
     @Deprecated
     @Override
