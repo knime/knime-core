@@ -98,6 +98,8 @@ public final class FileUtil {
 
     private static final Random RANDOM = new Random();
 
+    private static long tempDirUnifier = (int)(100000 * Math.random());
+
     // timeout when connecting to or reading from URLs
     private static int urlTimeout = 1000;
 
@@ -792,8 +794,7 @@ public final class FileUtil {
         }
         File tempDir;
         do {
-            tempDir =
-                new File(rootDir, prefix + Long.toHexString(Thread.currentThread().hashCode() ^ RANDOM.nextLong()));
+            tempDir = new File(rootDir, prefix + (tempDirUnifier++));
         } while (tempDir.exists());
         if (!tempDir.mkdirs()) {
             throw new IOException("Cannot create temporary directory '" + tempDir.getCanonicalPath() + "'.");
