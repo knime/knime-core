@@ -179,7 +179,11 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
         m_adapterMap = new BlobWrapperHashMap();
         if (valueClasses.length == 0) {
             for (Class<? extends DataValue> v : valueCell.getType().getValueClasses()) {
-                m_adapterMap.put(v, valueCell);
+                if (!v.isAssignableFrom(AdapterCell.class)) {
+                    // don't add adapters for generic value interfaces such as DataValue or RWAdapterValue
+                    // they are handled directly by this cell implementation
+                    m_adapterMap.put(v, valueCell);
+                }
             }
         } else {
             for (Class<? extends DataValue> v : valueClasses) {
