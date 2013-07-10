@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.06.2006 (gabriel): created
  */
@@ -63,7 +63,7 @@ import org.knime.core.node.config.ConfigWO;
 /**
  * Computes colors based on a range of minimum and maximum values assigned to
  * certain colors which are interpolated between a min and maximum color.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class ColorModelRange implements ColorModel {
@@ -85,7 +85,7 @@ public final class ColorModelRange implements ColorModel {
 
     /**
      * Creates new ColorHandler based on a mapping.
-     * 
+     *
      * @param lower Lower bound.
      * @param min Color of lower bound.
      * @param upper Upper bound.
@@ -114,10 +114,11 @@ public final class ColorModelRange implements ColorModel {
      * <code>ColorAttr.DEFAULT</code> if not set. The colors red, green, and
      * blue are merged in the same ratio from the original spread of the lower
      * and upper bounds.
-     * 
+     *
      * @param dc A DataCell value to get color for.
      * @return A ColorAttr for a DataCell value or the DEFAULT ColorAttr.
      */
+    @Override
     public ColorAttr getColorAttr(final DataCell dc) {
         if (dc == null || dc.isMissing()
                 || !dc.getType().isCompatible(DoubleValue.class)) {
@@ -191,11 +192,12 @@ public final class ColorModelRange implements ColorModel {
 
     /**
      * Save lower and upper, and min and max colors to the given Config.
-     * 
+     *
      * @param config to save settings to.
      * @see org.knime.core.data.property.ColorHandler.ColorModel
      *      #save(ConfigWO)
      */
+    @Override
     public void save(final ConfigWO config) {
         config.addDouble(CFG_LOWER_VALUE, m_minValue);
         config.addDouble(CFG_UPPER_VALUE, m_maxValue);
@@ -208,7 +210,7 @@ public final class ColorModelRange implements ColorModel {
     /**
      * Load color settings from Config including lower and upper bound, and min
      * and max colors.
-     * 
+     *
      * @param config Read settings from.
      * @return A new <code>ColorModelRange</code> object.
      * @throws InvalidSettingsException If the settings could not be read.
@@ -262,14 +264,14 @@ public final class ColorModelRange implements ColorModel {
             return false;
         }
         ColorModelRange cmodel = (ColorModelRange) obj;
-        // Double.compare() also handles NaN appropriately 
+        // Double.compare() also handles NaN appropriately
         return Double.compare(m_maxValue, cmodel.m_maxValue) == 0
             && Double.compare(m_minValue, cmodel.m_minValue) == 0
             && Double.compare(m_range, cmodel.m_range) == 0
             && m_maxColor.equals(cmodel.m_maxColor)
-            && m_minColor.equals(cmodel.m_minColor); 
+            && m_minColor.equals(cmodel.m_minColor);
     }
-    
+
     /**
      * {@inheritDoc}
      */

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.06.2006 (gabriel): created
  */
@@ -64,14 +64,16 @@ import org.knime.core.node.config.ConfigWO;
 
 
 /**
- * Color model which maps a set of <code>DataCell</code> objects to 
+ * Color model which maps a set of <code>DataCell</code> objects to
  * <code>Color</code>.
+ * 
+ * @author Thomas Gabriel, University of Konstanz, Germany
  */
 public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
-    
+
     /** Maps DataCell values to ColorAttr. */
     private final Map<DataCell, ColorAttr> m_map;
-    
+
     /**
      * Creates new ColorHandler based on a mapping.
      * @param map Mapping form DataCell values to ColorAttr objects.
@@ -85,11 +87,12 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
     }
 
     /**
-     * Returns a ColorAttr for the given DataCell value, or 
+     * Returns a ColorAttr for the given DataCell value, or
      * <code>ColorAttr.DEFAULT</code> if not set.
      * @param dc A DataCell value to get color for.
      * @return A ColorAttr for a DataCell value.
      */
+    @Override
     public ColorAttr getColorAttr(final DataCell dc) {
         ColorAttr color = m_map.get(dc);
         if (color == null) {
@@ -97,27 +100,29 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
         }
         return color;
     }
-    
+
     /**
      * Returns an iterator over the keys.
      * @see java.lang.Iterable#iterator()
      * @return - returns an iterator over the keys.
      */
+    @Override
     public Iterator<DataCell> iterator() {
         return m_map.keySet().iterator();
     }
-    
+
     private static final String CFG_KEYS = "keys";
-    
+
     /**
-     * Saves the <code>DataCell</code> to <code>Color</code> mapping to the 
+     * Saves the <code>DataCell</code> to <code>Color</code> mapping to the
      * given <code>Config</code>. The color is split into red, green, blue, and
      * alpha component which are stored as int array.
      * @param config Save settings to.
      * @see org.knime.core.data.property.ColorHandler.ColorModel
      *      #save(ConfigWO)
-     * @throws NullPointerException If the <i>config</i> is <code>null</code>. 
+     * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
+    @Override
     public void save(final ConfigWO config) {
         ConfigWO keyConfig = config.addConfig(CFG_KEYS);
         for (Map.Entry<DataCell, ColorAttr> e : m_map.entrySet()) {
@@ -127,7 +132,7 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
             config.addInt(key.toString(), color.getRGB());
         }
     }
-    
+
     /**
      * Read color settings from given <code>Config</code> and returns a new
      * <code>ColorModelNominal</code> object.
@@ -137,7 +142,7 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
      *         be read.
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
-    public static ColorModelNominal load(final ConfigRO config) 
+    public static ColorModelNominal load(final ConfigRO config)
             throws InvalidSettingsException {
         Map<DataCell, ColorAttr> map = new HashMap<DataCell, ColorAttr>();
         ConfigRO keyConfig = config.getConfig(CFG_KEYS);
@@ -148,7 +153,7 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
                 int[] v = config.getIntArray(key.toString());
                 color = new Color(v[0], v[1], v[2], v[3]);
             } catch (InvalidSettingsException ise) {
-                color = new Color(config.getInt(key.toString()), true); 
+                color = new Color(config.getInt(key.toString()), true);
             }
             DataCell cell = keyConfig.getDataCell(key);
             map.put(cell, ColorAttr.getInstance(color));
@@ -157,7 +162,7 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
     }
 
     /**
-     * @return A String for this <code>ColorModel</code> as list of 
+     * @return A String for this <code>ColorModel</code> as list of
      * <code>DataCell</code> to <code>Color</code> mapping.
      */
     public String printColorMapping() {
@@ -171,7 +176,7 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
         }
         return "[" + buf.toString() + "]";
     }
-      
+
     /**
      * @return <i>Nominal ColorModel</i>
      * @see java.lang.Object#toString()
@@ -180,7 +185,7 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
     public String toString() {
         return "Nominal ColorModel";
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -195,7 +200,7 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
         ColorModelNominal cmodel = (ColorModelNominal) obj;
         return m_map.equals(cmodel.m_map);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -203,5 +208,5 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
     public int hashCode() {
         return m_map.hashCode();
     }
-    
-}   
+
+}

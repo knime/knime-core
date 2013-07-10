@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.06.2006 (gabriel): created
  */
@@ -64,19 +64,19 @@ import org.knime.core.node.config.ConfigWO;
 
 
 /**
- * Nominal <code>ShapeModel</code> which maps a set of <code>DataCell</code> 
+ * Nominal <code>ShapeModel</code> which maps a set of <code>DataCell</code>
  * element to <code>Shape</code>.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class ShapeModelNominal implements ShapeModel, Iterable<DataCell> {
-    
+
     /** Maps DataCell values to Shape. */
     private final Map<DataCell, Shape> m_map;
-    
+
     /**
      * Creates new nominal <code>ShapeModel</code> based on a mapping.
-     * @param map Mapping form <code>DataCell</code> values to 
+     * @param map Mapping form <code>DataCell</code> values to
      *            <code>Shape</code> objects.
      * @throws IllegalArgumentException If the map is null.
      */
@@ -88,11 +88,12 @@ public final class ShapeModelNominal implements ShapeModel, Iterable<DataCell> {
     }
 
     /**
-     * Returns a Shape for the given DataCell value, or 
+     * Returns a Shape for the given DataCell value, or
      * <code>ShapeFactory.DEFAULT</code> if not set.
      * @param dc A DataCell value to get shape for.
      * @return A Shape for a DataCell value.
      */
+    @Override
     public Shape getShape(final DataCell dc) {
         Shape shape = m_map.get(dc);
         if (shape == null) {
@@ -100,24 +101,26 @@ public final class ShapeModelNominal implements ShapeModel, Iterable<DataCell> {
         }
         return shape;
     }
-    
+
     /**
      * Returns an iterator over the keys.
      * @see java.lang.Iterable#iterator()
      * @return - returns an iterator over the keys.
      */
+    @Override
     public Iterator<DataCell> iterator() {
         return m_map.keySet().iterator();
     }
-    
+
     private static final String CFG_KEYS = "keys";
-    
+
     /**
-     * Saves the <code>DataCell</code> to <code>Shape</code> mapping to the 
+     * Saves the <code>DataCell</code> to <code>Shape</code> mapping to the
      * given <code>Config</code>.
      * @param config Save settings to.
-     * @throws NullPointerException If the <i>config</i> is <code>null</code>. 
+     * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
+    @Override
     public void save(final ConfigWO config) {
         ConfigWO keyConfig = config.addConfig(CFG_KEYS);
         for (Map.Entry<DataCell, Shape> e : m_map.entrySet()) {
@@ -127,7 +130,7 @@ public final class ShapeModelNominal implements ShapeModel, Iterable<DataCell> {
             config.addString(key.toString(), shape.toString());
         }
     }
-    
+
     /**
      * Reads Shape settings from given <code>Config</code> and returns a new
      * <code>ShapeModelNominal</code> object.
@@ -137,7 +140,7 @@ public final class ShapeModelNominal implements ShapeModel, Iterable<DataCell> {
      *         could not be read.
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
-    public static ShapeModelNominal load(final ConfigRO config) 
+    public static ShapeModelNominal load(final ConfigRO config)
             throws InvalidSettingsException {
         Map<DataCell, Shape> map = new HashMap<DataCell, Shape>();
         ConfigRO keyConfig = config.getConfig(CFG_KEYS);
@@ -150,7 +153,7 @@ public final class ShapeModelNominal implements ShapeModel, Iterable<DataCell> {
     }
 
     /**
-     * @return A String for this <code>ShapeModel</code> as list of 
+     * @return A String for this <code>ShapeModel</code> as list of
      * <code>DataCell</code> to <code>Shape</code> mapping.
      */
     public String printShapeMapping() {
@@ -164,7 +167,7 @@ public final class ShapeModelNominal implements ShapeModel, Iterable<DataCell> {
         }
         return "[" + buf.toString() + "]";
     }
-      
+
     /**
      * @return <i>Nominal ShapeModel</i>
      * @see java.lang.Object#toString()
@@ -173,7 +176,7 @@ public final class ShapeModelNominal implements ShapeModel, Iterable<DataCell> {
     public String toString() {
         return "Nominal ShapeModel";
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -188,7 +191,7 @@ public final class ShapeModelNominal implements ShapeModel, Iterable<DataCell> {
         ShapeModelNominal model = (ShapeModelNominal) obj;
         return m_map.equals(model.m_map);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -196,4 +199,4 @@ public final class ShapeModelNominal implements ShapeModel, Iterable<DataCell> {
     public int hashCode() {
         return m_map.hashCode();
     }
-}   
+}

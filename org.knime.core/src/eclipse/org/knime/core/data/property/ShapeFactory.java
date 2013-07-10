@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   13.09.2006 (Fabian Dill): created
  */
@@ -68,11 +68,11 @@ import javax.swing.Icon;
 
 /**
  * Abstract class for different drawable shapes.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public final class ShapeFactory {
-    
+
     /** Name of and key for the rectangle. */
     public static final String RECTANGLE = "Rectangle";
     /** Name of and key for the circle. */
@@ -96,9 +96,9 @@ public final class ShapeFactory {
     /** Name of and key for the default shape. */
     public static final String DEFAULT = "Default";
 
-    
+
     private static Map<String, Shape> shapes;
-    
+
     static {
         shapes = new LinkedHashMap<String, Shape>();
         shapes.put(RECTANGLE, new Rectangle());
@@ -112,22 +112,22 @@ public final class ShapeFactory {
         shapes.put(HORIZONTAL_LINE, new HorizontalStroke());
         shapes.put(VERTICAL_LINE, new VerticalStroke());
     }
-    
+
     private ShapeFactory() {
-        
+
     }
-    
-    
+
+
     /**
-     * 
+     *
      * @return all registered shapes.
      */
     public static Set<Shape> getShapes() {
         return new LinkedHashSet<Shape>(shapes.values());
     }
-    
+
     /**
-     * 
+     *
      * @param name the name of the shape (also shape.toString() value).
      * @return the referring shape or a rectangle if the name couldn't resolved.
      */
@@ -138,63 +138,64 @@ public final class ShapeFactory {
         }
         return result;
     }
-    
+
     /**
      * Abstract implementation of a shape. Handles all common attributes such as
      * position, dimension, color, etc. All implementing classes have to
      * provide a possibility to get a new instance and to paint themselves.
-     * 
+     *
      * @author Fabian Dill, University of Konstanz
      */
     public abstract static class Shape {
-        
+
         private static final int DEFAULT_SIZE = 11;
-        
+
         private static final double BORDER_SIZE = 0.4;
-        
+
         private static final float DASH_FACTOR = 0.4f;
-        
+
         /**
-         * 
+         *
          * @return the shape as an icon.
          */
         public Icon getIcon() {
             return new Icon() {
+                @Override
                 public final int getIconHeight() {
                     return DEFAULT_SIZE;
                 }
-                
+                @Override
                 public final int getIconWidth() {
                     return DEFAULT_SIZE;
                 }
-                
-                public void paintIcon(final Component c, final Graphics g, 
+                @Override
+                public void paintIcon(final Component c, final Graphics g,
                         final int x, final int y) {
                     int dotX = x + (DEFAULT_SIZE / 2);
                     int dotY = y + (DEFAULT_SIZE / 2);
                     g.setXORMode(Color.lightGray);
                     ((Graphics2D)g).setRenderingHint(
-                            RenderingHints.KEY_ANTIALIASING, 
+                            RenderingHints.KEY_ANTIALIASING,
                             RenderingHints.VALUE_ANTIALIAS_ON);
-                    paint(g, dotX, dotY, DEFAULT_SIZE, 
+                    paint(g, dotX, dotY, DEFAULT_SIZE,
                             ColorAttr.DEFAULT.getColor(), false, false, false);
                     g.setPaintMode();
                 }
             };
-        };
-        
-        
+        }
+
+
         /**
          * Paints the hilite border.
          * @param g the graphics object.
          * @param x the x center position
          * @param y the y center position
          * @param size the dimension of the shape
-         * @param hilited falg whether the shape is hilited
+         * @param hilited flag whether the shape is hilited
          * @param selected flag whether the dot is selected
          */
-        public void paintBorder(final Graphics g, final int x, 
-                final int y, final int size, final boolean hilited, 
+        public void paintBorder(final Graphics g, final int x,
+                final int y, final int size, final boolean hilited,
                 final boolean selected) {
             int borderSize = (int)Math.ceil(BORDER_SIZE * size);
             if (borderSize < 1) {
@@ -213,22 +214,22 @@ public final class ShapeFactory {
                 g2.setColor(ColorAttr.HILITE);
                 Stroke stroke = new BasicStroke(borderSize);
                 g2.setStroke(stroke);
-                g2.drawRect(rectX, rectY, size + (2 * borderSize), 
+                g2.drawRect(rectX, rectY, size + (2 * borderSize),
                         size + (2 * borderSize));
             }
             if (selected) {
                 g2.setColor(Color.BLACK);
-                Stroke selectionStroke = new BasicStroke(borderSize, 
-                        BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f, 
+                Stroke selectionStroke = new BasicStroke(borderSize,
+                        BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1.0f,
                         new float[]{dash}, 0);
                 g2.setStroke(selectionStroke);
-                g2.drawRect(rectX, rectY, size + (2 * borderSize), 
-                        size + (2 * borderSize));                
+                g2.drawRect(rectX, rectY, size + (2 * borderSize),
+                        size + (2 * borderSize));
             }
             g2.setColor(backupColor);
             g2.setStroke(backupStroke);
         }
-        
+
         /**
          * Paints the dot and if hilited a border around the dot.
          * @param g the graphics object.
@@ -240,16 +241,16 @@ public final class ShapeFactory {
          * @param selected flag whether dot is selected.
          * @param faded flag whether point is faded.
          */
-        public void paint(final Graphics g, final int x, final int y, 
+        public void paint(final Graphics g, final int x, final int y,
                 final int size, final Color color,
-                final boolean hilited, final boolean selected, 
+                final boolean hilited, final boolean selected,
                 final boolean faded) {
             Color backupColor = g.getColor();
             if (faded && !hilited) {
                 if (!selected) {
                     g.setColor(ColorAttr.INACTIVE);
                 } else {
-                    g.setColor(ColorAttr.INACTIVE_SELECTED);                
+                    g.setColor(ColorAttr.INACTIVE_SELECTED);
                 }
             } else {
                 g.setColor(color);
@@ -264,7 +265,7 @@ public final class ShapeFactory {
             }
             g.setColor(backupColor);
         }
-        
+
 
         /**
          * Paints the shape.
@@ -276,22 +277,21 @@ public final class ShapeFactory {
          * @param selected flag whether the shape is selected
          */
         public abstract void paintShape(final Graphics g,
-                final int x, final int y, final int size, 
+                final int x, final int y, final int size,
                 final boolean selected, final boolean hilited);
-        
+
         /**
          * {@inheritDoc}
          */
         @Override
         public abstract String toString();
-        
+
     }
-    
+
     /* ------------- the shape implementations: ------------*/
     // Asterisk
     /**
-     * 
-     * @author Fabian Dill, University of Konstanz
+     *
      */
     private static class Asterisk extends Shape {
 
@@ -300,7 +300,7 @@ public final class ShapeFactory {
          */
         @Override
         public void paintShape(final Graphics g, final int x, final int y,
-                final int size, final boolean selected, 
+                final int size, final boolean selected,
                 final boolean hilited) {
             int x1 = x - (size / 2);
             int x2 = x;
@@ -312,7 +312,6 @@ public final class ShapeFactory {
             g.drawLine(x1, y2, x3, y2);
             g.drawLine(x1, y1, x3, y3);
             g.drawLine(x2, y3, x2, y1);
-            
         }
 
 
@@ -325,11 +324,10 @@ public final class ShapeFactory {
         }
 
     }
-    
-    // Circle 
+
+    // Circle
     /**
-     * 
-     * @author Fabian Dill, University of Konstanz
+     *
      */
     private static class Circle extends Shape {
 
@@ -338,13 +336,13 @@ public final class ShapeFactory {
          */
         @Override
         public void paintShape(final Graphics g, final int x, final int y,
-                final int size, final boolean selected, 
+                final int size, final boolean selected,
                 final boolean hilited) {
             int circleX = (int)(x - (size / 2.0));
             int circleY = (int)(y - (size / 2.0));
             g.fillOval(circleX, circleY, size, size);
         }
-        
+
 
         /**
          * {@inheritDoc}
@@ -357,8 +355,7 @@ public final class ShapeFactory {
     }
     // Cross
     /**
-     * 
-     * @author Fabian Dill, University of Konstanz
+     *
      */
     private static class Cross extends Shape {
 
@@ -366,8 +363,8 @@ public final class ShapeFactory {
          * {@inheritDoc}
          */
         @Override
-        public void paintShape(final Graphics g, final int x, final int y, 
-                final int size, final boolean selected, 
+        public void paintShape(final Graphics g, final int x, final int y,
+                final int size, final boolean selected,
                 final boolean hilited) {
             Graphics2D g2 = (Graphics2D)g;
             Stroke backupStroke = g2.getStroke();
@@ -384,7 +381,7 @@ public final class ShapeFactory {
             g2.drawLine(x1, y2, x3, y2);
             g2.setStroke(backupStroke);
         }
-        
+
 
         /**
          * {@inheritDoc}
@@ -395,10 +392,10 @@ public final class ShapeFactory {
         }
 
     }
-    
+
     // Diamond
     /**
-     * 
+     *
      * @author Fabian Dill, University of Konstanz
      */
     private static class Diamond extends Shape {
@@ -408,7 +405,7 @@ public final class ShapeFactory {
          */
         @Override
         public void paintShape(final Graphics g, final int x, final int y,
-                final int size, final boolean selected, 
+                final int size, final boolean selected,
                 final boolean hilited) {
             int x1 = x - (size / 2);
             int x2 = x;
@@ -435,8 +432,7 @@ public final class ShapeFactory {
     }
     // horizontal stroke
     /**
-     * 
-     * @author Fabian Dill, University of Konstanz
+     *
      */
     private static class HorizontalStroke extends Shape {
 
@@ -444,7 +440,7 @@ public final class ShapeFactory {
          * {@inheritDoc}
          */
         @Override
-        public void paintShape(final Graphics g, final int x, final int y, 
+        public void paintShape(final Graphics g, final int x, final int y,
                 final int size, final boolean selected, final boolean hilited) {
             Graphics2D g2 = (Graphics2D)g;
             Stroke backupStroke = g2.getStroke();
@@ -467,12 +463,11 @@ public final class ShapeFactory {
         }
 
     }
-    // Rectangle 
+    // Rectangle
     /**
-     * 
-     * @author Fabian Dill, University of Konstanz
+     *
      */
-    private static class Rectangle extends Shape { 
+    private static class Rectangle extends Shape {
 
         /**
          * {@inheritDoc}
@@ -498,8 +493,7 @@ public final class ShapeFactory {
     }
     // reverse triangle
     /**
-     * 
-     * @author Fabian Dill, University of Konstanz
+     *
      */
     private static class ReverseTriangle extends Shape {
 
@@ -507,7 +501,7 @@ public final class ShapeFactory {
          * {@inheritDoc}
          */
         @Override
-        public void paintShape(final Graphics g, final int x, final int y, 
+        public void paintShape(final Graphics g, final int x, final int y,
                 final int size, final boolean selected, final boolean hilited) {
             // draw here
             int x1 = (int)(x - (size / 2.0));
@@ -529,8 +523,7 @@ public final class ShapeFactory {
     }
     // triangle
     /**
-     * 
-     * @author Fabian Dill, University of Konstanz
+     *
      */
     private static class Triangle extends Shape {
 
@@ -538,7 +531,7 @@ public final class ShapeFactory {
          * {@inheritDoc}
          */
         @Override
-        public void paintShape(final Graphics g, final int x, final int y, 
+        public void paintShape(final Graphics g, final int x, final int y,
                 final int size, final boolean selected, final boolean hilited) {
             // draw here
             int x1 = (int)(x - (size / 2.0));
@@ -549,7 +542,7 @@ public final class ShapeFactory {
             int y3 = y1;
             g.fillPolygon(new int[]{x1, x2, x3}, new int[]{y1, y2, y3}, 3);
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -559,11 +552,10 @@ public final class ShapeFactory {
         }
 
     }
-    
-    // vertical stroke 
+
+    // vertical stroke
     /**
-     * 
-     * @author Fabian Dill, University of Konstanz
+     *
      */
     private static class VerticalStroke extends Shape {
 
@@ -572,7 +564,7 @@ public final class ShapeFactory {
          * {@inheritDoc}
          */
         @Override
-        public void paintShape(final Graphics g, final int x, final int y, 
+        public void paintShape(final Graphics g, final int x, final int y,
                 final int size, final boolean selected, final boolean hilited) {
             Graphics2D g2 = (Graphics2D)g;
             Stroke backupStroke = g2.getStroke();
@@ -582,7 +574,7 @@ public final class ShapeFactory {
             int y1 = y - (size / 2);
             int y2 = y + (size / 2);
             g.drawLine(x, y1, x, y2);
-            g2.setStroke(backupStroke);        
+            g2.setStroke(backupStroke);
         }
 
         /**
@@ -596,8 +588,7 @@ public final class ShapeFactory {
     }
     // X shape
     /**
-     * 
-     * @author Fabian Dill, University of Konstanz
+     *
      */
     private static class XShape extends Shape {
 
@@ -629,6 +620,6 @@ public final class ShapeFactory {
             return X_SHAPE;
         }
 
-    } 
-    
+    }
+
 }
