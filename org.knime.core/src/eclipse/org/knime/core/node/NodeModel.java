@@ -1854,5 +1854,14 @@ public abstract class NodeModel {
                 + " merge operator was created.");
     }
 
+    /**
+     * Returns the logger for this node.
+     *
+     * @return a node logger
+     * @since 2.8
+     */
+    protected final NodeLogger getLogger() {
+        return m_logger;
+    }
 }
 
