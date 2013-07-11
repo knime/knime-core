@@ -376,6 +376,13 @@ class FileRowIterator extends RowIterator {
             readCols++;
         } // end of while(readCols < colsToRead)
 
+        // seen EOF in the last column of the last row - insert missing value as item for this column (bug4262)
+        if (token == null && readCols == colsToRead - 1) {
+            if (!m_skipColumns[readCols]) {
+                row[createdCols++] = DataType.getMissingCell();
+            }
+        }
+
         int lineNr = m_tokenizer.getLineNumber();
         if ((lineNr > 0) && (token != null) && (token.equals("\n"))) {
             lineNr--;

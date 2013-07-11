@@ -1584,7 +1584,10 @@ public final class FileAnalyzer {
                         // ignore empty lines
                         linesRead++;
                     }
-
+                    if (token == null && colCount >= numOfCols) {
+                        // if the last line has no LF, EOF is delimits the last column
+                        colCount++;
+                    }
                     if (settings.ignoreEmptyTokensAtEndOfRow()) {
                         // we are looking for the maximum - those empty tokens
                         // should not contribute to it.
