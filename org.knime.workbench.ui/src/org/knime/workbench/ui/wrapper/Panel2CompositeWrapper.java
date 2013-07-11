@@ -66,6 +66,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.knime.core.node.util.ViewUtils;
 
 /**
  * Wrapper Composite that uses the SWT_AWT bridge to embed an AWT Panel into a
@@ -95,7 +96,7 @@ public class Panel2CompositeWrapper extends Composite {
         gridLayout.horizontalSpacing = 0;
         setLayout(gridLayout);
 
-        Frame awtFrame = SWT_AWT.new_Frame(this);
+        final Frame awtFrame = SWT_AWT.new_Frame(this);
         if ("gtk".equals(SWT.getPlatform()) && !x11ErrorHandlerFixInstalled.getAndSet(true)) {
             EventQueue.invokeLater(new Runnable() {
                 @Override
@@ -110,13 +111,18 @@ public class Panel2CompositeWrapper extends Composite {
          * components and SWT frames/dialogs to work smoothly together:
          * http://www.eclipse.org/articles/article.php?file=Article-Swing-SWT-Integration/index.html
          */
-        JApplet wrap = new JApplet();
-        wrap.add(m_awtComponent);
-        awtFrame.add(wrap);
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            @Override
+            public void run() {
+                JApplet wrap = new JApplet();
+                wrap.add(m_awtComponent);
+                awtFrame.add(wrap);
 
-        // Pack the frame
-        awtFrame.pack();
-        awtFrame.setVisible(true);
+                // Pack the frame
+                awtFrame.pack();
+                awtFrame.setVisible(true);
+            }
+        });
     }
 
     /**
