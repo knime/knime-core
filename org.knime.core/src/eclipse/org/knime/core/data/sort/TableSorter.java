@@ -429,27 +429,25 @@ abstract class TableSorter {
         double incProgress = m_rowsInInputTable <= 0
             ? -1.0 : 1.0 / (2.0 * m_rowsInInputTable);
         int counter = 0;
-        int cf = 0;
         int chunkStartRow = 0;
+        int rowsInCurrentChunk = 0;
 
         exec.setMessage("Reading table");
         for (Iterator<DataRow> iter = dataTable.iterator(); iter.hasNext();) {
-            cf++;
+            counter++;
+            rowsInCurrentChunk++;
             exec.checkCanceled();
-            if (!m_memService.isMemoryLow()
-                    && (cf % m_maxRows != 0 || cf == 0)) {
-                counter++;
-                exec.checkCanceled();
-                String message = "Reading table, " + counter + " rows read";
-                if (m_rowsInInputTable > 0) {
-                    progress += incProgress;
-                    exec.setProgress(progress, message);
-                } else {
-                    exec.setMessage(message);
-                }
-                DataRow row = iter.next();
-                buffer.add(row);
+            String message = "Reading table, " + counter + " rows read";
+            if (m_rowsInInputTable > 0) {
+                progress += incProgress;
+                exec.setProgress(progress, message);
             } else {
+                exec.setMessage(message);
+            }
+            DataRow row = iter.next();
+            buffer.add(row);
+            if ((m_memService.isMemoryLow() && (rowsInCurrentChunk >= m_maxOpenContainers))
+                || (counter % m_maxRows == 0)) {
                 LOGGER.debug("Writing chunk [" + chunkStartRow + ":"
                         + counter + "] - mem usage: " + getMemUsage());
                 if (m_rowsInInputTable > 0) {
@@ -482,15 +480,10 @@ abstract class TableSorter {
                 diskCont.close();
                 chunksCont.add(diskCont.getTable());
 
-                // Force full gc to be sure that there is not too much
-                // garbage
                 LOGGER.debug("Wrote chunk [" + chunkStartRow + ":"
                         + counter + "] - mem usage: " + getMemUsage());
-                Runtime.getRuntime().gc();
-
-                LOGGER.debug("Forced gc() when reading rows, new mem usage: "
-                        + getMemUsage());
                 chunkStartRow = counter + 1;
+                rowsInCurrentChunk = 0;
             }
         }
         // no or one row only in input table, can exit immediately
