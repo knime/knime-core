@@ -278,7 +278,7 @@ class RowHeaderTable extends JTable {
         private TableModel m_model;
         private String m_rowIdPrefix = "Row";
         private String m_rowIdSuffix = "";
-        private int m_rowIdStartValue = 1;
+        private int m_rowIdStartValue = 0;
 
         /**
          * @param model the model of the spreadsheet

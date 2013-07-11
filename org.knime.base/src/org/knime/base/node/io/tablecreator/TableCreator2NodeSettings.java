@@ -81,7 +81,7 @@ public final class TableCreator2NodeSettings {
         new TreeMap<Integer, ColProperty>();
     private String m_rowIdPrefix = "Row";
     private String m_rowIdSuffix = "";
-    private int m_rowIdStartValue = 1;
+    private int m_rowIdStartValue = 0;
     private boolean m_hightlightOutputTable = false;
 
     /**
