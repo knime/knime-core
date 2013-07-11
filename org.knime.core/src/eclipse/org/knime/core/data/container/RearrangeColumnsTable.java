@@ -436,10 +436,10 @@ public final class RearrangeColumnsTable
         CellFactory facForProgress = null;
         int workers = Integer.MAX_VALUE;
         int queueSize = Integer.MAX_VALUE;
-        Set<CellFactory> newColsFactories = newColsProducerMapping.getUniqueCellFactoryMap().keySet();
-        for (CellFactory fac : newColsFactories) {
-            if (fac instanceof AbstractCellFactory) {
-                AbstractCellFactory acf = (AbstractCellFactory)fac;
+        Collection<SpecAndFactoryObject> newColsFactories = newColsProducerMapping.getAllNewColumnsList();
+        for (SpecAndFactoryObject specAndFac : newColsFactories) {
+            if (specAndFac.getFactory() instanceof AbstractCellFactory) {
+                AbstractCellFactory acf = (AbstractCellFactory)specAndFac.getFactory();
                 workers = Math.min(workers, acf.getMaxParallelWorkers());
                 queueSize = Math.min(queueSize, acf.getMaxQueueSize());
             } else {
@@ -447,8 +447,8 @@ public final class RearrangeColumnsTable
                         + " should not have been called as the cell factories"
                         + " do not allow parallel processing");
             }
-            if (facForProgress == null) {
-                facForProgress = fac;
+            if ((facForProgress == null) || !specAndFac.isNewColumn()) {
+                facForProgress = specAndFac.getFactory();
             }
         }
         assert facForProgress != null;
