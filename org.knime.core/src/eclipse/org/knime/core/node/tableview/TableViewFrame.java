@@ -129,6 +129,7 @@ public class TableViewFrame extends JFrame {
         // frame's title bar. It is updated as new rows are inserted (user
         // scrolls down)
         view.getContentModel().addTableModelListener(new TableModelListener() {
+            @Override
             public void tableChanged(final TableModelEvent e) {
                 // fired when new rows have been seen (refer to description
                 // of caching strategy of the model)

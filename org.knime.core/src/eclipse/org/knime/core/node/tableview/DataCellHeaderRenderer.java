@@ -214,6 +214,7 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int getIconHeight() {
             return m_height;
         }
@@ -221,6 +222,7 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int getIconWidth() {
             return m_width;
         }
@@ -252,6 +254,7 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void paintIcon(
             final Component c, final Graphics g, final int x, final int y) {
             g.setColor(m_color);

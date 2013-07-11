@@ -666,6 +666,7 @@ public class TableContentView extends JTable {
         } else if (e.isControlDown()) {
             onSortRequest(convertColumnIndexToModel(columnInView));
         }
+        repaint();
     }
 
     /** Invoked by the mouse listener on the table header to trigger table
@@ -862,7 +863,6 @@ public class TableContentView extends JTable {
      * <p>This map is used to switch the renderer for a set of columns.
      * @return Such a (new) map.
      */
-    @SuppressWarnings("unchecked")
     public Map<DataType, String[]> getTypeRendererMap() {
         LinkedHashMap<DataType, String[]> result =
             new LinkedHashMap<DataType, String[]>();
