@@ -91,7 +91,7 @@ public final class NodeViewExport {
     private NodeViewExport() { }
 
     /** Used to initialized the export type map in a lazy way. */
-    private static void createExportMapLazy() {
+    private static synchronized void createExportMapLazy() {
         if (exportMap == null) {
             exportMap = new LinkedHashMap<String, ExportType>();
             addExportType(new PNGExportType());
