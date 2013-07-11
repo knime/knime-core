@@ -666,8 +666,8 @@ public class WrappedNodeDialog extends Dialog {
         });
 
         // underlying pane sizes
-        int width = panel.getWidth();
-        int height = panel.getHeight();
+        int width = panel.getPreferredSize().width;
+        int height = panel.getPreferredSize().height;
 
         // button bar sizes
         int widthButtonBar = buttonBar.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
