@@ -64,6 +64,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.util.MutableInteger;
 
 /**
  * This is the model for the business rule node. It takes the user-defined rules and assigns the row to the first or the
@@ -128,7 +129,7 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
 
         final BufferedDataTable[] ret = new BufferedDataTable[nrOutPorts];
         try {
-            final int[] rowIdx = new int[]{0};
+            final MutableInteger rowIdx = new MutableInteger(0);
             final int rows = inData[0].getRowCount();
             final VariableProvider provider = new VariableProvider() {
                 @Override
@@ -143,12 +144,12 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
 
                 @Override
                 public int getRowIndex() {
-                    return rowIdx[0];
+                    return rowIdx.intValue();
                 }
             };
             for (DataRow row : inData[0]) {
-                rowIdx[0]++;
-                exec.setProgress(rowIdx[0] / (double)rows, "Adding row " + rowIdx[0] + " of " + rows);
+                exec.setProgress(rowIdx.intValue() / (double)rows, "Adding row " + (rowIdx.intValue() + 1) + " of "
+                    + rows);
                 exec.checkCanceled();
                 boolean wasMatch = false;
                 for (Rule r : rules) {
@@ -162,6 +163,7 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
                 if (!wasMatch) {
                     containers[otherIndex].addRowToTable(row);
                 }
+                rowIdx.inc();
             }
         } finally {
             first.close();
