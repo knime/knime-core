@@ -60,6 +60,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.sort.BufferedDataTableSorter;
@@ -113,7 +114,7 @@ final class FileStoresInLoopCache {
         if (m_lastAddedKey != null) {
             int c = m_lastAddedKey.compareTo(key);
             if (c == 0) {
-                return; // already added (last), avoid duplicates were possible
+                return; // already added (last), avoid duplicates where possible
             } else if (c > 0) {
                 m_keysWereAddedSorted = false;
             }
@@ -139,24 +140,28 @@ final class FileStoresInLoopCache {
         CloseableRowIterator allKeysIterator = m_createdFileStoresTable.iterator();
         CloseableRowIterator endNodeKeysIterator = tableFromEndNode.iterator();
 
-        DataRow nextEndNodeKeyRow = next(endNodeKeysIterator);
-        DataRow nextAllKeysRow = next(allKeysIterator);
+        FileStoreKey nextLoopEndFSKey = next(endNodeKeysIterator, null);
+        FileStoreKey nextAllFSKey = next(allKeysIterator, null);
 
-        while (nextEndNodeKeyRow != null) {
-            if (nextAllKeysRow != null) {
-                if (equalFileStoreCell(nextAllKeysRow, nextEndNodeKeyRow)) {
-                    nextEndNodeKeyRow = next(endNodeKeysIterator);
+        while (nextLoopEndFSKey != null) {
+            if (nextAllFSKey != null) {
+                final int compare = nextLoopEndFSKey.compareTo(nextAllFSKey);
+                if (compare == 0) {
+                    nextLoopEndFSKey = next(endNodeKeysIterator, nextLoopEndFSKey);
+                    nextAllFSKey = next(allKeysIterator, nextAllFSKey);
+                } else if (compare > 0) {
+                    delete(nextAllFSKey, handler, nrFilesDeleted, nrFailedDeletes);
+                    nextAllFSKey = next(allKeysIterator, nextAllFSKey);
                 } else {
-                    delete(getFileStoreKey(nextAllKeysRow), handler, nrFilesDeleted, nrFailedDeletes);
+                    nextLoopEndFSKey = next(endNodeKeysIterator, nextLoopEndFSKey);
                 }
-                nextAllKeysRow = next(allKeysIterator);
             } else {
                 break;
             }
         }
-        while (nextAllKeysRow != null) {
-            delete(getFileStoreKey(nextAllKeysRow), handler, nrFilesDeleted, nrFailedDeletes);
-            nextAllKeysRow = next(allKeysIterator);
+        while (nextAllFSKey != null) {
+            delete(nextAllFSKey, handler, nrFilesDeleted, nrFailedDeletes);
+            nextAllFSKey = next(allKeysIterator, nextAllFSKey);
         }
         allKeysIterator.close();
         endNodeKeysIterator.close();
@@ -211,21 +216,40 @@ final class FileStoresInLoopCache {
         nrFilesDeleted.inc();
     }
 
-    private static DataRow next(final RowIterator it) {
-        return it.hasNext() ? it.next() : null;
+    private static FileStoreKey next(final RowIterator it, final FileStoreKey previousKey) {
+        FileStoreKey newKey;
+        // the table may have duplicates, but they are sorted and therefore consecutive.
+        do {
+            DataRow nextRow = it.hasNext() ? it.next() : null;
+            if (nextRow == null) {
+                return null;
+            }
+            newKey = getFileStoreKey(nextRow);
+        } while (newKey != null && previousKey != null && newKey.compareTo(previousKey) == 0);
+        return newKey;
     }
 
-    private static boolean equalFileStoreCell(final DataRow r1, final DataRow r2) {
-        if (r1 == null || r2 == null) {
+    private static boolean equalFileStoreCell(final FileStoreKey key1, final FileStoreKey key2) {
+        if (key1 == null || key2 == null) {
             return false;
         }
-        FileStoreKey v1 = getFileStoreKey(r1);
-        FileStoreKey v2 = getFileStoreKey(r2);
-        return v1.compareTo(v2) == 0;
+        return key1.compareTo(key2) == 0;
     }
 
     private static FileStoreKey getFileStoreKey(final DataRow r1) {
         return ((FileStoreKeyDataValue)r1.getCell(0)).getKey();
+    }
+
+    /** {@inheritDoc} */
+    @SuppressWarnings("deprecation")
+    @Override
+    public String toString() {
+        if (m_createdFileStoresTable != null) {
+            return "Closed - " + m_createdFileStoresTable.getRowCount() + " element(s):\n"
+                    + DefaultTable.toString(m_createdFileStoresTable);
+        } else {
+            return "Open - currently " + m_createdFileStoresContainer.size() + " element(s)";
+        }
     }
 
 }

@@ -96,5 +96,13 @@ public final class FileStore {
         return new File(parentDir, relativePath);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return m_key.toString();
+    }
+
 
 }
