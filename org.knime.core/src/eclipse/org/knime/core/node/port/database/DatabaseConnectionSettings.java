@@ -58,8 +58,10 @@ import java.sql.Statement;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -199,6 +201,40 @@ public class DatabaseConnectionSettings {
     private String m_user = null;
     private String m_pass = null;
 
+    /** Set of all TimeZone starting with GMT.
+     * @since 2.8
+     */
+    public static final Set<String> ALL_GMT_TIMEZONES = getAllTimeZones();
+    private static Set<String> getAllTimeZones() {
+        final LinkedHashSet<String> ret = new LinkedHashSet<String>();
+        for (String id : TimeZone.getAvailableIDs()) {
+            final String name = TimeZone.getTimeZone(id).getDisplayName();
+            if (name.startsWith("GMT")) {
+                ret.add(name);
+            }
+        }
+        return ret;
+    }
+    /** Field that represents the current TimeZone, e.g. GMT+01:00.
+     * @since 2.8
+     */
+    public static final String CURRENT_TIMEZONE = getCurrentTimeZone();
+    private static final String GMT0_TIMEZONE = "GMT+00:00";
+    private static String getCurrentTimeZone() {
+        final TimeZone cTimeZone = TimeZone.getDefault();
+        final int offset = cTimeZone.getRawOffset();
+        for (String s : ALL_GMT_TIMEZONES) {
+            if (s.startsWith("GMT")) {
+                TimeZone tz = TimeZone.getTimeZone(s);
+                if (tz.getRawOffset() == offset) {
+                    return s;
+                }
+            }
+        }
+        return cTimeZone.getDisplayName();
+    }
+    private String m_timezone = CURRENT_TIMEZONE;
+
     /** Create a default settings connection object. */
     public DatabaseConnectionSettings() {
         // init default driver with the first from the driver list
@@ -220,14 +256,30 @@ public class DatabaseConnectionSettings {
      * @param pass password for user name
      * @param credName credential id from {@link CredentialsProvider} or null
      */
+    @Deprecated
     public DatabaseConnectionSettings(final String driver, final String dbName,
             final String user, final String pass, final String credName) {
+        this(driver, dbName, user, pass, credName, GMT0_TIMEZONE);
+    }
+
+    /** Create a default database connection object.
+     * @param driver the database driver
+     * @param dbName database URL
+     * @param user user name
+     * @param pass password for user name
+     * @param credName credential id from {@link CredentialsProvider} or null
+     * @param timezone the TimeZone to correct data/time/timestamp fields
+     * @since 2.8
+     */
+    public DatabaseConnectionSettings(final String driver, final String dbName,
+            final String user, final String pass, final String credName, final String timezone) {
         this();
         m_driver   = driver;
         m_dbName   = dbName;
         m_user     = user;
         m_pass     = pass;
         m_credName = credName;
+        m_timezone = timezone;
     }
 
     /**
@@ -250,8 +302,7 @@ public class DatabaseConnectionSettings {
      * @throws NullPointerException if the connection is null
      */
     public DatabaseConnectionSettings(final DatabaseConnectionSettings conn) {
-        this(conn.m_driver, conn.m_dbName, conn.m_user, conn.m_pass,
-                conn.m_credName);
+        this(conn.m_driver, conn.m_dbName, conn.m_user, conn.m_pass, conn.m_credName, conn.m_timezone);
     }
 
     /** Map the keeps database connection based on the user and URL. */
@@ -333,15 +384,12 @@ public class DatabaseConnectionSettings {
             throws InvalidSettingsException, SQLException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidKeyException, IOException {
-        if (m_dbName == null || m_user == null || m_pass == null
-                || m_driver == null) {
-            throw new InvalidSettingsException("No settings available "
-                    + "to create database connection.");
+        if (m_dbName == null || m_user == null || m_pass == null || m_driver == null || m_timezone == null) {
+            throw new InvalidSettingsException("No settings available to create database connection.");
         }
-        Driver d = DatabaseDriverLoader.registerDriver(m_driver);
+        final Driver d = DatabaseDriverLoader.registerDriver(m_driver);
         if (!d.acceptsURL(m_dbName)) {
-            throw new InvalidSettingsException("Driver \"" + d
-                    + "\" does not accept URL: " + m_dbName);
+            throw new InvalidSettingsException("Driver \"" + d + "\" does not accept URL: " + m_dbName);
         }
 
         final String dbName = m_dbName;
@@ -357,8 +405,7 @@ public class DatabaseConnectionSettings {
         }
 
         // database connection key with user, password and database URL
-        ConnectionKey databaseConnKey =
-            new ConnectionKey(user, pass, dbName);
+        ConnectionKey databaseConnKey = new ConnectionKey(user, pass, dbName);
 
         // retrieve original key and/or modify connection key map
         synchronized (CONNECTION_KEYS) {
@@ -375,8 +422,15 @@ public class DatabaseConnectionSettings {
             // if connection already exists
             if (conn != null) {
                 try {
+                    // and is valid
+                    boolean isValid = true;
+                    try {
+                        isValid = conn.isValid(1);
+                    } catch (final Error e) {
+                        LOGGER.debug("java.sql.Connection#isValid(1) throws error: " + e.getMessage());
+                    }
                     // and is closed
-                    if (conn.isClosed() || !conn.isValid(1)) {
+                    if (conn.isClosed() || !isValid) {
                         CONNECTION_MAP.remove(databaseConnKey);
                     } else {
                         conn.clearWarnings();
@@ -391,13 +445,11 @@ public class DatabaseConnectionSettings {
                 /** {@inheritDoc} */
                 @Override
                 public Connection call() throws Exception {
-                    LOGGER.debug("Opening database connection to \""
-                            + dbName + "\"...");
+                    LOGGER.debug("Opening database connection to \"" + dbName + "\"...");
                     return DriverManager.getConnection(dbName, user, pass);
                 }
             };
-            Future<Connection> task =
-                CONNECTION_CREATOR_EXECUTOR.submit(callable);
+            Future<Connection> task = CONNECTION_CREATOR_EXECUTOR.submit(callable);
             try {
                 conn = task.get(LOGIN_TIMEOUT + 1, TimeUnit.SECONDS);
                 CONNECTION_MAP.put(databaseConnKey, conn);
@@ -448,6 +500,7 @@ public class DatabaseConnectionSettings {
         }
         DRIVER_ORDER.add(m_driver);
         DATABASE_URLS.add(m_dbName);
+        settings.addString("timezone", m_timezone);
     }
 
     /**
@@ -479,8 +532,7 @@ public class DatabaseConnectionSettings {
             final boolean write, final CredentialsProvider cp)
             throws InvalidSettingsException {
         if (settings == null) {
-            throw new InvalidSettingsException(
-                    "Connection settings not available!");
+            throw new InvalidSettingsException("Connection settings not available!");
         }
         String driver = settings.getString("driver");
         String database = settings.getString("database");
@@ -488,6 +540,7 @@ public class DatabaseConnectionSettings {
         String user = "";
         String password = null;
         String credName = null;
+        String timezone = settings.getString("timezone", GMT0_TIMEZONE);
         boolean useCredential = settings.containsKey("credential_name");
         if (useCredential) {
             credName = settings.getString("credential_name");
@@ -496,8 +549,7 @@ public class DatabaseConnectionSettings {
                 user = cred.getLogin();
                 password = cred.getPassword();
                 if (password == null) {
-                    LOGGER.warn("Credentials/Password has not been set, "
-                        + "using empty password.");
+                    LOGGER.warn("Credentials/Password has not been set, using empty password.");
                 }
             }
         } else {
@@ -509,8 +561,7 @@ public class DatabaseConnectionSettings {
                     password = KnimeEncryption.decrypt(pw);
                 }
             } catch (Exception e) {
-                LOGGER.error("Password could not be decrypted, reason: "
-                    + e.getMessage());
+                LOGGER.error("Password could not be decrypted, reason: " + e.getMessage());
             }
         }
         // write settings or skip it
@@ -523,8 +574,7 @@ public class DatabaseConnectionSettings {
                 m_credName = credName;
             } else {
                 if (m_user != null && m_dbName != null && m_pass != null) {
-                    if (!user.equals(m_user) || !database.equals(m_dbName)
-                            || !password.equals(m_pass)) {
+                    if (!user.equals(m_user) || !database.equals(m_dbName) || !password.equals(m_pass)) {
                         changed = true;
                     }
                 }
@@ -533,6 +583,7 @@ public class DatabaseConnectionSettings {
             m_user = user;
             m_pass = (password == null ? "" : password);
             m_dbName = database;
+            m_timezone = timezone;
             DATABASE_URLS.add(m_dbName);
             return changed;
         }
@@ -643,6 +694,20 @@ public class DatabaseConnectionSettings {
         }
     }
 
+    /** @return the TimeZone correction.
+     * @since 2.8
+     */
+    public final String getTimeZone() {
+        return m_timezone;
+    }
+
+    /** @return the TimeZone correction, raw offset in milli seconds.
+     * @since 2.8
+     */
+    public final int getTimeZoneRawOffset() {
+        return TimeZone.getTimeZone(m_timezone).getRawOffset();
+    }
+
     /**
      * @return user name used to login to the database
      * @deprecated use {@link #getUserName(CredentialsProvider)}
@@ -665,7 +730,7 @@ public class DatabaseConnectionSettings {
      * Set a new database driver.
      * @param driver used to open the connection
      * @deprecated use {@link DatabaseConnectionSettings#
-     * DatabaseConnectionSettings(String, String, String, String, String)}
+     * DatabaseConnectionSettings(String, String, String, String, String, String)}
      */
     @Deprecated
     public final void setDriver(final String driver) {
@@ -676,7 +741,7 @@ public class DatabaseConnectionSettings {
      * Set a new database name.
      * @param databaseName used to access the database URL
      * @deprecated use {@link DatabaseConnectionSettings#
-     * DatabaseConnectionSettings(String, String, String, String, String)}
+     * DatabaseConnectionSettings(String, String, String, String, String, String)}
      */
     @Deprecated
     public final void setDBName(final String databaseName) {
@@ -687,7 +752,7 @@ public class DatabaseConnectionSettings {
      * Set a new user name.
      * @param userName used to login to the database
      * @deprecated use {@link DatabaseConnectionSettings#
-     * DatabaseConnectionSettings(String, String, String, String, String)}
+     * DatabaseConnectionSettings(String, String, String, String, String, String)}
      */
     @Deprecated
     public final void setUserName(final String userName) {
@@ -698,7 +763,7 @@ public class DatabaseConnectionSettings {
      * Set a new password.
      * @param password (decrypted) used to login to the database
      * @deprecated use {@link DatabaseConnectionSettings#
-     * DatabaseConnectionSettings(String, String, String, String, String)}
+     * DatabaseConnectionSettings(String, String, String, String, String, String)}
      */
     @Deprecated
     public final void setPassword(final String password) {

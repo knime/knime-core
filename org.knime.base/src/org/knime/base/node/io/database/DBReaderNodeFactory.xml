@@ -39,6 +39,11 @@
         Your log-in password for the database. Note, the password is
         de- and encrypted before handling it internally.
 	</option>
+    <option name="TimeZone: ">
+	    Select the TimeZone to convert the date, time or timestamp field into. The current implementation can't 
+	    represent time zones. In order to support persisting those fields into a database, the time values can be change
+	    according to the selected time zone, which is used as the raw offset for the original values.
+	</option>
 	<option name="SQL Statement">
         Enter SQL statement being execute here, for example SELECT * FROM table.
         <br/>

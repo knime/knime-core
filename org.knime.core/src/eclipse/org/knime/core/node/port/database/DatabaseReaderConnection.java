@@ -841,7 +841,8 @@ public final class DatabaseReaderConnection {
             if (wasNull() || date == null) {
                 return DataType.getMissingCell();
             } else {
-                return new DateAndTimeCell(date.getTime(), true, false, false);
+                final long corrDate = date.getTime() + m_conn.getTimeZoneRawOffset();
+                return new DateAndTimeCell(corrDate, true, false, false);
             }
         }
 
@@ -850,7 +851,8 @@ public final class DatabaseReaderConnection {
             if (wasNull() || time == null) {
                 return DataType.getMissingCell();
             } else {
-                return new DateAndTimeCell(time.getTime(), false, true, true);
+                final long corrTime = time.getTime() + m_conn.getTimeZoneRawOffset();
+                return new DateAndTimeCell(corrTime, false, true, true);
             }
         }
 
@@ -859,8 +861,8 @@ public final class DatabaseReaderConnection {
             if (wasNull() || timestamp == null) {
                 return DataType.getMissingCell();
             } else {
-                return new DateAndTimeCell(
-                        timestamp.getTime(), true, true, true);
+                final long corrTime = timestamp.getTime() + m_conn.getTimeZoneRawOffset();
+                return new DateAndTimeCell(corrTime, true, true, true);
             }
         }
 

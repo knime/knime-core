@@ -85,8 +85,7 @@ import org.knime.core.node.workflow.CredentialsProvider;
  */
 public final class DatabaseWriterConnection {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(DatabaseWriterConnection.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(DatabaseWriterConnection.class);
 
     private DatabaseWriterConnection() {
         // empty default constructor
@@ -330,7 +329,8 @@ public final class DatabaseWriterConnection {
                         }
                         final DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
                         final DataCell cell = row.getCell(mapping[i]);
-                        fillStatement(stmt, dbIdx, cspec, cell);
+                        final int timezoneRawOffset = dbConn.getTimeZoneRawOffset();
+                        fillStatement(stmt, dbIdx, cspec, cell, timezoneRawOffset);
                     }
                     // if batch mode
                     if (batchSize > 1) {
@@ -465,7 +465,8 @@ public final class DatabaseWriterConnection {
                         final int columnIndex = spec.findColumnIndex(setColumns[i]);
                         final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
                         final DataCell cell = row.getCell(columnIndex);
-                        fillStatement(stmt, dbIdx, cspec, cell);
+                        final int timezoneRawOffset = dbConn.getTimeZoneRawOffset();
+                        fillStatement(stmt, dbIdx, cspec, cell, timezoneRawOffset);
                     }
                     // WHERE columns
                     for (int i = 0; i < whereColumns.length; i++) {
@@ -473,7 +474,8 @@ public final class DatabaseWriterConnection {
                         final int columnIndex = spec.findColumnIndex(whereColumns[i]);
                         final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
                         final DataCell cell = row.getCell(columnIndex);
-                        fillStatement(stmt, dbIdx, cspec, cell);
+                        final int timezoneRawOffset = dbConn.getTimeZoneRawOffset();
+                        fillStatement(stmt, dbIdx, cspec, cell, timezoneRawOffset);
                     }
 
                     // if batch mode
@@ -604,7 +606,8 @@ public final class DatabaseWriterConnection {
                         final int columnIndex = spec.findColumnIndex(whereColumns[i]);
                         final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
                         final DataCell cell = row.getCell(columnIndex);
-                        fillStatement(stmt, dbIdx, cspec, cell);
+                        final int timezoneRawOffset = dbConn.getTimeZoneRawOffset();
+                        fillStatement(stmt, dbIdx, cspec, cell, timezoneRawOffset);
                     }
 
                     // if batch mode
@@ -678,7 +681,7 @@ public final class DatabaseWriterConnection {
      * @throws SQLException if the value can't be set
      */
     private static void fillStatement(final PreparedStatement stmt, final int dbIdx,
-            final DataColumnSpec cspec, final DataCell cell)
+            final DataColumnSpec cspec, final DataCell cell, final int timezoneRawOffset)
             throws SQLException {
         if (cspec.getType().isCompatible(BooleanValue.class)) {
             if (cell.isMissing()) {
@@ -709,16 +712,16 @@ public final class DatabaseWriterConnection {
             if (cell.isMissing()) {
                 stmt.setNull(dbIdx, Types.DATE);
             } else {
-                DateAndTimeValue dateCell = (DateAndTimeValue) cell;
+                final DateAndTimeValue dateCell = (DateAndTimeValue) cell;
+                final long corrDate = dateCell.getUTCTimeInMillis() - timezoneRawOffset;
                 if (!dateCell.hasTime() && !dateCell.hasMillis()) {
-                    java.sql.Date date = new java.sql.Date(dateCell.getUTCTimeInMillis());
+                    java.sql.Date date = new java.sql.Date(corrDate);
                     stmt.setDate(dbIdx, date);
                 } else if (!dateCell.hasDate()) {
-                    java.sql.Time time = new java.sql.Time(dateCell.getUTCTimeInMillis());
+                    java.sql.Time time = new java.sql.Time(corrDate);
                     stmt.setTime(dbIdx, time);
                 } else {
-                    java.sql.Timestamp timestamp = new java.sql.Timestamp(
-                        dateCell.getUTCTimeInMillis());
+                    java.sql.Timestamp timestamp = new java.sql.Timestamp(corrDate);
                     stmt.setTimestamp(dbIdx, timestamp);
                 }
             }

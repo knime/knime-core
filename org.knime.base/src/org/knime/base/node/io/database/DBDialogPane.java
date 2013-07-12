@@ -85,8 +85,7 @@ import org.knime.core.util.KnimeEncryption;
  */
 final class DBDialogPane extends JPanel {
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(DBDialogPane.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(DBDialogPane.class);
 
     private final JComboBox m_driver = new JComboBox();
 
@@ -100,6 +99,7 @@ final class DBDialogPane extends JPanel {
 
     private final JCheckBox m_credCheckBox = new JCheckBox();
     private final JComboBox m_credBox = new JComboBox();
+    private final JComboBox m_timezone = new JComboBox();
 
     /** Default font used for all components within the database dialogs. */
     static final Font FONT = new Font("Monospaced", Font.PLAIN, 12);
@@ -189,6 +189,16 @@ final class DBDialogPane extends JPanel {
         });
         passPanel.add(m_pass, BorderLayout.CENTER);
         super.add(passPanel);
+
+// create and timezone field
+        final JPanel timezonePanel = new JPanel(new BorderLayout());
+        timezonePanel.setBorder(BorderFactory.createTitledBorder(" TimeZone "));
+        m_timezone.setFont(FONT);
+        for (String s : DatabaseConnectionSettings.ALL_GMT_TIMEZONES) {
+            m_timezone.addItem(s);
+        }
+        timezonePanel.add(m_timezone, BorderLayout.CENTER);
+        super.add(timezonePanel);
     }
 
     private void enableCredentials(final boolean flag) {
@@ -255,6 +265,10 @@ final class DBDialogPane extends JPanel {
             m_passwordChanged = false;
             m_credCheckBox.setSelected(false);
         }
+
+        // read timezone
+        final String timezone = settings.getString("timezone", DatabaseConnectionSettings.CURRENT_TIMEZONE);
+        m_timezone.setSelectedItem(timezone);
     }
 
     private void updateDriver() {
@@ -301,6 +315,8 @@ final class DBDialogPane extends JPanel {
                     new String(m_pass.getPassword()));
             }
         }
+        String timezone = (String) m_timezone.getSelectedItem();
+        settings.addString("timezone", timezone);
     }
 
     /**
@@ -313,8 +329,8 @@ final class DBDialogPane extends JPanel {
                 m_db.getSelectedItem().toString(),
                 m_user.getText(),
                 new String(m_pass.getPassword()),
-                m_credCheckBox.isSelected()
-                    ? m_credBox.getSelectedItem().toString() : null);
+                m_credCheckBox.isSelected() ? m_credBox.getSelectedItem().toString() : null,
+                (String) m_timezone.getSelectedItem());
     }
 }
 
