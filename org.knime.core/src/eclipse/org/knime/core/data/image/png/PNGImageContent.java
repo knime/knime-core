@@ -51,6 +51,7 @@ package org.knime.core.data.image.png;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -68,6 +69,8 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataType;
 import org.knime.core.data.image.ImageContent;
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.util.ImageViewPanel;
+import org.knime.core.node.util.ImageViewPanel.ScaleType;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -198,7 +201,9 @@ public class PNGImageContent implements ImageContent {
         if (error != null) {
             g.drawString(error, 0, 0);
         } else {
-            g.drawImage(image, 0, 0, width, height, null);
+            ImageViewPanel.drawInto(g, image, image.getWidth(), image.getHeight(),
+                new Rectangle(width, height), ScaleType.ShrinkAsNeeded);
+//            g.drawImage(image, 0, 0, width, height, null);
         }
     }
 

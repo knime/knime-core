@@ -51,6 +51,7 @@ package org.knime.core.node.util;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
@@ -132,32 +133,50 @@ public class ImageViewPanel extends JPanel implements Scrollable {
             int y = insets.top;
             int panelWidth = getWidth() - x - insets.right;
             int panelHeight = getHeight() - y - insets.bottom;
-            int imageWidth = m_image.getWidth();
-            int imageHeight = m_image.getHeight();
-            int drawWidth;
-            int drawHeight;
-            double scale;
-            if (ScaleType.None.equals(m_scaleType)) {
-                scale = 1.0;
-            } else {
-                scale = Math.max(imageWidth / (double)panelWidth, imageHeight / (double)panelHeight);
-                if (m_scaleType.equals(ScaleType.ShrinkAsNeeded)) {
-                    scale = Math.max(scale, 1.0);
-                }
+            final Rectangle drawingRectangle = new Rectangle(x, y, panelWidth, panelHeight);
+            drawInto(g, m_image, m_image.getWidth(), m_image.getHeight(), drawingRectangle, m_scaleType);
+        }
+    }
+
+    /** Scales and draws the given image into the argument graphics object.
+     * @param g to draw into.
+     * @param image the image width, e.g. ((BufferedImage)image).getWidth();
+     * @param imageWidth the image width, e.g. ((BufferedImage)image).getWidth();
+     * @param imageHeight the image height, e.g. ((BufferedImage)image).getHeight();
+     * @param drawingRectangle The rectangle in the graphics area to draw into
+     * @param scaleType The scaling type
+     */
+    public static void drawInto(final Graphics g, final Image image, final int imageWidth,
+        final int imageHeight, final Rectangle drawingRectangle, final ScaleType scaleType) {
+        final int x = drawingRectangle.x;
+        final int y = drawingRectangle.y;
+        final int panelWidth = drawingRectangle.width;
+        final int panelHeight = drawingRectangle.height;
+        int drawWidth;
+        int drawHeight;
+        double scale;
+        if (ScaleType.None.equals(scaleType)) {
+            scale = 1.0;
+        } else {
+            scale = Math.max(imageWidth / (double)panelWidth, imageHeight / (double)panelHeight);
+            if (scaleType.equals(ScaleType.ShrinkAsNeeded)) {
+                scale = Math.max(scale, 1.0);
             }
-            if (scale == 1.0) {
-                drawWidth = imageWidth;
-                drawHeight = imageHeight;
-            } else {
-                drawWidth = (int)(imageWidth / scale);
-                drawHeight = (int)(imageHeight / scale);
-            }
-            int placeX = Math.max(0, x + ((panelWidth - drawWidth) / 2));
-            int placeY = Math.max(0, y + ((panelHeight - drawHeight) / 2));
+        }
+        if (scale == 1.0) {
+            drawWidth = imageWidth;
+            drawHeight = imageHeight;
+        } else {
+            drawWidth = (int)(imageWidth / scale);
+            drawHeight = (int)(imageHeight / scale);
+        }
+        int placeX = Math.max(0, x + ((panelWidth - drawWidth) / 2));
+        int placeY = Math.max(0, y + ((panelHeight - drawHeight) / 2));
+        if (g instanceof Graphics2D) {
             Graphics2D g2d = (Graphics2D) g;
             g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-            g2d.drawImage(m_image, placeX, placeY, drawWidth, drawHeight, null);
         }
+        g.drawImage(image, placeX, placeY, drawWidth, drawHeight, null);
     }
 
     /** {@inheritDoc} */
