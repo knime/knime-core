@@ -132,13 +132,6 @@ public class NodeContainerOutPort extends NodePortAdaptor
         return getPortObjectSpec() instanceof InactiveBranchPortObjectSpec;
     }
 
-    /** {@inheritDoc}
-     * @since 2.8 */
-    @Override
-    public InternalNodeContainerState getNodeState() {
-        return m_snc.getInternalState();
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -250,20 +243,28 @@ public class NodeContainerOutPort extends NodePortAdaptor
     ///         State Listener methods
     //////////////////////////////////////////////
 
-    /**
-     *
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc}
+     * @since 2.8 */
+    @Override
+    public InternalNodeContainerState getNodeState() {
+        return m_snc.getInternalState();
+    }
+
+    /** @@inheritDoc}
+     * @since 2.8 */
+    @Override
+    public NodeContainerState getNodeContainerState() {
+        return getNodeState();
+    }
+
+    /** {@inheritDoc} */
     @Override
     public boolean addNodeStateChangeListener(
             final NodeStateChangeListener listener) {
         return m_listener.add(listener);
     }
 
-    /**
-     *
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public void notifyNodeStateChangeListener(final NodeStateEvent e) {
         NodeContext.pushContext(m_snc);
@@ -276,20 +277,14 @@ public class NodeContainerOutPort extends NodePortAdaptor
         }
     }
 
-    /**
-     *
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean removeNodeStateChangeListener(
             final NodeStateChangeListener listener) {
         return m_listener.remove(listener);
     }
 
-    /**
-     *
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public void stateChanged(final NodeStateEvent state) {
         if (!m_snc.getNodeContainerState().isExecutionInProgress()) {

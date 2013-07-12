@@ -306,6 +306,13 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
         return m_listener.remove(listener);
     }
 
+    /** {@inheritDoc}
+     * @since 2.8 */
+    @Override
+    public NodeContainerState getNodeContainerState() {
+        return getNodeState();
+    }
+
     /**
      *
      * {@inheritDoc}

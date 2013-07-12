@@ -2196,14 +2196,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * (has no affect on the workflow execution).
      * @since 2.6*/
     public void executePredecessorsAndWait(final NodeID id) throws InterruptedException {
-        final NodeContainer[] predNodes;
+        final NodeOutPort[] predecessorOutPorts;
         synchronized (m_workflowMutex) {
             final NodeContainer nc = getNodeContainer(id);
-            Set<ConnectionContainer> inCs = m_workflow.getConnectionsByDest(id);
-            predNodes = new NodeContainer[nc.getNrInPorts()];
-            for (ConnectionContainer c : inCs) {
-                predNodes[c.getDestPort()] = getNodeContainer(c.getSource());
-            }
+            predecessorOutPorts = assemblePredecessorOutPorts(id);
             boolean hasChanged = false;
             for (int i = 0; i < nc.getNrInPorts(); i++) {
                 hasChanged = markAndQueuePredecessors(id, i) || hasChanged;
@@ -2212,7 +2208,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 checkForNodeStateChanges(true);
             }
         }
-        waitWhileInExecution(predNodes, 0L, TimeUnit.MILLISECONDS);
+        waitWhileInExecution(predecessorOutPorts, 0L, TimeUnit.MILLISECONDS);
     }
 
     /** Find all nodes which are connected to a specific inport of a node
@@ -4479,7 +4475,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *         {@code true} if the time argument is 0 or negative.
      * @throws InterruptedException if the current thread is interrupted
      */
-    private static boolean waitWhileInExecution(final NodeContainer[] ncs,
+    private static boolean waitWhileInExecution(final NodeContainerStateObservable[] ncs,
             final long time, final TimeUnit unit)
         throws InterruptedException {
         // lock supporting timeout
@@ -4500,7 +4496,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
         };
         lock.lockInterruptibly();
-        for (NodeContainer nc : ncs) {
+        for (NodeContainerStateObservable nc : ncs) {
             if (nc != null) {
                 nc.addNodeStateChangeListener(listener);
             }
@@ -4517,7 +4513,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         } finally {
             lock.unlock();
-            for (NodeContainer nc : ncs) {
+            for (NodeContainerStateObservable nc : ncs) {
                 if (nc != null) {
                     nc.removeNodeStateChangeListener(listener);
                 }
@@ -4528,10 +4524,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /**
      * @param ncs
      * @return */
-    private static boolean containsExecutingNode(final NodeContainer[] ncs) {
+    private static boolean containsExecutingNode(final NodeContainerStateObservable[] ncs) {
         boolean isExecuting = false;
-        for (NodeContainer nc : ncs) {
-            if (nc != null && nc.getInternalState().isExecutionInProgress()) {
+        for (NodeContainerStateObservable nc : ncs) {
+            if (nc != null && nc.getNodeContainerState().isExecutionInProgress()) {
                 isExecuting = true;
                 break;
             }

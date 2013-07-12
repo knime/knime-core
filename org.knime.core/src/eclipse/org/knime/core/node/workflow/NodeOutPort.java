@@ -64,7 +64,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @noextend This interface is not intended to be extended by clients.
  * @noimplement This interface is not intended to be implemented by clients.
  */
-public interface NodeOutPort extends NodePort, NodeStateChangeListener {
+public interface NodeOutPort extends NodePort, NodeStateChangeListener, NodeContainerStateObservable {
 
     /**
      * Returns the <code>DataTableSpec</code> or null if not available.
@@ -103,7 +103,6 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener {
      */
     public InternalNodeContainerState getNodeState();
 
-
     /**
      * Returns the hilite handler for this port as set by the node this port is
      * output for.
@@ -129,25 +128,6 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener {
 
     /** Dispose the view (if any) associated with this port. */
     public void disposePortView();
-
-    /**
-     *
-     * @param listener a listener to the state of the port, that is the state
-     *  of the predecessor node
-     * @return true if the listener was added, false if it was already
-     *  registered
-     */
-    public boolean addNodeStateChangeListener(
-            final NodeStateChangeListener listener);
-
-    /**
-     *
-     * @param listener the listener to be de-registered
-     * @return true if it was successfully removed, false if it was not
-     *  registered
-     */
-    public boolean removeNodeStateChangeListener(
-            final NodeStateChangeListener listener);
 
     /**
      *

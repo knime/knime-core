@@ -98,7 +98,7 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  * @noextend This class is not intended to be subclassed by clients.
  */
-public abstract class NodeContainer implements NodeProgressListener {
+public abstract class NodeContainer implements NodeProgressListener, NodeContainerStateObservable {
 
     /** my logger. */
     private static final NodeLogger LOGGER =
@@ -771,34 +771,27 @@ public abstract class NodeContainer implements NodeProgressListener {
         }
     }
 
-    /**
-    *
-    * @param listener listener to the node's state
-    * @return true if the listener was not already registered, false otherwise
-    */
-   public boolean addNodeStateChangeListener(final NodeStateChangeListener listener) {
-       if (listener == null) {
-           throw new NullPointerException("Node state change listener must not be null!");
-       }
-       return m_stateChangeListeners.add(listener);
-   }
+    /** {@inheritDoc} */
+    @Override
+    public boolean addNodeStateChangeListener(final NodeStateChangeListener listener) {
+        if (listener == null) {
+            throw new NullPointerException("Node state change listener must not be null!");
+        }
+        return m_stateChangeListeners.add(listener);
+    }
 
-   /**
-    *
-    * @param listener listener to the node's state.
-    * @return true if the listener was successfully removed, false if the
-    *         listener was not registered
-    */
-   public boolean removeNodeStateChangeListener(final NodeStateChangeListener listener) {
-       return m_stateChangeListeners.remove(listener);
-   }
+    /** {@inheritDoc} */
+    @Override
+    public boolean removeNodeStateChangeListener(final NodeStateChangeListener listener) {
+        return m_stateChangeListeners.remove(listener);
+    }
 
-   /**
-    * @since 2.8
-    */
-   public NodeContainerState getNodeContainerState() {
-       return getInternalState();
-   }
+    /** {@inheritDoc}
+     * @since 2.8 */
+    @Override
+    public NodeContainerState getNodeContainerState() {
+        return getInternalState();
+    }
 
     /**
      * @return the status of this node
