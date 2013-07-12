@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Sep 1, 2008 (wiswedel): created
  */
@@ -72,11 +72,11 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 import org.knime.core.node.util.StringHistoryPanel;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 final class RegexSplitNodeDialogPane extends NodeDialogPane {
-    
+
     private final ColumnSelectionComboxBox m_columnSelectionPanel;
     private final StringHistoryPanel m_patternPanel;
     private final JCheckBox m_caseInsensitiveChecker;
@@ -92,7 +92,7 @@ final class RegexSplitNodeDialogPane extends NodeDialogPane {
                 "#######################################");
         JComboBox box = m_patternPanel.getComboBox();
         Font font = box.getFont();
-        box.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 
+        box.setFont(new Font(Font.MONOSPACED, Font.PLAIN,
                 (font == null ? 12 : font.getSize())));
         m_caseInsensitiveChecker = new JCheckBox(
                 "Ignore Case (Case Insensitive)");
@@ -104,29 +104,33 @@ final class RegexSplitNodeDialogPane extends NodeDialogPane {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTHWEST;
-        
+
         p.add(new JLabel("Target Column: "), gbc);
         gbc.gridx += 1;
+        gbc.weightx = 1.0;
         p.add(m_columnSelectionPanel, gbc);
-        
+
         gbc.gridx = 0;
         gbc.gridy += 1;
+        gbc.weightx = 0.0;
         p.add(new JLabel("Pattern: "), gbc);
         gbc.gridx += 1;
+        gbc.weightx = 1.0;
         p.add(m_patternPanel, gbc);
 
         gbc.gridx = 0;
         gbc.gridy += 1;
         gbc.gridwidth = 2;
+        gbc.weightx = 0.0;
         p.add(new JLabel(" "), gbc);
-        
+
         gbc.insets = new Insets(2, 2, 2, 2);
         gbc.gridy += 1;
         p.add(m_caseInsensitiveChecker, gbc);
-        
+
         gbc.gridy += 1;
         p.add(m_muliLineChecker, gbc);
-        
+
         addTab("Settings", p);
     }
 
