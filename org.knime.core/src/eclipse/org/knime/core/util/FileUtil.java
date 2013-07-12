@@ -813,7 +813,8 @@ public final class FileUtil {
                 rootDir = workflowContext.getTempLocation();
                 if (!rootDir.isDirectory()) {
                     LOGGER.error("Temp folder \"" + rootDir.getAbsolutePath() + "\" does not exist (associated "
-                            + "with NodeContext \"" + nodeContext + "\")");
+                            + "with NodeContext \"" + nodeContext + "\") - using default temp folder (\""
+                            + KNIMEConstants.getKNIMETempDir() + "\"");
                 }
             }
         }
