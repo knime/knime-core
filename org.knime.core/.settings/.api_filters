@@ -68,24 +68,6 @@
                 <message_argument value="configure(PortObjectSpec[], NodePostConfigure)"/>
             </message_arguments>
         </filter>
-        <filter comment="workflow version/persistor change" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.Node"/>
-                <message_argument value="getWarningMessageFromModel()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="workflow version/persistor change" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.Node"/>
-                <message_argument value="loadSettingsFrom(NodeSettingsRO)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="workflow version/persistor change" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.Node"/>
-                <message_argument value="saveSettingsTo(NodeSettingsWO)"/>
-            </message_arguments>
-        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/NodeConfigureHelper.java" type="org.knime.core.node.NodeConfigureHelper">
         <filter comment="workflow version/persistor change" id="1110441988">
