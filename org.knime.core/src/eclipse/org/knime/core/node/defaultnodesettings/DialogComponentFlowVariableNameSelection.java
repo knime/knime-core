@@ -75,14 +75,15 @@ import org.knime.core.node.workflow.FlowVariable;
  * @author Kilian Thiel, KNIME.com, Berlin, Germany
  * @since 2.8
  */
-public final class DialogComponentFlowVariableNameSelection
-extends DialogComponent {
+public final class DialogComponentFlowVariableNameSelection extends DialogComponent {
 
     private JComboBox m_jcombobox;
 
     private JLabel m_label;
 
     private FlowVariable.Type[] m_flowVarTypes;
+
+    private boolean m_hasNone;
 
     /**
      * Constructor creates a label and a combobox and adds them to the
@@ -100,9 +101,33 @@ extends DialogComponent {
             final SettingsModelString model, final String label,
             final Collection<FlowVariable> flowVars,
             final FlowVariable.Type... flowVarTypes) {
+        this(model, label, flowVars, false, flowVarTypes);
+    }
+
+    /**
+     * Constructor creates a label and a combobox and adds them to the
+     * component panel. The given flow variables, which are of the specified
+     * types are added as items to the combobox. If no types are specified
+     * all variables will be added.
+     *
+     * @param model The string model to store the name of the selected variable.
+     * @param label The title of the label to show.
+     * @param flowVars The flow variables to add to combobox.
+     * @param hasNone if true the field is optional and can be set to "NONE"
+     * @param flowVarTypes The types of flow variables which are added to
+     * combobox.
+     *
+     * @throws IllegalArgumentException Collection of FlowVariables can not be null
+     */
+    public DialogComponentFlowVariableNameSelection(
+            final SettingsModelString model, final String label,
+            final Collection<FlowVariable> flowVars,
+            final boolean hasNone,
+            final FlowVariable.Type... flowVarTypes) {
         super(model);
+        m_hasNone = hasNone;
         if (flowVars == null) {
-            throw new NullPointerException("Flow Variables may not be null!");
+            throw new IllegalArgumentException("Flow Variables may not be null!");
         }
 
         if (label != null) {
@@ -158,8 +183,7 @@ extends DialogComponent {
                     m_jcombobox.setBackground(DialogComponent.DEFAULT_BG);
                 }
             });
-            throw new InvalidSettingsException(
-                    "Please select an item from the list.");
+            throw new InvalidSettingsException("Please select an item from the list.");
         }
         // save the value of the flow variable into the model
         ((SettingsModelString)getModel()).setStringValue(
@@ -171,23 +195,18 @@ extends DialogComponent {
      */
     @Override
     protected void updateComponent() {
-        final String strVal =
-            ((SettingsModelString)getModel()).getStringValue();
+        final String strVal = ((SettingsModelString)getModel()).getStringValue();
         FlowVariable val = null;
-        if (strVal == null) {
-            val = null;
-        } else {
-            for (int i = 0, length = m_jcombobox.getItemCount();
-                i < length; i++) {
-                final FlowVariable curVal =
-                    (FlowVariable)m_jcombobox.getItemAt(i);
+        if (strVal != null) {
+            for (int i = 0, length = m_jcombobox.getItemCount(); i < length; i++) {
+                final FlowVariable curVal = (FlowVariable) m_jcombobox.getItemAt(i);
                 if (curVal.getName().equals(strVal)) {
                     val = curVal;
                     break;
                 }
             }
             if (val == null) {
-                val = new FlowVariable("", "");
+                val = new FlowVariable("NONE", "");
             }
         }
         boolean update;
@@ -203,11 +222,10 @@ extends DialogComponent {
         setEnabledComponents(getModel().isEnabled());
 
         // make sure the model is in sync (in case model value isn't selected)
-        FlowVariable selItem =
-            (FlowVariable)m_jcombobox.getSelectedItem();
+        final FlowVariable selItem = (FlowVariable) m_jcombobox.getSelectedItem();
+
         try {
-            if ((selItem == null && strVal != null)
-                    || (selItem != null && !selItem.getName().equals(strVal))) {
+            if ((selItem == null && strVal != null) || (selItem != null && !selItem.getName().equals(strVal))) {
                 // if the (initial) value in the model is not in the list
                 updateModel();
             }
@@ -270,12 +288,12 @@ extends DialogComponent {
      * @param select the item to select after the replace. Can be null, in which
      *            case the previous selection remains - if it exists in the new
      *            list.
+     * @throws IllegalArgumentException if set of flow variables is null or empty
      */
     public void replaceListItems(final Collection<FlowVariable> newItems,
             final String select) {
         if (newItems == null || newItems.size() < 1) {
-            throw new NullPointerException("The container with the new items"
-                    + " can't be null or empty.");
+            throw new IllegalArgumentException("The container with the new items can't be null or empty.");
         }
         Vector<FlowVariable> filteredItems = getFilteredFlowVariables(newItems);
 
@@ -287,11 +305,14 @@ extends DialogComponent {
         }
 
         m_jcombobox.removeAllItems();
+        if (m_hasNone) {
+            m_jcombobox.addItem(new FlowVariable("NONE", " "));
+        }
+
         FlowVariable selOption = null;
         for (final FlowVariable option : filteredItems) {
             if (option == null) {
-                throw new NullPointerException("Options in the selection"
-                        + " list can't be null");
+                throw new NullPointerException("Options in the selection list can't be null");
             }
             m_jcombobox.addItem(option);
             if (option.getName().equals(sel)) {
@@ -339,10 +360,8 @@ extends DialogComponent {
      * @param flowVars The flow variables to filter.
      * @return The vector of filtered flow variables.
      */
-    private Vector<FlowVariable> getFilteredFlowVariables(
-            final Collection<FlowVariable> flowVars) {
-        Vector<FlowVariable> flowVarsAsVector =
-            new Vector<FlowVariable>(flowVars.size());
+    private Vector<FlowVariable> getFilteredFlowVariables(final Collection<FlowVariable> flowVars) {
+        Vector<FlowVariable> flowVarsAsVector = new Vector<FlowVariable>(flowVars.size());
         if (m_flowVarTypes == null || m_flowVarTypes.length <= 0) {
             flowVarsAsVector.addAll(flowVars);
         } else {
