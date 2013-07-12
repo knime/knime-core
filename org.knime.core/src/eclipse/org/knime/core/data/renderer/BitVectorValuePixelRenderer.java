@@ -59,7 +59,7 @@ import org.knime.core.data.vector.bitvector.BitVectorValue;
 
 /**
  * Paints {@link BitVectorValue} elements. Each bit is represented by a little
- * bar, which is either painted (bit = set) or not.
+ * bar, which is either painted (bit = set) or not. At most {@link BitVectorValue#MAX_DISPLAY_BITS} bits are displayed.
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -115,7 +115,7 @@ public class BitVectorValuePixelRenderer extends AbstractPainterDataValueRendere
         if (m_bitVector == null) {
             return;
         }
-        int length = (int)Math.min(Integer.MAX_VALUE, m_bitVector.length());
+        int length = (int)Math.min(BitVectorValue.MAX_DISPLAY_BITS, m_bitVector.length());
         if (length == 0) {
             return;
         }

@@ -1072,7 +1072,7 @@ public class DenseBitVector {
     /**
      * Returns a string containing (comma separated) indices of the bits set in
      * this vector. The number of bit indices added to the string is limited to
-     * 300000. If the output is truncated, the string ends on &quot;... }&quot;
+     * {@link BitVectorValue#MAX_DISPLAY_BITS}. If the output is truncated, the string ends on &quot;... }&quot;
      *
      * @return a string containing (comma separated) indices of the bits set in
      *         this vector.
@@ -1082,10 +1082,10 @@ public class DenseBitVector {
         assert (checkConsistency() == null);
         long ones = cardinality();
 
-        int use = (int)Math.min(ones, 300000);
+        int use = (int)Math.min(ones, BitVectorValue.MAX_DISPLAY_BITS);
 
         StringBuilder result = new StringBuilder(use * 7);
-        result.append('{');
+        result.append("{length=").append(m_length).append(", set bits=");
         for (long i = nextSetBit(0); i > -1; i = nextSetBit(++i)) {
             result.append(i).append(", ");
         }
@@ -1105,14 +1105,14 @@ public class DenseBitVector {
      * character at string position <code>(length - 1)</code> holds the lowest
      * bits (bit 0 to 3), the character at position 0 represents the bits with
      * the largest index in the vector. If the length of the vector is larger
-     * than ({@link Integer#MAX_VALUE} - 1) * 4 (i.e. 8589934584), the result
+     * than {@link BitVectorValue#MAX_DISPLAY_BITS}, the result
      * is truncated (and ends with ...).
      *
      * @return the hex representation of this bit vector.
      */
     public String toHexString() {
         // the number of bits we store in the string
-        long max = Math.min(m_length, ((long)(Integer.MAX_VALUE - 12)) << 2);
+        long max = Math.min(m_length, BitVectorValue.MAX_DISPLAY_BITS);
 
         // 4 bits are combined to one character
         StringBuilder result = new StringBuilder((int)(max >> 2));
@@ -1164,14 +1164,14 @@ public class DenseBitVector {
      * a '0' represents a cleared bit. The character at string position
      * <code>(length - 1)</code> holds the bit with index 0, the character at
      * position 0 represents the bit with the largest index in the vector. If
-     * the length of the vector is larger than ({@link Integer#MAX_VALUE} - 3)
-     * (i.e. 2147483644), the result is truncated (and ends with ...).
+     * the length of the vector is larger than {@link BitVectorValue#MAX_DISPLAY_BITS}
+     * the result is truncated (and ends with ...).
      *
      * @return the binary (0/1) representation of this bit vector.
      */
     public String toBinaryString() {
         // the number of bits we store in the string
-        int max = (int)Math.min(m_length, Integer.MAX_VALUE - 4);
+        int max = (int)Math.min(m_length, BitVectorValue.MAX_DISPLAY_BITS);
 
         StringBuilder result = new StringBuilder(max);
         if (max == 0) {

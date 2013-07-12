@@ -66,6 +66,10 @@
                rendererFactoryClass="org.knime.core.data.renderer.BitVectorValuePixelRenderer$Factory"
                suggestAsDefault="false">
          </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.renderer.BitVectorValueStringRenderer$SetBitsRendererFactory"
+               suggestAsDefault="false">
+         </renderer>
       </dataValue>
       <dataValue
             valueClass="org.knime.core.data.BooleanValue">

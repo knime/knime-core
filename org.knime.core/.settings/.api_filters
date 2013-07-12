@@ -40,6 +40,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/vector/bitvector/BitVectorValue.java" type="org.knime.core.data.vector.bitvector.BitVectorValue">
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.vector.bitvector.BitVectorValue"/>
+                <message_argument value="MAX_DISPLAY_BITS"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/CopyNodePersistor.java" type="org.knime.core.node.CopyNodePersistor">
         <filter comment="workflow version/persistor change" id="338792546">
             <message_arguments>

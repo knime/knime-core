@@ -65,6 +65,14 @@ import org.knime.core.data.ExtensibleUtilityFactory;
  */
 public interface BitVectorValue extends DataValue {
     /**
+     * Maximum number of bits to show in string representations. The default value (8192) can be changed using the
+     * system property <tt>knime.data.bitvector.maxDisplayBits</tt>.
+     *
+     * @since 2.8
+     */
+    int MAX_DISPLAY_BITS = Integer.getInteger("knime.data.bitvector.maxDisplayBits", 8192);
+
+    /**
      * Meta information to bit vector values.
      *
      * @see DataValue#UTILITY

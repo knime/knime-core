@@ -110,6 +110,30 @@ public class BitVectorValueStringRenderer extends DefaultDataValueRenderer {
     }
 
 
+    /**
+     * Renderer that shows the set bits and the length.
+     *
+     * @since 2.8
+     */
+    public static final class SetBitsRendererFactory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return SetBitsRenderer.DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new SetBitsRenderer();
+        }
+    }
+
+
     private static final class HexRenderer extends BitVectorValueStringRenderer {
         static final String DESCRIPTION = "Hex String";
 
@@ -138,6 +162,24 @@ public class BitVectorValueStringRenderer extends DefaultDataValueRenderer {
         protected void setValue(final Object value) {
             if (value instanceof BitVectorValue) {
                 super.setValue(((BitVectorValue)value).toBinaryString());
+            } else {
+                super.setValue(value);
+            }
+        }
+    }
+
+
+    private static final class SetBitsRenderer extends BitVectorValueStringRenderer {
+        static final String DESCRIPTION = "Set bits";
+
+        SetBitsRenderer() {
+            super(DESCRIPTION);
+        }
+
+        @Override
+        protected void setValue(final Object value) {
+            if (value instanceof BitVectorValue) {
+                super.setValue(((BitVectorValue)value).toString());
             } else {
                 super.setValue(value);
             }
