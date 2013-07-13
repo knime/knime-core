@@ -3879,13 +3879,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private void invokeResetOnNode(final NodeID nodeID) {
         assert Thread.holdsLock(m_workflowMutex);
         NodeContainer nc = getNodeContainer(nodeID);
-        if (nc instanceof SingleNodeContainer) {
-            ((SingleNodeContainer)nc).reset();
-        } else {
-            // TODO - this case should never happen but can not yet be
-            // guaranteed since Bernd's persistor grap calls it left and right.
-            assert nc instanceof WorkflowManager;
-            ((WorkflowManager)nc).resetAllNodesInWFM();
+        if (nc.getInternalState().isExecuted()) {
+            if (nc instanceof SingleNodeContainer) {
+                invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
+            } else {
+                // TODO - this case should never happen but can not yet be
+                // guaranteed since Bernd's persistor grap calls it left and right.
+                assert nc instanceof WorkflowManager;
+                ((WorkflowManager)nc).resetAllNodesInWFM();
+            }
         }
     }
 
