@@ -71,6 +71,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -98,7 +99,7 @@ public final class FileUtil {
 
     private static final Random RANDOM = new Random();
 
-    private static long tempDirUnifier = (int)(100000 * Math.random());
+    private static final AtomicLong TEMP_DIR_UNIFIER = new AtomicLong((int)(100000 * Math.random()));
 
     // timeout when connecting to or reading from URLs
     private static int urlTimeout = 1000;
@@ -794,7 +795,7 @@ public final class FileUtil {
         }
         File tempDir;
         do {
-            tempDir = new File(rootDir, prefix + (tempDirUnifier++));
+            tempDir = new File(rootDir, prefix + (TEMP_DIR_UNIFIER.getAndIncrement()));
         } while (tempDir.exists());
         if (!tempDir.mkdirs()) {
             throw new IOException("Cannot create temporary directory '" + tempDir.getCanonicalPath() + "'.");
