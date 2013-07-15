@@ -48,92 +48,21 @@
  * History
  *   Jun 27, 2012 (wiswedel): created
  */
-package org.knime.testing.data.filestore;
+package org.knime.testing.node.filestore.create;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Random;
-
-import org.knime.core.data.filestore.FileStore;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 
 /**
- *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * 
+ * @author wiswedel
  */
-public final class LargeFile {
-
-    public static final int SIZE_OF_FILE = 1024;
-
-    private final FileStore m_fileStore;
-    private final long m_seed;
-    private boolean m_isWritten = false;
-
-    public static LargeFile create(final FileStore fs, final long seed, boolean keepInMemory) throws IOException {
-        LargeFile lf = new LargeFile(fs, seed);
-        if (!keepInMemory ) {
-            lf.write();
-        }
-        return lf;
-    }
-
-    public static LargeFile restore(final FileStore fs, final long seed) {
-        return new LargeFile(fs, seed);
-    }
-
-    /**
-     *  */
-    private LargeFile(final FileStore fs, final long seed) {
-        m_fileStore = fs;
-        m_seed = seed;
-    }
-
-    /** @return the seed */
-    public long getSeed() {
-        return m_seed;
-    }
-
-    /** @return the fileStore */
-    public FileStore getFileStore() {
-        return m_fileStore;
-    }
+final class FileStoreCreateNodeDialogPane extends DefaultNodeSettingsPane {
     
-    void write() throws IOException {
-        if (!m_isWritten) {
-            Random random = new Random(m_seed);
-            File file = m_fileStore.getFile();
-            DataOutputStream out = new DataOutputStream(new FileOutputStream(file));
-            byte[] ar = new byte[SIZE_OF_FILE / 2];
-            random.nextBytes(ar);
-            out.write(ar);
-            out.writeUTF(Long.toString(m_seed));
-            random.nextBytes(ar);
-            out.write(ar);
-            out.close();
-            m_isWritten = true;
-        }
+    FileStoreCreateNodeDialogPane() {
+        SettingsModelBoolean keepInMemorySettingsModel = FileStoreCreateNodeModel.createKeepInMemorySettingsModel();
+        addDialogComponent(new DialogComponentBoolean(keepInMemorySettingsModel, "Keep in memory"));
     }
 
-    public long read() throws IOException {
-        if (!m_isWritten) {
-            return m_seed;
-        }
-        File file = m_fileStore.getFile();
-        DataInputStream input = new DataInputStream(
-                new BufferedInputStream(new FileInputStream(file)));
-        for (int i = 0; i < SIZE_OF_FILE / 2; i++) {
-            input.readByte();
-        }
-        String identifier = input.readUTF();
-        for (int i = 0; i < SIZE_OF_FILE / 2; i++) {
-            input.readByte();
-        }
-        input.close(); 
-        m_isWritten = true;
-        return Long.parseLong(identifier);
-    }
 }

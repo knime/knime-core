@@ -69,6 +69,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelLong;
 import org.knime.testing.data.filestore.LargeFile;
 import org.knime.testing.data.filestore.LargeFileStoreCell;
@@ -78,6 +79,8 @@ import org.knime.testing.data.filestore.LargeFileStoreCell;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class FileStoreCreateNodeModel extends NodeModel {
+    
+    private final SettingsModelBoolean m_keepInMemorySettingsModel = createKeepInMemorySettingsModel();
 
     /**
      *  */
@@ -90,6 +93,7 @@ public class FileStoreCreateNodeModel extends NodeModel {
         ColumnRearranger r = new ColumnRearranger(spec);
         String name = DataTableSpec.getUniqueColumnName(spec, "large-file-store");
         DataColumnSpec s = new DataColumnSpecCreator(name, LargeFileStoreCell.TYPE).createSpec();
+        final boolean keepInMemory = m_keepInMemorySettingsModel.getBooleanValue();
         r.append(new SingleCellFactory(s) {
             @Override
             public DataCell getCell(final DataRow row) {
@@ -97,7 +101,7 @@ public class FileStoreCreateNodeModel extends NodeModel {
                 final long seed = Double.doubleToLongBits(Math.random());
                 try {
                     FileStore fs = ec.createFileStore(row.getKey().getString());
-                    lf = LargeFile.create(fs, seed);
+                    lf = LargeFile.create(fs, seed, keepInMemory);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -135,18 +139,25 @@ public class FileStoreCreateNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_keepInMemorySettingsModel.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        // m_keepInMemorySettingsModel.validate -- don't do it, added later
     }
 
     /** {@inheritDoc} */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        try {
+            m_keepInMemorySettingsModel.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            m_keepInMemorySettingsModel.setBooleanValue(false);
+        }
     }
 
     /** {@inheritDoc} */
@@ -170,5 +181,9 @@ public class FileStoreCreateNodeModel extends NodeModel {
     protected void reset() {
         // TODO Auto-generated method stub
 
+    }
+    
+    static SettingsModelBoolean createKeepInMemorySettingsModel() {
+        return new SettingsModelBoolean("keepInMemory", false);
     }
 }

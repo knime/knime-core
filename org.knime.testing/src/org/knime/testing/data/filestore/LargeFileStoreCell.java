@@ -69,6 +69,8 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
     public static final DataType TYPE = DataType.getType(LargeFileStoreCell.class);
 
     private final long m_seed;
+    
+    private LargeFile m_largeFile;
 
     public static DataCellSerializer<LargeFileStoreCell> getCellSerializer() {
         return new DataCellSerializer<LargeFileStoreCell>() {
@@ -85,6 +87,7 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
             @Override
             public void serialize(final LargeFileStoreCell cell, final DataCellDataOutput output)
                     throws IOException {
+                cell.m_largeFile.write();
                 output.writeLong(cell.m_seed);
             }
         };
@@ -102,7 +105,7 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
     public long getSeed() {
         return m_seed;
     }
-
+    
     /**
      * @param input
      * @throws IOException */
@@ -114,9 +117,19 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
      * @param largeFile */
     public LargeFileStoreCell(final LargeFile largeFile, final long seed) {
         super(largeFile.getFileStore());
+        m_largeFile = largeFile;
         m_seed = seed;
     }
+    
+    @Override
+    protected void postConstruct() throws IOException {
+        m_largeFile = LargeFile.restore(getFileStore(), m_seed);
+    }
 
+    @Override
+    protected void flushToFileStore() throws IOException {
+        m_largeFile.write();
+    }
 
     /** {@inheritDoc} */
     @Override
