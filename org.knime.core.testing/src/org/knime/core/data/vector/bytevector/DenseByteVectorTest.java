@@ -25,7 +25,6 @@ package org.knime.core.data.vector.bytevector;
 import junit.framework.TestCase;
 
 import org.knime.core.data.vector.bitvector.DenseBitVector;
-import org.knime.core.data.vector.bytevector.DenseByteVector;
 
 /**
  * Tests the {@link DenseBitVector} class.
@@ -759,18 +758,5 @@ public class DenseByteVectorTest extends TestCase {
         bv130.clear(129);
         assertTrue(!bv130.intersects(bv256));
         assertTrue(!bv256.intersects(bv130));
-    }
-
-    /**
-     * tests toString
-     */
-    public void testToString() {
-        DenseBitVector bv = new DenseBitVector(500000);
-        bv.set(18);
-        bv.set(7645);
-        bv.set(700);
-        bv.set(381966);
-        assertEquals(bv.toString(), "{18, 700, 7645, 381966}");
-
     }
 }
