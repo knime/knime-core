@@ -59,6 +59,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.commons.io.IOUtils;
 import org.knime.core.data.BooleanValue;
@@ -329,8 +330,7 @@ public final class DatabaseWriterConnection {
                         }
                         final DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
                         final DataCell cell = row.getCell(mapping[i]);
-                        final int timezoneRawOffset = dbConn.getTimeZoneRawOffset();
-                        fillStatement(stmt, dbIdx, cspec, cell, timezoneRawOffset);
+                        fillStatement(stmt, dbIdx, cspec, cell, dbConn.getTimeZone());
                     }
                     // if batch mode
                     if (batchSize > 1) {
@@ -465,8 +465,7 @@ public final class DatabaseWriterConnection {
                         final int columnIndex = spec.findColumnIndex(setColumns[i]);
                         final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
                         final DataCell cell = row.getCell(columnIndex);
-                        final int timezoneRawOffset = dbConn.getTimeZoneRawOffset();
-                        fillStatement(stmt, dbIdx, cspec, cell, timezoneRawOffset);
+                        fillStatement(stmt, dbIdx, cspec, cell, dbConn.getTimeZone());
                     }
                     // WHERE columns
                     for (int i = 0; i < whereColumns.length; i++) {
@@ -474,8 +473,7 @@ public final class DatabaseWriterConnection {
                         final int columnIndex = spec.findColumnIndex(whereColumns[i]);
                         final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
                         final DataCell cell = row.getCell(columnIndex);
-                        final int timezoneRawOffset = dbConn.getTimeZoneRawOffset();
-                        fillStatement(stmt, dbIdx, cspec, cell, timezoneRawOffset);
+                        fillStatement(stmt, dbIdx, cspec, cell, dbConn.getTimeZone());
                     }
 
                     // if batch mode
@@ -606,8 +604,7 @@ public final class DatabaseWriterConnection {
                         final int columnIndex = spec.findColumnIndex(whereColumns[i]);
                         final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
                         final DataCell cell = row.getCell(columnIndex);
-                        final int timezoneRawOffset = dbConn.getTimeZoneRawOffset();
-                        fillStatement(stmt, dbIdx, cspec, cell, timezoneRawOffset);
+                        fillStatement(stmt, dbIdx, cspec, cell, dbConn.getTimeZone());
                     }
 
                     // if batch mode
@@ -681,7 +678,7 @@ public final class DatabaseWriterConnection {
      * @throws SQLException if the value can't be set
      */
     private static void fillStatement(final PreparedStatement stmt, final int dbIdx,
-            final DataColumnSpec cspec, final DataCell cell, final int timezoneRawOffset)
+            final DataColumnSpec cspec, final DataCell cell, final TimeZone tz)
             throws SQLException {
         if (cspec.getType().isCompatible(BooleanValue.class)) {
             if (cell.isMissing()) {
@@ -713,7 +710,7 @@ public final class DatabaseWriterConnection {
                 stmt.setNull(dbIdx, Types.DATE);
             } else {
                 final DateAndTimeValue dateCell = (DateAndTimeValue) cell;
-                final long corrDate = dateCell.getUTCTimeInMillis() - timezoneRawOffset;
+                final long corrDate = dateCell.getUTCTimeInMillis() - tz.getOffset(dateCell.getUTCTimeInMillis());
                 if (!dateCell.hasTime() && !dateCell.hasMillis()) {
                     java.sql.Date date = new java.sql.Date(corrDate);
                     stmt.setDate(dbIdx, date);

@@ -115,8 +115,7 @@ public class DatabaseConnectionSettings {
      */
     private static final int LOGIN_TIMEOUT = initLoginTimeout();
     private static int initLoginTimeout() {
-        String tout = System.getProperty(
-                KNIMEConstants.PROPERTY_DATABASE_LOGIN_TIMEOUT);
+        String tout = System.getProperty(KNIMEConstants.PROPERTY_DATABASE_LOGIN_TIMEOUT);
         int timeout = 15; // default
         if (tout != null) {
             try {
@@ -204,8 +203,8 @@ public class DatabaseConnectionSettings {
     /** Set of all TimeZone starting with GMT.
      * @since 2.8
      */
-    public static final Set<String> ALL_GMT_TIMEZONES = getAllTimeZones();
-    private static Set<String> getAllTimeZones() {
+    public static final String[] ALL_GMT_TIMEZONES = getAllTimeZones();
+    private static String[] getAllTimeZones() {
         final LinkedHashSet<String> ret = new LinkedHashSet<String>();
         for (String id : TimeZone.getAvailableIDs()) {
             final String name = TimeZone.getTimeZone(id).getDisplayName();
@@ -213,13 +212,12 @@ public class DatabaseConnectionSettings {
                 ret.add(name);
             }
         }
-        return ret;
+        return ret.toArray(new String[ret.size()]);
     }
     /** Field that represents the current TimeZone, e.g. GMT+01:00.
      * @since 2.8
      */
     public static final String CURRENT_TIMEZONE = getCurrentTimeZone();
-    private static final String GMT0_TIMEZONE = "GMT+00:00";
     private static String getCurrentTimeZone() {
         final TimeZone cTimeZone = TimeZone.getDefault();
         final int offset = cTimeZone.getRawOffset();
@@ -233,7 +231,7 @@ public class DatabaseConnectionSettings {
         }
         return cTimeZone.getDisplayName();
     }
-    private String m_timezone = CURRENT_TIMEZONE;
+    private String m_timezone = "current";
 
     /** Create a default settings connection object. */
     public DatabaseConnectionSettings() {
@@ -259,7 +257,7 @@ public class DatabaseConnectionSettings {
     @Deprecated
     public DatabaseConnectionSettings(final String driver, final String dbName,
             final String user, final String pass, final String credName) {
-        this(driver, dbName, user, pass, credName, GMT0_TIMEZONE);
+        this(driver, dbName, user, pass, credName, "none");
     }
 
     /** Create a default database connection object.
@@ -540,7 +538,7 @@ public class DatabaseConnectionSettings {
         String user = "";
         String password = null;
         String credName = null;
-        String timezone = settings.getString("timezone", GMT0_TIMEZONE);
+        String timezone = settings.getString("timezone", "none");
         boolean useCredential = settings.containsKey("credential_name");
         if (useCredential) {
             credName = settings.getString("credential_name");
@@ -694,18 +692,19 @@ public class DatabaseConnectionSettings {
         }
     }
 
-    /** @return the TimeZone correction.
+    /** @return the TimeZone.
      * @since 2.8
      */
-    public final String getTimeZone() {
-        return m_timezone;
+    public final TimeZone getTimeZone() {
+        return TimeZone.getTimeZone(m_timezone);
     }
 
-    /** @return the TimeZone correction, raw offset in milli seconds.
+    /** @return the TimeZone correction, offset in milli seconds.
+     * @param date in the current date to compute the offset for
      * @since 2.8
      */
-    public final int getTimeZoneRawOffset() {
-        return TimeZone.getTimeZone(m_timezone).getRawOffset();
+    public final long getTimeZoneOffset(final long date) {
+        return TimeZone.getTimeZone(m_timezone).getOffset(date);
     }
 
     /**

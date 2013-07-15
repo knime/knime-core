@@ -841,7 +841,7 @@ public final class DatabaseReaderConnection {
             if (wasNull() || date == null) {
                 return DataType.getMissingCell();
             } else {
-                final long corrDate = date.getTime() + m_conn.getTimeZoneRawOffset();
+                final long corrDate = date.getTime() + m_conn.getTimeZoneOffset(date.getTime());
                 return new DateAndTimeCell(corrDate, true, false, false);
             }
         }
@@ -851,7 +851,7 @@ public final class DatabaseReaderConnection {
             if (wasNull() || time == null) {
                 return DataType.getMissingCell();
             } else {
-                final long corrTime = time.getTime() + m_conn.getTimeZoneRawOffset();
+                final long corrTime = time.getTime() + m_conn.getTimeZoneOffset(time.getTime());
                 return new DateAndTimeCell(corrTime, false, true, true);
             }
         }
@@ -861,7 +861,7 @@ public final class DatabaseReaderConnection {
             if (wasNull() || timestamp == null) {
                 return DataType.getMissingCell();
             } else {
-                final long corrTime = timestamp.getTime() + m_conn.getTimeZoneRawOffset();
+                final long corrTime = timestamp.getTime() + m_conn.getTimeZoneOffset(timestamp.getTime());
                 return new DateAndTimeCell(corrTime, true, true, true);
             }
         }

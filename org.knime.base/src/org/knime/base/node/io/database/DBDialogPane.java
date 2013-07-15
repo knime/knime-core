@@ -49,6 +49,7 @@
 package org.knime.base.node.io.database;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -60,11 +61,13 @@ import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -99,7 +102,11 @@ final class DBDialogPane extends JPanel {
 
     private final JCheckBox m_credCheckBox = new JCheckBox();
     private final JComboBox m_credBox = new JComboBox();
-    private final JComboBox m_timezone = new JComboBox();
+    private final JComboBox m_timezone = new JComboBox(DatabaseConnectionSettings.ALL_GMT_TIMEZONES);
+
+    private final JRadioButton m_noCorrectionTZ = new JRadioButton("No Correction (use UTC)");
+    private final JRadioButton m_currentTZ = new JRadioButton("Use current TimeZone");
+    private final JRadioButton m_selectTZ = new JRadioButton("TimeZone:");
 
     /** Default font used for all components within the database dialogs. */
     static final Font FONT = new Font("Monospaced", Font.PLAIN, 12);
@@ -191,13 +198,27 @@ final class DBDialogPane extends JPanel {
         super.add(passPanel);
 
 // create and timezone field
-        final JPanel timezonePanel = new JPanel(new BorderLayout());
+        final JPanel timezonePanel = new JPanel(new FlowLayout());
         timezonePanel.setBorder(BorderFactory.createTitledBorder(" TimeZone "));
         m_timezone.setFont(FONT);
-        for (String s : DatabaseConnectionSettings.ALL_GMT_TIMEZONES) {
-            m_timezone.addItem(s);
-        }
-        timezonePanel.add(m_timezone, BorderLayout.CENTER);
+        m_timezone.setSelectedItem(DatabaseConnectionSettings.CURRENT_TIMEZONE);
+        m_timezone.setEnabled(false);
+        m_selectTZ.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent ie) {
+                if (ie != null) {
+                    m_timezone.setEnabled(ie.getStateChange() == ItemEvent.SELECTED);
+                }
+            }
+        });
+        final ButtonGroup bg = new ButtonGroup();
+        bg.add(m_noCorrectionTZ);
+        bg.add(m_currentTZ);
+        bg.add(m_selectTZ);
+        timezonePanel.add(m_noCorrectionTZ);
+        timezonePanel.add(m_currentTZ);
+        timezonePanel.add(m_selectTZ);
+        timezonePanel.add(m_timezone);
         super.add(timezonePanel);
     }
 
@@ -267,8 +288,15 @@ final class DBDialogPane extends JPanel {
         }
 
         // read timezone
-        final String timezone = settings.getString("timezone", DatabaseConnectionSettings.CURRENT_TIMEZONE);
-        m_timezone.setSelectedItem(timezone);
+        final String timezone = settings.getString("timezone", "current");
+        if (timezone.equals("none")) {
+            m_noCorrectionTZ.setSelected(true);
+        } else if (timezone.equals("current")) {
+            m_currentTZ.setSelected(true);
+        } else {
+            m_selectTZ.setSelected(true);
+            m_timezone.setSelectedItem(timezone);
+        }
     }
 
     private void updateDriver() {
@@ -315,8 +343,14 @@ final class DBDialogPane extends JPanel {
                     new String(m_pass.getPassword()));
             }
         }
-        String timezone = (String) m_timezone.getSelectedItem();
-        settings.addString("timezone", timezone);
+        if (m_noCorrectionTZ.isSelected()) {
+            settings.addString("timezone", "none");
+        } else if (m_currentTZ.isSelected()) {
+            settings.addString("timezone", "current");
+        } else {
+            final String timezone = (String) m_timezone.getSelectedItem();
+            settings.addString("timezone", timezone);
+        }
     }
 
     /**

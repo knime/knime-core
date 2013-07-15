@@ -25,40 +25,43 @@
 	      sun.jdbc.odbc.JdbcOdbcDriver (Windows and Linux) is only available.
 	   </intro>
 		
-	<option name="Database Driver: ">
+	<option name="Database Driver">
 		Enter the database driver here; it is a Java class (including the
 		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
 		Additional driver can be registered via KNIME's preference page
         (Database Driver).
 	</option>
-	<option name="Database Name: ">
+	<option name="Database Name">
         Enter the database name here, for example 
         jdbc:odbc:database_name or jdbc:mysql://host:port/database_name
 	</option>
-	<option name="Workflow Credentials: ">
+	<option name="Workflow Credentials">
 	    If checked, the credentials (user and password) are used as defined on 
 	    the workflow. The credential name links to the specified user and 
 	    password. Those can be replaced or edit using the 'Workflow Credentials'
 	    menu available in the workflow context menu.
 	</option>
-	<option name="User Name: ">
+	<option name="User Name">
         Your log-in user name for the database.
 	</option>
-	<option name="Password: ">
+	<option name="Password">
         Your log-in password for the database. Note, the password is
         de- and encrypted before handling it internally.
 	</option>
-    <option name="TimeZone: ">
+    <option name="TimeZone">
 	    Select the TimeZone to convert the date, time or timestamp field into. The current implementation can't 
-	    represent time zones. In order to support persisting those fields into a database, the time values can be change
-	    according to the selected time zone, which is used as the raw offset for the original values.
+	    represent time zones. In order to support persisting those fields into a database, the time values can be 
+	    changed according to the selected time zone, which is used as the offset (including the daylight saving time)
+        for the original values: <i>No Correction (use UTC)</i> is used for workflows (created before 2.8) and does to
+        apply any correction, <i>Use current TimeZone</i> uses the current time zone offset to correct the date field 
+        before reading or writing, and <i>TimeZone: </i> allows selecting the time zone to covert the date values into.
 	</option>
-	<option name="SQL Statement: ">
+	<option name="SQL Statement">
         Enter the SQL-like query here, for example SELECT * FROM table. The 
         WHERE statement is automatically adjusted according to the possible
         values of the selected column.
 	</option>
-    <option name="Column selection: ">
+    <option name="Column selection">
         Select one column whose possible (distinct) values are used to 
         constrain the SQL WHERE clause.
 	</option>

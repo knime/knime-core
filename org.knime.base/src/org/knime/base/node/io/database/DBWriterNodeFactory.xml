@@ -43,10 +43,13 @@
         de- and encrypted before handling it internally and is not 
         stored inside the settings.
 	  </option>
-      <option name="TimeZone: ">
+      <option name="TimeZone">
 	    Select the TimeZone to convert the date, time or timestamp field into. The current implementation can't 
-	    represent time zones. In order to support persisting those fields into a database, the time values can be change
-	    according to the selected time zone, which is used as the raw offset for the original values.
+	    represent time zones. In order to support persisting those fields into a database, the time values can be 
+	    changed according to the selected time zone, which is used as the offset (including the daylight saving time)
+        for the original values: <i>No Correction (use UTC)</i> is used for workflows (created before 2.8) and does to
+        apply any correction, <i>Use current TimeZone</i> uses the current time zone offset to correct the date field 
+        before reading or writing, and <i>TimeZone: </i> allows selecting the time zone to covert the date values into.
 	  </option>
 	  <option name="Table Name">
         Enter the name of the table to which data should be written. Note, if 
