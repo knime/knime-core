@@ -54,9 +54,9 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.FileStoreKey;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -110,6 +110,18 @@ public abstract class FileStoreCell extends DataCell {
      * @throws IOException If thrown, the cell will be replaced by a missing value in the data stream and
      * an error will be reported to the log.  */
     protected void postConstruct() throws IOException {
+        // no op.
+    }
+
+    /** Called before the cell about to be serialized. Subclasses may override it to make sure the content
+     * is sync'ed with the file (e.g. in-memory content is written to the FileStore).
+     *
+     * <p>This method is also called when the file underlying the cell is copied into a another context (from
+     * a BufferedDataTable to DataTable).
+     * @throws IOException If thrown, the cell will be replaced by a missing value in the data stream and
+     * an error will be reported to the log.
+     * @since 2.8 */
+    protected void flushToFileStore() throws IOException {
         // no op.
     }
 

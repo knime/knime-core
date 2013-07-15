@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
@@ -155,10 +156,10 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
 
     /** {@inheritDoc} */
     @Override
-    public FileStoreKey translateToLocal(final FileStore fs) {
+    public FileStoreKey translateToLocal(final FileStore fs, final FileStoreCell fsOwner) {
         final FileStoreKey key = FileStoreUtil.getFileStoreKey(fs);
         if (getOwnerHandler(key) == null) {
-            return copyFileStore(fs);
+            return copyFileStore(fs, fsOwner);
         }
         return key;
     }
@@ -172,7 +173,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
         return getOwnerHandler(key) == null;
     }
 
-    synchronized FileStoreKey copyFileStore(final FileStore fs) {
+    private synchronized FileStoreKey copyFileStore(final FileStore fs, final FileStoreCell fsOwner) {
         FileStoreKey key = FileStoreUtil.getFileStoreKey(fs);
         if (m_createdFileStoreKeys == null) {
             LOGGER.debug("Duplicating file store objects - file store handler id "
@@ -187,6 +188,9 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
         }
         FileStore newStore;
         try {
+            // fixes problem with file store cell that keep things in memory until serialized:
+            // notify them that a copy is taken place and that they need to flush their in memory content
+            FileStoreUtil.invokeFlush(fsOwner);
             newStore = createFileStoreInternal(getNextIndex() + "_" + key.getName(), null, -1);
             FileUtil.copy(fs.getFile(), newStore.getFile());
         } catch (IOException e) {

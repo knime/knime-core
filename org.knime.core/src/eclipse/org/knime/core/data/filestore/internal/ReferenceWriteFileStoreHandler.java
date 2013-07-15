@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.node.ExecutionContext;
 
 /**
@@ -91,8 +92,8 @@ public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHand
 
     /** {@inheritDoc} */
     @Override
-    public FileStoreKey translateToLocal(final FileStore fs) {
-        return m_reference.translateToLocal(fs);
+    public FileStoreKey translateToLocal(final FileStore fs, final FileStoreCell fsOwner) {
+        return m_reference.translateToLocal(fs, fsOwner);
     }
 
     /** {@inheritDoc} */

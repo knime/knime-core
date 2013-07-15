@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.node.ExecutionContext;
 
@@ -96,7 +97,7 @@ public class ROWriteFileStoreHandler extends EmptyFileStoreHandler implements IW
 
     /** {@inheritDoc} */
     @Override
-    public FileStoreKey translateToLocal(final FileStore fs) {
+    public FileStoreKey translateToLocal(final FileStore fs, final FileStoreCell fsOwner) {
         return FileStoreUtil.getFileStoreKey(fs);
     }
 

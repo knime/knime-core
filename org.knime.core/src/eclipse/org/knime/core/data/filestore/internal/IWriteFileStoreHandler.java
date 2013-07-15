@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.node.ExecutionContext;
 
 /**
@@ -74,8 +75,9 @@ public interface IWriteFileStoreHandler extends IFileStoreHandler {
 
     /**
      * @param fs
+     * @param fsOwner TODO
      * @return */
-    public FileStoreKey translateToLocal(FileStore fs);
+    public FileStoreKey translateToLocal(FileStore fs, FileStoreCell fsOwner);
 
     public boolean mustBeFlushedPriorSave(final FileStore fs);
 

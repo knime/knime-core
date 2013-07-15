@@ -1308,8 +1308,9 @@ class Buffer implements KNIMEStreamConstants {
         Byte identifier = m_typeShortCuts.get(cellClass);
         FileStoreKey fileStoreKey = null;
         if (cell instanceof FileStoreCell) {
-            FileStore fileStore = FileStoreUtil.getFileStore((FileStoreCell)cell);
-            fileStoreKey = ((IWriteFileStoreHandler)m_fileStoreHandler).translateToLocal(fileStore);
+            final FileStoreCell fsCell = (FileStoreCell)cell;
+            FileStore fileStore = FileStoreUtil.getFileStore(fsCell);
+            fileStoreKey = ((IWriteFileStoreHandler)m_fileStoreHandler).translateToLocal(fileStore, fsCell);
         }
         final boolean isJavaSerializationOrBlob = ser == null && !isBlob;
         if (isJavaSerializationOrBlob) {

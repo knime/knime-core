@@ -55,6 +55,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.internal.LoopStartWritableFileStoreHandler.NestedLoopIdentifierProvider;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -111,8 +112,8 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
 
     /** {@inheritDoc} */
     @Override
-    public FileStoreKey translateToLocal(final FileStore fs) {
-        return m_reference.translateToLocal(fs);
+    public FileStoreKey translateToLocal(final FileStore fs, final FileStoreCell fsOwner) {
+        return m_reference.translateToLocal(fs, fsOwner);
     }
 
     /** {@inheritDoc} */

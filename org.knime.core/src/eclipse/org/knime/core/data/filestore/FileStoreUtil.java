@@ -84,6 +84,11 @@ public final class FileStoreUtil {
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
+    public static void invokeFlush(final FileStoreCell cell) throws IOException {
+        cell.flushToFileStore();
+    }
+
+    /** @noreference This method is not intended to be referenced by clients. */
     public static void retrieveFileStoreHandlerFrom(final FileStoreCell cell,
             final FileStoreKey key,
             final FileStoreHandlerRepository repos) throws IOException {
