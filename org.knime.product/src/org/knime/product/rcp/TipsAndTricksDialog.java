@@ -254,6 +254,7 @@ public class TipsAndTricksDialog extends Dialog {
         try {
             HttpURLConnection conn =
                     (HttpURLConnection)TIPS_AND_TRICKS_URL.openConnection();
+            conn.setReadTimeout(500);
             conn.setConnectTimeout(500);
             conn.connect();
 
