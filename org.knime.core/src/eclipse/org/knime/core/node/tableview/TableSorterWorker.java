@@ -71,6 +71,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
 
 import org.knime.core.data.DataTable;
@@ -87,14 +88,13 @@ import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeProgress;
 import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
-import org.knime.core.util.SwingWorkerWithContext;
 
 /**
  * SwingWorker that is used to sort the table content on mouse click in header.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class TableSorterWorker extends SwingWorkerWithContext<DataTable, NodeProgress> {
+final class TableSorterWorker extends SwingWorker<DataTable, NodeProgress> {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(TableSorterWorker.class);
@@ -140,7 +140,7 @@ final class TableSorterWorker extends SwingWorkerWithContext<DataTable, NodeProg
     /** Starts the sorting by calling {@link #execute()} and popping up the
      * progress bar.
      */
-    final void executeAndShowProgress() {
+    void executeAndShowProgress() {
         ViewUtils.invokeAndWaitInEDT(new Runnable() {
             @Override
             public void run() {
@@ -152,7 +152,7 @@ final class TableSorterWorker extends SwingWorkerWithContext<DataTable, NodeProg
 
     /** {@inheritDoc} */
     @Override
-    protected DataTable doInBackgroundWithContext() throws Exception {
+    protected DataTable doInBackground() throws Exception {
         int rowCount; // passed to table sorter for progress
         if (m_inputTable instanceof BufferedDataTable) {
             rowCount = ((BufferedDataTable)m_inputTable).getRowCount();
@@ -203,7 +203,7 @@ final class TableSorterWorker extends SwingWorkerWithContext<DataTable, NodeProg
 
     /** {@inheritDoc} */
     @Override
-    protected void processWithContext(final List<NodeProgress> chunks) {
+    protected void process(final List<NodeProgress> chunks) {
         // only display the latest progress update
         if (chunks.size() > 0) {
             NodeProgress nodeProgress = chunks.get(chunks.size() - 1);
@@ -218,7 +218,7 @@ final class TableSorterWorker extends SwingWorkerWithContext<DataTable, NodeProg
 
     /** {@inheritDoc} */
     @Override
-    protected void doneWithContext() {
+    protected void done() {
         m_progBar.dispose();
         if (isCancelled()) {
             return;
