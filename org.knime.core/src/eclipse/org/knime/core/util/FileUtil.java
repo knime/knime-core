@@ -111,18 +111,20 @@ public final class FileUtil {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                for (File f : TEMP_FILES) {
-                    if (!f.exists()) {
-                        continue;
-                    }
+                synchronized (TEMP_FILES) {
+                    for (File f : TEMP_FILES) {
+                        if (!f.exists()) {
+                            continue;
+                        }
 
-                    if (f.isFile()) {
-                        f.delete();
-                    } else if (f.isDirectory()) {
-                        try {
-                            deleteRecursively(f, false);
-                        } catch (Exception ex) {
-                            LOGGER.error(ex.getMessage(), ex);
+                        if (f.isFile()) {
+                            f.delete();
+                        } else if (f.isDirectory()) {
+                            try {
+                                deleteRecursively(f, false);
+                            } catch (Exception ex) {
+                                LOGGER.error(ex.getMessage(), ex);
+                            }
                         }
                     }
                 }
