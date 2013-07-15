@@ -50,6 +50,7 @@
  */
 package org.knime.core.node.tableview;
 
+
 /** Represents sort order in a table (multiple columns).
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
@@ -72,7 +73,7 @@ final class TableSortOrder {
 
     /** Indicates that no secondary sorting is used. */
     private static final int COLIDX_NONE = -2;
-    /** Indicates that the soring is on the rowID column. */
+    /** Indicates that the sorting is on the rowID column. */
     private static final int COLIDX_ROWKEY = -1;
 
     private final int m_colIndexPrimary;
@@ -85,8 +86,7 @@ final class TableSortOrder {
     TableSortOrder(final int colIndexPrimary) {
         // create object only if there is some sorting
         if (colIndexPrimary < COLIDX_ROWKEY) {
-            throw new IllegalArgumentException(
-                    "Invalid column index for sorting: " + colIndexPrimary);
+            throw new IllegalArgumentException("Invalid column index for sorting: " + colIndexPrimary);
         }
         m_colIndexPrimary = colIndexPrimary;
         m_primarySortIsAscending = false;
@@ -183,6 +183,58 @@ final class TableSortOrder {
             // make new column primary, discard (old) secondary
             return new TableSortOrder(colIdx, false,
                     m_colIndexPrimary, m_primarySortIsAscending);
+        }
+    }
+
+    /** Forces the next sort order according to the user selection (context menu).
+     * @param colIdx column clicked.
+     * @param sortKey Sort key as per context menu
+     * @return The next sorting.  */
+    TableSortOrder nextSortOrder(final int colIdx, final TableSortKey sortKey) {
+        if (colIdx < COLIDX_ROWKEY) {
+            throw new IllegalArgumentException(
+                    "Invalid sort column index: " + colIdx);
+        }
+        // if current column is primary
+        if (colIdx == m_colIndexPrimary) {
+            switch (sortKey) {
+                case PRIMARY_ASCENDING:
+                    return new TableSortOrder(colIdx, true, m_colIndexSecondary, m_secondarySortIsAscending);
+                case PRIMARY_DESCENDING:
+                    return new TableSortOrder(colIdx, false, m_colIndexSecondary, m_secondarySortIsAscending);
+                case NONE:
+                    if (m_colIndexSecondary >= 0) {
+                        return new TableSortOrder(m_colIndexSecondary, m_secondarySortIsAscending, COLIDX_NONE, false);
+                    } else {
+                        return new TableSortOrder(COLIDX_NONE, false, COLIDX_NONE, false);
+                    }
+                default:
+                    throw new IllegalArgumentException("Sort key must only be primary or none: " + sortKey);
+            }
+        // if current column is secondary
+        } else if (colIdx == m_colIndexSecondary) {
+            switch (sortKey) {
+                case SECONDARY_ASCENDING:
+                    return new TableSortOrder(colIdx, true, m_colIndexPrimary, m_primarySortIsAscending);
+                case SECONDARY_DESCENDING:
+                    return new TableSortOrder(colIdx, false, m_colIndexPrimary, m_primarySortIsAscending);
+                case NONE:
+                    return new TableSortOrder(m_colIndexPrimary, m_primarySortIsAscending, COLIDX_NONE, false);
+                default:
+                    throw new IllegalArgumentException("Sort key must only be primary or none: " + sortKey);
+            }
+        // if none of the above
+        } else {
+            switch (sortKey) {
+                case PRIMARY_ASCENDING:
+                    return new TableSortOrder(colIdx, true, m_colIndexPrimary, m_primarySortIsAscending);
+                case PRIMARY_DESCENDING:
+                    return new TableSortOrder(colIdx, false, m_colIndexPrimary, m_primarySortIsAscending);
+                case NONE:
+                    return new TableSortOrder(m_colIndexPrimary, m_primarySortIsAscending, COLIDX_NONE, false);
+                default:
+                    throw new IllegalArgumentException("Sort key must only be primary or none: " + sortKey);
+            }
         }
     }
 }

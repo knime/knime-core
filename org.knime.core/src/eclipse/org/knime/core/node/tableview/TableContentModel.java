@@ -75,6 +75,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
+import org.knime.core.node.tableview.TableSortOrder.TableSortKey;
 import org.knime.core.node.util.ViewUtils;
 
 
@@ -545,7 +546,7 @@ public class TableContentModel extends AbstractTableModel
 
     /** Enables/disables interactive sorting, which is usually invoked by
      * clicking the column header. This property controls whether the
-     * {@link #requestSort(int, JComponent)} call is ignored or not.
+     * {@link #requestSort(int, JComponent, TableSortKey)} call is ignored or not.
      *
      * <p>The default is false, i.e. sorting is not allowed.
      * @param isSortingAllowed the isSortingAllowed to set */
@@ -558,37 +559,56 @@ public class TableContentModel extends AbstractTableModel
      * @param column The column that was clicked. It will be sorted either
      * ascending or descending (or unsorted) depending on the previous sorting.
      * @param parComponent The parent component. The worker will create a modal
-     * progress dialog on this component. */
-    public final void requestSort(final int column,
-            final JComponent parComponent) {
+     * progress dialog on this component.
+     */
+    @Deprecated
+    public final void requestSort(final int column, final JComponent parComponent) {
+       requestSort(column, parComponent, null);
+    }
+
+    /** Sorts the table according the argument column. This call might be
+     * ignored if {@link #isSortingAllowed()} is false.
+     * @param column The column that was clicked. It will be sorted either
+     * ascending or descending (or unsorted) depending on the previous sorting.
+     * @param parComponent The parent component. The worker will create a modal
+     * progress dialog on this component.
+     * @param sortKey the new sort key
+     * @since 2.8
+     */
+    public final void requestSort(final int column, final JComponent parComponent, final TableSortKey sortKey) {
         if (isSortingAllowed()) {
             // queue in EDT to line up with table changes.
             // The sorting is done in a SwingWorker
             ViewUtils.invokeAndWaitInEDT(new Runnable() {
                 @Override
                 public void run() {
-                    sortTableIntern(column, parComponent);
+                    sortTableIntern(column, parComponent, sortKey);
                 }
             });
         }
     }
 
-    /** Implementation of {@link #requestSort(int, JComponent)} that is
+    /** Implementation of {@link #requestSort(int, JComponent, TableSortOrder)} that is
      * executed in the ED Thread. */
-    private void sortTableIntern(final int column,
-            final JComponent parComponent) {
+    private void sortTableIntern(final int column, final JComponent parComponent, final TableSortKey sortKey) {
         assert SwingUtilities.isEventDispatchThread();
         if (m_tableSorterWorker != null) {
             m_tableSorterWorker.cancel(true);
             m_tableSorterWorker = null;
         }
-        TableSortOrder nextOrder = m_tableSortOrder == null
-        ? new TableSortOrder(column) : m_tableSortOrder.nextSortOrder(column);
+        final TableSortOrder nextOrder;
+        if (sortKey == null) {
+            nextOrder = m_tableSortOrder == null
+                    ? new TableSortOrder(column) : m_tableSortOrder.nextSortOrder(column);
+        } else {
+            nextOrder = m_tableSortOrder == null
+                    ? new TableSortOrder(column) : m_tableSortOrder.nextSortOrder(column, sortKey);
+        }
         if (nextOrder == null) {
             setDataTableOnSort(m_originalUnsortedTable, nextOrder);
         } else {
             TableSorterWorker sortWorker = new TableSorterWorker(
-                    m_originalUnsortedTable, nextOrder, parComponent, this);
+                m_originalUnsortedTable, nextOrder, parComponent, this);
             sortWorker.executeAndShowProgress();
             m_tableSorterWorker = sortWorker;
         }

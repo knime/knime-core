@@ -93,6 +93,7 @@ import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.tableview.TableSortOrder.TableSortKey;
 
 
 
@@ -657,25 +658,62 @@ public class TableContentView extends JTable {
         Rectangle recOfColumn = header.getHeaderRect(columnInView);
         int horizPos = e.getX() - recOfColumn.x;
         assert (horizPos >= 0);
-        // right click in header.
-        if (SwingUtilities.isRightMouseButton(e)) {
-            JPopupMenu popup = getPopUpMenu(columnInView);
+        if (SwingUtilities.isRightMouseButton(e)) { // right click in header.
+            final JPopupMenu popup = getPopUpMenu(columnInView);
             if (popup.getSubElements().length > 0) { // only if it has content
                 popup.show(header, e.getX(), e.getY());
             }
-        } else if (e.isControlDown()) {
-            onSortRequest(convertColumnIndexToModel(columnInView));
+        } else if (e.isControlDown()) { // control pressed.
+            onSortRequest(convertColumnIndexToModel(columnInView), null);
+        } else if (SwingUtilities.isLeftMouseButton(e)) { // left click in header.
+            TableSortOrder sortOrder = null;
+            int colIndexInModel = -1;
+            TableModel model = getModel();
+            if (model instanceof TableContentModel) {
+                TableContentModel cntModel = (TableContentModel)model;
+                sortOrder = cntModel.getTableSortOrder();
+                colIndexInModel = convertColumnIndexToModel(columnInView);
+            } else if (model instanceof TableRowHeaderModel) {
+                TableRowHeaderModel rowHeaderModel = (TableRowHeaderModel)model;
+                TableContentInterface cntIface = rowHeaderModel.getTableContent();
+                if (cntIface instanceof TableContentModel) {
+                    TableContentModel cntModel = (TableContentModel)cntIface;
+                    sortOrder = cntModel.getTableSortOrder();
+                    colIndexInModel = -1;
+                }
+            }
+            TableSortKey sortKey;
+            if (sortOrder == null) {
+                sortKey = TableSortKey.NONE;
+            } else {
+                sortKey = sortOrder.getSortKeyForColumn(colIndexInModel);
+            }
+            final JPopupMenu popup = createSortPopupMenu(columnInView, sortKey);
+            popup.show(header, e.getX(), e.getY());
         }
-        repaint();
     }
 
     /** Invoked by the mouse listener on the table header to trigger table
      * sorting on a given column. This call might be ignored if the model
      * does not allow interactive sorting.
      * @param columnIndex The column that was clicked.
-     * @see TableContentModel#isSortingAllowed() */
+     * @see TableContentModel#isSortingAllowed()
+     */
+    @Deprecated
     protected void onSortRequest(final int columnIndex) {
-        getContentModel().requestSort(columnIndex, this);
+        onSortRequest(columnIndex, null);
+    }
+
+    /** Invoked by the mouse listener on the table header to trigger table
+     * sorting on a given column. This call might be ignored if the model
+     * does not allow interactive sorting.
+     * @param columnIndex The column that was clicked.
+     * @param sortKey the new sort key
+     * @see TableContentModel#isSortingAllowed()
+     * @since 2.8
+     */
+    protected void onSortRequest(final int columnIndex, final TableSortKey sortKey) {
+        getContentModel().requestSort(columnIndex, this, sortKey);
     }
 
     /**
@@ -752,6 +790,107 @@ public class TableContentView extends JTable {
                 menuItem.setSelected(thisID.equals(renderID));
                 subMenu.add(menuItem);
             }
+        }
+        return popup;
+    }
+
+    /** Create a custom popup menu when the mouse was clicked in a column header.
+     * This popup menu will contain possible sort options, ascending, descending, and clear sorting.
+     * @param column column for which to create the popup menu
+     * @param sortKey the new sort key
+     * @return a popup menu displaying these properties
+     * @see #onMouseClickInHeader(MouseEvent)
+     * @since 2.8
+     */
+    protected JPopupMenu createSortPopupMenu(final int column, final TableSortKey sortKey) {
+        final TableColumn tableColumn = getColumnModel().getColumn(column);
+        final Object value = tableColumn.getHeaderValue();
+        if (!(value instanceof DataColumnSpec)) {
+            // only occurs if someone overrides the addColumn method.
+            return null;
+        }
+
+        /** Action listener for all sort actions. */
+        final class SortKeyActionListener implements ActionListener {
+            private final TableSortKey m_sortKey;
+            /** New sort key action listener.  */
+            private SortKeyActionListener(final TableSortKey sk) {
+                m_sortKey = sk;
+            }
+            @Override
+            public void actionPerformed(final ActionEvent action) {
+                onSortRequest(column, m_sortKey);
+            }
+        }
+        final JPopupMenu popup = new JPopupMenu("Column Context Menu");
+        final JRadioButtonMenuItem menuItemDesc1 = new JRadioButtonMenuItem("Sort Descending");
+        menuItemDesc1.addActionListener(new SortKeyActionListener(TableSortKey.PRIMARY_DESCENDING));
+        final JRadioButtonMenuItem menuItemAsc1 = new JRadioButtonMenuItem("Sort Ascending");
+        menuItemAsc1.addActionListener(new SortKeyActionListener(TableSortKey.PRIMARY_ASCENDING));
+        final JRadioButtonMenuItem menuItemDesc2 = new JRadioButtonMenuItem("Sort Descending");
+        menuItemDesc2.addActionListener(new SortKeyActionListener(TableSortKey.SECONDARY_DESCENDING));
+        final JRadioButtonMenuItem menuItemAsc2 = new JRadioButtonMenuItem("Sort Ascending");
+        menuItemAsc2.addActionListener(new SortKeyActionListener(TableSortKey.SECONDARY_ASCENDING));
+        final JRadioButtonMenuItem menuItemNone = new JRadioButtonMenuItem("Clear Sorting");
+        menuItemNone.addActionListener(new SortKeyActionListener(TableSortKey.NONE));
+        popup.add(menuItemNone);
+        switch (sortKey) {
+            case NONE:
+                menuItemDesc1.setSelected(false);
+                menuItemDesc1.setEnabled(true);
+                popup.add(menuItemDesc1);
+                menuItemAsc1.setSelected(false);
+                menuItemAsc1.setEnabled(true);
+                popup.add(menuItemAsc1);
+                menuItemNone.setSelected(true);
+                menuItemNone.setEnabled(false);
+                popup.add(menuItemNone);
+                break;
+            case PRIMARY_DESCENDING:
+                menuItemDesc1.setSelected(true);
+                menuItemDesc1.setEnabled(false);
+                popup.add(menuItemDesc1);
+                menuItemAsc1.setSelected(false);
+                menuItemAsc1.setEnabled(true);
+                popup.add(menuItemAsc1);
+                menuItemNone.setSelected(false);
+                menuItemNone.setEnabled(true);
+                popup.add(menuItemNone);
+                break;
+            case PRIMARY_ASCENDING:
+                menuItemDesc1.setSelected(false);
+                menuItemDesc1.setEnabled(true);
+                popup.add(menuItemDesc1);
+                menuItemAsc1.setSelected(true);
+                menuItemAsc1.setEnabled(false);
+                popup.add(menuItemAsc1);
+                menuItemNone.setSelected(false);
+                menuItemNone.setEnabled(true);
+                popup.add(menuItemNone);
+                break;
+            case SECONDARY_DESCENDING:
+                menuItemDesc2.setSelected(true);
+                menuItemDesc2.setEnabled(false);
+                popup.add(menuItemDesc2);
+                menuItemAsc2.setSelected(false);
+                menuItemAsc2.setEnabled(true);
+                popup.add(menuItemAsc2);
+                menuItemNone.setSelected(false);
+                menuItemNone.setEnabled(true);
+                popup.add(menuItemNone);
+                break;
+            case SECONDARY_ASCENDING:
+                menuItemDesc2.setSelected(false);
+                menuItemDesc2.setEnabled(true);
+                popup.add(menuItemDesc2);
+                menuItemAsc2.setSelected(true);
+                menuItemAsc2.setEnabled(false);
+                popup.add(menuItemAsc1);
+                menuItemNone.setSelected(false);
+                menuItemNone.setEnabled(true);
+                popup.add(menuItemNone);
+                break;
+            default: throw new IllegalArgumentException("TableSortKey '" + sortKey.name() + "' not implemented.");
         }
         return popup;
     }
@@ -926,6 +1065,10 @@ public class TableContentView extends JTable {
                 firePropertyChange(
                         "requestRowHeight", getRowHeight(), bestRowHeight);
             }
+        }
+        final JTableHeader header = getTableHeader();
+        if (header != null) {
+            header.repaint(); // update sort icons
         }
     }
 
