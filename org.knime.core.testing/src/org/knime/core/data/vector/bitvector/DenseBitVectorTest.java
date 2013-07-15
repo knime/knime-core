@@ -954,12 +954,13 @@ public class DenseBitVectorTest extends TestCase {
      * tests toString
      */
     public void testToString() {
-        DenseBitVector bv = new DenseBitVector(500000);
+        int length = 500000;
+        DenseBitVector bv = new DenseBitVector(length);
         bv.set(18);
         bv.set(7645);
         bv.set(700);
         bv.set(381966);
-        assertEquals(bv.toString(), "{18, 700, 7645, 381966}");
+        assertEquals("{length=" + length + ", set bits=18, 700, 7645, 381966}", bv.toString());
 
     }
 

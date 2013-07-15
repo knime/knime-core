@@ -184,65 +184,88 @@ public class SparseBitVectorTest extends TestCase {
         bv10.set(3);
         bv10.set(1);
         bv10.set(9);
-        assertTrue(bv10.cardinality() == 3);
-        assertEquals(bv10.toString(), "{1, 3, 9}");
+        assertEquals(3, bv10.cardinality());
+        assertTrue(bv10.get(1));
+        assertTrue(bv10.get(3));
+        assertTrue(bv10.get(9));
+
         bv10.set(3);
         bv10.set(1);
         bv10.set(9);
-        assertTrue(bv10.cardinality() == 3);
-        assertEquals(bv10.toString(), "{1, 3, 9}");
+        assertEquals(3, bv10.cardinality());
+        assertTrue(bv10.get(1));
+        assertTrue(bv10.get(3));
+        assertTrue(bv10.get(9));
+
         bv10.clear(0);
-        assertEquals(bv10.toString(), "{1, 3, 9}");
+        assertTrue(bv10.get(1));
+        assertTrue(bv10.get(3));
+        assertTrue(bv10.get(9));
+
         bv10.clear(3);
-        assertTrue(bv10.cardinality() == 2);
-        assertEquals(bv10.toString(), "{1, 9}");
+        assertEquals(2, bv10.cardinality());
+        assertTrue(bv10.get(1));
+        assertFalse(bv10.get(3));
+        assertTrue(bv10.get(9));
+
         bv10.clear(9);
-        assertEquals(bv10.toString(), "{1}");
+        assertEquals(1, bv10.cardinality());
+        assertTrue(bv10.get(1));
+        assertFalse(bv10.get(3));
+        assertFalse(bv10.get(9));
+
         bv10.clear(9);
-        assertEquals(bv10.toString(), "{1}");
+        assertEquals(1, bv10.cardinality());
+        assertTrue(bv10.get(1));
+        assertFalse(bv10.get(3));
+        assertFalse(bv10.get(9));
+
         bv10.clear(1);
-        assertEquals(bv10.toString(), "{}");
-        assertTrue(bv10.cardinality() == 0);
+        assertEquals(0, bv10.cardinality());
         assertTrue(bv10.isEmpty());
+        assertFalse(bv10.get(1));
+        assertFalse(bv10.get(3));
+        assertFalse(bv10.get(9));
+
 
         bv10.set(3);
         bv10.set(1);
         bv10.set(9);
         bv10.set(0);
-        assertTrue(bv10.cardinality() == 4);
-        assertEquals(bv10.toString(), "{0, 1, 3, 9}");
+        assertEquals(4, bv10.cardinality());
+        assertEquals("{length=10, set bits=0, 1, 3, 9}", bv10.toString());
         bv10.set(2);
-        assertEquals(bv10.toString(), "{0, 1, 2, 3, 9}");
+        assertEquals("{length=10, set bits=0, 1, 2, 3, 9}", bv10.toString());
         bv10.set(4);
-        assertEquals(bv10.toString(), "{0, 1, 2, 3, 4, 9}");
+        assertEquals("{length=10, set bits=0, 1, 2, 3, 4, 9}", bv10.toString());
         bv10.set(5);
-        assertEquals(bv10.toString(), "{0, 1, 2, 3, 4, 5, 9}");
+        assertEquals("{length=10, set bits=0, 1, 2, 3, 4, 5, 9}", bv10.toString());
         bv10.set(6);
-        assertEquals(bv10.toString(), "{0, 1, 2, 3, 4, 5, 6, 9}");
+        assertEquals("{length=10, set bits=0, 1, 2, 3, 4, 5, 6, 9}", bv10.toString());
         bv10.set(7);
-        assertEquals(bv10.toString(), "{0, 1, 2, 3, 4, 5, 6, 7, 9}");
+        assertEquals("{length=10, set bits=0, 1, 2, 3, 4, 5, 6, 7, 9}", bv10.toString());
         bv10.set(8);
-        assertEquals(bv10.toString(), "{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}");
+        assertEquals("{length=10, set bits=0, 1, 2, 3, 4, 5, 6, 7, 8, 9}", bv10.toString());
 
         bv10.clear(9);
-        assertEquals(bv10.toString(), "{0, 1, 2, 3, 4, 5, 6, 7, 8}");
+        assertEquals("{length=10, set bits=0, 1, 2, 3, 4, 5, 6, 7, 8}", bv10.toString());
         bv10.clear(0);
-        assertEquals(bv10.toString(), "{1, 2, 3, 4, 5, 6, 7, 8}");
+        assertEquals("{length=10, set bits=1, 2, 3, 4, 5, 6, 7, 8}", bv10.toString());
         bv10.clear(5);
-        assertEquals(bv10.toString(), "{1, 2, 3, 4, 6, 7, 8}");
+        assertEquals("{length=10, set bits=1, 2, 3, 4, 6, 7, 8}", bv10.toString());
         bv10.clear(4);
-        assertEquals(bv10.toString(), "{1, 2, 3, 6, 7, 8}");
+        assertEquals("{length=10, set bits=1, 2, 3, 6, 7, 8}", bv10.toString());
         bv10.clear(8);
-        assertEquals(bv10.toString(), "{1, 2, 3, 6, 7}");
+        assertEquals("{length=10, set bits=1, 2, 3, 6, 7}", bv10.toString());
         bv10.set(9);
-        assertEquals(bv10.toString(), "{1, 2, 3, 6, 7, 9}");
-        assertTrue(bv10.cardinality() == 6);
+        assertEquals("{length=10, set bits=1, 2, 3, 6, 7, 9}", bv10.toString());
+        assertEquals(6, bv10.cardinality());
         bv10.set(5);
-        assertEquals(bv10.toString(), "{1, 2, 3, 5, 6, 7, 9}");
-        assertTrue(bv10.cardinality() == 7);
+        assertEquals("{length=10, set bits=1, 2, 3, 5, 6, 7, 9}", bv10.toString());
+        assertEquals(7, bv10.cardinality());
         bv10.set(4);
-        assertEquals(bv10.toString(), "{1, 2, 3, 4, 5, 6, 7, 9}");
-        assertTrue(bv10.cardinality() == 8);
+        assertEquals("{length=10, set bits=1, 2, 3, 4, 5, 6, 7, 9}", bv10.toString());
+        assertEquals(8, bv10.cardinality());
 
         try {
             bv10.set(-1);
@@ -561,7 +584,7 @@ public class SparseBitVectorTest extends TestCase {
         }
         result = a.and(b);
         assertTrue(result.cardinality() == 8);
-        assertEquals(result.toString(), "{0, 1, 2, 3, 4, 5, 6, 7}");
+        assertEquals("{length=16, set bits=0, 1, 2, 3, 4, 5, 6, 7}", result.toString());
         assertTrue(!result.isEmpty());
         assertTrue(result.length() == 16);
 
@@ -871,12 +894,13 @@ public class SparseBitVectorTest extends TestCase {
      * tests toString
      */
     public void testToString() {
-        SparseBitVector bv = new SparseBitVector(500000);
+        int length = 500000;
+        SparseBitVector bv = new SparseBitVector(length);
         bv.set(18);
         bv.set(7645);
         bv.set(700);
         bv.set(381966);
-        assertEquals(bv.toString(), "{18, 700, 7645, 381966}");
+        assertEquals("{length=" + length + ", set bits=18, 700, 7645, 381966}", bv.toString());
 
     }
 
