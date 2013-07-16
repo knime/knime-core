@@ -50,11 +50,6 @@
  */
 package org.knime.workbench.ui.wrapper;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.swing.SwingUtilities;
-
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
@@ -76,7 +71,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ViewUtils;
@@ -108,11 +102,6 @@ public class WrappedMultipleNodeDialog extends Dialog {
 
     private final NodeExecutorJobManagerDialogTab m_dialogPane;
 
-    private final AtomicBoolean m_dialogSizeComputed = new AtomicBoolean();
-
-    private static final boolean enableMacOSXWorkaround = Boolean
-            .getBoolean(KNIMEConstants.PROPERTY_MACOSX_DIALOG_WORKAROUND);
-
     /**
      * Creates the (application modal) dialog for a given node.
      *
@@ -132,24 +121,6 @@ public class WrappedMultipleNodeDialog extends Dialog {
         m_nodes = nodes;
         m_initValue = m_parentMgr.getCommonSettings(nodes);
         m_dialogPane = new NodeExecutorJobManagerDialogTab(splitType);
-        if (enableMacOSXWorkaround) {
-            // get underlying panel and do layout it
-            final Display display = Display.getCurrent();
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    m_dialogPane.doLayout();
-                    m_dialogSizeComputed.set(true);
-                    display.asyncExec(new Runnable() {
-                        @Override
-                        public void run() {
-                            // deliberately empty, this is only to wake up a
-                            // potentially waiting SWT-thread in getInitialSize
-                        }
-                    });
-                }
-            });
-        }
     }
 
     /**
@@ -226,10 +197,7 @@ public class WrappedMultipleNodeDialog extends Dialog {
     @Override
     public void create() {
         super.create();
-        String os = System.getProperty("os.name");
-        if (os != null && os.toLowerCase().startsWith("linux")) {
-            getShell().setSize(getInitialSize());
-        }
+        getShell().setSize(getInitialSize());
     }
 
     /**
@@ -390,31 +358,16 @@ public class WrappedMultipleNodeDialog extends Dialog {
      */
     @Override
     protected Point getInitialSize() {
-        if (enableMacOSXWorkaround) {
-            // this and the code in the constructor is a workaround
-            // for the nasty deadlock on MacOSX
-            // see http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=3151
-            while (!m_dialogSizeComputed.get()) {
-                Display.getCurrent().sleep();
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            @Override
+            public void run() {
+                m_dialogPane.doLayout();
             }
-        } else {
-            try {
-                SwingUtilities.invokeAndWait(new Runnable() {
-                    @Override
-                    public void run() {
-                        m_dialogPane.doLayout();
-                    }
-                });
-            } catch (InterruptedException ex) {
-                LOGGER.info("Thread interrupted", ex);
-            } catch (InvocationTargetException ex) {
-                LOGGER.error("Error while determining dialog sizes", ex);
-            }
-        }
+        });
 
         // underlying pane sizes
-        int width = m_dialogPane.getWidth();
-        int height = m_dialogPane.getHeight();
+        int width = m_dialogPane.getPreferredSize().width;
+        int height = m_dialogPane.getPreferredSize().height;
 
         // button bar sizes
         int widthButtonBar = buttonBar.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
