@@ -64,7 +64,6 @@ import javax.swing.SwingUtilities;
 
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.data.DataValue;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
 
@@ -77,8 +76,8 @@ import org.knime.core.node.workflow.NodeContext;
  * @author ohl, University of Konstanz
  */
 public final class ViewUtils {
-    private static final boolean enableMacOSXWorkaround = Boolean.getBoolean(
-        KNIMEConstants.PROPERTY_MACOSX_DIALOG_WORKAROUND);
+    private static final boolean disableSWTEventLoopWorkaround = Boolean
+        .getBoolean("knime.swt.disableEventLoopWorkaround");
 
     private static final Runnable EMPTY_RUNNABLE = new Runnable() {
         @Override
@@ -112,7 +111,7 @@ public final class ViewUtils {
             runMe.run();
         } else {
             try {
-                if (enableMacOSXWorkaround) {
+                if (!disableSWTEventLoopWorkaround) {
                     final Runnable nodeContextRunnable = getNodeContextWrapper(runMe);
                     final Display display = Display.getCurrent();
                     if (display == null) {

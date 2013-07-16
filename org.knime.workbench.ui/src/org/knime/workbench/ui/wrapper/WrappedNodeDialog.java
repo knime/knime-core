@@ -292,17 +292,12 @@ public class WrappedNodeDialog extends Dialog {
     }
 
     /**
-     * Linux (GTK) hack: must explicitly invoke <code>getInitialSize()</code>.
-     *
-     * @see org.eclipse.jface.window.Window#create()
+     * {@inheritDoc}
      */
     @Override
     public void create() {
         super.create();
-        String os = System.getProperty("os.name");
-        if (os != null && os.toLowerCase().startsWith("linux")) {
-            getShell().setSize(getInitialSize());
-        }
+        getShell().setSize(getInitialSize());
     }
 
     /**

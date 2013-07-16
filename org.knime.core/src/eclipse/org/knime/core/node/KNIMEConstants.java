@@ -190,7 +190,9 @@ public final class KNIMEConstants {
      * under MacOSX (see http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=3151).
      *
      * @since 2.5
+     * @deprecated This property is not used any more.
      */
+    @Deprecated
     public static final String PROPERTY_MACOSX_DIALOG_WORKAROUND =
         "knime.macosx.dialogworkaround";
 
@@ -398,11 +400,6 @@ public final class KNIMEConstants {
             }
         } else {
             knimeTempDir = new File(System.getProperty("java.io.tmpdir"));
-        }
-
-        if ((System.getProperty(PROPERTY_MACOSX_DIALOG_WORKAROUND) == null)
-                && (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)) {
-            System.setProperty(PROPERTY_MACOSX_DIALOG_WORKAROUND, "true");
         }
     }
 
