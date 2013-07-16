@@ -72,6 +72,7 @@ import javax.swing.UIManager;
 
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerException;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -1543,12 +1544,12 @@ public final class Node implements NodeModelWarningListener {
      * output is modified.
      *
      * @param rawInSpecs table specs from the predecessors
-     * @param postConfigure object called after node model calculated output
+     * @param configureHelper object called after node model calculated output
      *            specs
      * @return true if configure finished successfully.
      * @noreference This method is not intended to be referenced by clients.
      */
-    public boolean configure(final PortObjectSpec[] rawInSpecs, final NodeConfigureHelper postConfigure) {
+    public boolean configure(final PortObjectSpec[] rawInSpecs, final NodeConfigureHelper configureHelper) {
         boolean success = false;
         m_logger.assertLog(NodeContext.getContext() != null,
                 "No node context available, please check call hierarchy and fix it");
@@ -1556,8 +1557,7 @@ public final class Node implements NodeModelWarningListener {
             // reset message object
             clearNodeMessageAndNotify();
             // copy input port object specs, ignoring the 0-variable port:
-            PortObjectSpec[] inSpecs =
-                Arrays.copyOfRange(rawInSpecs, 1, rawInSpecs.length);
+            PortObjectSpec[] inSpecs = Arrays.copyOfRange(rawInSpecs, 1, rawInSpecs.length);
 
             // clean output spec
             for (int p = 0; p < m_outputs.length; p++) {
@@ -1602,27 +1602,53 @@ public final class Node implements NodeModelWarningListener {
                 }
                 if (isInactive) {
                     for (int j = 0; j < m_outputs.length; j++) {
-                        m_outputs[j].spec =
-                            InactiveBranchPortObjectSpec.INSTANCE;
+                        m_outputs[j].spec = InactiveBranchPortObjectSpec.INSTANCE;
                     }
                     if (success) {
                         m_logger.debug("Configure skipped. (" + getName() + " in inactive branch.)");
                     }
                     return true;
                 }
-                if (postConfigure != null) {
-                    postConfigure.preConfigure();
+                if (configureHelper != null) {
+                    configureHelper.preConfigure();
                 }
 
                 // call configure model to create output table specs
                 // guaranteed to return non-null, correct-length array
                 newOutSpec = invokeNodeModelConfigure(inSpecs);
-                if (postConfigure != null) {
-                    newOutSpec = postConfigure.postConfigure(inSpecs, newOutSpec);
+                if (configureHelper != null) {
+                    newOutSpec = configureHelper.postConfigure(inSpecs, newOutSpec);
                 }
-                for (int p = 0; p < newOutSpec.length; p++) {
-                    // update data table spec
-                    m_outputs[p + 1].spec = newOutSpec[p];
+                // find out if we are in the middle of executing a loop and this is a LoopEnd node
+                boolean isIntermediateRunningLoop = false;
+                if (isModelCompatibleTo(LoopEndNode.class)) {
+                    if ((getLoopContext() != null) && !getPauseLoopExecution()) {
+                        FlowLoopContext flc = m_model.getFlowObjectStack().peek(FlowLoopContext.class);
+                        if ((flc != null) && (flc.getIterationIndex() > 0)) {
+                            // don't treat first iteration as "in the middle":
+                            isIntermediateRunningLoop = true;
+                        }
+                    }
+                }
+                if (!isIntermediateRunningLoop) {
+                    // update data table specs
+                    for (int p = 0; p < newOutSpec.length; p++) {
+                        m_outputs[p + 1].spec = newOutSpec[p];
+                    }
+                } else {
+                    // update data table specs but remove domains when called with a running loop
+                    // on the loop end node (avoids costly configure calls on remainder of workflow).
+                    for (int p = 0; p < newOutSpec.length; p++) {
+                        if (newOutSpec[p] instanceof DataTableSpec) {
+                            // remove domain before assigning spec to outputs
+                            DataTableSpecCreator dtsCreator = new DataTableSpecCreator((DataTableSpec)newOutSpec[p]);
+                            dtsCreator.dropAllDomains();
+                            m_outputs[p + 1].spec = dtsCreator.createSpec();
+                        } else {
+                            // no domain to clean in PortObjectSpecs
+                            m_outputs[p + 1].spec = newOutSpec[p];
+                        }
+                    }
                 }
                 m_outputs[0].spec = FlowVariablePortObjectSpec.INSTANCE;
                 success = true;
@@ -1634,8 +1660,7 @@ public final class Node implements NodeModelWarningListener {
                     createWarningMessageAndNotify(ise.getMessage(), ise);
                 }
             } catch (Throwable t) {
-                String error = "Configure failed ("
-                    + t.getClass().getSimpleName() + "): "
+                String error = "Configure failed (" + t.getClass().getSimpleName() + "): "
                     + t.getMessage();
                 createErrorMessageAndNotify(error, t);
             }

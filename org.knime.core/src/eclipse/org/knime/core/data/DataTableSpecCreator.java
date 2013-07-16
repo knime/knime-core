@@ -71,6 +71,23 @@ public final class DataTableSpecCreator {
     private String m_name;
     private Map<String, String> m_properties = new LinkedHashMap<String, String>();
 
+    /** Start with empty spec.
+     * @since 2.8
+     */
+    public DataTableSpecCreator() {
+    }
+
+    /** Start with an existing spec.
+     *
+     * @param spec the original DataTableSpec
+     * @since 2.8
+     */
+    public DataTableSpecCreator(final DataTableSpec spec) {
+        addColumns(spec);
+        setName(spec.getName());
+        putProperties(spec.getProperties());
+    }
+
     /** Adds argument columns to list of already added columns.
      * @param columns to add
      * @return this
@@ -128,7 +145,6 @@ public final class DataTableSpecCreator {
      * @param value ...
      * @return this
      * @throws IllegalArgumentException if key is null or an empty string.
-     * @return
      */
     public DataTableSpecCreator putProperty(final String key, final String value) {
         if (key == null || key.length() == 0) {
@@ -136,6 +152,20 @@ public final class DataTableSpecCreator {
         }
         m_properties.put(key, value);
         return this;
+    }
+
+    /** Drop domains of all columns.
+     *
+     * @since 2.8
+     */
+    public void dropAllDomains() {
+        ArrayList<DataColumnSpec> newColumnSpecs = new ArrayList<DataColumnSpec>();
+        for (int i = 0; i < m_columnSpecs.size(); i++) {
+            DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(m_columnSpecs.get(i));
+            colSpecCreator.setDomain(null);
+            newColumnSpecs.add(colSpecCreator.createSpec());
+        }
+        m_columnSpecs = newColumnSpecs;
     }
 
     /** Takes all settings and creates the table spec.
