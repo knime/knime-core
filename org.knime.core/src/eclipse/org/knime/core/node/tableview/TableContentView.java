@@ -837,57 +837,42 @@ public class TableContentView extends JTable {
         switch (sortKey) {
             case NONE:
                 menuItemDesc1.setSelected(false);
-                menuItemDesc1.setEnabled(true);
                 popup.add(menuItemDesc1);
                 menuItemAsc1.setSelected(false);
-                menuItemAsc1.setEnabled(true);
                 popup.add(menuItemAsc1);
                 menuItemNone.setSelected(true);
-                menuItemNone.setEnabled(false);
                 popup.add(menuItemNone);
                 break;
             case PRIMARY_DESCENDING:
                 menuItemDesc1.setSelected(true);
-                menuItemDesc1.setEnabled(false);
                 popup.add(menuItemDesc1);
                 menuItemAsc1.setSelected(false);
-                menuItemAsc1.setEnabled(true);
                 popup.add(menuItemAsc1);
                 menuItemNone.setSelected(false);
-                menuItemNone.setEnabled(true);
                 popup.add(menuItemNone);
                 break;
             case PRIMARY_ASCENDING:
                 menuItemDesc1.setSelected(false);
-                menuItemDesc1.setEnabled(true);
                 popup.add(menuItemDesc1);
                 menuItemAsc1.setSelected(true);
-                menuItemAsc1.setEnabled(false);
                 popup.add(menuItemAsc1);
                 menuItemNone.setSelected(false);
-                menuItemNone.setEnabled(true);
                 popup.add(menuItemNone);
                 break;
             case SECONDARY_DESCENDING:
                 menuItemDesc2.setSelected(true);
-                menuItemDesc2.setEnabled(false);
                 popup.add(menuItemDesc2);
                 menuItemAsc2.setSelected(false);
-                menuItemAsc2.setEnabled(true);
                 popup.add(menuItemAsc2);
                 menuItemNone.setSelected(false);
-                menuItemNone.setEnabled(true);
                 popup.add(menuItemNone);
                 break;
             case SECONDARY_ASCENDING:
                 menuItemDesc2.setSelected(false);
-                menuItemDesc2.setEnabled(true);
                 popup.add(menuItemDesc2);
                 menuItemAsc2.setSelected(true);
-                menuItemAsc2.setEnabled(false);
                 popup.add(menuItemAsc1);
                 menuItemNone.setSelected(false);
-                menuItemNone.setEnabled(true);
                 popup.add(menuItemNone);
                 break;
             default: throw new IllegalArgumentException("TableSortKey '" + sortKey.name() + "' not implemented.");
