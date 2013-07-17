@@ -57,6 +57,7 @@ import java.io.IOException;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
@@ -297,7 +298,9 @@ public class WrappedNodeDialog extends Dialog {
     @Override
     public void create() {
         super.create();
-        getShell().setSize(getInitialSize());
+        if (!Platform.OS_MACOSX.equals(Platform.getOS())) {
+            getShell().setSize(getInitialSize());
+        }
     }
 
     /**
