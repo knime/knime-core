@@ -107,7 +107,7 @@ final class DBDialogPane extends JPanel {
     private final JComboBox m_timezone; // filled with all time zones (sorted by name)
 
     private final JRadioButton m_noCorrectionTZ = new JRadioButton("No Correction (use UTC)");
-    private final JRadioButton m_currentTZ = new JRadioButton("Use current TimeZone");
+    private final JRadioButton m_currentTZ = new JRadioButton("Use local TimeZone");
     private final JRadioButton m_selectTZ = new JRadioButton("TimeZone:");
 
     /** Default font used for all components within the database dialogs. */
