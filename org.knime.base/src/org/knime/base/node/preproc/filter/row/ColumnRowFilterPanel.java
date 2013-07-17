@@ -54,6 +54,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.Collections;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -478,6 +479,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         for (DataCell v : spec.getDomain().getValues()) {
             result.add(v.toString());
         }
+        Collections.sort(result);
         return result;
     }
 
