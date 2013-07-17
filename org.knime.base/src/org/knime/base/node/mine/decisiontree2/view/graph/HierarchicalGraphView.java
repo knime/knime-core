@@ -78,6 +78,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.knime.core.data.property.ColorAttr;
+import org.knime.core.node.util.ViewUtils;
 
 /**
  * A widget for a tree.
@@ -198,7 +199,12 @@ public abstract class HierarchicalGraphView<K> {
      * @param root the root
      */
     public void setRootNode(final K root) {
-        init(root);
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            @Override
+            public void run() {
+                init(root);
+            }
+        });
     }
 
 
