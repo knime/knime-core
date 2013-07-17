@@ -67,12 +67,14 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.LoopEndNode;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.AddAnnotationAction;
 import org.knime.workbench.editor2.actions.CancelAction;
+import org.knime.workbench.editor2.actions.ChangeMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
 import org.knime.workbench.editor2.actions.DisconnectMetaNodeLinkAction;
@@ -325,17 +327,19 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 }
 
                 if (container instanceof WorkflowManager) {
-                    action = new OpenSubworkflowEditorAction(
-                            (NodeContainerEditPart)p);
-                    manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
-                            action);
-
-                    action = m_actionRegistry.getAction(
-                            MetaNodeReconfigureAction.ID);
-                    manager.appendToGroup(
-                            IWorkbenchActionConstants.GROUP_APP, action);
-                    ((AbstractNodeAction)action).update();
-
+                    action = new OpenSubworkflowEditorAction((NodeContainerEditPart)p);
+                    manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                    if (parts.size() == 1) {
+                        if (Role.Link.equals(((WorkflowManager)container).getTemplateInformation().getRole())) {
+                            action = m_actionRegistry.getAction(ChangeMetaNodeLinkAction.ID);
+                            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                            ((AbstractNodeAction)action).update();
+                        } else {
+                            action = m_actionRegistry.getAction(MetaNodeReconfigureAction.ID);
+                            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                            ((AbstractNodeAction)action).update();
+                        }
+                    }
                 }
 
                 // add port views
@@ -355,44 +359,38 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         }
 
         boolean addMetaNodeActions = false;
+        boolean addMetaNodeLinkActions = false;
         for (Object p : parts) {
             if (p instanceof NodeContainerEditPart) {
                 NodeContainer model =
                     ((NodeContainerEditPart)p).getNodeContainer();
                 if (model instanceof WorkflowManager) {
                     addMetaNodeActions = true;
+                    if (Role.Link.equals(((WorkflowManager)model).getTemplateInformation().getRole())) {
+                        addMetaNodeLinkActions = true;
+                    }
                 }
             }
         }
         if (addMetaNodeActions) {
-            action = m_actionRegistry.getAction(
-                    SaveAsMetaNodeTemplateAction.ID);
-            manager.appendToGroup(
-                    IWorkbenchActionConstants.GROUP_APP, action);
+            action = m_actionRegistry.getAction(SaveAsMetaNodeTemplateAction.ID);
+            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
             ((AbstractNodeAction)action).update();
-            action = m_actionRegistry.getAction(
-                    CheckUpdateMetaNodeLinkAction.ID);
-            manager.appendToGroup(
-                    IWorkbenchActionConstants.GROUP_APP, action);
-            ((AbstractNodeAction)action).update();
-            action = m_actionRegistry.getAction(
-                    RevealMetaNodeTemplateAction.ID);
-            manager.appendToGroup(
-                    IWorkbenchActionConstants.GROUP_APP, action);
-            ((AbstractNodeAction)action).update();
+            if (addMetaNodeLinkActions) {
+                action = m_actionRegistry.getAction(CheckUpdateMetaNodeLinkAction.ID);
+                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                ((AbstractNodeAction)action).update();
+                action = m_actionRegistry.getAction(RevealMetaNodeTemplateAction.ID);
+                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                ((AbstractNodeAction)action).update();
+                action = m_actionRegistry.getAction(DisconnectMetaNodeLinkAction.ID);
+                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                ((AbstractNodeAction)action).update();
+            }
 
-            action = m_actionRegistry.getAction(
-                    DisconnectMetaNodeLinkAction.ID);
-            manager.appendToGroup(
-                    IWorkbenchActionConstants.GROUP_APP, action);
-            ((AbstractNodeAction)action).update();
-
-            if (Boolean.getBoolean(
-                    KNIMEConstants.PROPERTY_SHOW_METANODE_LOCK_ACTION)) {
-                action = m_actionRegistry.getAction(
-                        LockMetaNodeAction.ID);
-                manager.appendToGroup(
-                        IWorkbenchActionConstants.GROUP_APP, action);
+            if (Boolean.getBoolean(KNIMEConstants.PROPERTY_SHOW_METANODE_LOCK_ACTION)) {
+                action = m_actionRegistry.getAction(LockMetaNodeAction.ID);
+                manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                 ((AbstractNodeAction)action).update();
             }
 

@@ -118,4 +118,23 @@ public interface URIToFileResolve {
      * @since 2.6
      */
     public File resolveToLocalOrTempFile(final URI uri, IProgressMonitor monitor) throws IOException;
+
+    /**
+     * Returns true, if this is a URI that is relative to the current mountpoint (of the flow it is used in). It can
+     * only be resolved in the context of a flow. Contains the corresponding keyword as host.
+     * @param uri to check
+     * @return true if argument URI is mount point relative, false if not.
+     * @since 2.8
+     */
+    public boolean isMountpointRelative(final URI uri);
+
+    /**
+     * Returns true, if this is a URI that is relative to the workflow it is used in. It can only be resolved in the
+     * context of a flow. Contains the corresponding keyword as host.
+     * @param uri to check
+     * @return true if argument URI is workflow relative, false if not.
+     * @since 2.8
+     */
+    public boolean isWorkflowRelative(final URI uri);
+
 }

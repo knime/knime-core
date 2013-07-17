@@ -213,6 +213,33 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         }
     }
 
+    /**
+     * Create a new link template info based on this template (which must be a link already), which is supposed to be
+     * accessible under the argument URI.
+     *
+     * @param newSource The sourceURI, must not be null.
+     * @return a new template linking to the argument URI, using the timestamp of this object.
+     * @throws InvalidSettingsException If this object is not a template.
+     * @since 2.8
+     */
+    public MetaNodeTemplateInformation createLinkWithUpdatedSource(final URI newSource)
+        throws InvalidSettingsException {
+        if (newSource == null) {
+            throw new NullPointerException("Can't create link to null URI");
+        }
+        switch (getRole()) {
+        case Link:
+            Date ts = getTimestamp();
+            assert ts != null : "Templates must not have null timestamp";
+            MetaNodeTemplateInformation newInfo = new MetaNodeTemplateInformation(Role.Link, newSource, ts);
+            newInfo.m_updateStatus = m_updateStatus;
+            return newInfo;
+        default:
+            throw new InvalidSettingsException("Can't link to meta node of role"
+                    + " \"" + getRole() + "\" (URI: \"" + m_sourceURI + "\")");
+        }
+    }
+
     /** Saves this object to the argument settings.
      * @param settings To save to.
      */

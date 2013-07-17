@@ -180,6 +180,7 @@ import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.AddAnnotationAction;
 import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.CancelAllAction;
+import org.knime.workbench.editor2.actions.ChangeMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
 import org.knime.workbench.editor2.actions.CopyAction;
@@ -546,16 +547,12 @@ public class WorkflowEditor extends GraphicalEditor implements
             new ToggleFlowVarPortsAction(this);
         AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
 
-        AbstractNodeAction metaNodeReConfigure =
-            new MetaNodeReconfigureAction(this);
-        AbstractNodeAction defineMetaNodeTemplate =
-            new SaveAsMetaNodeTemplateAction(this);
-        AbstractNodeAction checkUpdateMetaNodeLink =
-            new CheckUpdateMetaNodeLinkAction(this);
-        AbstractNodeAction revealMetaNodeTemplate
-            = new RevealMetaNodeTemplateAction(this);
-        AbstractNodeAction disconnectMetaNodeLink =
-            new DisconnectMetaNodeLinkAction(this);
+        AbstractNodeAction metaNodeReConfigure = new MetaNodeReconfigureAction(this);
+        AbstractNodeAction metaNodeChangeLink = new ChangeMetaNodeLinkAction(this);
+        AbstractNodeAction defineMetaNodeTemplate = new SaveAsMetaNodeTemplateAction(this);
+        AbstractNodeAction checkUpdateMetaNodeLink = new CheckUpdateMetaNodeLinkAction(this);
+        AbstractNodeAction revealMetaNodeTemplate = new RevealMetaNodeTemplateAction(this);
+        AbstractNodeAction disconnectMetaNodeLink = new DisconnectMetaNodeLinkAction(this);
         AbstractNodeAction lockMetaLink = new LockMetaNodeAction(this);
 
         // new annotation action
@@ -600,6 +597,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(expand);
 
         m_actionRegistry.registerAction(metaNodeReConfigure);
+        m_actionRegistry.registerAction(metaNodeChangeLink);
         m_actionRegistry.registerAction(defineMetaNodeTemplate);
         m_actionRegistry.registerAction(checkUpdateMetaNodeLink);
         m_actionRegistry.registerAction(revealMetaNodeTemplate);
@@ -631,6 +629,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
         m_editorActions.add(metaNodeReConfigure.getId());
+        m_editorActions.add(metaNodeChangeLink.getId());
         m_editorActions.add(defineMetaNodeTemplate.getId());
         m_editorActions.add(checkUpdateMetaNodeLink.getId());
         m_editorActions.add(annotation.getId());

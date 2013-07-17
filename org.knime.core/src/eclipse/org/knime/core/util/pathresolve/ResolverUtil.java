@@ -164,4 +164,61 @@ public final class ResolverUtil {
         }
         return res.resolveToLocalOrTempFile(uri, monitor);
     }
+
+    /**
+     * Checks whether the passed URI is a mountpoint relative URI.
+     * @param uri to check
+     * @return true, if URI has KNIME FS scheme and is a mount point relative URI
+     * @throws IOException if things went bad.
+     * @since 2.8
+     */
+    public static boolean isMountpointRelativeURL(final URI uri) throws IOException {
+        if (uri == null) {
+            throw new IOException("Can't check null URI");
+        }
+        String scheme = uri.getScheme();
+        if (scheme == null) {
+            throw new IOException("Can't check URI \"" + uri + "\": it does not have a scheme");
+        }
+        if (scheme.equalsIgnoreCase("file")) {
+            return false;
+        }
+        if (serviceTracker == null) {
+            throw new IOException("Core bundle is not active, can't resolve URI \"" + uri + "\"");
+        }
+        URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
+        if (res == null) {
+            throw new IOException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
+        }
+        return res.isMountpointRelative(uri);
+    }
+
+    /**
+     * Checks whether the passed URI is a workflow relative URI.
+     * @param uri to check
+     * @return true, if URI has KNIME FS scheme and is a workflow relative URI
+     * @throws IOException if things went bad.
+     * @since 2.8
+     */
+    public static boolean isWorkflowRelativeURL(final URI uri) throws IOException {
+        if (uri == null) {
+            throw new IOException("Can't check null URI");
+        }
+        String scheme = uri.getScheme();
+        if (scheme == null) {
+            throw new IOException("Can't check URI \"" + uri + "\": it does not have a scheme");
+        }
+        if (scheme.equalsIgnoreCase("file")) {
+            return false;
+        }
+        if (serviceTracker == null) {
+            throw new IOException("Core bundle is not active, can't resolve URI \"" + uri + "\"");
+        }
+        URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
+        if (res == null) {
+            throw new IOException("Can't resolve URI \"" + uri + "\"; no URI resolve service registered");
+        }
+        return res.isWorkflowRelative(uri);
+    }
+
 }
