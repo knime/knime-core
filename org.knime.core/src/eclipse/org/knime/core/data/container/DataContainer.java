@@ -885,6 +885,10 @@ public class DataContainer implements RowAppender {
         return -1L;
     }
 
+    /** ID for buffers, which are not part of the workflow (no BufferedDataTable).
+     * @since 2.8 */
+    protected static final int NOT_IN_WORKFLOW_BUFFER = -1;
+
     /**
      * Get an internal id for the buffer being used. This ID is used in
      * conjunction with blob serialization to locate buffers. Blobs that belong
@@ -898,11 +902,11 @@ public class DataContainer implements RowAppender {
      * to it will be newly serialized as if they were created for the first
      * time.
      *
-     * <p>This implementation returns -1.
+     * <p>This implementation returns -1 ({@link #NOT_IN_WORKFLOW_BUFFER}.
      * @return -1 or a unique buffer ID.
      */
     protected int createInternalBufferID() {
-        return -1;
+        return NOT_IN_WORKFLOW_BUFFER;
     }
 
     /**

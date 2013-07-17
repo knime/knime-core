@@ -612,15 +612,13 @@ class Buffer implements KNIMEStreamConstants {
                 if (m_outStream == null) {
                     writeAllRowsFromListToFile(true);
                     // write next row to file directly
-                    MemoryObjectTracker.getInstance().removeMemoryReleaseable(m_memoryReleasable);
-                    m_memoryReleasable = null;
+                    unregisterMemoryReleasable();
                 } else {
                     writeRow(m_list.remove(0), m_outStream);
                 }
-            } else if (oldTotalSize == 0) {
+            } else if (oldTotalSize == 0 && m_bufferID >= 0) {
                 // starting to cache rows in memory, add mem observer
-                m_memoryReleasable = new BufferMemoryReleasable();
-                MemoryObjectTracker.getInstance().addMemoryReleaseable(m_memoryReleasable);
+                registerMemoryReleasable();
             }
         } catch (Exception e) {
             if (!(e instanceof IOException)) {
@@ -1221,8 +1219,23 @@ class Buffer implements KNIMEStreamConstants {
 
     /** Called from back into memory iterator when the last row was read. */
     final synchronized void onAllRowsReadBackIntoMemory() {
-        m_memoryReleasable = new BufferMemoryReleasable();
-        MemoryObjectTracker.getInstance().addMemoryReleaseable(m_memoryReleasable);
+        registerMemoryReleasable();
+    }
+
+    /** Adds this buffer to the {@link MemoryObjectTracker} (if it is part of the workflow). */
+    private void registerMemoryReleasable() {
+        if (m_bufferID != DataContainer.NOT_IN_WORKFLOW_BUFFER) {
+            m_memoryReleasable = new BufferMemoryReleasable();
+            MemoryObjectTracker.getInstance().addMemoryReleaseable(m_memoryReleasable);
+        }
+    }
+
+    /** Unregisters this object from the {@link MemoryObjectTracker}. */
+    private void unregisterMemoryReleasable() {
+        if (m_memoryReleasable != null) {
+            MemoryObjectTracker.getInstance().removeMemoryReleaseable(m_memoryReleasable);
+            m_memoryReleasable = null;
+        }
     }
 
     /**
@@ -1857,10 +1870,7 @@ class Buffer implements KNIMEStreamConstants {
         }
         m_binFile = null;
         m_blobDir = null;
-        if (m_memoryReleasable != null) {
-            MemoryObjectTracker.getInstance().removeMemoryReleaseable(m_memoryReleasable);
-            m_memoryReleasable = null;
-        }
+        unregisterMemoryReleasable();
     }
 
     private static final int MAX_FILES_TO_CREATE_BEFORE_GC = 10000;
