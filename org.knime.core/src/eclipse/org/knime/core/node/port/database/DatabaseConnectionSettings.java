@@ -696,7 +696,13 @@ public class DatabaseConnectionSettings {
      * @since 2.8
      */
     public final TimeZone getTimeZone() {
-        return TimeZone.getTimeZone(m_timezone);
+        if (m_timezone.equals("none")) {
+            return TimeZone.getTimeZone("GMT+00:00");
+        } else if (m_timezone.equals("current")) {
+            return TimeZone.getDefault();
+        } else {
+            return TimeZone.getTimeZone(m_timezone);
+        }
     }
 
     /** @return the TimeZone correction, offset in milli seconds.
@@ -704,7 +710,7 @@ public class DatabaseConnectionSettings {
      * @since 2.8
      */
     public final long getTimeZoneOffset(final long date) {
-        return TimeZone.getTimeZone(m_timezone).getOffset(date);
+        return getTimeZone().getOffset(date);
     }
 
     /**
