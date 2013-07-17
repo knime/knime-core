@@ -96,7 +96,7 @@ public class WorkflowOutPortBarFigure extends AbstractWorkflowPortBarFigure {
                 xLoc = m_minXCoord + 50;
             } else {
                 // place the bar at the right border of the parent
-                xLoc = parent.width - barWidth;
+                xLoc = parent.width - barWidth - OFFSET;
             }
             Rectangle newBounds =
                     new Rectangle(xLoc, OFFSET, WIDTH + AbstractPortFigure.WF_PORT_SIZE, parent.height - (2 * OFFSET));
