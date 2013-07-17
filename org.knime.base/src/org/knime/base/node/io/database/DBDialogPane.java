@@ -55,9 +55,11 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TimeZone;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -102,7 +104,7 @@ final class DBDialogPane extends JPanel {
 
     private final JCheckBox m_credCheckBox = new JCheckBox();
     private final JComboBox m_credBox = new JComboBox();
-    private final JComboBox m_timezone = new JComboBox(DatabaseConnectionSettings.ALL_GMT_TIMEZONES);
+    private final JComboBox m_timezone; // filled with all time zones (sorted by name)
 
     private final JRadioButton m_noCorrectionTZ = new JRadioButton("No Correction (use UTC)");
     private final JRadioButton m_currentTZ = new JRadioButton("Use current TimeZone");
@@ -198,10 +200,11 @@ final class DBDialogPane extends JPanel {
         super.add(passPanel);
 
 // create and timezone field
-        final JPanel timezonePanel = new JPanel(new FlowLayout());
-        timezonePanel.setBorder(BorderFactory.createTitledBorder(" TimeZone "));
+        final String[] timezones = TimeZone.getAvailableIDs();
+        Arrays.sort(timezones);
+        m_timezone = new JComboBox(timezones);
         m_timezone.setFont(FONT);
-        m_timezone.setSelectedItem(DatabaseConnectionSettings.CURRENT_TIMEZONE);
+        m_timezone.setSelectedItem(TimeZone.getDefault().getID());
         m_timezone.setEnabled(false);
         m_selectTZ.addItemListener(new ItemListener() {
             @Override
@@ -215,10 +218,16 @@ final class DBDialogPane extends JPanel {
         bg.add(m_noCorrectionTZ);
         bg.add(m_currentTZ);
         bg.add(m_selectTZ);
-        timezonePanel.add(m_noCorrectionTZ);
-        timezonePanel.add(m_currentTZ);
-        timezonePanel.add(m_selectTZ);
-        timezonePanel.add(m_timezone);
+        final JPanel tzPanel1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        tzPanel1.add(m_noCorrectionTZ);
+        tzPanel1.add(m_currentTZ);
+        final JPanel tzPanel2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        tzPanel2.add(m_selectTZ);
+        tzPanel2.add(m_timezone);
+        final JPanel timezonePanel = new JPanel(new BorderLayout());
+        timezonePanel.setBorder(BorderFactory.createTitledBorder(" TimeZone "));
+        timezonePanel.add(tzPanel1, BorderLayout.NORTH);
+        timezonePanel.add(tzPanel2, BorderLayout.SOUTH);
         super.add(timezonePanel);
     }
 

@@ -318,6 +318,7 @@ public final class DatabaseWriterConnection {
                 } catch (Exception e) {
                     // might not be supported, HIVE
                 }
+                final TimeZone timezone = dbConn.getTimeZone();
                 for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
                     exec.checkCanceled();
                     exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
@@ -330,7 +331,7 @@ public final class DatabaseWriterConnection {
                         }
                         final DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
                         final DataCell cell = row.getCell(mapping[i]);
-                        fillStatement(stmt, dbIdx, cspec, cell, dbConn.getTimeZone());
+                        fillStatement(stmt, dbIdx, cspec, cell, timezone);
                     }
                     // if batch mode
                     if (batchSize > 1) {
@@ -449,6 +450,9 @@ public final class DatabaseWriterConnection {
             // count number of rows added to current batch
             int curBatchSize = 0;
 
+            // selected timezone
+            final TimeZone timezone = dbConn.getTimeZone();
+
             LOGGER.debug("Executing SQL statement as prepareStatement: " + query);
             final PreparedStatement stmt = conn.prepareStatement(query.toString());
             // remember auto-commit flag
@@ -465,7 +469,7 @@ public final class DatabaseWriterConnection {
                         final int columnIndex = spec.findColumnIndex(setColumns[i]);
                         final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
                         final DataCell cell = row.getCell(columnIndex);
-                        fillStatement(stmt, dbIdx, cspec, cell, dbConn.getTimeZone());
+                        fillStatement(stmt, dbIdx, cspec, cell, timezone);
                     }
                     // WHERE columns
                     for (int i = 0; i < whereColumns.length; i++) {
@@ -473,7 +477,7 @@ public final class DatabaseWriterConnection {
                         final int columnIndex = spec.findColumnIndex(whereColumns[i]);
                         final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
                         final DataCell cell = row.getCell(columnIndex);
-                        fillStatement(stmt, dbIdx, cspec, cell, dbConn.getTimeZone());
+                        fillStatement(stmt, dbIdx, cspec, cell, timezone);
                     }
 
                     // if batch mode
@@ -588,6 +592,9 @@ public final class DatabaseWriterConnection {
             // count number of rows added to current batch
             int curBatchSize = 0;
 
+            // selected timezone
+            final TimeZone timezone = dbConn.getTimeZone();
+
             LOGGER.debug("Executing SQL statement as prepareStatement: " + query);
             final PreparedStatement stmt = conn.prepareStatement(query.toString());
             // remember auto-commit flag
@@ -604,7 +611,7 @@ public final class DatabaseWriterConnection {
                         final int columnIndex = spec.findColumnIndex(whereColumns[i]);
                         final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
                         final DataCell cell = row.getCell(columnIndex);
-                        fillStatement(stmt, dbIdx, cspec, cell, dbConn.getTimeZone());
+                        fillStatement(stmt, dbIdx, cspec, cell, timezone);
                     }
 
                     // if batch mode

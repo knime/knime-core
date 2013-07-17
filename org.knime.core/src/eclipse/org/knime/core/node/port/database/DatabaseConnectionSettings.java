@@ -58,7 +58,6 @@ import java.sql.Statement;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
@@ -72,6 +71,7 @@ import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 
+import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.ModelContent;
@@ -200,38 +200,7 @@ public class DatabaseConnectionSettings {
     private String m_user = null;
     private String m_pass = null;
 
-    /** Set of all TimeZone starting with GMT.
-     * @since 2.8
-     */
-    public static final String[] ALL_GMT_TIMEZONES = getAllTimeZones();
-    private static String[] getAllTimeZones() {
-        final LinkedHashSet<String> ret = new LinkedHashSet<String>();
-        for (String id : TimeZone.getAvailableIDs()) {
-            final String name = TimeZone.getTimeZone(id).getDisplayName();
-            if (name.startsWith("GMT")) {
-                ret.add(name);
-            }
-        }
-        return ret.toArray(new String[ret.size()]);
-    }
-    /** Field that represents the current TimeZone, e.g. GMT+01:00.
-     * @since 2.8
-     */
-    public static final String CURRENT_TIMEZONE = getCurrentTimeZone();
-    private static String getCurrentTimeZone() {
-        final TimeZone cTimeZone = TimeZone.getDefault();
-        final int offset = cTimeZone.getRawOffset();
-        for (String s : ALL_GMT_TIMEZONES) {
-            if (s.startsWith("GMT")) {
-                TimeZone tz = TimeZone.getTimeZone(s);
-                if (tz.getRawOffset() == offset) {
-                    return s;
-                }
-            }
-        }
-        return cTimeZone.getDisplayName();
-    }
-    private String m_timezone = "current";
+    private String m_timezone = "current"; // use current as of KNIME 2.8, none before 2.8
 
     /** Create a default settings connection object. */
     public DatabaseConnectionSettings() {
@@ -697,7 +666,7 @@ public class DatabaseConnectionSettings {
      */
     public final TimeZone getTimeZone() {
         if (m_timezone.equals("none")) {
-            return TimeZone.getTimeZone("GMT+00:00");
+            return DateAndTimeCell.UTC_TIMEZONE;
         } else if (m_timezone.equals("current")) {
             return TimeZone.getDefault();
         } else {
