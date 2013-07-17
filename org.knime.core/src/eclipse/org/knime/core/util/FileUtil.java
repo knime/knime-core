@@ -818,6 +818,7 @@ public final class FileUtil {
                     LOGGER.error("Temp folder \"" + rootDir.getAbsolutePath() + "\" does not exist (associated "
                             + "with NodeContext \"" + nodeContext + "\") - using default temp folder (\""
                             + KNIMEConstants.getKNIMETempDir() + "\"");
+                    rootDir = null;
                 }
             }
         }
