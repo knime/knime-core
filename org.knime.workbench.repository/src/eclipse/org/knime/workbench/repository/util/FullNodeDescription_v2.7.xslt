@@ -3,7 +3,8 @@
 <!ENTITY css SYSTEM "style.css">
 ]>
 <!-- Stylesheet for node descriptions prior between KNIME 2.0 and 2.7 -->
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:t="http://knime.org/node2012">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:t="http://knime.org/node2012"
+                xmlns="http://www.w3.org/1999/xhtml">
     <xsl:param name="css" />
     <xsl:template match="t:knimeNode">
         <html>
@@ -139,30 +140,34 @@
         </table>
     </xsl:template>
 
-    <xsl:template match="t:a[starts-with(@href, 'node:')]">
+    <xsl:template match="t:a[starts-with(@t:href, 'node:')]">
         <a href="http://127.0.0.1:51176/node/?bundle={/t:knimeNode/osgi-info/@bundle-symbolic-name}&amp;package={/t:knimeNode/osgi-info/@factory-package}&amp;file={substring-after(@href, 'node:')}">
         <xsl:apply-templates />
         </a>
     </xsl:template>
 
-    <xsl:template match="t:a[starts-with(@href, 'bundle:')]">
+    <xsl:template match="t:a[starts-with(@t:href, 'bundle:')]">
         <a href="http://127.0.0.1:51176/bundle/?bundle={/t:knimeNode/osgi-info/@bundle-symbolic-name}&amp;file={substring-after(@href, 'bundle:')}">
         <xsl:apply-templates />
         </a>
     </xsl:template>
 
 
-    <xsl:template match="@*|node()" priority="-1" mode="copy">
-        <xsl:copy>
-            <xsl:apply-templates select="@*|node()" mode="copy" />
-        </xsl:copy>
+    <xsl:template match="*">
+        <xsl:element name="{local-name(.)}">
+            <xsl:apply-templates select="@*|node()"/>
+        </xsl:element>
     </xsl:template>
 
+    <xsl:template match="@*">
+        <xsl:attribute name="{local-name()}">
+            <xsl:value-of select="." />
+        </xsl:attribute>
+    </xsl:template>
 
     <xsl:template match="@*|node()" priority="-1">
         <xsl:copy>
             <xsl:apply-templates select="@*|node()" />
         </xsl:copy>
     </xsl:template>
-
 </xsl:stylesheet>
