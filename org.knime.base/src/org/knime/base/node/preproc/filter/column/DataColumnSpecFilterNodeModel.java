@@ -60,6 +60,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
@@ -69,9 +70,9 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  * exclude.
  *
  * @author Thomas Gabriel, KNIME.com AG, Zurich
- * @since 2.6
+ * @since 2.8
  */
-final class DataColumnSpecFilterNodeModel extends NodeModel {
+public class DataColumnSpecFilterNodeModel extends NodeModel {
 
     /** Config key for this column filter. */
     static final String CFG_KEY_FILTER = "column-filter";
@@ -79,8 +80,16 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
     private DataColumnSpecFilterConfiguration m_conf;
 
     /** Creates a new filter model with one and in- and output. */
-    DataColumnSpecFilterNodeModel() {
+    public DataColumnSpecFilterNodeModel() {
         super(1, 1);
+    }
+
+    /** Constructor for in and out <code>PortType</code> objects.
+     * @param inPorts in ports
+     * @param outPorts out ports
+     */
+    public DataColumnSpecFilterNodeModel(final PortType[] inPorts, final PortType[] outPorts) {
+        super(inPorts, outPorts);
     }
 
     /** Nothing to do. */
@@ -145,7 +154,7 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
             // auto-configure
             m_conf.loadDefaults(spec, true);
         }
-        final FilterResult filter = m_conf.applyTo(spec);
+        final FilterResult filter = getFilterResult(spec);
         final String[] incls = filter.getIncludes();
         final ColumnRearranger c = new ColumnRearranger(spec);
         c.keepOnly(incls);
@@ -188,5 +197,16 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
         DataColumnSpecFilterConfiguration conf =
             new DataColumnSpecFilterConfiguration(CFG_KEY_FILTER);
         conf.loadConfigurationInModel(settings);
+    }
+
+    /** Returns the object holding the include and exclude columns.
+     * @param spec the spec to be applied to the current configuration.
+     * @return filter result
+     */
+    protected FilterResult getFilterResult(final DataTableSpec spec) {
+        if (m_conf == null) {
+            return null;
+        }
+        return m_conf.applyTo(spec);
     }
 }

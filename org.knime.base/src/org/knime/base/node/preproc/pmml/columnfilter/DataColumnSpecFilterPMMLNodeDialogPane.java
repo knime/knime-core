@@ -45,16 +45,14 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
  */
-package org.knime.base.node.preproc.filter.column;
+package org.knime.base.node.preproc.pmml.columnfilter;
 
+import org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeDialogPane;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
-import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * This is the dialog for the column filter. The user can specify which columns
@@ -63,17 +61,14 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
  * @author Thomas Gabriel, KNIME.com AG, Zurich
  * @since 2.8
  */
-public class DataColumnSpecFilterNodeDialogPane extends NodeDialogPane {
-
-    private final DataColumnSpecFilterPanel m_filterPanel;
+public final class DataColumnSpecFilterPMMLNodeDialogPane extends DataColumnSpecFilterNodeDialogPane {
 
     /**
      * Creates a new {@link NodeDialogPane} for the column filter in order to
      * set the desired columns.
      */
-    public DataColumnSpecFilterNodeDialogPane() {
-        m_filterPanel = new DataColumnSpecFilterPanel();
-        super.addTab("Column Filter", m_filterPanel);
+    public DataColumnSpecFilterPMMLNodeDialogPane() {
+        super();
     }
 
     /**
@@ -85,31 +80,8 @@ public class DataColumnSpecFilterNodeDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        final DataTableSpec spec = specs[0];
-        if (spec == null || spec.getNumColumns() == 0) {
-            throw new NotConfigurableException("No columns available for "
-                    + "selection.");
-        }
-
-        DataColumnSpecFilterConfiguration config = new DataColumnSpecFilterConfiguration(
-                    DataColumnSpecFilterNodeModel.CFG_KEY_FILTER);
-        config.loadConfigurationInDialog(settings, specs[0]);
-        m_filterPanel.loadConfiguration(config, specs[0]);
+            final PortObjectSpec[] specs) throws NotConfigurableException {
+        super.loadSettingsFrom(settings, new DataTableSpec[]{(DataTableSpec) specs[0]});
     }
 
-    /**
-     * Sets the list of columns to exclude inside the corresponding
-     * <code>NodeModel</code> which are retrieved from the filter panel.
-     * @param settings the node settings to write into
-     * @throws InvalidSettingsException if one of the settings is not valid
-     */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
-        DataColumnSpecFilterConfiguration config = new DataColumnSpecFilterConfiguration(
-                    DataColumnSpecFilterNodeModel.CFG_KEY_FILTER);
-        m_filterPanel.saveConfiguration(config);
-        config.saveConfiguration(settings);
-    }
 }

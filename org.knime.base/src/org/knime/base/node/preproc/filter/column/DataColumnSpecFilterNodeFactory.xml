@@ -59,10 +59,10 @@
 	
 	<ports>
 		<inPort index="0" name="Table to be filtered">
-			Table from which columns are to be excluded
+			Table from which columns are to be excluded.
 		</inPort>
 		<outPort index="0" name="Filtered table">
-			Table with excluded columns
+			Table excluding selected columns.
 		</outPort>
 	</ports>	
 </knimeNode>

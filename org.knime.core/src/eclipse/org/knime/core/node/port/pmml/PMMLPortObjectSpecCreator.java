@@ -247,6 +247,37 @@ public class PMMLPortObjectSpecCreator {
     }
 
     /**
+     * Sets the specified columns as preprocessing columns.
+     * @param preprocCols the preprocessing columns
+     * @since 2.8
+     */
+    public void setPreprocCols(final List<DataColumnSpec> preprocCols) {
+        if (preprocCols == null) {
+            throw new IllegalArgumentException(
+                    "Preproc columns must not be null!");
+        }
+        validateColumns(preprocCols);
+        m_preprocCols.clear();
+        for (DataColumnSpec colSpec : preprocCols) {
+            m_preprocCols.add(colSpec.getName());
+        }
+    }
+
+    /**
+     * Sets the specified columns as preprocessing columns.
+     * @param preprocCols the preprocessing columns
+     * @since 2.8
+     */
+    public void setPreprocColNames(final List<String> preprocCols) {
+        if (preprocCols == null) {
+            throw new IllegalArgumentException("Preproc columns must not be null!");
+        }
+        validateColumnNames(preprocCols);
+        m_preprocCols.clear();
+        m_preprocCols.addAll(preprocCols);
+    }
+
+    /**
      * Adds the specified columns as preprocessing column. Nothing happens if
      * they are already set as preprocessing column.
      *
@@ -254,8 +285,7 @@ public class PMMLPortObjectSpecCreator {
      */
     public void addPreprocCols(final List<DataColumnSpec> activeCols) {
         if (activeCols == null) {
-            throw new IllegalArgumentException(
-                    "Target columns must not be null!");
+            throw new IllegalArgumentException("Preproc columns must not be null!");
         }
         validateColumns(activeCols);
         for (DataColumnSpec colSpec : activeCols) {
@@ -270,6 +300,10 @@ public class PMMLPortObjectSpecCreator {
      * @param colNames the names of the columns to be marked as active
      */
     public void addPreprocColNames(final List<String> colNames) {
+        if (colNames == null) {
+            throw new IllegalArgumentException(
+                    "Preproc columns must not be null!");
+        }
         validateColumnNames(colNames);
         for (String columnName : colNames) {
             if (!m_preprocCols.contains(columnName)) {
