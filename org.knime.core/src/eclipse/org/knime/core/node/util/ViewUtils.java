@@ -126,10 +126,13 @@ public final class ViewUtils {
                         Runnable lockedRunnable = new Runnable() {
                             @Override
                             public void run() {
-                                nodeContextRunnable.run();
-                                swingRunnableFinished.set(true);
-                                // this call is to wake up the main thread from its "sleep" below
-                                display.asyncExec(EMPTY_RUNNABLE);
+                                try {
+                                    nodeContextRunnable.run();
+                                } finally {
+                                    swingRunnableFinished.set(true);
+                                    // this call is to wake up the main thread from its "sleep" below
+                                    display.asyncExec(EMPTY_RUNNABLE);
+                                }
                             }
                         };
                         SwingUtilities.invokeLater(lockedRunnable);
