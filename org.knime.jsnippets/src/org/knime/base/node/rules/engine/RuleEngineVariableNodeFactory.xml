@@ -10,64 +10,55 @@
 		<intro>This node takes a list of user-defined rules and tries to match them to the flow variables
         and constants. If a rule matches, its outcome value is returned as a flow variable.
         The first matching rule will provide the outcome.
-        The rules follow a limited SQL-like syntax:
-        <pre>
-LINE := RULE | '//' [^\n]*
-RULE := BEXPR '=&gt;' SINGLE
-SINGLE := CONST | FLOWVAR
-BEXPR := PREBEXPR |
-         AEXPR (op=BOP PREBEXPR (op PREBEXPR)*)?
-PREBEXPR := '(' BEXPR ')' |
-            'NOT' BEXPR
-AEXPR := SINGLE OP SINGLE |
-         SINGLE LOP LIST
-BOP := 'AND' | 'OR' | 'XOR'
-OP := '&gt;' | '&lt;' | '&gt;=' | '&lt;=' |
-      '=' | 'LIKE' | 'CONTAINS' | 'MATCHES'
-LOP := 'IN'
-STRING := '&quot;' [^&quot;]* '&quot;'
-NUMBER := '-'? POSITIVE
-POSITIVE := ([0-9]*\.[0-9]*('E''-'?[1-9][0-9]*)?) |
-            [0-9]+('E''-'?[1-9][0-9]*)? | 'Infinity'
-FLOWVAR := '$${' ('D' | 'I' | 'S') [^}]+ '}$$'
-CONST := STRING | NUMBER
-LIST := '(' SINGLE (',' SINGLE)* ')'
-        </pre>
         <p>
         The comments start with <tt>//</tt>, and anything after that is not interpreted as a rule in that line.
 	 	Rules consist of a condition part (antecedent), that must evaluate to <i>true</i>
-        or <i>false</i>, and an outcome (consequent) that is put into the new column if the rule matches.
-        The most simple rule is a comparison between a flow variable and another flow variable, a fixed number or string.
-        The LIKE operator treats the fixed string as a wildcard pattern (with * and ?) as wildcards,
-        the CONTAINS operator checks whether the regular expression appears in the left expression,
-        the MATCHES operator uses the right regular expressions to check whether the left expression, 
-        the IN operator compares the column value to a list of strings and evaluates to <i>true</i> if at least
-        one value in the list is equal to the column's value. Note that all operators are case-sensitive!
-        Please also note that the NOT negates all following expressions, not just the direct following.
+        or <i>false</i>, and an outcome (consequent, after the => symbol) that is put into the new column if the rule matches.
+        Each rule is represented by a line.
+        The most simple rule is a comparison between a flow variable and another flow variable, a constant number or string.
+        All operators are case-sensitive!
+        The NOT operator negates all following expressions, not just the direct following.
         </p>
-        <p>The outcome of a rule can either be a fixed string, a fixed number, or a reference to a flow variable value.
+        <p>The outcome of a rule can either be a constant string, a constant number or a reference to a flow variable value.
         The type of the outcome variable is the common super type of all possible outcomes including the default label.
         </p>
         <p>
         Note that strings must not contain (double-)quotes. The flow variables are represented by <b>$${</b>TypeCharacterAndFlowVarName<b>}$$</b>.
         The TypeCharacter should be 'D' for double (real) values, 'I' for integer values and 'S' for strings.
         </p>
-        <p>Rules can (and should) be grouped with brackets because there is not pre-defined
+        <p>Rules can (and should) be grouped with brackets because there is no pre-defined
         operator precedence for the logical connectives (NOT, AND, OR, XOR) (comparison operators always take precedence
         over logical connectives).</p>
         <p>Some example rules (each should be in one line):</p>
         <pre>
 // This is a comment
-$${DFlowVar0}$$ > 5 => "Positive"
-$${SFlowVar0}$$ = "Active" AND $${IFlowVar1}$$ &lt;= 5 => "Outlier"
+$${DFlowVar0}$$ > 0 => "Positive"
+</pre>
+        FlowVar0 has value above zero, which case the result flow variable has the value Positive.
+<pre>
+$${SFlowVar0}$$ = "Active" AND 
+    $${IFlowVar1}$$ &lt;= 5 => "Outlier"
+</pre>
+        When FlowVar0 is "Active" and FlowVar1 is greater or equal to 5, so the result is Outlier.
+<pre>
 $${SFlowVar0}$$ LIKE "Market Street*" AND 
     ($${SFlowVar1}$$ IN ("married", "divorced") 
         OR $${IFlowVar2}$$ > 40) => "Strange"
+</pre>
+        The logical connectives help express complex conditions.
+<pre>
 $${SFlowVar10}$$ CONTAINS $${SFlowVar0}$$ OR $${DFlowVar2}$$ &lt; $${IFlowVar1}$$ =>
     $${SFlowVar0}$$
+</pre>
+        You can compare different flow variables.
+<pre>
 $${IFlowVar0}$$ > 5 => $${SFlowVar1}$$
+</pre>
+        You can use flow variables in the outcome too.
+<pre>
 "Hello world" CONTAINS "l+o" => "Always true"
         </pre>
+        The regular expression l+o (some ls followed by an o) will always be found in the text, so this will match.
         <p>
         You can use either Ctrl+Space to insert predefined parts, or select them from the upper controls.
         </p>
@@ -77,7 +68,7 @@ $${IFlowVar0}$$ > 5 => $${SFlowVar1}$$
 		<option name="Category">The operator categories.</option>
 		<option name="Function">A list of valid operators in the selected category.</option>
 		<option name="Description">Short help about the operator.</option>
-		<option name="Expression">The rule editor. You have completion, each row represents a rule.</option>
+		<option name="Expression">The rule editor. You can complete the expressions with Ctrl+Space. Each row represents a rule. The background of the line signals errors, or comments. The right side of the editor can show an error icon or the type of the outcome of the rule.</option>
 		<option name="New flow variable name">Name of the new flow variable, 
 		  which contains the outcome of the rules.</option>
 		<option name="Default label">This label is used if no rule matches.</option>

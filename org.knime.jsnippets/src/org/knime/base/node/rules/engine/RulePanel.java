@@ -533,17 +533,20 @@ abstract class RulePanel extends JPanel {
      */
     protected synchronized void setOutputMarkers(final long startDate, final DataType[] outputTypes) {
         final KnimeSyntaxTextArea textArea = m_mainPanel.getTextEditor();
-        if (startDate > m_outputMarkersLastSet && !textArea.getText().isEmpty()) {
+        String text = textArea.getText();
+        if (startDate > m_outputMarkersLastSet && !text.isEmpty()) {
+            String[] lines = text.split("\n", -1);
             final Gutter gutter = m_mainPanel.getGutter();
             gutter.removeAllTrackingIcons();
             textArea.removeAllLineHighlights();
             for (int i = outputTypes.length; i-- > 0;) {
                 try {
-                    if (outputTypes[i] == null) {//error
+                    if (outputTypes[i] == null && !(i < lines.length && lines[i].trim().isEmpty())) {//error
                         gutter.addLineTrackingIcon(i, KNIMEConstants.KNIME16X16);
                         textArea.addLineHighlight(i, Color.PINK);
-                    } else if (outputTypes[i] == DataType.getMissingCell().getType()) {//comment
-                        gutter.addLineTrackingIcon(i, outputTypes[i].getIcon());
+                    } else if (/*outputTypes[i] == DataType.getMissingCell().getType()
+                            &&*/ i < lines.length && RuleSupport.isComment(lines[i])) {//comment
+                        //gutter.addLineTrackingIcon(i, outputTypes[i].getIcon());
                         textArea.addLineHighlight(i, Color.YELLOW);
                     } else if (m_hasOutputColumn) {
                         gutter.addLineTrackingIcon(i, outputTypes[i].getIcon());
@@ -684,6 +687,13 @@ abstract class RulePanel extends JPanel {
         RuleFactory factory = m_hasOutputColumn ? RuleFactory.getInstance() : RuleFactory.getFilterInstance();
         for (String line : text.split("\n", -1)) {
             lineNo++;
+            //Skip empty lines
+            if (line.trim().isEmpty()) {
+                if (continueOnError) {
+                    ret.add(null);
+                }
+                continue;
+            }
             try {
                 final Rule r = factory.parse(line, m_spec, availableFlowVariables);
                 if (r.getCondition().isEnabled() || includingComments) {

@@ -67,11 +67,11 @@ public interface Rule {
      * @return The {@link Condition} of the {@link Rule}.
      */
     public Condition getCondition();
-
     /**
      * @return The {@link Outcome} of rule application.
      */
     public Outcome getOutcome();
+
 
 //    /**
 //     * @return The possible side effects of rule application.
@@ -111,11 +111,6 @@ public interface Rule {
          */
         DataValue getComputedResult(DataRow row, VariableProvider provider);
 
-//        /**
-//         * @return How should the result be interpreted?
-//         */
-//        OutcomeKind getKind();
-
         /**
          * @return Type of result that will be returned by {@link #getComputedResult(DataRow, VariableProvider)}.
          */
@@ -145,14 +140,6 @@ public interface Rule {
             public DataValue getComputedResult(final DataRow row, final VariableProvider provider) {
                 return DataType.getMissingCell();
             }
-
-//            /**
-//             * {@inheritDoc}
-//             */
-//            @Override
-//            public OutcomeKind getKind() {
-//                return OutcomeKind.PlainText;
-//            }
 
             /**
              * {@inheritDoc}
@@ -196,14 +183,6 @@ public interface Rule {
             public DataValue getComputedResult(final DataRow row, final VariableProvider provider) {
                 return m_expression.evaluate(row, provider).getValue();
             }
-
-//            /**
-//             * {@inheritDoc}
-//             */
-//            @Override
-//            public OutcomeKind getKind() {
-//                return OutcomeKind.Column;
-//            }
 
             /**
              * {@inheritDoc}
@@ -310,91 +289,6 @@ public interface Rule {
         DataType getDataType();
     }
 
-//    static class ConstantReference implements Reference {
-//        private final DataType m_dataType;
-//
-//        private final DataValue m_value;
-//
-//        public ConstantReference(final DataValue value, final DataType type) {
-//            this.m_value = value;
-//            m_dataType = type;
-//        }
-//
-//        /**
-//         * {@inheritDoc}
-//         */
-//        @Override
-//        public DataType getDataType() {
-//            return m_dataType;
-//        }
-//
-//        /**
-//         * @return the value
-//         */
-//        public DataValue getValue() {
-//            return m_value;
-//        }
-//    }
-//
-//    static class ColumnReference implements Reference {
-//        public final int index;
-//
-//        public final DataColumnSpec spec;
-//
-//        @SuppressWarnings("hiding")
-//        ColumnReference(final DataColumnSpec spec, final int index) {
-//            this.spec = spec;
-//            this.index = index;
-//        }
-//
-//        /**
-//         * {@inheritDoc}
-//         */
-//        @Override
-//        public DataType getDataType() {
-//            return spec.getType();
-//        }
-//
-//        /**
-//         * {@inheritDoc}
-//         */
-//        @Override
-//        public String toString() {
-//            return "$" + spec.getName() + "$";
-//        }
-//    }
-//
-//    static class FlowVariableReference implements Reference {
-//        private final FlowVariable m_var;
-//
-//        private final DataType m_dataType;
-//
-//        /**
-//         * @param var The wrapped flow variable
-//         */
-//        FlowVariableReference(final FlowVariable var) {
-//            super();
-//            this.m_var = var;
-//            this.m_dataType = Util.toDataType(m_var.getType());
-//        }
-//
-//        /**
-//         * {@inheritDoc}
-//         */
-//        @Override
-//        public String toString() {
-//            return "$$" + m_var.getName() + "$$";
-//        }
-//
-//        /**
-//         * {@inheritDoc}
-//         */
-//        @Override
-//        public DataType getDataType() {
-//            return m_dataType;
-//        }
-//    }
-
     /**
      * Reference to a table property.
      *
@@ -402,7 +296,7 @@ public interface Rule {
      * @since 2.8
      */
     static enum TableReference implements Reference {
-        /** Refers to the row index (the first row is {@code 1}) */
+        /** Refers to the row index (the first row is {@code 0}) */
         RowIndex(org.knime.ext.sun.nodes.script.expression.Expression.ROWINDEX, IntCell.TYPE),
         /** The row key's string representation */
         RowId(org.knime.ext.sun.nodes.script.expression.Expression.ROWID, StringCell.TYPE),
@@ -410,13 +304,10 @@ public interface Rule {
         RowCount(org.knime.ext.sun.nodes.script.expression.Expression.ROWCOUNT, IntCell.TYPE);
         private final String m_name;
 
-//        private final Type m_type;
-
         private final DataType m_dataType;
 
         private TableReference(final String name, final DataType type) {
             this.m_name = name;
-//            this.m_type = type;
             this.m_dataType = type;
         }
 
@@ -428,13 +319,6 @@ public interface Rule {
             return "$$" + m_name + "$$";
         }
 
-//        /**
-//         * @return the type
-//         */
-//        public Type getType() {
-//            return m_type;
-//        }
-//
         /**
          * @return the name
          */

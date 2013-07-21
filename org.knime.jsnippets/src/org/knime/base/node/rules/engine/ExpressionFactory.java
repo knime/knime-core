@@ -50,6 +50,7 @@
 package org.knime.base.node.rules.engine;
 
 import java.lang.reflect.InvocationTargetException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -170,13 +171,15 @@ public class ExpressionFactory {
         /**
          * Constructor for {@link RegExExpression}.
          *
-         * @param right The expression to compute the text to match on.
-         * @param left The expression to compute the regular expression. Please note that a {@link #transform(String)}
+         * @param left The expression to compute the text to match on.
+         * @param right The expression to compute the regular expression. Please note that a {@link #transform(String)}
          *            will be used on the result.
          * @param key Insertion key for the maps.
+         *
+         * @throws ParseException
          */
-        private RegExExpression(final Expression right, final Expression left, final String opName,
-                                final boolean match, final String key) {
+        private RegExExpression(final Expression left, final Expression right, final String opName,
+            final boolean match, final String key) throws IllegalStateException {
             this.m_right = right;
             this.m_left = left;
             this.m_opName = opName;
@@ -194,8 +197,7 @@ public class ExpressionFactory {
                     }
                 }
             } catch (Exception e) {
-                //TODO maybe log?
-                pattern = null;
+                throw new IllegalStateException(right.toString(), e);
             }
             m_pattern = pattern;
             m_rightConstantMap = map;
@@ -227,13 +229,12 @@ public class ExpressionFactory {
          * @return The expression value with the found groups and a {@link BooleanValue} result for match.
          */
         private ExpressionValue match(final ExpressionValue leftValue,
-                                      final Map<String, Map<String, String>> rightObjects, final StringValue lString,
-                                      final Pattern pattern) {
+            final Map<String, Map<String, String>> rightObjects, final StringValue lString, final Pattern pattern) {
             final String l = lString.getStringValue();
             final Matcher matcher = pattern.matcher(l);
             final boolean res = m_match ? matcher.matches() : matcher.find();
             final Map<String, Map<String, String>> mergedObjects =
-                    Util.mergeObjects(leftValue.getMatchedObjects(), rightObjects);
+                Util.mergeObjects(leftValue.getMatchedObjects(), rightObjects);
             for (int i = 1; i <= matcher.groupCount(); ++i) {
                 if (!mergedObjects.containsKey(m_key)) {
                     mergedObjects.put(m_key, new HashMap<String, String>());
@@ -259,7 +260,7 @@ public class ExpressionFactory {
                     return match(leftValue, m_rightConstantMap, lString, m_pattern);
                 }
                 throw new IllegalStateException("Both the m_value and the pattern have to be strings: " + leftCell
-                        + " [" + leftCell.getType() + "], " + m_pattern.pattern());
+                    + " [" + leftCell.getType() + "], " + m_pattern.pattern());
             }
             ExpressionValue rightValue = m_right.evaluate(row, provider);
             DataCell rightCell = rightValue.getValue();
@@ -275,7 +276,7 @@ public class ExpressionFactory {
                 }
             }
             throw new IllegalStateException("Both the m_value and the pattern have to be strings: " + leftCell + " ["
-                    + leftCell.getType() + "], " + rightCell + " [" + rightCell.getType() + "]");
+                + leftCell.getType() + "], " + rightCell + " [" + rightCell.getType() + "]");
         }
 
         /**
@@ -305,7 +306,7 @@ public class ExpressionFactory {
 
     /** A constant to avoid type inference problems. */
     private static final Map<String, Map<String, String>> EMPTY_MAP = Collections
-            .<String, Map<String, String>> emptyMap();
+        .<String, Map<String, String>> emptyMap();
 
     /** Static singleton instance. */
     private static final ExpressionFactory INSTANCE = new ExpressionFactory();
@@ -471,7 +472,7 @@ public class ExpressionFactory {
             allIsConstant &= expression.isConstant();
             if (!expression.getOutputType().isCompatible(BooleanValue.class)) {
                 throw new IllegalStateException("Expected a boolean expression, got: " + expression + " in "
-                        + Arrays.toString(boolExpressions));
+                    + Arrays.toString(boolExpressions));
             }
         }
         return allIsConstant;
@@ -977,7 +978,7 @@ public class ExpressionFactory {
     public Expression in(final Expression left, final Expression right) {
         if (!right.getOutputType().isCollectionType()) {
             throw new IllegalStateException("The m_right operand of operator 'IN' is not a collection: "
-                    + right.getOutputType());
+                + right.getOutputType());
         }
         ExpressionValue constantTmp = null;
         if (left.isConstant() && right.isConstant()) {
@@ -991,11 +992,11 @@ public class ExpressionFactory {
                 CollectionDataValue rightValues = (CollectionDataValue)r;
                 for (DataCell dataCell : rightValues) {
                     DataValueComparator cmp =
-                            DataType.getCommonSuperType(l.getType(), dataCell.getType()).getComparator();
+                        DataType.getCommonSuperType(l.getType(), dataCell.getType()).getComparator();
                     if (cmp.compare(l, dataCell) == 0) {
                         constantTmp =
-                                new ExpressionValue(BooleanCell.TRUE, Util.mergeObjects(leftValue.getMatchedObjects(),
-                                                                                        rightValue.getMatchedObjects()));
+                            new ExpressionValue(BooleanCell.TRUE, Util.mergeObjects(leftValue.getMatchedObjects(),
+                                rightValue.getMatchedObjects()));
                     }
                 }
                 if (constantTmp == null) {
@@ -1015,7 +1016,7 @@ public class ExpressionFactory {
             @Override
             public List<DataType> getInputArgs() {
                 return Arrays.asList(DataType.getMissingCell().getType(),
-                                     ListCell.getCollectionType(DataType.getMissingCell().getType()));
+                    ListCell.getCollectionType(DataType.getMissingCell().getType()));
             }
 
             /**
@@ -1045,10 +1046,10 @@ public class ExpressionFactory {
                     CollectionDataValue rightValues = (CollectionDataValue)r;
                     for (DataCell dataCell : rightValues) {
                         DataValueComparator cmp =
-                                DataType.getCommonSuperType(l.getType(), dataCell.getType()).getComparator();
+                            DataType.getCommonSuperType(l.getType(), dataCell.getType()).getComparator();
                         if (cmp.compare(l, dataCell) == 0) {
-                            return new ExpressionValue(BooleanCell.TRUE, Util.mergeObjects(leftValue
-                                    .getMatchedObjects(), rightValue.getMatchedObjects()));
+                            return new ExpressionValue(BooleanCell.TRUE, Util.mergeObjects(
+                                leftValue.getMatchedObjects(), rightValue.getMatchedObjects()));
                         }
                     }
                     return new ExpressionValue(BooleanCell.FALSE, EMPTY_MAP);
@@ -1099,7 +1100,7 @@ public class ExpressionFactory {
      *         else a {@link BooleanCell#FALSE}.
      */
     public Expression compare(final Expression left, final Expression right, final DataValueComparator cmp,
-                              final int... possibleValues) {
+        final int... possibleValues) {
         return new Expression() {
 
             /**
@@ -1133,7 +1134,7 @@ public class ExpressionFactory {
                     found |= possibleValue == compareResult;
                 }
                 return new ExpressionValue(BooleanCell.get(found), Util.mergeObjects(leftValue.getMatchedObjects(),
-                                                                                     rightValue.getMatchedObjects()));
+                    rightValue.getMatchedObjects()));
             }
 
             /**
@@ -1174,9 +1175,11 @@ public class ExpressionFactory {
      * @param right Another {@link StringValue}'d {@link Expression}, but this is for the wild-card pattern.
      * @param key The key for the matched objects. Can be {@code null}.
      * @return An {@link Expression} representing an SQL-like LIKE operator.
+     * @throws IllegalStateException When the constant right expression is an invalid pattern. (Most probably never.)
      */
-    public Expression like(final Expression left, final Expression right, final String key) {
-        return new RegExExpression(right, left, " like ", true, key) {
+    public Expression like(final Expression left, final Expression right, final String key)
+        throws IllegalStateException {
+        return new RegExExpression(left, right, " like ", true, key) {
 
             /**
              * {@inheritDoc}
@@ -1197,9 +1200,11 @@ public class ExpressionFactory {
      * @param right Another {@link StringValue}'d {@link Expression}, but this is for the regular expression pattern.
      * @param key The key for the matched objects. Can be {@code null}.
      * @return An {@link Expression} representing a regular expression finding operator.
+     * @throws IllegalStateException When the constant right expression is an invalid pattern.
      */
-    public Expression contains(final Expression left, final Expression right, final String key) {
-        return new RegExExpression(right, left, " contains ", false, key) {
+    public Expression contains(final Expression left, final Expression right, final String key)
+        throws IllegalStateException {
+        return new RegExExpression(left, right, " contains ", false, key) {
 
             /**
              * {@inheritDoc}
@@ -1220,9 +1225,11 @@ public class ExpressionFactory {
      * @param right Another {@link StringValue}'d {@link Expression}, but this is for the regular expression pattern.
      * @param key The key for the matched objects. Can be {@code null}.
      * @return An {@link Expression} representing a regular expression matcher operator.
+     * @throws IllegalStateException When the constant right expression is an invalid pattern.
      */
-    public Expression matches(final Expression left, final Expression right, final String key) {
-        return new RegExExpression(right, left, " matches ", true, key) {
+    public Expression matches(final Expression left, final Expression right, final String key)
+        throws IllegalStateException {
+        return new RegExExpression(left, right, " matches ", true, key) {
 
             /**
              * {@inheritDoc}

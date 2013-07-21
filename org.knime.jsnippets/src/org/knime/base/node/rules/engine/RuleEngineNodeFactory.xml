@@ -10,47 +10,15 @@
 		<intro>This node takes a list of user-defined rules and tries to match them to each
         row in the input table. If a rule matches, its outcome value is added into a new column.
         The first matching rule will provide the outcome.
-        The rules follow a limited SQL-like syntax:
-        <pre>
-LINE := RULE | '//' [^\n]*
-RULE := BEXPR '=&gt;' SINGLE
-SINGLE := CONST | REF
-BEXPR := PREBEXPR |
-         AEXPR (op=BOP PREBEXPR (op PREBEXPR)*)?
-PREBEXPR := '(' BEXPR ')' |
-            'NOT' BEXPR |
-            'MISSING' COL
-AEXPR := SINGLE OP SINGLE |
-         SINGLE LOP LIST
-BOP := 'AND' | 'OR' | 'XOR'
-OP := '&gt;' | '&lt;' | '&gt;=' | '&lt;=' |
-      '=' | 'LIKE' | 'CONTAINS' | 'MATCHES'
-LOP := 'IN'
-STRING := '&quot;' [^&quot;]* '&quot;'
-NUMBER := '-'? POSITIVE
-POSITIVE := ([0-9]*\.[0-9]*('E''-'?[1-9][0-9]*)?) |
-            [0-9]+('E''-'?[1-9][0-9]*)? | 'Infinity'
-COL := '$' [^$]+ '$'
-REF := COL | FLOWVAR | TABLEREF
-FLOWVAR := '$${' ('D' | 'I' | 'S') [^}]+ '}$$'
-TABLEREF := '$$ROWID$$' | '$$ROWINDEX$$' | '$$ROWCOUNT$$'
-CONST := STRING | NUMBER
-LIST := '(' SINGLE (',' SINGLE)* ')'
-        </pre>
         <p>
         The comments start with <tt>//</tt>, and anything after that is not interpreted as a rule in that line.
 	 	Rules consist of a condition part (antecedent), that must evaluate to <i>true</i>
-        or <i>false</i>, and an outcome (consequent) that is put into the new column if the rule matches.
-        The most simple rule is a comparison between a column and another column, a fixed number or string.
-        The MISSING operator matches if and only if the value in the argument column is missing.
-        The LIKE operator treats the fixed string as a wildcard pattern (with * and ?) as wildcards,
-        the CONTAINS operator checks whether the regular expression appears in the left expression,
-        the MATCHES operator uses the right regular expressions to check whether the left expression, 
-        the IN operator compares the column value to a list of strings and evaluates to <i>true</i> if at least
-        one value in the list is equal to the column's value. Note that all operators are case-sensitive!
-        Please also note that the NOT negates all following expressions, not just the direct following.
+        or <i>false</i>, and an outcome (consequent, after the => symbol) that is put into the new column if the rule matches.
+        The most simple rule is a comparison between a column and another column, a constant number or string.
+        All operators are case-sensitive!
+        The NOT operator negates all following expressions, not just the direct following.
         </p>
-        <p>The outcome of a rule can either be a fixed string, a fixed number, or a reference to another column or flow variable value.
+        <p>The outcome of a rule can either be a constant string, a constant number, or a reference to another column or flow variable value.
         The type of the outcome column is the common super type of all possible outcomes including the default label.
         </p>
         <p>
@@ -58,24 +26,37 @@ LIST := '(' SINGLE (',' SINGLE)* ')'
         strings must not contain (double-)quotes. The flow variables are represented by <b>$${</b>TypeCharacterAndFlowVarName<b>}$$</b>.
         The TypeCharacter should be 'D' for double (real) values, 'I' for integer values and 'S' for strings.
         </p>
-        <p>Rules can (and should) be grouped with brackets because there is not pre-defined
+        <p>Rules can (and should) be grouped with brackets because there is no pre-defined
         operator precedence for the logical connectives (NOT, AND, OR, XOR) (comparison operators always take precedence
         over logical connectives).</p>
-        <p>The <tt>ROWID</tt> represents the row key string, the <tt>ROWINDEX</tt> is a the index of the row (first row has <tt>1</tt> value),
+        <p>The <tt>ROWID</tt> represents the row key string, the <tt>ROWINDEX</tt> is a the index of the row (first row has <tt>0</tt> value),
         while <tt>ROWCOUNT</tt> stands for the number of rows in the table.</p>
         <p>Some example rules (each should be in one line):</p>
         <pre>
 // This is a comment
-$Col0$ > 5 => "Positive"
+$Col0$ > 0 => "Positive"
+</pre>
+        When the values in Col0 are greater than 0, we assign Positive to the result column value (if no previous rule matched).
+<pre>
 $Col0$ = "Active" AND $Col1$ &lt;= 5 => "Outlier"
+</pre>
+        You can combine conditions.
+<pre>
 $Col0$ LIKE "Market Street*" AND 
     ($Col1$ IN ("married", "divorced") 
         OR $Col2$ > 40) => "Strange"
 $Col0$ CONTAINS $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$ =>
     $Col0$
-$Col0$ > 5 => $Col1$
+</pre>
+        With parentheses you can combine multiple conditions. The result in this case comes from one of the columns.
+<pre>
+$Col0$ > 5 => $${SCol1}$$
+</pre>
+        The result can also come from a flow variable.
+<pre>
 "Hello world" CONTAINS "l+o" => "Always true"
         </pre>
+        The regular expression l+o (some ls followed by o) will always be present in Hello, so this rule will match.
         <p>
         You can use either Ctrl+Space to insert predefined parts, or select them from the upper controls.
         </p>
@@ -86,7 +67,7 @@ $Col0$ > 5 => $Col1$
 		<option name="Category">The operator categories.</option>
 		<option name="Function">A list of valid operators in the selected category.</option>
 		<option name="Description">Short help about the operator.</option>
-		<option name="Expression">The rule editor. You have completion, each row represents a rule.</option>
+		<option name="Expression">The rule editor. You can complete the expressions with Ctrl+Space. Each row represents a rule. The background of the line signals errors, or comments. The right side of the editor can show an error icon or the type of the outcome of the rule.</option>
 		<option name="Appended column name">Name of the newly appended column, 
 		  which contains the outcome of the rules.</option>
 		<option name="Default label">This label is used if no rule matches.</option>

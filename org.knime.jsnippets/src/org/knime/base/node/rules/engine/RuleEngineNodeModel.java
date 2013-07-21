@@ -129,6 +129,9 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
         //SimpleRuleParser ruleParser = new SimpleRuleParser(spec, availableFlowVariables);
         RuleFactory factory = allowNoOutcome ? RuleFactory.getFilterInstance() : RuleFactory.getInstance();
         for (String s : m_settings.rules()) {
+            if (s.trim().isEmpty()) {
+                continue;
+            }
             final Rule rule = factory.parse(s, spec, availableFlowVariables);
             if (rule.getCondition().isEnabled()) {
                 rules.add(rule);

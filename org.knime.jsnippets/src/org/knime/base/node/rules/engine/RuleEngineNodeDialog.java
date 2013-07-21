@@ -83,7 +83,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
     static final String NEW_COL_NAME = "prediction";
 
     /** The default text for the rule editor. */
-    static final String RULE_LABEL = "Enter condition...";
+    static final String RULE_LABEL = "Enter condition...\n";
 
     private final boolean m_hasOutputColumn;
 

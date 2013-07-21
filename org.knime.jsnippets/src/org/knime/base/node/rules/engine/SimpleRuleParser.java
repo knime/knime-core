@@ -69,7 +69,85 @@ import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * A simple implementation to parse {@link Rule}s.
- *
+ * <p>
+ * Filter rules:
+ * <pre>
+LINE := RULE | '//' [^\n]*
+RULE := BEXPR ('=&gt;' SINGLE)?
+SINGLE := CONST | REF
+BEXPR := PREBEXPR |
+         AEXPR (op=BOP PREBEXPR (op PREBEXPR)*)?
+PREBEXPR := '(' BEXPR ')' |
+            'NOT' BEXPR |
+            'MISSING' COL
+AEXPR := SINGLE OP SINGLE |
+         SINGLE LOP LIST
+BOP := 'AND' | 'OR' | 'XOR'
+OP := '&gt;' | '&lt;' | '&gt;=' | '&lt;=' |
+      '=' | 'LIKE' | 'CONTAINS' | 'MATCHES'
+LOP := 'IN'
+STRING := '&quot;' [^&quot;]* '&quot;'
+NUMBER := '-'? POSITIVE
+POSITIVE := ([0-9]*\.[0-9]*('E''-'?[1-9][0-9]*)?) |
+            [0-9]+('E''-'?[1-9][0-9]*)? | 'Infinity'
+COL := '$' [^$]+ '$'
+REF := COL | FLOWVAR | TABLEREF
+FLOWVAR := '$${' ('D' | 'I' | 'S') [^}]+ '}$$'
+TABLEREF := '$$ROWID$$' | '$$ROWINDEX$$' | '$$ROWCOUNT$$'
+CONST := STRING | NUMBER
+LIST := '(' SINGLE (',' SINGLE)* ')'
+</pre>
+ * </p>
+ * <p>Rule Engine rules:
+ * <pre>LINE := RULE | '//' [^\n]*
+RULE := BEXPR '=&gt;' SINGLE
+SINGLE := CONST | REF
+BEXPR := PREBEXPR |
+         AEXPR (op=BOP PREBEXPR (op PREBEXPR)*)?
+PREBEXPR := '(' BEXPR ')' |
+            'NOT' BEXPR |
+            'MISSING' COL
+AEXPR := SINGLE OP SINGLE |
+         SINGLE LOP LIST
+BOP := 'AND' | 'OR' | 'XOR'
+OP := '&gt;' | '&lt;' | '&gt;=' | '&lt;=' |
+      '=' | 'LIKE' | 'CONTAINS' | 'MATCHES'
+LOP := 'IN'
+STRING := '&quot;' [^&quot;]* '&quot;'
+NUMBER := '-'? POSITIVE
+POSITIVE := ([0-9]*\.[0-9]*('E''-'?[1-9][0-9]*)?) |
+            [0-9]+('E''-'?[1-9][0-9]*)? | 'Infinity'
+COL := '$' [^$]+ '$'
+REF := COL | FLOWVAR | TABLEREF
+FLOWVAR := '$${' ('D' | 'I' | 'S') [^}]+ '}$$'
+TABLEREF := '$$ROWID$$' | '$$ROWINDEX$$' | '$$ROWCOUNT$$'
+CONST := STRING | NUMBER
+LIST := '(' SINGLE (',' SINGLE)* ')'
+        </pre>
+ * </p>
+ * <p>Variable rules:        <pre>
+LINE := RULE | '//' [^\n]*
+RULE := BEXPR '=&gt;' SINGLE
+SINGLE := CONST | FLOWVAR
+BEXPR := PREBEXPR |
+         AEXPR (op=BOP PREBEXPR (op PREBEXPR)*)?
+PREBEXPR := '(' BEXPR ')' |
+            'NOT' BEXPR
+AEXPR := SINGLE OP SINGLE |
+         SINGLE LOP LIST
+BOP := 'AND' | 'OR' | 'XOR'
+OP := '&gt;' | '&lt;' | '&gt;=' | '&lt;=' |
+      '=' | 'LIKE' | 'CONTAINS' | 'MATCHES'
+LOP := 'IN'
+STRING := '&quot;' [^&quot;]* '&quot;'
+NUMBER := '-'? POSITIVE
+POSITIVE := ([0-9]*\.[0-9]*('E''-'?[1-9][0-9]*)?) |
+            [0-9]+('E''-'?[1-9][0-9]*)? | 'Infinity'
+FLOWVAR := '$${' ('D' | 'I' | 'S') [^}]+ '}$$'
+CONST := STRING | NUMBER
+LIST := '(' SINGLE (',' SINGLE)* ')'
+        </pre>
+ * </p>
  * @author Gabor Bakos
  * @since 2.8
  */
@@ -97,8 +175,6 @@ public class SimpleRuleParser {
         private int m_position;
 
         private final int m_end;
-
-        //        private Stack<List<Expression>> expressions = new Stack<List<Expression>>();
 
         /**
          * Initializes the {@link ParseState} with {@code text}.
@@ -161,7 +237,7 @@ public class SimpleRuleParser {
          * @throws ParseException Reached end without finding unescaped {@code find}.
          */
         private String collectTill(final char find, final int startPosition, final char... escapeChars)
-                throws ParseException {
+            throws ParseException {
             StringBuilder sb = new StringBuilder();
             while (!isEnd()) {
                 char ch = consume();
@@ -189,7 +265,7 @@ public class SimpleRuleParser {
         public void expect(final char ch) throws ParseException {
             if (isEnd() || m_text.charAt(m_position) != ch) {
                 throw new ParseException("Expected: " + ch + " got: "
-                        + (isEnd() ? "end of rule" : m_text.charAt(m_position)), m_position);
+                    + (isEnd() ? "end of rule" : m_text.charAt(m_position)), m_position);
             }
         }
 
@@ -271,8 +347,8 @@ public class SimpleRuleParser {
          */
         public boolean isTablePropertyReference() {
             for (String string : new String[]{org.knime.ext.sun.nodes.script.expression.Expression.ROWCOUNT,
-                    org.knime.ext.sun.nodes.script.expression.Expression.ROWID,
-                    org.knime.ext.sun.nodes.script.expression.Expression.ROWINDEX}) {
+                org.knime.ext.sun.nodes.script.expression.Expression.ROWID,
+                org.knime.ext.sun.nodes.script.expression.Expression.ROWINDEX}) {
                 if (peekText("$$" + string + "$$")) {
                     return true;
                 }
@@ -389,8 +465,8 @@ public class SimpleRuleParser {
                     ++len;
                 }
                 if (m_text.length() >= m_position + len + infinityString.length() - 1
-                        && infinityString.equals(m_text.substring(m_position + len - 1, m_position + len - 1
-                                + infinityString.length()))) {
+                    && infinityString.equals(m_text.substring(m_position + len - 1, m_position + len - 1
+                        + infinityString.length()))) {
                     len += infinityString.length();
                     len--;
                     String ret = m_text.substring(m_position, m_position + len);
@@ -408,7 +484,7 @@ public class SimpleRuleParser {
                         continue;
                     }
                     if (substring.charAt(len - 1) == '-' && len > 1
-                            && Character.toLowerCase(substring.charAt(len - 2)) == 'e') {
+                        && Character.toLowerCase(substring.charAt(len - 2)) == 'e') {
                         ++len;
                         continue;
                     }
@@ -457,8 +533,8 @@ public class SimpleRuleParser {
                     case 'E':
                     case 'y':
                         break;
-                        default:
-                            throw new NumberFormatException(string);
+                    default:
+                        throw new NumberFormatException(string);
                 }
                 Double.parseDouble(string);
                 return true;
@@ -533,7 +609,7 @@ public class SimpleRuleParser {
      * @see SimpleRuleParser#SimpleRuleParser(DataTableSpec, Map, ExpressionFactory)
      */
     public SimpleRuleParser(final DataTableSpec spec, final Map<String, FlowVariable> flowVariables,
-                     final ExpressionFactory factory) {
+        final ExpressionFactory factory) {
         this(spec, flowVariables, factory, true);
     }
 
@@ -546,7 +622,7 @@ public class SimpleRuleParser {
      * @see SimpleRuleParser#SimpleRuleParser(DataTableSpec, Map, ExpressionFactory)
      */
     public SimpleRuleParser(final DataTableSpec spec, final Map<String, FlowVariable> flowVariables,
-                            final boolean allowTableReferences) {
+        final boolean allowTableReferences) {
         this(spec, flowVariables, ExpressionFactory.getInstance(), allowTableReferences);
     }
 
@@ -560,7 +636,7 @@ public class SimpleRuleParser {
      * @see SimpleRuleParser#SimpleRuleParser(DataTableSpec, Map, ExpressionFactory)
      */
     public SimpleRuleParser(final DataTableSpec spec, final Map<String, FlowVariable> flowVariables,
-                            final ExpressionFactory factory, final boolean allowTableReferences) {
+        final ExpressionFactory factory, final boolean allowTableReferences) {
         super();
         this.m_spec = spec;
         this.m_flowVariables = flowVariables;
@@ -653,7 +729,7 @@ public class SimpleRuleParser {
     public Condition parseCondition(final ParseState state) throws ParseException {
         Expression expression = parseBooleanExpression(state);
         return new Condition.GenericCondition(state.m_text, state.m_text.substring(0, state.getPosition()), true,
-                expression);
+            expression);
     }
 
     /**
@@ -710,7 +786,7 @@ public class SimpleRuleParser {
             state.consumeText(Operators.MISSING.name());
             String operator = "MISSING ";
             state.expectWS();
-            Expression reference = parseReference(state, operator);
+            Expression reference = parseReference(state, operator, false);
             left = m_factory.missing(reference);
         } else { //infix relation
             left = parseRelation(state);
@@ -727,17 +803,36 @@ public class SimpleRuleParser {
      * @throws ParseException Problem during parsing.
      */
     private Expression parseReference(final ParseState state, final String operator) throws ParseException {
+        return parseReference(state, operator, true);
+    }
+
+    /**
+     * Reads a {@link FlowVariable} reference, or a {@link TableReference} or a column reference.
+     *
+     * @param state The {@link ParseState}.
+     * @param operator The text referring to the operator (for error messages).
+     * @param allowFlowVariable The next reference can be a flow variable too, else it is not accepted.
+     * @return The {@link Expression} parsed representing a column.
+     * @throws ParseException Problem during parsing.
+     */
+    private Expression parseReference(final ParseState state, final String operator, final boolean allowFlowVariable)
+        throws ParseException {
         state.skipWS();
         Expression reference;
-        if (state.isFlowVariableRef()) {
+        if (allowFlowVariable && state.isFlowVariableRef()) {
             reference = parseFlowVariableExpression(state);
         } else if (state.isTablePropertyReference() && m_allowTableReferences) {
             reference = parseTablePropertyReference(state);
         } else if (state.isColumnRef()) {
             reference = parseColumnExpression(state);
         } else {
-            throw new ParseException(operator + "operator requires either a column"
+            if (allowFlowVariable) {
+                throw new ParseException(operator + "operator requires either a column"
                     + (m_allowTableReferences ? ", a table property" : "") + " or a flow variable", state.getPosition());
+            } else {
+                throw new ParseException(operator + "operator requires a column"
+                        + (m_allowTableReferences ? " or a table property" : ""), state.getPosition());
+            }
         }
         return reference;
     }
@@ -752,7 +847,7 @@ public class SimpleRuleParser {
      * @throws ParseException Problem during parsing.
      */
     private List<Expression> collectInfixArguments(final ParseState state, final Expression left, final String name)
-            throws ParseException {
+        throws ParseException {
         state.skipWS();
         List<Expression> arguments = new ArrayList<Expression>();
         arguments.add(left);
@@ -817,7 +912,7 @@ public class SimpleRuleParser {
         state.skipWS();
         Expression right = parseOperand(state);
         DataValueComparator cmp =
-                DataType.getCommonSuperType(left.getOutputType(), right.getOutputType()).getComparator();
+            DataType.getCommonSuperType(left.getOutputType(), right.getOutputType()).getComparator();
         switch (op) {
             case IN:
             case MISSING:
@@ -838,13 +933,25 @@ public class SimpleRuleParser {
                 return m_factory.compare(left, right, cmp, 1);
             case LIKE:
                 reportNotString(beforeLeft, left, op, beforeRight, right);
-                return m_factory.like(left, right, null); //add keys when parsed
+                try {
+                    return m_factory.like(left, right, null); //add keys when parsed
+                } catch (IllegalStateException ex) {
+                    throw new ParseException("Invalid pattern: " + right.toString(), beforeRight);
+                }
             case CONTAINS:
                 reportNotString(beforeLeft, left, op, beforeRight, right);
-                return m_factory.contains(left, right, null); //add keys when parsed
+                try {
+                    return m_factory.contains(left, right, null); //add keys when parsed
+                } catch (IllegalStateException ex) {
+                    throw new ParseException("Invalid pattern: " + right.toString(), beforeRight);
+                }
             case MATCHES:
                 reportNotString(beforeLeft, left, op, beforeRight, right);
-                return m_factory.matches(left, right, null); //add keys when parsed
+                try {
+                    return m_factory.matches(left, right, null); //add keys when parsed
+                } catch (IllegalStateException ex) {
+                    throw new ParseException("Invalid pattern: " + right.toString(), beforeRight);
+                }
             default:
                 throw new ParseException("Not supported operator: " + op, beforeOperator);
         }
@@ -861,7 +968,7 @@ public class SimpleRuleParser {
      * @throws ParseException The type of the output is not a {@link StringValue}.
      */
     private void reportNotString(final int beforeLeft, final Expression left, final Operators op,
-                                 final int beforeRight, final Expression right) throws ParseException {
+        final int beforeRight, final Expression right) throws ParseException {
         if (!StringCell.TYPE.isASuperTypeOf(left.getOutputType())) {
             throw new ParseException("Expression before '" + op + "' is not a string.", beforeLeft);
         }
@@ -915,7 +1022,7 @@ public class SimpleRuleParser {
                 String text = state.readString();
                 left = m_factory.constant(text, StringCell.TYPE);
             } else if (ch == '-' || (ch >= '0' && ch <= '9') || ch == '.'
-                    || state.peekText(Double.toString(Double.POSITIVE_INFINITY))) {
+                || state.peekText(Double.toString(Double.POSITIVE_INFINITY))) {
                 String text = state.parseNumber();
                 try {
                     int integer = Integer.parseInt(text);
@@ -926,8 +1033,8 @@ public class SimpleRuleParser {
                 }
             } else {
                 throw new ParseException("Expected a number, string, column"
-                        + (m_allowTableReferences ? ", a table property" : "") + " or flow variable reference.",
-                        state.getPosition());
+                    + (m_allowTableReferences ? ", a table property" : "") + " or flow variable reference.",
+                    state.getPosition());
             }
         }
         return left;

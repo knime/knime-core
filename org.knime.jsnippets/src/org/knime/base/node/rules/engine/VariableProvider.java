@@ -128,7 +128,7 @@ public interface VariableProvider extends FlowVariableProvider {
     }
 
     /**
-     * @return The row index (the first row is {@code 1}.
+     * @return The row index (the first row is {@code 0}.
      */
     int getRowIndex();
 }
