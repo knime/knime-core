@@ -85,6 +85,7 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.actions.RetargetAction;
 import org.eclipse.ui.part.ViewPart;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
@@ -624,7 +625,9 @@ public class NodeMonitorView extends ViewPart
             TableItem item = new TableItem(m_table, SWT.NONE);
             item.setText(0, thisRow.getKey().getString());
             for (int i = 0; i < thisRow.getNumCells(); i++) {
-                item.setText(i + 1, thisRow.getCell(i).toString());
+                DataCell c = thisRow.getCell(i);
+                String s = c.toString().replaceAll("\\p{Cntrl}", "_");
+                item.setText(i + 1, s);
             }
             rowIndex++;
         }
