@@ -563,6 +563,11 @@
             category-path="/manipulation/row/row-transform"
             id="org.knime.base.node.preproc.sample.SamplingNodeFactory"/>
       <node
+            after="org.knime.base.node.preproc.sample.SamplingNodeFactory"
+            factory-class="org.knime.base.node.preproc.bootstrap.BootstrapNodeFactory"
+            category-path="/manipulation/row/row-transform"
+            id="org.knime.base.node.preproc.bootstrap.BootstrapNodeFactory"/>
+      <node
             category-path="/manipulation/row/row-transform"
             factory-class="org.knime.base.node.preproc.equalsizesampling.EqualSizeSamplingNodeFactory"
             id="org.knime.base.node.preproc.equalsizesampling.EqualSizeSamplingNodeFactory"
