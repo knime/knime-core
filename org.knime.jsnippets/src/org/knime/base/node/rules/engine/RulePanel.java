@@ -97,7 +97,6 @@ import org.knime.core.data.DataValue;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -542,13 +541,11 @@ abstract class RulePanel extends JPanel {
             for (int i = outputTypes.length; i-- > 0;) {
                 try {
                     if (outputTypes[i] == null && !(i < lines.length && lines[i].trim().isEmpty())) {//error
-                        gutter.addLineTrackingIcon(i, KNIMEConstants.KNIME16X16);
+                        gutter.addLineTrackingIcon(i, RuleMainPanel.ERROR_ICON);
                         textArea.addLineHighlight(i, Color.PINK);
-                    } else if (/*outputTypes[i] == DataType.getMissingCell().getType()
-                            &&*/ i < lines.length && RuleSupport.isComment(lines[i])) {//comment
-                        //gutter.addLineTrackingIcon(i, outputTypes[i].getIcon());
+                    } else if (i < lines.length && RuleSupport.isComment(lines[i])) {//comment
                         textArea.addLineHighlight(i, Color.YELLOW);
-                    } else if (m_hasOutputColumn) {
+                    } else if (m_hasOutputColumn && outputTypes[i] != null) {
                         gutter.addLineTrackingIcon(i, outputTypes[i].getIcon());
                     }
                 } catch (BadLocationException e) {

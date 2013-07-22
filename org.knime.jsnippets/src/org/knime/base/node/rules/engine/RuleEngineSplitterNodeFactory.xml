@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Manipulator" icon="./rule_engine_splitter.png">
+<knimeNode type="Manipulator" icon="./rule_engine_splitter.png" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
 	<name>Rule-based Row Splitter</name>
 	<shortDescription>
 		 Splits the input table based on user-defined business rules
@@ -11,21 +10,23 @@
         row in the input table. Depending on a rule match and settings, the row will be sent to the first or second output table.
         <p>
         The comments start with <tt>//</tt>, and anything after that is not interpreted as a rule in that line.
-	 	Rules consist of a condition part (antecedent), that must evaluate to <i>true</i>
-        or <i>false</i>, and possibly an outcome (consequent, after the => symbol) which is ignored.
+	 	Rules consist of a condition part (antecedent), which must evaluate to <i>true</i>
+        or <i>false</i>, and possibly an outcome (consequent, after the => symbol) that is ignored.
+        Each rule is represented by a line.
         The most simple rule is a comparison between a column and another column, a constant number or string.
-        All operators are case-sensitive!
-        The NOT operator negates all following expressions, not just the direct following.
         </p>
         <p>
         Columns are given by their name surrounded by $, numbers are given in the usual decimal representation. Note that
         strings must not contain (double-)quotes. The flow variables are represented by <b>$${</b>TypeCharacterAndFlowVarName<b>}$$</b>.
         The TypeCharacter should be 'D' for double (real) values, 'I' for integer values and 'S' for strings.
         </p>
-        <p>Rules can (and should) be grouped with brackets because there is no pre-defined
+        <p>The logical expressions can (and should) be grouped with parentheses because there is no pre-defined
         operator precedence for the logical connectives (NOT, AND, OR, XOR) (comparison operators always take precedence
-        over logical connectives).</p>
-        <p>The <tt>ROWID</tt> represents the row key string, the <tt>ROWINDEX</tt> is a the index of the row (first row has <tt>1</tt> value),
+        over logical connectives).
+        All operators are case-sensitive.
+        The NOT operator negates all following expressions, not just the direct following expression.
+        </p>
+        <p>The <tt>ROWID</tt> represents the row key string, the <tt>ROWINDEX</tt> is a the index of the row (first row has <tt>0</tt> value),
         while <tt>ROWCOUNT</tt> stands for the number of rows in the table.</p>
         <p>Some example rules (each should be in one line):</p>
         <pre>
@@ -48,9 +49,9 @@ $Col0$ CONTAINS $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$
 </pre>
         The flow variables can be used with most operators.
 <pre>
-"Hello world" CONTAINS "l+o" => "Always true"
+"Hello world" CONTAINS "ll+o" => "Always true"
         </pre>
-        The regular expression l+o (some ls followed by an o) always present in Hello, so this rule will match.
+        The regular expression ll+o (at least two ls followed by an o) will always be present in Hello, so this rule will match.
         <p>
         You can use either Ctrl+Space to insert predefined parts, or select them from the upper controls.
         </p>
@@ -61,7 +62,7 @@ $Col0$ CONTAINS $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$
 		<option name="Category">The operator categories.</option>
 		<option name="Function">A list of valid operators in the selected category.</option>
 		<option name="Description">Short help about the operator.</option>
-		<option name="Expression">The rule editor. You can complete the expressions with Ctrl+Space. Each row represents a rule. The background of the line signals errors, or comments. The right side of the editor can show an error icon.</option>
+		<option name="Expression">The rule editor. You can complete the expressions with Ctrl+Space. Each row represents a rule. The background of the line signals errors (pink), or comments (yellow). The right side of the editor can show an error icon.</option>
 		<option name="any rule matches -> first, others second">The row will be included in the first output if any of the rules matches, the rest go to second.</option>
 		<option name="any rule matches -> second, others -> first">The row will be included in the second output if any of the rules matches, the rest go to first.</option>
 	</fullDescription>

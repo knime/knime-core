@@ -62,6 +62,7 @@ import java.util.Date;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.text.BadLocationException;
 
@@ -89,6 +90,18 @@ import org.knime.core.node.NodeLogger;
 @SuppressWarnings("serial")
 class RuleMainPanel extends JSnippetPanel {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(RuleMainPanel.class);
+
+    /** Error icon to signal problems in rows */
+    static final ImageIcon ERROR_ICON;
+    static {
+        ImageIcon icon;
+        try {
+            icon = new ImageIcon(RuleMainPanel.class.getResource("error_obj.png"));
+        } catch (RuntimeException e) {
+            icon = KNIMEConstants.KNIME16X16;
+        }
+        ERROR_ICON = icon;
+    }
 
     private KnimeSyntaxTextArea m_textEditor;
 
@@ -254,8 +267,6 @@ class RuleMainPanel extends JSnippetPanel {
         textScrollPane.setLineNumbersEnabled(true);
         textScrollPane.setIconRowHeaderEnabled(true);
         m_gutter = textScrollPane.getGutter();
-        m_gutter.setBookmarkingEnabled(true);
-        m_gutter.setBookmarkIcon(KNIMEConstants.KNIME16X16);
         addRowHeaderMouseListener(new MouseAdapter() {
                 /**
                  * {@inheritDoc}
