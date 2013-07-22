@@ -1114,6 +1114,11 @@
             id="org.knime.base.node.preproc.filter.nominal.NominalValueRowFilterNodeFactory">
       </node>
       <node
+            category-path="/manipulation/row/row-other"
+            factory-class="org.knime.base.node.rules.RuleEngineNodeFactory"
+            id="org.knime.base.node.rules.RuleEngineNodeFactory">
+      </node>
+      <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory"
             id="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory">
