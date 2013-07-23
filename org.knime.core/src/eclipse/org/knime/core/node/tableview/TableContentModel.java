@@ -1441,7 +1441,7 @@ public class TableContentModel extends AbstractTableModel
             m_rowCountOfInterest = m_maxRowCount;
             m_isRowCountOfInterestFinal = isFinal;
         }
-        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+        ViewUtils.invokeLaterInEDT(new Runnable() {
             @Override
             public void run() {
                 fireTableRowsInserted(oldCount, newCount - 1);
