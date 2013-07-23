@@ -151,7 +151,7 @@ public class FilelistAccessory extends JPanel
             }
 
             final File[] finalListForThread = fileList;
-            ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            ViewUtils.invokeLaterInEDT(new Runnable() {
                 @Override
                 public void run() {
                     m_fileList.setListData(finalListForThread);

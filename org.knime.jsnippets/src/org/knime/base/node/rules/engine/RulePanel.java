@@ -430,7 +430,7 @@ abstract class RulePanel extends JPanel {
                     }
                     ++i;
                 }
-                ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+                ViewUtils.invokeLaterInEDT(new Runnable() {
                     @Override
                     public void run() {
                         setOutputMarkers(startDate, outputTypes);
@@ -492,7 +492,7 @@ abstract class RulePanel extends JPanel {
                     final DataType outputType =
                             RuleEngineNodeModel.computeOutputType(m_spec, rules, defaultLabelColumnIndex, defaultLabel,
                                                                   preferredDefaultType);
-                    ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+                    ViewUtils.invokeLaterInEDT(new Runnable() {
                         @Override
                         public void run() {
                             setOutputType(startDate, outputType);

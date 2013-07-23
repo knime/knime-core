@@ -1675,7 +1675,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         // set this - even before displaying it
         m_previewTable = table;
 
-        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+        ViewUtils.invokeLaterInEDT(new Runnable() {
             @Override
             public void run() {
                 // set the new table in the view
