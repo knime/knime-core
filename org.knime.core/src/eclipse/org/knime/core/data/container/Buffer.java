@@ -1072,6 +1072,7 @@ class Buffer implements KNIMEStreamConstants {
                     NotInWorkflowWriteFileStoreHandler notInWorkflowFSH =
                             new NotInWorkflowWriteFileStoreHandler(fileStoresUUID, m_fileStoreHandlerRepository);
                     notInWorkflowFSH.setBaseDir(fileStoreDir);
+                    fileStoreHandler = notInWorkflowFSH;
                 }
             }
             m_fileStoreHandler = fileStoreHandler;
