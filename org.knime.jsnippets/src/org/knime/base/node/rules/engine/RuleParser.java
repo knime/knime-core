@@ -99,10 +99,6 @@ public class RuleParser implements Parser {
      * @since 2.8
      */
     public static class RuleLanguageSupport extends AbstractLanguageSupport {
-        static {
-            new RuleLanguageSupport();
-        }
-
         /**
          * Constructs the {@link RuleLanguageSupport}.
          */

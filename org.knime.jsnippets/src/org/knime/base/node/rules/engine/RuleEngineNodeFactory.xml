@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Predictor" icon="./rule_engine.png">
+<knimeNode type="Predictor" icon="./rule_engine.png" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
 	<name>Rule Engine</name>
 	<shortDescription>
 		 Applies user-defined business rules to the input table
@@ -12,11 +11,10 @@
         The first matching rule will provide the outcome.
         <p>
         The comments start with <tt>//</tt>, and anything after that is not interpreted as a rule in that line.
-	 	Rules consist of a condition part (antecedent), that must evaluate to <i>true</i>
-        or <i>false</i>, and an outcome (consequent, after the => symbol) that is put into the new column if the rule matches.
+	 	Rules consist of a condition part (antecedent), which must evaluate to <i>true</i>
+        or <i>false</i>, and an outcome (consequent, after the => symbol) which is put into the new column if the rule matches.
+        Each rule is represented by a line.
         The most simple rule is a comparison between a column and another column, a constant number or string.
-        All operators are case-sensitive!
-        The NOT operator negates all following expressions, not just the direct following.
         </p>
         <p>The outcome of a rule can either be a constant string, a constant number, or a reference to another column or flow variable value.
         The type of the outcome column is the common super type of all possible outcomes including the default label.
@@ -26,11 +24,15 @@
         strings must not contain (double-)quotes. The flow variables are represented by <b>$${</b>TypeCharacterAndFlowVarName<b>}$$</b>.
         The TypeCharacter should be 'D' for double (real) values, 'I' for integer values and 'S' for strings.
         </p>
-        <p>Rules can (and should) be grouped with brackets because there is no pre-defined
+        <p>The logical expressions can (and should) be grouped with parentheses because there is no pre-defined
         operator precedence for the logical connectives (NOT, AND, OR, XOR) (comparison operators always take precedence
-        over logical connectives).</p>
+        over logical connectives).
+        All operators are case-sensitive.
+        The NOT operator negates all following expressions, not just the direct following expression.
+        </p>
         <p>The <tt>ROWID</tt> represents the row key string, the <tt>ROWINDEX</tt> is a the index of the row (first row has <tt>0</tt> value),
-        while <tt>ROWCOUNT</tt> stands for the number of rows in the table.</p>
+        while <tt>ROWCOUNT</tt> stands for the number of rows in the table.
+        </p>
         <p>Some example rules (each should be in one line):</p>
         <pre>
 // This is a comment
@@ -54,9 +56,9 @@ $Col0$ > 5 => $${SCol1}$$
 </pre>
         The result can also come from a flow variable.
 <pre>
-"Hello world" CONTAINS "l+o" => "Always true"
+"Hello world" CONTAINS "ll+o" => "Always true"
         </pre>
-        The regular expression l+o (some ls followed by o) will always be present in Hello, so this rule will match.
+        The regular expression ll+o (at least two ls followed by o) will always be present in Hello, so this rule will match.
         <p>
         You can use either Ctrl+Space to insert predefined parts, or select them from the upper controls.
         </p>
@@ -67,7 +69,7 @@ $Col0$ > 5 => $${SCol1}$$
 		<option name="Category">The operator categories.</option>
 		<option name="Function">A list of valid operators in the selected category.</option>
 		<option name="Description">Short help about the operator.</option>
-		<option name="Expression">The rule editor. You can complete the expressions with Ctrl+Space. Each row represents a rule. The background of the line signals errors, or comments. The right side of the editor can show an error icon or the type of the outcome of the rule.</option>
+		<option name="Expression">The rule editor. You can complete the expressions with Ctrl+Space. Each row represents a rule. The background of the line signals errors (pink), or comments (yellow). The right side of the editor can show an error icon.</option>
 		<option name="Appended column name">Name of the newly appended column, 
 		  which contains the outcome of the rules.</option>
 		<option name="Default label">This label is used if no rule matches.</option>

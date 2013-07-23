@@ -250,7 +250,7 @@ class LimitRowsPanel extends JPanel {
      */
     private void checkAndFixTextfield() {
         // this is called from inside the change listener - invoke is later
-        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+        ViewUtils.invokeLaterInEDT(new Runnable() {
             public void run() {
 
                 if (m_maxNumber.getText().trim().length() == 0) {
@@ -285,7 +285,7 @@ class LimitRowsPanel extends JPanel {
      */
     private void checkAndFixSkipCount() {
         // this is called from inside the change listener - invoke is later
-        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+        ViewUtils.invokeLaterInEDT(new Runnable() {
             @Override
             public void run() {
                 if (m_skipNumber.getText().trim().length() == 0) {

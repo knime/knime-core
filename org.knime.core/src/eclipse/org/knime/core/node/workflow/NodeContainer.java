@@ -1092,8 +1092,13 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         if (i < getNrNodeViews()) {
             return getNodeView(i);
         } else {
-            assert getJobManager() != null : "Job Manager changed: No view!!";
-            return getJobManager().getView(this);
+            NodeContext.pushContext(this);
+            try {
+                assert getJobManager() != null : "Job Manager changed: No view!!";
+                return getJobManager().getView(this);
+            } finally {
+                NodeContext.removeLastContext();
+            }
         }
     }
 

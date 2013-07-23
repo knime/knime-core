@@ -1072,6 +1072,7 @@ class Buffer implements KNIMEStreamConstants {
                     NotInWorkflowWriteFileStoreHandler notInWorkflowFSH =
                             new NotInWorkflowWriteFileStoreHandler(fileStoresUUID, m_fileStoreHandlerRepository);
                     notInWorkflowFSH.setBaseDir(fileStoreDir);
+                    fileStoreHandler = notInWorkflowFSH;
                 }
             }
             m_fileStoreHandler = fileStoreHandler;
@@ -1323,7 +1324,14 @@ class Buffer implements KNIMEStreamConstants {
         if (cell instanceof FileStoreCell) {
             final FileStoreCell fsCell = (FileStoreCell)cell;
             FileStore fileStore = FileStoreUtil.getFileStore(fsCell);
-            fileStoreKey = ((IWriteFileStoreHandler)m_fileStoreHandler).translateToLocal(fileStore, fsCell);
+            if (m_fileStoreHandler instanceof IWriteFileStoreHandler) {
+                fileStoreKey = ((IWriteFileStoreHandler)m_fileStoreHandler).translateToLocal(fileStore, fsCell);
+            } else {
+                // handler is not an IWriteFileStoreHandler but the buffer still contains file stores:
+                // the flow is part of a workflow and all file stores were already properly handled
+                // (this buffer is restored from disc - and then a memory alert forces the data back onto disc)
+                fileStoreKey = FileStoreUtil.getFileStoreKey(fileStore);
+            }
         }
         final boolean isJavaSerializationOrBlob = ser == null && !isBlob;
         if (isJavaSerializationOrBlob) {
