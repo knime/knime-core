@@ -34,8 +34,7 @@
 			in the bootstrap samples.
 		</option>
 		<option name="Append original RowID">
-			Will append a column containing the the original
-			RowID
+			Will append a column containing the original RowID
 			in the bootstrap samples.
 		</option>
 		<option name="RowID separator">

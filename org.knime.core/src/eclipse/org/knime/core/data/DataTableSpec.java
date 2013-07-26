@@ -971,6 +971,14 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * &quot;uniquify&quot; the argument string and append a
      * &quot;<i>(# i)</i>&quot; where <i>i</i> is a running index.
      *
+     * <p>This method is mostly used when columns get appended in node model implementations.
+     * It is good practice to call this method in each invocation of NodeModel#configure and
+     * #execute and to not update the internal fields (which represent user configuration parameters).
+     *
+     * <p>Also note that for ensuring uniqueness of many new columns it's better to use
+     * {@link org.knime.core.util.UniqueNameGenerator} as this method here does not guarantee
+     * uniqueness of multiple new column names.
+     *
      * @param spec The argument spec to check.
      * @param columnName The desired column name
      * @return <code>columnName</code> if it is not contained in the argument
