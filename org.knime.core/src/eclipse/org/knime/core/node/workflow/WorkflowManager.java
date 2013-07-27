@@ -4418,15 +4418,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 checkForNodeStateChanges(false);
             }
             m_wfmListeners.clear();
-            if (m_tmpDir != null) {
-                // delete the flow temp dir that we created
-                KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {
-                    @Override
-                    public void run() {
-                        FileUtil.deleteRecursively(m_tmpDir);
-                    }
-                });
-            }
             super.performShutdown();
         }
     }
@@ -7550,8 +7541,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (ncDir != null) {
                 ncDir.fileUnlockRootForVM();
             }
-            for (NodeContainer nc : m_workflow.getNodeValues()) {
+            // breadth first sorted list - traverse backwards (downstream before upstream nodes)
+            final List<NodeID> idList = new ArrayList<NodeID>(
+                    m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet());
+            for (ListIterator<NodeID> reverseIt = idList.listIterator(idList.size()); reverseIt.hasPrevious();) {
+                NodeContainer nc = getNodeContainer(reverseIt.previous());
                 nc.cleanup();
+            }
+            if (m_tmpDir != null) {
+                // delete the flow temp dir that we created
+                KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {
+                    @Override
+                    public void run() {
+                        FileUtil.deleteRecursively(m_tmpDir);
+                    }
+                });
             }
         }
     }
