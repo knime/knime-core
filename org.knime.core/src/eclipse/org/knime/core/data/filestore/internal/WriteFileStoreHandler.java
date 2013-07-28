@@ -133,7 +133,10 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
         if (m_baseDir != null) {
             StringBuilder b = new StringBuilder("Disposing file store \"");
             b.append(toString()).append("\"");
-            if (FileUtil.deleteRecursively(m_baseDir)) {
+            if (!m_baseDir.exists()) { // possibly deleted as workflow cleanup (job folder gone)
+                b.append(" - associated folder already deleted");
+                LOGGER.debug(b.toString());
+            } else if (FileUtil.deleteRecursively(m_baseDir)) {
                 b.append(" - folder successfully deleted");
                 LOGGER.debug(b.toString());
             } else {

@@ -387,17 +387,17 @@ public final class SingleNodeContainer extends NodeContainer {
         super.cleanup();
         NodeContext.pushContext(this);
         try {
+            if (m_outputPorts != null) {
+                for (NodeOutPort p : m_outputPorts) {
+                    if (p != null) {
+                        p.disposePortView();
+                    }
+                }
+            }
+            clearFileStoreHandler();
             m_node.cleanup();
         } finally {
             NodeContext.removeLastContext();
-        }
-        clearFileStoreHandler();
-        if (m_outputPorts != null) {
-            for (NodeOutPort p : m_outputPorts) {
-                if (p != null) {
-                    p.disposePortView();
-                }
-            }
         }
     }
 

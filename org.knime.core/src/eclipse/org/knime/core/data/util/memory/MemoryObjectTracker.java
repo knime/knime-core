@@ -111,38 +111,42 @@ public final class MemoryObjectTracker {
             public void memoryUsageLow(final long usedMemory, final long maxMemory) {
                 LOGGER.debug("Low memory encountered. Used memory: " + FileUtils.byteCountToDisplaySize(usedMemory)
                              + "; maximum memory: " + FileUtils.byteCountToDisplaySize(maxMemory) + ".");
-                final double percentageToFree;
-                switch (m_strategy) {
-                    case FREE_ONE:
-                        percentageToFree = 0.0;
-                        break;
-                    case FREE_ALL:
-                        percentageToFree = 1.0;
-                        break;
-                    case FREE_PERCENTAGE:
-                        percentageToFree = 0.5;
-                        break;
-                    default:
-                        percentageToFree = 1.0;
-                        LOGGER.warn("Unknown MemoryObjectTracker.Strategy, using default");
-                        break;
-                }
-                // run in separate thread so that it can be debugged and we don't mess around with system threads
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        freeAllMemory(percentageToFree);
-                    }
-                }, "KNIME-Memory-Cleaner").start();
+                fireMemoryAlert();
             }
         });
 
     }
 
+    private void fireMemoryAlert() {
+        final double percentageToFree;
+        switch (m_strategy) {
+            case FREE_ONE:
+                percentageToFree = 0.0;
+                break;
+            case FREE_ALL:
+                percentageToFree = 1.0;
+                break;
+            case FREE_PERCENTAGE:
+                percentageToFree = 0.5;
+                break;
+            default:
+                percentageToFree = 1.0;
+                LOGGER.warn("Unknown MemoryObjectTracker.Strategy, using default");
+                break;
+        }
+        // run in separate thread so that it can be debugged and we don't mess around with system threads
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                freeAllMemory(percentageToFree);
+            }
+        }, "KNIME-Memory-Cleaner").start();
+    }
+
     /**
      * Track memory releasable objects. If the memory gets low, on all tracked objects the
-     * {@link MemoryReleasable#freeMemory()} method will be called and the objects itself will be removed from the
-     * cache.
+     * {@link MemoryReleasable#memoryAlert(MemoryAlertObject)} method will be called and
+     * the objects itself will be removed from the cache.
      *
      * @param obj
      */
@@ -259,6 +263,12 @@ public final class MemoryObjectTracker {
             instance = new MemoryObjectTracker();
         }
         return instance;
+    }
+
+    /** Executes the code path that is executed in low memory events. Currently only used in the test
+     * environment (no API). */
+    public void simulateMemoryAlert() {
+        fireMemoryAlert();
     }
 
     /** Value class of the tracked object. Keeps last access time stamp and the node context. */
