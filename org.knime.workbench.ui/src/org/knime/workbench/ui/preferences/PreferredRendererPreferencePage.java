@@ -75,11 +75,12 @@ import org.knime.core.data.renderer.DataValueRendererFactory;
 import org.osgi.framework.FrameworkUtil;
 
 /**
+ * Preference page for selecting the default renderers for all data types.
  *
- * @author thor
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 public class PreferredRendererPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
-    private static final ScopedPreferenceStore CORE_STORE = new ScopedPreferenceStore(InstanceScope.INSTANCE,
+    static final ScopedPreferenceStore CORE_STORE = new ScopedPreferenceStore(InstanceScope.INSTANCE,
         FrameworkUtil.getBundle(DataValueRendererFactory.class).getSymbolicName());
 
     private static final Comparator<ExtensibleUtilityFactory> utilityFactoryComparator =
@@ -110,7 +111,7 @@ public class PreferredRendererPreferencePage extends FieldEditorPreferencePage i
         };
 
     /**
-     *
+     * Creates a new preference page.
      */
     public PreferredRendererPreferencePage() {
         super(GRID);
