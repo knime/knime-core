@@ -255,7 +255,7 @@ public class TipsAndTricksDialog extends Dialog {
             HttpURLConnection conn =
                     (HttpURLConnection)TIPS_AND_TRICKS_URL.openConnection();
             conn.setReadTimeout(5000);
-            conn.setConnectTimeout(500);
+            conn.setConnectTimeout(1000);
             conn.connect();
 
             Transformer transformer =
