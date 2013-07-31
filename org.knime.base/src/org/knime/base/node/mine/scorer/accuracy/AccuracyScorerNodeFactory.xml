@@ -19,7 +19,7 @@
 			<a href="http://en.wikipedia.org/wiki/Information_retrieval">
 			accuracy statistics</a> such as True-Positives, False-Positives, 
 			True-Negatives, False-Negatives, Recall, Precision, Sensitivity, 
-			Specifity, F-measure, as well as the overall accuracy.
+			Specificity, F-measure, as well as the overall accuracy.
 		</intro>
         <option name="First column">The first column represents the real classes of the data.</option>
         <option name="Second column">The second column represents the predicted classes of the data.</option>
@@ -35,7 +35,7 @@
 	<views>
 		<view index="0" name="Confusion Matrix">
 			Displays the confusion matrix in a table view. It is possible
-			to hilight cells of the matrix which propagates highlighting
+			to hilite cells of the matrix which propagates highlighting
 			to the corresponding rows. Therefore, it is possible for example to 
 			identify wrong predictions.
 		</view>

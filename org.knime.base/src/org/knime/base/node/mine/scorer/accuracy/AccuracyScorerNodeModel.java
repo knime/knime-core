@@ -358,11 +358,11 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             if (tp + fp > 0) {
                 prec = new DoubleCell(1.0 * tp / (tp + fp));
             }
-            final DataCell specifity; // TN / (TN + FP)
+            final DataCell specificity; // TN / (TN + FP)
             if (tn + fp > 0) {
-                specifity = new DoubleCell(1.0 * tn / (tn + fp));
+                specificity = new DoubleCell(1.0 * tn / (tn + fp));
             } else {
-                specifity = DataType.getMissingCell();
+                specificity = DataType.getMissingCell();
             }
             final DataCell fmeasure; // 2 * Prec. * Recall / (Prec. + Recall)
             if (recall != null && prec != null) {
@@ -378,7 +378,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
                         new IntCell(tn), new IntCell(fn),
                         recall == null ? DataType.getMissingCell() : recall,
                         prec == null ? DataType.getMissingCell() : prec,
-                        sensitivity, specifity, fmeasure,
+                        sensitivity, specificity, fmeasure,
                         DataType.getMissingCell()});
             accTable.addRowToTable(row);
         }
