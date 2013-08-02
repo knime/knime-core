@@ -34,7 +34,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
 
-import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.knime.core.node.NodeLogger;
@@ -166,7 +165,7 @@ public class KnimeTestRegistry {
      * @return all registered test cases.
      * @throws IOException if an I/O error occurs
      */
-    public Test collectTestCases(final WorkflowTestFactory factory) throws IOException {
+    public TestSuite collectTestCases(final WorkflowTestFactory factory) throws IOException {
         Collection<WorkflowTest> workflowTests = new ArrayList<WorkflowTest>();
         Collection<File> rootDirSnapshot = new ArrayList<File>(m_testRootDirs);
         // m_testRootDirs may be changed during search for zipped workflows
