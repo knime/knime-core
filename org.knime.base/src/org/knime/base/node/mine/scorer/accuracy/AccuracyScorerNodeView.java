@@ -58,8 +58,8 @@ import java.awt.event.ActionListener;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
-import java.util.Vector;
 
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -79,18 +79,16 @@ import org.knime.core.node.property.hilite.KeyEvent;
 /**
  * This view displays the scoring results. It needs to be hooked up with a
  * scoring model.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
-final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel> 
+final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
         implements HiLiteListener {
     /*
      * Components displaying the scorer table, number of correct/wrong
      * classified patterns, and the error percentage number.
      */
     private final JTable m_tableView;
-
-    private JScrollPane m_scrollPane;
 
     private JLabel m_correct;
 
@@ -100,15 +98,17 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
 
     private JLabel m_accuracy;
 
+    private final JLabel m_cohenKappa;
+
     private boolean[][] m_cellHilited;
-    
+
     /**
      * Creates a new ScorerNodeView displaying the table with the score.
-     * 
+     *
      * The view consists of the table with the example data and the appropriate
      * scoring in the upper part and the summary of correct and wrong classified
      * examples in the lower part.
-     * 
+     *
      * @param nodeModel
      *            the underlying <code>NodeModel</code>
      */
@@ -123,9 +123,9 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
         m_tableView.setDefaultRenderer(Object.class,
                 new AttributiveCellRenderer());
         m_tableView.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        m_scrollPane = new JScrollPane(m_tableView);
+        JScrollPane scrollPane = new JScrollPane(m_tableView);
 
-        JPanel summary = new JPanel(new GridLayout(2, 2));
+        JPanel summary = new JPanel(new GridLayout(3, 2));
 
         JPanel labelPanel = new JPanel(new FlowLayout());
         labelPanel.add(new JLabel("Correct classified:"));
@@ -153,9 +153,15 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
         labelPanel.add(new JLabel("%"));
         summary.add(labelPanel);
 
+        labelPanel = new JPanel(new FlowLayout());
+        labelPanel.add(new JLabel("Cohen's kappa (\u03BA)"));
+        m_cohenKappa = new JLabel("n/a");
+        labelPanel.add(m_cohenKappa);
+        summary.add(labelPanel);
+
 
         JPanel outerPanel = new JPanel(new BorderLayout());
-        outerPanel.add(m_scrollPane, BorderLayout.CENTER);
+        outerPanel.add(scrollPane, BorderLayout.CENTER);
         outerPanel.add(summary, BorderLayout.SOUTH);
 
         setComponent(outerPanel);
@@ -180,6 +186,7 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
             m_error.setToolTipText(null);
             m_accuracy.setText(" n/a ");
             m_accuracy.setToolTipText(null);
+            m_cohenKappa.setText(" n/a ");
             // m_precision.setText(" n/a ");
             m_tableView.setModel(new DefaultTableModel());
             m_cellHilited = new boolean[0][0];
@@ -200,18 +207,19 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
                 headerNames, rowHeaderDescription, columnHeaderDescription);
 
         m_tableView.setModel(dataModel);
-        
+
         NumberFormat nf = NumberFormat.getInstance();
-        m_correct.setText(String.valueOf(nf.format(model.getCorrectCount())));
-        m_wrong.setText(String.valueOf(nf.format(model.getFalseCount())));
+        m_correct.setText(nf.format(model.getCorrectCount()));
+        m_wrong.setText(nf.format(model.getFalseCount()));
         double error = 100.0 * model.getError();
-        m_error.setText(String.valueOf(nf.format(error)));
-        m_error.setToolTipText("Error: " 
-                + String.valueOf(error) + " %");
+        m_error.setText(nf.format(error));
+        m_error.setToolTipText("Error: " + error + " %");
         double accurarcy = 100.0 * model.getAccuracy();
-        m_accuracy.setText(String.valueOf(nf.format(accurarcy)));
-        m_accuracy.setToolTipText("Accuracy: " 
-                + String.valueOf(accurarcy) + " %");
+        m_accuracy.setText(nf.format(accurarcy));
+        m_accuracy.setToolTipText("Accuracy: " + accurarcy + " %");
+        double cohenKappa = model.getCohenKappa();
+        m_cohenKappa.setText(nf.format(cohenKappa));
+        m_cohenKappa.setToolTipText("Cohen's \u03BA: " + cohenKappa);
     }
 
     /**
@@ -234,7 +242,7 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
 
     /**
      * Get a new menu to control hiliting for this view.
-     * 
+     *
      * @return a new JMenu with hiliting buttons
      */
     private JMenu createHiLiteMenu() {
@@ -248,7 +256,7 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
 
     /**
      * Helper function to create new JMenuItems that are in the hilite menu.
-     * 
+     *
      * @return all those items in an array
      */
     Collection<JMenuItem> createHiLiteMenuItems() {
@@ -287,7 +295,7 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
     }
 
     private Point[] getSelectedCells() {
-        Vector<Point> cellVector = new Vector<Point>();
+        List<Point> cellVector = new ArrayList<Point>();
 
         int matrixLength = m_cellHilited.length;
         for (int i = 0; i < matrixLength; i++) {
@@ -367,7 +375,7 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
 
         /**
          * Creates a cell renderer for the hilite scorer view.
-         * 
+         *
          */
         public AttributiveCellRenderer() {
             setOpaque(true);
@@ -419,7 +427,7 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
      * {@inheritDoc}
      */
     public void hiLite(final KeyEvent event) {
-        
+
         updateHilitedCells();
 
         m_tableView.repaint();
@@ -433,41 +441,30 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
         if (getNodeModel().getInHiLiteHandler(0) != null) {
             Set<RowKey> hilitedKeys = getNodeModel().getInHiLiteHandler(0)
                     .getHiLitKeys();
-        
-            Point[] completeHilitedCells = 
+
+            Point[] completeHilitedCells =
                 getNodeModel().getCompleteHilitedCells(hilitedKeys);
-        
+
             // hilite all cells given by the points
             for (Point cell : completeHilitedCells) {
                 m_cellHilited[cell.x][cell.y] = true;
             }
         }
     }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected AccuracyScorerNodeModel getNodeModel() {
-        return (AccuracyScorerNodeModel) super.getNodeModel();
-    }
 
     /**
      * Checks for all hilit cells the model. If a key noted as unhilit in the
      * event occurs in a hilit cell the cell is unhilit (principle of
      * correctness!!)
-     * 
+     *
      * {@inheritDoc}
      */
+    @Override
     public void unHiLite(final KeyEvent event) {
-        
         for (int i = 0; i < m_cellHilited.length; i++) {
             for (int j = 0; j < m_cellHilited[i].length; j++) {
-                if (m_cellHilited[i][j]) {
-                    if (getNodeModel().containsConfusionMatrixKeys(
-                            i, j, event.keys())) {
-                        m_cellHilited[i][j] = false;
-                    }
+                if (m_cellHilited[i][j] && getNodeModel().containsConfusionMatrixKeys(i, j, event.keys())) {
+                    m_cellHilited[i][j] = false;
                 }
             }
         }
@@ -478,8 +475,8 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void unHiLiteAll(final KeyEvent event) {
         clearHiliteBackgroundColor();
     }
-
 }
