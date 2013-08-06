@@ -50,6 +50,7 @@ package org.knime.timeseries.node.diff;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.TimeZone;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -106,8 +107,6 @@ public class TimeDifferenceNodeModel extends NodeModel {
     private final SettingsModelString m_typeofreference = TimeDifferenceNodeDialog.getReferenceTypeModel();
 
     private final SettingsModelCalendar m_timemodel = TimeDifferenceNodeDialog.getCalendarModel();
-
-    private long m_time = 0;
 
     /**
      * Constructor for the node model with one in and one out port.
@@ -193,21 +192,21 @@ public class TimeDifferenceNodeModel extends NodeModel {
                     long first = m_previous.getUTCTimeInMillis();
                     long last = ((DateAndTimeValue)cell1).getUTCTimeInMillis();
                     m_previous = (DateAndTimeValue)cell1;
-                    return getRoundedTimeDifference(first, last , g);
+                    return getRoundedTimeDifference(first, last, g);
 
                 }
             });
         } else {
+            final long time;
             if (typeofref.equals(TimeDifferenceNodeDialog.CFG_FIXDATE)) {
-                m_time = m_timemodel.getCalendar().getTimeInMillis();
+                time = m_timemodel.getCalendar().getTimeInMillis();
             } else {
-                m_time  = System.currentTimeMillis();
+                time = System.currentTimeMillis() + TimeZone.getDefault().getOffset(System.currentTimeMillis());
             }
 
             // append the new column with single cell factory
             rearranger.append(new SingleCellFactory(
-                    createOutputColumnSpec(inData[0].getDataTableSpec(),
-                            m_newColName.getStringValue())) {
+                    createOutputColumnSpec(inData[0].getDataTableSpec(), m_newColName.getStringValue())) {
 
                 /**
                  * Value for the new column is based on the values of two column
@@ -225,13 +224,12 @@ public class TimeDifferenceNodeModel extends NodeModel {
                         return DataType.getMissingCell();
                     }
                     long first = ((DateAndTimeValue)cell1).getUTCTimeInMillis();
-                    return getRoundedTimeDifference(first, m_time, g);
+                    return getRoundedTimeDifference(first, time, g);
                 }
             });
         }
 
-        BufferedDataTable out = exec.createColumnRearrangeTable(inData[0],
-                rearranger, exec);
+        BufferedDataTable out = exec.createColumnRearrangeTable(inData[0], rearranger, exec);
         return new BufferedDataTable[]{out};
     }
 
@@ -255,9 +253,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
             final Granularity g) {
         double diffTime = (last - first) / g.getFactor();
         BigDecimal bd = new BigDecimal(diffTime);
-        bd =
-                bd.setScale(m_rounding.getIntValue(),
-                        BigDecimal.ROUND_CEILING);
+        bd = bd.setScale(m_rounding.getIntValue(), BigDecimal.ROUND_CEILING);
         return new DoubleCell(bd.doubleValue());
     }
 
@@ -301,8 +297,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
         }
         if (nrDateCols < 1) {
             m_col1.setStringValue("");
-            throw new InvalidSettingsException(
-                    "Input must contain at least one date/time columns!");
+            throw new InvalidSettingsException("Input must contain at least one date/time columns!");
         }
         m_col1Idx = inSpecs[0].findColumnIndex(m_col1.getStringValue());
         if (nrDateCols > 1) {
@@ -310,24 +305,20 @@ public class TimeDifferenceNodeModel extends NodeModel {
         }
         // check for first date column in input spec
         if (m_col1Idx < 0) {
-            throw new InvalidSettingsException("Column "
-                    + m_col1.getStringValue() + " not found in input table");
+            throw new InvalidSettingsException("Column " + m_col1.getStringValue() + " not found in input table");
         }
         // return new spec with appended column
         // (time and chosen new column name)
         return new DataTableSpec[]{new DataTableSpec(inSpecs[0],
-                new DataTableSpec(createOutputColumnSpec(inSpecs[0],
-                        m_newColName.getStringValue())))};
+                new DataTableSpec(createOutputColumnSpec(inSpecs[0], m_newColName.getStringValue())))};
     }
 
     private DataColumnSpec createOutputColumnSpec(final DataTableSpec spec,
             final String newColName) {
         // get unique column name based on the entered column name
-        m_newColName.setStringValue(DataTableSpec.getUniqueColumnName(spec,
-                newColName));
+        m_newColName.setStringValue(DataTableSpec.getUniqueColumnName(spec, newColName));
         // create column spec with type date and new (now uniwue) column name
-        DataColumnSpecCreator creator = new DataColumnSpecCreator(m_newColName
-                .getStringValue(), DoubleCell.TYPE);
+        DataColumnSpecCreator creator = new DataColumnSpecCreator(m_newColName.getStringValue(), DoubleCell.TYPE);
         return creator.createSpec();
     }
 
@@ -361,8 +352,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
             m_typeofreference.loadSettingsFrom(settings);
             m_timemodel.loadSettingsFrom(settings);
         } catch (InvalidSettingsException ise) {
-            m_typeofreference.setStringValue(
-                    TimeDifferenceNodeDialog.CFG_COLUMN);
+            m_typeofreference.setStringValue(TimeDifferenceNodeDialog.CFG_COLUMN);
             m_timemodel.setEnabled(false);
         }
     }

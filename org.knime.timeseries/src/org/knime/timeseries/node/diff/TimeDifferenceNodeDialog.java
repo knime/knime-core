@@ -67,16 +67,13 @@ import org.knime.timeseries.util.DialogComponentCalendar;
 import org.knime.timeseries.util.SettingsModelCalendar;
 
 /**
- * 
  * Dialog for the TimeDifference node with a column selection for the first date
  * column, one for the other date column, a text field for the new column, a
  * selection list for the desired granularity (year, quarter, month, week, day,
  * hour, minute) of the difference and a spinner to choose the rounding of the
  * fraction digits of the result.
- * 
- * 
- * @author KNIME GmbH
- * @author Iris Adä, University Konstanz
+ *
+ * @author Iris Adae, University of Konstanz, Germany
  */
 public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
 
@@ -103,10 +100,10 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
     /** the key for generating the difference, between the previous and
      * the current row. */
     public static final String CFG_ROW_DIFF = "Use previous row";
-    
-    private final SettingsModelString m_referencemodel 
+
+    private final SettingsModelString m_referencemodel
                                 = getReferenceTypeModel();
-    private final SettingsModelCalendar m_fixTimeComponent 
+    private final SettingsModelCalendar m_fixTimeComponent
                                 = getCalendarModel();
     private final SettingsModelString m_columnSelComponent
                                 = createColumn2Model();
@@ -118,7 +115,7 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
     protected TimeDifferenceNodeDialog() {
         setHorizontalPlacement(true);
-        
+
         // en- and disable the selection of the time and the
         // second column, as selected by user.
         m_referencemodel.addChangeListener(new ChangeListener() {
@@ -127,15 +124,15 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
             public void stateChanged(final ChangeEvent e) {
                  updateComponentVisibility(
                          m_referencemodel.getStringValue());
-                
+
             }
-            
+
         });
         addDialogComponent(new DialogComponentButtonGroup(m_referencemodel,
                 false, "", CFG_NOW, CFG_COLUMN, CFG_FIXDATE, CFG_ROW_DIFF));
 
         setHorizontalPlacement(false);
-       
+
         // first date column
         addDialogComponent(new DialogComponentColumnNameSelection(
                 createColmn1Model(), "Select first date column", 0,
@@ -160,12 +157,12 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentCalendar(m_fixTimeComponent,
                 "Fixed time "));
     }
-    
+
 
     /*
      * Models...
      */
-    
+
     /**
      * @return settings model for the selected time
      */
@@ -188,7 +185,7 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
     }
 
     /**
-     * 
+     *
      * @return settings model for the second time column
      */
     static SettingsModelString createColumn2Model() {
@@ -196,7 +193,7 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
     }
 
     /**
-     * 
+     *
      * @return settings model for the new column name
      */
     static SettingsModelString createNewColNameModel() {
@@ -204,22 +201,22 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
     }
 
     /**
-     * 
+     *
      * @return settings model for the granularity
      */
     static SettingsModelString createGranularityModel() {
-        return new SettingsModelString(CFG_GRANULARITY, 
+        return new SettingsModelString(CFG_GRANULARITY,
                 Granularity.DAY.getName());
     }
 
     /**
-     * 
+     *
      * @return settings model for the rounding model
      */
     static SettingsModelInteger createRoundingModel() {
         return new SettingsModelInteger(CFG_ROUND, 0);
-    }   
-    
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -242,7 +239,7 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
      */
     private void updateComponentVisibility(final String string) {
         if (string.equals(CFG_FIXDATE)) {
-            m_fixTimeComponent.setEnabled(true);    
+            m_fixTimeComponent.setEnabled(true);
             m_columnSelComponent.setEnabled(false);
         } else if (string.equals(CFG_NOW)
                 || string.equals(CFG_ROW_DIFF)) {
@@ -252,6 +249,6 @@ public class TimeDifferenceNodeDialog extends DefaultNodeSettingsPane {
             m_fixTimeComponent.setEnabled(false);
             m_columnSelComponent.setEnabled(true);
         }
-        
+
     }
 }
