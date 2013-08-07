@@ -66,6 +66,12 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
  */
 public interface NodeContainerPersistor {
 
+    /** Instantiates the node container but does not call API methods on it. This is done later
+     * when {@link #loadNodeContainer(Map, ExecutionMonitor, LoadResult)} is called.
+     * @param parent The parent workflow of the node.
+     * @param id The id of the node
+     * @return A new NC instance.
+     */
     NodeContainer getNodeContainer(final WorkflowManager parent, final NodeID id);
 
     NodeContainerMetaPersistor getMetaPersistor();
@@ -83,6 +89,15 @@ public interface NodeContainerPersistor {
      */
     boolean mustComplainIfStateDoesNotMatch();
 
+    /** Loads internals, configuration, etc into the node instance. This method is called
+     * when the corresponding node container has been instantiated.
+     * @param tblRep Global table repository - for reference table lookup.
+     * @param exec progress/cancel
+     * @param loadResult where to add errors to.
+     * @throws InvalidSettingsException  ...
+     * @throws CanceledExecutionException  ...
+     * @throws IOException ...
+     */
     void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep,
             final ExecutionMonitor exec, final LoadResult loadResult)
             throws InvalidSettingsException, CanceledExecutionException,

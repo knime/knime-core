@@ -56,7 +56,7 @@ import org.knime.core.node.Node;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 
 /**
- *
+ * Persistor to load a single node container.
  * @author wiswedel, University of Konstanz
  */
 interface SingleNodeContainerPersistor extends NodeContainerPersistor {
@@ -64,9 +64,21 @@ interface SingleNodeContainerPersistor extends NodeContainerPersistor {
     /** Name of the settings file in a node's directory. */
     static final String SETTINGS_FILE_NAME = "settings.xml";
 
+    /** Called from the {@link SingleNodeContainer} constructor. Implementations instantiate
+     * a new instance of a node but don't load its settings yet. The latter should be done
+     * in {@link NodeContainerPersistor#loadNodeContainer(java.util.Map,
+     * org.knime.core.node.ExecutionMonitor, org.knime.core.node.workflow.WorkflowPersistor.LoadResult)} as this
+     * method is called from a not fully instantiated SingleNodeContainer (reduce API calls during construction).
+     * @return The unconfigured node instance.
+     */
     Node getNode();
 
+    /** @return The single node container settings for the new instance, not null. */
     SingleNodeContainerSettings getSNCSettings();
 
+    /** The flow objects associated with the node. Copy/Paste persistors don't have flow objects but
+     * the persistor that reads from a file has.
+     * @return the flow object list (never null).
+     */
     List<FlowObject> getFlowObjects();
 }
