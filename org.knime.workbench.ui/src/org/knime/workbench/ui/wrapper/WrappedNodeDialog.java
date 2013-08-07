@@ -155,24 +155,29 @@ public class WrappedNodeDialog extends Dialog {
      */
     @Override
     public int open() {
-        ViewUtils.invokeAndWaitInEDT(new Runnable() {
-            @Override
-            public void run() {
-                NodeContext.pushContext(m_nodeContainer);
-            }
-        });
-        NodeContext.pushContext(m_nodeContainer);
+        getParentShell().setEnabled(false);
         try {
-            m_dialogPane.onOpen();
-            return super.open();
-        } finally {
-            NodeContext.removeLastContext();
             ViewUtils.invokeAndWaitInEDT(new Runnable() {
                 @Override
                 public void run() {
-                    NodeContext.removeLastContext();
+                    NodeContext.pushContext(m_nodeContainer);
                 }
             });
+            NodeContext.pushContext(m_nodeContainer);
+            try {
+                m_dialogPane.onOpen();
+                return super.open();
+            } finally {
+                NodeContext.removeLastContext();
+                ViewUtils.invokeAndWaitInEDT(new Runnable() {
+                    @Override
+                    public void run() {
+                        NodeContext.removeLastContext();
+                    }
+                });
+            }
+        } finally {
+            getParentShell().setEnabled(true);
         }
     }
 
