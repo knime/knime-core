@@ -162,10 +162,12 @@ public class WrappedNodeDialog extends Dialog {
             }
         });
         NodeContext.pushContext(m_nodeContainer);
+        getParentShell().setEnabled(false);
         try {
             m_dialogPane.onOpen();
             return super.open();
         } finally {
+            getParentShell().setEnabled(true);
             NodeContext.removeLastContext();
             ViewUtils.invokeAndWaitInEDT(new Runnable() {
                 @Override
