@@ -51,6 +51,7 @@
 package org.knime.core.internal;
 
 import java.io.File;
+import java.net.URL;
 
 import org.knime.core.node.KNIMEConstants;
 
@@ -63,8 +64,7 @@ import org.knime.core.node.KNIMEConstants;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class KNIMEPath {
-
-    private static File homeDir;
+    private static File knimeHomeDir;
     private static File workspaceDir;
 
     /**
@@ -73,27 +73,56 @@ public final class KNIMEPath {
     private KNIMEPath() {
     }
 
-    /**
-     * Set the workspace directory.
-     * @param file The directory of the workspace.
-     */
-    static void setWorkspaceDir(final File file) {
-        if (file.exists()) {
-            if (!file.isDirectory()) {
-                throw new IllegalArgumentException("KNIME workspace path "
-                        + "is not a directory: " + file.getAbsolutePath());
-            }
-            if (!file.canWrite()) {
-                throw new IllegalArgumentException("Unable to write to "
-                        + "workspace path: " + file.getAbsolutePath());
-            }
-        } else {
-            if (!file.mkdirs()) {
-                throw new IllegalArgumentException("Unable to create workspace "
-                        + "directory " + file.getAbsolutePath());
-            }
+
+    static {
+        try {
+            Class.forName("org.eclipse.core.runtime.Platform");
+            initializePaths();
+        } catch (ClassNotFoundException e) {
+            // this only happens in a non-Eclipse OSGi environment
         }
-        workspaceDir = file.getAbsoluteFile();
+    }
+
+
+    private static void initializePaths() {
+        try {
+            URL workspaceURL = org.eclipse.core.runtime.Platform.getInstanceLocation().getURL();
+            if (workspaceURL.getProtocol().equalsIgnoreCase("file")) {
+                // we can create our home only in local workspaces
+                File wsDir = new File(workspaceURL.getPath());
+                if (!wsDir.exists() && !wsDir.mkdirs()) {
+                    throw new IllegalArgumentException("Unable to create workspace directory "
+                        + wsDir.getAbsolutePath());
+                }
+                if (!wsDir.isDirectory()) {
+                    throw new IllegalArgumentException("KNIME workspace " + wsDir.getAbsolutePath()
+                        + " is not a directory");
+                }
+                if (!wsDir.canWrite()) {
+                    throw new IllegalArgumentException("Unable to write to workspace directory at "
+                        + wsDir.getAbsolutePath());
+                }
+                workspaceDir = wsDir;
+
+                File homeDir = new File(wsDir, ".metadata" + File.separator + "knime");
+                if (!homeDir.exists() && !homeDir.mkdirs()) {
+                    throw new IllegalArgumentException("Unable to create KNIME home directory "
+                        + homeDir.getAbsolutePath());
+                }
+                if (!homeDir.isDirectory()) {
+                    throw new IllegalArgumentException("KNIME home path " + homeDir.getAbsolutePath()
+                        + " is not a directory");
+                }
+                if (!wsDir.canWrite()) {
+                    throw new IllegalArgumentException("Unable to write to KNIME home directory at "
+                        + homeDir.getAbsolutePath());
+                }
+                knimeHomeDir = homeDir;
+            }
+        } catch (Exception e) {
+            // the logger is not yet available here
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -109,38 +138,15 @@ public final class KNIMEPath {
     }
 
     /**
-     * Set the knime home dir.
-     * @param file The file to use as home dir (should be a directory).
-     */
-    static void setKNIMEHomeDir(final File file) {
-        if (file.exists()) {
-            if (!file.isDirectory()) {
-                throw new IllegalArgumentException("KNIME home path is not a "
-                        + "directory: " + file.getAbsolutePath());
-            }
-            if (!file.canWrite()) {
-                throw new IllegalArgumentException("Unable to write to "
-                        + "KNIME home: " + file.getAbsolutePath());
-            }
-        } else {
-            if (!file.mkdirs()) {
-                throw new IllegalArgumentException("Unable to create KNIME "
-                        + "home directory " + file.getAbsolutePath());
-            }
-        }
-        homeDir = file.getAbsoluteFile();
-    }
-
-    /**
      * Getter for the home dir of KNIME.
      *
      * @return The directory to use.
      */
     public static File getKNIMEHomeDirPath() {
-        if (homeDir == null) {
+        if (knimeHomeDir == null) {
             initDefaultDir();
         }
-        return homeDir;
+        return knimeHomeDir;
     }
 
     private static void initDefaultDir() {
@@ -158,7 +164,7 @@ public final class KNIMEPath {
                 tempHomeDir = userHome;
             }
         }
-        homeDir = tempHomeDir;
+        knimeHomeDir = tempHomeDir;
     }
 
     private static File createUniqueDir(final File file) {

@@ -53,9 +53,7 @@ package org.knime.core.internal;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 
-import org.knime.core.node.NodeLogger;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 import org.osgi.framework.BundleActivator;
@@ -68,35 +66,6 @@ import org.osgi.framework.BundleContext;
  */
 public class CorePlugin implements BundleActivator {
     private static CorePlugin instance;
-
-    private static class KNIMEPathInitializer {
-        public static void initialize() {
-            try {
-                URL workspaceURL =
-                   org.eclipse.core.runtime.Platform.getInstanceLocation().getURL();
-                if (workspaceURL.getProtocol().equalsIgnoreCase("file")) {
-                    // we can create our home only in local workspaces
-                    File workspaceDir = new File(workspaceURL.getPath());
-                    File metaDataFile = new File(workspaceDir, ".metadata");
-                    if (!metaDataFile.exists()) {
-                        metaDataFile.mkdir();
-                    }
-                    File knimeHomeDir = new File(metaDataFile, "knime");
-                    if (!knimeHomeDir.exists()) {
-                        knimeHomeDir.mkdir();
-                    }
-                    KNIMEPath.setKNIMEHomeDir(knimeHomeDir.getAbsoluteFile());
-                    KNIMEPath.setWorkspaceDir(workspaceDir.getAbsoluteFile());
-                }
-
-            } catch (Exception e) {
-                // the logger will use the "user.dir" as knime home, unfortunately.
-                NodeLogger.getLogger(KNIMEPathInitializer.class).warn(
-                        "Can't init knime home dir to workspace path.", e);
-            }
-
-        }
-    }
 
     /** see {@link #setWrapColumnHeaderInTableViews(boolean)}. */
     private boolean m_isWrapColumnHeaderInTableViews = false;
@@ -129,14 +98,6 @@ public class CorePlugin implements BundleActivator {
 
         instance = this;
 
-        try {
-            Class.forName("org.eclipse.core.runtime.Platform");
-            KNIMEPathInitializer.initialize();
-        }
-        catch (ClassNotFoundException e) {
-
-        }
-
         /* Unfortunately we have to activate the plugin
          * org.eclipse.ecf.filetransfer explicitly by accessing one of the
          * contained classed. This will trigger the initialization of the
@@ -145,8 +106,8 @@ public class CorePlugin implements BundleActivator {
          * "knime" URL protocol. */
         try {
             Class.forName("org.eclipse.ecf.filetransfer.IFileTransfer");
-        }
-        catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
+            // this may happen in a non-Eclipse OSGi environment
         }
     }
 
