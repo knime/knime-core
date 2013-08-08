@@ -73,6 +73,8 @@ import org.apache.log4j.spi.Filter;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
 import org.apache.log4j.xml.DOMConfigurator;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.osgi.service.datalocation.Location;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LogfileAppender;
@@ -538,25 +540,30 @@ public final class NodeLogger {
     }
 
     /**
-     * Writes CODING PROBLEM plus this message into this logger as error.
+     * Writes CODING PROBLEM plus this message into this logger as error. The event is only logged if assertions are
+     * enabled or KNIME is run from within the SDK.
      *
-     * @param o The message to print.
+     * @param o the message to print
      */
     public void coding(final Object o) {
-        m_logger.error("CODING PROBLEM\t" + o);
+        if (KNIMEConstants.ASSERTIONS_ENABLED || isRunFromSDK()) {
+            m_logger.error("CODING PROBLEM\t" + o);
+        }
     }
 
     /**
-     * Writes <i>CODING PROBLEM</i> plus this message, as well as the the
-     * message of the throwable into this logger as error and debug.
+     * Writes <i>CODING PROBLEM</i> plus this message, as well as the the message of the throwable into this logger as
+     * error and debug. The event is only logged if assertions are enabled or KNIME is run from within the SDK.
      *
-     * @param o The message to print.
-     * @param t The exception to log at debug level, including its stack trace.
+     * @param o the message to print
+     * @param t the exception to log at debug level, including its stack trace
      */
     public void coding(final Object o, final Throwable t) {
-        this.coding(o);
-        if (t != null) {
-            this.debug(o, t);
+        if (KNIMEConstants.ASSERTIONS_ENABLED || isRunFromSDK()) {
+            this.coding(o);
+            if (t != null) {
+                this.debug(o, t);
+            }
         }
     }
 
@@ -781,5 +788,18 @@ public final class NodeLogger {
             ((LevelRangeFilter) filter).setLevelMin(transLEVEL(min));
             ((LevelRangeFilter) filter).setLevelMax(transLEVEL(max));
         }
+    }
+
+    private static boolean isRunFromSDK() {
+        Location installLocation = Platform.getInstallLocation();
+        if (installLocation == null) {
+            return true;
+        }
+        Location configurationLocation = Platform.getConfigurationLocation();
+        if (configurationLocation == null) {
+            return true;
+        }
+
+        return !configurationLocation.getURL().toString().contains(installLocation.getURL().toString());
     }
 }

@@ -385,7 +385,7 @@ public final class RepositoryManager {
                     // If parent category is illegal, log an error and append
                     // the node to the repository root.
                     if (parentContainer == null) {
-                        LOGGER.error("Unknown category for node " + node.getID() + ": " + node.getCategoryPath()
+                        LOGGER.coding("Unknown category for node " + node.getID() + ": " + node.getCategoryPath()
                                 + ". Node will be added to 'Uncategorized' instead");
                         uncategorized.addChild(node);
                     } else {
@@ -408,7 +408,7 @@ public final class RepositoryManager {
                             // or the vendor is the same (comparing the first two parts of the plug-in ids)
                             parentContainer.addChild(node);
                         } else {
-                            LOGGER.error("Locked category for node " + node.getID() + ": " + node.getCategoryPath()
+                            LOGGER.coding("Locked category for node " + node.getID() + ": " + node.getCategoryPath()
                                         + ". Node will be added to 'Uncategorized' instead");
                             uncategorized.addChild(node);
                         }
