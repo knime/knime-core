@@ -1182,7 +1182,7 @@ public class SimpleRuleParser {
             }
             try {
                 Expression expr = m_factory.columnRef(m_spec, columnRef);
-                if (expr.getOutputType().isASuperTypeOf(BooleanCell.TYPE) && fromMissing) {
+                if (BooleanCell.TYPE.isASuperTypeOf(expr.getOutputType()) && fromMissing) {
                     expr = m_factory.columnRefForMissing(m_spec, columnRef);
                 }
                 return expr;
