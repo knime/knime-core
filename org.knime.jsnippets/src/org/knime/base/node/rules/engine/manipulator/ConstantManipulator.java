@@ -45,60 +45,34 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   11.04.2008 (thor): created
+ * Created on 2013.08.01. by Gabor Bakos
  */
-package org.knime.base.node.rules.engine;
-
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+package org.knime.base.node.rules.engine.manipulator;
 
 /**
- * This factory creates all necessary object for the business rule node.
  *
- * @author Thorsten Meinl, University of Konstanz
- * @since 2.8
+ * @author Gabor Bakos
+ * @since 2.9
  */
-public class RuleEngineFilterNodeFactory extends NodeFactory<RuleEngineFilterNodeModel> {
+public class ConstantManipulator extends AbstractManipulator {
+
     /**
-     * {@inheritDoc}
+     * @param name
+     * @param category
+     * @param displayName
+     * @param description
+     * @param returnType
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new RuleEngineNodeDialog("include if first matching rule is TRUE");
+    public ConstantManipulator(final String name, final String category, final String displayName, final String description, final Class<?> returnType) {
+        super(name, category, displayName, description, returnType);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public RuleEngineFilterNodeModel createNodeModel() {
-        return new RuleEngineFilterNodeModel(true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<RuleEngineFilterNodeModel> createNodeView(final int index,
-            final RuleEngineFilterNodeModel model) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
+    public int getNrArgs() {
         return 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
 }

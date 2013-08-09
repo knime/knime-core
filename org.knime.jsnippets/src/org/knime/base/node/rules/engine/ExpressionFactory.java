@@ -428,6 +428,7 @@ public class ExpressionFactory {
                 for (Expression boolExpression : boolExpressions) {
                     ExpressionValue v = boolExpression.evaluate(row, provider);
                     DataCell cell = v.getValue();
+                    assert !cell.isMissing();
                     if (cell instanceof BooleanValue) {
                         BooleanValue bool = (BooleanValue)cell;
                         if (bool.getBooleanValue()) {
@@ -518,6 +519,7 @@ public class ExpressionFactory {
                 for (Expression boolExpression : boolExpressions) {
                     ExpressionValue v = boolExpression.evaluate(row, provider);
                     DataCell cell = v.getValue();
+                    assert !cell.isMissing();
                     if (cell instanceof BooleanValue) {
                         BooleanValue bool = (BooleanValue)cell;
                         if (!bool.getBooleanValue()) {
@@ -592,6 +594,7 @@ public class ExpressionFactory {
             public ExpressionValue evaluate(final DataRow row, final VariableProvider provider) {
                 ExpressionValue val = boolExpressions[0].evaluate(row, provider);
                 DataCell valCell = val.getValue();
+                assert !valCell.isMissing();
                 if (valCell.isMissing()) {
                     return new ExpressionValue(valCell, EMPTY_MAP);
                 }
@@ -691,6 +694,60 @@ public class ExpressionFactory {
     }
 
     /**
+     * Creates an {@link Expression} for checking for missing values.
+     *
+     * @param reference Any non-{@code null} {@link Expression}.
+     * @return An {@link Expression} which result {@link BooleanCell#TRUE} if the wrapped {@link Expression} returns a
+     *         missing value, and {@link BooleanCell#FALSE} if it is not missing.
+     */
+    public Expression missingBoolean(final Expression reference) {
+        return new Expression() {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public DataType getOutputType() {
+                return BooleanCell.TYPE;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public List<DataType> getInputArgs() {
+                return Collections.singletonList(DataType.getMissingCell().getType());
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ExpressionValue evaluate(final DataRow row, final VariableProvider provider) {
+                ExpressionValue val = reference.evaluate(row, provider);
+                DataCell valCell = val.getValue();
+                return new ExpressionValue(BooleanCell.get(valCell.isMissing()), EMPTY_MAP);
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public boolean isConstant() {
+                return false;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public String toString() {
+                return "missing(" + reference + ")";
+            }
+        };
+    }
+
+    /**
      * Creates a reference {@link Expression} to a column in a {@link DataTable}.
      *
      * @param spec The {@link DataTableSpec}.
@@ -699,10 +756,42 @@ public class ExpressionFactory {
      * @throws IllegalStateException If the {@code columnRef} is not present in {@code spec}.
      */
     public Expression columnRef(final DataTableSpec spec, final String columnRef) {
+        return columnRefImpl(spec, columnRef, false);
+    }
+
+    /**
+     * Creates a reference {@link Expression} to a boolean column in a {@link DataTable} for missing operator. Cannot be
+     * called with non-Boolean columns.
+     *
+     * @param spec The {@link DataTableSpec}.
+     * @param columnRef Name of the column in the {@code spec}. (As-is, no escapes.)
+     * @return The {@link Expression} computing the value of the column, or false if that value is missing for a boolean
+     *         column.
+     * @throws IllegalStateException If the {@code columnRef} is not present in {@code spec}.
+     */
+    public Expression columnRefForMissing(final DataTableSpec spec, final String columnRef) {
+        return columnRefImpl(spec, columnRef, true);
+    }
+
+    /**
+     *
+     * @param spec The {@link DataTableSpec}.
+     * @param columnRef Name of the column.
+     * @param booleanArgumentOfMissing When this value is {@code true} and the value is a boolean missing value, the
+     *            result is {@code false}, else missing.
+     * @return The {@link Expression} computing the value of the column.
+     * @see #columnRef(DataTableSpec, String)
+     * @see #columnRefForMissing(DataTableSpec, String)
+     */
+    private Expression columnRefImpl(final DataTableSpec spec, final String columnRef,
+        final boolean booleanArgumentOfMissing) {
         if (!spec.containsName(columnRef)) {
             throw new IllegalStateException("Not a column: " + columnRef);
         }
         final int position = spec.findColumnIndex(columnRef);
+        final DataType type = spec.getColumnSpec(position).getType();
+        final boolean isBoolean = type.isCompatible(BooleanValue.class);
+        assert (!booleanArgumentOfMissing || isBoolean) : type;
         return new Expression() {
 
             /**
@@ -726,6 +815,13 @@ public class ExpressionFactory {
              */
             @Override
             public ExpressionValue evaluate(final DataRow row, final VariableProvider provider) {
+                if (booleanArgumentOfMissing) {
+                    return new ExpressionValue(row.getCell(position), EMPTY_MAP);
+                }
+                final DataCell cell = row.getCell(position);
+                if (isBoolean && cell.isMissing()) {
+                    return new ExpressionValue(BooleanCell.FALSE, EMPTY_MAP);
+                }
                 return new ExpressionValue(row.getCell(position), EMPTY_MAP);
             }
 
@@ -1075,15 +1171,15 @@ public class ExpressionFactory {
         };
     }
 
-    private static final int[] lt = new int[]{-1};
+    private static final int[] LT = new int[]{-1};
 
-    private static final int[] le = new int[]{-1, 0};
+    private static final int[] LE = new int[]{-1, 0};
 
-    private static final int[] gt = new int[]{1};
+    private static final int[] GT = new int[]{1};
 
-    private static final int[] ge = new int[]{0, 1};
+    private static final int[] GE = new int[]{0, 1};
 
-    private static final int[] eq = new int[]{0};
+    private static final int[] EQ = new int[]{0};
 
     /**
      * Creates a comparison {@link Expression} with the acceptable outcomes. The matched objects are combined (in
@@ -1151,15 +1247,15 @@ public class ExpressionFactory {
             @Override
             public String toString() {
                 String rel = "???";
-                if (Arrays.equals(possibleValues, lt)) {
+                if (Arrays.equals(possibleValues, LT)) {
                     rel = "<";
-                } else if (Arrays.equals(possibleValues, le)) {
+                } else if (Arrays.equals(possibleValues, LE)) {
                     rel = "<=";
-                } else if (Arrays.equals(possibleValues, gt)) {
+                } else if (Arrays.equals(possibleValues, GT)) {
                     rel = ">";
-                } else if (Arrays.equals(possibleValues, ge)) {
+                } else if (Arrays.equals(possibleValues, GE)) {
                     rel = ">=";
-                } else if (Arrays.equals(possibleValues, eq)) {
+                } else if (Arrays.equals(possibleValues, EQ)) {
                     rel = "=";
                 }
                 return left + rel + right;
@@ -1303,5 +1399,28 @@ public class ExpressionFactory {
                 return reference.toString();
             }
         };
+    }
+
+    /**
+     * @return A constant {@code true} {@link Expression}.
+     */
+    public Expression trueValue() {
+        return booleanValue(true);
+    }
+
+    /**
+     * @param b
+     * @return
+     */
+    private Expression booleanValue(final boolean b) {
+        return new ConstantExpression(new ExpressionValue(BooleanCell.get(b),
+            Collections.<String, Map<String, String>> emptyMap()));
+    }
+
+    /**
+     * @return A constant {@code false} {@link Expression}.
+     */
+    public Expression falseValue() {
+        return booleanValue(false);
     }
 }

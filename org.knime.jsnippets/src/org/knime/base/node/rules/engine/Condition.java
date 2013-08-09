@@ -97,7 +97,7 @@ public interface Condition extends Line {
         /**
          * @return The result after a match attempted.
          */
-        public MatchState getOutcome();
+        MatchState getOutcome();
 
         /**
          * The {@link Expression}s might generate objects based on the rule and the other inputs. This method provides
@@ -105,7 +105,7 @@ public interface Condition extends Line {
          *
          * @return The matched objects.
          */
-        public Map<String, Map<String, String>> getMatchedObjects();
+        Map<String, Map<String, String>> getMatchedObjects();
 
         /**
          * For comments this is a default implementation, you can get the singleton instance with {@link #getInstance()}
@@ -114,7 +114,7 @@ public interface Condition extends Line {
          * @author Gabor Bakos
          * @since 2.8
          */
-        static class CommentOutcome implements MatchOutcome {
+        class CommentOutcome implements MatchOutcome {
             private static final CommentOutcome INSTANCE = new CommentOutcome();
 
             private CommentOutcome() {
@@ -151,7 +151,7 @@ public interface Condition extends Line {
          * @author Gabor Bakos
          * @since 2.8
          */
-        static class GenericMatchOutcome implements MatchOutcome {
+        class GenericMatchOutcome implements MatchOutcome {
             private final MatchState m_state;
 
             private final Map<String, Map<String, String>> m_matchedObjects;
@@ -217,7 +217,7 @@ public interface Condition extends Line {
      * @author Gabor Bakos
      * @since 2.8
      */
-    static class Comment implements Condition {
+    class Comment implements Condition {
         private final String m_line;
 
         /**
@@ -268,6 +268,22 @@ public interface Condition extends Line {
         public String getText() {
             return m_line;
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean isCatchAll() {
+            return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean isConstantFalse() {
+            return false;
+        }
     }
 
     /**
@@ -276,7 +292,7 @@ public interface Condition extends Line {
      * @author Gabor Bakos
      * @since 2.8
      */
-    static class GenericCondition implements Condition {
+    class GenericCondition implements Condition {
         private final String m_line;
 
         private final String m_text;
@@ -352,8 +368,49 @@ public interface Condition extends Line {
          * {@inheritDoc}
          */
         @Override
+        public boolean isCatchAll() {
+            return checkValue(true);
+        }
+
+        /**
+         * @return The <em>constant</em> value is equals to {@code value}, else false.
+         * @see #isCatchAll()
+         * @see #isConstantFalse()
+         */
+        private boolean checkValue(final boolean value) {
+            if (m_expression.isConstant()) { DataCell rawValue = m_expression.evaluate(null, null).getValue();
+                if (rawValue instanceof BooleanValue) {
+                    BooleanValue bv = (BooleanValue)rawValue;
+                    return bv.getBooleanValue() == value;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean isConstantFalse() {
+            return checkValue(false);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public String toString() {
             return m_expression.toString();
         }
     }
+
+    /**
+     * @return {@code true}, iff the condition is known to be a constant true.
+     */
+    boolean isCatchAll();
+
+    /**
+     * @return {@code true}, iff the condition is known to be a constant false.
+     */
+    boolean isConstantFalse();
 }

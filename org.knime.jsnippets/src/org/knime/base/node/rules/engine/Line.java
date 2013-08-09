@@ -49,14 +49,19 @@
  */
 package org.knime.base.node.rules.engine;
 
-
-
 /**
- *
- * @author Gabor
+ * Interface for representing an optional line (in a list of rules).
+ * @author Gabor Bakos
+ * @since 2.8
  */
 interface Line {
+    /**
+     * @return The line is enabled (not a comment), or not.
+     */
     boolean isEnabled();
 
+    /**
+     * @return The content of the line.
+     */
     String getLine();
 }

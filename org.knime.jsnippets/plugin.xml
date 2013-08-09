@@ -19,8 +19,7 @@
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.jsnippet.JavaEditVarNodeFactory"
             id="org.knime.base.node.jsnippet.JavaEditVarNodeFactory">
-      </node>   
-      <!--   
+      </node>      
       <node
             category-path="/manipulation/row/row-other"
             factory-class="org.knime.base.node.rules.engine.RuleEngineNodeFactory"
@@ -41,7 +40,6 @@
             factory-class="org.knime.base.node.rules.engine.RuleEngineVariableNodeFactory"
             id="org.knime.base.node.rules.engine.RuleEngineVariableNodeFactory">
       </node>
-      -->
    </extension>
    <extension
          point="org.knime.jsnippets.templaterepository">

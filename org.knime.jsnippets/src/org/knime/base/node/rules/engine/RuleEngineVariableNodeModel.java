@@ -59,7 +59,6 @@ import java.util.Map;
 
 import org.knime.base.node.rules.engine.Condition.MatchOutcome.MatchState;
 import org.knime.base.node.rules.engine.Rule.Outcome;
-import org.knime.base.node.rules.engine.Rule.OutcomeKind;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -115,7 +114,6 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
         ArrayList<Rule> rules = new ArrayList<Rule>();
 
         final Map<String, FlowVariable> availableFlowVariables = getAvailableFlowVariables();
-        //SimpleRuleParser ruleParser = new SimpleRuleParser(spec, availableFlowVariables);
         final RuleFactory factory = RuleFactory.getVariableInstance();
         final DataTableSpec spec = new DataTableSpec();
         for (String s : m_settings.rules()) {
@@ -137,41 +135,7 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
     private void performExecute(final List<Rule> rules) throws InvalidSettingsException {
         String newFlowVar = m_settings.getNewColName();
 
-        final String defaultLabelRaw = m_settings.getDefaultLabel();
-        final String defaultLabel;
-        DataType preferredDefaultDataType = null;
-        switch (m_settings.getDefaultOutputType()) {
-            case FlowVariable:
-                if (defaultLabelRaw.length() < 5 || !defaultLabelRaw.startsWith("$${")
-                        || !defaultLabelRaw.endsWith("}$$")) {
-                    throw new InvalidSettingsException("Not a valid flow variable reference: " + defaultLabelRaw);
-                }
-                final String flowVarName = defaultLabelRaw.substring(4, defaultLabelRaw.length() - 3);
-                final FlowVariable flowVariable = getAvailableFlowVariables().get(flowVarName);
-                if (flowVariable == null) {
-                    throw new InvalidSettingsException("No flow variable is avaialable with name: " + flowVarName);
-                }
-                defaultLabel = flowVariable.getValueAsString();
-                preferredDefaultDataType = Util.toDataType(flowVariable.getType());
-                break;
-            case Column:
-                throw new InvalidSettingsException("Columns are not supported!");
-                //                if (defaultLabelRaw.length() < 3 || defaultLabelRaw.charAt(0) != '$' || !defaultLabelRaw.endsWith("$")) {
-                //                    throw new InvalidSettingsException("Not a column reference: " + defaultLabelRaw);
-                //                }
-                //                defaultLabel = defaultLabelRaw;
-                //                break;
-            case PlainText:
-                defaultLabel = defaultLabelRaw;
-                break;
-            case StringInterpolation:
-                throw new InvalidSettingsException("String interpolation is not supported yet.");
-            default:
-                throw new InvalidSettingsException("Not supported outcome type: " + m_settings.getDefaultOutputType());
-        }
-        final DataType outType =
-                computeOutputType(rules, defaultLabel, m_settings.getDefaultOutputType() == OutcomeKind.FlowVariable
-                        ? preferredDefaultDataType : null);
+        final DataType outType = computeOutputType(rules);
 
         final VariableProvider provider = new VariableProvider() {
             @Override
@@ -200,7 +164,6 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
                     pushFlowVariableString(newFlowVar, cell.toString());
                     break;
                 } else {
-                    //return cell;
                     if (cell.isMissing()) {
                         throw new UnsupportedOperationException("Missing result, TODO");
                     }
@@ -216,36 +179,17 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
                     } else {
                         //TODO
                         throw new UnsupportedOperationException("Wrong type: " + cell.getClass());
-                        //break;
                     }
                 }
             }
         }
         if (!wasMatch) {
-            if (m_settings.getDefaultLabel().length() > 0) {
-                String l = defaultLabel;
-                if (outType.equals(StringCell.TYPE)) {
-                    pushFlowVariableString(newFlowVar, l);
-                } else {
-
-                    try {
-                        int i = Integer.parseInt(l);
-                        pushFlowVariableInt(newFlowVar, i);
-                        //return new IntCell(i);
-                    } catch (NumberFormatException ex) {
-                        try {
-                            double d = Double.parseDouble(l);
-                            //return new DoubleCell(d);
-                            pushFlowVariableDouble(newFlowVar, d);
-                        } catch (NumberFormatException ex1) {
-                            //return new StringCell(l);
-                            pushFlowVariableString(newFlowVar, l);
-                        }
-                    }
-                }
+            if (outType.equals(StringCell.TYPE)) {
+                pushFlowVariableString(newFlowVar, "");
+            } else if (outType.equals(IntCell.TYPE)) {
+                pushFlowVariableInt(newFlowVar, 0);
             } else {
-                //return DataType.getMissingCell();
-                throw new UnsupportedOperationException("Missing value!");
+                pushFlowVariableDouble(newFlowVar, 0.0);
             }
         }
     }
@@ -258,7 +202,7 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
      * @param flowVarType The data type of flow variable if it is selected in the default value. Can be {@code null}.
      * @return The common base type of the outcomes and the default value.
      */
-    static DataType computeOutputType(final List<Rule> rules, final String defaultLabel, final DataType flowVarType) {
+    static DataType computeOutputType(final List<Rule> rules) {
         // determine output type
         List<DataType> types = new ArrayList<DataType>();
         // add outcome column types
@@ -266,23 +210,6 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
             types.add(r.getOutcome().getType());
         }
 
-        if (defaultLabel != null && defaultLabel.length() > 0) {
-            if (flowVarType != null) {
-                types.add(flowVarType);
-            } else {
-                try {
-                    Integer.parseInt(defaultLabel);
-                    types.add(IntCell.TYPE);
-                } catch (NumberFormatException ex) {
-                    try {
-                        Double.parseDouble(defaultLabel);
-                        types.add(DoubleCell.TYPE);
-                    } catch (NumberFormatException ex1) {
-                        types.add(StringCell.TYPE);
-                    }
-                }
-            }
-        }
         final DataType outType;
         if (types.size() > 0) {
             DataType temp = types.get(0);
@@ -342,8 +269,6 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
     @Override
     protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         List<Rule> rules = parseRules();
-        //            ColumnRearranger crea = createRearranger(inData[0].getDataTableSpec(), rules);
-        //exec.createColumnRearrangeTable(inData[0], crea, exec);
         performExecute(rules);
         return new PortObject[]{FlowVariablePortObject.INSTANCE};
     }
@@ -353,7 +278,7 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
      */
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+        CanceledExecutionException {
     }
 
     /**
@@ -376,7 +301,7 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
      */
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+        CanceledExecutionException {
     }
 
     /**

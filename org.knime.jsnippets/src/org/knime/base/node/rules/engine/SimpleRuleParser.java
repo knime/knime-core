@@ -55,99 +55,130 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.knime.base.node.rules.engine.Rule.BooleanConstants;
 import org.knime.base.node.rules.engine.Rule.GenericRule;
 import org.knime.base.node.rules.engine.Rule.Operators;
 import org.knime.base.node.rules.engine.Rule.Outcome;
+import org.knime.base.node.rules.engine.Rule.Outcome.GenericOutcome;
 import org.knime.base.node.rules.engine.Rule.Outcome.NoOutcome;
 import org.knime.base.node.rules.engine.Rule.TableReference;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * A simple implementation to parse {@link Rule}s.
  * <p>
- * Filter rules:
+ * Rule Engine rules:
+ *
  * <pre>
-LINE := RULE | '//' [^\n]*
-RULE := BEXPR ('=&gt;' SINGLE)?
-SINGLE := CONST | REF
-BEXPR := PREBEXPR |
-         AEXPR (op=BOP PREBEXPR (op PREBEXPR)*)?
-PREBEXPR := '(' BEXPR ')' |
-            'NOT' BEXPR |
-            'MISSING' COL
-AEXPR := SINGLE OP SINGLE |
-         SINGLE LOP LIST
-BOP := 'AND' | 'OR' | 'XOR'
-OP := '&gt;' | '&lt;' | '&gt;=' | '&lt;=' |
-      '=' | 'LIKE' | 'CONTAINS' | 'MATCHES'
-LOP := 'IN'
-STRING := '&quot;' [^&quot;]* '&quot;'
-NUMBER := '-'? POSITIVE
-POSITIVE := ([0-9]*\.[0-9]*('E''-'?[1-9][0-9]*)?) |
-            [0-9]+('E''-'?[1-9][0-9]*)? | 'Infinity'
-COL := '$' [^$]+ '$'
-REF := COL | FLOWVAR | TABLEREF
-FLOWVAR := '$${' ('D' | 'I' | 'S') [^}]+ '}$$'
-TABLEREF := '$$ROWID$$' | '$$ROWINDEX$$' | '$$ROWCOUNT$$'
-CONST := STRING | NUMBER
-LIST := '(' SINGLE (',' SINGLE)* ')'
-</pre>
+ * LINE := RULE | '//' [^\n]*
+ * RULE := BEXPR '=&gt;' (SINGLE | BOOLCONST)
+ * SINGLE := CONST | REF
+ * BEXPR := BEXPR3
+ * BEXPR3 := BEXPR2 ('OR' BEXPR2)*
+ * BEXPR2 := BEXPR1 ('XOR' BEXPR1)*
+ * BEXPR1 := BEXPR0 ('AND' BEXPR0)*
+ * BEXPR0 := '(' BEXPR ')' |
+ *           'NOT' BEXPR0 |
+ *           'MISSING' COL |
+ *           BOOLCONST |
+ *           BOOLCOL |
+ *           PREDEXPR
+ * PREDEXPR := SINGLE OP SINGLE |
+ *          SINGLE LOP (LIST | COL)
+ * OP := '&gt;' | '&lt;' | '&gt;=' | '&lt;=' |
+ *       '=' | 'LIKE' | 'MATCHES'
+ * LOP := 'IN'
+ * STRING := '&quot;' [^&quot;]* '&quot;'
+ * NUMBER := '-'? POSITIVE
+ * POSITIVE := ([0-9]*\.[0-9]*('E''-'?[1-9][0-9]*)?) |
+ *             [0-9]+('E''-'?[1-9][0-9]*)? | 'Infinity'
+ * COL := '$' [^$]+ '$'
+ * BOOLCOL := COL
+ * REF := COL | FLOWVAR | TABLEREF
+ * FLOWVAR := '$${' ('D' | 'I' | 'S') [^}]+ '}$$'
+ * TABLEREF := '$$ROWID$$' | '$$ROWINDEX$$' | '$$ROWCOUNT$$'
+ * CONST := STRING | NUMBER
+ * BOOLCONST := 'TRUE' | 'FALSE'
+ * LIST := '(' SINGLE (',' SINGLE)* ')'
+ * </pre>
+ *
  * </p>
- * <p>Rule Engine rules:
- * <pre>LINE := RULE | '//' [^\n]*
-RULE := BEXPR '=&gt;' SINGLE
-SINGLE := CONST | REF
-BEXPR := PREBEXPR |
-         AEXPR (op=BOP PREBEXPR (op PREBEXPR)*)?
-PREBEXPR := '(' BEXPR ')' |
-            'NOT' BEXPR |
-            'MISSING' COL
-AEXPR := SINGLE OP SINGLE |
-         SINGLE LOP LIST
-BOP := 'AND' | 'OR' | 'XOR'
-OP := '&gt;' | '&lt;' | '&gt;=' | '&lt;=' |
-      '=' | 'LIKE' | 'CONTAINS' | 'MATCHES'
-LOP := 'IN'
-STRING := '&quot;' [^&quot;]* '&quot;'
-NUMBER := '-'? POSITIVE
-POSITIVE := ([0-9]*\.[0-9]*('E''-'?[1-9][0-9]*)?) |
-            [0-9]+('E''-'?[1-9][0-9]*)? | 'Infinity'
-COL := '$' [^$]+ '$'
-REF := COL | FLOWVAR | TABLEREF
-FLOWVAR := '$${' ('D' | 'I' | 'S') [^}]+ '}$$'
-TABLEREF := '$$ROWID$$' | '$$ROWINDEX$$' | '$$ROWCOUNT$$'
-CONST := STRING | NUMBER
-LIST := '(' SINGLE (',' SINGLE)* ')'
-        </pre>
+ * <p>
+ * Rule Filter rules:
+ *
+ * <pre>
+ * LINE := RULE | '//' [^\n]*
+ * RULE := BEXPR '=&gt;' BOOLCONST
+ * SINGLE := CONST | REF
+ * BEXPR := BEXPR3
+ * BEXPR3 := BEXPR2 ('OR' BEXPR2)*
+ * BEXPR2 := BEXPR1 ('XOR' BEXPR1)*
+ * BEXPR1 := BEXPR0 ('AND' BEXPR0)*
+ * BEXPR0 := '(' BEXPR ')' |
+ *           'NOT' BEXPR0 |
+ *           'MISSING' COL |
+ *           BOOLCONST |
+ *           BOOLCOL |
+ *           PREDEXPR
+ * PREDEXPR := SINGLE OP SINGLE |
+ *          SINGLE LOP (LIST | COL)
+ * OP := '&gt;' | '&lt;' | '&gt;=' | '&lt;=' |
+ *       '=' | 'LIKE' | 'MATCHES'
+ * LOP := 'IN'
+ * STRING := '&quot;' [^&quot;]* '&quot;'
+ * NUMBER := '-'? POSITIVE
+ * POSITIVE := ([0-9]*\.[0-9]*('E''-'?[1-9][0-9]*)?) |
+ *             [0-9]+('E''-'?[1-9][0-9]*)? | 'Infinity'
+ * COL := '$' [^$]+ '$'
+ * BOOLCOL := COL
+ * REF := COL | FLOWVAR | TABLEREF
+ * FLOWVAR := '$${' ('D' | 'I' | 'S') [^}]+ '}$$'
+ * TABLEREF := '$$ROWID$$' | '$$ROWINDEX$$' | '$$ROWCOUNT$$'
+ * CONST := STRING | NUMBER
+ * BOOLCONST := 'TRUE' | 'FALSE'
+ * LIST := '(' SINGLE (',' SINGLE)* ')'
+ * </pre>
+ *
  * </p>
- * <p>Variable rules:        <pre>
-LINE := RULE | '//' [^\n]*
-RULE := BEXPR '=&gt;' SINGLE
-SINGLE := CONST | FLOWVAR
-BEXPR := PREBEXPR |
-         AEXPR (op=BOP PREBEXPR (op PREBEXPR)*)?
-PREBEXPR := '(' BEXPR ')' |
-            'NOT' BEXPR
-AEXPR := SINGLE OP SINGLE |
-         SINGLE LOP LIST
-BOP := 'AND' | 'OR' | 'XOR'
-OP := '&gt;' | '&lt;' | '&gt;=' | '&lt;=' |
-      '=' | 'LIKE' | 'CONTAINS' | 'MATCHES'
-LOP := 'IN'
-STRING := '&quot;' [^&quot;]* '&quot;'
-NUMBER := '-'? POSITIVE
-POSITIVE := ([0-9]*\.[0-9]*('E''-'?[1-9][0-9]*)?) |
-            [0-9]+('E''-'?[1-9][0-9]*)? | 'Infinity'
-FLOWVAR := '$${' ('D' | 'I' | 'S') [^}]+ '}$$'
-CONST := STRING | NUMBER
-LIST := '(' SINGLE (',' SINGLE)* ')'
-        </pre>
+ * <p>
+ * Variable rules:
+ *
+ * <pre>
+ * LINE := RULE | '//' [^\n]*
+ * RULE := BEXPR '=&gt;' FLOWVAR
+ * SINGLE := CONST | FLOWVAR
+ * BEXPR := BEXPR3
+ * BEXPR3 := BEXPR2 ('OR' BEXPR2)*
+ * BEXPR2 := BEXPR1 ('XOR' BEXPR1)*
+ * BEXPR1 := BEXPR0 ('AND' BEXPR0)*
+ * BEXPR0 := '(' BEXPR ')' |
+ *           'NOT' BEXPR0 |
+ *           BOOLCONST |
+ *           PREDEXPR
+ * PREDEXPR := SINGLE OP SINGLE |
+ *          SINGLE LOP LIST
+ * OP := '&gt;' | '&lt;' | '&gt;=' | '&lt;=' |
+ *       '=' | 'LIKE' | 'MATCHES'
+ * LOP := 'IN'
+ * STRING := '&quot;' [^&quot;]* '&quot;'
+ * NUMBER := '-'? POSITIVE
+ * POSITIVE := ([0-9]*\.[0-9]*('E''-'?[1-9][0-9]*)?) |
+ *             [0-9]+('E''-'?[1-9][0-9]*)? | 'Infinity'
+ * COL := '$' [^$]+ '$'
+ * FLOWVAR := '$${' ('D' | 'I' | 'S') [^}]+ '}$$'
+ * CONST := STRING | NUMBER
+ * BOOLCONST := 'TRUE' | 'FALSE'
+ * LIST := '(' SINGLE (',' SINGLE)* ')'
+ * </pre>
+ *
  * </p>
+ *
  * @author Gabor Bakos
  * @since 2.8
  */
@@ -648,24 +679,22 @@ public class SimpleRuleParser {
      * Parses a whole {@link Rule}.
      *
      * @param rule A line representing a rule (possibly comment).
-     * @param allowNoOutcome Should the rule include an outcome, or it is optional?
+     * @param booleanOutcome Should the rule include only a boolean outcome ({@code true}), or it cannot ({@code false}
+     *            ), or it can be either boolean or non-boolean ({@code null})?
      * @return The parsed {@link Rule}.
      * @throws ParseException Problem during parsing.
      */
-    public Rule parse(final String rule, final boolean allowNoOutcome) throws ParseException {
+    public Rule parse(final String rule, final Boolean booleanOutcome) throws ParseException {
         if (RuleSupport.isComment(rule)) {
             return new GenericRule(rule, new Condition.Comment(rule), NoOutcome.getInstance());
         }
         final ParseState state = new ParseState(rule);
         final Condition condition = parseCondition(state);
         if (!state.isEnd()) {
-            final Outcome outcome = parseOutcome(state, allowNoOutcome);
+            final Outcome outcome = parseOutcome(state, booleanOutcome);
             return new GenericRule(rule, condition, outcome);
         }
-        if (!allowNoOutcome) {
-            throw new ParseException("No outcome specified.", state.getPosition());
-        }
-        return new GenericRule(rule, condition, NoOutcome.getInstance());
+        throw new ParseException("No outcome specified.", state.getPosition());
     }
 
     /**
@@ -674,10 +703,10 @@ public class SimpleRuleParser {
      * @param rule A line representing a rule (possibly comment).
      * @return The parsed {@link Rule}.
      * @throws ParseException Problem during parsing.
-     * @see SimpleRuleParser#parse(String, boolean)
+     * @see SimpleRuleParser#parse(String, Boolean)
      */
     public Rule parse(final String rule) throws ParseException {
-        return parse(rule, false);
+        return parse(rule, null);
     }
 
     /**
@@ -686,10 +715,10 @@ public class SimpleRuleParser {
      * @param state The {@link ParseState}.
      * @return The parsed {@link Outcome}.
      * @throws ParseException Problem during parsing.
-     * @see SimpleRuleParser#parseOutcome(ParseState, boolean)
+     * @see SimpleRuleParser#parseOutcome(ParseState, Boolean)
      */
     public Outcome parseOutcome(final ParseState state) throws ParseException {
-        return parseOutcome(state, false);
+        return parseOutcome(state, true);
     }
 
     /**
@@ -697,21 +726,28 @@ public class SimpleRuleParser {
      * instance.
      *
      * @param state The {@link ParseState}.
-     * @param allowNoOutcome Allow missing {@link Outcome} in the rule?
+     * @param booleanOutcome Only booleans in {@link Outcome} of the rule? ({@code null} means both booleans and
+     *            non-booleans are allowed.)
      * @return An {@link Outcome}, can be {@link NoOutcome} if it is missing and not required.
      * @throws ParseException Problem during parsing.
      */
-    public Outcome parseOutcome(final ParseState state, final boolean allowNoOutcome) throws ParseException {
+    public Outcome parseOutcome(final ParseState state, final Boolean booleanOutcome) throws ParseException {
         state.skipWS();
         state.consumeText("=>");
         state.skipWS();
         if (state.isEnd()) {
-            if (allowNoOutcome) {
-                return Outcome.NoOutcome.getInstance();
-            }
             throw new ParseException("No outcome specified", state.getPosition());
         }
-        Expression parseOperand = parseOperand(state);
+        if (booleanOutcome != null && booleanOutcome) {
+            state.skipWS();
+            Expression constantBoolean = parseConstantBoolean(state);
+            if (constantBoolean != null) {
+                return new GenericOutcome(constantBoolean);
+            }
+            throw new ParseException("Expected " + BooleanConstants.TRUE + " or " + BooleanConstants.FALSE + ".",
+                state.getPosition());
+        }
+        final Expression parseOperand = parseOperand(state, booleanOutcome == null, false);
         state.skipWS();
         if (!state.isEnd()) {
             throw new ParseException("Garbage at end of rule detected", state.getPosition());
@@ -742,56 +778,126 @@ public class SimpleRuleParser {
      * @throws ParseException Problem during parsing.
      */
     private Expression parseBooleanExpression(final ParseState state) throws ParseException {
+        return parseOrExpression(state);
+    }
+
+    private Expression parseOrExpression(final ParseState state) throws ParseException {
         state.skipWS();
-        char ch = state.peekChar();
-        Expression left = parseNonConnectiveBooleanExpression(state, ch);
+        Expression left = parseXorExpression(state);
         state.skipWS();
-        //Check for infix logical connectives
-        if (state.peekText(Operators.AND.name())) {
-            List<Expression> arguments = collectInfixArguments(state, left, Operators.AND.name());
-            return m_factory.and(arguments.toArray(new Expression[0]));
-        } else if (state.peekText(Operators.OR.name())) {
-            List<Expression> arguments = collectInfixArguments(state, left, Operators.OR.name());
-            return m_factory.or(arguments.toArray(new Expression[0]));
-        } else if (state.peekText(Operators.XOR.name())) {
-            List<Expression> arguments = collectInfixArguments(state, left, Operators.XOR.name());
-            return m_factory.xor(arguments.toArray(new Expression[0]));
+        List<Expression> args = new ArrayList<Expression>();
+        args.add(left);
+        while (checkAndConsume(state, Operators.OR.name())) {
+            args.add(parseXorExpression(state));
+            state.skipWS();
+        }
+        if (args.size() > 1) {
+            return m_factory.or(args.toArray(new Expression[0]));
+        }
+        return left;
+    }
+
+    private Expression parseXorExpression(final ParseState state) throws ParseException {
+        state.skipWS();
+        Expression left = parseAndExpression(state);
+        state.skipWS();
+        List<Expression> args = new ArrayList<Expression>();
+        args.add(left);
+        while (checkAndConsume(state, Operators.XOR.name())) {
+            args.add(parseAndExpression(state));
+            state.skipWS();
+        }
+        if (args.size() > 1) {
+            return m_factory.xor(args.toArray(new Expression[0]));
+        }
+        return left;
+    }
+
+    private Expression parseAndExpression(final ParseState state) throws ParseException {
+        state.skipWS();
+        Expression left = parseRootBooleanExpression(state);
+        state.skipWS();
+        List<Expression> args = new ArrayList<Expression>();
+        args.add(left);
+        while (checkAndConsume(state, Operators.AND.name())) {
+            args.add(parseRootBooleanExpression(state));
+            state.skipWS();
+        }
+        if (args.size() > 1) {
+            return m_factory.and(args.toArray(new Expression[0]));
         }
         return left;
     }
 
     /**
-     * Reads a boolean expression without infix logical connectives ({@code AND}, {@code OR}, {@code XOR}) are not
-     * parsed during this call.
+     * Reads a boolean expression without infix logical connectives ({@code AND}, {@code OR}, {@code XOR}), unless they
+     * are within a parenthesis.
      *
      * @param state The {@link ParseState}.
-     * @param ch The current character.
      * @return The Boolean (inputs, output) {@link Expression} parsed.
      * @throws ParseException Problem during parsing.
      */
-    private Expression parseNonConnectiveBooleanExpression(final ParseState state, final char ch) throws ParseException {
-        Expression left;
-        if (ch == '(') { //parenthesis
+    private Expression parseRootBooleanExpression(final ParseState state) throws ParseException {
+        state.skipWS();
+        char ch = state.peekChar();
+        if (ch == '(') { // parenthesis
             state.consume();
-            left = parseBooleanExpression(state);
+            final Expression result = parseBooleanExpression(state);
+            state.skipWS();
             state.expect(')');
             state.consume();
-        } else if (state.peekText(Operators.NOT.name())) { //NOT
-            state.consumeText(Operators.NOT.name());
+            return result;
+        }
+        if (checkAndConsume(state, Operators.NOT.name())) { // NOT
             state.expectWS();
-            state.skipWS();
-            Expression expressionToNegate = parseBooleanExpression(state);
-            left = m_factory.not(expressionToNegate);
-        } else if (state.peekText(Operators.MISSING.name())) { //MISSING
-            state.consumeText(Operators.MISSING.name());
+            final Expression toNegate = parseRootBooleanExpression(state);
+            return m_factory.not(toNegate);
+        }
+        if (checkAndConsume(state, Operators.MISSING.name())) { // MISSING
             String operator = "MISSING ";
             state.expectWS();
-            Expression reference = parseReference(state, operator, false);
-            left = m_factory.missing(reference);
-        } else { //infix relation
-            left = parseRelation(state);
+            Expression reference = parseReference(state, operator, false, true);
+            return m_factory.missing(reference);
         }
-        return left;
+        //        final Expression constantBoolean = parseConstantBoolean(state);
+        //        if (constantBoolean != null) { // TRUE or FALSE
+        //            return constantBoolean;
+        //        }
+        //infix relation
+        return parseRelation(state);
+    }
+
+    /**
+     * Creates an {@link Expression} for {@link BooleanConstants}.
+     *
+     * @param state The {@link ParseState}.
+     * @return The {@link Expression} for the TRUE/FALSE constant, or {@code null}.
+     * @throws ParseException Should not happen, {@code null} will be returned when no match was found.
+     */
+    private Expression parseConstantBoolean(final ParseState state) throws ParseException {
+        if (checkAndConsume(state, BooleanConstants.TRUE.name())) {
+            return m_factory.trueValue();
+        }
+        if (checkAndConsume(state, BooleanConstants.FALSE.name())) {
+            return m_factory.falseValue();
+        }
+        return null;
+    }
+
+    /**
+     * Checks whether {@code text} comes next, and if yes, it also consumes.
+     *
+     * @param state The {@link ParseState}.
+     * @param text Expected {@link String}.
+     * @return The {@code text} is available or not.
+     * @throws ParseException Problem during parsing.
+     */
+    private boolean checkAndConsume(final ParseState state, final String text) throws ParseException {
+        boolean found = state.peekText(text);
+        if (found) {
+            state.consumeText(text);
+        }
+        return found;
     }
 
     /**
@@ -799,11 +905,14 @@ public class SimpleRuleParser {
      *
      * @param state The {@link ParseState}.
      * @param operator The text referring to the operator (for error messages).
+     * @param fromMissing This {@link Expression} is created within a {@link Operators#MISSING}.
      * @return The {@link Expression} parsed representing a column.
      * @throws ParseException Problem during parsing.
      */
-    private Expression parseReference(final ParseState state, final String operator) throws ParseException {
-        return parseReference(state, operator, true);
+    @Deprecated
+    private Expression parseReference(final ParseState state, final String operator, final boolean fromMissing)
+        throws ParseException {
+        return parseReference(state, operator, true, fromMissing);
     }
 
     /**
@@ -812,11 +921,12 @@ public class SimpleRuleParser {
      * @param state The {@link ParseState}.
      * @param operator The text referring to the operator (for error messages).
      * @param allowFlowVariable The next reference can be a flow variable too, else it is not accepted.
+     * @param fromMissing This {@link Expression} is created within a {@link Operators#MISSING}.
      * @return The {@link Expression} parsed representing a column.
      * @throws ParseException Problem during parsing.
      */
-    private Expression parseReference(final ParseState state, final String operator, final boolean allowFlowVariable)
-        throws ParseException {
+    private Expression parseReference(final ParseState state, final String operator, final boolean allowFlowVariable,
+        final boolean fromMissing) throws ParseException {
         state.skipWS();
         Expression reference;
         if (allowFlowVariable && state.isFlowVariableRef()) {
@@ -824,41 +934,17 @@ public class SimpleRuleParser {
         } else if (state.isTablePropertyReference() && m_allowTableReferences) {
             reference = parseTablePropertyReference(state);
         } else if (state.isColumnRef()) {
-            reference = parseColumnExpression(state);
+            reference = parseColumnExpression(state, fromMissing);
         } else {
             if (allowFlowVariable) {
                 throw new ParseException(operator + "operator requires either a column"
                     + (m_allowTableReferences ? ", a table property" : "") + " or a flow variable", state.getPosition());
             } else {
                 throw new ParseException(operator + "operator requires a column"
-                        + (m_allowTableReferences ? " or a table property" : ""), state.getPosition());
+                    + (m_allowTableReferences ? " or a table property" : ""), state.getPosition());
             }
         }
         return reference;
-    }
-
-    /**
-     * Reads the infix operators arguments.
-     *
-     * @param state The {@link ParseState}.
-     * @param left The already parsed left {@link Expression}.
-     * @param name The name of the operator.
-     * @return The {@link Expression} parsed representing a infix operator ({@code name}).
-     * @throws ParseException Problem during parsing.
-     */
-    private List<Expression> collectInfixArguments(final ParseState state, final Expression left, final String name)
-        throws ParseException {
-        state.skipWS();
-        List<Expression> arguments = new ArrayList<Expression>();
-        arguments.add(left);
-        while (state.peekText(name)) {
-            state.consumeText(name);
-            state.expectWS();
-            state.skipWS();
-            arguments.add(parseNonConnectiveBooleanExpression(state, state.peekChar()));
-            state.skipWS();
-        }
-        return arguments;
     }
 
     /**
@@ -869,23 +955,46 @@ public class SimpleRuleParser {
      * @throws ParseException Problem during parsing.
      */
     private Expression parseRelation(final ParseState state) throws ParseException {
-        int beforeLeft = state.getPosition();
-        Expression left = parseOperand(state);
+        final int beforeLeft = state.getPosition();
+        final Expression left = parseOperand(state, true, false);
         state.skipWS();
-        int beforeOperator = state.getPosition();
-        Operators op = state.parseOperator();
+        final int beforeOperator = state.getPosition();
+
+        if (left.getOutputType().equals(BooleanCell.TYPE) && state.peekText("=>")) {
+            return left;
+        }
+        final Operators op;
+        try {
+            op = state.parseOperator();
+        } catch (ParseException e) {
+            if (left.getOutputType().isASuperTypeOf(BooleanCell.TYPE)) {
+                state.setPosition(beforeOperator);
+                return left;
+            }
+            throw e;
+        }
         switch (op) {
-            case IN:
+            case IN: {
+                state.skipWS();
+                int afterOperator = state.getPosition();
                 Expression right = parseList(state);
-                return m_factory.in(left, right);
+                try {
+                    return m_factory.in(left, right);
+                } catch (IllegalStateException e) {
+                    throw new ParseException(e.getMessage(), afterOperator);
+                }
+            }
             case MISSING:
                 throw new ParseException("Invalid logical predicate: " + op, beforeOperator);
             case NOT:
             case AND:
             case OR:
             case XOR:
-                throw new ParseException("Invalid logical connective" + op, beforeOperator);
-            case CONTAINS:
+                if (left.getOutputType().isASuperTypeOf(BooleanCell.TYPE)) {
+                    state.setPosition(beforeOperator);
+                    return left;
+                }
+                throw new ParseException("Invalid logical connective: " + op, beforeOperator);
             case EQ:
             case GE:
             case GT:
@@ -899,7 +1008,7 @@ public class SimpleRuleParser {
                 throw new ParseException("Not supported operator: " + op, beforeOperator);
         }
         switch (op) {
-            case CONTAINS:
+        //            case CONTAINS:
             case LIKE:
             case MATCHES:
                 state.expectWS();
@@ -910,7 +1019,8 @@ public class SimpleRuleParser {
         }
         int beforeRight = state.getPosition();
         state.skipWS();
-        Expression right = parseOperand(state);
+        Expression right =
+            parseOperand(state, left.getOutputType().isASuperTypeOf(BooleanCell.TYPE), Operators.MISSING == op);
         DataValueComparator cmp =
             DataType.getCommonSuperType(left.getOutputType(), right.getOutputType()).getComparator();
         switch (op) {
@@ -938,13 +1048,13 @@ public class SimpleRuleParser {
                 } catch (IllegalStateException ex) {
                     throw new ParseException("Invalid pattern: " + right.toString(), beforeRight);
                 }
-            case CONTAINS:
-                reportNotString(beforeLeft, left, op, beforeRight, right);
-                try {
-                    return m_factory.contains(left, right, null); //add keys when parsed
-                } catch (IllegalStateException ex) {
-                    throw new ParseException("Invalid pattern: " + right.toString(), beforeRight);
-                }
+                //            case CONTAINS:
+                //                reportNotString(beforeLeft, left, op, beforeRight, right);
+                //                try {
+                //                    return m_factory.contains(left, right, null); //add keys when parsed
+                //                } catch (IllegalStateException ex) {
+                //                    throw new ParseException("Invalid pattern: " + right.toString(), beforeRight);
+                //                }
             case MATCHES:
                 reportNotString(beforeLeft, left, op, beforeRight, right);
                 try {
@@ -988,19 +1098,23 @@ public class SimpleRuleParser {
     private Expression parseList(final ParseState state) throws ParseException {
         state.skipWS();
         List<Expression> operands = new ArrayList<Expression>();
-        state.expect('(');
-        state.consume();
-        while (true) {
-            operands.add(parseOperand(state));
-            state.skipWS();
-            if (state.peekChar() != ',') {
-                break;
-            }
+        if (state.peekChar() == '(') {
+            state.expect('(');
             state.consume();
+            while (true) {
+                operands.add(parseOperand(state, true, false));
+                state.skipWS();
+                if (state.peekChar() != ',') {
+                    break;
+                }
+                state.consume();
+            }
+            state.expect(')');
+            state.consume();
+            return m_factory.list(operands);
         }
-        state.expect(')');
-        state.consume();
-        return m_factory.list(operands);
+        String columnRef = state.readColumnRef();
+        return m_factory.columnRef(m_spec, columnRef);
     }
 
     /**
@@ -1008,14 +1122,18 @@ public class SimpleRuleParser {
      * a {@link String}.
      *
      * @param state The {@link ParseState}.
+     * @param allowBooleanResult The result can be a boolean value.
+     * @param fromMissing This {@link Expression} is created within a {@link Operators#MISSING}.
      * @return The {@link Expression} parsed representing a column.
      * @throws ParseException Problem during parsing.
      */
-    private Expression parseOperand(final ParseState state) throws ParseException {
+    private Expression
+        parseOperand(final ParseState state, final boolean allowBooleanResult, final boolean fromMissing)
+            throws ParseException {
         state.skipWS();
         Expression left;
         if (state.isColumnRef() || state.isFlowVariableRef() || state.isTablePropertyReference()) {
-            left = parseReference(state, "");
+            left = parseReference(state, "", fromMissing);
         } else {
             final char ch = state.peekChar();
             if (ch == '"') {
@@ -1032,8 +1150,14 @@ public class SimpleRuleParser {
                     left = m_factory.constant(real);
                 }
             } else {
-                throw new ParseException("Expected a number, string, column"
-                    + (m_allowTableReferences ? ", a table property" : "") + " or flow variable reference.",
+                if (allowBooleanResult) {
+                    final Expression constantBoolean = parseConstantBoolean(state);
+                    if (constantBoolean != null) {
+                        return constantBoolean;
+                    }
+                }
+                throw new ParseException("Expected a number, " + (allowBooleanResult ? "boolean, " : "") + "string"
+                    + (m_allowTableReferences ? ", column, a table property" : "") + " or flow variable reference.",
                     state.getPosition());
             }
         }
@@ -1044,16 +1168,24 @@ public class SimpleRuleParser {
      * Creates an {@link Expression} to compute a column.
      *
      * @param state The {@link ParseState}.
+     * @param fromMissing This {@link Expression} is created within a {@link Operators#MISSING}.
      * @return The {@link Expression} parsed representing a column.
      * @throws ParseException Problem during parsing.
      */
-    private Expression parseColumnExpression(final ParseState state) throws ParseException {
+    private Expression parseColumnExpression(final ParseState state, final boolean fromMissing) throws ParseException {
         state.skipWS();
         int startPos = state.getPosition();
         if (state.isColumnRef()) {
             String columnRef = state.readColumnRef();
+            if (m_spec == null) {
+                throw new ParseException("No columns present.", startPos);
+            }
             try {
-                return m_factory.columnRef(m_spec, columnRef);
+                Expression expr = m_factory.columnRef(m_spec, columnRef);
+                if (expr.getOutputType().isASuperTypeOf(BooleanCell.TYPE) && fromMissing) {
+                    expr = m_factory.columnRefForMissing(m_spec, columnRef);
+                }
+                return expr;
             } catch (IllegalStateException e) {
                 throw new ParseException(e.getMessage(), startPos);
             }

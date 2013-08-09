@@ -75,6 +75,7 @@ import org.fife.ui.rsyntaxtextarea.parser.ExtendedHyperlinkListener;
 import org.fife.ui.rsyntaxtextarea.parser.ParseResult;
 import org.fife.ui.rsyntaxtextarea.parser.Parser;
 import org.fife.ui.rsyntaxtextarea.parser.ParserNotice;
+import org.knime.base.node.rules.engine.Rule.BooleanConstants;
 import org.knime.base.node.rules.engine.Rule.Operators;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.workflow.FlowVariable;
@@ -82,15 +83,12 @@ import org.knime.core.node.workflow.FlowVariable;
 /**
  * Wraps a normal parser for the rules and provides the {@link Parser} interface.
  *
- * @author Gabor
+ * @author Gabor Bakos
  * @since 2.8
  */
 public class RuleParser implements Parser {
     /** Syntax style key for rules. */
     static final String SYNTAX_STYLE_RULE = "text/knime-rule";
-
-    //    /** Syntax style key for rules without mandatory outcome */
-    //    static final String SYNTAX_STYLE_RULE_NO_OUTCOME = "text/knime-rule-no-outcome";
 
     /**
      * Language support class for the rule language.
@@ -102,11 +100,11 @@ public class RuleParser implements Parser {
         /**
          * Constructs the {@link RuleLanguageSupport}.
          */
-        RuleLanguageSupport() {
+        public RuleLanguageSupport() {
             LanguageSupportFactory.get().addLanguageSupport(SYNTAX_STYLE_RULE, RuleLanguageSupport.class.getName());
-            ((AbstractTokenMakerFactory)TokenMakerFactory.getDefaultInstance())
-                    .putMapping(RuleParser.SYNTAX_STYLE_RULE, KnimeTokenMaker.class.getName(),
-                                RuleLanguageSupport.class.getClassLoader());
+            ((AbstractTokenMakerFactory)TokenMakerFactory.getDefaultInstance()).putMapping(
+                RuleParser.SYNTAX_STYLE_RULE, KnimeTokenMaker.class.getName(),
+                RuleLanguageSupport.class.getClassLoader());
         }
 
         /**
@@ -179,7 +177,7 @@ public class RuleParser implements Parser {
          */
         @Override
         public void addToken(final char[] array, final int start, final int end, final int tokenType,
-                             final int startOffset) {
+            final int startOffset) {
             m_wrapped.addToken(array, start, end, tokenType, startOffset);
         }
 
@@ -241,6 +239,15 @@ public class RuleParser implements Parser {
             Token tokenList = m_wrapped.getTokenList(text, initialTokenType, startOffset);
             Token token = tokenList;
             while (token != null && token.isPaintable()) {
+                switch (token.type ) {
+                    case TokenTypes.RESERVED_WORD:
+                    case TokenTypes.RESERVED_WORD_2:
+                    case TokenTypes.LITERAL_BOOLEAN:
+                    case TokenTypes.LITERAL_CHAR:
+                    case TokenTypes.COMMENT_DOCUMENTATION:
+                    case TokenTypes.COMMENT_MULTILINE:
+                        token.type = TokenTypes.IDENTIFIER;
+                }
                 if (m_operators.contains(token.getLexeme())) {
                     token.type = TokenTypes.RESERVED_WORD;
                 }
@@ -283,11 +290,11 @@ public class RuleParser implements Parser {
 
     private boolean m_isEnabled;
 
-    private final boolean m_warnOnColRefsInStrings;
+    private boolean m_warnOnColRefsInStrings;
 
-    private final boolean m_allowNoOutcome;
+    private boolean m_allowNoOutcome;
 
-    private final boolean m_allowTableReferences;
+    private boolean m_allowTableReferences;
 
     /**
      * Constructs a {@link RuleParser}. It requires outcomes in the rules.
@@ -323,10 +330,10 @@ public class RuleParser implements Parser {
      * @param allowTableReferences Enable to parse {@code $$ROWINDEX$$}, {@code $$ROWID$$} or {@code $$ROWCOUNT$$}.
      */
     public RuleParser(final boolean warnOnColRefsInStrings, final boolean allowNoOutcome,
-                      final boolean allowTableReferences) {
+        final boolean allowTableReferences) {
         if (allowNoOutcome && !allowTableReferences) {
             throw new UnsupportedOperationException(
-                    "Not supported combination of parameters: allow no outcome and not allowing table references.");
+                "Not supported combination of parameters: allow no outcome and not allowing table references.");
         }
         this.m_warnOnColRefsInStrings = warnOnColRefsInStrings;
         this.m_allowNoOutcome = allowNoOutcome;
@@ -334,6 +341,9 @@ public class RuleParser implements Parser {
         m_isEnabled = true;
         for (Rule.Operators op : Rule.Operators.values()) {
             m_operators.add(op.toString());
+        }
+        for (BooleanConstants constant : BooleanConstants.values()) {
+            m_operators.add(constant.toString());
         }
     }
 
@@ -385,15 +395,16 @@ public class RuleParser implements Parser {
      */
     @Override
     public ParseResult parse(final RSyntaxDocument doc, final String style) {
-        if (!RuleParser.SYNTAX_STYLE_RULE.equals(style) || !m_isEnabled) {
+        if (!RuleParser.SYNTAX_STYLE_RULE.equals(style) || !m_isEnabled
+            || (m_dataTableSpec == null && m_allowTableReferences)) {
             return new DefaultParseResult(this);
         }
         DefaultParseResult res = new DefaultParseResult(this);
         Element rootElement = doc.getDefaultRootElement();
-        //SimpleRuleParser ruleParser = new SimpleRuleParser(m_dataTableSpec, m_flowVariables);
         final RuleFactory factory =
-                m_allowNoOutcome ? RuleFactory.getFilterInstance() : m_allowTableReferences ? RuleFactory.getInstance()
-                        : RuleFactory.getVariableInstance();
+            m_allowNoOutcome ? RuleFactory.getFilterInstance() : m_allowTableReferences ? RuleFactory.getInstance()
+                : RuleFactory.getVariableInstance();
+        boolean wasCatchAllRule = false;
         for (int line = 0; line < rootElement.getElementCount(); ++line) {
             String lastString = null;
             StringBuilder sb = new StringBuilder();
@@ -417,21 +428,33 @@ public class RuleParser implements Parser {
                 //Check for potential error in outcomes.
                 if (lineText.trim().endsWith("\"") && m_warnOnColRefsInStrings) {
                     String lastContent =
-                            lastString != null && lastString.length() > 2 ? lastString
-                                    .substring(1, lastString.length() - 1) : lastString;
-                    if (lastContent != null && lastContent.endsWith("$") && lastContent.startsWith("$")) { //TODO better check
+                        lastString != null && lastString.length() > 2 ? lastString
+                            .substring(1, lastString.length() - 1) : lastString;
+                    //TODO better check
+                    if (lastContent != null && lastContent.endsWith("$") && lastContent.charAt(0) == '$') {
                         DefaultParserNotice notice =
-                                new DefaultParserNotice(this,
-                                        "You are referring to a column or flow variable, although no String interpolation is implemented, you might want to "
-                                                + "remove the quotes around the reference.", line,
-                                        doc.getTokenListForLine(line).offset + lineText.lastIndexOf(lastContent),
-                                        lastContent.length());
+                            new DefaultParserNotice(this,
+                                "You might be referring to a column or flow variable, although no String "
+                                    + "interpolation is implemented, you might want to "
+                                    + "remove the quotes around the reference.", line,
+                                doc.getTokenListForLine(line).offset + lineText.lastIndexOf(lastContent),
+                                lastContent.length());
                         notice.setLevel(ParserNotice.WARNING);
                         res.addNotice(notice);
                     }
                 }
                 if (!lineText.isEmpty()) {
-                    factory.parse(lineText, m_dataTableSpec, m_flowVariables);
+                    Rule rule = factory.parse(lineText, m_dataTableSpec, m_flowVariables);
+                    if (rule.getCondition().isEnabled() && (wasCatchAllRule || rule.getCondition().isConstantFalse())) {
+                        DefaultParserNotice notice =
+                            new DefaultParserNotice(this, wasCatchAllRule
+                                ? "There was a rule that will always match, this rule will never be used."
+                                : "This rule will never match.", line, doc.getTokenListForLine(line).offset,
+                                lineText.length());
+                        notice.setLevel(ParserNotice.WARNING);
+                        res.addNotice(notice);
+                    }
+                    wasCatchAllRule |= rule.getCondition().isCatchAll();
                 }
             } catch (ParseException e) {
                 DefaultParserNotice notice;
@@ -439,13 +462,34 @@ public class RuleParser implements Parser {
                     notice = new DefaultParserNotice(this, e.getMessage(), line);
                 } else {
                     notice =
-                            new DefaultParserNotice(this, e.getMessage(), line, doc.getTokenListForLine(line).offset
-                                    + e.getErrorOffset(), sb.length() - e.getErrorOffset());
+                        new DefaultParserNotice(this, e.getMessage(), line, doc.getTokenListForLine(line).offset
+                            + e.getErrorOffset(), sb.length() - e.getErrorOffset());
                 }
                 res.addNotice(notice);
             }
         }
         return res;
+    }
+
+    /**
+     * @param allowNoOutcome the allowNoOutcome to set
+     */
+    public void setAllowNoOutcome(final boolean allowNoOutcome) {
+        this.m_allowNoOutcome = allowNoOutcome;
+    }
+
+    /**
+     * @param allowTableReferences the allowTableReferences to set
+     */
+    public void setAllowTableReferences(final boolean allowTableReferences) {
+        this.m_allowTableReferences = allowTableReferences;
+    }
+
+    /**
+     * @param warnOnColRefsInStrings the warnOnColRefsInStrings to set
+     */
+    public void setWarnOnColRefsInStrings(final boolean warnOnColRefsInStrings) {
+        this.m_warnOnColRefsInStrings = warnOnColRefsInStrings;
     }
 
     /**

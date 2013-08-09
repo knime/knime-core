@@ -53,11 +53,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.util.Date;
 
 import javax.swing.AbstractAction;
@@ -121,6 +116,7 @@ class RuleMainPanel extends JSnippetPanel {
              * @param command
              * @param modifiers
              * @param lineNumber Line number starting from {@code 0}.
+             * @see ActionEvent#ActionEvent(Object, int, String, int)
              */
             @SuppressWarnings("hiding")
             public LinePosition(final Object source, final int id, final String command, final int modifiers,
@@ -182,8 +178,10 @@ class RuleMainPanel extends JSnippetPanel {
         }
 
         /**
-         * @param textArea
-         * @param line
+         * Comments/uncomments the rule in line {@code line}. Invalid line numbers have no effect besides a debug log.
+         *
+         * @param textArea The {@link RTextArea}.
+         * @param line A valid line in {@code textArea}.
          */
         private void toggle(final RTextArea textArea, final int line) {
             int lineStart;
@@ -232,7 +230,8 @@ class RuleMainPanel extends JSnippetPanel {
      */
     @Override
     protected JComponent createEditorComponent() {
-        final RSyntaxTextArea textArea = m_textEditor = new KnimeSyntaxTextArea(20, 60);
+        m_textEditor = new KnimeSyntaxTextArea(20, 60);
+        final RSyntaxTextArea textArea = m_textEditor;
         // An AutoCompletion acts as a "middle-man" between a text component
         // and a CompletionProvider. It manages any options associated with
         // the auto-completion (the popup trigger key, whether to display a
@@ -244,23 +243,7 @@ class RuleMainPanel extends JSnippetPanel {
 
         ac.install(textArea);
         setExpEdit(textArea);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try {
-            PrintStream stringWriter = new PrintStream(out, false, "UTF-8");
-            PrintStream oldWriter = System.err;
-            System.setErr(stringWriter);
-            textArea.setSyntaxEditingStyle(RuleParser.SYNTAX_STYLE_RULE);
-            System.setErr(oldWriter);
-        } catch (UnsupportedEncodingException ex) {
-            LOGGER.coding("Strange, encoding UTF-8 is not known", ex);
-        } finally {
-            try {
-                out.close();
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-        LOGGER.debug(new String(out.toByteArray(), Charset.forName("UTF-8")));
+        textArea.setSyntaxEditingStyle(RuleParser.SYNTAX_STYLE_RULE);
 
         textArea.getPopupMenu().add(new ToggleRuleAction("Toggle comment", textArea));
         RTextScrollPane textScrollPane = new RTextScrollPane(textArea);
@@ -268,22 +251,21 @@ class RuleMainPanel extends JSnippetPanel {
         textScrollPane.setIconRowHeaderEnabled(true);
         m_gutter = textScrollPane.getGutter();
         addRowHeaderMouseListener(new MouseAdapter() {
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public void mouseClicked(final MouseEvent e) {
-                    if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
-                        try {
-                            new ToggleRuleAction(textArea).actionPerformed(new ToggleRuleAction.LinePosition(
-                                    textArea, (int)(new Date().getTime() & 0x7fffffff), "toggle comment", e
-                                            .getModifiers(), textArea.getLineOfOffset(textArea.viewToModel(e
-                                            .getPoint()))));
-                        } catch (BadLocationException e1) {
-                            LOGGER.debug(e1.getMessage(), e1);
-                        }
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void mouseClicked(final MouseEvent e) {
+                if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
+                    try {
+                        new ToggleRuleAction(textArea).actionPerformed(new ToggleRuleAction.LinePosition(textArea,
+                                (int)(new Date().getTime() & 0x7fffffff), "toggle comment", e.getModifiers(), textArea
+                                        .getLineOfOffset(textArea.viewToModel(e.getPoint()))));
+                    } catch (BadLocationException e1) {
+                        LOGGER.debug(e1.getMessage(), e1);
                     }
                 }
+            }
         });
         return textScrollPane;
     }
@@ -307,10 +289,10 @@ class RuleMainPanel extends JSnippetPanel {
     protected void onSelectionInManipulatorList(final Object selected) {
         if (selected instanceof InfixManipulator) {
             InfixManipulator infix = (InfixManipulator)selected;
-            //String selectedString = m_textEditor.getSelectedText();
             String textToInsert = infix.getName() + " ";
             try {
-                if (m_textEditor.getCaretPosition() == 0 || m_textEditor.getText().isEmpty() || m_textEditor.getText(m_textEditor.getCaretPosition(), 1).charAt(0) != ' ') {
+                if (m_textEditor.getCaretPosition() == 0 || m_textEditor.getText().isEmpty()
+                        || m_textEditor.getText(m_textEditor.getCaretPosition(), 1).charAt(0) != ' ') {
                     textToInsert = " " + textToInsert;
                 }
             } catch (BadLocationException e) {

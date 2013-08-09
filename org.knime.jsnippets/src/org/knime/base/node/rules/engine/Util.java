@@ -164,6 +164,8 @@ public final class Util {
      *
      * @param input A {@link Map}.
      * @return The cloned value.
+     * @param <K> Key type.
+     * @param <V> Value type.
      */
     static <K, V> Map<K, V> clone(final Map<K, V> input) {
         if (input.isEmpty()) {
@@ -237,6 +239,7 @@ public final class Util {
      * @param components Some {@link Component}s.
      * @param cls A class, belonging to a subclass of {@link Component}.
      * @return The first element of {@code components} which is instance of {@code cls}, else {@code null}.
+     * @param <T> {@link Component}'s type.
      */
     public static <T extends Component> T findComponent(final Component[] components, final Class<? extends T> cls) {
         for (int i = 0; i < components.length; i++) {
@@ -275,8 +278,8 @@ public final class Util {
      * @param component A {@link JTextComponent}.
      */
     public static void addCopyCutPaste(final JTextComponent component) {
-        JPopupMenu popup;
-        if ((popup = component.getComponentPopupMenu()) == null) {
+        JPopupMenu popup = component.getComponentPopupMenu();
+        if (popup == null) {
             popup = new JPopupMenu("Test");
             component.setComponentPopupMenu(popup);
         }
@@ -307,7 +310,6 @@ public final class Util {
      */
     private static JMenuItem createNamedMenuItem(final Action action) {
         final JMenuItem menuItem = new JMenuItem(action);
-        //menuItem.setName(menuItem.getActionCommand());
         return menuItem;
     }
 

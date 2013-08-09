@@ -68,6 +68,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -129,9 +130,6 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
         //SimpleRuleParser ruleParser = new SimpleRuleParser(spec, availableFlowVariables);
         RuleFactory factory = allowNoOutcome ? RuleFactory.getFilterInstance() : RuleFactory.getInstance();
         for (String s : m_settings.rules()) {
-            if (s.trim().isEmpty()) {
-                continue;
-            }
             final Rule rule = factory.parse(s, spec, availableFlowVariables);
             if (rule.getCondition().isEnabled()) {
                 rules.add(rule);
@@ -147,39 +145,8 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
 
         String newColName = DataTableSpec.getUniqueColumnName(inSpec, m_settings.getNewColName());
 
-        final String defaultLabelRaw = m_settings.getDefaultLabel();
-        final String defaultLabel;
-        DataType preferredDefaultDataType = null;
-        switch (m_settings.getDefaultOutputType()) {
-            case FlowVariable:
-                if (defaultLabelRaw.length() < 5 || !defaultLabelRaw.startsWith("$${") || !defaultLabelRaw.endsWith("}$$")) {
-                    throw new InvalidSettingsException("Not a valid flow variable reference: " + defaultLabelRaw);
-                }
-                final String flowVarName = defaultLabelRaw.substring(4, defaultLabelRaw.length() - 3);
-                final FlowVariable flowVariable = getAvailableFlowVariables().get(flowVarName);
-                if (flowVariable == null) {
-                    throw new InvalidSettingsException("No flow variable is avaialable with name: " + flowVarName);
-                }
-                defaultLabel = flowVariable.getValueAsString();
-                preferredDefaultDataType = Util.toDataType(flowVariable.getType());
-                break;
-            case Column:
-                if (defaultLabelRaw.length() < 3 || defaultLabelRaw.charAt(0) != '$' || !defaultLabelRaw.endsWith("$")) {
-                    throw new InvalidSettingsException("Not a column reference: " + defaultLabelRaw);
-                }
-                defaultLabel = defaultLabelRaw;
-                break;
-            case PlainText:
-                defaultLabel = defaultLabelRaw;
-                break;
-            case StringInterpolation:
-                throw new InvalidSettingsException("String interpolation is not supported yet.");
-            default:
-                throw new InvalidSettingsException("Not supported outcome type: " + m_settings.getDefaultOutputType());
-        }
-        final int defaultLabelColumnIndex =
-                findDefaultLabelColumnIndex(inSpec, m_settings.getDefaultOutputType(), defaultLabel);
-        final DataType outType = computeOutputType(inSpec, rules, defaultLabelColumnIndex, defaultLabel, m_settings.getDefaultOutputType() == OutcomeKind.FlowVariable ? preferredDefaultDataType : null);
+        final DataType outType =
+                computeOutputType(inSpec, rules);
 
         DataColumnSpec cs = new DataColumnSpecCreator(newColName, outType).createSpec();
 
@@ -189,7 +156,7 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
                 for (Rule r : rules) {
                     if (r.getCondition().matches(row, this).getOutcome() == MatchState.matchedAndStop) {
                         Outcome outcome2 = r.getOutcome();
-//                        r.getSideEffect().perform(row, this);
+                        //                        r.getSideEffect().perform(row, this);
                         final DataCell cell = (DataCell)outcome2.getComputedResult(row, this);
                         if (outType.equals(StringCell.TYPE) && !cell.isMissing()
                                 && !cell.getType().equals(StringCell.TYPE)) {
@@ -200,38 +167,14 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
                     }
                 }
 
-                if (defaultLabelColumnIndex >= 0) {
-                    DataCell cell = row.getCell(defaultLabelColumnIndex);
-                    if (outType.equals(StringCell.TYPE) && !cell.getType().equals(StringCell.TYPE)) {
-                        return new StringCell(cell.toString());
-                    } else {
-                        return cell;
-                    }
-                } else if (m_settings.getDefaultLabel().length() > 0) {
-                    String l = defaultLabel;
-                    if (outType.equals(StringCell.TYPE)) {
-                        return new StringCell(l);
-                    }
-
-                    try {
-                        int i = Integer.parseInt(l);
-                        return new IntCell(i);
-                    } catch (NumberFormatException ex) {
-                        try {
-                            double d = Double.parseDouble(l);
-                            return new DoubleCell(d);
-                        } catch (NumberFormatException ex1) {
-                            return new StringCell(l);
-                        }
-                    }
-                } else {
-                    return DataType.getMissingCell();
-                }
+                return DataType.getMissingCell();
             }
+
             @Override
             public Object readVariable(final String name, final Class<?> type) {
                 return RuleEngineNodeModel.this.readVariable(name, type);
             }
+
             @Override
             public int getRowCount() {
                 return RuleEngineNodeModel.this.getRowCount();
@@ -247,10 +190,12 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
      * @param inSpec The input table specification.
      * @param defaultOutcomeType How to interpret the {@code defaultLabel} parameter.
      * @param defaultLabel {@link String} representation of the default value, can be empty, but cannot be {@code null}.
-     * @return The index of the column, or {@code -1} when it is not requested {@code defaultOutcomeType} is not {@value OutcomeKind#Column}.
+     * @return The index of the column, or {@code -1} when it is not requested {@code defaultOutcomeType} is not
+     *         {@value OutcomeKind#Column}.
      * @throws InvalidSettingsException When {@code defaultLabel} is inconsistent, eg. not properly escaped column name.
      * @see OutcomeKind
      */
+    @Deprecated
     static int findDefaultLabelColumnIndex(final DataTableSpec inSpec, final Rule.OutcomeKind defaultOutcomeType,
                                            final String defaultLabel) throws InvalidSettingsException {
         if (defaultOutcomeType == null) {
@@ -259,11 +204,11 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
         final int defaultLabelColumnIndex;
         switch (defaultOutcomeType) {
             case Column:
-                if (defaultLabel.length() < 3) {
+                if (defaultLabel.length() < "$_$".length()) {
                     throw new InvalidSettingsException("Default label is not a column reference");
                 }
 
-                if (!defaultLabel.startsWith("$") || !defaultLabel.endsWith("$")) {
+                if (defaultLabel.charAt(0) != '$' || !defaultLabel.endsWith("$")) {
                     throw new InvalidSettingsException("Column references in default label must be enclosed in $");
                 }
                 String colRef = defaultLabel.substring(1, defaultLabel.length() - 1);
@@ -289,15 +234,56 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
     }
 
     /**
+     * Computes the result type based on the the rules (and the column types).
+     *
+     * @param inSpec The input table specification.
+     * @param rules The {@link Rule}s.
+     * @return The {@link DataType} representing the output's type.
+     */
+    static DataType computeOutputType(final DataTableSpec inSpec, final List<Rule> rules) {
+        return computeOutputType(inSpec, rules, true);
+    }
+    static DataType computeOutputType(final DataTableSpec inSpec, final List<Rule> rules, final boolean allowBooleanOutcome) {
+        // determine output type
+        List<DataType> types = new ArrayList<DataType>();
+        // add outcome column types
+        for (Rule r : rules) {
+            types.add(r.getOutcome().getType());
+        }
+
+        final DataType outType;
+        if (types.size() > 0) {
+            DataType temp = types.get(0);
+            for (int i = 1; i < types.size(); i++) {
+                temp = DataType.getCommonSuperType(temp, types.get(i));
+            }
+            if ((temp.getValueClasses().size() == 1) && temp.getValueClasses().contains(DataValue.class)) {
+                // a non-native type, we replace it with string
+                temp = StringCell.TYPE;
+            }
+            outType = allowBooleanOutcome ? temp : temp.isASuperTypeOf(BooleanCell.TYPE) ? IntCell.TYPE : temp;
+        } else {
+            outType = StringCell.TYPE;
+        }
+        return outType;
+    }
+    /**
      * Computes the result type based on the default value and the rules (and the column types).
      *
      * @param inSpec The input table specification.
      * @param rules The {@link Rule}s.
-     * @param defaultLabelColumnIndex The index of column referred by the default label, or a negative number (eg. {@code -1}).
+     * @param defaultLabelColumnIndex The index of column referred by the default label, or a negative number (eg.
+     *            {@code -1}).
+     * @param defaultLabel The text coming as the default. It can have encoded column name or flow variable (both
+     *            without escaping), although that information is not used, their type is decided by the
+     *            {@code defaultLabelColumnIndex} and the {@code flowVarType} parameters. Can be {@code null}.
+     * @param flowVarType {@link DataType} of the referenced flow variable.
      * @return The {@link DataType} representing the output's type.
      */
+    @Deprecated
     static DataType computeOutputType(final DataTableSpec inSpec, final List<Rule> rules,
-                                      final int defaultLabelColumnIndex, final String defaultLabel, final DataType flowVarType) {
+                                      final int defaultLabelColumnIndex, final String defaultLabel,
+                                      final DataType flowVarType) {
         // determine output type
         List<DataType> types = new ArrayList<DataType>();
         // add outcome column types

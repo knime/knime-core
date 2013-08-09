@@ -45,7 +45,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 2013.04.25. by Gabor
+ * Created on 2013.04.25. by Gabor Bakos
  */
 package org.knime.base.node.rules.engine;
 
@@ -54,56 +54,43 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.Box;
-import javax.swing.ButtonGroup;
-import javax.swing.ButtonModel;
-import javax.swing.JComboBox;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.parser.Parser;
 import org.fife.ui.rtextarea.Gutter;
-import org.knime.base.node.rules.engine.Rule.OutcomeKind;
 import org.knime.base.node.util.KnimeCompletionProvider;
 import org.knime.base.node.util.KnimeSyntaxTextArea;
 import org.knime.base.node.util.ManipulatorProvider;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.FlowVariableModel;
-import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.util.DataColumnSpecListCellRenderer;
-import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.ThreadUtils;
@@ -115,45 +102,18 @@ import org.knime.core.util.ThreadUtils;
  * @since 2.8
  */
 @SuppressWarnings({"serial"})
-abstract class RulePanel extends JPanel {
+class RulePanel extends JPanel {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(RulePanel.class);
 
     private final boolean m_hasOutputColumn;
 
-    private ButtonGroup m_inclusionButtonGroup;
-
-    private JRadioButton m_includeButton;
-
-    private JRadioButton m_excludeButton;
+    private JCheckBox m_inclusionBox;
 
     private final String m_inclusionLabel;
-
-    private final String m_exclusionLabel;
-
-    private final boolean m_hasDefaultOutcome;
-
-    private ButtonGroup m_defaultLabelTypeGroup;
-
-    private JRadioButton m_defaultIsText;
-
-    private JRadioButton m_defaultIsColumnReference;
-
-    private JRadioButton m_defaultIsFlowVariable;
-
-    @SuppressWarnings("unused")
-    ///To be used when the string interpolation gets supported.
-    private JRadioButton m_defaultIsStringInterpolation;
-
-    private final EnumMap<Rule.OutcomeKind, JRadioButton> m_outcomeControls =
-            new EnumMap<Rule.OutcomeKind, JRadioButton>(Rule.OutcomeKind.class);
-
-    private JComboBox/*<Object>*/m_flowVarOrColumn;
 
     private JLabel m_outputType;
 
     private JTextField m_newColumnName;
-
-    private JTextField m_defaultLabelEditor;
 
     private volatile long m_outputTypeLastSet, m_outputMarkersLastSet;
 
@@ -168,8 +128,6 @@ abstract class RulePanel extends JPanel {
 
     private Map<String, FlowVariable> m_flowVariables;
 
-    private FlowVariableModel m_fvmDefaultLabel;
-
     private RuleParser m_parser;
 
     private final boolean m_showColumns;
@@ -181,15 +139,14 @@ abstract class RulePanel extends JPanel {
      * @param hasDefaultOutcome The default outcome can be specified?
      * @param warnOnColRefsInStrings Whether warn if the outcomes contain $ signs.
      * @param inclusion The inclusion text for filter (matches go to the first outport).
-     * @param exclusion The exclusion text for filter (matches go to the second (possibly non-existing) outport).
      * @param manipulatorProvider The {@link ManipulatorProvider} to use.
      * @param completionProvider The {@link CompletionProvider} to use.
      */
     public RulePanel(final boolean hasOutputColumn, final boolean hasDefaultOutcome,
-                     final boolean warnOnColRefsInStrings, final String inclusion, final String exclusion,
-                     final ManipulatorProvider manipulatorProvider, final KnimeCompletionProvider completionProvider) {
-        this(hasOutputColumn, hasDefaultOutcome, warnOnColRefsInStrings, true/*showColumns*/, inclusion, exclusion,
-                manipulatorProvider, completionProvider);
+        final boolean warnOnColRefsInStrings, final String inclusion, final ManipulatorProvider manipulatorProvider,
+        final KnimeCompletionProvider completionProvider) {
+        this(hasOutputColumn, hasDefaultOutcome, warnOnColRefsInStrings, true/*showColumns*/, inclusion,
+            manipulatorProvider, completionProvider);
     }
 
     /**
@@ -200,41 +157,41 @@ abstract class RulePanel extends JPanel {
      * @param warnOnColRefsInStrings Whether warn if the outcomes contain $ signs.
      * @param showColumns Show the columns panel or hide it.
      * @param inclusion The inclusion text for filter (matches go to the first outport).
-     * @param exclusion The exclusion text for filter (matches go to the second (possibly non-existing) outport).
      * @param manipulatorProvider The {@link ManipulatorProvider} to use.
      * @param completionProvider The {@link CompletionProvider} to use.
      */
     public RulePanel(final boolean hasOutputColumn, final boolean hasDefaultOutcome,
-                     final boolean warnOnColRefsInStrings, final boolean showColumns, final String inclusion,
-                     final String exclusion, final ManipulatorProvider manipulatorProvider,
-                     final KnimeCompletionProvider completionProvider) {
+        final boolean warnOnColRefsInStrings, final boolean showColumns, final String inclusion,
+        final ManipulatorProvider manipulatorProvider, final KnimeCompletionProvider completionProvider) {
         super(new BorderLayout());
         this.m_showColumns = showColumns;
-        m_parser = new RuleParser(warnOnColRefsInStrings, !hasDefaultOutcome, showColumns);
-        m_parser.setDataTableSpec(m_spec);
 
         this.m_hasOutputColumn = hasOutputColumn;
-        this.m_hasDefaultOutcome = hasDefaultOutcome;
         this.m_inclusionLabel = inclusion;
-        this.m_exclusionLabel = exclusion;
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
-        add(m_mainPanel = new RuleMainPanel(manipulatorProvider, completionProvider, showColumns), BorderLayout.CENTER);
-        m_mainPanel.getTextEditor().addParser(m_parser);
-        //        m_mainPanel.getTextEditor().addFocusListener(new FocusAdapter() {
-        //            /**
-        //             * {@inheritDoc}
-        //             */
-        //            @Override
-        //            public void focusGained(final FocusEvent e) {
-        //                m_lastUsedTextComponent = m_mainPanel.getTextEditor();
-        //            }
-        //        });
+        m_mainPanel = new RuleMainPanel(manipulatorProvider, completionProvider, showColumns);
+        for (int i = 0; i < m_mainPanel.getTextEditor().getParserCount(); ++i) {
+            Parser p = m_mainPanel.getTextEditor().getParser(i);
+            if (p instanceof RuleParser) {
+                final RuleParser parser = (RuleParser)p;
+                m_parser = parser;
+                m_parser.setWarnOnColRefsInStrings(warnOnColRefsInStrings);
+                m_parser.setAllowNoOutcome(!hasDefaultOutcome);
+                m_parser.setAllowTableReferences(showColumns);
+            }
+        }
+        if (m_parser == null) {
+            m_parser = new RuleParser(warnOnColRefsInStrings, !hasDefaultOutcome, showColumns);
+            m_mainPanel.getTextEditor().addParser(m_parser);
+        }
+        m_parser.setDataTableSpec(m_spec);
+        add(m_mainPanel, BorderLayout.CENTER);
         gbc.gridy = 1;
         gbc.weighty = 0;
-        add(createOutputControls(), BorderLayout.SOUTH/*gbc*/);
+        add(createOutputControls(), BorderLayout.SOUTH);
         m_mainPanel.getTextEditor().getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void removeUpdate(final DocumentEvent e) {
@@ -268,74 +225,12 @@ abstract class RulePanel extends JPanel {
         GridBagConstraints constraints = new GridBagConstraints();
         if (m_hasOutputColumn) {
             constraints.weighty = .25;
-            ret.add(createNewColumnTextFieldWithLabel("prediction", 35, m_showColumns ? "Appended column name"
-                            : "New flow variable name"), constraints);
+            ret.add(
+                createNewColumnTextFieldWithLabel("prediction", 35, m_showColumns ? "Appended column name"
+                    : "New flow variable name"), constraints);
         } else {
-            m_inclusionButtonGroup = new ButtonGroup();
-            m_includeButton = new JRadioButton(m_inclusionLabel);
-            m_excludeButton = new JRadioButton(m_exclusionLabel);
-            m_inclusionButtonGroup.add(m_includeButton);
-            m_inclusionButtonGroup.add(m_excludeButton);
-            ret.add(m_includeButton, constraints);
-            constraints.gridx = 1;
-            ret.add(m_excludeButton, constraints);
-        }
-        if (m_hasDefaultOutcome) {
-            constraints.gridy = 1;
-            constraints.weighty = .75;
-            final GridBagLayout gbl = new GridBagLayout();
-            JPanel outcomeBox = new JPanel(gbl);
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.fill = GridBagConstraints.HORIZONTAL;
-            outcomeBox.add(createDefaultTextFieldWithLabel("default", 35, "Default label (if no rule matches)"), gbc);
-            m_defaultLabelTypeGroup = new ButtonGroup();
-            m_defaultIsText = new JRadioButton("is plain text");
-            m_defaultIsColumnReference = new JRadioButton("is a column reference");
-            m_defaultIsFlowVariable = new JRadioButton("is a flow variable");
-            m_defaultIsStringInterpolation = new JRadioButton("is an expression");//not used yet
-            m_outcomeControls.put(Rule.OutcomeKind.PlainText, m_defaultIsText);
-            m_outcomeControls.put(Rule.OutcomeKind.Column, m_defaultIsColumnReference);
-            m_outcomeControls.put(Rule.OutcomeKind.FlowVariable, m_defaultIsFlowVariable);
-            //            outcomeControls.put(OutcomeKind.StringInterpolation, m_defaultIsStringInterpolation);
-            m_defaultLabelTypeGroup.add(m_defaultIsText);
-            m_defaultLabelTypeGroup.add(m_defaultIsColumnReference);
-            m_defaultLabelTypeGroup.add(m_defaultIsFlowVariable);
-            //            m_defaultLabelTypeGroup.add(m_defaultIsStringInterpolation);
-            gbc.gridy = 0;
-            gbc.gridx = 1;
-            outcomeBox.add(m_defaultIsText, gbc);
-            gbc.gridy = 1;
-            gbc.gridx = 0;
-            gbc.gridheight = 2;
-            gbc.anchor = GridBagConstraints.CENTER;
-            outcomeBox.add(m_flowVarOrColumn = new JComboBox/*<Object>*/(), gbc);
-            gbc.gridx = 1;
-            gbc.gridy = 1;
-            gbc.gridheight = 1;
-            outcomeBox.add(m_defaultIsColumnReference, gbc);
-            gbc.gridy = 2;
-            outcomeBox.add(m_defaultIsFlowVariable, gbc);
-            m_defaultIsText
-                    .setToolTipText("The outcome's default value is not interpreted besides number or text, results as is.");
-            m_defaultIsColumnReference.setToolTipText("The outcome's default value is from this column.");
-            m_defaultIsFlowVariable.setToolTipText("The outcome's default value is from this flow variable.");
-            final ItemListener radioItemListener = new ItemListener() {
-                @Override
-                public void itemStateChanged(final ItemEvent e) {
-                    updateOutputType();
-                    adjustOutputControls();
-                }
-            };
-            m_flowVarOrColumn.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(final ItemEvent e) {
-                    updateOutputType();
-                }
-            });
-            m_defaultIsText.getModel().addItemListener(radioItemListener);
-            m_defaultIsColumnReference.getModel().addItemListener(radioItemListener);
-            m_defaultIsFlowVariable.getModel().addItemListener(radioItemListener);
-            ret.add(outcomeBox, constraints);
+            m_inclusionBox = new JCheckBox(m_inclusionLabel);
+            ret.add(m_inclusionBox, constraints);
         }
         return ret;
     }
@@ -360,67 +255,13 @@ abstract class RulePanel extends JPanel {
     }
 
     /**
-     * @param watermark The watermark to show when the textfield is empty.
-     * @param colWidth The width of the textfield.
-     * @param label The tooltip and the label before the textfield.
-     * @return The {@link JTextField} with a {@link JLabel} to used for the default label.
-     */
-    private Component createDefaultTextFieldWithLabel(final String watermark, final int colWidth, final String label) {
-        Box ret = Box.createHorizontalBox();
-        if (label != null) {
-            ret.add(new JLabel(label));
-        }
-        JTextField comp = Util.createTextFieldWithWatermark(watermark, colWidth, label);
-        m_defaultLabelEditor = comp;
-        //                m_defaultLabelEditor.addFocusListener(new FocusAdapter() {
-        //                    @Override
-        //                    public void focusGained(final FocusEvent e) {
-        //                        m_lastUsedTextComponent = m_defaultLabelEditor;
-        //                    }
-        //                });
-        ret.add(comp);
-        m_defaultLabelEditor.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(final DocumentEvent e) {
-                onAnyUpdate();
-            }
-
-            @Override
-            public void removeUpdate(final DocumentEvent e) {
-                onAnyUpdate();
-            }
-
-            @Override
-            public void changedUpdate(final DocumentEvent e) {
-                onAnyUpdate();
-            }
-
-            private void onAnyUpdate() {
-                updateOutputType();
-            }
-        });
-        m_fvmDefaultLabel = createFlowVariableModel();
-        m_fvmDefaultLabel.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent evt) {
-                if (!m_fvmDefaultLabel.isVariableReplacementEnabled()) {
-                    m_defaultIsFlowVariable.setEnabled(true);
-                }
-                adjustOutputControls();
-            }
-        });
-        ret.add(new FlowVariableModelButton(m_fvmDefaultLabel));
-        return ret;
-    }
-
-    /**
      * Updates the {@link RSyntaxTextArea}'s markers to show the output type of the rules.
      */
     protected void updateOutputMarkers() {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                final long startDate = new Date().getTime();
+                final long startDate = System.nanoTime();
                 final List<Rule> rules = computeRulesRobust();
                 final DataType[] outputTypes = new DataType[rules.size()];
                 int i = 0;
@@ -451,55 +292,16 @@ abstract class RulePanel extends JPanel {
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                final Rule.OutcomeKind outcome = currentOutcomeType();
-                final Object selectedItem = m_flowVarOrColumn.getSelectedItem();
-                final String defaultLabel;
-                DataType preferredDefaultType = null;
-                if (outcome == null) {
-                    defaultLabel = "";
-                } else {
-                    switch (outcome) {
-                        case PlainText:
-                            defaultLabel = m_defaultLabelEditor.getText();
-                            break;
-                        case Column:
-                            defaultLabel =
-                                    selectedItem instanceof DataColumnSpec ? "$"
-                                            + ((DataColumnSpec)selectedItem).getName() + "$" : "";
-                            break;
-                        case FlowVariable:
-                            if (selectedItem instanceof FlowVariable) {
-                                FlowVariable fv = (FlowVariable)selectedItem;
-                                defaultLabel = "$$" + fv.getName() + "$$";
-                                preferredDefaultType = Util.toDataType(fv.getType());
-                            } else {
-                                defaultLabel = null;
-                                preferredDefaultType = DataType.getMissingCell().getType();
-                            }
-                            break;
-                        case StringInterpolation:
-                            throw new UnsupportedOperationException("String interpolation is not supported yet.");
-                        default:
-                            throw new UnsupportedOperationException("Not supported outcome type: " + outcome);
-                    }
-                }
-
                 final long startDate = new Date().getTime();
                 try {
-                    final int defaultLabelColumnIndex =
-                            RuleEngineNodeModel.findDefaultLabelColumnIndex(m_spec, outcome, defaultLabel);
                     final List<Rule> rules = computeRules();
-                    final DataType outputType =
-                            RuleEngineNodeModel.computeOutputType(m_spec, rules, defaultLabelColumnIndex, defaultLabel,
-                                                                  preferredDefaultType);
+                    final DataType outputType = RuleEngineNodeModel.computeOutputType(m_spec, rules, m_showColumns);
                     ViewUtils.invokeLaterInEDT(new Runnable() {
                         @Override
                         public void run() {
                             setOutputType(startDate, outputType);
                         }
                     });
-                } catch (InvalidSettingsException e) {
-                    setOutputType(startDate, DataType.getMissingCell().getType());
                 } catch (ParseException e) {
                     setOutputType(startDate, DataType.getMissingCell().getType());
                 }
@@ -532,18 +334,17 @@ abstract class RulePanel extends JPanel {
      */
     protected synchronized void setOutputMarkers(final long startDate, final DataType[] outputTypes) {
         final KnimeSyntaxTextArea textArea = m_mainPanel.getTextEditor();
-        String text = textArea.getText();
-        if (startDate > m_outputMarkersLastSet && !text.isEmpty()) {
-            String[] lines = text.split("\n", -1);
+        if (startDate - m_outputMarkersLastSet > 0 && !textArea.getText().isEmpty()) {
             final Gutter gutter = m_mainPanel.getGutter();
             gutter.removeAllTrackingIcons();
             textArea.removeAllLineHighlights();
+            String[] lines = textArea.getText().split("\n", -1);
             for (int i = outputTypes.length; i-- > 0;) {
                 try {
-                    if (outputTypes[i] == null && !(i < lines.length && lines[i].trim().isEmpty())) {//error
+                    if (outputTypes[i] == null && !(i < lines.length && lines[i].trim().isEmpty())) { //error
                         gutter.addLineTrackingIcon(i, RuleMainPanel.ERROR_ICON);
                         textArea.addLineHighlight(i, Color.PINK);
-                    } else if (i < lines.length && RuleSupport.isComment(lines[i])) {//comment
+                    } else if (i < lines.length && RuleSupport.isComment(lines[i])) { //comment
                         textArea.addLineHighlight(i, Color.YELLOW);
                     } else if (m_hasOutputColumn && outputTypes[i] != null) {
                         gutter.addLineTrackingIcon(i, outputTypes[i].getIcon());
@@ -556,101 +357,6 @@ abstract class RulePanel extends JPanel {
             }
             m_outputMarkersLastSet = startDate;
         }
-    }
-
-    /**
-     * Sets the selected values/enabled state for the output controls based on the selection of them.
-     */
-    protected void adjustOutputControls() {
-        final boolean editable = !m_fvmDefaultLabel.isVariableReplacementEnabled();
-        if (m_spec.getNumColumns() == 0) {
-            m_defaultIsColumnReference.setEnabled(false);
-        }
-        if (m_flowVariables.isEmpty()) {
-            m_defaultIsFlowVariable.setEnabled(false);
-        }
-        final Rule.OutcomeKind type = currentOutcomeType();
-        if (type == null) {
-            m_defaultLabelEditor.setEnabled(false);
-            m_flowVarOrColumn.setEnabled(false);
-            return;
-        }
-        switch (type) {
-            case PlainText:
-                m_flowVarOrColumn.setEnabled(false);
-                m_defaultLabelEditor.setEditable(editable);
-                if (!editable) {
-                    m_defaultLabelEditor.setText(m_flowVariables.get(m_fvmDefaultLabel.getInputVariableName())
-                            .getValueAsString());
-                }
-                break;
-            case Column:
-                m_flowVarOrColumn.setEnabled(editable);
-                m_defaultLabelEditor.setEditable(false);
-                m_flowVarOrColumn.removeAllItems();
-                m_flowVarOrColumn.setRenderer(new DataColumnSpecListCellRenderer());
-                m_flowVarOrColumn.setSelectedItem(null);
-                {
-                    DataColumnSpec found = null;
-                    FlowVariable fv = m_flowVariables.get(m_fvmDefaultLabel.getInputVariableName());
-                    for (DataColumnSpec column : m_spec) {
-                        m_flowVarOrColumn.addItem(column);
-                        if (!editable && column.getName().equals(fv.getValueAsString())) {
-                            m_flowVarOrColumn.setSelectedItem(found = column);
-                            break;
-                        }
-                    }
-                    m_flowVarOrColumn.setSelectedItem(found);
-                }
-                break;
-            case FlowVariable:
-                if (!editable) {
-                    m_defaultIsFlowVariable.setEnabled(false);
-                    m_defaultLabelTypeGroup.setSelected(m_defaultIsText.getModel(), true);
-                    adjustOutputControls();
-                    return;
-                }
-                m_flowVarOrColumn.setEnabled(editable);
-                m_defaultLabelEditor.setEditable(false);
-                m_flowVarOrColumn.removeAllItems();
-                m_flowVarOrColumn.setRenderer(new FlowVariableListCellRenderer());
-                for (FlowVariable flowVar : m_flowVariables.values()) {
-                    m_flowVarOrColumn.addItem(flowVar);
-                }
-                m_flowVarOrColumn.setSelectedItem(null);
-                if (!editable) {
-                    FlowVariable fv = m_flowVariables.get(m_fvmDefaultLabel.getInputVariableName());
-                    if (fv == null) {
-                        m_flowVarOrColumn.setSelectedItem(null);
-                    } else {
-                        final FlowVariable fvReferenced = m_flowVariables.get(fv.getValueAsString());
-                        m_flowVarOrColumn.setSelectedItem(fvReferenced);
-                        if (fvReferenced != null) {
-                            m_defaultLabelEditor.setText(fvReferenced.getValueAsString());
-                        }
-                    }
-                }
-                break;
-            case StringInterpolation:
-                m_flowVarOrColumn.setEnabled(false);
-                m_defaultLabelEditor.setEditable(editable);
-                break;
-        }
-    }
-
-    /**
-     * @return The computed {@link OutcomeKind} (based on the rules and the default value).
-     */
-    private OutcomeKind currentOutcomeType() {
-        final ButtonModel selection = m_defaultLabelTypeGroup.getSelection();
-        Rule.OutcomeKind type = null;
-        for (Entry<Rule.OutcomeKind, JRadioButton> entry : m_outcomeControls.entrySet()) {
-            if (entry.getValue().getModel() == selection) {
-                type = entry.getKey();
-                break;
-            }
-        }
-        return type;
     }
 
     /**
@@ -676,7 +382,7 @@ abstract class RulePanel extends JPanel {
      * @throws ParseException If we stop processing on errors this is the cause.
      */
     protected List<Rule> computeRules(final boolean includingComments, final boolean continueOnError)
-            throws ParseException {
+        throws ParseException {
         List<Rule> ret = new ArrayList<Rule>();
         String text = m_mainPanel.getExpression();
         final Map<String, FlowVariable> availableFlowVariables = m_flowVariables;
@@ -701,9 +407,8 @@ abstract class RulePanel extends JPanel {
                     ret.add(null);
                 } else {
                     ParseException error =
-                            new ParseException(
-                                    "line " + lineNo + ", col " + e.getErrorOffset() + ": " + e.getMessage(),
-                                    e.getErrorOffset());
+                        new ParseException("line " + lineNo + ", col " + e.getErrorOffset() + ": " + e.getMessage(),
+                            e.getErrorOffset());
                     error.setStackTrace(e.getStackTrace());
                     throw error;
                 }
@@ -766,39 +471,8 @@ abstract class RulePanel extends JPanel {
     public void saveSettings(final NodeSettingsWO settings) throws InvalidSettingsException {
         RuleEngineSettings ruleSettings = new RuleEngineSettings();
         if (m_hasOutputColumn) {
-            OutcomeKind selectedOutcome = currentOutcomeType();
-            if (selectedOutcome == null) {
-                throw new InvalidSettingsException("The default value type is not selected");
-            }
-            switch (selectedOutcome) {
-                case PlainText:
-                    ruleSettings.setDefaultLabel(m_defaultLabelEditor.getText());
-                    break;
-                case Column:
-                    if (m_flowVarOrColumn.getSelectedItem() == null) {
-                        throw new InvalidSettingsException("No column selected");
-                    }
-                    ruleSettings.setDefaultLabel("$" + ((DataColumnSpec)m_flowVarOrColumn.getSelectedItem()).getName()
-                            + "$");
-                    break;
-                case FlowVariable:
-                    if (!(m_flowVarOrColumn.getSelectedItem() instanceof FlowVariable)) {
-                        throw new InvalidSettingsException("No flow variable selected");
-                    }
-                    final FlowVariable fv = (FlowVariable)m_flowVarOrColumn.getSelectedItem();
-                    ruleSettings.setDefaultLabel(Util.escapeFlowVariableName(fv));
-                    break;
-                case StringInterpolation:
-                    ruleSettings.setDefaultLabel(m_defaultLabelEditor.getText());
-                    throw new InvalidSettingsException("String interpolation is not supported yet.");
-                default:
-                    throw new InvalidSettingsException("Not supported outcome type: " + selectedOutcome);
-            }
-            ruleSettings.setDefaultOutputType(selectedOutcome);
             ruleSettings.setNewcolName(m_newColumnName.getText());
         } else {
-            ruleSettings.setDefaultLabel("");
-            ruleSettings.setDefaultOutputType(Rule.OutcomeKind.PlainText);
             ruleSettings.setNewcolName("");
         }
         try {
@@ -807,14 +481,16 @@ abstract class RulePanel extends JPanel {
             throw new InvalidSettingsException(e.getMessage(), e);
         }
         for (String r : m_mainPanel.getExpression().split("\n", -1)) {
-            ruleSettings.addRule(r);
+            if (!r.trim().isEmpty()) {
+                ruleSettings.addRule(r);
+            }
         }
         ruleSettings.saveSettings(settings);
         if (!m_hasOutputColumn) {
             final SettingsModelBoolean settingsModelBoolean =
-                    new SettingsModelBoolean(RuleEngineFilterNodeModel.CFGKEY_INCLUDE_ON_MATCH,
-                            RuleEngineFilterNodeModel.DEFAULT_INCLUDE_ON_MATCH);
-            settingsModelBoolean.setBooleanValue(m_inclusionButtonGroup.getSelection() != m_excludeButton.getModel());
+                new SettingsModelBoolean(RuleEngineFilterNodeModel.CFGKEY_INCLUDE_ON_MATCH,
+                    RuleEngineFilterNodeModel.DEFAULT_INCLUDE_ON_MATCH);
+            settingsModelBoolean.setBooleanValue(m_inclusionBox.isSelected());
             settingsModelBoolean.saveSettingsTo(settings);
         }
     }
@@ -828,8 +504,7 @@ abstract class RulePanel extends JPanel {
      * @throws NotConfigurableException The information in the {@code settings} model is invalid.
      */
     protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs,
-                                    final Map<String, FlowVariable> availableFlowVariables)
-            throws NotConfigurableException {
+        final Map<String, FlowVariable> availableFlowVariables) throws NotConfigurableException {
         if (specs == null || specs.length == 0 || specs[0] == null /*|| specs[0].getNumColumns() == 0*/) {
             throw new NotConfigurableException("No columns available!");
         }
@@ -840,56 +515,7 @@ abstract class RulePanel extends JPanel {
         update(m_spec, availableFlowVariables);
         RuleEngineSettings ruleSettings = new RuleEngineSettings();
         ruleSettings.loadSettingsForDialog(settings);
-        String defaultLabel = ruleSettings.getDefaultLabel();
         if (m_hasOutputColumn) {
-            final Rule.OutcomeKind defaultOutputType = ruleSettings.getDefaultOutputType();
-            final ButtonModel model = m_outcomeControls.get(defaultOutputType).getModel();
-            if (model != null) {
-                m_defaultLabelTypeGroup.setSelected(model, true);
-            }
-            if (defaultOutputType == null) {
-                throw new NotConfigurableException("No output type is selected for default outcome.");
-            }
-            switch (defaultOutputType) {
-                case PlainText:
-                    m_defaultLabelEditor.setText(defaultLabel);
-                    break;
-                case Column: {
-                    boolean found = false;
-                    final String colName;
-                    if (defaultLabel.length() < 3 || defaultLabel.charAt(0) != '$' || !defaultLabel.endsWith("$")) {
-                        colName = "";
-                    } else {
-                        colName = defaultLabel.substring(1, defaultLabel.length() - 1);
-                    }
-                    for (DataColumnSpec col : m_spec) {
-                        if (col.getName().equals(colName)) {
-                            m_flowVarOrColumn.setSelectedItem(col);
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        m_flowVarOrColumn.setSelectedItem(null);
-                    }
-                }
-                    break;
-                case FlowVariable: {
-                    final String flowVarName;
-                    if (defaultLabel.length() < 8 || !defaultLabel.startsWith("$${") || !defaultLabel.endsWith("}$$")) {
-                        flowVarName = "";
-                    } else {
-                        flowVarName = defaultLabel.substring(4, defaultLabel.length() - 3);
-                    }
-                    m_flowVarOrColumn.setSelectedItem(availableFlowVariables.get(flowVarName));
-                }
-                    break;
-                case StringInterpolation:
-                    m_defaultLabelEditor.setText(defaultLabel);
-                    throw new UnsupportedOperationException("String interpolation is not supported yet.");
-                default:
-                    throw new UnsupportedOperationException("Not supported default outcome type: " + defaultOutputType);
-            }
             String newColName = ruleSettings.getNewColName();
             m_newColumnName.setText(newColName);
         }
@@ -913,23 +539,29 @@ abstract class RulePanel extends JPanel {
             }
         }
         if (!ruleSettings.rules().iterator().hasNext()) {
-            final String noText = RuleSupport.toComment(RuleEngineNodeDialog.RULE_LABEL);
+            final String defaultText;
+            if (!m_hasOutputColumn) {
+                defaultText = RuleEngineNodeDialog.FILTER_RULE_LABEL;
+            } else if (m_showColumns) {
+                defaultText = RuleEngineNodeDialog.RULE_LABEL;
+            } else {
+                defaultText = RuleEngineVariableNodeDialog.RULE_LABEL;
+            }
+            final String noText = RuleSupport.toComment(defaultText);
             textEditor.setText(noText);
             text.append(noText);
         }
         if (!m_hasOutputColumn) {
             try {
                 final SettingsModelBoolean includeOnMatch =
-                        new SettingsModelBoolean(RuleEngineFilterNodeModel.CFGKEY_INCLUDE_ON_MATCH,
-                                RuleEngineFilterNodeModel.DEFAULT_INCLUDE_ON_MATCH);
+                    new SettingsModelBoolean(RuleEngineFilterNodeModel.CFGKEY_INCLUDE_ON_MATCH,
+                        RuleEngineFilterNodeModel.DEFAULT_INCLUDE_ON_MATCH);
                 includeOnMatch.loadSettingsFrom(settings);
-                m_inclusionButtonGroup.setSelected(includeOnMatch.getBooleanValue() ? m_includeButton.getModel()
-                        : m_excludeButton.getModel(), true);
+                m_inclusionBox.setSelected(includeOnMatch.getBooleanValue());
             } catch (InvalidSettingsException e) {
-                m_inclusionButtonGroup.clearSelection();
+                m_inclusionBox.setSelected(true);
             }
         }
-        //       m_lastUsedTextComponent = null;
         updateText(text.toString());
     }
 
@@ -938,5 +570,8 @@ abstract class RulePanel extends JPanel {
      *
      * @return The {@link FlowVariableModel}.
      */
-    protected abstract FlowVariableModel createFlowVariableModel();
+    @Deprecated
+    protected FlowVariableModel createFlowVariableModel() {
+        throw new IllegalStateException("Deprecated");
+    }
 }

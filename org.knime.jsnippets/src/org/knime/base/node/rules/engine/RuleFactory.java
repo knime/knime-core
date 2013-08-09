@@ -62,19 +62,19 @@ import org.knime.core.node.workflow.FlowVariable;
  * @since 2.8
  */
 public final class RuleFactory {
-    private static final RuleFactory INSTANCE = new RuleFactory(false, true);
+    private static final RuleFactory INSTANCE = new RuleFactory(null, true);
 
     private static final RuleFactory FILTER_INSTANCE = new RuleFactory(true, true);
 
     private static final RuleFactory VARIABLE_INSTANCE = new RuleFactory(false, false);
 
-    private final boolean m_allowNoOutcome;
+    private final Boolean m_booleanOutcome;
 
     private final boolean m_allowTableReference;
 
-    private RuleFactory(final boolean allowNoOutcome, final boolean allowTableReference) {
+    private RuleFactory(final Boolean booleanOutcome, final boolean allowTableReference) {
         super();
-        this.m_allowNoOutcome = allowNoOutcome;
+        this.m_booleanOutcome = booleanOutcome;
         this.m_allowTableReference = allowTableReference;
     }
 
@@ -108,7 +108,7 @@ public final class RuleFactory {
      */
     public Rule parse(final String rule, final DataTableSpec spec, final Map<String, FlowVariable> flowVariables)
             throws ParseException {
-        return new SimpleRuleParser(spec, flowVariables, m_allowTableReference).parse(rule, m_allowNoOutcome);
+        return new SimpleRuleParser(spec, flowVariables, m_allowTableReference).parse(rule, m_booleanOutcome);
     }
 
     /**
