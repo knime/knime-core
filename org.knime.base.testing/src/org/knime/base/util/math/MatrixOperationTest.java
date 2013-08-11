@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 28, 2006 (wiswedel): created
  */
@@ -28,21 +28,23 @@ import java.util.Random;
 
 import junit.framework.TestCase;
 
+import org.knime.core.node.NodeLogger;
+
 /** Test case for utility class MatrixOperation. */
 public class MatrixOperationTest extends TestCase {
-    
+
     /**
      * Test method for 'MatrixOperation.hypotenuse(double, double)'.
      */
-    public void testHypotenuse() {                
+    public void testHypotenuse() {
         assertEquals(MathUtils.hypotenuse(2,1),Math.sqrt(5));
         assertEquals(MathUtils.hypotenuse(1,2),Math.sqrt(5));
         assertEquals(MathUtils.hypotenuse(-2,1),Math.sqrt(5));
         assertEquals(MathUtils.hypotenuse(-2,-1),Math.sqrt(5));
-        assertEquals(MathUtils.hypotenuse(0,2),2.0);        
+        assertEquals(MathUtils.hypotenuse(0,2),2.0);
         assertEquals(MathUtils.hypotenuse(2,0),2.0);
     }
-    
+
     /**
      * Test method for 'MatrixOperation.multiply(double[][], double[][])'.
      */
@@ -71,7 +73,7 @@ public class MatrixOperationTest extends TestCase {
         } catch (IllegalArgumentException ae) {
             // nothing
         }
-    }    
+    }
 
     /**
      * Test method for 'MathUtils.add(double[][], double[][])'.
@@ -101,7 +103,7 @@ public class MatrixOperationTest extends TestCase {
                 assertEquals(expected[r][c], result[r][c]);
             }
         }
-    }        
+    }
 
     /**
      * Test method for 'MathUtils.subtract(double[][], double[][])'.
@@ -131,8 +133,8 @@ public class MatrixOperationTest extends TestCase {
                 assertEquals(expected[r][c], result[r][c]);
             }
         }
-    }    
-    
+    }
+
     /**
      * Test method for 'MatrixOperation.multiply(double[][], double[])'.
      */
@@ -151,14 +153,14 @@ public class MatrixOperationTest extends TestCase {
         } catch (IllegalArgumentException ae) {
             // nothing
         }
-    }        
-    
+    }
+
     /**
      * Test method for 'MathUtils.subtract(double[], double[])'.
      */
     public void testSubtractVectors() {
         double[] vectorA = new double[]{-1.5, 5, 3};
-        double[] vectorB = new double[]{-4, 2, 7.3};        
+        double[] vectorB = new double[]{-4, 2, 7.3};
         double[] expected = {2.5, 3, -4.3};
         double[] result;
         try {
@@ -167,34 +169,35 @@ public class MatrixOperationTest extends TestCase {
         } catch (IllegalArgumentException e) {
             // OK
         }
-    
+
         result = MathUtils.subtract(vectorA, vectorB);
         assertEquals(expected.length, result.length);
-        for (int d = 0; d < result.length; d++)
+        for (int d = 0; d < result.length; d++) {
             assertEquals(expected[d], result[d]);
+        }
     }
-    
+
     /**
      * Test method for 'MathUtils.dotProduct(double[], double[])'.
      */
     public void testDotProduct() {
         double[] vectorA = new double[]{-1.5, 5, 3};
-        double[] vectorB = new double[]{-4, 2, 7.3};        
+        double[] vectorB = new double[]{-4, 2, 7.3};
         assertEquals(37.9, MathUtils.dotProduct(vectorA, vectorB));
         try {
             MathUtils.dotProduct(vectorA, new double[]{-4, 2});
             fail("Vectors of different lengths accepted.");
         } catch (IllegalArgumentException e) {
             // OK
-        }        
+        }
     }
 
     /**
      * Test method for 'MathUtils.multiplyLeftWithTranspose(double[][], double[])'.
      */
     public void testMultiplyLeftWithTranspose() {
-        
-        double[][] matrix = new double[][]{new double[]{3, 4}, 
+
+        double[][] matrix = new double[][]{new double[]{3, 4},
             new double[]{6, 8},
             new double[]{4, 1}};
         double[][] expected = new double[][]{
@@ -205,9 +208,9 @@ public class MatrixOperationTest extends TestCase {
         assertEquals(expected[0][1], result[0][1]);
         assertEquals(expected[1][0], result[1][0]);
         assertEquals(expected[1][1], result[1][1]);
-        
 
-        matrix = new double[][]{new double[]{3, 6, 4}, 
+
+        matrix = new double[][]{new double[]{3, 6, 4},
                                 new double[]{4, 8, 1}};
         expected = new double[][]{
             new double[]{25, 50,  16},
@@ -225,13 +228,13 @@ public class MatrixOperationTest extends TestCase {
         assertEquals(expected[2][1], result[2][1]);
         assertEquals(expected[2][2], result[2][2]);
     }
-    
+
     /**
      * Test method for 'MatrixOperation.transpose(double[][])'.
      */
     public void testTranspose() {
-        
-        double[][] matrix = new double[][]{new double[]{3, 4}, 
+
+        double[][] matrix = new double[][]{new double[]{3, 4},
                                            new double[]{6, 8},
                                            new double[]{4, 1}};
         double[][] expected = new double[][]{
@@ -243,11 +246,11 @@ public class MatrixOperationTest extends TestCase {
         assertEquals(expected[0][0], result[0][0]);
         assertEquals(expected[0][1], result[0][1]);
         assertEquals(expected[0][2], result[0][2]);
-        assertEquals(expected[1][0], result[1][0]);        
+        assertEquals(expected[1][0], result[1][0]);
         assertEquals(expected[1][1], result[1][1]);
-        assertEquals(expected[1][2], result[1][2]);        
+        assertEquals(expected[1][2], result[1][2]);
     }
-    
+
     /**
      * Test method for 'MatrixOperation.inverse(double[][])'.
      */
@@ -255,7 +258,7 @@ public class MatrixOperationTest extends TestCase {
         double[][] d;
         double[][] inverse;
         long seed = System.currentTimeMillis();
-        System.out.println("Testing with random seed: " + seed);
+        NodeLogger.getLogger(getClass()).info("Testing with random seed: " + seed);
         Random rand = new Random(seed);
         for (int k = 0; k < 20; k++) {
             // draw size of matrix in [1, 100]
@@ -266,7 +269,7 @@ public class MatrixOperationTest extends TestCase {
                     d[i][j] = -0.5 + 2 * rand.nextDouble();
                 }
             }
-    
+
             inverse = MathUtils.inverse(d);
             double[][] unity = MathUtils.multiply(inverse, d);
             double error = compareToUnitMatrix(unity);
@@ -275,7 +278,7 @@ public class MatrixOperationTest extends TestCase {
             }
         }
         // linear dependency should not allow a solution
-        d = new double[][]{new double[]{3, 4, 2}, new double[]{6, 8, 4}, 
+        d = new double[][]{new double[]{3, 4, 2}, new double[]{6, 8, 4},
                 // multiple of first row
                 new double[]{4, 1, 5}};
         try {
@@ -292,10 +295,10 @@ public class MatrixOperationTest extends TestCase {
         } catch (ArithmeticException ae) {
             // nothing to do here
         }
-    
-    
+
+
         // non-invertible matrix (determinant is 0)
-        d = new double[][]{new double[]{1, 2, 3}, new double[]{4, 5, 6}, 
+        d = new double[][]{new double[]{1, 2, 3}, new double[]{4, 5, 6},
                 new double[]{7, 8, 9}};
         try {
             inverse = MathUtils.inverse(d);
@@ -309,55 +312,55 @@ public class MatrixOperationTest extends TestCase {
      * Test method for 'MatrixOperation.normalizeMatrix(double[][])'.
      */
     public void testNormalizeMatrix() {
-        double[][] matrix = new double[][]{new double[]{2, 4}, 
+        double[][] matrix = new double[][]{new double[]{2, 4},
             new double[]{6, 7},
             new double[]{4, 4}};
         double [][] result = MathUtils.normalizeMatrix(matrix);
-        assertEquals(matrix.length, result.length);        
-        assertEquals(matrix[0].length, result[0].length);        
-        assertEquals(matrix[1].length, result[1].length);        
-        assertEquals(matrix[2].length, result[2].length);        
-        
+        assertEquals(matrix.length, result.length);
+        assertEquals(matrix[0].length, result[0].length);
+        assertEquals(matrix[1].length, result[1].length);
+        assertEquals(matrix[2].length, result[2].length);
+
         double[] mean = new double[]{4, 5};
         double[] sd = new double[]{2, Math.sqrt(3)};
         for(int r = 0; r < matrix.length; r++) {
             for(int c = 0; c < matrix[0].length; c++) {
-                assertEquals((matrix[r][c] - mean[c]) / sd[c], result[r][c]); 
+                assertEquals((matrix[r][c] - mean[c]) / sd[c], result[r][c]);
             }
-        }        
+        }
     }
-    
+
     /**
      * Test method for 'MatrixOperation.normalizeMatrix(double[][], double[])'.
      */
     public void testNormalizeMatrixWithMean() {
-        double[][] matrix = new double[][]{new double[]{2, 4}, 
+        double[][] matrix = new double[][]{new double[]{2, 4},
             new double[]{6, 7},
             new double[]{4, 4}};
         double[] mean = new double[]{-1, 2};
         double [][] result = MathUtils.normalizeMatrix(matrix, mean);
-        assertEquals(matrix.length, result.length);        
-        assertEquals(matrix[0].length, result[0].length);        
-        assertEquals(matrix[1].length, result[1].length);        
-        assertEquals(matrix[2].length, result[2].length);        
-        
+        assertEquals(matrix.length, result.length);
+        assertEquals(matrix[0].length, result[0].length);
+        assertEquals(matrix[1].length, result[1].length);
+        assertEquals(matrix[2].length, result[2].length);
+
         for(int r = 0; r < matrix.length; r++) {
             for(int c = 0; c < matrix[0].length; c++) {
-                assertEquals((matrix[r][c] - mean[c]), result[r][c]); 
+                assertEquals((matrix[r][c] - mean[c]), result[r][c]);
             }
-        }        
+        }
     }
-    
+
     /**
      * Test method for 'MatrixOperation.normalizeMatrix(double[][], double[], double[])'.
      */
     public void testNormalizeMatrixWithMeanAndSD() {
-        double[][] matrix = new double[][]{new double[]{2, 4}, 
+        double[][] matrix = new double[][]{new double[]{2, 4},
             new double[]{6, 7},
             new double[]{4, 4}};
         double[] mean = new double[]{-1, 2};
         double[] sd = new double[]{3, -1};
-        
+
         double[][] result = new double[3][2];
         try {
             result = MathUtils.normalizeMatrix(matrix, sd, mean);
@@ -365,7 +368,7 @@ public class MatrixOperationTest extends TestCase {
         } catch (IllegalArgumentException e) {
             //OK
         }
-        
+
         sd = new double[]{3, 0};
         try {
             result = MathUtils.normalizeMatrix(matrix, sd, mean);
@@ -373,93 +376,93 @@ public class MatrixOperationTest extends TestCase {
         } catch (IllegalArgumentException e) {
             //OK
         }
-        
+
         sd = new double[]{3, 2};
         result = MathUtils.normalizeMatrix(matrix, sd, mean);
-        assertEquals(matrix.length, result.length);        
-        assertEquals(matrix[0].length, result[0].length);        
-        assertEquals(matrix[1].length, result[1].length);        
-        assertEquals(matrix[2].length, result[2].length);        
-        
+        assertEquals(matrix.length, result.length);
+        assertEquals(matrix[0].length, result[0].length);
+        assertEquals(matrix[1].length, result[1].length);
+        assertEquals(matrix[2].length, result[2].length);
+
         for(int r = 0; r < matrix.length; r++) {
             for(int c = 0; c < matrix[0].length; c++) {
-                assertEquals((matrix[r][c] - mean[c]) / sd[c], result[r][c]); 
+                assertEquals((matrix[r][c] - mean[c]) / sd[c], result[r][c]);
             }
-        }        
+        }
     }
 
     /**
      * Test method for 'MatrixOperation.denormalizeVector(double[], double, double)'.
      */
     public void testDenormalizeVectorWithMeanAndSD() {
-        double[] vector = new double[]{2, 4, 6};        
+        double[] vector = new double[]{2, 4, 6};
         double mean = 4.0;
         double sd = 2;
         double [] result = MathUtils.denormalizeVector(vector, sd, mean);
-        assertEquals(vector.length, result.length);        
-        
+        assertEquals(vector.length, result.length);
+
         for(int r = 0; r < vector.length; r++) {
-            assertEquals((vector[r] * sd) + mean, result[r]); 
-        }        
+            assertEquals((vector[r] * sd) + mean, result[r]);
+        }
     }
 
     /**
      * Test method for 'MatrixOperation.denormalizeVector(double[], double)'.
      */
     public void testDenormalizeVectorWithMean() {
-        double[] vector = new double[]{2, 4, 6};        
+        double[] vector = new double[]{2, 4, 6};
         double mean = -4.0;
         double [] result = MathUtils.denormalizeVector(vector, mean);
-        assertEquals(vector.length, result.length);        
-        
+        assertEquals(vector.length, result.length);
+
         for(int r = 0; r < vector.length; r++) {
-            assertEquals(vector[r] + mean, result[r]); 
-        }        
+            assertEquals(vector[r] + mean, result[r]);
+        }
     }
 
     /**
      * Test method for 'MatrixOperation.denormalizeMatrix(double[][], double[], double[])'.
      */
     public void testDenormalizeMatrix() {
-        double[][] matrix = new double[][]{new double[]{2, 4}, 
+        double[][] matrix = new double[][]{new double[]{2, 4},
             new double[]{6, 7},
             new double[]{4, 4}};
         double[] mean = new double[]{4, 5};
         double[] sd = new double[]{2, Math.sqrt(3)};
         double [][] result = MathUtils.denormalizeMatrix(matrix, sd, mean);
-        assertEquals(matrix.length, result.length);        
-        assertEquals(matrix[0].length, result[0].length);        
-        assertEquals(matrix[1].length, result[1].length);        
-        assertEquals(matrix[2].length, result[2].length);        
-        
+        assertEquals(matrix.length, result.length);
+        assertEquals(matrix[0].length, result[0].length);
+        assertEquals(matrix[1].length, result[1].length);
+        assertEquals(matrix[2].length, result[2].length);
+
         for(int r = 0; r < matrix.length; r++) {
             for(int c = 0; c < matrix[0].length; c++) {
-                assertEquals((matrix[r][c] * sd[c]) + mean[c], result[r][c]); 
+                assertEquals((matrix[r][c] * sd[c]) + mean[c], result[r][c]);
             }
-        }        
+        }
     }
 
     /**
      * Test method for 'MatrixOperation.denormalizeMatrix(double[][], double[])'.
      */
     public void testDenormalizeMatrixWithMean() {
-        double[][] matrix = new double[][]{new double[]{2, 4}, 
+        double[][] matrix = new double[][]{new double[]{2, 4},
             new double[]{6, 7},
             new double[]{4, 4}};
         double[] mean = new double[]{-2.4, 0};
         double [][] result = MathUtils.denormalizeMatrix(matrix, mean);
-        assertEquals(matrix.length, result.length);        
-        assertEquals(matrix[0].length, result[0].length);        
-        assertEquals(matrix[1].length, result[1].length);        
-        assertEquals(matrix[2].length, result[2].length);        
-        
+        assertEquals(matrix.length, result.length);
+        assertEquals(matrix[0].length, result[0].length);
+        assertEquals(matrix[1].length, result[1].length);
+        assertEquals(matrix[2].length, result[2].length);
+
         for(int r = 0; r < matrix.length; r++) {
             for(int c = 0; c < matrix[0].length; c++) {
-                assertEquals(matrix[r][c] + mean[c], result[r][c]); 
+                assertEquals(matrix[r][c] + mean[c], result[r][c]);
             }
-        }        
+        }
     }
-    
+
     /**
      * Test method for 'MathUtils.addArrays(double[], double[])'.
      */
@@ -492,8 +495,8 @@ public class MatrixOperationTest extends TestCase {
                 assertEquals(expected[r][c], matrixA[r][c]);
             }
         }
-    }        
-    
+    }
+
     private double compareToUnitMatrix(final double[][] matrix) {
         int size = matrix.length;
         double maxDiff = 0.0;

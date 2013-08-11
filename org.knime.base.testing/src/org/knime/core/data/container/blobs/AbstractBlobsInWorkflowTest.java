@@ -32,6 +32,7 @@ import org.knime.base.node.util.cache.CacheNodeFactory;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
@@ -145,7 +146,7 @@ public abstract class AbstractBlobsInWorkflowTest extends TestCase {
             + roughlyExpectedSizeInMB + "MB, actual " + sizeInMB + "MB";
         assertTrue(error, size > 0.8 * roughlyExpectedSize);
         assertTrue(error, size < 1.2 * roughlyExpectedSize);
-        System.out.println("Test succeeds: expected size (in MB) is " + sizeInMB
+        NodeLogger.getLogger(getClass()).info("Test succeeds: expected size (in MB) is " + sizeInMB
                 + ", expected " + roughlyExpectedSizeInMB + " -- which is ok");
     }
 

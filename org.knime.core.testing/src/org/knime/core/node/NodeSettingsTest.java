@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.core.node;
 
@@ -44,7 +44,7 @@ import org.knime.core.data.def.StringCell;
 
 /**
  * Test the <code>Config</code> class.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class NodeSettingsTest extends TestCase {
@@ -55,14 +55,14 @@ public final class NodeSettingsTest extends TestCase {
      * {@inheritDoc}
      */
     @Override
-    public void tearDown() {
+    public void tearDown() throws Exception {
         StringBuffer buf = new StringBuffer();
         SETT.toString(buf);
-        System.out.println(buf.toString());
+        NodeLogger.getLogger(getClass()).debug(buf.toString());
         testFile();
         testXML();
     }
-    
+
 //    /**
 //     * Tests special chars.
 //     * @throws Exception
@@ -98,7 +98,7 @@ public final class NodeSettingsTest extends TestCase {
 
     /**
      * Test write/read of ints.
-     * 
+     *
      * @throws Exception Should not happen.
      */
     public void testInt() throws Exception {
@@ -133,7 +133,7 @@ public final class NodeSettingsTest extends TestCase {
 
     /**
      * Test write/read of doubles.
-     * 
+     *
      * @throws Exception Should not happen.
      */
 
@@ -166,10 +166,10 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(SETT.containsKey(key));
         assertTrue(SETT.getDoubleArray(key) == null);
     }
-    
+
     /**
      * Test write/read of floats.
-     * 
+     *
      * @throws Exception Should not happen.
      */
     public void testFloat() throws Exception {
@@ -204,7 +204,7 @@ public final class NodeSettingsTest extends TestCase {
 
     /**
      * Test write/read of ints.
-     * 
+     *
      * @throws Exception Should not happen.
      */
     public void testBoolean() throws Exception {
@@ -239,7 +239,7 @@ public final class NodeSettingsTest extends TestCase {
 
     /**
      * Test write/read of chars.
-     * 
+     *
      * @throws Exception Should not happen.
      */
     public void testChar() throws Exception {
@@ -274,7 +274,7 @@ public final class NodeSettingsTest extends TestCase {
 
     /**
      * Test write/read of shorts.
-     * 
+     *
      * @throws Exception Should not happen.
      */
     public void testShort() throws Exception {
@@ -306,10 +306,10 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(SETT.containsKey(key));
         assertTrue(SETT.getShortArray(key) == null);
     }
-    
+
     /**
      * Test write/read of longs.
-     * 
+     *
      * @throws Exception Should not happen.
      */
     public void testLong() throws Exception {
@@ -344,7 +344,7 @@ public final class NodeSettingsTest extends TestCase {
 
     /**
      * Test write/read of bytes.
-     * 
+     *
      * @throws Exception Should not happen.
      */
     public void testByte() throws Exception {
@@ -379,7 +379,7 @@ public final class NodeSettingsTest extends TestCase {
 
     /**
      * Test write/read of StringCells.
-     * 
+     *
      * @throws Exception Should not happen.
      */
     public void testStringDataCell() throws Exception {
@@ -428,10 +428,10 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(SETT.containsKey(key));
         assertTrue(unknownCell.equals(SETT.getDataCell(key)));
     }
-    
+
     /**
      * Test write/read of DataCells.
-     * 
+     *
      * @throws Exception Should not happen.
      */
     public void testDataCell() throws Exception {
@@ -468,7 +468,7 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(SETT.containsKey("unknownCell"));
         assertTrue(SETT.getDataCell("unknownCell").equals(unknownCell));
     }
-    
+
     private static class UnknownCell extends DataCell {
         @Override
         protected boolean equalsDataCell(final DataCell dc) {
@@ -483,11 +483,11 @@ public final class NodeSettingsTest extends TestCase {
             return "unknown";
         }
     };
-    
-    
+
+
     /**
      * Test write/read of DataType elements.
-     * 
+     *
      * @throws Exception Should not happen.
      */
     public void testDataType() throws Exception {
@@ -537,7 +537,7 @@ public final class NodeSettingsTest extends TestCase {
 
     /**
      * Test write/read of Strings.
-     * 
+     *
      * @throws Exception Should not happen.
      */
     public void testString() throws Exception {
@@ -581,7 +581,7 @@ public final class NodeSettingsTest extends TestCase {
 
     /**
      * Test write/read of NodeSettings.
-     * 
+     *
      * @throws Exception Should not happen.
      */
     public void testConfig() throws Exception {
@@ -599,7 +599,7 @@ public final class NodeSettingsTest extends TestCase {
         c.containsKey("kString_plus");
         assertTrue(c.getString("kString_plus", "-1").equals("6"));
     }
-    
+
     /**
      * Tests <code>getKeySet()</code> and <code>getKeySet(String)</code>.
      */
@@ -628,7 +628,7 @@ public final class NodeSettingsTest extends TestCase {
 
     /**
      * Test \n, \r, and \t.
-     * 
+     *
      * @throws Exception Should not happen.
      */
     public void testSpecialStrings() throws Exception {
@@ -659,15 +659,15 @@ public final class NodeSettingsTest extends TestCase {
         assertTrue(key.getString("NULL").equals("null"));
         assertTrue(key.getString("LENGTH1").equals(" "));
     }
-    
+
     /**
      * Test a 3x2x3 int array.
      * @throws InvalidSettingsException If a value could not be read.
      */
-    public void testInt3DMatrix() throws InvalidSettingsException { 
+    public void testInt3DMatrix() throws InvalidSettingsException {
         NodeSettings config = (NodeSettings) SETT.addNodeSettings("matrix");
         // write int matrix
-        int[][][] array = new int[][][]{{{1, 2, 4}, {5, 2, 6}, {7, 1, 9}}, 
+        int[][][] array = new int[][][]{{{1, 2, 4}, {5, 2, 6}, {7, 1, 9}},
                 {{7, 6, 4}, {8, 2, 9}, {0, 1, 2}}};
         for (int r = 0; r < array.length; r++) {
             for (int i = 0; i < array[r].length; i++) {
@@ -706,51 +706,38 @@ public final class NodeSettingsTest extends TestCase {
 
     /**
      * Test serialize/deserialize.
+     * @throws IOException
      */
-    public void testFile() {
-        try {
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(os);
-            // write this NodeSettings
-            SETT.writeToFile(oos);
-            // and read the NodeSettings again
-            byte[] bytes = os.toByteArray();
-            ByteArrayInputStream is = new ByteArrayInputStream(bytes);
-            ObjectInputStream ois = new ObjectInputStream(is);
-            NodeSettings settings = NodeSettings.readFromFile(ois);
-            assertTrue(settings.isIdentical(SETT));
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-            fail();
-        }
+    public void testFile() throws IOException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(os);
+        // write this NodeSettings
+        SETT.writeToFile(oos);
+        // and read the NodeSettings again
+        byte[] bytes = os.toByteArray();
+        ByteArrayInputStream is = new ByteArrayInputStream(bytes);
+        ObjectInputStream ois = new ObjectInputStream(is);
+        NodeSettings settings = NodeSettings.readFromFile(ois);
+        assertTrue(settings.isIdentical(SETT));
     }
 
     /**
      * Test XML read/write.
+     * @throws IOException
      */
-    public void testXML() {
+    public void testXML() throws IOException {
         // store to XML
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        try {
-            SETT.saveToXML(os);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        }
+        SETT.saveToXML(os);
         // read from XML
-        try {
-            InputStream is = new ByteArrayInputStream(os.toByteArray());
-            NodeSettingsRO settings = NodeSettings.loadFromXML(is);
-            assertTrue(settings.equals(SETT));
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-            fail();
-        }
+        InputStream is = new ByteArrayInputStream(os.toByteArray());
+        NodeSettingsRO settings = NodeSettings.loadFromXML(is);
+        assertTrue(settings.equals(SETT));
     }
 
     /**
      * System entry point.
-     * 
+     *
      * @param args The command line arguments.
      */
     public static void main(final String[] args) {

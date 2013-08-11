@@ -1,9 +1,9 @@
 /**
- * 
+ *
  */
 package org.knime.base.data.statistics;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -27,6 +27,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.SingleNodeContainer;
 
 /**
@@ -78,18 +79,22 @@ public class MedianTableTest {
         } finally {
             container.close();
         }
+
         smallTable = container.getTable();
+        NodeLogger.getLogger(getClass()).debug("Contents of test table:");
         for (DataRow row : smallTable) {
+
+            StringBuilder buf = new StringBuilder();
             for (DataCell dataCell : row) {
-                System.out.print(dataCell + "\t");
+                buf.append(dataCell + "\t");
             }
-            System.out.println();
+            NodeLogger.getLogger(getClass()).debug(buf.toString());
         }
     }
 
     /**
      * Test method for {@link org.knime.base.data.statistics.MedianTable#medianValues(org.knime.core.node.ExecutionContext)}.
-     * @throws CanceledExecutionException 
+     * @throws CanceledExecutionException
      */
     @Test
     public void testMedianValues() throws CanceledExecutionException {

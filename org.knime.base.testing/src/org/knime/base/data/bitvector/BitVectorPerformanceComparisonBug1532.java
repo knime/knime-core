@@ -33,6 +33,7 @@ import java.util.Random;
 import org.junit.Test;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
+import org.knime.core.node.NodeLogger;
 
 /**
  *
@@ -48,15 +49,17 @@ public class BitVectorPerformanceComparisonBug1532 {
         assertNotNull(DenseBitVectorCell.TYPE);
         assertNotNull(DenseBitVectorCellFactory.class);
         final long seed = System.currentTimeMillis();
-        System.out.println("Using seed " + seed);
+        NodeLogger.getLogger(BitVectorPerformanceComparisonBug1532.class).info("Using seed " + seed);
         long time = System.currentTimeMillis();
         createNewDenseBitVectorCells(size, length, seed);
         long timeForNew = System.currentTimeMillis() - time;
         time = System.currentTimeMillis();
         createOldBitVectorCells(size, length, seed);
         long timeForOld = System.currentTimeMillis() - time;
-        System.out.println("bit vector generation old: " + timeForOld);
-        System.out.println("bit vector generation new: " + timeForNew);
+        NodeLogger.getLogger(BitVectorPerformanceComparisonBug1532.class).info(
+            "bit vector generation old: " + timeForOld);
+        NodeLogger.getLogger(BitVectorPerformanceComparisonBug1532.class).info(
+            "bit vector generation new: " + timeForNew);
         assertTrue("Creation of new bit vector cells takes longer than " +
         		"generating old (java) bit vectors", timeForNew < timeForOld);
     }
@@ -69,7 +72,7 @@ public class BitVectorPerformanceComparisonBug1532 {
         // If you set the length to 2048 the test case seems to succeed
         // more often than with a random length (as below)
         int length = 1000 + new Random(seed).nextInt(2000);
-        System.out.println("Using seed " + seed);
+        NodeLogger.getLogger(BitVectorPerformanceComparisonBug1532.class).info("Using seed " + seed);
         DenseBitVectorCell[] newCells = createNewDenseBitVectorCells(
                 size, length, seed);
         BitVectorCell[] oldCells = createOldBitVectorCells(size, length, seed);
@@ -91,8 +94,10 @@ public class BitVectorPerformanceComparisonBug1532 {
             }
         }
         long timeForOld = System.currentTimeMillis() - time;
-        System.out.println("tanimoto calculation old: " + timeForOld);
-        System.out.println("tanimoto calculation new: " + timeForNew);
+        NodeLogger.getLogger(BitVectorPerformanceComparisonBug1532.class).info(
+            "tanimoto calculation old: " + timeForOld);
+        NodeLogger.getLogger(BitVectorPerformanceComparisonBug1532.class).info(
+            "tanimoto calculation new: " + timeForNew);
         assertTrue(Arrays.equals(newValues, oldValues));
     }
 
@@ -107,7 +112,7 @@ public class BitVectorPerformanceComparisonBug1532 {
         // If you set the length to 2048 the test case seems to succeed
         // more often than with a random length (as below)
         int length = 1000 + new Random(seed).nextInt(2000);
-        System.out.println("Using seed " + seed);
+        NodeLogger.getLogger(BitVectorPerformanceComparisonBug1532.class).info("Using seed " + seed);
         DenseBitVectorCell[] newCells = createNewDenseBitVectorCells(
                 size, length, seed);
         BitVectorCell[] oldCells = createOldBitVectorCells(size, length, seed);
@@ -129,8 +134,10 @@ public class BitVectorPerformanceComparisonBug1532 {
             }
         }
         long timeForOld = System.currentTimeMillis() - time;
-        System.out.println("tanimoto calculation old: " + timeForOld);
-        System.out.println("tanimoto calculation new: " + timeForNew);
+        NodeLogger.getLogger(BitVectorPerformanceComparisonBug1532.class).info(
+            "tanimoto calculation old: " + timeForOld);
+        NodeLogger.getLogger(BitVectorPerformanceComparisonBug1532.class).info(
+            "tanimoto calculation new: " + timeForNew);
         assertTrue("Tanimoto calculation of new bit vector cells takes much " +
                 "longer than calculation on old (java) bit vectors",
                 timeForNew < 1.2 * timeForOld);

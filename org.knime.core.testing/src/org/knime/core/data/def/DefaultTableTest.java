@@ -24,6 +24,8 @@ package org.knime.core.data.def;
 import java.util.Arrays;
 import java.util.Vector;
 
+import junit.framework.TestCase;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -33,12 +35,11 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
-
-import junit.framework.TestCase;
+import org.knime.core.node.NodeLogger;
 
 /**
  * JUnit test for all public methods in <code>DefaultTable</code>.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  * @see DefaultTable
  */
@@ -101,7 +102,7 @@ public class DefaultTableTest extends TestCase {
 
     /**
      * System entry point.
-     * 
+     *
      * @param args command line parameter: ignored.
      */
     public static void main(final String[] args) {
@@ -110,7 +111,7 @@ public class DefaultTableTest extends TestCase {
 
     /**
      * Tester for constructor.
-     * 
+     *
      * @see DefaultTable#DefaultTable(DataRow[], String[], DataType[])
      */
     public final void testOriginalDefaultTable() {
@@ -127,9 +128,9 @@ public class DefaultTableTest extends TestCase {
                     "bla", "42", "99.9"}, new DataType[] {
                     DoubleCell.TYPE, IntCell.TYPE,
                     DoubleCell.TYPE});
-            fail();
-        } catch (NullPointerException npe) {
-            System.out.println(npe.getMessage());
+            fail("Expected " + NullPointerException.class + " not thrown");
+        } catch (NullPointerException e) {
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass(), e);
         }
 
         // fails: column name array is null
@@ -137,18 +138,18 @@ public class DefaultTableTest extends TestCase {
             new DefaultTable(new DataRow[0], null, new DataType[] {
                     DoubleCell.TYPE, IntCell.TYPE,
                     DoubleCell.TYPE});
-            fail();
-        } catch (NullPointerException npe) {
-            System.out.println(npe.getMessage());
+            fail("Expected " + NullPointerException.class + " not thrown");
+        } catch (NullPointerException e) {
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass(), e);
         }
 
         // fails: column type array is null
         try {
             new DefaultTable(new DataRow[0], new String[] {
                     "bla", "42", "99.9"}, null);
-            fail();
-        } catch (NullPointerException npe) {
-            System.out.println(npe.getMessage());
+            fail("Expected " + NullPointerException.class + " not thrown");
+        } catch (NullPointerException e) {
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass(), e);
         }
 
         // fails: inconsistent number of column names vs. types
@@ -158,9 +159,9 @@ public class DefaultTableTest extends TestCase {
                     new String[] {"bla", "42"}, new DataType[] {
                             DoubleCell.TYPE, IntCell.TYPE,
                             DoubleCell.TYPE});
-            fail();
-        } catch (IllegalArgumentException iae) {
-            System.out.println(iae.getMessage());
+            fail("Expected " + IllegalArgumentException.class + " not thrown");
+        } catch (IllegalArgumentException e) {
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass(), e);
         }
 
         // fails: column name array has null value
@@ -170,9 +171,9 @@ public class DefaultTableTest extends TestCase {
                     new String[] {"bla", null, "99.9"}, new DataType[] {
                             DoubleCell.TYPE, IntCell.TYPE,
                             StringCell.TYPE});
-            fail();
-        } catch (NullPointerException npe) {
-            System.out.println(npe.getMessage());
+            fail("Expected " + NullPointerException.class + " not thrown");
+        } catch (NullPointerException e) {
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass(), e);
         }
 
         // fails: column name array contains redundant objects
@@ -181,9 +182,9 @@ public class DefaultTableTest extends TestCase {
                     new String[] {"bla", "42", "42"}, new DataType[] {
                             DoubleCell.TYPE, IntCell.TYPE,
                             StringCell.TYPE});
-            fail();
-        } catch (IllegalArgumentException iae) {
-            System.out.println(iae.getMessage());
+            fail("Expected " + IllegalArgumentException.class + " not thrown");
+        } catch (IllegalArgumentException e) {
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass(), e);
         }
 
         // fails: column type array has null value
@@ -193,9 +194,9 @@ public class DefaultTableTest extends TestCase {
                     new String[] {"bla", "42", "99.9"},
                     new DataType[] {null, StringCell.TYPE,
                             DoubleCell.TYPE});
-            fail();
-        } catch (NullPointerException npe) {
-            System.out.println(npe.getMessage());
+            fail("Expected " + NullPointerException.class + " not thrown");
+        } catch (NullPointerException e) {
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass(), e);
         }
 
     } // testOriginalDefaultTable()
@@ -211,11 +212,11 @@ public class DefaultTableTest extends TestCase {
         // and some constructors with problems
         /* data contains not 4 but 3 values in row 2, exception expected */
         try {
-            new DefaultTable(CASE_2_CONTENT, CASE_2_ROWHEADER, 
+            new DefaultTable(CASE_2_CONTENT, CASE_2_ROWHEADER,
                     CASE_2_COLHEADER);
-            fail();
-        } catch (IllegalArgumentException iae) {
-            System.out.println(iae.getMessage());
+            fail("Expected " + IllegalArgumentException.class + " not thrown");
+        } catch (IllegalArgumentException e) {
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass(), e);
         }
 
         /* data contains null values, missing values */
@@ -265,7 +266,7 @@ public class DefaultTableTest extends TestCase {
     /**
      * Test if the number of columns passed in the constructor is widely
      * accepted.
-     * 
+     *
      * @see DataTableSpec#getNumColumns()
      */
     public final void testGetNumColumns() {
@@ -291,7 +292,7 @@ public class DefaultTableTest extends TestCase {
     /**
      * Checker if auto-generated column names are like "Column_"+i and - if
      * passed in constructor - are accepted.
-     * 
+     *
      * @see DataTableSpec#getColumnSpec(int)
      * @see org.knime.core.data.DataColumnSpec#getName()
      */
@@ -323,21 +324,21 @@ public class DefaultTableTest extends TestCase {
      * <code>getColumnType(int)</code> is called. If constructor parameter is
      * <code>null</code> it must return <code>DataCell.class</code> for
      * every column.
-     * 
+     *
      * @see DataColumnSpec#getType()
      */
     public final void testGetColumnType() {
         DefaultTable auto = new DefaultTable(CASE_1_CONTENT, CASE_1_ROWHEADER,
                 CASE_1_COLHEADER);
         for (int c = 0; c < CASE_1_COLHEADER.length; c++) {
-            DataType t = auto.getDataTableSpec().getColumnSpec(c).getType(); 
+            DataType t = auto.getDataTableSpec().getColumnSpec(c).getType();
             assertTrue(t.isCompatible(StringValue.class));
         }
     } // testGetColumnType()
 
     /**
      * Tests the row iterator in the table.
-     * 
+     *
      * @see DefaultTable#iterator()
      */
     public final void testGetRowIterator() {
@@ -359,7 +360,7 @@ public class DefaultTableTest extends TestCase {
                 CASE_4_COLHEADER);
         DataTableSpec spec4 = case4.getDataTableSpec();
 
-        Vector<Object[]> content = 
+        Vector<Object[]> content =
             new Vector<Object[]>(); // contains Object[] (row-wise)
         for (DataRow row : case4) {
             assertTrue(row.getNumCells() == spec4.getNumColumns());
@@ -381,7 +382,7 @@ public class DefaultTableTest extends TestCase {
     /**
      * Creates from a given DataCell an object. A StringDataCell returns a
      * String, an IntDataCell an Integer, and a DoubelDataCell a Double.
-     * 
+     *
      * @param cell to get content from
      * @return cell's content
      * @throws IllegalArgumentException if cell can't be casted as one of the
