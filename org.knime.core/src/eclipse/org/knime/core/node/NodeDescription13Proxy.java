@@ -144,6 +144,10 @@ final class NodeDescription13Proxy extends NodeDescription {
      */
     @Override
     public String getInportDescription(final int index) {
+        if (m_document.getKnimeNode().getPorts() == null) {
+            return null;
+        }
+
         int maxDataIndex = 0;
         for (DataIn inPort : m_document.getKnimeNode().getPorts().getDataInList()) {
             maxDataIndex = Math.max(maxDataIndex, inPort.getIndex().intValue());
@@ -170,6 +174,10 @@ final class NodeDescription13Proxy extends NodeDescription {
      */
     @Override
     public String getInportName(final int index) {
+        if (m_document.getKnimeNode().getPorts() == null) {
+            return null;
+        }
+
         int maxDataIndex = 0;
 
         for (DataIn inPort : m_document.getKnimeNode().getPorts().getDataInList()) {
@@ -218,6 +226,10 @@ final class NodeDescription13Proxy extends NodeDescription {
      */
     @Override
     public String getOutportDescription(final int index) {
+        if (m_document.getKnimeNode().getPorts() == null) {
+            return null;
+        }
+
         int maxDataIndex = 0;
 
         for (DataOut outPort : m_document.getKnimeNode().getPorts().getDataOutList()) {
@@ -246,6 +258,10 @@ final class NodeDescription13Proxy extends NodeDescription {
      */
     @Override
     public String getOutportName(final int index) {
+        if (m_document.getKnimeNode().getPorts() == null) {
+            return null;
+        }
+
         int maxDataIndex = 0;
 
         for (DataOut outPort : m_document.getKnimeNode().getPorts().getDataOutList()) {
@@ -298,6 +314,10 @@ final class NodeDescription13Proxy extends NodeDescription {
      */
     @Override
     public String getViewDescription(final int index) {
+        if (m_document.getKnimeNode().getViews() == null) {
+            return null;
+        }
+
         for (View view : m_document.getKnimeNode().getViews().getViewList()) {
             if (view.getIndex().intValue() == index) {
                 return stripXmlFragment(view);
@@ -311,6 +331,10 @@ final class NodeDescription13Proxy extends NodeDescription {
      */
     @Override
     public String getViewName(final int index) {
+        if (m_document.getKnimeNode().getViews() == null) {
+            return null;
+        }
+
         for (View view : m_document.getKnimeNode().getViews().getViewList()) {
             if (view.getIndex().intValue() == index) {
                 return view.getName();

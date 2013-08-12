@@ -53,6 +53,8 @@ package org.knime.core.node.workflow;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.SwingUtilities;
+
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -186,21 +188,31 @@ public class NodeContainerOutPort extends NodePortAdaptor
     public void openPortView(final String name) {
         NodeContext.pushContext(m_snc);
         try {
-            if (m_portView == null) {
-                setPortView(new OutPortView(m_snc.getDisplayLabel(),
-                        getPortName()));
-            } else {
-                // the custom name might have changed meanwhile
-                m_portView.setTitle(getPortName() + " - "
-                        + m_snc.getDisplayLabel());
-            }
-            m_portView.update(getPortObject(), getPortObjectSpec(),
-                    getFlowObjectStack(),
-                    m_snc.getNode().getCredentialsProvider());
-            m_portView.openView();
+            ViewUtils.invokeLaterInEDT(new Runnable() {
+                @Override
+                public void run() {
+                    openPortViewInEDT(name);
+                }
+            });
         } finally {
             NodeContext.removeLastContext();
         }
+    }
+
+    private void openPortViewInEDT(final String name) {
+        assert SwingUtilities.isEventDispatchThread();
+        if (m_portView == null) {
+            setPortView(new OutPortView(m_snc.getDisplayLabel(),
+                getPortName()));
+        } else {
+            // the custom name might have changed meanwhile
+            m_portView.setTitle(getPortName() + " - "
+                    + m_snc.getDisplayLabel());
+        }
+        m_portView.update(getPortObject(), getPortObjectSpec(),
+            getFlowObjectStack(),
+            m_snc.getNode().getCredentialsProvider());
+        m_portView.openView();
     }
 
     /** {@inheritDoc} */

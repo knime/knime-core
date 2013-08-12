@@ -54,6 +54,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.data.ExtensibleUtilityFactory;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -111,5 +112,12 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(PreferenceConstants.P_GRID_SIZE_X, PreferenceConstants.P_GRID_DEFAULT_SIZE_X);
         store.setDefault(PreferenceConstants.P_GRID_SIZE_Y, PreferenceConstants.P_GRID_DEFAULT_SIZE_Y);
         store.setDefault(PreferenceConstants.P_WRAP_TABLE_HEADER, PreferenceConstants.P_WRAP_TABLE_HEADER_DEFAULT);
+
+
+        // TODO retrieve the utility factories from the data type extension point once we have it
+        for (ExtensibleUtilityFactory fac : ExtensibleUtilityFactory.getAllFactories()) {
+            PreferredRendererPreferencePage.CORE_STORE.setDefault(fac.getPreferenceKey(), fac.getDefaultRenderer()
+                .getId());
+        }
     }
 }

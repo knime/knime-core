@@ -722,86 +722,90 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         }
 
         final Shell shell = Display.getCurrent().getActiveShell();
-        if (container.hasDataAwareDialogPane()
-                && !container.isAllInputDataAvailable() && container.canExecuteUpToHere()) {
-            IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
-            String prefPrompt = store.getString(PreferenceConstants.P_EXEC_NODES_DATA_AWARE_DIALOGS);
-            boolean isExecuteUpstreamNodes;
-            if (MessageDialogWithToggle.PROMPT.equals(prefPrompt)) {
-                int returnCode = MessageDialogWithToggle.openYesNoCancelQuestion(shell, "Execute upstream nodes",
-                        "The " + container.getName() + " node can be configured using the full input data.\n\n"
-                            + "Execute upstream nodes?", "Remember my decision",
-                        false, store, PreferenceConstants.P_EXEC_NODES_DATA_AWARE_DIALOGS).getReturnCode();
-                if (returnCode == Window.CANCEL) {
-                    return;
-                } else if (returnCode == IDialogConstants.YES_ID) {
+        shell.setEnabled(false);
+        try {
+            if (container.hasDataAwareDialogPane()
+                    && !container.isAllInputDataAvailable() && container.canExecuteUpToHere()) {
+                IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
+                String prefPrompt = store.getString(PreferenceConstants.P_EXEC_NODES_DATA_AWARE_DIALOGS);
+                boolean isExecuteUpstreamNodes;
+                if (MessageDialogWithToggle.PROMPT.equals(prefPrompt)) {
+                    int returnCode = MessageDialogWithToggle.openYesNoCancelQuestion(shell, "Execute upstream nodes",
+                            "The " + container.getName() + " node can be configured using the full input data.\n\n"
+                                + "Execute upstream nodes?", "Remember my decision",
+                            false, store, PreferenceConstants.P_EXEC_NODES_DATA_AWARE_DIALOGS).getReturnCode();
+                    if (returnCode == Window.CANCEL) {
+                        return;
+                    } else if (returnCode == IDialogConstants.YES_ID) {
+                        isExecuteUpstreamNodes = true;
+                    } else {
+                        isExecuteUpstreamNodes = false;
+                    }
+                } else if (MessageDialogWithToggle.ALWAYS.equals(prefPrompt)) {
                     isExecuteUpstreamNodes = true;
                 } else {
                     isExecuteUpstreamNodes = false;
                 }
-            } else if (MessageDialogWithToggle.ALWAYS.equals(prefPrompt)) {
-                isExecuteUpstreamNodes = true;
-            } else {
-                isExecuteUpstreamNodes = false;
-            }
-            if (isExecuteUpstreamNodes) {
-                try {
-                    PlatformUI.getWorkbench().getProgressService().run(true, true, new IRunnableWithProgress() {
-                        @Override
-                        public void run(final IProgressMonitor monitor) throws InvocationTargetException,
-                            InterruptedException {
-                            Future<Void> submit = DATA_AWARE_DIALOG_EXECUTOR.submit(new Callable<Void>() {
-                                @Override
-                                public Void call() throws Exception {
-                                    container.getParent().executePredecessorsAndWait(container.getID());
-                                    return null;
-                                }
-                            });
-                            while (!submit.isDone()) {
-                                if (monitor.isCanceled()) {
-                                    submit.cancel(true);
-                                    throw new InterruptedException();
-                                }
-                                try {
-                                    submit.get(300, TimeUnit.MILLISECONDS);
-                                } catch (ExecutionException e) {
-                                    LOGGER.error("Error while waiting for execution to finish", e);
-                                } catch (InterruptedException e) {
-                                    submit.cancel(true);
-                                    throw e;
-                                } catch (TimeoutException e) {
-                                    // do another round
+                if (isExecuteUpstreamNodes) {
+                    try {
+                        PlatformUI.getWorkbench().getProgressService().run(true, true, new IRunnableWithProgress() {
+                            @Override
+                            public void run(final IProgressMonitor monitor) throws InvocationTargetException,
+                                InterruptedException {
+                                Future<Void> submit = DATA_AWARE_DIALOG_EXECUTOR.submit(new Callable<Void>() {
+                                    @Override
+                                    public Void call() throws Exception {
+                                        container.getParent().executePredecessorsAndWait(container.getID());
+                                        return null;
+                                    }
+                                });
+                                while (!submit.isDone()) {
+                                    if (monitor.isCanceled()) {
+                                        submit.cancel(true);
+                                        throw new InterruptedException();
+                                    }
+                                    try {
+                                        submit.get(300, TimeUnit.MILLISECONDS);
+                                    } catch (ExecutionException e) {
+                                        LOGGER.error("Error while waiting for execution to finish", e);
+                                    } catch (InterruptedException e) {
+                                        submit.cancel(true);
+                                        throw e;
+                                    } catch (TimeoutException e) {
+                                        // do another round
+                                    }
                                 }
                             }
-                        }
-                    });
-                } catch (InvocationTargetException e) {
-                    String error = "Exception while waiting for completion of execution";
-                    LOGGER.warn(error, e);
-                    ErrorDialog.openError(shell, "Failed opening dialog", error, new Status(IStatus.ERROR,
-                        KNIMEEditorPlugin.PLUGIN_ID, error, e));
-                } catch (InterruptedException e) {
-                    return;
+                        });
+                    } catch (InvocationTargetException e) {
+                        String error = "Exception while waiting for completion of execution";
+                        LOGGER.warn(error, e);
+                        ErrorDialog.openError(shell, "Failed opening dialog", error, new Status(IStatus.ERROR,
+                            KNIMEEditorPlugin.PLUGIN_ID, error, e));
+                    } catch (InterruptedException e) {
+                        return;
+                    }
                 }
             }
-        }
 
-        //
-        // This is embedded in a special JFace wrapper dialog
-        //
-        try {
-            WrappedNodeDialog dlg = new WrappedNodeDialog(shell, container);
-            dlg.open();
-        } catch (NotConfigurableException ex) {
-            MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
-            mb.setText("Dialog cannot be opened");
-            mb.setMessage("The dialog cannot be opened for the following" + " reason:\n" + ex.getMessage());
-            mb.open();
-        } catch (Throwable t) {
-            LOGGER.error("The dialog pane for node '" + container.getNameWithID() + "' has thrown a '"
-                + t.getClass().getSimpleName() + "'. That is most likely an implementation error.", t);
+            //
+            // This is embedded in a special JFace wrapper dialog
+            //
+            try {
+                WrappedNodeDialog dlg = new WrappedNodeDialog(shell, container);
+                dlg.open();
+            } catch (NotConfigurableException ex) {
+                MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
+                mb.setText("Dialog cannot be opened");
+                mb.setMessage("The dialog cannot be opened for the following" + " reason:\n" + ex.getMessage());
+                mb.open();
+            } catch (Throwable t) {
+                LOGGER.error("The dialog pane for node '" + container.getNameWithID() + "' has thrown a '"
+                    + t.getClass().getSimpleName() + "'. That is most likely an implementation error.", t);
+            }
+        } finally {
+            shell.setEnabled(true);
         }
-
     }
 
     public void openSubWorkflowEditor() {

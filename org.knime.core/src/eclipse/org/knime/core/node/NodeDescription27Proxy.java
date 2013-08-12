@@ -151,6 +151,10 @@ final class NodeDescription27Proxy extends NodeDescription {
      */
     @Override
     public String getInportDescription(final int index) {
+        if (m_document.getKnimeNode().getPorts() == null) {
+            return null;
+        }
+
         for (InPort inPort : m_document.getKnimeNode().getPorts().getInPortList()) {
             if (inPort.getIndex() == index) {
                 return stripXmlFragment(inPort);
@@ -164,6 +168,10 @@ final class NodeDescription27Proxy extends NodeDescription {
      */
     @Override
     public String getInportName(final int index) {
+        if (m_document.getKnimeNode().getPorts() == null) {
+            return null;
+        }
+
         for (InPort inPort : m_document.getKnimeNode().getPorts().getInPortList()) {
             if (inPort.getIndex() == index) {
                 return inPort.getName();
@@ -199,6 +207,10 @@ final class NodeDescription27Proxy extends NodeDescription {
      */
     @Override
     public String getOutportDescription(final int index) {
+        if (m_document.getKnimeNode().getPorts() == null) {
+            return null;
+        }
+
         for (OutPort outPort : m_document.getKnimeNode().getPorts().getOutPortList()) {
             if (outPort.getIndex() == index) {
                 return stripXmlFragment(outPort);
@@ -212,6 +224,10 @@ final class NodeDescription27Proxy extends NodeDescription {
      */
     @Override
     public String getOutportName(final int index) {
+        if (m_document.getKnimeNode().getPorts() == null) {
+            return null;
+        }
+
         for (OutPort outPort : m_document.getKnimeNode().getPorts().getOutPortList()) {
             if (outPort.getIndex() == index) {
                 return outPort.getName();
@@ -248,6 +264,9 @@ final class NodeDescription27Proxy extends NodeDescription {
      */
     @Override
     public String getViewDescription(final int index) {
+        if (m_document.getKnimeNode().getViews() == null) {
+            return null;
+        }
         for (View view : m_document.getKnimeNode().getViews().getViewList()) {
             if (view.getIndex() == index) {
                 return stripXmlFragment(view);
@@ -261,6 +280,9 @@ final class NodeDescription27Proxy extends NodeDescription {
      */
     @Override
     public String getViewName(final int index) {
+        if (m_document.getKnimeNode().getViews() == null) {
+            return null;
+        }
         for (View view : m_document.getKnimeNode().getViews().getViewList()) {
             if (view.getIndex() == index) {
                 return view.getName();

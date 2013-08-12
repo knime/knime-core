@@ -43,42 +43,43 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * --------------------------------------------------------------------- *
+ * ---------------------------------------------------------------------
  *
  * History
- *   Sep 18, 2007 (wiswedel): created
+ *   06.08.2013 (thor): created
  */
-package org.knime.core.node.workflow;
+package org.knime.startup.macosx;
 
-import java.util.List;
+import javax.swing.SwingUtilities;
 
-import org.knime.core.node.Node;
-import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
+import org.eclipse.ui.IStartup;
 
 /**
- * Persistor to load a single node container.
- * @author wiswedel, University of Konstanz
+ * This class is automatically loaded during Eclipse startup.
+ *
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-interface SingleNodeContainerPersistor extends NodeContainerPersistor {
-
-    /** Name of the settings file in a node's directory. */
-    static final String SETTINGS_FILE_NAME = "settings.xml";
-
-    /** Called from the {@link SingleNodeContainer} constructor. Implementations instantiate
-     * a new instance of a node but don't load its settings yet. The latter should be done
-     * in {@link NodeContainerPersistor#loadNodeContainer(java.util.Map,
-     * org.knime.core.node.ExecutionMonitor, org.knime.core.node.workflow.WorkflowPersistor.LoadResult)} as this
-     * method is called from a not fully instantiated SingleNodeContainer (reduce API calls during construction).
-     * @return The unconfigured node instance.
+public class StartupHelper implements IStartup {
+    /**
+     * {@inheritDoc}
      */
-    Node getNode();
-
-    /** @return The single node container settings for the new instance, not null. */
-    SingleNodeContainerSettings getSNCSettings();
-
-    /** The flow objects associated with the node. Copy/Paste persistors don't have flow objects but
-     * the persistor that reads from a file has.
-     * @return the flow object list (never null).
-     */
-    List<FlowObject> getFlowObjects();
+    @Override
+    public void earlyStartup() {
+        if (Boolean.getBoolean("java.awt.headless")) {
+            return;
+        }
+        
+        // This line forces loading AWT libraries. See bug #4396 why this is necessary under MacOS X.
+        // This method is supposed to be called in a thread that is not the main thread, but just to be sure...
+        if ("main".equals(Thread.currentThread().getName())) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    SwingUtilities.isEventDispatchThread();
+                }
+            });
+        } else {
+            SwingUtilities.isEventDispatchThread();
+        }
+    }
 }
