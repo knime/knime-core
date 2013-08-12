@@ -75,8 +75,10 @@ public class FileWriterSettings {
         REPLACE
     }
 
-    /** mode specifying how to end a line in the file written.
-     * @since 2.8*/
+    /**
+     * Mode specifying how to end a line in the file written.
+     * @since 2.9
+     */
     public enum LineEnding {
         /** System default. Null will cause the writer to read the system property */
         SYST(null),
@@ -427,7 +429,7 @@ public class FileWriterSettings {
 
     /**
      * @return the selected line ending mode
-     * @since 2.8
+     * @since 2.9
      */
     public LineEnding getLineEndingMode() {
         return m_lineEnding;
@@ -436,7 +438,7 @@ public class FileWriterSettings {
     /**
      * Set a new line ending mode.
      * @param mode to set
-     * @since 2.8
+     * @since 2.9
      */
     public void setLineEndingMode(final LineEnding mode) {
         m_lineEnding = mode;
