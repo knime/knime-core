@@ -42,6 +42,7 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultRowIterator;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
 import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
@@ -182,9 +183,9 @@ public class TableContentModelTest extends TestCase {
         final TableContentModel m = new TableContentModel();
         try {
             m.getValueAt(1, 0);
-            fail();
+            fail("Expected " + IndexOutOfBoundsException.class + " not thrown");
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
 
         // create big data table (so that it has to cache) and
@@ -218,30 +219,30 @@ public class TableContentModelTest extends TestCase {
 
         try {
             m.getValueAt(-4, 0);
-            fail();
+            fail("Expected " + IndexOutOfBoundsException.class + " not thrown");
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
 
         try {
             m.getValueAt(0, -2);
-            fail();
+            fail("Expected " + IndexOutOfBoundsException.class + " not thrown");
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
 
         try {
             m.getValueAt(20000, 0);
-            fail();
+            fail("Expected " + IndexOutOfBoundsException.class + " not thrown");
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
 
         try {
             m.getValueAt(0, 500);
-            fail();
+            fail("Expected " + IndexOutOfBoundsException.class + " not thrown");
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
     }
 
@@ -252,7 +253,7 @@ public class TableContentModelTest extends TestCase {
         final TableContentModel m = new TableContentModel();
         try {
             m.getColumnName(0);
-            fail();
+            fail("Expected " + IndexOutOfBoundsException.class + " not thrown");
         } catch (IndexOutOfBoundsException e) {
             System.out.println(e.getMessage());
         }
@@ -267,15 +268,15 @@ public class TableContentModelTest extends TestCase {
 
         try {
             m.getColumnName(-1);
-            fail();
+            fail("Expected " + IndexOutOfBoundsException.class + " not thrown");
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
         try {
             m.getColumnName(spec.getNumColumns());
-            fail();
+            fail("Expected " + IndexOutOfBoundsException.class + " not thrown");
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
 
     }
@@ -327,9 +328,9 @@ public class TableContentModelTest extends TestCase {
         assertFalse(cacheSize2 == currentChunkSize);
         try {
             m.setCacheSize(-1);
-            fail();
+            fail("Expected " + IllegalArgumentException.class + " not thrown");
         } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
     }
 
@@ -351,9 +352,9 @@ public class TableContentModelTest extends TestCase {
         assertFalse(chunkSize2 == currentChunkSize);
         try {
             m.setChunkSize(-1);
-            fail();
+            fail("Expected " + IllegalArgumentException.class + " not thrown");
         } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
     }
 
@@ -384,15 +385,15 @@ public class TableContentModelTest extends TestCase {
         }
         try {
             m.isHiLit(-1);
-            fail();
+            fail("Expected " + IndexOutOfBoundsException.class + " not thrown");
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
         try {
             m.isHiLit(OBJECT_DATA.length);
-            fail();
+            fail("Expected " + IndexOutOfBoundsException.class + " not thrown");
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
     }
 
@@ -453,9 +454,9 @@ public class TableContentModelTest extends TestCase {
 
         try {
             m.requestHiLite((ListSelectionModel)null);
-            fail();
+            fail("Expected " + NullPointerException.class + " not thrown");
         } catch (NullPointerException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
 
     } // testHilite()
@@ -526,9 +527,9 @@ public class TableContentModelTest extends TestCase {
         }
         try {
             m.requestUnHiLite((ListSelectionModel)null);
-            fail();
+            fail("Expected " + NullPointerException.class + " not thrown");
         } catch (NullPointerException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
 
     } // testUnHilite()
@@ -591,15 +592,15 @@ public class TableContentModelTest extends TestCase {
         }
         try {
             m.getRow(-1);
-            fail();
+            fail("Expected " + IndexOutOfBoundsException.class + " not thrown");
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
         try {
             m.getRow(OBJECT_DATA.length);
-            fail();
+            fail("Expected " + IndexOutOfBoundsException.class + " not thrown");
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
         // further checking is done at testCachingStrategy() and other
         // test methods
