@@ -875,4 +875,12 @@ propagated with or for interoperation with KNIME.
          fragment="true"
          unpack="false"/>
 
+   <plugin
+         id="org.knime.startup.macosx"
+         os="macosx"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
 </feature>
