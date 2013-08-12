@@ -344,8 +344,6 @@ class RulePanel extends JPanel {
                     if (outputTypes[i] == null && !(i < lines.length && lines[i].trim().isEmpty())) { //error
                         gutter.addLineTrackingIcon(i, RuleMainPanel.ERROR_ICON);
                         textArea.addLineHighlight(i, Color.PINK);
-                    } else if (i < lines.length && RuleSupport.isComment(lines[i])) { //comment
-                        textArea.addLineHighlight(i, Color.YELLOW);
                     } else if (m_hasOutputColumn && outputTypes[i] != null) {
                         gutter.addLineTrackingIcon(i, outputTypes[i].getIcon());
                     }

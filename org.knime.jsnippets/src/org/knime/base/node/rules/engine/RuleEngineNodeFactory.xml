@@ -27,9 +27,8 @@
 				, and an outcome (consequent, after the => symbol) which is put into
 				the new column if the rule matches.
 			</p>
-			<p>The outcome of a rule can either be a constant string, a constant
-				number or boolean constant, or a reference to another column or flow
-				variable value.
+			<p>The outcome of a rule may be any of the following: a string, a number, a boolean constant, a reference
+                to another column or the value of a flow variable value.
 				The type of the outcome column is the common super
 				type of all possible
 				outcomes (including the rules that can never
@@ -39,14 +38,15 @@
 			<p>
 				Columns are given by their name surrounded by $, numbers are given
 				in the usual decimal representation. Note that strings must not
-				contain (double-)quotes. The flow variables are
-				represented by
+				contain (double-)quotes. Flow variables are represented by
 				<b>$${</b>
 				TypeCharacterAndFlowVarName
 				<b>}$$</b>
 				.
 				The TypeCharacter should be 'D' for double (real) values, 'I' for
 				integer values and 'S' for strings.
+                You can insert column names or flow variables by hand or by clicking in the respective lists in the
+                dialog.
 			</p>
             <p>The logical expressions can be grouped with parentheses. The
                 precedence rules for them are the following: <tt>NOT</tt> binds most, <tt>AND</tt>,
@@ -109,9 +109,8 @@ $Col0$ > 5 => $${SCol1}$$
 		</option>
 		<option name="Description">Short help about the operator.</option>
 		<option name="Expression">The rule editor. You can complete the expressions
-			with Ctrl+Space. Each row represents a rule. The background of the
-			line signals errors (pink), or comments (yellow). The right side of
-			the editor can show an error icon.
+			with Ctrl+Space. Each row represents a rule. A red background of the
+			line signals an error and the left side of the editor then shows an error icon.
 		</option>
 		<option name="Appended column name">Name of the newly appended column,
 			which contains

@@ -108,9 +108,8 @@ $Col0$ MATCHES $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$ =>
 		</option>
 		<option name="Description">Short help about the operator.</option>
 		<option name="Expression">The rule editor. You can complete the expressions
-			with Ctrl+Space. Each row represents a rule. The background of the
-			line signals errors (pink), or comments (yellow). The right side of
-			the editor can show an error icon.
+            with Ctrl+Space. Each row represents a rule. A red background of the
+            line signals an error and the left side of the editor then shows an error icon.
 		</option>
 		<option
 			name="TRUE to first, FALSE to second output table">

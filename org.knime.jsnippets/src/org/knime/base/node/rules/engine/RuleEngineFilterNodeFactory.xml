@@ -12,7 +12,7 @@
 			This node takes a list of user-defined rules and tries to match them
 			to each row in the input table. If the first matching rule has a <tt>TRUE</tt> outcome, the row will be
             selected for inclusion. Otherwise (i.e. if the first matching rule yields <tt>FALSE</tt>) it will be
-            excluded. If no rule matches the row will be excluded (like having a <tt>TRUE=>FALSE</tt>).
+            excluded. If no rule matches the row will be excluded.
             Inclusion and exclusion may be inverted, see the options below.
 			<p>
 				Each rule is represented by a line.
@@ -107,9 +107,8 @@ $Col0$ MATCHES $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$ =>
 		</option>
 		<option name="Description">Short help about the operator.</option>
 		<option name="Expression">The rule editor. You can complete the expressions
-			with Ctrl+Space. Each row represents a rule. The background of the
-			line signals errors (pink), or comments (yellow). The right side of
-			the editor can show an error icon.
+            with Ctrl+Space. Each row represents a rule. A red background of the
+            line signals an error and the left side of the editor then shows an error icon.
 		</option>
 		<option
 			name="include if first matching rule is TRUE">A row will be included in the output if the first rule that
