@@ -62,6 +62,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 import org.knime.ext.sun.nodes.script.compile.CompilationFailedException;
@@ -392,9 +393,10 @@ public final class Expression {
     private static synchronized void ensureTempClassPathExists()
         throws IOException {
         // the temp directory may get deleted under Linux if it has not been
-        // access for some time, see bug #3319
+        // accessed for some time, see bug #3319
         if ((tempClassPath == null) || !tempClassPath.isDirectory()) {
-            File tempClassPathDir = FileUtil.createTempDir("knime_javasnippet");
+            File tempClassPathDir =
+                FileUtil.createTempDir("knime_javasnippet", new File(KNIMEConstants.getKNIMETempDir()));
             for (Class<?> cl : REQUIRED_COMPILATION_UNITS) {
                 Package pack = cl.getPackage();
                 File childDir = tempClassPathDir;
