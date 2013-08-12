@@ -1076,12 +1076,12 @@ public final class SingleNodeContainer extends NodeContainer {
 
     private IWriteFileStoreHandler initFileStore(
             final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository) {
-        FlowLoopContext upstreamFLC = getFlowObjectStack().peekScopeContext(FlowLoopContext.class, false);
+        FlowLoopContext upstreamFLC = getFlowObjectStack().peek(FlowLoopContext.class);
         NodeID outerStartNodeID = upstreamFLC == null ? null : upstreamFLC.getHeadNode();
         // loop start nodes will put their loop context on the outgoing flow object stack
         assert !getID().equals(outerStartNodeID) : "Loop start on incoming flow stack can't be node itself";
 
-        FlowLoopContext innerFLC = getOutgoingFlowObjectStack().peekScopeContext(FlowLoopContext.class, false);
+        FlowLoopContext innerFLC = getOutgoingFlowObjectStack().peek(FlowLoopContext.class);
         NodeID innerStartNodeID = innerFLC == null ? null : innerFLC.getHeadNode();
         // if there is a loop context on this node's stack, this node must be the start
         assert !(this.isModelCompatibleTo(LoopStartNode.class)) || getID().equals(innerStartNodeID);
