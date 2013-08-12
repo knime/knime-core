@@ -255,7 +255,7 @@ public class TableContentModelTest extends TestCase {
             m.getColumnName(0);
             fail("Expected " + IndexOutOfBoundsException.class + " not thrown");
         } catch (IndexOutOfBoundsException e) {
-            System.out.println(e.getMessage());
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass().getName(), e);
         }
         final TableContentModel m1 = new TableContentModel(DATA);
         DataTableSpec spec = DATA.getDataTableSpec();
