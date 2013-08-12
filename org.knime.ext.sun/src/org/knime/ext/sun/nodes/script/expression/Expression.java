@@ -395,19 +395,19 @@ public final class Expression {
         // access for some time, see bug #3319
         if ((tempClassPath == null) || !tempClassPath.isDirectory()) {
             File tempClassPathDir = FileUtil.createTempDir("knime_javasnippet");
-            tempClassPathDir.deleteOnExit();
             for (Class<?> cl : REQUIRED_COMPILATION_UNITS) {
                 Package pack = cl.getPackage();
                 File childDir = tempClassPathDir;
                 for (String subDir : pack.getName().split("\\.")) {
                     childDir = new File(childDir, subDir);
-                    childDir.deleteOnExit();
                 }
-                childDir.mkdirs();
+                if (!childDir.mkdirs()) {
+                    throw new IOException("Could not create temporary directory for Java Snippet class files: "
+                        + childDir.getAbsolutePath());
+                }
                 String className = cl.getSimpleName();
                 className = className.concat(".class");
                 File classFile = new File(childDir, className);
-                classFile.deleteOnExit();
                 ClassLoader loader = cl.getClassLoader();
                 InputStream inStream = loader.getResourceAsStream(
                         cl.getName().replace('.', '/') + ".class");
