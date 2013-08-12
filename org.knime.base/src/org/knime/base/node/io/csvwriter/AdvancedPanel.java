@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
+ * 
  * History
  *   Mar 9, 2007 (ohl): created
  */
@@ -55,17 +55,12 @@ import java.awt.Dimension;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.ButtonModel;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
-import org.knime.base.node.io.csvwriter.FileWriterSettings.LineEnding;
-
 /**
- *
+ * 
  * @author ohl, University of Konstanz
  */
 class AdvancedPanel extends JPanel {
@@ -76,18 +71,8 @@ class AdvancedPanel extends JPanel {
 
     private JTextField m_missValuePattern = new JTextField("");
 
-    private ButtonModel m_defEnding;
-
-    private ButtonModel m_lfEnding;
-
-    private ButtonModel m_crlfEnding;
-
-    private ButtonModel m_crEnding;
-
-    private ButtonGroup m_bGroup;
-
     /**
-     *
+     * 
      */
     public AdvancedPanel() {
 
@@ -115,62 +100,20 @@ class AdvancedPanel extends JPanel {
                 + "for a tab or newline character.");
         colSepPanel.add(Box.createHorizontalGlue());
 
-        JPanel lineSep = new JPanel();
-        lineSep.setLayout(new BoxLayout(lineSep, BoxLayout.Y_AXIS));
-        lineSep.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Line Endings"));
-        Box defBox = Box.createHorizontalBox();
-        defBox.add(Box.createHorizontalStrut(10));
-        JRadioButton def = new JRadioButton("System default (operating system dependant)");
-        defBox.add(def);
-        defBox.add(Box.createHorizontalGlue());
-        Box lfBox = Box.createHorizontalBox();
-        lfBox.add(Box.createHorizontalStrut(10));
-        JRadioButton lf = new JRadioButton("LF line endings (Linux/Unix style)");
-        lfBox.add(lf);
-        lfBox.add(Box.createHorizontalGlue());
-        Box crlfBox = Box.createHorizontalBox();
-        crlfBox.add(Box.createHorizontalStrut(10));
-        JRadioButton crlf = new JRadioButton("CR+LF line endings (Windows/DOS style)");
-        crlfBox.add(crlf);
-        crlfBox.add(Box.createHorizontalGlue());
-        Box crBox = Box.createHorizontalBox();
-        crBox.add(Box.createHorizontalStrut(10));
-        JRadioButton cr = new JRadioButton("CR only");
-        crBox.add(cr);
-        crBox.add(Box.createHorizontalGlue());
-
-        m_defEnding = def.getModel();
-        m_lfEnding = lf.getModel();
-        m_crlfEnding = crlf.getModel();
-        m_crEnding = cr.getModel();
-
-        m_bGroup = new ButtonGroup();
-        m_bGroup.add(def);
-        m_bGroup.add(lf);
-        m_bGroup.add(crlf);
-        m_bGroup.add(cr);
-        m_bGroup.setSelected(m_defEnding, true);
-
-        lineSep.add(defBox);
-        lineSep.add(lfBox);
-        lineSep.add(crlfBox);
-        lineSep.add(crBox);
-
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         add(Box.createVerticalGlue());
         add(colSepPanel);
         add(Box.createVerticalStrut(10));
         add(missPanel);
-        add(Box.createVerticalStrut(10));
-        add(lineSep);
         add(Box.createVerticalGlue());
         add(Box.createVerticalGlue());
+
     }
 
     /**
      * Reads new values from the specified object and puts them into the panel's
      * components.
-     *
+     * 
      * @param settings object holding the new values to show.
      */
     void loadValuesIntoPanel(final FileWriterSettings settings) {
@@ -182,26 +125,11 @@ class AdvancedPanel extends JPanel {
         m_colSeparator.setText(colSep);
         m_missValuePattern.setText(settings.getMissValuePattern());
 
-        LineEnding leMode = settings.getLineEndingMode();
-        switch (leMode) {
-            case SYST:
-                m_bGroup.setSelected(m_defEnding, true);
-                break;
-            case LF:
-                m_bGroup.setSelected(m_lfEnding, true);
-                break;
-            case CRLF:
-                m_bGroup.setSelected(m_crlfEnding, true);
-                break;
-            case CR:
-                m_bGroup.setSelected(m_crEnding, true);
-                break;
-        }
     }
 
     /**
      * Writes the current values from the components into the settings object.
-     *
+     * 
      * @param settings the object to write the values into
      */
     void saveValuesFromPanelInto(final FileWriterSettings settings) {
@@ -213,20 +141,6 @@ class AdvancedPanel extends JPanel {
         settings.setColSeparator(colSep);
         settings.setMissValuePattern(m_missValuePattern.getText());
 
-        ButtonModel lf = m_bGroup.getSelection();
-        LineEnding mode;
-        if (lf == m_defEnding) {
-            mode = LineEnding.SYST;
-        } else if (lf == m_lfEnding) {
-            mode = LineEnding.LF;
-        } else if (lf == m_crlfEnding) {
-            mode = LineEnding.CRLF;
-        } else if (lf == m_crEnding) {
-            mode = LineEnding.CR;
-        } else {
-            mode = LineEnding.SYST;
-        }
-        settings.setLineEndingMode(mode);
     }
 
 }

@@ -76,8 +76,6 @@ public class CSVWriter extends BufferedWriter {
 
     private String m_lastWarning;
 
-    private String m_newLine;
-
     /**
      * Creates a new writer with default settings.
      *
@@ -125,10 +123,6 @@ public class CSVWriter extends BufferedWriter {
         }
         if (m_settings.getSeparatorReplacement() == null) {
             m_settings.setSeparatorReplacement("");
-        }
-        m_newLine = m_settings.getLineEndingMode().getEndString();
-        if (m_newLine == null) {
-            m_newLine = System.getProperty("line.separator");
         }
     }
 
@@ -450,14 +444,5 @@ public class CSVWriter extends BufferedWriter {
      */
     public String getLastWarningMessage() {
         return m_lastWarning;
-    }
-
-    /**
-     * {@inheritDoc}
-     * Writes a line feed according to the writer settings.
-     */
-    @Override
-    public void newLine() throws IOException {
-        write(m_newLine);
     }
 }
