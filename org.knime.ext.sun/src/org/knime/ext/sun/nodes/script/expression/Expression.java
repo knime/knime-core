@@ -401,7 +401,7 @@ public final class Expression {
                 for (String subDir : pack.getName().split("\\.")) {
                     childDir = new File(childDir, subDir);
                 }
-                if (!childDir.mkdirs()) {
+                if (!childDir.isDirectory() && !childDir.mkdirs()) {
                     throw new IOException("Could not create temporary directory for Java Snippet class files: "
                         + childDir.getAbsolutePath());
                 }
