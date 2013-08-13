@@ -3,10 +3,10 @@
 <schema targetNamespace="org.knime.testing" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appInfo>
-         <meta.schema plugin="org.knime.testing" id="TestcaseCollector" name="TestcaseCollector"/>
+         <meta.schema plugin="org.knime.testing" id="DifferenceCheckerFactory" name="DifferenceCheckerFactory"/>
       </appInfo>
       <documentation>
-         Extension point for plugins/fragments that contribute JUnit testcases.
+         Extension point for difference checkers used by the difference checker node.
       </documentation>
    </annotation>
 
@@ -17,8 +17,8 @@
          </appInfo>
       </annotation>
       <complexType>
-         <sequence>
-            <element ref="TestcaseCollector"/>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <element ref="DifferenceCheckerFactory"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -47,15 +47,15 @@
       </complexType>
    </element>
 
-   <element name="TestcaseCollector">
+   <element name="DifferenceCheckerFactory">
       <complexType>
-         <attribute name="TestcaseCollector" type="string" use="required">
+         <attribute name="class" type="string" use="required">
             <annotation>
                <documentation>
-                  Specify an extension of the abstract org.knime.testing.core.AbstractTestcaseCollector class
+                  Specify an implementation of the org.knime.testing.core.diffcheckers.DifferenceCheckerFactory interface
                </documentation>
                <appInfo>
-                  <meta.attribute kind="java" basedOn="org.knime.testing.core.AbstractTestcaseCollector:"/>
+                  <meta.attribute kind="java" basedOn=":org.knime.testing.diffcheckers.DifferenceCheckerFactory"/>
                </appInfo>
             </annotation>
          </attribute>
@@ -67,7 +67,7 @@
          <meta.section type="since"/>
       </appInfo>
       <documentation>
-         2.3.0
+         2.9
       </documentation>
    </annotation>
 

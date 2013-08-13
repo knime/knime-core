@@ -2,6 +2,7 @@
 <?eclipse version="3.0"?>
 <plugin>
    <extension-point id="TestcaseCollector" name="TestcaseCollector" schema="schema/org.knime.testing.TestcaseCollector.exsd"/>
+   <extension-point id="DifferenceCheckerFactory" name="DifferenceCheckerFactory" schema="schema/org.knime.testing.DifferenceCheckerFactory.exsd"/>
    <!-- This is an example for providing an own category 
       <extension
          point="org.knime.workbench.repository.categories">
@@ -16,10 +17,6 @@
    
    <extension
          point="org.knime.workbench.repository.nodes">
-      <node
-            category-path="/testing"
-            factory-class="org.knime.testing.node.differNode.DiffNodeFactory"
-            id="org.knime.testing.differNode.DiffNodeFactory"/>
       <node
             category-path="/testing"
             factory-class="org.knime.testing.node.disturber.DisturberNodeFactory"
@@ -51,12 +48,7 @@
       <node
             category-path="/testing"
             factory-class="org.knime.testing.node.file.DifferFileNodeFactory"
-            id="org.knime.testing.file.DifferFileNodeFactory"/>
-      <node
-            category-path="/testing"
-            expert-flag="false"
-            factory-class="org.knime.testing.node.config.TestConfigNodeFactory"
-            id="org.knime.testing.node.config.TestConfigNodeFactory">
+            id="org.knime.testing.file.DifferFileNodeFactory">
       </node>
       <node
             category-path="/testing"
@@ -76,6 +68,12 @@
             expert-flag="false"
             factory-class="org.knime.testing.imagecomp.ImageCompNodeFactory"
             id="org.knime.testing.imagecomp.ImageCompNodeFactory">
+      </node>
+      <node
+            category-path="/testing"
+            expert-flag="false"
+            factory-class="org.knime.testing.internal.nodes.differ.DifferenceCheckerNodeFactory"
+            id="org.knime.testing.node.differ.DifferenceCheckerNodeFactory">
       </node>     
    </extension>
    <extension
@@ -101,5 +99,17 @@
                class="org.knime.testing.core.KNIMEPrintNodesStdOutApplication">
          </run>
       </application>
+   </extension>
+   <extension
+         point="org.knime.testing.DifferenceCheckerFactory">
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.EqualityChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.EpsilonNumberChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.StringChecker$Factory">
+      </DifferenceCheckerFactory>
    </extension>
 </plugin>

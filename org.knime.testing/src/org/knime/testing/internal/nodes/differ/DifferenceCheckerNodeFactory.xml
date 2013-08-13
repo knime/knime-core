@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Other" icon="equals.png">
+    <name>Difference Checker</name>
+
+    <shortDescription>
+        Compares the two input tables.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            <p>
+                Used in regression tests to test the created data table with a
+                reference data table. The node will compare
+                (depending
+                on the dialog settings) the incoming tables during execute and
+                fails with an exception if the
+                tables are not equal (or do not meet
+                the expectations). In that case the node stays not executed and the
+                test will fail.
+            </p>
+            <p>
+                In the node's dialog, you can adjust how individual columns are compared. The default is to check for
+                exact equality. For certain column types you can relax the comparison by using special checkers.
+                Examples
+                are numeric column where you may want to use an epsilon or string columns where you may want to
+                ignore
+                different line feed characters (Windows vs. Unix). The special checkers are used for the cell contents
+                as well as for the column domain (i.e. possible values and bounds).
+            </p>
+            <p>In order to configure column, change the checker in the second column and if applicable configure
+                it in
+                the panel below the column table.
+            </p>
+        </intro>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Test Table">Table with the output of the node to test</inPort>
+        <inPort index="1" name="Reference Table">The reference table.</inPort>
+    </ports>
+</knimeNode>
