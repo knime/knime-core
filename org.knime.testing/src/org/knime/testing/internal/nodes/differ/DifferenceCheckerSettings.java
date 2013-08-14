@@ -87,6 +87,17 @@ class DifferenceCheckerSettings {
     }
 
     /**
+     * Returns the class name of the checker factory for the given column. If not factory is registered for the column
+     * <code>null</code> is returned.
+     *
+     * @param columnName a column name
+     * @return a class name or <code>null</code>
+     */
+    public String checkerFactoryClassName(final String columnName) {
+        return m_checkerPerColumn.get(columnName);
+    }
+
+    /**
      * Returns the configured checker factory for the given column name. If no factory is configured, <code>null</code>
      * is returned.
      *

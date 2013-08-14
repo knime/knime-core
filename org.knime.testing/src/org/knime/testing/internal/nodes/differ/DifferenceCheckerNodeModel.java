@@ -54,15 +54,19 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -84,6 +88,9 @@ import org.knime.testing.core.DifferenceCheckerFactory;
 class DifferenceCheckerNodeModel extends NodeModel {
     private final DifferenceCheckerSettings m_settings = new DifferenceCheckerSettings();
 
+    private final Map<DataColumnSpec, DifferenceChecker<? extends DataValue>> m_checkers =
+            new HashMap<DataColumnSpec, DifferenceChecker<? extends DataValue>>();
+
     DifferenceCheckerNodeModel() {
         super(2, 0);
     }
@@ -93,6 +100,9 @@ class DifferenceCheckerNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        if (inSpecs[1] == null) {
+            throw new InvalidSettingsException("No reference table available");
+        }
         if (inSpecs[0] != null) {
             checkTableSpecs(inSpecs[0], inSpecs[1]);
         }
@@ -117,7 +127,62 @@ class DifferenceCheckerNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
             throws Exception {
+        BufferedDataTable testTable = inData[0];
+        BufferedDataTable refTable = inData[1];
+
+        exec.setMessage("Comparing table specs");
+        checkTableSpecs(testTable.getDataTableSpec(), refTable.getDataTableSpec());
+
+        if (testTable.getRowCount() != refTable.getRowCount()) {
+            throw new IllegalStateException("Wrong number of rows: expected " + refTable.getRowCount() + ", got "
+                    + testTable.getRowCount());
+        }
+
+        for (DataColumnSpec colSpec : refTable.getDataTableSpec()) {
+            m_checkers.put(colSpec, m_settings.createCheckerForColumn(colSpec.getName()));
+        }
+
+        exec.setMessage("Comparing table contents");
+        final double max = refTable.getRowCount();
+        int i = 0;
+        RowIterator testIt = testTable.iterator();
+        for (DataRow refRow : refTable) {
+            exec.setProgress(i / max, "Comparing row " + i);
+            exec.checkCanceled();
+
+            DataRow testRow = testIt.next();
+            compareRow(refTable.getDataTableSpec(), testRow, refRow, i);
+            i++;
+        }
+
         return new BufferedDataTable[0];
+    }
+
+    private void compareRow(final DataTableSpec spec, final DataRow testRow, final DataRow refRow, final int rowIndex) {
+        if (!refRow.getKey().equals(testRow.getKey())) {
+            throw new IllegalStateException("Wrong row key in row " + rowIndex + ": expected '" + refRow.getKey()
+                    + "', got '" + testRow.getKey() + "'");
+        }
+
+        for (int i = 0; i < spec.getNumColumns(); i++) {
+            DataColumnSpec colSpec = spec.getColumnSpec(i);
+            DifferenceChecker<DataValue> checker = (DifferenceChecker<DataValue>)m_checkers.get(colSpec);
+
+            DataCell testCell = testRow.getCell(i);
+            DataCell refCell = testRow.getCell(i);
+
+            if (refCell.isMissing() && !testCell.isMissing()) {
+                throw new IllegalStateException("Expected missing cell in row '" + refRow.getKey() + "' but got '"
+                        + testCell + "'");
+            } else if (!refCell.isMissing() && testCell.isMissing()) {
+                throw new IllegalStateException("Unexpected missing cell in row '" + refRow.getKey() + "'");
+            } else if (!refCell.isMissing() && !testCell.isMissing() && !checker.check(testCell, refCell)) {
+                throw new IllegalStateException("Wrong value in column '" + colSpec.getName() + "': expected '"
+                        + refCell + "', got '" + testCell + "' (using checker '" + checker.getDescription() + "')");
+            } else {
+                // both cells are missing => OK
+            }
+        }
     }
 
     /**
@@ -154,6 +219,10 @@ class DifferenceCheckerNodeModel extends NodeModel {
 
         for (String colName : s.configuredColumns()) {
             DifferenceCheckerFactory<? extends DataValue> fac = s.checkerFactory(colName);
+            if (fac == null) {
+                throw new InvalidSettingsException("Unknown difference checker factory for column '" + colName + "': "
+                        + s.checkerFactoryClassName(colName));
+            }
             DifferenceChecker<? extends DataValue> checker = fac.newChecker();
             for (SettingsModel sm : checker.getSettings()) {
                 sm.loadSettingsFrom(s.internalsForColumn(colName));
@@ -174,7 +243,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-
+        m_checkers.clear();
     }
 
     private void checkTableSpecs(final DataTableSpec testTable, final DataTableSpec referenceTable)
@@ -239,7 +308,6 @@ class DifferenceCheckerNodeModel extends NodeModel {
             checkBounds(testColSpec, refColSpec, checker);
         }
     }
-
 
     private void checkBounds(final DataColumnSpec testColSpec, final DataColumnSpec refColSpec,
                              final DifferenceChecker<DataValue> checker) throws InvalidSettingsException {
