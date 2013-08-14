@@ -76,7 +76,7 @@
     </xsl:template>
 
     <xsl:template match="t:interactiveView">
-        <h2><xsl:value-of select="@name" /></h2>
+        <h2>Interactive View: <xsl:value-of select="@name" /></h2>
         <div>
             <xsl:apply-templates />
         </div>
