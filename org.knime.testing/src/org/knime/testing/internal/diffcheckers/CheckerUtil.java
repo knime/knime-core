@@ -120,17 +120,22 @@ public final class CheckerUtil {
     }
 
     /**
-     * Returns a list of checker factories that can handle the given data type. The data type is asked for all its
-     * value interfaces and all matching checker factories are returned. Therefore the list always includes at least
-     * the factory for the {@link EqualityChecker} because it can be applied to any type.
+     * Returns a list of checker factories that can handle the given data type. If the type is a collection the
+     * collection elements' type is used instead. The data type is asked for all its value interfaces and all matching
+     * checker factories are returned. Therefore the list always includes at least the factory for the
+     * {@link EqualityChecker} because it can be applied to any type.
      *
      * @param type a data type
      *
      * @return a non-empty list with checker factories
      */
-    public List<DifferenceCheckerFactory<? extends DataValue>> getFactoryForType(final DataType type) {
+    public List<DifferenceCheckerFactory<? extends DataValue>> getFactoryForType(DataType type) {
         List<DifferenceCheckerFactory<? extends DataValue>> checkers =
                 new ArrayList<DifferenceCheckerFactory<? extends DataValue>>();
+        if (type.isCollectionType()) {
+            type = type.getCollectionElementType();
+        }
+
         for (Class<? extends DataValue> valueClass : type.getValueClasses()) {
             List<DifferenceCheckerFactory<? extends DataValue>> l = m_checkersByType.get(valueClass);
             if (l != null) {

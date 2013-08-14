@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,8 +66,10 @@ import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -79,6 +82,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
+import org.knime.testing.internal.diffcheckers.EqualityChecker;
 
 /**
  * Model for the difference checker node.
@@ -112,7 +116,9 @@ class DifferenceCheckerNodeModel extends NodeModel {
             if (fac == null) {
                 throw new InvalidSettingsException("No checker configured for column '" + dcs.getName() + "'");
             }
-            if (!dcs.getType().isCompatible(fac.getType())) {
+
+            DataType type = dcs.getType().isCollectionType() ? dcs.getType().getCollectionElementType() : dcs.getType();
+            if (!type.isCompatible(fac.getType())) {
                 throw new InvalidSettingsException("Difference checker '" + fac.getDescription()
                         + "' is not compatible with data type " + dcs.getType());
             }
@@ -176,12 +182,46 @@ class DifferenceCheckerNodeModel extends NodeModel {
                         + testCell + "'");
             } else if (!refCell.isMissing() && testCell.isMissing()) {
                 throw new IllegalStateException("Unexpected missing cell in row '" + refRow.getKey() + "'");
-            } else if (!refCell.isMissing() && !testCell.isMissing() && !checker.check(testCell, refCell)) {
-                throw new IllegalStateException("Wrong value in column '" + colSpec.getName() + "': expected '"
-                        + refCell + "', got '" + testCell + "' (using checker '" + checker.getDescription() + "')");
+            } else if (!refCell.isMissing() && !testCell.isMissing()) {
+                if (colSpec.getType().isCollectionType() && !(checker instanceof EqualityChecker)) {
+                    compareCollection(colSpec, checker, testCell, refCell);
+                } else if (!checker.check(testCell, refCell)) {
+                    throw new IllegalStateException("Wrong value in column '" + colSpec.getName() + "': expected '"
+                            + refCell + "', got '" + testCell + "' (using checker '" + checker.getDescription() + "')");
+                }
             } else {
                 // both cells are missing => OK
             }
+        }
+    }
+
+    /**
+     * @param colSpec
+     * @param checker
+     * @param testCell
+     * @param refCell
+     */
+    private void compareCollection(final DataColumnSpec colSpec, final DifferenceChecker<DataValue> checker,
+                                   final DataCell testCell, final DataCell refCell) {
+        CollectionDataValue testCollection = (CollectionDataValue)testCell;
+        CollectionDataValue refCollection = (CollectionDataValue)refCell;
+
+        if (refCollection.size() != testCollection.size()) {
+            throw new IllegalStateException("Wrong number of elements in collection of column '" + colSpec.getName()
+                    + "': expected " + refCollection.size() + ", got " + testCollection.size());
+        }
+
+        int index = 0;
+        Iterator<DataCell> testCollIt = testCollection.iterator();
+        for (DataCell refCollCell : refCollection) {
+            DataCell testCollCell = testCollIt.next();
+
+            if (!checker.check(testCollCell, refCollCell)) {
+                throw new IllegalStateException("Wrong value at position " + index + " in collection of column '"
+                        + colSpec.getName() + "': expected '" + refCollCell + "', got '" + testCollCell
+                        + "' (using checker '" + checker.getDescription() + "')");
+            }
+            index++;
         }
     }
 
@@ -246,22 +286,22 @@ class DifferenceCheckerNodeModel extends NodeModel {
         m_checkers.clear();
     }
 
-    private void checkTableSpecs(final DataTableSpec testTable, final DataTableSpec referenceTable, final boolean checkDomain)
-            throws InvalidSettingsException {
+    private void checkTableSpecs(final DataTableSpec testTable, final DataTableSpec referenceTable,
+                                 final boolean checkDomain) throws InvalidSettingsException {
         Set<String> columnNames = new HashSet<String>();
 
         for (int i = 0; i < referenceTable.getNumColumns(); i++) {
             DataColumnSpec refColSpec = referenceTable.getColumnSpec(i);
             if (testTable.getNumColumns() <= i) {
-                throw new InvalidSettingsException("Column '" + refColSpec + "' is missing in test table");
+                throw new IllegalStateException("Column '" + refColSpec + "' is missing in test table");
             }
             DataColumnSpec testColSpec = testTable.getColumnSpec(i);
             if (!refColSpec.getName().equals(testColSpec.getName())) {
-                throw new InvalidSettingsException("Expected column named '" + refColSpec.getName() + "' at position "
-                        + i + " in test table");
+                throw new IllegalStateException("Expected column named '" + refColSpec.getName() + "' at position " + i
+                        + " in test table");
             }
             if (!refColSpec.getType().equals(testColSpec.getType())) {
-                throw new InvalidSettingsException("Expected type '" + refColSpec.getType() + "' for column "
+                throw new IllegalStateException("Expected type '" + refColSpec.getType() + "' for column "
                         + refColSpec.getName() + " in test table");
 
             }
@@ -269,23 +309,23 @@ class DifferenceCheckerNodeModel extends NodeModel {
                 checkDomain(testColSpec, refColSpec);
             }
             if (!ConvenienceMethods.areEqual(refColSpec.getColorHandler(), testColSpec.getColorHandler())) {
-                throw new InvalidSettingsException("Unexpected color handler in column '" + refColSpec.getName() + "'");
+                throw new IllegalStateException("Unexpected color handler in column '" + refColSpec.getName() + "'");
             }
             if (!ConvenienceMethods.areEqual(refColSpec.getShapeHandler(), testColSpec.getShapeHandler())) {
-                throw new InvalidSettingsException("Unexpected shape handler in column '" + refColSpec.getName() + "'");
+                throw new IllegalStateException("Unexpected shape handler in column '" + refColSpec.getName() + "'");
             }
             if (!ConvenienceMethods.areEqual(refColSpec.getSizeHandler(), testColSpec.getSizeHandler())) {
-                throw new InvalidSettingsException("Unexpected size handler in column '" + refColSpec.getName() + "'");
+                throw new IllegalStateException("Unexpected size handler in column '" + refColSpec.getName() + "'");
             }
 
             if (!refColSpec.getElementNames().equals(testColSpec.getElementNames())) {
-                throw new InvalidSettingsException("Wrong elements names in column '" + refColSpec.getName()
+                throw new IllegalStateException("Wrong elements names in column '" + refColSpec.getName()
                         + "': expected '" + refColSpec.getElementNames() + "', got '" + testColSpec.getElementNames()
                         + "'");
             }
             if (!refColSpec.getProperties().equals(testColSpec.getProperties())) {
-                throw new InvalidSettingsException("Wrong properties in column '" + refColSpec.getName()
-                        + "': expected '" + refColSpec.getProperties() + "', got '" + testColSpec.getProperties() + "'");
+                throw new IllegalStateException("Wrong properties in column '" + refColSpec.getName() + "': expected '"
+                        + refColSpec.getProperties() + "', got '" + testColSpec.getProperties() + "'");
             }
 
             columnNames.add(refColSpec.getName());
@@ -293,7 +333,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
 
         for (DataColumnSpec dcs : testTable) {
             if (!columnNames.contains(dcs.getName())) {
-                throw new InvalidSettingsException("Unexpected column in test table: " + dcs.getName());
+                throw new IllegalStateException("Unexpected column in test table: " + dcs.getName());
             }
         }
     }
@@ -312,49 +352,51 @@ class DifferenceCheckerNodeModel extends NodeModel {
     }
 
     private void checkBounds(final DataColumnSpec testColSpec, final DataColumnSpec refColSpec,
-                             final DifferenceChecker<DataValue> checker) throws InvalidSettingsException {
+                             final DifferenceChecker<DataValue> checker) {
         DataColumnDomain testDom = testColSpec.getDomain();
         DataColumnDomain refDom = refColSpec.getDomain();
 
         if (refDom.hasLowerBound() && !testDom.hasLowerBound()) {
-            throw new InvalidSettingsException("Missing lower bound in column '" + refColSpec.getName() + "'");
+            throw new IllegalStateException("Missing lower bound in column '" + refColSpec.getName() + "'");
         } else if (!refDom.hasLowerBound() && testDom.hasLowerBound()) {
-            throw new InvalidSettingsException("New lower bound in column '" + refColSpec.getName() + "'");
+            throw new IllegalStateException("New lower bound in column '" + refColSpec.getName() + "'");
         } else if (refDom.hasLowerBound()) {
             DataCell refBound = refDom.getLowerBound();
             DataCell testBound = refDom.getLowerBound();
             if (!checker.check(refBound, testBound)) {
-                throw new InvalidSettingsException("Wrong lower bound in column '" + refColSpec.getName()
+                throw new IllegalStateException("Wrong lower bound in column '" + refColSpec.getName()
                         + "': expected '" + refBound + "', got '" + testBound + "'");
             }
         }
 
         if (refDom.hasUpperBound() && !testDom.hasUpperBound()) {
-            throw new InvalidSettingsException("Missing upper bound in column '" + refColSpec.getName() + "'");
+            throw new IllegalStateException("Missing upper bound in column '" + refColSpec.getName() + "'");
         } else if (!refDom.hasUpperBound() && testDom.hasUpperBound()) {
-            throw new InvalidSettingsException("New upper bound in column '" + refColSpec.getName() + "'");
+            throw new IllegalStateException("New upper bound in column '" + refColSpec.getName() + "'");
         } else if (refDom.hasUpperBound()) {
             DataCell refBound = refDom.getUpperBound();
             DataCell testBound = refDom.getUpperBound();
             if (!checker.check(refBound, testBound)) {
-                throw new InvalidSettingsException("Wrong upper bound in column '" + refColSpec.getName()
+                throw new IllegalStateException("Wrong upper bound in column '" + refColSpec.getName()
                         + "': expected '" + refBound + "', got '" + testBound + "'");
             }
         }
     }
 
     private void checkPossibleValues(final DataColumnSpec testColSpec, final DataColumnSpec refColSpec,
-                                     final DifferenceChecker<DataValue> checker) throws InvalidSettingsException {
+                                     final DifferenceChecker<DataValue> checker) {
         DataColumnDomain testDom = testColSpec.getDomain();
         DataColumnDomain refDom = refColSpec.getDomain();
 
         if (refDom.hasValues() && !testDom.hasValues()) {
-            throw new IllegalStateException("Expected possible values in domain of column '" + testColSpec.getName() + "'");
+            throw new IllegalStateException("Expected possible values in domain of column '" + testColSpec.getName()
+                    + "'");
         } else if (!refDom.hasValues() && testDom.hasValues()) {
-            throw new IllegalStateException("Unexpected possible values in domain of column '" + testColSpec.getName() + "'");
+            throw new IllegalStateException("Unexpected possible values in domain of column '" + testColSpec.getName()
+                    + "'");
         } else if (refDom.hasValues() && testDom.hasValues()) {
             if (refDom.getValues().size() != testDom.getValues().size()) {
-                throw new InvalidSettingsException("Unequal number of possible values in column '" + refColSpec.getName()
+                throw new IllegalStateException("Unequal number of possible values in column '" + refColSpec.getName()
                         + "'");
             }
 
@@ -369,7 +411,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
                 DataCell testCell = testValues.get(i);
 
                 if (!checker.check(refCell, testCell)) {
-                    throw new InvalidSettingsException("Wrong possible value in column '" + refColSpec.getName()
+                    throw new IllegalStateException("Wrong possible value in column '" + refColSpec.getName()
                             + "': expected '" + refCell + "', got '" + testCell + "'");
                 }
             }

@@ -25,8 +25,13 @@
                 Examples
                 are numeric column where you may want to use an epsilon or string columns where you may want to
                 ignore
-                different line feed characters (Windows vs. Unix). The special checkers are used for the cell contents
+                different line feed characters (Windows vs. Unix). The special checkers are used for the cell
+                contents
                 as well as for the column domain (i.e. possible values and bounds).
+                <br />
+                In case a column is a collection, you can select a checker for the elements' type which is then
+                applied
+                to every element in the collection (except the Equality checker which does look into the collection).
             </p>
             <p>In order to configure column, change the checker in the second column and if applicable configure
                 it in
