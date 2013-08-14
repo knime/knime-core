@@ -104,7 +104,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
             throw new InvalidSettingsException("No reference table available");
         }
         if (inSpecs[0] != null) {
-            checkTableSpecs(inSpecs[0], inSpecs[1]);
+            checkTableSpecs(inSpecs[0], inSpecs[1], false);
         }
 
         for (DataColumnSpec dcs : inSpecs[1]) {
@@ -131,7 +131,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
         BufferedDataTable refTable = inData[1];
 
         exec.setMessage("Comparing table specs");
-        checkTableSpecs(testTable.getDataTableSpec(), refTable.getDataTableSpec());
+        checkTableSpecs(testTable.getDataTableSpec(), refTable.getDataTableSpec(), true);
 
         if (testTable.getRowCount() != refTable.getRowCount()) {
             throw new IllegalStateException("Wrong number of rows: expected " + refTable.getRowCount() + ", got "
@@ -246,7 +246,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
         m_checkers.clear();
     }
 
-    private void checkTableSpecs(final DataTableSpec testTable, final DataTableSpec referenceTable)
+    private void checkTableSpecs(final DataTableSpec testTable, final DataTableSpec referenceTable, final boolean checkDomain)
             throws InvalidSettingsException {
         Set<String> columnNames = new HashSet<String>();
 
@@ -265,7 +265,9 @@ class DifferenceCheckerNodeModel extends NodeModel {
                         + refColSpec.getName() + " in test table");
 
             }
-            checkDomain(testColSpec, refColSpec);
+            if (checkDomain) {
+                checkDomain(testColSpec, refColSpec);
+            }
             if (!ConvenienceMethods.areEqual(refColSpec.getColorHandler(), testColSpec.getColorHandler())) {
                 throw new InvalidSettingsException("Unexpected color handler in column '" + refColSpec.getName() + "'");
             }
@@ -345,12 +347,17 @@ class DifferenceCheckerNodeModel extends NodeModel {
                                      final DifferenceChecker<DataValue> checker) throws InvalidSettingsException {
         DataColumnDomain testDom = testColSpec.getDomain();
         DataColumnDomain refDom = refColSpec.getDomain();
-        if (refDom.getValues().size() != testDom.getValues().size()) {
-            throw new InvalidSettingsException("Unequal number of possible values in column '" + refColSpec.getName()
-                    + "'");
-        }
 
-        if (refDom.hasValues()) {
+        if (refDom.hasValues() && !testDom.hasValues()) {
+            throw new IllegalStateException("Expected possible values in domain of column '" + testColSpec.getName() + "'");
+        } else if (!refDom.hasValues() && testDom.hasValues()) {
+            throw new IllegalStateException("Unexpected possible values in domain of column '" + testColSpec.getName() + "'");
+        } else if (refDom.hasValues() && testDom.hasValues()) {
+            if (refDom.getValues().size() != testDom.getValues().size()) {
+                throw new InvalidSettingsException("Unequal number of possible values in column '" + refColSpec.getName()
+                        + "'");
+            }
+
             List<DataCell> refValues = new ArrayList<DataCell>(refDom.getValues());
             Collections.sort(refValues, refColSpec.getType().getComparator());
 
@@ -366,6 +373,8 @@ class DifferenceCheckerNodeModel extends NodeModel {
                             + "': expected '" + refCell + "', got '" + testCell + "'");
                 }
             }
+        } else {
+            // no possible values in both domains => OK
         }
     }
 }
