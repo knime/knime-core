@@ -154,9 +154,9 @@ public class DifferFileNodeModel extends NodeModel {
 					+ " file selected");
 		}
 
-		if (loc.startsWith("file:/") || !loc.matches("^[a-zA-Z]+:/.*")) {
+		if (loc.startsWith("file:") || !loc.matches("^[a-zA-Z]+:/.*")) {
 			File file = null;
-			if (loc.startsWith("file:/")) {
+			if (loc.startsWith("file:")) {
 				URL url;
 				try {
 					url = new URL(loc);
