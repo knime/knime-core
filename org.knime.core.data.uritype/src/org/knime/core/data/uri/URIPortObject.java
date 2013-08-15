@@ -151,8 +151,10 @@ public class URIPortObject extends AbstractSimplePortObject {
             CanceledExecutionException {
         List<URIContent> list = new ArrayList<URIContent>();
         for (String key : model.keySet()) {
-            ModelContentRO child = model.getModelContent(key);
-            list.add(URIContent.load(child));
+            if (key.startsWith("child-")) {
+                ModelContentRO child = model.getModelContent(key);
+                list.add(URIContent.load(child));
+            }
         }
         m_uriContents = Collections.unmodifiableList(list);
         m_uriPortObjectSpec = (URIPortObjectSpec)spec;
