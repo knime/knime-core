@@ -137,9 +137,14 @@ public final class ViewUtils {
                         };
                         SwingUtilities.invokeLater(lockedRunnable);
                         while (!swingRunnableFinished.get()) {
-                            if (!display.readAndDispatch()) {
+                            /*
+                             * Testing workaround for bug 4431
+                             */
+//                            if (!display.readAndDispatch()) {
                                 display.sleep();
-                            }
+//                            } else {
+//                                System.out.println("KNIME is great.");
+//                            }
                         }
                     }
                 } else {
