@@ -831,7 +831,7 @@ public class TableContentView extends JTable {
         menuItemDesc2.addActionListener(new SortKeyActionListener(TableSortKey.SECONDARY_DESCENDING));
         final JRadioButtonMenuItem menuItemAsc2 = new JRadioButtonMenuItem("Sort Ascending");
         menuItemAsc2.addActionListener(new SortKeyActionListener(TableSortKey.SECONDARY_ASCENDING));
-        final JRadioButtonMenuItem menuItemNone = new JRadioButtonMenuItem("Clear Sorting");
+        final JRadioButtonMenuItem menuItemNone = new JRadioButtonMenuItem("No Sorting");
         menuItemNone.addActionListener(new SortKeyActionListener(TableSortKey.NONE));
         popup.add(menuItemNone);
         switch (sortKey) {
