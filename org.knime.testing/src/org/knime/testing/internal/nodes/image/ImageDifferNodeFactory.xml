@@ -21,6 +21,25 @@
                 exact equality. For certain images you can relax the comparison by using special checkers, e.g. by
                 specifying a certain allowed percentage of difference.
             </p>
+            <p>
+            Currently there are three different image checker available:
+            <ul>
+                <li><a href="http://www.hackerfactor.com/blog/index.php?/archives/432-Looks-Like-It.html">pHash</a>, 
+                which first downscales the image to the given size, converts it to grayscale, computes a discrete cosinus
+                transformation (DCT) and finally takes only the given left upper part of the matrix (the low frequencies
+                in the picture). Finally the two small matrices from both images are compared.
+                </li>
+                <li><a href="http://www.hackerfactor.com/blog/index.php?/archives/529-Kind-of-Like-That.html">dHash</a>,
+                which works similar to the above, but skips the DCT step and compares difference between neighbouring pixels
+                in the downscaled images.
+                </li>
+                <li>Full difference compares the complete images. For each pixel and each color channel (excluding the
+                alpha channel for now) the differences between reference and test image are summed up and then divided
+                by the maximum possible differences.
+                </li>
+            </ul>
+            In all cases a percentage between 0 and 100 is computed and compared to the given threshold.
+            </p>
         </intro>
     </fullDescription>
 
