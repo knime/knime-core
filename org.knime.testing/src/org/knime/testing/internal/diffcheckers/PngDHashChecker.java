@@ -133,7 +133,7 @@ public class PngDHashChecker implements DifferenceChecker<PNGImageValue> {
         hashA.xor(hashB);
         int diff = hashA.cardinality();
 
-        double relativeDiff = 100 * diff / (8.0 * 8.0);
+        double relativeDiff = 100 * diff / (m_sampleSize.getUpperBound() * m_sampleSize.getIntValue());
         if (relativeDiff <= m_allowedDifference.getDoubleValue()) {
             return OK;
         } else {
