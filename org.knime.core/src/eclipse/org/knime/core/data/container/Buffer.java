@@ -52,6 +52,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -652,6 +653,11 @@ class Buffer implements KNIMEStreamConstants {
         ensureTempFileExists();
         int result = m_list.size();
         if (m_outStream == null) {
+            if (!m_binFile.getParentFile().isDirectory()) {
+                throw new FileNotFoundException("Directory " + m_binFile.getParentFile() + " for buffer " + m_bufferID
+                    + " does not exist");
+            }
+
             m_outStream = initOutFile(new BufferedOutputStream(new FileOutputStream(m_binFile)));
             Buffer.onFileCreated(m_binFile);
             for (BlobSupportDataRow rowInList : m_list) {
