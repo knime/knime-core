@@ -57,8 +57,8 @@ import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 
 /**
- * Interface used by the difference checker node. Subclasses can implement more relaxed difference checks than pure
- * 1:1 equality.
+ * Interface used by the difference checker node. Subclasses can implement more relaxed difference checks than pure 1:1
+ * equality.
  *
  * @param <T> value type that this checker handles
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
@@ -66,13 +66,72 @@ import org.knime.core.node.defaultnodesettings.SettingsModel;
  */
 public interface DifferenceChecker<T extends DataValue> {
     /**
+     * Interface for the result of a difference check.
+     */
+    public final class Result {
+        private final String m_message;
+
+        /**
+        * Creates a positive result, i.e. {@link #ok()} will return <code>true</code>.
+        */
+        public Result() {
+            m_message = null;
+        }
+
+        /**
+         * Creates a negative result i.e. {@link #ok()} will return <code>false</code>. A message explaining the
+         * negative result must be supplied.
+         *
+         * @param message an explanation for the negative result
+         */
+        public Result(final String message) {
+            if (message == null) {
+                throw new IllegalAccessError("Message must not be null");
+            }
+            m_message = message;
+        }
+
+        /**
+         * Returns whether the check is OK, i.e. the two value are equal (in the sense of the checker).
+         *
+         * @return <code>true</code> if the check is OK, false otherwise
+         */
+        public boolean ok() {
+            return m_message == null;
+        }
+
+        /**
+         * Returns a message explaining the differences in case {@link #ok()} returns <code>false</code>. In case
+         * {@link #ok()} is <code>true</code>, null may be returned.
+         *
+         * @return an optional message or <code>null</code>
+         */
+        public String getMessage() {
+            return m_message;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return ok() ? "OK" : "Not OK: " + m_message;
+        }
+    }
+
+    /**
+     * Constant result for successful checks, i.e. {@link Result#ok()} is <code>true</code>.
+     */
+    final Result OK = new Result();
+
+    /**
      * Checks whether the two values are "equal" in the sense of this checker.
      *
-     * @param valueA the first value
-     * @param valueB the second value
-     * @return <code>true</code> if both value are considered equal, <code>false</code> otherwise
+     * @param expected the expected value
+     * @param got the actual value
+     * @return the result of the comparison
      */
-    boolean check(T valueA, T valueB);
+    Result check(T expected, T got);
 
     /**
      * Returns a (possibly empty) list of settings with which this checker can be configured.
@@ -80,7 +139,6 @@ public interface DifferenceChecker<T extends DataValue> {
      * @return a list with {@link SettingsModel}s, never <code>null</code>
      */
     List<? extends SettingsModel> getSettings();
-
 
     /**
      * Returns a (possibly empty) list of dialog components for the settings returned by {@link #getSettings()}. The

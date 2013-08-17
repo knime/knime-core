@@ -46,90 +46,57 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   12.08.2013 (thor): created
+ *   16.08.2013 (thor): created
  */
-package org.knime.testing.internal.diffcheckers;
+package org.knime.testing.internal.nodes.image;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.knime.core.data.DataValue;
-import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
-import org.knime.testing.core.DifferenceChecker;
-import org.knime.testing.core.DifferenceCheckerFactory;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * Difference checker that checks for equality using the equals method of the passed values.
+ * Factory for the image difference checker node.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 2.9
  */
-public class EqualityChecker implements DifferenceChecker<DataValue> {
-    /**
-     * Factory for the {@link EqualityChecker}.
-     */
-    public static class Factory implements DifferenceCheckerFactory<DataValue> {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Class<DataValue> getType() {
-            return DataValue.class;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getDescription() {
-            return DESCRIPTION;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DifferenceChecker<DataValue> newChecker() {
-            return new EqualityChecker();
-        }
-    }
-
-    static final String DESCRIPTION = "Equality";
-
+public class ImageDifferNodeFactory extends NodeFactory<ImageDifferNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public Result check(final DataValue expected, final DataValue got) {
-        if (expected.equals(got)) {
-            return OK;
-        } else {
-            return new Result("expected '" + expected + "', got '" + got + "'");
-        }
+    public ImageDifferNodeModel createNodeModel() {
+        return new ImageDifferNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<SettingsModel> getSettings() {
-        return Collections.emptyList();
+    protected int getNrNodeViews() {
+        return 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<DialogComponent> getDialogComponents() {
-        return Collections.emptyList();
+    public NodeView<ImageDifferNodeModel> createNodeView(final int viewIndex, final ImageDifferNodeModel nodeModel) {
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getDescription() {
-        return "Equality Checker";
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new ImageDifferNodeDialog();
     }
 }

@@ -74,6 +74,18 @@
             expert-flag="false"
             factory-class="org.knime.testing.internal.nodes.differ.DifferenceCheckerNodeFactory"
             id="org.knime.testing.node.differ.DifferenceCheckerNodeFactory">
+      </node>
+      <node
+            category-path="/testing"
+            expert-flag="false"
+            factory-class="org.knime.testing.internal.nodes.image.ImageDifferNodeFactory"
+            id="org.knime.testing.internal.nodes.image.ImageDifferNodeFactory">
+      </node>
+      <node
+            category-path="/testing"
+            expert-flag="false"
+            factory-class="org.knime.testing.node.config.TestConfigNodeFactory"
+            id="org.knime.testing.node.config.TestConfigNodeFactory">
       </node>     
    </extension>
    <extension
@@ -110,6 +122,15 @@
       </DifferenceCheckerFactory>
       <DifferenceCheckerFactory
             class="org.knime.testing.internal.diffcheckers.StringChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.PngPHashChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.PngDHashChecker$Factory">
+      </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.PngFullDifferenceChecker$Factory">
       </DifferenceCheckerFactory>
    </extension>
 </plugin>

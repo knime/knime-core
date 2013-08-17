@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode type="Other" icon="equals.png" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+    <name>Image Difference Checker</name>
+
+    <shortDescription>
+        Compares the two image port objects.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            <p>
+                Used in regression tests to test the created image with a reference image. The node will compare
+                (depending on the dialog settings) the incoming images during execute and
+                fails with an exception if they are not equal (or do not meet
+                the expectations). In that case the node stays not executed and the
+                test will fail.
+            </p>
+            <p>
+                In the node's dialog, you can adjust how individual the images are compared. The default is to check for
+                exact equality. For certain images you can relax the comparison by using special checkers, e.g. by
+                specifying a certain allowed percentage of difference.
+            </p>
+        </intro>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Test Image">Freshly created image that is tested.</inPort>
+        <inPort index="1" name="Reference Image">The reference image.</inPort>
+    </ports>
+</knimeNode>

@@ -81,6 +81,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.testing.core.DifferenceChecker;
+import org.knime.testing.core.DifferenceChecker.Result;
 import org.knime.testing.core.DifferenceCheckerFactory;
 import org.knime.testing.internal.diffcheckers.EqualityChecker;
 
@@ -175,7 +176,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
             DifferenceChecker<DataValue> checker = (DifferenceChecker<DataValue>)m_checkers.get(colSpec);
 
             DataCell testCell = testRow.getCell(i);
-            DataCell refCell = testRow.getCell(i);
+            DataCell refCell = refRow.getCell(i);
 
             if (refCell.isMissing() && !testCell.isMissing()) {
                 throw new IllegalStateException("Expected missing cell in row '" + refRow.getKey() + "' but got '"
@@ -185,9 +186,12 @@ class DifferenceCheckerNodeModel extends NodeModel {
             } else if (!refCell.isMissing() && !testCell.isMissing()) {
                 if (colSpec.getType().isCollectionType() && !(checker instanceof EqualityChecker)) {
                     compareCollection(colSpec, checker, testCell, refCell);
-                } else if (!checker.check(testCell, refCell)) {
-                    throw new IllegalStateException("Wrong value in column '" + colSpec.getName() + "': expected '"
-                            + refCell + "', got '" + testCell + "' (using checker '" + checker.getDescription() + "')");
+                } else {
+                    Result res = checker.check(testCell, refCell);
+                    if (!res.ok()) {
+                        throw new IllegalStateException("Wrong value in column '" + colSpec.getName() + "': "
+                                + res.getMessage() + " (using checker '" + checker.getDescription() + "')");
+                    }
                 }
             } else {
                 // both cells are missing => OK
@@ -216,10 +220,11 @@ class DifferenceCheckerNodeModel extends NodeModel {
         for (DataCell refCollCell : refCollection) {
             DataCell testCollCell = testCollIt.next();
 
-            if (!checker.check(testCollCell, refCollCell)) {
+            Result res = checker.check(testCollCell, refCollCell);
+            if (!res.ok()) {
                 throw new IllegalStateException("Wrong value at position " + index + " in collection of column '"
-                        + colSpec.getName() + "': expected '" + refCollCell + "', got '" + testCollCell
-                        + "' (using checker '" + checker.getDescription() + "')");
+                        + colSpec.getName() + "': " + res.getMessage() + " (using checker '" + checker.getDescription()
+                        + "')");
             }
             index++;
         }
@@ -362,10 +367,13 @@ class DifferenceCheckerNodeModel extends NodeModel {
             throw new IllegalStateException("New lower bound in column '" + refColSpec.getName() + "'");
         } else if (refDom.hasLowerBound()) {
             DataCell refBound = refDom.getLowerBound();
-            DataCell testBound = refDom.getLowerBound();
-            if (!checker.check(refBound, testBound)) {
-                throw new IllegalStateException("Wrong lower bound in column '" + refColSpec.getName()
-                        + "': expected '" + refBound + "', got '" + testBound + "'");
+            DataCell testBound = testDom.getLowerBound();
+
+            Result res = checker.check(refBound, testBound);
+
+            if (!res.ok()) {
+                throw new IllegalStateException("Wrong lower bound in column '" + refColSpec.getName() + "': "
+                        + res.getMessage());
             }
         }
 
@@ -375,10 +383,13 @@ class DifferenceCheckerNodeModel extends NodeModel {
             throw new IllegalStateException("New upper bound in column '" + refColSpec.getName() + "'");
         } else if (refDom.hasUpperBound()) {
             DataCell refBound = refDom.getUpperBound();
-            DataCell testBound = refDom.getUpperBound();
-            if (!checker.check(refBound, testBound)) {
-                throw new IllegalStateException("Wrong upper bound in column '" + refColSpec.getName()
-                        + "': expected '" + refBound + "', got '" + testBound + "'");
+            DataCell testBound = testDom.getUpperBound();
+
+            Result res = checker.check(refBound, testBound);
+
+            if (!res.ok()) {
+                throw new IllegalStateException("Wrong upper bound in column '" + refColSpec.getName() + "': "
+                        + res.getMessage());
             }
         }
     }
@@ -410,9 +421,10 @@ class DifferenceCheckerNodeModel extends NodeModel {
                 DataCell refCell = refValues.get(i);
                 DataCell testCell = testValues.get(i);
 
-                if (!checker.check(refCell, testCell)) {
-                    throw new IllegalStateException("Wrong possible value in column '" + refColSpec.getName()
-                            + "': expected '" + refCell + "', got '" + testCell + "'");
+                Result res = checker.check(refCell, testCell);
+                if (!res.ok()) {
+                    throw new IllegalStateException("Wrong possible value in column '" + refColSpec.getName() + "': "
+                            + res.getMessage());
                 }
             }
         } else {

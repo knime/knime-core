@@ -46,38 +46,41 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   13.08.2013 (thor): created
+ *   16.08.2013 (thor): created
  */
 package org.knime.testing.internal.diffcheckers;
 
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.List;
 
-import org.knime.core.data.DoubleValue;
+import org.knime.core.data.image.png.PNGImageValue;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
-import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
 
 /**
- * Checker for numerical values which allows a configurable epsilon-deviation.
+ * Image checker that computes pixel-wise color differences (independently for each color channel) and compares it to
+ * the maximal possible differences for the reference image.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 2.9
  */
-public class EpsilonNumberChecker implements DifferenceChecker<DoubleValue> {
+public class PngFullDifferenceChecker implements DifferenceChecker<PNGImageValue> {
     /**
-     * Factory for the {@link EpsilonNumberChecker}.
+     * Factory for {@link PngFullDifferenceChecker}.
      */
-    public static class Factory implements DifferenceCheckerFactory<DoubleValue> {
+    public static class Factory implements DifferenceCheckerFactory<PNGImageValue> {
         /**
          * {@inheritDoc}
          */
         @Override
-        public Class<DoubleValue> getType() {
-            return DoubleValue.class;
+        public Class<PNGImageValue> getType() {
+            return PNGImageValue.class;
         }
 
         /**
@@ -92,28 +95,57 @@ public class EpsilonNumberChecker implements DifferenceChecker<DoubleValue> {
          * {@inheritDoc}
          */
         @Override
-        public DifferenceChecker<DoubleValue> newChecker() {
-            return new EpsilonNumberChecker();
+        public DifferenceChecker<PNGImageValue> newChecker() {
+            return new PngFullDifferenceChecker();
         }
     }
 
-    static final String DESCRIPTION = "Numbers with epsilon";
+    private static final String DESCRIPTION = "PNG images (full difference)";
 
-    private final SettingsModelDouble m_epsilon = new SettingsModelDouble("epsilon", 0.01);
+    private final SettingsModelDoubleBounded m_allowedDifference = new SettingsModelDoubleBounded("allowedDifference",
+            5, 0, 100);
 
-    private final DialogComponentNumber m_component = new DialogComponentNumber(m_epsilon, "Epsilon", 0.001);
+    private final DialogComponentNumber m_dialogComponent = new DialogComponentNumber(m_allowedDifference,
+            "Allowed difference in %", 1);
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Result check(final DoubleValue expected, final DoubleValue got) {
-        double diff = Math.abs(expected.getDoubleValue() - got.getDoubleValue());
-        if (diff <= m_epsilon.getDoubleValue()) {
+    public Result check(final PNGImageValue expected, final PNGImageValue got) {
+        BufferedImage expectedImage = getBufferedImage(expected.getImageContent().getImage());
+        BufferedImage actualImage = getBufferedImage(got.getImageContent().getImage());
+
+        if ((expectedImage.getWidth() != actualImage.getWidth())
+                || (expectedImage.getHeight() != actualImage.getHeight())) {
+            return new Result("wrong image dimension, expected " + expectedImage.getWidth() + "x"
+                    + expectedImage.getHeight() + ", got " + actualImage.getWidth() + "x" + actualImage.getHeight());
+        }
+
+        double diff = 0;
+        double maxPossibleDiff = 0;
+        for (int x = 0; x < expectedImage.getWidth(); x++) {
+            for (int y = 0; y < expectedImage.getHeight(); y++) {
+                int expectedRed = ImageUtil.getRed(expectedImage, x, y);
+                int expectedGreen = ImageUtil.getGreen(expectedImage, x, y);
+                int expectedBlue = ImageUtil.getBlue(expectedImage, x, y);
+
+                diff += Math.abs(expectedRed - ImageUtil.getRed(actualImage, x, y));
+                diff += Math.abs(expectedGreen - ImageUtil.getGreen(actualImage, x, y));
+                diff += Math.abs(expectedGreen - ImageUtil.getBlue(actualImage, x, y));
+
+                maxPossibleDiff += Math.max(0xff - expectedRed, expectedRed);
+                maxPossibleDiff += Math.max(0xff - expectedGreen, expectedGreen);
+                maxPossibleDiff += Math.max(0xff - expectedBlue, expectedBlue);
+            }
+        }
+
+        double relativeDiff = 100 * diff / maxPossibleDiff;
+        if (relativeDiff <= m_allowedDifference.getDoubleValue()) {
             return OK;
         } else {
-            return new Result("expected " + expected.getDoubleValue() + ", got " + got.getDoubleValue()
-                    + "; difference " + diff + " is greater than " + m_epsilon.getDoubleValue());
+            return new Result("image difference " + relativeDiff + "% is greater than "
+                    + m_allowedDifference.getDoubleValue() + "%");
         }
     }
 
@@ -122,7 +154,7 @@ public class EpsilonNumberChecker implements DifferenceChecker<DoubleValue> {
      */
     @Override
     public List<? extends SettingsModel> getSettings() {
-        return Collections.singletonList(m_epsilon);
+        return Collections.singletonList(m_allowedDifference);
     }
 
     /**
@@ -130,7 +162,7 @@ public class EpsilonNumberChecker implements DifferenceChecker<DoubleValue> {
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
-        return Collections.singletonList(m_component);
+        return Collections.singletonList(m_dialogComponent);
     }
 
     /**
@@ -139,5 +171,18 @@ public class EpsilonNumberChecker implements DifferenceChecker<DoubleValue> {
     @Override
     public String getDescription() {
         return DESCRIPTION;
+    }
+
+    private BufferedImage getBufferedImage(final Image img) {
+        if (img instanceof BufferedImage) {
+            return (BufferedImage)img;
+        } else {
+            BufferedImage bimage =
+                    new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D bGr = bimage.createGraphics();
+            bGr.drawImage(img, 0, 0, null);
+            bGr.dispose();
+            return bimage;
+        }
     }
 }

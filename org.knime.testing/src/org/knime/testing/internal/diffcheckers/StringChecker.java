@@ -111,26 +111,38 @@ public class StringChecker implements DifferenceChecker<StringValue> {
      * {@inheritDoc}
      */
     @Override
-    public boolean check(final StringValue valueA, final StringValue valueB) {
+    public Result check(final StringValue valueA, final StringValue valueB) {
         if (m_ignoreLinefeeds.getBooleanValue()) {
             BufferedReader rA = new BufferedReader(new StringReader(valueA.getStringValue()));
             BufferedReader rB = new BufferedReader(new StringReader(valueA.getStringValue()));
 
             String lineA, lineB;
             try {
+                int lineNo = 1;
                 while ((lineA = rA.readLine()) != null) {
                     lineB = rB.readLine();
                     if (!lineA.equals(lineB)) {
-                        return false;
+                        return new Result("expected '" + lineA + "', got '" + lineB + "' in line " + lineNo);
                     }
+                    lineNo++;
                 }
-                return (rB.readLine() == null);
+
+                lineB = rB.readLine();
+                if (lineB == null){
+                    return OK;
+                } else {
+                    return new Result("unexpected additional lines: " + lineB);
+                }
             } catch (IOException ex) {
                 // does not happen because we are reading from a string
-                return false;
+                return new Result("I/O exception: " + ex.getMessage());
             }
         } else {
-            return valueA.equals(valueB);
+            if (valueA.equals(valueB)) {
+                return OK;
+            } else {
+                return new Result("expected '" + valueA + "', got '" + valueB + "'");
+            }
         }
     }
 

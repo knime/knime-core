@@ -46,90 +46,63 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   12.08.2013 (thor): created
+ *   16.08.2013 (thor): created
  */
 package org.knime.testing.internal.diffcheckers;
 
-import java.util.Collections;
-import java.util.List;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 
-import org.knime.core.data.DataValue;
-import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
-import org.knime.testing.core.DifferenceChecker;
-import org.knime.testing.core.DifferenceCheckerFactory;
+import javax.swing.ImageIcon;
 
 /**
- * Difference checker that checks for equality using the equals method of the passed values.
+ * Some utility methods for manipulating and querying images.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 2.9
  */
-public class EqualityChecker implements DifferenceChecker<DataValue> {
-    /**
-     * Factory for the {@link EqualityChecker}.
-     */
-    public static class Factory implements DifferenceCheckerFactory<DataValue> {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Class<DataValue> getType() {
-            return DataValue.class;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getDescription() {
-            return DESCRIPTION;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DifferenceChecker<DataValue> newChecker() {
-            return new EqualityChecker();
-        }
+final class ImageUtil {
+    private ImageUtil() {
     }
 
-    static final String DESCRIPTION = "Equality";
+    public static int getBlue(final BufferedImage img, final int x, final int y) {
+        return img.getRGB(x, y) & 0xff;
+    }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Result check(final DataValue expected, final DataValue got) {
-        if (expected.equals(got)) {
-            return OK;
+    public static int getGreen(final BufferedImage img, final int x, final int y) {
+        return (img.getRGB(x, y) & 0xff00) >> 8;
+    }
+
+    public static int getRed(final BufferedImage img, final int x, final int y) {
+        return (img.getRGB(x, y) & 0xff0000) >> 16;
+    }
+
+    public static BufferedImage resize(final BufferedImage image, final int width, final int height) {
+        Image scaled = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        Image temp = new ImageIcon(scaled).getImage();
+        BufferedImage bufferedImage =
+                new BufferedImage(temp.getWidth(null), temp.getHeight(null), BufferedImage.TYPE_INT_RGB);
+        Graphics g = bufferedImage.createGraphics();
+        g.setColor(Color.white);
+        g.fillRect(0, 0, temp.getWidth(null), temp.getHeight(null));
+        g.drawImage(temp, 0, 0, null);
+        g.dispose();
+
+        return bufferedImage;
+    }
+
+    public static BufferedImage getBufferedImage(final Image img) {
+        if (img instanceof BufferedImage) {
+            return (BufferedImage)img;
         } else {
-            return new Result("expected '" + expected + "', got '" + got + "'");
+            BufferedImage bimage =
+                    new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D bGr = bimage.createGraphics();
+            bGr.drawImage(img, 0, 0, null);
+            bGr.dispose();
+            return bimage;
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<SettingsModel> getSettings() {
-        return Collections.emptyList();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<DialogComponent> getDialogComponents() {
-        return Collections.emptyList();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Equality Checker";
     }
 }

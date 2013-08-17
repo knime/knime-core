@@ -46,36 +46,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   12.08.2013 (thor): created
+ *   16.08.2013 (thor): created
  */
 package org.knime.testing.internal.diffcheckers;
 
-import java.util.Collections;
+import java.awt.Image;
+import java.awt.color.ColorSpace;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorConvertOp;
+import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
 
-import org.knime.core.data.DataValue;
+import org.knime.core.data.image.png.PNGImageValue;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
+import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
 
 /**
- * Difference checker that checks for equality using the equals method of the passed values.
+ * Checker for PNGs that uses the pHash algorithm. See
+ *
+ * http://www.hackerfactor.com/blog/index.php?/archives/529-Kind-of-Like-That.html
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 2.9
  */
-public class EqualityChecker implements DifferenceChecker<DataValue> {
+public class PngDHashChecker implements DifferenceChecker<PNGImageValue> {
     /**
-     * Factory for the {@link EqualityChecker}.
+     * Factory for the {@link PngDHashChecker}.
      */
-    public static class Factory implements DifferenceCheckerFactory<DataValue> {
+    public static class Factory implements DifferenceCheckerFactory<PNGImageValue> {
         /**
          * {@inheritDoc}
          */
         @Override
-        public Class<DataValue> getType() {
-            return DataValue.class;
+        public Class<PNGImageValue> getType() {
+            return PNGImageValue.class;
         }
 
         /**
@@ -90,22 +99,46 @@ public class EqualityChecker implements DifferenceChecker<DataValue> {
          * {@inheritDoc}
          */
         @Override
-        public DifferenceChecker<DataValue> newChecker() {
-            return new EqualityChecker();
+        public DifferenceChecker<PNGImageValue> newChecker() {
+            return new PngDHashChecker();
         }
     }
 
-    static final String DESCRIPTION = "Equality";
+    private static final String DESCRIPTION = "PNG images (dHash)";
+
+    private final SettingsModelDoubleBounded m_allowedDifference = new SettingsModelDoubleBounded("allowedDifference",
+            5, 0, 100);
+
+    private final DialogComponentNumber m_allowedDifferenceComponent = new DialogComponentNumber(m_allowedDifference,
+            "Allowed difference in %", 1);
+
+    private final SettingsModelIntegerBounded m_sampleSize = new SettingsModelIntegerBounded("sampleSize", 8, 4, 128);
+
+    private final DialogComponentNumber m_sampleSizeComponent = new DialogComponentNumber(m_sampleSize, "Sample size",
+            1);
+
+    private final ColorConvertOp m_colorConvert = new ColorConvertOp(ColorSpace.getInstance(ColorSpace.CS_GRAY), null);
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Result check(final DataValue expected, final DataValue got) {
-        if (expected.equals(got)) {
+    public Result check(final PNGImageValue valueA, final PNGImageValue valueB) {
+        Image pngA = valueA.getImageContent().getImage();
+        Image pngB = valueB.getImageContent().getImage();
+
+        BitSet hashA = getHash(ImageUtil.getBufferedImage(pngA));
+        BitSet hashB = getHash(ImageUtil.getBufferedImage(pngB));
+
+        hashA.xor(hashB);
+        int diff = hashA.cardinality();
+
+        double relativeDiff = 100 * diff / (8.0 * 8.0);
+        if (relativeDiff <= m_allowedDifference.getDoubleValue()) {
             return OK;
         } else {
-            return new Result("expected '" + expected + "', got '" + got + "'");
+            return new Result("image difference " + relativeDiff + "% is greater than "
+                    + m_allowedDifference.getDoubleValue() + "%");
         }
     }
 
@@ -113,16 +146,16 @@ public class EqualityChecker implements DifferenceChecker<DataValue> {
      * {@inheritDoc}
      */
     @Override
-    public List<SettingsModel> getSettings() {
-        return Collections.emptyList();
+    public List<? extends SettingsModel> getSettings() {
+        return Arrays.asList(m_allowedDifference, m_sampleSize);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<DialogComponent> getDialogComponents() {
-        return Collections.emptyList();
+    public List<? extends DialogComponent> getDialogComponents() {
+        return Arrays.asList(m_allowedDifferenceComponent, m_sampleSizeComponent);
     }
 
     /**
@@ -130,6 +163,25 @@ public class EqualityChecker implements DifferenceChecker<DataValue> {
      */
     @Override
     public String getDescription() {
-        return "Equality Checker";
+        return DESCRIPTION;
+    }
+
+    private BufferedImage grayscale(final BufferedImage img) {
+        return m_colorConvert.filter(img, null);
+    }
+
+    private BitSet getHash(BufferedImage img) {
+        img = ImageUtil.resize(img, m_sampleSize.getIntValue() + 1, m_sampleSize.getIntValue());
+        img = grayscale(img);
+
+        BitSet hash = new BitSet(m_sampleSize.getIntValue() * m_sampleSize.getIntValue());
+        int index = 0;
+        for (int x = 0; x < img.getWidth() - 1; x++) {
+            for (int y = 0; y < img.getHeight(); y++) {
+                hash.set(index++, ImageUtil.getBlue(img, x, y) < ImageUtil.getBlue(img, x + 1, y));
+            }
+        }
+
+        return hash;
     }
 }
