@@ -78,7 +78,7 @@ import org.knime.testing.core.DifferenceCheckerFactory;
  */
 public class PngPHashChecker implements DifferenceChecker<PNGImageValue> {
     /**
-     * Factory for {@linl PngPHashChecker}.
+     * Factory for {@link PngPHashChecker}.
      */
     public static class Factory implements DifferenceCheckerFactory<PNGImageValue> {
         /**
