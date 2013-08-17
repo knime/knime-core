@@ -108,9 +108,6 @@ class DifferenceCheckerNodeModel extends NodeModel {
         if (inSpecs[1] == null) {
             throw new InvalidSettingsException("No reference table available");
         }
-        if (inSpecs[0] != null) {
-            checkTableSpecs(inSpecs[0], inSpecs[1], false);
-        }
 
         for (DataColumnSpec dcs : inSpecs[1]) {
             DifferenceCheckerFactory<? extends DataValue> fac = m_settings.checkerFactory(dcs.getName());
