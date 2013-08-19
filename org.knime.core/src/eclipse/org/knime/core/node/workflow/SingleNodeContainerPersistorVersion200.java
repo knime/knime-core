@@ -299,7 +299,9 @@ public class SingleNodeContainerPersistorVersion200 extends SingleNodeContainerP
     }
 
     protected static void saveSNCSettings(final NodeSettingsWO settings, final SingleNodeContainer snc) {
-        snc.saveSNCSettings(settings, false);
+        // if no settings are stored in the SNCSettings, use the ones from the NodeModel as
+        // default (node uses default configuration after new instantiation), fixes bug 4364
+        snc.saveSNCSettings(settings, true);
     }
 
     protected static void saveFlowObjectStack(final NodeSettingsWO settings, final SingleNodeContainer nc) {
