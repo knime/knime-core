@@ -147,19 +147,25 @@ public final class LogRegLearnerNodeModel extends NodeModel {
             inPMMLSpec = creator.createSpec();
             inPMMLPort = new PMMLPortObject(inPMMLSpec);
         }
-        LogRegLearner learner = new LogRegLearner(new PortObjectSpec[] {
-                tableSpec, inPMMLSpec}, m_settings);
+        LogRegLearner learner = new LogRegLearner(new PortObjectSpec[] {tableSpec, inPMMLSpec}, m_settings);
         m_content = learner.execute(new PortObject[] {data, inPMMLPort}, exec);
 
-        PMMLPortObject outPMMLPort = new PMMLPortObject(
-                (PMMLPortObjectSpec)learner.getOutputSpec()[0], inPMMLPort,
-                tableSpec);
-        PMMLGeneralRegressionTranslator trans
-                = new PMMLGeneralRegressionTranslator(
+        // the learner has maybe changed the domain values of the target and learning columns
+        // recreate inPMMLPort if PMML Input is no connected
+        if (inObjects[1] == null) {
+            PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(m_content.getSpec().getDataTableSpec());
+            inPMMLPort = new PMMLPortObject(creator.createSpec());
+        } else {
+            // TODO: Wait for fix of Bug 4439.
+        }
+
+        // third argument is ignored since we provide a port
+        PMMLPortObject outPMMLPort = new PMMLPortObject((PMMLPortObjectSpec)learner.getOutputSpec()[0],
+            inPMMLPort, null);
+        PMMLGeneralRegressionTranslator trans = new PMMLGeneralRegressionTranslator(
                         m_content.createGeneralRegressionContent());
         outPMMLPort.addModelTranslater(trans);
-        return new PortObject[]{outPMMLPort,
-                m_content.createTablePortObject(exec)};
+        return new PortObject[]{outPMMLPort, m_content.createTablePortObject(exec)};
     }
 
     /** {@inheritDoc} */

@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,6 +72,7 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
@@ -130,36 +132,41 @@ public final class LogRegLearner {
         PMMLPortObject inPMMLPort = (PMMLPortObject)portObjects[1];
         PMMLPortObjectSpec inPMMLSpec = inPMMLPort.getSpec();
         init(data.getDataTableSpec(), inPMMLSpec);
-        DataTable dataTable = recalcDomainIfNeccessary(data, inPMMLSpec, exec);
+        DataTable dataTable = recalcDomainForTargeAndLearningFields(data, inPMMLSpec, exec);
         return m_learner.perform(dataTable, exec);
     }
 
-    private DataTable recalcDomainIfNeccessary(
+    private DataTable recalcDomainForTargeAndLearningFields(
             final BufferedDataTable data, final PMMLPortObjectSpec inPMMLSpec,
-            final ExecutionContext exec) throws InvalidSettingsException {
-        List<String> recalcValuesFor = new ArrayList<String>();
+            final ExecutionContext exec) throws InvalidSettingsException, CanceledExecutionException {
+        Map<String, Set<DataCell>> recalcValuesFor = new HashMap<String, Set<DataCell>>();
+        final DataTableSpec dataTableSpec = data.getDataTableSpec();
         for (String col : m_pmmlOutSpec.getLearningFields()) {
-            DataColumnSpec colSpec = data.getDataTableSpec().getColumnSpec(col);
-            if (colSpec.getType().isCompatible(NominalValue.class)
-                    && !colSpec.getDomain().hasValues()) {
-                recalcValuesFor.add(col);
+            DataColumnSpec colSpec = dataTableSpec.getColumnSpec(col);
+            if (colSpec.getType().isCompatible(NominalValue.class)) {
+                Set<DataCell> domainValues = new LinkedHashSet<DataCell>();
+                if (colSpec.getDomain().getValues() != null) {
+                    domainValues.addAll(colSpec.getDomain().getValues());
+                }
+                recalcValuesFor.put(col, domainValues);
             }
         }
         String targetCol = m_pmmlOutSpec.getTargetFields().get(0);
-        DataColumnSpec targetColSpec = data.getDataTableSpec().getColumnSpec(
+        DataColumnSpec targetColSpec = dataTableSpec.getColumnSpec(
                 targetCol);
-        if (targetColSpec.getType().isCompatible(NominalValue.class)
-                && !targetColSpec.getDomain().hasValues()) {
-            recalcValuesFor.add(targetCol);
+        if (targetColSpec.getType().isCompatible(NominalValue.class)) {
+            Set<DataCell> domainValues = new LinkedHashSet<DataCell>();
+            if (targetColSpec.getDomain().getValues() != null) {
+                domainValues.addAll(targetColSpec.getDomain().getValues());
+            }
+            recalcValuesFor.put(targetCol, domainValues);
         }
-        if (recalcValuesFor.isEmpty()) {
-            return data;
-        }
+
         int[] valuesI = new int[recalcValuesFor.size()];
         int c = 0;
-        for (int i = 0; i < data.getDataTableSpec().getNumColumns(); i++) {
-            String colName = data.getDataTableSpec().getColumnSpec(i).getName();
-            if (recalcValuesFor.contains(colName)) {
+        for (int i = 0; i < dataTableSpec.getNumColumns(); i++) {
+            String colName = dataTableSpec.getColumnSpec(i).getName();
+            if (recalcValuesFor.containsKey(colName)) {
                 valuesI[c] = i;
                 c++;
             }
@@ -169,7 +176,12 @@ public final class LogRegLearner {
         for (int i = 0; i < valuesI.length; i++) {
             valuesMap.put(valuesI[i], new HashSet<DataCell>());
         }
+        int rowIndex = 0;
+        final int rowCount = data.getRowCount();
         for (DataRow row : data) {
+            exec.setMessage("Determining possible values " + (rowIndex + 1)
+                + "/" + rowCount + " (\"" + row.getKey() + "\")");
+            exec.checkCanceled();
             for (int i = 0; i < valuesI.length; i++) {
                 valuesMap.get(valuesI[i]).add(row.getCell(valuesI[i]));
             }
@@ -177,12 +189,18 @@ public final class LogRegLearner {
 
         List<DataColumnSpec> newColSpecList = new ArrayList<DataColumnSpec>();
         int cc = 0;
-        for (DataColumnSpec columnSpec : data.getDataTableSpec()) {
-            if (recalcValuesFor.contains(columnSpec.getName())) {
-                DataColumnSpecCreator specCreator =
-                    new DataColumnSpecCreator(columnSpec);
-                DataColumnDomainCreator domainCreator =
-                    new DataColumnDomainCreator(valuesMap.get(cc));
+        for (DataColumnSpec columnSpec : dataTableSpec) {
+            if (recalcValuesFor.containsKey(columnSpec.getName())) {
+                DataColumnSpecCreator specCreator = new DataColumnSpecCreator(columnSpec);
+                Set<DataCell> values = recalcValuesFor.get(columnSpec.getName());
+                Set<DataCell> dataValues = valuesMap.get(cc);
+                // retain values found in data, this way the original order of domains values
+                // is preserved.
+                values.retainAll(dataValues);
+                // append all values found in the data that are not in the domain
+                dataValues.removeAll(values);
+                values.addAll(dataValues);
+                DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(values);
                 specCreator.setDomain(domainCreator.createDomain());
                 DataColumnSpec newColSpec = specCreator.createSpec();
                 newColSpecList.add(newColSpec);
@@ -194,7 +212,7 @@ public final class LogRegLearner {
         DataTableSpec spec =
             new DataTableSpec(newColSpecList.toArray(new DataColumnSpec[0]));
         DataTable newDataTable = exec.createSpecReplacerTable(data, spec);
-        // initilize m_learner so that it has the correct DataTableSpec of
+        // initialize m_learner so that it has the correct DataTableSpec of
         // the input
         init(newDataTable.getDataTableSpec(), inPMMLSpec);
         return newDataTable;
@@ -286,6 +304,14 @@ public final class LogRegLearner {
         }
 
         if (null != targetColSpec) {
+            // Check if target has at least two categories.
+            final Set<DataCell> targetValues = targetColSpec.getDomain().getValues();
+            if (targetValues != null && targetValues.size() < 2) {
+                throw new InvalidSettingsException("The target column \""
+                        + targetColSpec.getName() + "\" has one value, only. "
+                        + "At least two target categories are expected.");
+            }
+
             String[] learnerCols = new String[regressorColSpecs.size() + 1];
             for (int i = 0; i < regressorColSpecs.size(); i++) {
                 learnerCols[i] = regressorColSpecs.get(i).getName();
