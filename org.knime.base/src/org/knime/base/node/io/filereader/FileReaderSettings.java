@@ -51,6 +51,7 @@
 package org.knime.base.node.io.filereader;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -1195,7 +1196,10 @@ public class FileReaderSettings extends TokenizerSettings {
                 BufferedReader reader = null;
                 try {
                     reader = createNewInputReader();
+                } catch (FileNotFoundException fnfe) {
+                    status.addError(fnfe.getMessage());
                 } catch (IOException ioe) {
+                    LOGGER.debug(ioe.getMessage(), ioe);
                     status.addError(ioe.getMessage());
                 }
                 if (reader != null) {
