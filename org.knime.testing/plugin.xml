@@ -132,5 +132,8 @@
       <DifferenceCheckerFactory
             class="org.knime.testing.internal.diffcheckers.PngFullDifferenceChecker$Factory">
       </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.PngHistogramDifferenceChecker$Factory">
+      </DifferenceCheckerFactory>
    </extension>
 </plugin>

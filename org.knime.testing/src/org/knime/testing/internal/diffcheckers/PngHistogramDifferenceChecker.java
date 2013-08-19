@@ -51,7 +51,7 @@
 package org.knime.testing.internal.diffcheckers;
 
 import java.awt.image.BufferedImage;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import org.knime.core.data.image.png.PNGImageValue;
@@ -59,18 +59,18 @@ import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
 
 /**
- * Image checker that computes pixel-wise color differences (independently for each color channel) and compares it to
- * the maximal possible differences for the reference image.
+ * Image checker that computes color historgrams for two images and compares the normalized historgrams.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-public class PngFullDifferenceChecker implements DifferenceChecker<PNGImageValue> {
+public class PngHistogramDifferenceChecker implements DifferenceChecker<PNGImageValue> {
     /**
-     * Factory for {@link PngFullDifferenceChecker}.
+     * Factory for {@link PngHistogramDifferenceChecker}.
      */
     public static class Factory implements DifferenceCheckerFactory<PNGImageValue> {
         /**
@@ -94,17 +94,23 @@ public class PngFullDifferenceChecker implements DifferenceChecker<PNGImageValue
          */
         @Override
         public DifferenceChecker<PNGImageValue> newChecker() {
-            return new PngFullDifferenceChecker();
+            return new PngHistogramDifferenceChecker();
         }
     }
 
-    private static final String DESCRIPTION = "PNG images (full difference)";
+    private static final String DESCRIPTION = "PNG images (historgram)";
 
     private final SettingsModelDoubleBounded m_allowedDifference = new SettingsModelDoubleBounded("allowedDifference",
             5, 0, 100);
 
-    private final DialogComponentNumber m_dialogComponent = new DialogComponentNumber(m_allowedDifference,
-            "Allowed difference in %", 1);
+    private final DialogComponentNumber m_allowedDifferenceDialogComponent = new DialogComponentNumber(
+            m_allowedDifference, "Allowed difference in %", 1);
+
+    private final SettingsModelIntegerBounded m_numberOfBins = new SettingsModelIntegerBounded("numberOfBins", 5, 1,
+            255);
+
+    private final DialogComponentNumber m_binsDialogComponent = new DialogComponentNumber(m_numberOfBins,
+            "Bins per color", 1);
 
     /**
      * {@inheritDoc}
@@ -114,31 +120,18 @@ public class PngFullDifferenceChecker implements DifferenceChecker<PNGImageValue
         BufferedImage expectedImage = ImageUtil.getBufferedImage(expected.getImageContent().getImage());
         BufferedImage actualImage = ImageUtil.getBufferedImage(got.getImageContent().getImage());
 
-        if ((expectedImage.getWidth() != actualImage.getWidth())
-                || (expectedImage.getHeight() != actualImage.getHeight())) {
-            return new Result("wrong image dimension, expected " + expectedImage.getWidth() + "x"
-                    + expectedImage.getHeight() + ", got " + actualImage.getWidth() + "x" + actualImage.getHeight());
-        }
+        double[][] referenceHisto = computeHistograms(expectedImage);
+        double[][] testHisto = computeHistograms(actualImage);
 
         double diff = 0;
-        double maxPossibleDiff = 0;
-        for (int x = 0; x < expectedImage.getWidth(); x++) {
-            for (int y = 0; y < expectedImage.getHeight(); y++) {
-                int expectedRed = ImageUtil.getRed(expectedImage, x, y);
-                int expectedGreen = ImageUtil.getGreen(expectedImage, x, y);
-                int expectedBlue = ImageUtil.getBlue(expectedImage, x, y);
-
-                diff += Math.abs(expectedRed - ImageUtil.getRed(actualImage, x, y));
-                diff += Math.abs(expectedGreen - ImageUtil.getGreen(actualImage, x, y));
-                diff += Math.abs(expectedGreen - ImageUtil.getBlue(actualImage, x, y));
-
-                maxPossibleDiff += Math.max(0xff - expectedRed, expectedRed);
-                maxPossibleDiff += Math.max(0xff - expectedGreen, expectedGreen);
-                maxPossibleDiff += Math.max(0xff - expectedBlue, expectedBlue);
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < m_numberOfBins.getIntValue(); j++) {
+                diff += Math.abs(referenceHisto[i][j] - testHisto[i][j]);
             }
         }
 
-        double relativeDiff = 100 * diff / maxPossibleDiff;
+
+        double relativeDiff = 100 * diff / (3 * m_numberOfBins.getIntValue());
         if (relativeDiff <= m_allowedDifference.getDoubleValue()) {
             return OK;
         } else {
@@ -152,7 +145,7 @@ public class PngFullDifferenceChecker implements DifferenceChecker<PNGImageValue
      */
     @Override
     public List<? extends SettingsModel> getSettings() {
-        return Collections.singletonList(m_allowedDifference);
+        return Arrays.asList(m_allowedDifference, m_numberOfBins);
     }
 
     /**
@@ -160,7 +153,7 @@ public class PngFullDifferenceChecker implements DifferenceChecker<PNGImageValue
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
-        return Collections.singletonList(m_dialogComponent);
+        return Arrays.asList(m_allowedDifferenceDialogComponent, m_binsDialogComponent);
     }
 
     /**
@@ -169,5 +162,30 @@ public class PngFullDifferenceChecker implements DifferenceChecker<PNGImageValue
     @Override
     public String getDescription() {
         return DESCRIPTION;
+    }
+
+    private double[][] computeHistograms(final BufferedImage img) {
+        double[][] histo = new double[3][m_numberOfBins.getIntValue()];
+
+        for (int x = 0; x < img.getWidth(); x++) {
+            for (int y = 0; y < img.getHeight(); y++) {
+                int redBin = (int)Math.floor(ImageUtil.getRed(img, x, y) / 256.0 * m_numberOfBins.getIntValue());
+                int greenBin = (int)Math.floor(ImageUtil.getGreen(img, x, y) / 256.0 * m_numberOfBins.getIntValue());
+                int blueBin = (int)Math.floor(ImageUtil.getBlue(img, x, y) / 256.0 * m_numberOfBins.getIntValue());
+
+                histo[0][redBin]++;
+                histo[1][greenBin]++;
+                histo[2][blueBin]++;
+            }
+        }
+
+        final int totalPixels = img.getWidth() * img.getHeight();
+        for (int j = 0; j < m_numberOfBins.getIntValue(); j++) {
+            for (int i = 0; i < 3; i++) {
+                histo[i][j] /= totalPixels;
+            }
+        }
+
+        return histo;
     }
 }
