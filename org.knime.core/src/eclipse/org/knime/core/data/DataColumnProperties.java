@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.12.2005 (bw): created
  *   25.10.2006 (tg): cleanup
@@ -66,10 +66,10 @@ import org.knime.core.node.config.ConfigWO;
  * implements a slim, read only version of java's {@link Properties} class,
  * whereby all related methods delegate to the underlying property object. This
  * class is used by the {@link DataColumnSpec}.
- * 
+ *
  * @see java.util.Properties
  * @see org.knime.core.data.DataColumnSpec#getProperties()
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class DataColumnProperties implements Cloneable {
@@ -89,7 +89,7 @@ public final class DataColumnProperties implements Cloneable {
      * argument. The argument must not be <code>null</code> (but may be
      * empty). Any subsequent change to the argument is not reflected in this
      * object.
-     * 
+     *
      * @param content a map with key-value pairs
      * @throws NullPointerException if the argument is <code>null</code>
      */
@@ -100,12 +100,12 @@ public final class DataColumnProperties implements Cloneable {
 
     /**
      * Tests if this properties object contains a given key.
-     * 
+     *
      * @param key the key to check
      * @return <code>true</code> if <code>key</code> is contained in this
      *         property object, <code>false</code> otherwise
      * @throws NullPointerException if the key is <code>null</code>
-     * 
+     *
      * @see java.util.Properties#containsKey(Object)
      */
     public boolean containsProperty(final String key) {
@@ -115,14 +115,14 @@ public final class DataColumnProperties implements Cloneable {
     /**
      * Get the property assigned to <code>key</code> or - if this property
      * does not exist - the <code>defaultValue</code>.
-     * 
+     *
      * @param key request-key
      * @param defaultValue the value to be returned if <code>key</code> is not
      *            contained in this property object
      * @return the property value for the given <code>key</code> or the
      *         <code>defaultValue</code>
      * @throws NullPointerException if <code>key</code> is <code>null</code>
-     * 
+     *
      * @see Properties#getProperty(String, String)
      */
     public String getProperty(final String key, final String defaultValue) {
@@ -132,12 +132,12 @@ public final class DataColumnProperties implements Cloneable {
     /**
      * Get the property value for the given <code>key</code> or
      * <code>null</code> if <code>key</code> does not exist.
-     * 
+     *
      * @param key request key
      * @return the value which is mapped to the given key or <code>null</code>
      *         if <code>key</code> is not contained
      * @throws NullPointerException if argument is <code>null</code>
-     * 
+     *
      * @see Properties#getProperty(String)
      */
     public String getProperty(final String key) {
@@ -146,9 +146,9 @@ public final class DataColumnProperties implements Cloneable {
 
     /**
      * Get the number of properties in this object.
-     * 
+     *
      * @return the number of stored properties
-     * 
+     *
      * @see Properties#size()
      */
     public int size() {
@@ -157,9 +157,9 @@ public final class DataColumnProperties implements Cloneable {
 
     /**
      * Get an enumeration on all keys in this property object.
-     * 
+     *
      * @return an enumeration on the keys
-     * 
+     *
      * @see Properties#propertyNames()
      */
     @SuppressWarnings("unchecked")
@@ -172,7 +172,7 @@ public final class DataColumnProperties implements Cloneable {
      * adds the <code>newProperties</code>. If there is a key conflict the
      * newProperties overwrite the old ones. This serves as a convenient way to
      * add new properties to a <code>DataColumnProperties</code> object.
-     * 
+     *
      * @param newProperties the new properties to add
      * @return a (almost) clone of this object with additional properties
      * @throws NullPointerException if the argument is <code>null</code>
@@ -187,7 +187,7 @@ public final class DataColumnProperties implements Cloneable {
 
     /**
      * Returns a string containing key=value pairs, separated by ", ".
-     * 
+     *
      * @see Properties#toString()
      */
     @Override
@@ -199,7 +199,7 @@ public final class DataColumnProperties implements Cloneable {
      * Compares a given object on equality. It will be equal if it is also a
      * <code>DataColumnProperties</code> object and contains the equal key
      * value pairs.
-     * 
+     *
      * @param obj to compare to
      * @return <code>true</code> if the given object is equal to this property
      *         object
@@ -209,15 +209,21 @@ public final class DataColumnProperties implements Cloneable {
         if (this == obj) {
             return true;
         }
-        if (obj == null || !(obj instanceof DataColumnProperties)) {
+        if (!(obj instanceof DataColumnProperties)) {
             return false;
         }
-        return m_props.equals(((DataColumnProperties)obj).m_props);
+
+        // avoid a deadlock, see bug #4444
+        if (System.identityHashCode(this) < System.identityHashCode(obj)) {
+            return m_props.equals(((DataColumnProperties)obj).m_props);
+        } else {
+            return ((DataColumnProperties)obj).m_props.equals(m_props);
+        }
     }
 
     /**
      * Hash code based on underlying {@link Properties} class.
-     * 
+     *
      * @see Properties#hashCode()
      */
     @Override
@@ -230,11 +236,11 @@ public final class DataColumnProperties implements Cloneable {
      * <p>
      * Note: This implementation adds the pairs directly to the argument, make
      * sure to provide an empty subconfig!
-     * 
+     *
      * @param config write properties into this object
      */
     public void save(final ConfigWO config) {
-      
+
         for (Map.Entry<Object, Object> p : m_props.entrySet()) {
             String key = (String)p.getKey();
             String val = (String)p.getValue();
@@ -245,7 +251,7 @@ public final class DataColumnProperties implements Cloneable {
     /**
      * Reads all properties (key-value pairs) from the given {@link ConfigRO}
      * and returns a new <code>DataColumnProperties</code> object.
-     * 
+     *
      * @param config to read properties from
      * @return a new property object
      * @throws InvalidSettingsException if the <i>keys</i> entry is not
