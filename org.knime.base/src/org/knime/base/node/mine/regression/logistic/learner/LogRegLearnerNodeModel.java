@@ -150,15 +150,6 @@ public final class LogRegLearnerNodeModel extends NodeModel {
         LogRegLearner learner = new LogRegLearner(new PortObjectSpec[] {tableSpec, inPMMLSpec}, m_settings);
         m_content = learner.execute(new PortObject[] {data, inPMMLPort}, exec);
 
-        // the learner has maybe changed the domain values of the target and learning columns
-        // recreate inPMMLPort if PMML Input is no connected
-        if (inObjects[1] == null) {
-            PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(m_content.getSpec().getDataTableSpec());
-            inPMMLPort = new PMMLPortObject(creator.createSpec());
-        } else {
-            // TODO: Wait for fix of Bug 4439.
-        }
-
         // third argument is ignored since we provide a port
         PMMLPortObject outPMMLPort = new PMMLPortObject((PMMLPortObjectSpec)learner.getOutputSpec()[0],
             inPMMLPort, null);
