@@ -56,6 +56,7 @@ import java.util.Map;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeView;
@@ -122,14 +123,10 @@ public class LogRegLearnerNodeView
                 buffer.append("<th>z-score</th>");
                 buffer.append("<th>P&gt;|z|</th>");
                 buffer.append("</tr>");
-                Map<String, Double> coefficients =
-                    content.getCoefficients(logit);
-                Map<String, Double> stdErrs =
-                    content.getStandardErrors(logit);
-                Map<String, Double> zScores =
-                    content.getZScores(logit);
-                Map<String, Double> pValues =
-                    content.getPValues(logit);
+                Map<String, Double> coefficients = content.getCoefficients(logit);
+                Map<String, Double> stdErrs = content.getStandardErrors(logit);
+                Map<String, Double> zScores = content.getZScores(logit);
+                Map<String, Double> pValues = content.getPValues(logit);
 
                 boolean first = true;
                 boolean odd = true;
@@ -144,25 +141,21 @@ public class LogRegLearnerNodeView
                     buffer.append("<td>");
                     if (first) {
                         first = false;
-                        buffer.append(logit.toString());
+                        buffer.append(StringEscapeUtils.escapeHtml(logit.toString()));
                     }
                     buffer.append("</td>\n<td>");
-                    buffer.append(parameter);
+                    buffer.append(StringEscapeUtils.escapeHtml(parameter));
                     buffer.append("</td>\n<td class=\"numeric\">");
-                    String coeff = DoubleFormat.formatDouble(
-                            coefficients.get(parameter));
+                    String coeff = DoubleFormat.formatDouble(coefficients.get(parameter));
                     buffer.append(coeff);
                     buffer.append("</td>\n<td class=\"numeric\">");
-                    String stdErr = DoubleFormat.formatDouble(
-                            stdErrs.get(parameter));
+                    String stdErr = DoubleFormat.formatDouble(stdErrs.get(parameter));
                     buffer.append(stdErr);
                     buffer.append("</td>\n<td class=\"numeric\">");
-                    String zScore = DoubleFormat.formatDouble(
-                            zScores.get(parameter));
+                    String zScore = DoubleFormat.formatDouble(zScores.get(parameter));
                     buffer.append(zScore);
                     buffer.append("</td>\n<td class=\"numeric\">");
-                    String pValue = DoubleFormat.formatDouble(
-                            pValues.get(parameter));
+                    String pValue = DoubleFormat.formatDouble(pValues.get(parameter));
                     buffer.append(pValue);
                     buffer.append("</td>\n");
                     buffer.append("</tr>\n");
@@ -176,20 +169,16 @@ public class LogRegLearnerNodeView
                 buffer.append("</td>\n<td>");
                 buffer.append("Constant");
                 buffer.append("</td>\n<td class=\"numeric\">");
-                String intercept = DoubleFormat.formatDouble(
-                        content.getIntercept(logit));
+                String intercept = DoubleFormat.formatDouble(content.getIntercept(logit));
                 buffer.append(intercept);
                 buffer.append("</td>\n<td class=\"numeric\">");
-                String stdErr = DoubleFormat.formatDouble(
-                        content.getInterceptStdErr(logit));
+                String stdErr = DoubleFormat.formatDouble(content.getInterceptStdErr(logit));
                 buffer.append(stdErr);
                 buffer.append("</td>\n<td class=\"numeric\">");
-                String zScore = DoubleFormat.formatDouble(
-                        content.getInterceptZScore(logit));
+                String zScore = DoubleFormat.formatDouble(content.getInterceptZScore(logit));
                 buffer.append(zScore);
                 buffer.append("</td>\n<td class=\"numeric\">");
-                String pValue = DoubleFormat.formatDouble(
-                        content.getInterceptPValue(logit));
+                String pValue = DoubleFormat.formatDouble(content.getInterceptPValue(logit));
                 buffer.append(pValue);
                 buffer.append("</td>\n");
                 buffer.append("</tr>\n");
@@ -199,8 +188,7 @@ public class LogRegLearnerNodeView
             }
 
             buffer.append("Log-likelihood = ");
-            String likelihood = DoubleFormat.formatDouble(
-                    content.getEstimatedLikelihood());
+            String likelihood = DoubleFormat.formatDouble(content.getEstimatedLikelihood());
             buffer.append(likelihood);
             buffer.append("<br/>");
             buffer.append("Number of iterations = ");
