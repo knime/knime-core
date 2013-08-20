@@ -136,4 +136,28 @@
             class="org.knime.testing.internal.diffcheckers.PngHistogramDifferenceChecker$Factory">
       </DifferenceCheckerFactory>
    </extension>
+   <extension
+         id="NGTestflowRunner"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="org.knime.testing.core.ng.TestflowRunnerApplication">
+         </run>
+      </application>
+   </extension>
+   <extension
+         id="NGUnittestRunner"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="org.knime.testing.core.ng.UnittestRunnerApplication">
+         </run>
+      </application>
+   </extension>
 </plugin>
