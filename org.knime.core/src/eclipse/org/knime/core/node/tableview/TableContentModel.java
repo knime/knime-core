@@ -601,8 +601,9 @@ public class TableContentModel extends AbstractTableModel
             nextOrder = m_tableSortOrder == null
                     ? new TableSortOrder(column) : m_tableSortOrder.nextSortOrder(column);
         } else {
-            nextOrder = m_tableSortOrder == null
-                    ? new TableSortOrder(column) : m_tableSortOrder.nextSortOrder(column, sortKey);
+            final TableSortOrder tableOrder = m_tableSortOrder == null
+                    ? new TableSortOrder(column) : m_tableSortOrder;
+            nextOrder = tableOrder.nextSortOrder(column, sortKey);
         }
         if (nextOrder == null) {
             setDataTableOnSort(m_originalUnsortedTable, nextOrder);
