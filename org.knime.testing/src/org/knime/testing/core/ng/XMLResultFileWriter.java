@@ -70,12 +70,19 @@ import org.w3c.dom.Element;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class XMLResultFileWriter extends AbstractXMLResultWriter {
+public class XMLResultFileWriter extends AbstractXMLResultWriter {
     private final File m_file;
 
     private long m_startTime, m_endTime;
 
-    XMLResultFileWriter(final File file) throws TransformerConfigurationException, ParserConfigurationException {
+    /**
+     * Creates a new result writer.
+     *
+     * @param file the destination file
+     * @throws ParserConfigurationException if the document builder cannot be created
+     * @throws TransformerConfigurationException if the serializer cannot be created
+     */
+    public XMLResultFileWriter(final File file) throws TransformerConfigurationException, ParserConfigurationException {
         m_file = file;
     }
 
@@ -85,26 +92,31 @@ class XMLResultFileWriter extends AbstractXMLResultWriter {
     @Override
     public void writeResult(final Collection<WorkflowTestResult> results) throws TransformerException, IOException {
         Document doc = m_docBuilder.newDocument();
-        Element testSuites = doc.createElement("testsuites");
-        doc.appendChild(testSuites);
+        Element root;
+        if (results.size() == 1) {
+            root = createTestsuiteElement(results.iterator().next(), doc);
+        } else {
+            root = doc.createElement("testsuites");
 
-        int runs = 0;
-        int errors = 0;
-        int failures = 0;
-        for (WorkflowTestResult res : results) {
-            runs += res.runCount();
-            errors += res.errorCount();
-            failures += res.failureCount();
+            int runs = 0;
+            int errors = 0;
+            int failures = 0;
+            for (WorkflowTestResult res : results) {
+                runs += res.runCount();
+                errors += res.errorCount();
+                failures += res.failureCount();
 
-            testSuites.appendChild(createTestsuiteElement(res, doc));
+                root.appendChild(createTestsuiteElement(res, doc));
+
+            }
+            root.setAttribute("name", "All tests");
+            root.setAttribute("time", Double.toString((m_endTime - m_startTime) / 1000.0));
+            root.setAttribute("tests", Integer.toString(runs));
+            root.setAttribute("errors", Integer.toString(errors));
+            root.setAttribute("failures", Integer.toString(failures));
 
         }
-        testSuites.setAttribute("name", "All tests");
-        testSuites.setAttribute("time", Double.toString((m_endTime - m_startTime) / 1000.0));
-        testSuites.setAttribute("tests", Integer.toString(runs));
-        testSuites.setAttribute("errors", Integer.toString(errors));
-        testSuites.setAttribute("failures", Integer.toString(failures));
-
+        doc.appendChild(root);
         if (!m_file.getParentFile().isDirectory() && !m_file.getParentFile().mkdirs()) {
             throw new IOException("Could not created directory for result file: "
                     + m_file.getParentFile().getAbsolutePath());

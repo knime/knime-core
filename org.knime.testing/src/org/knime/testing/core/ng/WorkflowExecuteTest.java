@@ -57,6 +57,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
@@ -79,8 +80,9 @@ class WorkflowExecuteTest extends WorkflowTest {
 
     private WorkflowManager m_manager;
 
-    WorkflowExecuteTest(final String workflowName, final TestrunConfiguration runConfiguration) {
-        super(workflowName);
+    WorkflowExecuteTest(final String workflowName, final IProgressMonitor monitor,
+                        final TestrunConfiguration runConfiguration) {
+        super(workflowName, monitor);
         m_runConfiguration = runConfiguration;
     }
 
@@ -103,22 +105,32 @@ class WorkflowExecuteTest extends WorkflowTest {
         try {
             m_flowConfiguration = new TestflowConfiguration(m_manager);
 
-            final int timeout =
-                    (m_flowConfiguration.getTimeout() > 0) ? m_flowConfiguration.getTimeout() : m_runConfiguration
-                            .getTimeout();
+            final long timeout =
+                    System.currentTimeMillis()
+                            + ((m_flowConfiguration.getTimeout() > 0) ? m_flowConfiguration.getTimeout()
+                                    : m_runConfiguration.getTimeout()) * 1000;
             watchdog = new TimerTask() {
                 @Override
                 public void run() {
-                    String status = m_manager.printNodeSummary(m_manager.getID(), 0);
-                    result.addFailure(WorkflowExecuteTest.this, new AssertionFailedError("Worklow running longer than "
-                            + timeout + " seconds.\n" + status));
-                    m_manager.getParent().cancelExecution(m_manager);
+                    if (m_progressMonitor.isCanceled()) {
+                        result.addError(WorkflowExecuteTest.this, new InterruptedException("Testflow canceled by user"));
+                        m_manager.getParent().cancelExecution(m_manager);
+                        this.cancel();
+                    } else if (System.currentTimeMillis() > timeout) {
+                        String status = m_manager.printNodeSummary(m_manager.getID(), 0);
+                        result.addFailure(WorkflowExecuteTest.this, new AssertionFailedError(
+                                "Worklow running longer than " + timeout + " seconds.\n" + status));
+                        m_manager.getParent().cancelExecution(m_manager);
+                        this.cancel();
+                    }
                 }
             };
 
-            TIMEOUT_TIMER.schedule(watchdog, timeout * 1000);
+            TIMEOUT_TIMER.schedule(watchdog, 500, 500);
             m_manager.executeAllAndWaitUntilDone();
-            checkExecutionStatus(result, m_manager);
+            if (!m_progressMonitor.isCanceled()) {
+                checkExecutionStatus(result, m_manager);
+            }
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {

@@ -23,15 +23,12 @@ package org.knime.testing.core.ng;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Writer;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import javax.xml.transform.TransformerException;
-
-import junit.framework.TestListener;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
@@ -40,8 +37,6 @@ import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.util.FileUtil;
 import org.knime.workbench.repository.RepositoryManager;
 import org.osgi.framework.FrameworkUtil;
@@ -146,7 +141,7 @@ public class TestflowRunnerApplication implements IApplication {
                 break;
             }
             System.out.printf("=> Running %-" + maxNameLength + "s...", testFlow.getName());
-            WorkflowTestResult result = runTest(testFlow, resultWriter);
+            WorkflowTestResult result = WorkflowTestSuite.runTest(testFlow, resultWriter);
             results.add(result);
             if (result.errorCount() > 0) {
                 System.out.println("ERROR");
@@ -361,53 +356,6 @@ public class TestflowRunnerApplication implements IApplication {
     @Override
     public void stop() {
         m_stopped = true;
-    }
-
-    /**
-     * Runs a single workflow test suite.
-     *
-     * @param suite the test suite
-     * @param listener a listener for test results
-     * @return the result of the test
-     */
-    private WorkflowTestResult runTest(final WorkflowTestSuite suite, final TestListener listener) {
-        final WorkflowTestResult result = new WorkflowTestResult(suite);
-        result.addListener(listener);
-        Writer stdout = new Writer() {
-            @Override
-            public void write(final char[] cbuf, final int off, final int len) throws IOException {
-                result.handleSystemOut(cbuf, off, len);
-            }
-
-            @Override
-            public void flush() throws IOException {
-            }
-
-            @Override
-            public void close() throws IOException {
-            }
-        };
-        Writer stderr = new Writer() {
-            @Override
-            public void write(final char[] cbuf, final int off, final int len) throws IOException {
-                result.handleSystemErr(cbuf, off, len);
-            }
-
-            @Override
-            public void flush() throws IOException {
-            }
-
-            @Override
-            public void close() throws IOException {
-            }
-        };
-
-        NodeLogger.addWriter(stdout, LEVEL.DEBUG, LEVEL.FATAL);
-        NodeLogger.addWriter(stderr, LEVEL.ERROR, LEVEL.FATAL);
-        suite.run(result);
-        NodeLogger.removeWriter(stderr);
-        NodeLogger.removeWriter(stdout);
-        return result;
     }
 
     private File downloadWorkflows() throws IOException, CoreException, URISyntaxException {

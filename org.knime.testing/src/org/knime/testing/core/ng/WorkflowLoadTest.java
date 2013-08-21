@@ -57,6 +57,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -75,7 +76,7 @@ import org.knime.core.util.LockFailedException;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class WorkflowLoadTest extends WorkflowTest {
-    private final File m_knimeWorkFlow;
+    private final File m_workflowDir;
 
     private final File m_testcaseRoot;
 
@@ -86,15 +87,16 @@ class WorkflowLoadTest extends WorkflowTest {
     /**
      * Creates a new test for loading a workflow.
      *
-     * @param workflowFile the workflow dir
+     * @param workflowDir the workflow dir
      * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
      * @param workflowName a unique name for the workflow
+     * @param monitor a progress monitor, may be <code>null</code>
      * @param runConfiguration the run configuration
      */
-    public WorkflowLoadTest(final File workflowFile, final File testcaseRoot, final String workflowName,
-                            final TestrunConfiguration runConfiguration) {
-        super(workflowName);
-        m_knimeWorkFlow = workflowFile;
+    public WorkflowLoadTest(final File workflowDir, final File testcaseRoot, final String workflowName,
+                            final IProgressMonitor monitor, final TestrunConfiguration runConfiguration) {
+        super(workflowName, monitor);
+        m_workflowDir = workflowDir;
         m_testcaseRoot = testcaseRoot;
         m_runConfiguration = runConfiguration;
     }
@@ -138,14 +140,13 @@ class WorkflowLoadTest extends WorkflowTest {
              */
             @Override
             public WorkflowContext getWorkflowContext() {
-                WorkflowContext.Factory fac = new WorkflowContext.Factory(m_knimeWorkFlow.getParentFile());
+                WorkflowContext.Factory fac = new WorkflowContext.Factory(m_workflowDir);
                 fac.setMountpointRoot(m_testcaseRoot);
                 return fac.createContext();
             }
         };
 
-        WorkflowLoadResult loadRes =
-                WorkflowManager.loadProject(m_knimeWorkFlow.getParentFile(), new ExecutionMonitor(), loadHelper);
+        WorkflowLoadResult loadRes = WorkflowManager.loadProject(m_workflowDir, new ExecutionMonitor(), loadHelper);
         if (loadRes.hasErrors()) {
             result.addFailure(this, new AssertionFailedError(loadRes.getFilteredError("", LoadResultEntryType.Error)));
         }

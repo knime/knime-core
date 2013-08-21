@@ -57,6 +57,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.Pair;
@@ -71,8 +72,8 @@ import org.knime.core.util.Pair;
 class WorkflowUncaughtExceptionsTest extends WorkflowTest {
     private final List<Pair<Thread, Throwable>> m_uncaughtExceptions = new ArrayList<Pair<Thread, Throwable>>();
 
-    WorkflowUncaughtExceptionsTest(final String workflowName) {
-        super(workflowName);
+    WorkflowUncaughtExceptionsTest(final String workflowName, final IProgressMonitor monitor) {
+        super(workflowName, monitor);
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override

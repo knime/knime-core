@@ -62,7 +62,7 @@ import junit.framework.TestResult;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class WorkflowTestResult extends TestResult {
+public class WorkflowTestResult extends TestResult {
     private final WorkflowTestSuite m_suite;
 
     private final StringBuilder m_sysout = new StringBuilder();

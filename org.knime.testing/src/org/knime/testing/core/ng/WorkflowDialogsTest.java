@@ -55,6 +55,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
@@ -73,8 +74,8 @@ class WorkflowDialogsTest extends WorkflowTest {
 
     private WorkflowManager m_manager;
 
-    WorkflowDialogsTest(final String workflowName) {
-        super(workflowName);
+    WorkflowDialogsTest(final String workflowName, final IProgressMonitor monitor) {
+        super(workflowName, monitor);
     }
 
     /**

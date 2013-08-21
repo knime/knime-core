@@ -66,6 +66,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.varia.LevelRangeFilter;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -108,8 +109,8 @@ class WorkflowLogMessagesTest extends WorkflowTest {
         }
     };
 
-    WorkflowLogMessagesTest(final String workflowName) {
-        super(workflowName);
+    WorkflowLogMessagesTest(final String workflowName, final IProgressMonitor monitor) {
+        super(workflowName, monitor);
         Logger.getRootLogger().addAppender(m_logAppender);
     }
 

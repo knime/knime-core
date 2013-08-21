@@ -56,6 +56,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -69,8 +70,8 @@ import org.knime.core.node.workflow.WorkflowManager;
 class WorkflowCloseTest extends WorkflowTest {
     private WorkflowManager m_manager;
 
-    WorkflowCloseTest(final String workflowName) {
-        super(workflowName);
+    WorkflowCloseTest(final String workflowName, final IProgressMonitor monitor) {
+        super(workflowName, monitor);
     }
 
     /**

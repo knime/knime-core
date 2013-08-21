@@ -57,6 +57,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
@@ -72,9 +73,9 @@ import org.knime.core.node.workflow.WorkflowManager;
 class WorkflowCloseViewsTest extends WorkflowTest {
     private final Map<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>> m_allViews;
 
-    WorkflowCloseViewsTest(final String workflowName,
+    WorkflowCloseViewsTest(final String workflowName, final IProgressMonitor monitor,
                            final Map<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>> views) {
-        super(workflowName);
+        super(workflowName, monitor);
         m_allViews = views;
     }
 

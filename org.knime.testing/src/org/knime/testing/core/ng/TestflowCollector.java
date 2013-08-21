@@ -122,13 +122,14 @@ public class TestflowCollector {
         if (workflowFile.exists()) {
             String name = currentDir.getName();
             if (name.matches(m_pattern)) {
-                WorkflowTestSuite testCase = new WorkflowTestSuite(workflowFile, rootDir, runConfiguration);
+                WorkflowTestSuite testCase =
+                        new WorkflowTestSuite(workflowFile.getParentFile(), rootDir, runConfiguration, null);
                 tests.add(testCase);
             } else {
                 logger.info("Skipping testcase '" + name + "' (doesn't match pattern '" + m_pattern + "').");
             }
         } else {
-            // recursivly search directories
+            // recursively search directories
             File[] dirList = currentDir.listFiles(DIRECTORY_FILTER);
             if (dirList == null) {
                 logger.error("I/O error accessing '" + currentDir + "'. Does it exist?!?");

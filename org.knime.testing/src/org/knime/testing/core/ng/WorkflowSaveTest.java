@@ -56,6 +56,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import junit.framework.TestResult;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.KNIMEConstants;
@@ -76,9 +77,9 @@ class WorkflowSaveTest extends WorkflowTest {
 
     private WorkflowManager m_manager;
 
-    WorkflowSaveTest(final String workflowName, final TestrunConfiguration runConfig, final File testcaseRoot,
-                     final File workflowDir) {
-        super(workflowName);
+    WorkflowSaveTest(final String workflowName, final IProgressMonitor monitor, final TestrunConfiguration runConfig,
+                     final File testcaseRoot, final File workflowDir) {
+        super(workflowName, monitor);
         m_runConfiguration = runConfig;
         m_testcaseRoot = testcaseRoot;
         m_workflowDir = workflowDir;
@@ -126,12 +127,11 @@ class WorkflowSaveTest extends WorkflowTest {
     }
 
     private void saveWorkflow() throws IOException, CanceledExecutionException, LockFailedException {
-        File testName = m_workflowDir.getParentFile();
         // path from root to current flow dir
-        String postfix = testName.getAbsolutePath().substring(m_testcaseRoot.getAbsolutePath().length());
+        String postfix = m_workflowDir.getAbsolutePath().substring(m_testcaseRoot.getAbsolutePath().length());
         if (postfix.isEmpty()) {
             // seems the test was in the testRoot dir
-            postfix = testName.getName();
+            postfix = m_workflowDir.getName();
         }
 
         File saveLocation = new File(m_runConfiguration.getSaveLocation(), postfix);

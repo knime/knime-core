@@ -57,7 +57,7 @@ import java.io.File;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class TestrunConfiguration {
+public class TestrunConfiguration {
     /**
      * The default maximum runtime for a single testcase in seconds (currently {@value} ). After the timeout the
      * workflow will be canceled.
@@ -66,13 +66,13 @@ class TestrunConfiguration {
 
     private boolean m_testDialogs;
 
-    private boolean m_testViews;
+    private boolean m_testViews = true;
 
     private boolean m_checkForLoadWarnings;
 
     private boolean m_reportDeprecatedNodes;
 
-    private boolean m_checkLogMessages;
+    private boolean m_checkLogMessages = true;
 
     private File m_saveLocation;
 
@@ -109,7 +109,8 @@ class TestrunConfiguration {
     }
 
     /**
-     * Returns if dialogs for all nodes in the workflow should be tested, i.e. load settings and save settings.
+     * Returns if dialogs for all nodes in the workflow should be tested, i.e. load settings and save settings. The
+     * default is <code>false</code>.
      *
      * @return <code>true</code> if dialogs should be tested, <code>false</code> otherwise
      */
@@ -118,7 +119,7 @@ class TestrunConfiguration {
     }
 
     /**
-     * Returns if all views should be opened prior to running the workflow.
+     * Returns if all views should be opened prior to running the workflow. The default is <code>true</code>.
      *
      * @return <code>true</code> if views should be opened, <code>false</code> otherwise
      */
@@ -146,7 +147,7 @@ class TestrunConfiguration {
     }
 
     /**
-     * Returns whether warnings during load should be reported as failures or not.
+     * Returns whether warnings during load should be reported as failures or not. The default is <code>false</code>.
      *
      * @return <code>true</code> if warnings are treated as failures, <code>false</code> otherwise
      */
@@ -175,7 +176,7 @@ class TestrunConfiguration {
     }
 
     /**
-     * Returns whether deprecated nodes in workflows should be reported as failures.
+     * Returns whether deprecated nodes in workflows should be reported as failures. The default is <code>false</code>.
      *
      * @return <code>true</code> if deprecated nodes result in failures, <code>false</code> otherwise
      */
@@ -194,7 +195,8 @@ class TestrunConfiguration {
     }
 
     /**
-     * Returns whether all log messages should be checked for required or unexpected messages.
+     * Returns whether all log messages should be checked for required or unexpected messages. The default is
+     * <code>true</code>.
      *
      * @return <code>true</code> when log messages should be checked, <code>false</code> otherwise
      */

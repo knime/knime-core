@@ -212,7 +212,10 @@ public abstract class AbstractXMLResultWriter implements TestListener {
 
             Element tc = testcases.get(f.failedTest());
             if (tc == null) {
-                throw new IllegalStateException("Element for testcasse '" + f.failedTest() + "' not found");
+                // strange, but we add an element anyway
+                tc = createTestcaseElement((WorkflowTest)f.failedTest(), doc);
+                testSuite.appendChild(tc);
+                testcases.put(f.failedTest(), tc);
             }
 
             Element failure = doc.createElement(type);

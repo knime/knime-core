@@ -70,10 +70,17 @@ import org.w3c.dom.Element;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class XMLResultDirWriter extends AbstractXMLResultWriter {
+public class XMLResultDirWriter extends AbstractXMLResultWriter {
     private final File m_rootDir;
 
-    XMLResultDirWriter(final File dir) throws ParserConfigurationException, TransformerConfigurationException {
+    /**
+     * Creates a new result writer.
+     *
+     * @param dir the destination directory
+     * @throws ParserConfigurationException if the document builder cannot be created
+     * @throws TransformerConfigurationException if the serializer cannot be created
+     */
+    public XMLResultDirWriter(final File dir) throws ParserConfigurationException, TransformerConfigurationException {
         m_rootDir = dir;
     }
 

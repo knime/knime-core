@@ -54,6 +54,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import junit.framework.Test;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -68,13 +70,21 @@ public abstract class WorkflowTest implements Test {
      */
     protected final String m_workflowName;
 
+    protected final IProgressMonitor m_progressMonitor;
+
     /**
      * Creates a new workflow test for the given workflow.
      *
      * @param workflowName the workflow's name
+     * @param monitor progress monitor, may be <code>null</code>
      */
-    protected WorkflowTest(final String workflowName) {
+    protected WorkflowTest(final String workflowName, final IProgressMonitor monitor) {
         m_workflowName = workflowName;
+        if (monitor == null) {
+            m_progressMonitor = new NullProgressMonitor();
+        } else {
+            m_progressMonitor = monitor;
+        }
     }
 
     /**

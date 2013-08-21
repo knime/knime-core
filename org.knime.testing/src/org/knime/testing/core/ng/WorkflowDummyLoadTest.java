@@ -46,35 +46,33 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   19.08.2013 (thor): created
+ *   21.08.2013 (thor): created
  */
 package org.knime.testing.core.ng;
 
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Pattern;
 
-import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeMessage;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * Testcase that check all node messages after execution. Unexpected or wrong messages are reported as failures.
+ * Dummy test that does not load the workflow but takes the workflow manager passes via the constructor and sets it into
+ * the manager reference while running the test. This is useful for execution in the GUI when the workflow is already
+ * open in an editor.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class WorkflowNodeMessagesTest extends WorkflowTest {
-    private TestflowConfiguration m_flowConfiguration;
+class WorkflowDummyLoadTest extends WorkflowTest {
+    private final WorkflowManager m_manager;
 
-    private WorkflowManager m_manager;
+    private AtomicReference<WorkflowManager> m_managerRef;
 
-    WorkflowNodeMessagesTest(final String workflowName, final IProgressMonitor monitor) {
+    WorkflowDummyLoadTest(final String workflowName, final IProgressMonitor monitor, final WorkflowManager manager) {
         super(workflowName, monitor);
+        m_manager = manager;
     }
 
     /**
@@ -82,7 +80,7 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
      */
     @Override
     public int countTestCases() {
-        return 1;
+        return 0; // yes, no real test
     }
 
     /**
@@ -90,17 +88,7 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
      */
     @Override
     public void run(final TestResult result) {
-        result.startTest(this);
-
-        try {
-            m_flowConfiguration = new TestflowConfiguration(m_manager);
-            checkNodeMessages(result, m_manager);
-        } catch (Throwable t) {
-            result.addError(this, t);
-        } finally {
-            result.endTest(this);
-        }
-
+        m_managerRef.set(m_manager);
     }
 
     /**
@@ -108,38 +96,7 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
      */
     @Override
     public String getName() {
-        return "node messages (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
-    }
-
-    private void checkNodeMessages(final TestResult result, final WorkflowManager wfm) {
-        for (NodeContainer node : wfm.getNodeContainers()) {
-            if (node instanceof SingleNodeContainer) {
-                NodeMessage nodeMessage = node.getNodeMessage();
-
-                Pattern expectedErrorMessage = m_flowConfiguration.getNodeErrorMessage(node.getID());
-                if ((expectedErrorMessage != null) && !expectedErrorMessage.matcher(nodeMessage.getMessage()).matches()) {
-                    String error =
-                            "Node '" + node.getNameWithID() + "' has unexpected error message: expected '"
-                                    + TestflowConfiguration.patternToString(expectedErrorMessage) + "', got '"
-                                    + nodeMessage.getMessage() + "'";
-                    result.addFailure(this, new AssertionFailedError(error));
-                }
-
-                Pattern expectedWarningMessage = m_flowConfiguration.getNodeWarningMessage(node.getID());
-                if ((expectedWarningMessage != null)
-                        && !expectedWarningMessage.matcher(nodeMessage.getMessage()).matches()) {
-                    String error =
-                            "Node '" + node.getNameWithID() + "' has unexpected warning message: expected '"
-                                    + TestflowConfiguration.patternToString(expectedWarningMessage) + "', got '"
-                                    + nodeMessage.getMessage() + "'";
-                    result.addFailure(this, new AssertionFailedError(error));
-                }
-            } else if (node instanceof WorkflowManager) {
-                checkNodeMessages(result, (WorkflowManager)node);
-            } else {
-                throw new IllegalStateException("Unknown node container type: " + node.getClass());
-            }
-        }
+        return "dummy workflow loader (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
     }
 
     /**
@@ -147,6 +104,7 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
      */
     @Override
     public void setup(final AtomicReference<WorkflowManager> managerRef) {
-        m_manager = managerRef.get();
+        m_managerRef = managerRef;
     }
+
 }

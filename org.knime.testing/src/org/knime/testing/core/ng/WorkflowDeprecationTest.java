@@ -55,6 +55,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
@@ -68,8 +69,8 @@ import org.knime.core.node.workflow.WorkflowManager;
 class WorkflowDeprecationTest extends WorkflowTest {
     private WorkflowManager m_manager;
 
-    WorkflowDeprecationTest(final String workflowName) {
-        super(workflowName);
+    WorkflowDeprecationTest(final String workflowName, final IProgressMonitor monitor) {
+        super(workflowName, monitor);
     }
 
     /**
