@@ -517,16 +517,12 @@ class TestflowConfiguration {
     public static String patternToString(final Pattern pattern) {
         String s = pattern.pattern();
 
-        if (s.startsWith(REGEX_PATTERN)) {
-            if (s.indexOf(REGEX_PATTERN, REGEX_PATTERN.length()) >= 0) {
+        if (s.startsWith("\\Q")) {
+            if ((s.indexOf("\\Q", "\\Q".length()) >= 0) || !s.endsWith("\\E")) {
                 // we have a real regex part in the message => output complete pattern
                 return s;
             } else {
-                if (s.endsWith(REGEX_PATTERN)) {
-                    return s.substring(REGEX_PATTERN.length(), s.length() - REGEX_PATTERN.length());
-                } else {
-                    return s.substring(REGEX_PATTERN.length());
-                }
+                return s.substring("\\Q".length(), s.length() - "\\E".length());
             }
         } else {
             // strange, not quoted at all
