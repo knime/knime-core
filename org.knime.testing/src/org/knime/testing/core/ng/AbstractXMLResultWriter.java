@@ -239,7 +239,31 @@ public abstract class AbstractXMLResultWriter implements TestListener {
     }
 
     private static String formatWorkflowName(final String workflowName) {
-        return workflowName.replace('/', '.').replace('\\', '.').replaceAll("[\\s\\(\\)]+", "_");
+        StringBuilder buf = new StringBuilder(workflowName.length());
+
+        boolean uppercaseNextChar = false;
+        boolean lowercaseNextChar = true;
+        for (int i = 0; i < workflowName.length(); i++) {
+            char c = workflowName.charAt(i);
+            if ((c == '/') || (c == '\\')) {
+                buf.append('.');
+                lowercaseNextChar = true;
+            } else if ((c == ' ') || (c == '(')) {
+                uppercaseNextChar = true;
+            } else if (Character.isJavaIdentifierPart(c)) {
+                if (uppercaseNextChar) {
+                    buf.append(Character.toUpperCase(c));
+                    uppercaseNextChar = false;
+                } else if (lowercaseNextChar) {
+                    buf.append(Character.toLowerCase(c));
+                    lowercaseNextChar = false;
+                } else {
+                    buf.append(c);
+                }
+            }
+        }
+
+        return buf.toString();
     }
 
     /**
