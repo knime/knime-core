@@ -106,6 +106,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.tableview.TableRowHeaderView;
 import org.knime.core.node.tableview.TableView;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.ViewUtils;
@@ -1673,7 +1674,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             });
         }
 
-        // set this - even before displaying it
+         // set this - even before displaying it
         m_previewTable = table;
 
         ViewUtils.invokeLaterInEDT(new Runnable() {
@@ -1690,6 +1691,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                             column.setMinWidth(75);
                             column.setWidth(75);
                             column.setPreferredWidth(75);
+                            TableRowHeaderView headerTable = m_previewTableView.getHeaderTable();
+                            Dimension newSize = new Dimension(75, 0);
+                            headerTable.setPreferredScrollableViewportSize(newSize);
                         }
                     });
                 }
