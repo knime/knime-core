@@ -36,8 +36,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -49,7 +47,7 @@ public class TestLoadAndExecManySimultaneously extends WorkflowTestCase {
     private ExecutorService m_executorService;
     private OneInstanceWorkflowTest[] m_instances;
     private static final int NR_CONCURRENT = 250;
-    
+
     /** {@inheritDoc} */
     @Override
     protected void setUp() throws Exception {
@@ -59,13 +57,12 @@ public class TestLoadAndExecManySimultaneously extends WorkflowTestCase {
         for (int i = 0; i < NR_CONCURRENT; i++) {
             m_instances[i] = new OneInstanceWorkflowTest(i);
         }
-        NodeLogger.setAppenderLevelRange(NodeLogger.STDOUT_APPENDER, LEVEL.DEBUG, LEVEL.WARN);
     }
 
     public void testConcurrency() throws Exception {
         final CyclicBarrier barrier = new CyclicBarrier(NR_CONCURRENT);
         Future<Void>[] futures = new Future[NR_CONCURRENT];
-        final AtomicBoolean isDone = new AtomicBoolean(); 
+        final AtomicBoolean isDone = new AtomicBoolean();
         for (int i = 0; i < NR_CONCURRENT; i++) {
             final int index = i;
             futures[i] = m_executorService.submit(new Callable<Void>() {
@@ -96,7 +93,7 @@ public class TestLoadAndExecManySimultaneously extends WorkflowTestCase {
                         isDone.set(true);
                     }
                 }
-                private void await(final int secondsTimeOut) 
+                private void await(final int secondsTimeOut)
                         throws InterruptedException, BrokenBarrierException, TimeoutException {
                     barrier.await(secondsTimeOut, TimeUnit.SECONDS);
                 }
@@ -120,7 +117,7 @@ public class TestLoadAndExecManySimultaneously extends WorkflowTestCase {
             throw brokenBarrierExceptionWrapper;
         }
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
@@ -131,24 +128,24 @@ public class TestLoadAndExecManySimultaneously extends WorkflowTestCase {
     }
 
     class OneInstanceWorkflowTest {
-        
+
         private NodeContainer m_fileReader;
         private NodeContainer m_diffChecker;
         private File m_instanceDir;
         private final int m_index;
         private WorkflowManager m_loadWorkflow;
-        
-        public OneInstanceWorkflowTest(int index) {
+
+        public OneInstanceWorkflowTest(final int index) {
             m_index = index;
         }
-        
+
         private void prepareWorkflowDirectory() throws Exception {
             File dir = TestLoadAndExecManySimultaneously.this.getDefaultWorkflowDirectory();
             m_instanceDir = FileUtil.createTempDir(
-                TestLoadAndExecManySimultaneously.class.getSimpleName() + "-instance-" + m_index); 
+                TestLoadAndExecManySimultaneously.class.getSimpleName() + "-instance-" + m_index);
             FileUtil.copyDir(dir, m_instanceDir);
         }
-        
+
         private void loadWorkflow(final InternalNodeContainerState exectedState) throws Exception {
             m_loadWorkflow = TestLoadAndExecManySimultaneously.this.loadWorkflow(m_instanceDir);
             m_fileReader = m_loadWorkflow.getNodeContainer(new NodeID(m_loadWorkflow.getID(), 1));
@@ -156,7 +153,7 @@ public class TestLoadAndExecManySimultaneously extends WorkflowTestCase {
             checkState(m_fileReader, exectedState);
             checkState(m_diffChecker, exectedState);
         }
-        
+
         private void executeWorkflow() throws Exception {
             m_loadWorkflow.executeAll();
             waitWhileNodeInExecution(m_loadWorkflow);
@@ -164,11 +161,11 @@ public class TestLoadAndExecManySimultaneously extends WorkflowTestCase {
             checkState(m_fileReader, InternalNodeContainerState.EXECUTED);
             checkState(m_diffChecker, InternalNodeContainerState.EXECUTED);
         }
-        
+
         private void saveWorkflow() throws Exception {
             m_loadWorkflow.save(m_instanceDir, new ExecutionMonitor(), true);
         }
-        
+
         private void discardWorkflow() throws Exception {
             if (m_loadWorkflow != null) {
                 m_loadWorkflow.shutdown();
@@ -176,12 +173,12 @@ public class TestLoadAndExecManySimultaneously extends WorkflowTestCase {
                 m_loadWorkflow = null;
             }
         }
-        
+
         private void shutDown() throws Exception {
             discardWorkflow();
             FileUtil.deleteRecursively(m_instanceDir);
         }
-        
+
     }
 
 }
