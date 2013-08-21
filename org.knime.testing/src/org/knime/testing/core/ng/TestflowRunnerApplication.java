@@ -28,7 +28,6 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.xml.transform.TransformerException;
 
@@ -68,7 +67,7 @@ public class TestflowRunnerApplication implements IApplication {
 
     private final TestrunConfiguration m_runConfiguration = new TestrunConfiguration();
 
-    private final AtomicBoolean m_stop = new AtomicBoolean();
+    private volatile boolean m_stopped = false;
 
     /**
      * {@inheritDoc}
@@ -143,7 +142,7 @@ public class TestflowRunnerApplication implements IApplication {
 
         resultWriter.startSuites();
         for (WorkflowTestSuite testFlow : allTestFlows) {
-            if (m_stop.get()) {
+            if (m_stopped) {
                 break;
             }
             System.out.printf("=> Running %-" + maxNameLength + "s...", testFlow.getName());
@@ -361,7 +360,7 @@ public class TestflowRunnerApplication implements IApplication {
 
     @Override
     public void stop() {
-        m_stop.set(true);
+        m_stopped = true;
     }
 
     /**
