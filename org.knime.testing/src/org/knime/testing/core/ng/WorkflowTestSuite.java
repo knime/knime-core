@@ -127,20 +127,24 @@ public class WorkflowTestSuite extends WorkflowTest {
      */
     @Override
     public void run(final TestResult result) {
+        LOGGER.info("================= Starting testflow " + getName() + " =================");
+
         result.startTest(this);
         AtomicReference<WorkflowManager> managerRef = new AtomicReference<WorkflowManager>();
 
         try {
             for (WorkflowTest test : m_allTests) {
-                LOGGER.debug("====================== Executing " + test.getName() + " ======================");
+                LOGGER.info("----------------- Starting sub-test " + test.getName() + " -----------------");
                 test.setup(managerRef);
                 test.run(result);
+                LOGGER.info("----------------- Finished sub-test " + test.getName() + " -----------------");
             }
         } catch (Throwable ex) {
             result.addError(this, ex);
         } finally {
             Thread.setDefaultUncaughtExceptionHandler(null);
             result.endTest(this);
+            LOGGER.info("================= Finished testflow " + getName() + " =================");
         }
     }
 
