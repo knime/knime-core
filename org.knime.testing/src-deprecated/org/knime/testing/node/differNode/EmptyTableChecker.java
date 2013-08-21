@@ -26,12 +26,17 @@ package org.knime.testing.node.differNode;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.RowIterator;
+import org.knime.testing.internal.nodes.image.ImageDifferNodeFactory;
 
 /**
  * Fails if one of the input tables is not empty.
  *
  * @author Tobias Koetter, University of Konstanz
+ *
+ * @deprecated use the new image comparator {@link ImageDifferNodeFactory} and the extension point for difference
+ *             checker instead
  */
+@Deprecated
 public class EmptyTableChecker implements TestEvaluator {
     /**
      *

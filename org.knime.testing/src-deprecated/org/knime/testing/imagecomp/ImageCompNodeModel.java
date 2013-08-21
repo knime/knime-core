@@ -71,12 +71,15 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObject;
+import org.knime.testing.internal.nodes.image.ImageDifferNodeFactory;
 
 /**
  * Model to compare two images.
  *
  * @author Iris Adae, University of Konstanz
+ * @deprecated use the new image comparator {@link ImageDifferNodeFactory} instead
  */
+@Deprecated
 public class ImageCompNodeModel extends NodeModel {
 
     private final SettingsModelDoubleBounded m_allowance = ImageCompNodeDialog.getAllowanceModel();

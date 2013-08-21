@@ -79,7 +79,9 @@ import org.knime.core.util.LockFailedException;
  *
  * @author Thorsten Meinl, University of Konstanz
  * @since 2.6
+ * @deprecated the new testing framework (in <tt>org.knime.testing.core.ng</tt>) offer more flexible configuration
  */
+@Deprecated
 public class SimpleWorkflowTest implements WorkflowTest {
     private static final Timer TIMEOUT_TIMER = new Timer("Workflow watchdog", true);
 

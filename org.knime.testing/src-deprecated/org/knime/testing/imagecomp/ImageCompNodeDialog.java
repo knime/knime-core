@@ -3,13 +3,16 @@ package org.knime.testing.imagecomp;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
+import org.knime.testing.internal.nodes.image.ImageDifferNodeFactory;
 
 
 /**
  * Dialog for the image comparator node.
  * @author Iris Adä, University of Konstanz
  *
+ * @deprecated use the new image comparator {@link ImageDifferNodeFactory} instead
  */
+@Deprecated
 public class ImageCompNodeDialog extends DefaultNodeSettingsPane {
 
     /**

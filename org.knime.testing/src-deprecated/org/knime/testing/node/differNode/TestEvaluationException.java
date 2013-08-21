@@ -24,10 +24,15 @@
  */
 package org.knime.testing.node.differNode;
 
+import org.knime.testing.internal.nodes.image.ImageDifferNodeFactory;
+
 /**
  *
  * @author ritmeier, University of Konstanz
+ * @deprecated use the new image comparator {@link ImageDifferNodeFactory} and the extension point for difference
+ *             checker instead
  */
+@Deprecated
 public class TestEvaluationException extends Exception {
 
     /**

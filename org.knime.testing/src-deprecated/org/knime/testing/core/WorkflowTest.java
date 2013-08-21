@@ -57,7 +57,9 @@ import junit.framework.Test;
  *
  * @author Thorsten Meinl, University of Konstanz
  * @since 2.6
+ * @depreated use the new testing framework in <tt>org.knime.testing.core.ng</tt> instead
  */
+@Deprecated
 public interface WorkflowTest extends Test {
     /**
      * Returns a name for the workflow test, usually the workflow name.

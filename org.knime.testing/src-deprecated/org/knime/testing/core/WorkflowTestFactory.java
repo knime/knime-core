@@ -55,7 +55,9 @@ import java.io.File;
 /**
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @deprecated use the new testing framework in <tt>org.knime.testing.core.ng</tt> instead
  */
+@Deprecated
 public interface WorkflowTestFactory {
     /**
      * Creates a new JUnit testcase for the given workflow. When the testcase is

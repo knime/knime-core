@@ -53,6 +53,7 @@ import org.knime.core.util.FilelistAccessory;
  *
  * @author ohl, University of Konstanz
  */
+@Deprecated
 class TestingDialog extends JDialog {
 
     private static final String PATTERN_HISTORY = "TESTING_PATTERN";

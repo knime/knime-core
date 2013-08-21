@@ -28,11 +28,15 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
+import org.knime.testing.internal.nodes.image.ImageDifferNodeFactory;
 
 /**
  *
  * @author ritmeier, University of Konstanz
+ * @deprecated use the new image comparator {@link ImageDifferNodeFactory} and the extension point for difference
+ *             checker instead
  */
+@Deprecated
 public class DiffNodeFactory extends NodeFactory {
     /**
      * {@inheritDoc}

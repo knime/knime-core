@@ -57,8 +57,10 @@ import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.repository.RepositoryManager;
 
 /**
- *
+ * @deprecated Test flows can now be executed directly in KNIME. For bulk-execution use the NGTestflowRunner
+ *             application.
  */
+@Deprecated
 public class KNIMETestingApplication implements IApplication {
     private boolean m_analyzeLogFile = false;
 

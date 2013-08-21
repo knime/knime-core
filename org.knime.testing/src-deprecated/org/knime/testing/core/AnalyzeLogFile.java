@@ -48,7 +48,9 @@ import org.knime.core.util.FileUtil;
  * line.
  *
  * @author ohl, University of Konstanz
+ * @deprecated the new testing framework (in <tt>org.knime.testing.core.ng</tt>) analyzes the log output on-the-fly
  */
+@Deprecated
 public class AnalyzeLogFile {
     /*
      * privately used enum

@@ -29,12 +29,17 @@ import java.util.Iterator;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
+import org.knime.testing.internal.nodes.image.ImageDifferNodeFactory;
 
 
 /**
  *
  * @author ritmeier, University of Konstanz
+ *
+ * @deprecated use the new image comparator {@link ImageDifferNodeFactory} and the extension point for difference
+ *             checker instead
  */
+@Deprecated
 public class NegativeDataTableDiffer implements TestEvaluator {
     /**
      *

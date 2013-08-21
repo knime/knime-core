@@ -51,12 +51,16 @@ package org.knime.testing.imagecomp;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.knime.testing.internal.nodes.image.ImageDifferNodeFactory;
 
 
 /**
  * Factory to compare two images.
  * @author Iris Adae, University of Konstanz
+ *
+ * @deprecated use the new image comparator {@link ImageDifferNodeFactory} instead
  */
+@Deprecated
 public class ImageCompNodeFactory
         extends NodeFactory<ImageCompNodeModel> {
 

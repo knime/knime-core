@@ -37,11 +37,15 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.StringCell;
+import org.knime.testing.internal.nodes.image.ImageDifferNodeFactory;
 
 /**
  *
  * @author ritmeier, University of Konstanz
+ * @deprecated use the new image comparator {@link ImageDifferNodeFactory} and the extension point for difference
+ *             checker instead
  */
+@Deprecated
 public class DataTableDiffer implements TestEvaluator {
 
     private DataTable m_dataTable1 = null;

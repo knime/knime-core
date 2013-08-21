@@ -43,7 +43,9 @@ import org.knime.core.util.FileUtil;
 /**
  *
  * @author Fabian Dill, University of Konstanz
+ * @deprecated use the new testing framework in <tt>org.knime.testing.core.ng</tt> instead
  */
+@Deprecated
 public class KnimeTestRegistry {
     private static NodeLogger logger = NodeLogger
             .getLogger(KnimeTestRegistry.class);

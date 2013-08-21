@@ -36,12 +36,16 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.testing.internal.nodes.image.ImageDifferNodeFactory;
 import org.knime.testing.node.differNode.DiffNodeDialog.Evaluators;
 
 /**
  *
  * @author ritmeier, University of Konstanz
+ * @deprecated use the new image comparator {@link ImageDifferNodeFactory} and the extension point for difference
+ *             checker instead
  */
+@Deprecated
 public class DiffNodeModel extends NodeModel {
 
     /** Config key for the evaluator. */

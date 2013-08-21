@@ -94,7 +94,9 @@ import org.knime.testing.node.config.TestConfigSettings;
 /**
  *
  * @since 2.6
+ * @deprecated the new testing framework (in <tt>org.knime.testing.core.ng</tt>) offer more flexible configuration
  */
+@Deprecated
 public class FullWorkflowTest extends TestCase implements WorkflowTest {
     private static final Timer TIMEOUT_TIMER = new Timer("Workflow watchdog", true);
 
