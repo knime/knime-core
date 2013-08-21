@@ -95,7 +95,7 @@ class XMLResultDirWriter extends AbstractXMLResultWriter {
             }
 
             Source source = new DOMSource(doc);
-            Result result = new StreamResult();
+            Result result = new StreamResult(destFile);
             m_serializer.transform(source, result);
         }
     }
