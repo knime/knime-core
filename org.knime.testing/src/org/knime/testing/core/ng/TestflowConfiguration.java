@@ -487,7 +487,7 @@ class TestflowConfiguration {
 
             while (index >= 0) {
                 // non-regex part
-                patternString.append(message.substring(0, index));
+                patternString.append("\\Q").append(message, 0, index).append("\\E");
 
                 // regex pattern starts
                 message = message.substring(index + REGEX_PATTERN.length());
@@ -502,6 +502,7 @@ class TestflowConfiguration {
                 message = message.substring(index + REGEX_PATTERN.length());
                 index = message.indexOf(REGEX_PATTERN);
             }
+            patternString.append("\\Q").append(message).append("\\E");
 
             return Pattern.compile(patternString.toString());
         }
