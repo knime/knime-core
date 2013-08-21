@@ -41,9 +41,8 @@ import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.testing.core.AbstractTestcaseCollector;
 
 /**
- * This application runs all Unit tests it can find. It collects all classes by
- * querying implementations of {@link AbstractTestcaseCollector} that are
- * registered at the extension point.
+ * This application runs all Unit tests it can find. It collects all classes by querying implementations of
+ * {@link AbstractTestcaseCollector} that are registered at the extension point.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -56,9 +55,7 @@ public class UnittestRunnerApplication implements IApplication {
     public Object start(final IApplicationContext context) throws Exception {
         PlatformUI.createDisplay(); // create a display because some tests may need it
         context.applicationRunning();
-        Object args =
-                context.getArguments()
-                        .get(IApplicationContext.APPLICATION_ARGS);
+        Object args = context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
 
         if (!extractCommandLineArgs(args) || (m_destDir == null)) {
             printUsage();
@@ -74,7 +71,6 @@ public class UnittestRunnerApplication implements IApplication {
             maxNameLength = Math.max(maxNameLength, testClass.getName().length());
         }
 
-
         // run the tests
         for (Class<?> testClass : allTests) {
             if (m_stopped) {
@@ -84,7 +80,8 @@ public class UnittestRunnerApplication implements IApplication {
 
             System.out.printf("=> Running %-" + maxNameLength + "s ...", testClass.getName());
             JUnitTest junitTest = new JUnitTest(testClass.getName());
-            final JUnitTestRunner runner = new JUnitTestRunner(junitTest, false, false, false, testClass.getClassLoader());
+            final JUnitTestRunner runner =
+                    new JUnitTestRunner(junitTest, false, false, false, testClass.getClassLoader());
             XMLJUnitResultFormatter formatter = new XMLJUnitResultFormatter();
             OutputStream out = new FileOutputStream(new File(m_destDir, testClass.getName() + ".xml"));
             formatter.setOutput(out);
@@ -163,13 +160,12 @@ public class UnittestRunnerApplication implements IApplication {
     }
 
     /**
-     * Extracts from the passed object the arguments. Returns true if everything
-     * went smooth, false if the application must exit.
+     * Extracts from the passed object the arguments. Returns true if everything went smooth, false if the application
+     * must exit.
      *
      * @param args the object with the command line arguments.
-     * @return true if the members were set according to the command line
-     *         arguments, false, if an error message was printed and the
-     *         application must exit.
+     * @return true if the members were set according to the command line arguments, false, if an error message was
+     *         printed and the application must exit.
      */
     private boolean extractCommandLineArgs(final Object args) {
         String[] stringArgs;
@@ -181,10 +177,8 @@ public class UnittestRunnerApplication implements IApplication {
                 stringArgs = copy;
             }
         } else if (args != null) {
-            System.err.println("Unable to read application's arguments."
-                    + " (was expecting a String array, but got a "
-                    + args.getClass().getName() + ". toString() returns '"
-                    + args.toString() + "')");
+            System.err.println("Unable to read application's arguments. Was expecting a String array, but got a "
+                    + args.getClass().getName() + ". toString() returns '" + args.toString() + "'");
             return false;
         } else {
             stringArgs = new String[0];
@@ -194,19 +188,16 @@ public class UnittestRunnerApplication implements IApplication {
         while (i < stringArgs.length) {
 
             // "-destDir" specifies the destination directory
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-destDir")) {
+            if ((stringArgs[i] != null) && stringArgs[i].equals("-xmlResultDir")) {
                 if (m_destDir != null) {
-                    System.err.println("You can't specify multiple -destDir "
-                            + "options at the command line");
+                    System.err.println("Multiple -xmlResultDir arguments are not allowed");
                     return false;
                 }
 
                 i++;
                 // requires another argument
-                if ((i >= stringArgs.length) || (stringArgs[i] == null)
-                        || (stringArgs[i].length() == 0)) {
-                    System.err
-                            .println("Missing <dir_name> for option -destDir.");
+                if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
+                    System.err.println("Missing <dir_name> for option -xmlResultDir.");
                     printUsage();
                     return false;
                 }
@@ -225,10 +216,9 @@ public class UnittestRunnerApplication implements IApplication {
     private void printUsage() {
         System.err.println("Valid arguments:");
 
-        System.err.println("    -destDir <dir_name>: specifies the"
-                + " directory into which the test results are written.");
+        System.err.println("    -xmlResultDir <dir_name>: specifies the directory into which the test results are "
+                + "written.");
     }
-
 
     private static class WriterOutputStream extends OutputStream {
         private final Writer m_writer;
