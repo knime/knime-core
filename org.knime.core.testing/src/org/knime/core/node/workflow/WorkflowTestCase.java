@@ -71,9 +71,15 @@ public abstract class WorkflowTestCase extends TestCase {
     }
 
     protected NodeID loadAndSetWorkflow(final File workflowDir) throws Exception {
+        WorkflowManager m = loadWorkflow(workflowDir);
+        setManager(m);
+        return m.getID();
+    }
+    
+    protected WorkflowManager loadWorkflow(final File workflowDir) throws Exception {
         WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(
                 workflowDir, new ExecutionMonitor(),
-                WorkflowLoadHelper.INSTANCE, false);
+                new WorkflowLoadHelper(workflowDir), false);
         WorkflowManager m = loadResult.getWorkflowManager();
         if (m == null) {
             throw new Exception("Errors reading workflow: "
@@ -88,8 +94,7 @@ public abstract class WorkflowTestCase extends TestCase {
                     LoadResultEntryType.Warning));
             }
         }
-        setManager(m);
-        return m.getID();
+        return m;
     }
 
     /**
@@ -154,7 +159,13 @@ public abstract class WorkflowTestCase extends TestCase {
             + "expected (any of) " + Arrays.toString(expected) + ", actual "
             + actual + " (dump follows)";
             m_logger.info("Test failed: " + error);
-            dumpWorkflowToLog();
+            // don't use m_manager as corresponding project - some tests load 50+ workflows and
+            // don't use the field in this superclass
+            WorkflowManager project = nc instanceof WorkflowManager ? (WorkflowManager)nc : nc.getParent();
+            while (project.getParent() != WorkflowManager.ROOT) {
+                project = project.getParent();
+            }
+            dumpWorkflowToLog(project);
             fail(error);
         }
     }
@@ -180,7 +191,7 @@ public abstract class WorkflowTestCase extends TestCase {
                 + Arrays.toString(expected) + ", actual " + actual
                 + " (dump follows)";
             m_logger.info("Test failed: " + error);
-            dumpWorkflowToLog();
+            dumpWorkflowToLog((WorkflowManager)nc);
             fail(error);
         }
     }
@@ -411,7 +422,7 @@ public abstract class WorkflowTestCase extends TestCase {
             if (!WorkflowManager.ROOT.canRemoveNode(m_manager.getID())) {
                 String error = "Cannot remove workflow, dump follows";
                 m_logger.error(error);
-                dumpWorkflowToLog();
+                dumpWorkflowToLog(m_manager);
                 fail(error);
             }
             WorkflowManager.ROOT.removeProject(m_manager.getID());
@@ -424,10 +435,14 @@ public abstract class WorkflowTestCase extends TestCase {
     }
 
     protected void dumpWorkflowToLog() throws IOException {
-        String toString = m_manager.printNodeSummary(m_manager.getID(), 0);
-        dumpLineBreakStringToLog(toString);
+        dumpWorkflowToLog(m_manager);
     }
 
+    protected void dumpWorkflowToLog(WorkflowManager manager) throws IOException {
+        String toString = manager.printNodeSummary(manager.getID(), 0);
+        dumpLineBreakStringToLog(toString);
+    }
+    
     protected void dumpLineBreakStringToLog(final String s) throws IOException {
         BufferedReader r = new BufferedReader(new StringReader(s));
         String line;
