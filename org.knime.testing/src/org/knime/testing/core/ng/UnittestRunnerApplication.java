@@ -38,11 +38,10 @@ import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
-import org.knime.testing.core.AbstractTestcaseCollector;
 
 /**
  * This application runs all Unit tests it can find. It collects all classes by querying implementations of
- * {@link AbstractTestcaseCollector} that are registered at the extension point.
+ * {@link org.knime.testing.core.AbstractTestcaseCollector} that are registered at the extension point.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -123,9 +122,11 @@ public class UnittestRunnerApplication implements IApplication {
             PrintStream oldOut = System.out;
             PrintStream oldErr = System.err;
             try {
-                System.setOut(new PrintStream(new WriterOutputStream(stdout)));
-                System.setErr(new PrintStream(new WriterOutputStream(stderr)));
+                System.setOut(new PrintStream(new WriterOutputStream(stdout), false, "UTF-8"));
+                System.setErr(new PrintStream(new WriterOutputStream(stderr), false, "UTF-8"));
                 runner.run();
+                System.out.flush();
+                System.err.flush();
             } finally {
                 System.setOut(oldOut);
                 System.setErr(oldErr);

@@ -165,8 +165,8 @@ class TestrunConfiguration {
     }
 
     /**
-     * Sets the location where executed testflows should be saved to. If <code>null</code> the workflows should not
-     * be saved.
+     * Sets the location where executed testflows should be saved to. If <code>null</code> the workflows should not be
+     * saved.
      *
      * @param saveLocation the destination directory for saved workflows
      */
@@ -186,7 +186,8 @@ class TestrunConfiguration {
     /**
      * Sets whether deprecated nodes in workflows should be reported as failures.
      *
-     * @param reportDeprecatedNodes <code>true</code> if deprecated nodes result in failures, <code>false</code> otherwise
+     * @param reportDeprecatedNodes <code>true</code> if deprecated nodes result in failures, <code>false</code>
+     *            otherwise
      */
     public void setReportDeprecatedNodes(final boolean reportDeprecatedNodes) {
         m_reportDeprecatedNodes = reportDeprecatedNodes;

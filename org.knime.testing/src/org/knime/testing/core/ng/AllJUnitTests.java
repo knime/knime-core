@@ -98,9 +98,9 @@ public class AllJUnitTests {
      * Returns a collection with class names of all JUnit tests.
      *
      * @return a collection with class names
-     * @throws CoreException
-     * @throws IOException
-     * @throws ClassNotFoundException
+     * @throws CoreException if a testcase collector cannot be created via its plug-in
+     * @throws IOException if an I/O error occurs while searching for testcase collectors
+     * @throws ClassNotFoundException if a testcase collector class cannot be found
      */
     public static Collection<Class<?>> getAllJunitTests() throws CoreException, IOException, ClassNotFoundException {
         IExtensionRegistry registry = Platform.getExtensionRegistry();

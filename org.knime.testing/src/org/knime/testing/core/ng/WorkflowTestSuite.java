@@ -73,51 +73,42 @@ import org.knime.core.node.workflow.WorkflowManager;
 public class WorkflowTestSuite extends WorkflowTest {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowTestSuite.class);
 
-    private final File m_knimeWorkFlow;
-
-    private final File m_testcaseRoot;
-
-    private final TestrunConfiguration m_runConfiguration;
-
     private final List<WorkflowTest> m_allTests = new ArrayList<WorkflowTest>(8);
 
     /**
      * Creates a new suite of workflow tests. Which tests are actually executed is determined by the given run
      * configuration.
      *
-     * @param workflowFile the workflow dir
+     * @param workflowFile the workflow file (<tt>workflow.knime</tt>)
      * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
      * @param runConfig run configuration for all test flows
      */
     public WorkflowTestSuite(final File workflowFile, final File testcaseRoot, final TestrunConfiguration runConfig) {
         super(workflowFile.getParentFile().getAbsolutePath().substring(testcaseRoot.getAbsolutePath().length() + 1));
-        m_knimeWorkFlow = workflowFile;
-        m_testcaseRoot = testcaseRoot;
-        m_runConfiguration = runConfig;
 
-        m_allTests.add(new WorkflowLoadTest(m_knimeWorkFlow, m_testcaseRoot, m_workflowName, m_runConfiguration));
-        if (m_runConfiguration.isReportDeprecatedNodes()) {
+        m_allTests.add(new WorkflowLoadTest(workflowFile, testcaseRoot, m_workflowName, runConfig));
+        if (runConfig.isReportDeprecatedNodes()) {
             m_allTests.add(new WorkflowDeprecationTest(m_workflowName));
         }
         Map<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>> views =
                 new HashMap<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>>();
-        if (m_runConfiguration.isTestViews()) {
+        if (runConfig.isTestViews()) {
             m_allTests.add(new WorkflowOpenViewsTest(m_workflowName, views));
         }
-        m_allTests.add(new WorkflowExecuteTest(m_workflowName, m_runConfiguration));
+        m_allTests.add(new WorkflowExecuteTest(m_workflowName, runConfig));
         m_allTests.add(new WorkflowNodeMessagesTest(m_workflowName));
-        if (m_runConfiguration.isTestDialogs()) {
+        if (runConfig.isTestDialogs()) {
             m_allTests.add(new WorkflowDialogsTest(m_workflowName));
         }
-        if (m_runConfiguration.isTestViews()) {
+        if (runConfig.isTestViews()) {
             m_allTests.add(new WorkflowCloseViewsTest(m_workflowName, views));
         }
 
-        if (m_runConfiguration.getSaveLocation() != null) {
-            m_allTests.add(new WorkflowSaveTest(m_workflowName, m_runConfiguration, m_testcaseRoot, m_knimeWorkFlow));
+        if (runConfig.getSaveLocation() != null) {
+            m_allTests.add(new WorkflowSaveTest(m_workflowName, runConfig, testcaseRoot, workflowFile));
         }
         m_allTests.add(new WorkflowCloseTest(m_workflowName));
-        if (!m_runConfiguration.isCheckLogMessages()) {
+        if (!runConfig.isCheckLogMessages()) {
             m_allTests.add(new WorkflowLogMessagesTest(m_workflowName));
         }
         m_allTests.add(new WorkflowUncaughtExceptionsTest(m_workflowName));

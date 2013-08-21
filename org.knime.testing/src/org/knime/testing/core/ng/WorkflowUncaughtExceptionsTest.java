@@ -69,7 +69,7 @@ import org.knime.core.util.Pair;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class WorkflowUncaughtExceptionsTest extends WorkflowTest {
-    private final List<Pair<Thread, Throwable>> m_uncaughtExceptions = new ArrayList<Pair<Thread,Throwable>>();
+    private final List<Pair<Thread, Throwable>> m_uncaughtExceptions = new ArrayList<Pair<Thread, Throwable>>();
 
     WorkflowUncaughtExceptionsTest(final String workflowName) {
         super(workflowName);

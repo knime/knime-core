@@ -58,7 +58,6 @@ import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
@@ -75,8 +74,7 @@ class XMLResultFileWriter extends AbstractXMLResultWriter {
 
     private long m_startTime, m_endTime;
 
-    XMLResultFileWriter(final File file) throws TransformerConfigurationException, ParserConfigurationException,
-                                               TransformerFactoryConfigurationError {
+    XMLResultFileWriter(final File file) throws TransformerConfigurationException, ParserConfigurationException {
         m_file = file;
     }
 
