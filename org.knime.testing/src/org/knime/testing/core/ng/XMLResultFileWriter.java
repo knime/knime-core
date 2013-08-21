@@ -51,6 +51,7 @@
 package org.knime.testing.core.ng;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -82,7 +83,7 @@ class XMLResultFileWriter extends AbstractXMLResultWriter {
      * {@inheritDoc}
      */
     @Override
-    public void writeResult(final Collection<WorkflowTestResult> results) throws TransformerException {
+    public void writeResult(final Collection<WorkflowTestResult> results) throws TransformerException, IOException {
         Document doc = m_docBuilder.newDocument();
         Element testSuites = doc.createElement("testsuites");
         doc.appendChild(testSuites);
@@ -103,6 +104,11 @@ class XMLResultFileWriter extends AbstractXMLResultWriter {
         testSuites.setAttribute("tests", Integer.toString(runs));
         testSuites.setAttribute("errors", Integer.toString(errors));
         testSuites.setAttribute("failures", Integer.toString(failures));
+
+        if (!m_file.getParentFile().isDirectory() && !m_file.getParentFile().mkdirs()) {
+            throw new IOException("Could not created directory for result file: "
+                    + m_file.getParentFile().getAbsolutePath());
+        }
 
         Source source = new DOMSource(doc);
         Result result = new StreamResult(m_file);

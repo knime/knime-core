@@ -50,6 +50,7 @@
  */
 package org.knime.testing.core.ng;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.InetAddress;
@@ -243,6 +244,7 @@ public abstract class AbstractXMLResultWriter implements TestListener {
      *
      * @param results a collection with test results
      * @throws TransformerException if an error occurs while writing the XML
+     * @throws IOException if an I/O error occurs while writing the results
      */
-    public abstract void writeResult(Collection<WorkflowTestResult> results) throws TransformerException;
+    public abstract void writeResult(Collection<WorkflowTestResult> results) throws TransformerException, IOException;
 }
