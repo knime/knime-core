@@ -138,7 +138,7 @@ class WorkflowLoadTest extends WorkflowTest {
              */
             @Override
             public WorkflowContext getWorkflowContext() {
-                WorkflowContext.Factory fac = new WorkflowContext.Factory(m_knimeWorkFlow);
+                WorkflowContext.Factory fac = new WorkflowContext.Factory(m_knimeWorkFlow.getParentFile());
                 fac.setMountpointRoot(m_testcaseRoot);
                 return fac.createContext();
             }

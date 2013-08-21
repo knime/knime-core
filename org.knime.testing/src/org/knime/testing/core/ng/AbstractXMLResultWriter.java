@@ -163,7 +163,7 @@ public abstract class AbstractXMLResultWriter implements TestListener {
     protected final Element createTestsuiteElement(final WorkflowTestResult result, final Document doc) {
         Element testSuite = doc.createElement("testsuite");
 
-        testSuite.setAttribute("name", result.getSuite().getName());
+        testSuite.setAttribute("name", formatWorkflowName(result.getSuite().getName()));
         testSuite.setAttribute("tests", Integer.toString(result.runCount()));
         testSuite.setAttribute("failures", Integer.toString(result.failureCount()));
         testSuite.setAttribute("errors", Integer.toString(result.errorCount()));
@@ -193,6 +193,14 @@ public abstract class AbstractXMLResultWriter implements TestListener {
     private void addTestcases(final WorkflowTestResult result, final Document doc, final Element testSuite) {
         Map<Test, Element> testcases = new HashMap<Test, Element>();
 
+        for (Test t : result.getAllTests()) {
+            if ((t instanceof WorkflowTest) && !(t instanceof WorkflowTestSuite)) {
+                Element tc = createTestcaseElement((WorkflowTest)t, doc);
+                testSuite.appendChild(tc);
+                testcases.put(t, tc);
+            }
+        }
+
         processIssues(result.failures(), "failure", doc, testSuite, testcases);
         processIssues(result.errors(), "failure", doc, testSuite, testcases);
     }
@@ -204,14 +212,7 @@ public abstract class AbstractXMLResultWriter implements TestListener {
 
             Element tc = testcases.get(f.failedTest());
             if (tc == null) {
-                tc = doc.createElement("testcase");
-                testSuite.appendChild(tc);
-                tc.setAttribute("name", ((WorkflowTest)f.failedTest()).getName());
-                tc.setAttribute("classname", formatWorkflowName(((WorkflowTest)f.failedTest()).getWorkflowName()));
-                tc.setAttribute("time", Double.toString((m_endTimes.get(f.failedTest()) - m_startTimes.get(f
-                        .failedTest())) / 1000.0));
-
-                testcases.put(f.failedTest(), tc);
+                throw new IllegalStateException("Element for testcasse '" + f.failedTest() + "' not found");
             }
 
             Element failure = doc.createElement(type);
@@ -225,8 +226,17 @@ public abstract class AbstractXMLResultWriter implements TestListener {
         }
     }
 
+
+    private Element createTestcaseElement(final WorkflowTest test, final Document doc) {
+        Element tc = doc.createElement("testcase");
+        tc.setAttribute("name", test.getName());
+        tc.setAttribute("classname", formatWorkflowName(test.getWorkflowName()));
+        tc.setAttribute("time", Double.toString((m_endTimes.get(test) - m_startTimes.get(test)) / 1000.0));
+        return tc;
+    }
+
     private static String formatWorkflowName(final String workflowName) {
-        return workflowName.replace('/', '.').replace('\\', '.').replaceAll("[\\s\\(\\)]", "_");
+        return workflowName.replace('/', '.').replace('\\', '.').replaceAll("[\\s\\(\\)]+", "_");
     }
 
     /**

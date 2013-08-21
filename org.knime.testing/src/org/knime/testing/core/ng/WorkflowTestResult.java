@@ -50,6 +50,11 @@
  */
 package org.knime.testing.core.ng;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import junit.framework.Test;
 import junit.framework.TestResult;
 
 /**
@@ -63,6 +68,8 @@ class WorkflowTestResult extends TestResult {
     private final StringBuilder m_sysout = new StringBuilder();
 
     private final StringBuilder m_syserr = new StringBuilder();
+
+    private final List<Test> m_allTests = new ArrayList<Test>();
 
     /**
      * Creates a new test result for the given test suite.
@@ -120,5 +127,24 @@ class WorkflowTestResult extends TestResult {
      */
     public WorkflowTestSuite getSuite() {
         return m_suite;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void startTest(final Test test) {
+        super.startTest(test);
+        m_allTests.add(test);
+    }
+
+    /**
+     * Returns a list with all tests that have been run as part of this workflow test. The order in the list is the
+     * order in which they have been started.
+     *
+     * @return a list with tests
+     */
+    public List<Test> getAllTests() {
+        return Collections.unmodifiableList(m_allTests);
     }
 }
