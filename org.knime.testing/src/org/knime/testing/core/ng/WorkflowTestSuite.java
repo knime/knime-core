@@ -258,7 +258,7 @@ public class WorkflowTestSuite extends WorkflowTest {
 
         Formatter formatter = new Formatter();
         formatter.format("===== Memory statistics: %1$,.3f MB max, %2$,.3f MB used, %3$,.3f MB free ====",
-                         maxMem / 1024.0, usedMem / 1024.0, (maxMem - usedMem) / 1024.0);
+                         maxMem / 1024.0 / 1024.0, usedMem / 1024.0 / 1024.0, (maxMem - usedMem) / 1024.0 / 1024.0);
         LOGGER.info(formatter.out().toString());
     }
 }
