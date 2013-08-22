@@ -101,9 +101,9 @@ class TestflowConfiguration {
 
     private final Collection<Pattern> m_requiredInfos = new ArrayList<Pattern>();
 
-    private final Map<NodeID, Pattern> m_warningStatus = new HashMap<NodeID, Pattern>();
+    private final Map<NodeID, Pattern> m_nodeWarningMessages = new HashMap<NodeID, Pattern>();
 
-    private final Map<NodeID, Pattern> m_errorStatus = new HashMap<NodeID, Pattern>();
+    private final Map<NodeID, Pattern> m_nodeErrorMessages = new HashMap<NodeID, Pattern>();
 
     private final Collection<Pattern> m_requiredDebugs = new ArrayList<Pattern>();
 
@@ -167,11 +167,13 @@ class TestflowConfiguration {
         for (Map.Entry<String, String> e : settings.requiredNodeErrors().entrySet()) {
             NodeID nodeId = createCompleteNodeID(e.getKey());
             try {
-                m_manager.findNodeContainer(nodeId);
+                NodeContainer cont = m_manager.findNodeContainer(nodeId);
                 Pattern pattern = createPatternFromMessage(e.getValue());
-                m_errorStatus.put(nodeId, pattern);
-                // error status on node also creates an error in the log
-                m_requiredErrors.add(pattern);
+                m_nodeErrorMessages.put(nodeId, pattern);
+                if (!cont.getNodeContainerState().isExecuted()) {
+                    // error status on node also creates an error in the log if the node is not already executed
+                    m_requiredErrors.add(pattern);
+                }
             } catch (IllegalArgumentException ex) {
                 LOGGER.warn("No node with id '" + e.getKey() + "' found in "
                         + "workflow, but we have a configuration for it. Ignoring the configuration.");
@@ -181,11 +183,13 @@ class TestflowConfiguration {
         for (Map.Entry<String, String> e : settings.requiredNodeWarnings().entrySet()) {
             NodeID nodeId = createCompleteNodeID(e.getKey());
             try {
-                m_manager.findNodeContainer(nodeId);
+                NodeContainer cont = m_manager.findNodeContainer(nodeId);
                 Pattern pattern = createPatternFromMessage(e.getValue());
-                m_warningStatus.put(nodeId, pattern);
-                // warning status on node also creates a warning in the log
-                m_requiredWarnings.add(pattern);
+                m_nodeWarningMessages.put(nodeId, pattern);
+                if (!cont.getNodeContainerState().isExecuted()) {
+                    // warning status on node also creates an error in the log if the node is not already executed
+                    m_requiredWarnings.add(pattern);
+                }
             } catch (IllegalArgumentException ex) {
                 LOGGER.warn("No node with id '" + e.getKey() + "' found in "
                         + "workflow, but we have a configuration for it. Ignoring the configuration.");
@@ -320,7 +324,7 @@ class TestflowConfiguration {
                 }
 
                 // now store the expected status message
-                m_errorStatus.put(nodeID, pattern);
+                m_nodeErrorMessages.put(nodeID, pattern);
                 if (msg == null) {
                     msg = "Node #" + nodeID;
                 }
@@ -332,7 +336,7 @@ class TestflowConfiguration {
                 // add message of the error status to the list of expected msgs
                 m_requiredErrors.add(pattern);
             } else if (stats[0].toUpperCase().startsWith("WARN")) {
-                m_warningStatus.put(nodeID, pattern);
+                m_nodeWarningMessages.put(nodeID, pattern);
                 msg = "Node #" + nodeID + " should have a warning status '" + pattern + "'";
 
                 /*
@@ -428,7 +432,7 @@ class TestflowConfiguration {
      * @return a pattern specifying the expected error message
      */
     public Pattern getNodeErrorMessage(final NodeID nodeId) {
-        return m_errorStatus.get(nodeId);
+        return m_nodeErrorMessages.get(nodeId);
     }
 
     /**
@@ -438,7 +442,7 @@ class TestflowConfiguration {
      * @return a pattern specifying the expected warning message
      */
     public Pattern getNodeWarningMessage(final NodeID nodeId) {
-        return m_warningStatus.get(nodeId);
+        return m_nodeWarningMessages.get(nodeId);
     }
 
     /**
