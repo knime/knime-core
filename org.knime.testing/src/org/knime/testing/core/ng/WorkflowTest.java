@@ -103,7 +103,7 @@ public abstract class WorkflowTest implements Test {
      * @return the workflow's name
      */
     public final String getWorkflowName() {
-        return  m_workflowName;
+        return m_workflowName;
     }
 
     /**
@@ -119,5 +119,13 @@ public abstract class WorkflowTest implements Test {
     @Override
     public String toString() {
         return getWorkflowName() + " - " + getName();
+    }
+
+    /**
+     * This methods is called when the whole test suite starts but before the first test is run. Subclassed may override
+     * this method in order to initialize things.
+     */
+    public void aboutToStart() {
+        // do nothing by default
     }
 }

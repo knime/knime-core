@@ -116,10 +116,8 @@ public class WorkflowTestSuite extends WorkflowTest {
     }
 
     private void initTestsuite(final File workflowDir, final File testcaseRoot, final TestrunConfiguration runConfig) {
-        if (m_context.getWorkflowManager() == null) {
-            m_allTests.add(new WorkflowLoadTest(workflowDir, testcaseRoot, m_workflowName, m_progressMonitor,
-                    runConfig, m_context));
-        }
+        m_allTests.add(new WorkflowLoadTest(workflowDir, testcaseRoot, m_workflowName, m_progressMonitor,
+                runConfig, m_context));
         if (runConfig.isReportDeprecatedNodes()) {
             m_allTests.add(new WorkflowDeprecationTest(m_workflowName, m_progressMonitor, m_context));
         }
@@ -140,7 +138,7 @@ public class WorkflowTestSuite extends WorkflowTest {
                     workflowDir, m_context));
         }
         m_allTests.add(new WorkflowCloseTest(m_workflowName, m_progressMonitor, m_context));
-        if (!runConfig.isCheckLogMessages()) {
+        if (runConfig.isCheckLogMessages()) {
             m_allTests.add(new WorkflowLogMessagesTest(m_workflowName, m_progressMonitor, m_context));
         }
         m_allTests.add(new WorkflowUncaughtExceptionsTest(m_workflowName, m_progressMonitor, m_context));
@@ -164,6 +162,10 @@ public class WorkflowTestSuite extends WorkflowTest {
 
         result.startTest(this);
         try {
+            for (WorkflowTest test : m_allTests) {
+                test.aboutToStart();
+            }
+
             for (WorkflowTest test : m_allTests) {
                 m_progressMonitor.subTask(test.getName());
                 LOGGER.info("----------------- Starting sub-test " + test.getName() + " -----------------");

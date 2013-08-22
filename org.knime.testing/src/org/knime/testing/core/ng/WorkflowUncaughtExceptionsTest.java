@@ -68,7 +68,14 @@ class WorkflowUncaughtExceptionsTest extends WorkflowTest {
     WorkflowUncaughtExceptionsTest(final String workflowName, final IProgressMonitor monitor,
                                    final WorkflowTestContext context) {
         super(workflowName, monitor, context);
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void aboutToStart() {
+        super.aboutToStart();
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(final Thread t, final Throwable e) {

@@ -105,6 +105,14 @@ class WorkflowLogMessagesTest extends WorkflowTest {
 
     WorkflowLogMessagesTest(final String workflowName, final IProgressMonitor monitor, final WorkflowTestContext context) {
         super(workflowName, monitor, context);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void aboutToStart() {
+        super.aboutToStart();
         Logger.getRootLogger().addAppender(m_logAppender);
     }
 
@@ -125,6 +133,7 @@ class WorkflowLogMessagesTest extends WorkflowTest {
 
         try {
             TestflowConfiguration flowConfiguration = new TestflowConfiguration(m_context.getWorkflowManager());
+            Logger.getRootLogger().removeAppender(m_logAppender);
             checkLogMessages(result, flowConfiguration);
         } catch (Throwable t) {
             result.addError(this, t);
