@@ -165,7 +165,7 @@ class WorkflowLogMessagesTest extends WorkflowTest {
             boolean expected = false;
             List<Pattern> currentList = map.get(logEvent.getLevel());
             if (currentList != null) {
-                Iterator<Pattern> it = flowConfiguration.getRequiredErrors().iterator();
+                Iterator<Pattern> it = currentList.iterator();
                 while (it.hasNext()) {
                     Pattern p = it.next();
                     if (p.matcher(message).matches()) {
@@ -179,6 +179,13 @@ class WorkflowLogMessagesTest extends WorkflowTest {
             if (!expected && logEvent.getLevel().isGreaterOrEqual(Level.ERROR)) {
                 result.addFailure(this, new AssertionFailedError("Unexpected " + logEvent.getLevel() + " logged: "
                         + logEvent.getRenderedMessage()));
+            }
+        }
+
+        for (Map.Entry<Level, List<Pattern>> e : map.entrySet()) {
+            for (Pattern p : e.getValue()) {
+                result.addFailure(this, new AssertionFailedError("Expected " + e.getKey() + " log message '"
+                        + TestflowConfiguration.patternToString(p) + "' not found"));
             }
         }
     }

@@ -121,14 +121,18 @@ public class WorkflowTestSuite extends WorkflowTest {
         if (runConfig.isReportDeprecatedNodes()) {
             m_allTests.add(new WorkflowDeprecationTest(m_workflowName, m_progressMonitor, m_context));
         }
+
         if (runConfig.isTestViews()) {
             m_allTests.add(new WorkflowOpenViewsTest(m_workflowName, m_progressMonitor, m_context));
         }
+
         m_allTests.add(new WorkflowExecuteTest(m_workflowName, m_progressMonitor, runConfig, m_context));
         m_allTests.add(new WorkflowNodeMessagesTest(m_workflowName, m_progressMonitor, m_context));
+
         if (runConfig.isTestDialogs()) {
             m_allTests.add(new WorkflowDialogsTest(m_workflowName, m_progressMonitor, m_context));
         }
+
         if (runConfig.isTestViews()) {
             m_allTests.add(new WorkflowCloseViewsTest(m_workflowName, m_progressMonitor, m_context));
         }
@@ -137,10 +141,15 @@ public class WorkflowTestSuite extends WorkflowTest {
             m_allTests.add(new WorkflowSaveTest(m_workflowName, m_progressMonitor, runConfig, testcaseRoot,
                     workflowDir, m_context));
         }
-        m_allTests.add(new WorkflowCloseTest(m_workflowName, m_progressMonitor, m_context));
+
+        if (runConfig.isCloseWorkflowAfterTest()) {
+            m_allTests.add(new WorkflowCloseTest(m_workflowName, m_progressMonitor, m_context));
+        }
+
         if (runConfig.isCheckLogMessages()) {
             m_allTests.add(new WorkflowLogMessagesTest(m_workflowName, m_progressMonitor, m_context));
         }
+
         m_allTests.add(new WorkflowUncaughtExceptionsTest(m_workflowName, m_progressMonitor, m_context));
     }
 

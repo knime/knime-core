@@ -76,6 +76,8 @@ public class TestrunConfiguration {
 
     private File m_saveLocation;
 
+    private boolean m_closeWorkflowAfterTest = true;
+
     private int m_timeout = DEFAULT_TIMEOUT;
 
     /**
@@ -211,5 +213,25 @@ public class TestrunConfiguration {
      */
     public void setCheckLogMessages(final boolean checkLogMessages) {
         m_checkLogMessages = checkLogMessages;
+    }
+
+    /**
+     * Sets whether the workflow should be closed as part of the tests. Sometimes the workflow should not be closed,
+     * e.g. when the test is run in the KNIME GUI.
+     *
+     * @param close <code>true</code> when the workflow should be closed, <code>false</code> otherwise
+     */
+    public void setCloseWorkflowAfterTest(final boolean close) {
+        m_closeWorkflowAfterTest = close;
+    }
+
+    /**
+     * Returnss whether the workflow should be closed as part of the tests. Sometimes the workflow should not be closed,
+     * e.g. when the test is run in the KNIME GUI. The default is <code>true</code>.
+     *
+     * @return <code>true</code> when the workflow should be closed, <code>false</code> otherwise
+     */
+    public boolean isCloseWorkflowAfterTest() {
+        return m_closeWorkflowAfterTest;
     }
 }
