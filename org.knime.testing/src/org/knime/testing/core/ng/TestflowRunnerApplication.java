@@ -23,6 +23,7 @@ package org.knime.testing.core.ng;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -132,19 +133,22 @@ public class TestflowRunnerApplication implements IApplication {
             maxNameLength = Math.max(maxNameLength, testFlow.getName().length());
         }
 
+        final PrintStream sysout = System.out; // we save and use the copy because some test may re-assign it
+        final PrintStream syserr = System.err; // we save and use the copy because some test may re-assign it
         resultWriter.startSuites();
         for (WorkflowTestSuite testFlow : allTestFlows) {
             if (m_stopped) {
+                syserr.println("Tests aborted");
                 break;
             }
-            System.out.printf("=> Running %-" + maxNameLength + "s...", testFlow.getName());
+            sysout.printf("=> Running %-" + maxNameLength + "s...", testFlow.getName());
             WorkflowTestResult result = WorkflowTestSuite.runTest(testFlow, resultWriter);
             if (result.errorCount() > 0) {
-                System.out.println("ERROR");
+                sysout.println("ERROR");
             } else if (result.failureCount() > 0) {
-                System.out.println("FAILURE");
+                sysout.println("FAILURE");
             } else {
-                System.out.println("OK");
+                sysout.println("OK");
             }
             resultWriter.addResult(result);
         }

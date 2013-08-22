@@ -70,14 +70,16 @@ public class UnittestRunnerApplication implements IApplication {
             maxNameLength = Math.max(maxNameLength, testClass.getName().length());
         }
 
+        final PrintStream sysout = System.out; // we save and use the copy because some test may re-assign it
+        final PrintStream syserr = System.err;
         // run the tests
         for (Class<?> testClass : allTests) {
             if (m_stopped) {
-                System.err.println("Tests aborted");
+                syserr.println("Tests aborted");
                 break;
             }
 
-            System.out.printf("=> Running %-" + maxNameLength + "s ...", testClass.getName());
+            sysout.printf("=> Running %-" + maxNameLength + "s ...", testClass.getName());
             JUnitTest junitTest = new JUnitTest(testClass.getName());
             final JUnitTestRunner runner =
                     new JUnitTestRunner(junitTest, false, false, false, testClass.getClassLoader());
@@ -119,8 +121,6 @@ public class UnittestRunnerApplication implements IApplication {
             NodeLogger.addWriter(stdout, LEVEL.DEBUG, LEVEL.FATAL);
             NodeLogger.addWriter(stderr, LEVEL.ERROR, LEVEL.FATAL);
 
-            PrintStream oldOut = System.out;
-            PrintStream oldErr = System.err;
             try {
                 System.setOut(new PrintStream(new WriterOutputStream(stdout), false, "UTF-8"));
                 System.setErr(new PrintStream(new WriterOutputStream(stderr), false, "UTF-8"));
@@ -128,8 +128,8 @@ public class UnittestRunnerApplication implements IApplication {
                 System.out.flush();
                 System.err.flush();
             } finally {
-                System.setOut(oldOut);
-                System.setErr(oldErr);
+                System.setOut(sysout);
+                System.setErr(syserr);
             }
             NodeLogger.removeWriter(stderr);
             NodeLogger.removeWriter(stdout);
@@ -138,16 +138,16 @@ public class UnittestRunnerApplication implements IApplication {
 
             switch (runner.getRetCode()) {
                 case JUnitTestRunnerMirror.SUCCESS:
-                    System.out.println("OK");
+                    sysout.println("OK");
                     break;
                 case JUnitTestRunnerMirror.FAILURES:
-                    System.out.println("FAILURE");
+                    sysout.println("FAILURE");
                     break;
                 case JUnitTestRunnerMirror.ERRORS:
-                    System.out.println("ERROR");
+                    sysout.println("ERROR");
                     break;
                 default:
-                    System.out.println("UNKNOWN");
+                    sysout.println("UNKNOWN");
                     break;
             }
         }
