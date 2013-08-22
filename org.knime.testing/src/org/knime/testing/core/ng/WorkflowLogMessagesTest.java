@@ -139,8 +139,8 @@ class WorkflowLogMessagesTest extends WorkflowTest {
             result.addError(this, t);
         } finally {
             result.endTest(this);
-            m_logEvents.clear();
             Logger.getRootLogger().removeAppender(m_logAppender);
+            m_logEvents.clear();
         }
     }
 
