@@ -301,10 +301,10 @@ public class CommandExecution extends Observable {
         } catch (InterruptedException ie) {
             throw ie;
         } catch (Exception e) {
-            LOGGER.error("Execution failed (with exception)", e);
+            LOGGER.error("Execution failed (with exception): " + e.getMessage(), e);
             throw e;
         } catch (Throwable t) {
-            LOGGER.fatal("Execution failed (with exception)", t);
+            LOGGER.fatal("Execution failed (with error): " + t.getMessage(), t);
             throw new Exception(t);
         }
 
