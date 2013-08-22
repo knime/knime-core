@@ -52,7 +52,6 @@ package org.knime.testing.core.ng;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicReference;
 
 import junit.framework.TestResult;
 
@@ -60,7 +59,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.LockFailedException;
 
 /**
@@ -75,11 +73,9 @@ class WorkflowSaveTest extends WorkflowTest {
 
     private final File m_testcaseRoot;
 
-    private WorkflowManager m_manager;
-
     WorkflowSaveTest(final String workflowName, final IProgressMonitor monitor, final TestrunConfiguration runConfig,
-                     final File testcaseRoot, final File workflowDir) {
-        super(workflowName, monitor);
+                     final File testcaseRoot, final File workflowDir, final WorkflowTestContext context) {
+        super(workflowName, monitor, context);
         m_runConfiguration = runConfig;
         m_testcaseRoot = testcaseRoot;
         m_workflowDir = workflowDir;
@@ -118,14 +114,6 @@ class WorkflowSaveTest extends WorkflowTest {
         return "save workflow (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setup(final AtomicReference<WorkflowManager> managerRef) {
-        m_manager = managerRef.get();
-    }
-
     private void saveWorkflow() throws IOException, CanceledExecutionException, LockFailedException {
         // path from root to current flow dir
         String postfix = m_workflowDir.getAbsolutePath().substring(m_testcaseRoot.getAbsolutePath().length());
@@ -139,6 +127,6 @@ class WorkflowSaveTest extends WorkflowTest {
             throw new IOException("Could not create destination directory for workflow: "
                     + saveLocation.getAbsolutePath());
         }
-        m_manager.save(saveLocation, new ExecutionMonitor(), true);
+        m_context.getWorkflowManager().save(saveLocation, new ExecutionMonitor(), true);
     }
 }

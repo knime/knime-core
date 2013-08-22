@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import javax.xml.transform.TransformerException;
 
@@ -133,8 +132,6 @@ public class TestflowRunnerApplication implements IApplication {
             maxNameLength = Math.max(maxNameLength, testFlow.getName().length());
         }
 
-        List<WorkflowTestResult> results = new ArrayList<WorkflowTestResult>();
-
         resultWriter.startSuites();
         for (WorkflowTestSuite testFlow : allTestFlows) {
             if (m_stopped) {
@@ -142,7 +139,6 @@ public class TestflowRunnerApplication implements IApplication {
             }
             System.out.printf("=> Running %-" + maxNameLength + "s...", testFlow.getName());
             WorkflowTestResult result = WorkflowTestSuite.runTest(testFlow, resultWriter);
-            results.add(result);
             if (result.errorCount() > 0) {
                 System.out.println("ERROR");
             } else if (result.failureCount() > 0) {
@@ -150,9 +146,9 @@ public class TestflowRunnerApplication implements IApplication {
             } else {
                 System.out.println("OK");
             }
+            resultWriter.addResult(result);
         }
         resultWriter.endSuites();
-        resultWriter.writeResult(results);
 
         return EXIT_OK;
     }

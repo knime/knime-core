@@ -46,80 +46,105 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   19.08.2013 (thor): created
+ *   22.08.2013 (thor): created
  */
 package org.knime.testing.core.ng;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.TestResult;
-
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.AbstractNodeView;
-import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.Node;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.Pair;
 
 /**
- * Testcase that closes all open views of the workflow and checks whether any exceptions are thrown meanwhile.
+ * Shared context for all testcases. It is used to exchange information that is needed by several testcases, such as the
+ * workflow manager, a list of pre-executed nodes, etc.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class WorkflowCloseViewsTest extends WorkflowTest {
-    WorkflowCloseViewsTest(final String workflowName, final IProgressMonitor monitor, final WorkflowTestContext context) {
-        super(workflowName, monitor, context);
+class WorkflowTestContext {
+    private final Map<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>> m_views =
+            new HashMap<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>>();
+
+    private final Set<NodeID> m_preExecutedNodes = new HashSet<NodeID>();
+
+    private final List<Pair<Thread, Throwable>> m_uncaughtExceptions = new ArrayList<Pair<Thread, Throwable>>();
+
+    private WorkflowManager m_manager;
+
+    /**
+     * Returns a map with the node views for each node (if there are any). This map is intended to be modified by
+     * clients. If a node does not have a view, the corresponding entry is <code>null</code>.
+     *
+     * @return a map between node containers and their views
+     */
+    public Map<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>> getNodeViews() {
+        return m_views;
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the workflow manager. This may be <code>null</code> until the workflow has been loaded.
+     *
+     * @return a workflow manager or <code>null</code>
      */
-    @Override
-    public int countTestCases() {
-        return 1;
+    public WorkflowManager getWorkflowManager() {
+        return m_manager;
     }
 
     /**
-     * {@inheritDoc}
+     * Sets the workflow manager.
+     *
+     * @param manager a workflow manager
      */
-    @Override
-    public void run(final TestResult result) {
-        result.startTest(this);
-
-        try {
-            closeViews(result);
-        } catch (Throwable t) {
-            result.addError(this, t);
-        } finally {
-            result.endTest(this);
-        }
+    public void setWorkflowManager(final WorkflowManager manager) {
+        m_manager = manager;
     }
 
     /**
-     * {@inheritDoc}
+     * Returns a map between threads and their uncaught exceptions. This map is intended to be modified by clients.
+     *
+     * @return a map between threads and uncaught exceptions
      */
-    @Override
-    public String getName() {
-        return "close views (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+    public List<Pair<Thread, Throwable>> getUncaughtExceptions() {
+        return m_uncaughtExceptions;
     }
 
-    private void closeViews(final TestResult result) {
-        for (Map.Entry<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>> e : m_context.getNodeViews()
-                .entrySet()) {
-            for (AbstractNodeView<? extends NodeModel> view : e.getValue()) {
-                try {
-                    Node.invokeCloseView(view);
-                } catch (Exception ex) {
-                    String msg =
-                            "View '" + view + "' of node '" + e.getKey().getNameWithID() + "' has thrown a "
-                                    + ex.getClass().getSimpleName() + " during close: " + ex.getMessage();
-                    AssertionFailedError error = new AssertionFailedError(msg);
-                    error.initCause(ex);
-                    result.addFailure(this, error);
-                }
-            }
-        }
+    /**
+     * Adds a node to the list of pre-executed nodes.
+     *
+     * @param node a node container
+     */
+    public void addPreExecutedNode(final NodeContainer node) {
+        m_preExecutedNodes.add(node.getID());
     }
+
+    /**
+     * Returns whether the given node was pre-executed or not when the workflow was loaded.
+     *
+     * @param node a node container
+     * @return <code>true</code> if the node was already executed, <code>false</code> otherwise
+     */
+    public boolean isPreExecutedNode(final NodeContainer node) {
+        return m_preExecutedNodes.contains(node.getID());
+    }
+
+    /**
+     * Clears the context.
+     */
+    public void clear() {
+        m_views.clear();
+        m_uncaughtExceptions.clear();
+        m_preExecutedNodes.clear();
+        m_manager = null;
+    }
+
 }

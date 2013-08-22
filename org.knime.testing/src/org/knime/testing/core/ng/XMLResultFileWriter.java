@@ -52,7 +52,8 @@ package org.knime.testing.core.ng;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Result;
@@ -75,6 +76,8 @@ public class XMLResultFileWriter extends AbstractXMLResultWriter {
 
     private long m_startTime, m_endTime;
 
+    private final List<WorkflowTestResult> m_allResults = new ArrayList<WorkflowTestResult>();
+
     /**
      * Creates a new result writer.
      *
@@ -90,18 +93,36 @@ public class XMLResultFileWriter extends AbstractXMLResultWriter {
      * {@inheritDoc}
      */
     @Override
-    public void writeResult(final Collection<WorkflowTestResult> results) throws TransformerException, IOException {
+    public void addResult(final WorkflowTestResult result) throws TransformerException, IOException {
+        m_allResults.add(result);
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void startSuites() {
+        m_startTime = System.currentTimeMillis();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void endSuites() throws IOException, TransformerException {
+        m_endTime = System.currentTimeMillis();
         Document doc = m_docBuilder.newDocument();
         Element root;
-        if (results.size() == 1) {
-            root = createTestsuiteElement(results.iterator().next(), doc);
+        if (m_allResults.size() == 1) {
+            root = createTestsuiteElement(m_allResults.iterator().next(), doc);
         } else {
             root = doc.createElement("testsuites");
 
             int runs = 0;
             int errors = 0;
             int failures = 0;
-            for (WorkflowTestResult res : results) {
+            for (WorkflowTestResult res : m_allResults) {
                 runs += res.runCount();
                 errors += res.errorCount();
                 failures += res.failureCount();
@@ -125,21 +146,5 @@ public class XMLResultFileWriter extends AbstractXMLResultWriter {
         Source source = new DOMSource(doc);
         Result result = new StreamResult(m_file);
         m_serializer.transform(source, result);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void startSuites() {
-        m_startTime = System.currentTimeMillis();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void endSuites() {
-        m_endTime = System.currentTimeMillis();
     }
 }

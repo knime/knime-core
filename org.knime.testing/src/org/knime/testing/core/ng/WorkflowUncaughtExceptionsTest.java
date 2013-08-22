@@ -50,36 +50,30 @@
  */
 package org.knime.testing.core.ng;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.Pair;
 
 /**
- * Testcase that reports any uncaught exceptions. An exception handler is installed during creation of the
- * test. It records all uncaught exception and reports them as errors when the test is run. The exception handler
- * is removed after the test has run.
+ * Testcase that reports any uncaught exceptions. An exception handler is installed during creation of the test. It
+ * records all uncaught exception and reports them as errors when the test is run. The exception handler is removed
+ * after the test has run.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class WorkflowUncaughtExceptionsTest extends WorkflowTest {
-    private final List<Pair<Thread, Throwable>> m_uncaughtExceptions = new ArrayList<Pair<Thread, Throwable>>();
-
-    WorkflowUncaughtExceptionsTest(final String workflowName, final IProgressMonitor monitor) {
-        super(workflowName, monitor);
+    WorkflowUncaughtExceptionsTest(final String workflowName, final IProgressMonitor monitor,
+                                   final WorkflowTestContext context) {
+        super(workflowName, monitor, context);
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(final Thread t, final Throwable e) {
-                synchronized (m_uncaughtExceptions) {
-                    m_uncaughtExceptions.add(new Pair<Thread, Throwable>(t, e));
+                synchronized (m_context.getUncaughtExceptions()) {
+                    m_context.getUncaughtExceptions().add(new Pair<Thread, Throwable>(t, e));
                 }
             }
         });
@@ -100,12 +94,14 @@ class WorkflowUncaughtExceptionsTest extends WorkflowTest {
     public void run(final TestResult result) {
         result.startTest(this);
         try {
-            for (Pair<Thread, Throwable> p : m_uncaughtExceptions) {
-                AssertionFailedError error =
-                        new AssertionFailedError("Thread " + p.getFirst().getName() + " has thrown an uncaught "
-                                + p.getSecond().getClass().getSimpleName() + ": " + p.getSecond().getMessage());
-                error.initCause(p.getSecond());
-                result.addError(this, error);
+            synchronized (m_context.getUncaughtExceptions()) {
+                for (Pair<Thread, Throwable> p : m_context.getUncaughtExceptions()) {
+                    AssertionFailedError error =
+                            new AssertionFailedError("Thread " + p.getFirst().getName() + " has thrown an uncaught "
+                                    + p.getSecond().getClass().getSimpleName() + ": " + p.getSecond().getMessage());
+                    error.initCause(p.getSecond());
+                    result.addError(this, error);
+                }
             }
         } catch (Throwable t) {
             result.addError(this, t);
@@ -121,13 +117,5 @@ class WorkflowUncaughtExceptionsTest extends WorkflowTest {
     @Override
     public String getName() {
         return "uncaught exceptions (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setup(final AtomicReference<WorkflowManager> managerRef) {
-        // nothing to do
     }
 }

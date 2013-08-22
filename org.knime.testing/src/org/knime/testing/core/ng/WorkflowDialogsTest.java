@@ -50,8 +50,6 @@
  */
 package org.knime.testing.core.ng;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
@@ -72,10 +70,8 @@ import org.knime.core.node.workflow.WorkflowManager;
 class WorkflowDialogsTest extends WorkflowTest {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowDialogsTest.class);
 
-    private WorkflowManager m_manager;
-
-    WorkflowDialogsTest(final String workflowName, final IProgressMonitor monitor) {
-        super(workflowName, monitor);
+    WorkflowDialogsTest(final String workflowName, final IProgressMonitor monitor, final WorkflowTestContext context) {
+        super(workflowName, monitor, context);
     }
 
     /**
@@ -94,7 +90,7 @@ class WorkflowDialogsTest extends WorkflowTest {
         result.startTest(this);
 
         try {
-            checkDialogs(result, m_manager);
+            checkDialogs(result, m_context.getWorkflowManager());
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {
@@ -110,16 +106,12 @@ class WorkflowDialogsTest extends WorkflowTest {
         return "check dialogs (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setup(final AtomicReference<WorkflowManager> managerRef) {
-        m_manager = managerRef.get();
-    }
-
     private void checkDialogs(final TestResult result, final WorkflowManager wfm) {
         for (NodeContainer node : wfm.getNodeContainers()) {
+            if (m_context.isPreExecutedNode(node)) {
+                continue;
+            }
+
             if (node instanceof SingleNodeContainer) {
                 LOGGER.debug("Opening dialog of node " + ((SingleNodeContainer) node).getName());
                 try {

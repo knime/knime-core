@@ -52,7 +52,6 @@ package org.knime.testing.core.ng;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicReference;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
@@ -76,13 +75,9 @@ class WorkflowExecuteTest extends WorkflowTest {
 
     private final TestrunConfiguration m_runConfiguration;
 
-    private TestflowConfiguration m_flowConfiguration;
-
-    private WorkflowManager m_manager;
-
     WorkflowExecuteTest(final String workflowName, final IProgressMonitor monitor,
-                        final TestrunConfiguration runConfiguration) {
-        super(workflowName, monitor);
+                        final TestrunConfiguration runConfiguration, final WorkflowTestContext context) {
+        super(workflowName, monitor, context);
         m_runConfiguration = runConfiguration;
     }
 
@@ -103,33 +98,35 @@ class WorkflowExecuteTest extends WorkflowTest {
 
         TimerTask watchdog = null;
         try {
-            m_flowConfiguration = new TestflowConfiguration(m_manager);
+            TestflowConfiguration flowConfiguration = new TestflowConfiguration(m_context.getWorkflowManager());
 
             final long timeout =
                     System.currentTimeMillis()
-                            + ((m_flowConfiguration.getTimeout() > 0) ? m_flowConfiguration.getTimeout()
+                            + ((flowConfiguration.getTimeout() > 0) ? flowConfiguration.getTimeout()
                                     : m_runConfiguration.getTimeout()) * 1000;
             watchdog = new TimerTask() {
                 @Override
                 public void run() {
                     if (m_progressMonitor.isCanceled()) {
                         result.addError(WorkflowExecuteTest.this, new InterruptedException("Testflow canceled by user"));
-                        m_manager.getParent().cancelExecution(m_manager);
+                        m_context.getWorkflowManager().getParent().cancelExecution(m_context.getWorkflowManager());
                         this.cancel();
                     } else if (System.currentTimeMillis() > timeout) {
-                        String status = m_manager.printNodeSummary(m_manager.getID(), 0);
+                        String status =
+                                m_context.getWorkflowManager().printNodeSummary(m_context.getWorkflowManager().getID(),
+                                                                                0);
                         result.addFailure(WorkflowExecuteTest.this, new AssertionFailedError(
                                 "Worklow running longer than " + timeout + " seconds.\n" + status));
-                        m_manager.getParent().cancelExecution(m_manager);
+                        m_context.getWorkflowManager().getParent().cancelExecution(m_context.getWorkflowManager());
                         this.cancel();
                     }
                 }
             };
 
             TIMEOUT_TIMER.schedule(watchdog, 500, 500);
-            m_manager.executeAllAndWaitUntilDone();
+            m_context.getWorkflowManager().executeAllAndWaitUntilDone();
             if (!m_progressMonitor.isCanceled()) {
-                checkExecutionStatus(result, m_manager);
+                checkExecutionStatus(result, m_context.getWorkflowManager(), flowConfiguration);
             }
         } catch (Throwable t) {
             result.addError(this, t);
@@ -150,34 +147,27 @@ class WorkflowExecuteTest extends WorkflowTest {
         return "execute workflow (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
     }
 
-    private void checkExecutionStatus(final TestResult result, final WorkflowManager wfm) {
+    private void checkExecutionStatus(final TestResult result, final WorkflowManager wfm,
+                                      final TestflowConfiguration flowConfiguration) {
         for (NodeContainer node : wfm.getNodeContainers()) {
             NodeContainerState status = node.getNodeContainerState();
 
             if (node instanceof SingleNodeContainer) {
-                if (!status.isExecuted() && !m_flowConfiguration.nodeMustFail(node.getID())) {
+                if (!status.isExecuted() && !flowConfiguration.nodeMustFail(node.getID())) {
                     NodeMessage nodeMessage = node.getNodeMessage();
                     String error =
                             "Node '" + node.getNameWithID() + "' is not executed. Error message is: "
                                     + nodeMessage.getMessage();
                     result.addFailure(this, new AssertionFailedError(error));
-                } else if (status.isExecuted() && m_flowConfiguration.nodeMustFail(node.getID())) {
+                } else if (status.isExecuted() && flowConfiguration.nodeMustFail(node.getID())) {
                     String error = "Node '" + node.getNameWithID() + "' is executed although it should have failed.";
                     result.addFailure(this, new AssertionFailedError(error));
                 }
             } else if (node instanceof WorkflowManager) {
-                checkExecutionStatus(result, (WorkflowManager)node);
+                checkExecutionStatus(result, (WorkflowManager)node, flowConfiguration);
             } else {
                 throw new IllegalStateException("Unknown node container type: " + node.getClass());
             }
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setup(final AtomicReference<WorkflowManager> managerRef) {
-        m_manager = managerRef.get();
     }
 }

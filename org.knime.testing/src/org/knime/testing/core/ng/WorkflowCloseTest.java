@@ -51,7 +51,6 @@
 package org.knime.testing.core.ng;
 
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicReference;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
@@ -68,10 +67,8 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class WorkflowCloseTest extends WorkflowTest {
-    private WorkflowManager m_manager;
-
-    WorkflowCloseTest(final String workflowName, final IProgressMonitor monitor) {
-        super(workflowName, monitor);
+    WorkflowCloseTest(final String workflowName, final IProgressMonitor monitor, final WorkflowTestContext context) {
+        super(workflowName, monitor, context);
     }
 
     /**
@@ -90,8 +87,8 @@ class WorkflowCloseTest extends WorkflowTest {
         result.startTest(this);
 
         try {
-            m_manager.shutdown();
-            m_manager.getParent().removeNode(m_manager.getID());
+            m_context.getWorkflowManager().shutdown();
+            m_context.getWorkflowManager().getParent().removeNode(m_context.getWorkflowManager().getID());
 
             Collection<NodeContainer> openWorkflows = WorkflowManager.ROOT.getNodeContainers();
             if (openWorkflows.size() > 1) {
@@ -115,13 +112,5 @@ class WorkflowCloseTest extends WorkflowTest {
     @Override
     public String getName() {
         return "close workflow (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setup(final AtomicReference<WorkflowManager> managerRef) {
-        m_manager = managerRef.get();
     }
 }

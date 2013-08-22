@@ -50,13 +50,10 @@
  */
 package org.knime.testing.core.ng;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import junit.framework.Test;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * Abstract base class for workflow tests.
@@ -70,21 +67,34 @@ public abstract class WorkflowTest implements Test {
      */
     protected final String m_workflowName;
 
+    /**
+     * The progress monitor, never <code>null</code>.
+     */
     protected final IProgressMonitor m_progressMonitor;
+
+    /**
+     * The test context, never <code>null</code>.
+     */
+    protected final WorkflowTestContext m_context;
 
     /**
      * Creates a new workflow test for the given workflow.
      *
      * @param workflowName the workflow's name
      * @param monitor progress monitor, may be <code>null</code>
+     * @param context the test context, must not be <code>null</code>
      */
-    protected WorkflowTest(final String workflowName, final IProgressMonitor monitor) {
+    protected WorkflowTest(final String workflowName, final IProgressMonitor monitor, final WorkflowTestContext context) {
         m_workflowName = workflowName;
         if (monitor == null) {
             m_progressMonitor = new NullProgressMonitor();
         } else {
             m_progressMonitor = monitor;
         }
+        if (context == null) {
+            throw new IllegalArgumentException("Test context must not be null");
+        }
+        m_context = context;
     }
 
     /**
@@ -102,15 +112,6 @@ public abstract class WorkflowTest implements Test {
      * @return a name
      */
     public abstract String getName();
-
-    /**
-     * Sets up the test with the given workflow manager. The reference may be null for some tests and tests may override
-     * the value of the reference. Since all tests use the same reference, the workflow manager may be changed by
-     * certain tests (e.g. a test that initially loads the workflow).
-     *
-     * @param managerRef a reference to the workflow manager
-     */
-    public abstract void setup(AtomicReference<WorkflowManager> managerRef);
 
     /**
      * {@inheritDoc}

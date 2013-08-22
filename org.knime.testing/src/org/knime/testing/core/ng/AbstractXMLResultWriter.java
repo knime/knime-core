@@ -57,7 +57,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -229,7 +228,6 @@ public abstract class AbstractXMLResultWriter implements TestListener {
         }
     }
 
-
     private Element createTestcaseElement(final WorkflowTest test, final Document doc) {
         Element tc = doc.createElement("testcase");
         tc.setAttribute("name", test.getName());
@@ -272,16 +270,20 @@ public abstract class AbstractXMLResultWriter implements TestListener {
     public abstract void startSuites();
 
     /**
-     * This method is called after the last test suite has been executed.
-     */
-    public abstract void endSuites();
-
-    /**
-     * Writes out the given workflow test results.
+     * This method is called after the last test suite has been executed. All pending results that have not been written
+     * yet are now processed.
      *
-     * @param results a collection with test results
      * @throws TransformerException if an error occurs while writing the XML
      * @throws IOException if an I/O error occurs while writing the results
      */
-    public abstract void writeResult(Collection<WorkflowTestResult> results) throws TransformerException, IOException;
+    public abstract void endSuites() throws IOException, TransformerException;
+
+    /**
+     * Adds a result. The writer may choose to write it out immediately or postpone the processing.
+     *
+     * @param result a test results
+     * @throws TransformerException if an error occurs while writing the XML
+     * @throws IOException if an I/O error occurs while writing the results
+     */
+    public abstract void addResult(WorkflowTestResult result) throws TransformerException, IOException;
 }

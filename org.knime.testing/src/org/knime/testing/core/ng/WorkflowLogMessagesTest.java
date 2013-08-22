@@ -55,7 +55,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import junit.framework.AssertionFailedError;
@@ -68,7 +67,6 @@ import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * Testcase that checks for expected log messages and reported unexpected ERRORs and FATALs. An appender to the root
@@ -79,10 +77,6 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class WorkflowLogMessagesTest extends WorkflowTest {
-    private WorkflowManager m_manager;
-
-    private TestflowConfiguration m_flowConfiguration;
-
     private final List<LoggingEvent> m_logEvents = new ArrayList<LoggingEvent>();
 
     private final AppenderSkeleton m_logAppender = new AppenderSkeleton() {
@@ -109,8 +103,8 @@ class WorkflowLogMessagesTest extends WorkflowTest {
         }
     };
 
-    WorkflowLogMessagesTest(final String workflowName, final IProgressMonitor monitor) {
-        super(workflowName, monitor);
+    WorkflowLogMessagesTest(final String workflowName, final IProgressMonitor monitor, final WorkflowTestContext context) {
+        super(workflowName, monitor, context);
         Logger.getRootLogger().addAppender(m_logAppender);
     }
 
@@ -130,8 +124,8 @@ class WorkflowLogMessagesTest extends WorkflowTest {
         result.startTest(this);
 
         try {
-            m_flowConfiguration = new TestflowConfiguration(m_manager);
-            checkLogMessages(result);
+            TestflowConfiguration flowConfiguration = new TestflowConfiguration(m_context.getWorkflowManager());
+            checkLogMessages(result, flowConfiguration);
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {
@@ -149,20 +143,12 @@ class WorkflowLogMessagesTest extends WorkflowTest {
         return "log messages (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setup(final AtomicReference<WorkflowManager> managerRef) {
-        m_manager = managerRef.get();
-    }
-
-    private void checkLogMessages(final TestResult result) {
+    private void checkLogMessages(final TestResult result, final TestflowConfiguration flowConfiguration) {
         Map<Level, List<Pattern>> map = new HashMap<Level, List<Pattern>>();
-        map.put(Level.ERROR, new ArrayList<Pattern>(m_flowConfiguration.getRequiredErrors()));
-        map.put(Level.WARN, new ArrayList<Pattern>(m_flowConfiguration.getRequiredWarnings()));
-        map.put(Level.INFO, new ArrayList<Pattern>(m_flowConfiguration.getRequiredInfos()));
-        map.put(Level.DEBUG, new ArrayList<Pattern>(m_flowConfiguration.getRequiredDebugs()));
+        map.put(Level.ERROR, new ArrayList<Pattern>(flowConfiguration.getRequiredErrors()));
+        map.put(Level.WARN, new ArrayList<Pattern>(flowConfiguration.getRequiredWarnings()));
+        map.put(Level.INFO, new ArrayList<Pattern>(flowConfiguration.getRequiredInfos()));
+        map.put(Level.DEBUG, new ArrayList<Pattern>(flowConfiguration.getRequiredDebugs()));
 
         for (LoggingEvent logEvent : m_logEvents) {
             String message = logEvent.getRenderedMessage();
@@ -170,7 +156,7 @@ class WorkflowLogMessagesTest extends WorkflowTest {
             boolean expected = false;
             List<Pattern> currentList = map.get(logEvent.getLevel());
             if (currentList != null) {
-                Iterator<Pattern> it = m_flowConfiguration.getRequiredErrors().iterator();
+                Iterator<Pattern> it = flowConfiguration.getRequiredErrors().iterator();
                 while (it.hasNext()) {
                     Pattern p = it.next();
                     if (p.matcher(message).matches()) {

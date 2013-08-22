@@ -50,7 +50,6 @@
  */
 package org.knime.testing.core.ng;
 
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import junit.framework.AssertionFailedError;
@@ -70,12 +69,9 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class WorkflowNodeMessagesTest extends WorkflowTest {
-    private TestflowConfiguration m_flowConfiguration;
-
-    private WorkflowManager m_manager;
-
-    WorkflowNodeMessagesTest(final String workflowName, final IProgressMonitor monitor) {
-        super(workflowName, monitor);
+    WorkflowNodeMessagesTest(final String workflowName, final IProgressMonitor monitor,
+                             final WorkflowTestContext context) {
+        super(workflowName, monitor, context);
     }
 
     /**
@@ -94,8 +90,8 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
         result.startTest(this);
 
         try {
-            m_flowConfiguration = new TestflowConfiguration(m_manager);
-            checkNodeMessages(result, m_manager);
+            TestflowConfiguration flowConfiguration = new TestflowConfiguration(m_context.getWorkflowManager());
+            checkNodeMessages(result, m_context.getWorkflowManager(), flowConfiguration);
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {
@@ -112,12 +108,17 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
         return "node messages (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
     }
 
-    private void checkNodeMessages(final TestResult result, final WorkflowManager wfm) {
+    private void checkNodeMessages(final TestResult result, final WorkflowManager wfm,
+                                   final TestflowConfiguration flowConfiguration) {
         for (NodeContainer node : wfm.getNodeContainers()) {
+            if (m_context.isPreExecutedNode(node)) {
+                continue;
+            }
+
             if (node instanceof SingleNodeContainer) {
                 NodeMessage nodeMessage = node.getNodeMessage();
 
-                Pattern expectedErrorMessage = m_flowConfiguration.getNodeErrorMessage(node.getID());
+                Pattern expectedErrorMessage = flowConfiguration.getNodeErrorMessage(node.getID());
                 if (expectedErrorMessage != null) {
                     if (!expectedErrorMessage.matcher(nodeMessage.getMessage()).matches()) {
                         String error =
@@ -133,7 +134,7 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
                     result.addFailure(this, new AssertionFailedError(error));
                 }
 
-                Pattern expectedWarningMessage = m_flowConfiguration.getNodeWarningMessage(node.getID());
+                Pattern expectedWarningMessage = flowConfiguration.getNodeWarningMessage(node.getID());
                 if (expectedWarningMessage != null) {
                     if (!expectedWarningMessage.matcher(nodeMessage.getMessage()).matches()) {
                         String error =
@@ -149,18 +150,10 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
                     result.addFailure(this, new AssertionFailedError(error));
                 }
             } else if (node instanceof WorkflowManager) {
-                checkNodeMessages(result, (WorkflowManager)node);
+                checkNodeMessages(result, (WorkflowManager)node, flowConfiguration);
             } else {
                 throw new IllegalStateException("Unknown node container type: " + node.getClass());
             }
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setup(final AtomicReference<WorkflowManager> managerRef) {
-        m_manager = managerRef.get();
     }
 }

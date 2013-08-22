@@ -52,8 +52,6 @@ package org.knime.testing.core.ng;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
@@ -77,14 +75,8 @@ import org.knime.core.node.workflow.WorkflowManager;
 class WorkflowOpenViewsTest extends WorkflowTest {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowOpenViewsTest.class);
 
-    private final Map<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>> m_allViews;
-
-    private WorkflowManager m_manager;
-
-    WorkflowOpenViewsTest(final String workflowName, final IProgressMonitor monitor,
-                          final Map<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>> views) {
-        super(workflowName, monitor);
-        m_allViews = views;
+    WorkflowOpenViewsTest(final String workflowName, final IProgressMonitor monitor, final WorkflowTestContext context) {
+        super(workflowName, monitor, context);
     }
 
     /**
@@ -103,7 +95,7 @@ class WorkflowOpenViewsTest extends WorkflowTest {
         result.startTest(this);
 
         try {
-            openViews(result, m_manager);
+            openViews(result, m_context.getWorkflowManager());
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {
@@ -117,14 +109,6 @@ class WorkflowOpenViewsTest extends WorkflowTest {
     @Override
     public String getName() {
         return "open views (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setup(final AtomicReference<WorkflowManager> managerRef) {
-        m_manager = managerRef.get();
     }
 
     private void openViews(final TestResult result, final WorkflowManager wfm) {
@@ -168,10 +152,10 @@ class WorkflowOpenViewsTest extends WorkflowTest {
         LOGGER.debug("opening view nr. " + index + " for node " + node.getName());
         final AbstractNodeView<? extends NodeModel> view = node.getView(index);
         // store the view in order to close is after the test finishes
-        List<AbstractNodeView<? extends NodeModel>> l = m_allViews.get(node);
+        List<AbstractNodeView<? extends NodeModel>> l = m_context.getNodeViews().get(node);
         if (l == null) {
             l = new ArrayList<AbstractNodeView<? extends NodeModel>>(2);
-            m_allViews.put(node, l);
+            m_context.getNodeViews().put(node, l);
         }
         l.add(view);
         // open it now.

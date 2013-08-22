@@ -52,7 +52,6 @@ package org.knime.testing.core.ng;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Result;
@@ -88,23 +87,22 @@ public class XMLResultDirWriter extends AbstractXMLResultWriter {
      * {@inheritDoc}
      */
     @Override
-    public void writeResult(final Collection<WorkflowTestResult> results) throws TransformerException, IOException {
-        for (WorkflowTestResult res : results) {
+    public void addResult(final WorkflowTestResult result) throws TransformerException, IOException {
+        Document doc = m_docBuilder.newDocument();
+        Element testsuite = createTestsuiteElement(result, doc);
+        doc.appendChild(testsuite);
 
-            Document doc = m_docBuilder.newDocument();
-            Element testsuite = createTestsuiteElement(res, doc);
-            doc.appendChild(testsuite);
-
-            File destFile = new File(m_rootDir, res.getSuite().getName() + ".xml");
-            if (!destFile.getParentFile().isDirectory() && !destFile.getParentFile().mkdirs()) {
-                throw new IOException("Could not created directory for result file: "
-                        + destFile.getParentFile().getAbsolutePath());
-            }
-
-            Source source = new DOMSource(doc);
-            Result result = new StreamResult(destFile);
-            m_serializer.transform(source, result);
+        File destFile = new File(m_rootDir, result.getSuite().getName() + ".xml");
+        if (!destFile.getParentFile().isDirectory() && !destFile.getParentFile().mkdirs()) {
+            throw new IOException("Could not created directory for result file: "
+                    + destFile.getParentFile().getAbsolutePath());
         }
+
+        Source source = new DOMSource(doc);
+        Result res = new StreamResult(destFile);
+        m_serializer.transform(source, res);
+        m_startTimes.clear();
+        m_endTimes.clear();
     }
 
     /**

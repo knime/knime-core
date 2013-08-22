@@ -50,8 +50,6 @@
  */
 package org.knime.testing.core.ng;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
@@ -67,10 +65,8 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class WorkflowDeprecationTest extends WorkflowTest {
-    private WorkflowManager m_manager;
-
-    WorkflowDeprecationTest(final String workflowName, final IProgressMonitor monitor) {
-        super(workflowName, monitor);
+    WorkflowDeprecationTest(final String workflowName, final IProgressMonitor monitor, final WorkflowTestContext context) {
+        super(workflowName, monitor, context);
     }
 
     /**
@@ -89,7 +85,7 @@ class WorkflowDeprecationTest extends WorkflowTest {
         result.startTest(this);
 
         try {
-            checkForDeprecatedNodes(result, m_manager);
+            checkForDeprecatedNodes(result, m_context.getWorkflowManager());
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {
@@ -117,13 +113,5 @@ class WorkflowDeprecationTest extends WorkflowTest {
                 throw new IllegalStateException("Unknown node container type: " + node.getClass().getName());
             }
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setup(final AtomicReference<WorkflowManager> managerRef) {
-        m_manager = managerRef.get();
     }
 }

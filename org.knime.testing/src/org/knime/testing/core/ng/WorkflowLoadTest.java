@@ -52,7 +52,6 @@ package org.knime.testing.core.ng;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicReference;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
@@ -62,6 +61,8 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
@@ -82,8 +83,6 @@ class WorkflowLoadTest extends WorkflowTest {
 
     private final TestrunConfiguration m_runConfiguration;
 
-    private AtomicReference<WorkflowManager> m_managerRef;
-
     /**
      * Creates a new test for loading a workflow.
      *
@@ -92,10 +91,12 @@ class WorkflowLoadTest extends WorkflowTest {
      * @param workflowName a unique name for the workflow
      * @param monitor a progress monitor, may be <code>null</code>
      * @param runConfiguration the run configuration
+     * @param context the test context, must not be <code>null</code>
      */
     public WorkflowLoadTest(final File workflowDir, final File testcaseRoot, final String workflowName,
-                            final IProgressMonitor monitor, final TestrunConfiguration runConfiguration) {
-        super(workflowName, monitor);
+                            final IProgressMonitor monitor, final TestrunConfiguration runConfiguration,
+                            final WorkflowTestContext context) {
+        super(workflowName, monitor, context);
         m_workflowDir = workflowDir;
         m_testcaseRoot = testcaseRoot;
         m_runConfiguration = runConfiguration;
@@ -116,7 +117,10 @@ class WorkflowLoadTest extends WorkflowTest {
     public void run(final TestResult result) {
         result.startTest(this);
         try {
-            m_managerRef.set(loadWorkflow(result));
+            if (m_context.getWorkflowManager() == null) {
+                m_context.setWorkflowManager(loadWorkflow(result));
+            }
+            recordPreExecutedNodes(m_context.getWorkflowManager());
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {
@@ -153,14 +157,21 @@ class WorkflowLoadTest extends WorkflowTest {
         if (m_runConfiguration.isCheckForLoadWarnings() && loadRes.hasWarningEntries()) {
             result.addFailure(this, new AssertionFailedError(loadRes.getFilteredError("", LoadResultEntryType.Warning)));
         }
+
         return loadRes.getWorkflowManager();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setup(final AtomicReference<WorkflowManager> managerRef) {
-        m_managerRef = managerRef;
+    private void recordPreExecutedNodes(final WorkflowManager manager) {
+        for (NodeContainer node : manager.getNodeContainers()) {
+            if (node instanceof SingleNodeContainer) {
+                if (((SingleNodeContainer) node).getNodeContainerState().isExecuted()) {
+                    m_context.addPreExecutedNode(node);
+                }
+            } else if (node instanceof WorkflowManager) {
+                recordPreExecutedNodes((WorkflowManager)node);
+            } else {
+                throw new IllegalStateException("Unknown node container type: " + node.getClass());
+            }
+        }
     }
 }

@@ -53,22 +53,21 @@ package org.knime.testing.core.ng;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryType;
+import java.lang.management.MemoryUsage;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Formatter;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 import junit.framework.TestListener;
 import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -84,23 +83,6 @@ public class WorkflowTestSuite extends WorkflowTest {
      * Creates a new suite of workflow tests. Which tests are actually executed is determined by the given run
      * configuration.
      *
-     * @param workflowDir the workflow file (<tt>workflow.knime</tt>)
-     * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
-     * @param runConfig run configuration for all test flows
-     * @param monitor progress monitor, may be <code>null</code>
-     */
-    public WorkflowTestSuite(final File workflowDir, final File testcaseRoot, final TestrunConfiguration runConfig,
-                             final IProgressMonitor monitor) {
-        super(workflowDir.getAbsolutePath().substring(testcaseRoot.getAbsolutePath().length() + 1), monitor);
-
-        m_allTests.add(new WorkflowLoadTest(workflowDir, testcaseRoot, m_workflowName, m_progressMonitor, runConfig));
-        initTestsuite(workflowDir, testcaseRoot, runConfig);
-    }
-
-    /**
-     * Creates a new suite of workflow tests. Which tests are actually executed is determined by the given run
-     * configuration.
-     *
      * @param workflowManager a workflow manager for the already loaded workflow
      * @param workflowDir the workflow file (<tt>workflow.knime</tt>)
      * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
@@ -109,39 +91,59 @@ public class WorkflowTestSuite extends WorkflowTest {
      */
     public WorkflowTestSuite(final WorkflowManager workflowManager, final File workflowDir, final File testcaseRoot,
                              final TestrunConfiguration runConfig, final IProgressMonitor monitor) {
-        super(workflowDir.getAbsolutePath().substring(testcaseRoot.getAbsolutePath().length() + 1), monitor);
+        super(workflowDir.getAbsolutePath().substring(testcaseRoot.getAbsolutePath().length() + 1), monitor,
+                new WorkflowTestContext());
+        m_context.setWorkflowManager(workflowManager);
 
-        m_allTests.add(new WorkflowDummyLoadTest(m_workflowName, m_progressMonitor, workflowManager));
+        initTestsuite(workflowDir, testcaseRoot, runConfig);
+    }
+
+    /**
+     * Creates a new suite of workflow tests. Which tests are actually executed is determined by the given run
+     * configuration.
+     *
+     * @param workflowDir the workflow file (<tt>workflow.knime</tt>)
+     * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
+     * @param runConfig run configuration for all test flows
+     * @param monitor progress monitor, may be <code>null</code>
+     */
+    public WorkflowTestSuite(final File workflowDir, final File testcaseRoot, final TestrunConfiguration runConfig,
+                             final IProgressMonitor monitor) {
+        super(workflowDir.getAbsolutePath().substring(testcaseRoot.getAbsolutePath().length() + 1), monitor,
+                new WorkflowTestContext());
+
         initTestsuite(workflowDir, testcaseRoot, runConfig);
     }
 
     private void initTestsuite(final File workflowDir, final File testcaseRoot, final TestrunConfiguration runConfig) {
+        if (m_context.getWorkflowManager() == null) {
+            m_allTests.add(new WorkflowLoadTest(workflowDir, testcaseRoot, m_workflowName, m_progressMonitor,
+                    runConfig, m_context));
+        }
         if (runConfig.isReportDeprecatedNodes()) {
-            m_allTests.add(new WorkflowDeprecationTest(m_workflowName, m_progressMonitor));
+            m_allTests.add(new WorkflowDeprecationTest(m_workflowName, m_progressMonitor, m_context));
         }
-        Map<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>> views =
-                new HashMap<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>>();
         if (runConfig.isTestViews()) {
-            m_allTests.add(new WorkflowOpenViewsTest(m_workflowName, m_progressMonitor, views));
+            m_allTests.add(new WorkflowOpenViewsTest(m_workflowName, m_progressMonitor, m_context));
         }
-        m_allTests.add(new WorkflowExecuteTest(m_workflowName, m_progressMonitor, runConfig));
-        m_allTests.add(new WorkflowNodeMessagesTest(m_workflowName, m_progressMonitor));
+        m_allTests.add(new WorkflowExecuteTest(m_workflowName, m_progressMonitor, runConfig, m_context));
+        m_allTests.add(new WorkflowNodeMessagesTest(m_workflowName, m_progressMonitor, m_context));
         if (runConfig.isTestDialogs()) {
-            m_allTests.add(new WorkflowDialogsTest(m_workflowName, m_progressMonitor));
+            m_allTests.add(new WorkflowDialogsTest(m_workflowName, m_progressMonitor, m_context));
         }
         if (runConfig.isTestViews()) {
-            m_allTests.add(new WorkflowCloseViewsTest(m_workflowName, m_progressMonitor, views));
+            m_allTests.add(new WorkflowCloseViewsTest(m_workflowName, m_progressMonitor, m_context));
         }
 
         if (runConfig.getSaveLocation() != null) {
-            m_allTests
-                    .add(new WorkflowSaveTest(m_workflowName, m_progressMonitor, runConfig, testcaseRoot, workflowDir));
+            m_allTests.add(new WorkflowSaveTest(m_workflowName, m_progressMonitor, runConfig, testcaseRoot,
+                    workflowDir, m_context));
         }
-        m_allTests.add(new WorkflowCloseTest(m_workflowName, m_progressMonitor));
+        m_allTests.add(new WorkflowCloseTest(m_workflowName, m_progressMonitor, m_context));
         if (!runConfig.isCheckLogMessages()) {
-            m_allTests.add(new WorkflowLogMessagesTest(m_workflowName, m_progressMonitor));
+            m_allTests.add(new WorkflowLogMessagesTest(m_workflowName, m_progressMonitor, m_context));
         }
-        m_allTests.add(new WorkflowUncaughtExceptionsTest(m_workflowName, m_progressMonitor));
+        m_allTests.add(new WorkflowUncaughtExceptionsTest(m_workflowName, m_progressMonitor, m_context));
     }
 
     /**
@@ -161,13 +163,10 @@ public class WorkflowTestSuite extends WorkflowTest {
         LOGGER.info("================= Starting testflow " + getName() + " =================");
 
         result.startTest(this);
-        AtomicReference<WorkflowManager> managerRef = new AtomicReference<WorkflowManager>();
-
         try {
             for (WorkflowTest test : m_allTests) {
                 m_progressMonitor.subTask(test.getName());
                 LOGGER.info("----------------- Starting sub-test " + test.getName() + " -----------------");
-                test.setup(managerRef);
                 test.run(result);
                 m_progressMonitor.worked(1);
                 LOGGER.info("----------------- Finished sub-test " + test.getName() + " -----------------");
@@ -178,8 +177,10 @@ public class WorkflowTestSuite extends WorkflowTest {
         } catch (Throwable ex) {
             result.addError(this, ex);
         } finally {
+            m_context.clear();
             Thread.setDefaultUncaughtExceptionHandler(null);
             result.endTest(this);
+            logMemoryStatus();
             LOGGER.info("================= Finished testflow " + getName() + " =================");
         }
     }
@@ -190,14 +191,6 @@ public class WorkflowTestSuite extends WorkflowTest {
     @Override
     public String getName() {
         return getWorkflowName() + " (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setup(final AtomicReference<WorkflowManager> managerRef) {
-        // nothing to do here
     }
 
     /**
@@ -245,5 +238,25 @@ public class WorkflowTestSuite extends WorkflowTest {
         NodeLogger.removeWriter(stderr);
         NodeLogger.removeWriter(stdout);
         return result;
+    }
+
+    private void logMemoryStatus() {
+        System.gc();
+
+        long maxMem = 0;
+        long usedMem = 0;
+        for (MemoryPoolMXBean memoryPool : ManagementFactory.getMemoryPoolMXBeans()) {
+            if (memoryPool.getType().equals(MemoryType.HEAP) && (memoryPool.getCollectionUsage() != null)) {
+                MemoryUsage usage = memoryPool.getUsage();
+
+                maxMem += usage.getMax();
+                usedMem += usage.getUsed();
+            }
+        }
+
+        Formatter formatter = new Formatter();
+        formatter.format("===== Memory statistics: %1$,.3f MB max, %2$,.3f MB used, %3$,.3f MB free ====",
+                         maxMem / 1024.0, usedMem / 1024.0, (maxMem - usedMem) / 1024.0);
+        LOGGER.info(formatter.out().toString());
     }
 }
