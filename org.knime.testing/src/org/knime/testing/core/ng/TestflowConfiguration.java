@@ -170,8 +170,9 @@ class TestflowConfiguration {
                 NodeContainer cont = m_manager.findNodeContainer(nodeId);
                 Pattern pattern = createPatternFromMessage(e.getValue());
                 m_nodeErrorMessages.put(nodeId, pattern);
-                if (!cont.getNodeContainerState().isExecuted()) {
+                if (!cont.getNodeContainerState().isExecuted() && !(cont instanceof WorkflowManager)) {
                     // error status on node also creates an error in the log if the node is not already executed
+                    // and if it's not a workflow manager
                     m_requiredErrors.add(pattern);
                 }
             } catch (IllegalArgumentException ex) {
@@ -186,8 +187,9 @@ class TestflowConfiguration {
                 NodeContainer cont = m_manager.findNodeContainer(nodeId);
                 Pattern pattern = createPatternFromMessage(e.getValue());
                 m_nodeWarningMessages.put(nodeId, pattern);
-                if (!cont.getNodeContainerState().isExecuted()) {
+                if (!cont.getNodeContainerState().isExecuted() && !(cont instanceof WorkflowManager)) {
                     // warning status on node also creates an error in the log if the node is not already executed
+                    // and if it's not a workflow manager
                     m_requiredWarnings.add(pattern);
                 }
             } catch (IllegalArgumentException ex) {
