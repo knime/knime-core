@@ -975,6 +975,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private void setWorkflowManagerInput(final WorkflowManagerInput input) {
         m_parentEditor = input.getParentEditor();
+        m_fileResource = input.getWorkflowLocation();
+
         WorkflowManager wfm = (input).getWorkflowManager();
         setWorkflowManager(wfm);
         setPartName(input.getName());
@@ -2242,7 +2244,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         // only looks for the WorkflowManager, we can pass
                         // null as the editor argument
                         WorkflowManagerInput in =
-                            new WorkflowManagerInput(wm, null);
+                            new WorkflowManagerInput(wm, (WorkflowEditor) null);
                         IEditorPart editor =
                             getEditorSite().getPage().findEditor(in);
                         if (editor != null) {
