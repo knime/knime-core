@@ -796,14 +796,14 @@ public class TableContentView extends JTable {
 
     /** Create a custom popup menu when the mouse was clicked in a column header.
      * This popup menu will contain possible sort options, ascending, descending, and clear sorting.
-     * @param column column for which to create the popup menu
+     * @param columnInView column for which to create the popup menu
      * @param sortKey the new sort key
      * @return a popup menu displaying these properties
      * @see #onMouseClickInHeader(MouseEvent)
      * @since 2.8
      */
-    protected JPopupMenu createSortPopupMenu(final int column, final TableSortKey sortKey) {
-        final TableColumn tableColumn = getColumnModel().getColumn(column);
+    protected JPopupMenu createSortPopupMenu(final int columnInView, final TableSortKey sortKey) {
+        final TableColumn tableColumn = getColumnModel().getColumn(columnInView);
         final Object value = tableColumn.getHeaderValue();
         if (!(value instanceof DataColumnSpec)) {
             // only occurs if someone overrides the addColumn method.
@@ -819,7 +819,7 @@ public class TableContentView extends JTable {
             }
             @Override
             public void actionPerformed(final ActionEvent action) {
-                onSortRequest(column, m_sortKey);
+                onSortRequest(convertColumnIndexToModel(columnInView), m_sortKey);
             }
         }
         final JPopupMenu popup = new JPopupMenu("Column Context Menu");
