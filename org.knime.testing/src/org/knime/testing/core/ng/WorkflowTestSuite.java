@@ -272,11 +272,33 @@ public class WorkflowTestSuite extends WorkflowTest {
         m_logger.info(formatter.out().toString());
     }
 
+    /**
+     * Creates a new test for loading a workflow. The test must put the workflow manager into the test context. Note
+     * that this method is called from the constructor, therefore instance variables from subclasses are not yet
+     * available!
+     *
+     * @param workflowDir the workflow's directory
+     * @param testcaseRoot the testcase root directory (used a the mountpoint root)
+     * @param runConfig the run configuration
+     *
+     * @return a new workflow test
+     */
     protected WorkflowTest createLoadTest(final File workflowDir, final File testcaseRoot,
                                           final TestrunConfiguration runConfig) {
         return new WorkflowLoadTest(workflowDir, testcaseRoot, m_workflowName, m_progressMonitor, runConfig, m_context);
     }
 
+    /**
+     * Creates a new load-save-load test. The test must put the workflow manager of the second load into the test
+     * context. Note that this method is called from the constructor, therefore instance variables from subclasses are
+     * not yet available!
+     *
+     * @param workflowDir the workflow's directory
+     * @param testcaseRoot the testcase root directory (used a the mountpoint root)
+     * @param runConfig the run configuration
+     *
+     * @return a new workflow test
+     */
     protected WorkflowTest createLoadSaveLoadTest(final File workflowDir, final File testcaseRoot,
                                                   final TestrunConfiguration runConfig) {
         return new WorkflowLoadSaveLoadTest(workflowDir, testcaseRoot, m_workflowName, m_progressMonitor, runConfig,
