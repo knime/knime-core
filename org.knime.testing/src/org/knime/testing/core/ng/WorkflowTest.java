@@ -128,4 +128,12 @@ public abstract class WorkflowTest implements Test {
     public void aboutToStart() {
         // do nothing by default
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int countTestCases() {
+        return 1;
+    }
 }

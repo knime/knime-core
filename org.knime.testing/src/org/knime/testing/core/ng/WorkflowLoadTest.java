@@ -61,8 +61,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
@@ -106,21 +104,11 @@ class WorkflowLoadTest extends WorkflowTest {
      * {@inheritDoc}
      */
     @Override
-    public int countTestCases() {
-        return 1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void run(final TestResult result) {
         result.startTest(this);
         try {
-            if (m_context.getWorkflowManager() == null) {
-                m_context.setWorkflowManager(loadWorkflow(result));
-            }
-            recordPreExecutedNodes(m_context.getWorkflowManager());
+            m_context.setWorkflowManager(loadWorkflow(result));
+            m_context.recordPreExecutedNodes(m_context.getWorkflowManager());
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {
@@ -159,19 +147,5 @@ class WorkflowLoadTest extends WorkflowTest {
         }
 
         return loadRes.getWorkflowManager();
-    }
-
-    private void recordPreExecutedNodes(final WorkflowManager manager) {
-        for (NodeContainer node : manager.getNodeContainers()) {
-            if (node instanceof SingleNodeContainer) {
-                if (((SingleNodeContainer) node).getNodeContainerState().isExecuted()) {
-                    m_context.addPreExecutedNode(node);
-                }
-            } else if (node instanceof WorkflowManager) {
-                recordPreExecutedNodes((WorkflowManager)node);
-            } else {
-                throw new IllegalStateException("Unknown node container type: " + node.getClass());
-            }
-        }
     }
 }

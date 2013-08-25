@@ -90,14 +90,6 @@ class WorkflowUncaughtExceptionsTest extends WorkflowTest {
      * {@inheritDoc}
      */
     @Override
-    public int countTestCases() {
-        return 1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void run(final TestResult result) {
         result.startTest(this);
         try {
