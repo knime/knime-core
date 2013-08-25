@@ -218,8 +218,8 @@ public final class FileUtil {
                     + "\" does not exist.");
         }
         if (sourceDir.isDirectory()) {
-            if (!targetDir.exists()) {
-                targetDir.mkdirs();
+            if (!targetDir.isDirectory() && !targetDir.mkdirs()) {
+                throw new IOException("Cannot create target directory \"" + targetDir.getAbsolutePath() + "\"");
             }
             if (sourceDir.list() == null) {
                 throw new IOException("Can't copy directory \"" + sourceDir
