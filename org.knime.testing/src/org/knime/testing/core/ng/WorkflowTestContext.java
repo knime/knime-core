@@ -71,7 +71,7 @@ import org.knime.core.util.Pair;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class WorkflowTestContext {
+public class WorkflowTestContext {
     private final Map<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>> m_views =
             new HashMap<SingleNodeContainer, List<AbstractNodeView<? extends NodeModel>>>();
 
@@ -138,6 +138,25 @@ class WorkflowTestContext {
     }
 
     /**
+     * Records all nodes on the given workflow manager that are already executed.
+     *
+     * @param manager a workflow manager
+     */
+    public void recordPreExecutedNodes(final WorkflowManager manager) {
+        for (NodeContainer node : manager.getNodeContainers()) {
+            if (node instanceof SingleNodeContainer) {
+                if (((SingleNodeContainer)node).getNodeContainerState().isExecuted()) {
+                    addPreExecutedNode(node);
+                }
+            } else if (node instanceof WorkflowManager) {
+                recordPreExecutedNodes((WorkflowManager)node);
+            } else {
+                throw new IllegalStateException("Unknown node container type: " + node.getClass());
+            }
+        }
+    }
+
+    /**
      * Clears the context.
      */
     public void clear() {
@@ -146,5 +165,4 @@ class WorkflowTestContext {
         m_preExecutedNodes.clear();
         m_manager = null;
     }
-
 }

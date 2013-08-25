@@ -68,14 +68,13 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
-import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 public class WorkflowTestSuite extends WorkflowTest {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowTestSuite.class);
+    private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
     private final List<WorkflowTest> m_allTests = new ArrayList<WorkflowTest>(8);
 
@@ -83,19 +82,15 @@ public class WorkflowTestSuite extends WorkflowTest {
      * Creates a new suite of workflow tests. Which tests are actually executed is determined by the given run
      * configuration.
      *
-     * @param workflowManager a workflow manager for the already loaded workflow
      * @param workflowDir the workflow file (<tt>workflow.knime</tt>)
      * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
      * @param runConfig run configuration for all test flows
      * @param monitor progress monitor, may be <code>null</code>
+     * @throws IOException if an I/O error occurs while setting up the test suite
      */
-    public WorkflowTestSuite(final WorkflowManager workflowManager, final File workflowDir, final File testcaseRoot,
-                             final TestrunConfiguration runConfig, final IProgressMonitor monitor) {
-        super(workflowDir.getAbsolutePath().substring(testcaseRoot.getAbsolutePath().length() + 1), monitor,
-                new WorkflowTestContext());
-        m_context.setWorkflowManager(workflowManager);
-
-        initTestsuite(workflowDir, testcaseRoot, runConfig);
+    public WorkflowTestSuite(final File workflowDir, final File testcaseRoot, final TestrunConfiguration runConfig,
+                             final IProgressMonitor monitor) throws IOException {
+        this(workflowDir, testcaseRoot, runConfig, monitor, new WorkflowTestContext());
     }
 
     /**
@@ -106,18 +101,24 @@ public class WorkflowTestSuite extends WorkflowTest {
      * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
      * @param runConfig run configuration for all test flows
      * @param monitor progress monitor, may be <code>null</code>
+     * @param testContext the test context that should be used
+     * @throws IOException if an I/O error occurs while setting up the test suite
      */
-    public WorkflowTestSuite(final File workflowDir, final File testcaseRoot, final TestrunConfiguration runConfig,
-                             final IProgressMonitor monitor) {
+    protected WorkflowTestSuite(final File workflowDir, final File testcaseRoot, final TestrunConfiguration runConfig,
+                                final IProgressMonitor monitor, final WorkflowTestContext testContext)
+                                                                                                      throws IOException {
         super(workflowDir.getAbsolutePath().substring(testcaseRoot.getAbsolutePath().length() + 1), monitor,
-                new WorkflowTestContext());
+                testContext);
 
         initTestsuite(workflowDir, testcaseRoot, runConfig);
     }
 
     private void initTestsuite(final File workflowDir, final File testcaseRoot, final TestrunConfiguration runConfig) {
-        m_allTests.add(new WorkflowLoadTest(workflowDir, testcaseRoot, m_workflowName, m_progressMonitor,
-                runConfig, m_context));
+        if (runConfig.isLoadSaveLoad()) {
+            m_allTests.add(createLoadSaveLoadTest(workflowDir, testcaseRoot, runConfig));
+        } else {
+            m_allTests.add(createLoadTest(workflowDir, testcaseRoot, runConfig));
+        }
         if (runConfig.isReportDeprecatedNodes()) {
             m_allTests.add(new WorkflowDeprecationTest(m_workflowName, m_progressMonitor, m_context));
         }
@@ -138,8 +139,8 @@ public class WorkflowTestSuite extends WorkflowTest {
         }
 
         if (runConfig.getSaveLocation() != null) {
-            m_allTests.add(new WorkflowSaveTest(m_workflowName, m_progressMonitor, runConfig, testcaseRoot,
-                    workflowDir, m_context));
+            m_allTests.add(new WorkflowSaveTest(m_workflowName, m_progressMonitor, runConfig.getSaveLocation(),
+                    m_context));
         }
 
         if (runConfig.isCloseWorkflowAfterTest()) {
@@ -167,7 +168,7 @@ public class WorkflowTestSuite extends WorkflowTest {
     @Override
     public void run(final TestResult result) {
         m_progressMonitor.beginTask(getName(), countTestCases());
-        LOGGER.info("================= Starting testflow " + getName() + " =================");
+        m_logger.info("================= Starting testflow " + getName() + " =================");
 
         result.startTest(this);
         try {
@@ -177,10 +178,10 @@ public class WorkflowTestSuite extends WorkflowTest {
 
             for (WorkflowTest test : m_allTests) {
                 m_progressMonitor.subTask(test.getName());
-                LOGGER.info("----------------- Starting sub-test " + test.getName() + " -----------------");
+                m_logger.info("----------------- Starting sub-test " + test.getName() + " -----------------");
                 test.run(result);
                 m_progressMonitor.worked(1);
-                LOGGER.info("----------------- Finished sub-test " + test.getName() + " -----------------");
+                m_logger.info("----------------- Finished sub-test " + test.getName() + " -----------------");
                 if (m_progressMonitor.isCanceled()) {
                     break;
                 }
@@ -192,7 +193,7 @@ public class WorkflowTestSuite extends WorkflowTest {
             Thread.setDefaultUncaughtExceptionHandler(null);
             result.endTest(this);
             logMemoryStatus();
-            LOGGER.info("================= Finished testflow " + getName() + " =================");
+            m_logger.info("================= Finished testflow " + getName() + " =================");
         }
     }
 
@@ -268,6 +269,17 @@ public class WorkflowTestSuite extends WorkflowTest {
         Formatter formatter = new Formatter();
         formatter.format("===== Memory statistics: %1$,.3f MB max, %2$,.3f MB used, %3$,.3f MB free ====",
                          maxMem / 1024.0 / 1024.0, usedMem / 1024.0 / 1024.0, (maxMem - usedMem) / 1024.0 / 1024.0);
-        LOGGER.info(formatter.out().toString());
+        m_logger.info(formatter.out().toString());
+    }
+
+    protected WorkflowTest createLoadTest(final File workflowDir, final File testcaseRoot,
+                                          final TestrunConfiguration runConfig) {
+        return new WorkflowLoadTest(workflowDir, testcaseRoot, m_workflowName, m_progressMonitor, runConfig, m_context);
+    }
+
+    protected WorkflowTest createLoadSaveLoadTest(final File workflowDir, final File testcaseRoot,
+                                                  final TestrunConfiguration runConfig) {
+        return new WorkflowLoadSaveLoadTest(workflowDir, testcaseRoot, m_workflowName, m_progressMonitor, runConfig,
+                m_context);
     }
 }

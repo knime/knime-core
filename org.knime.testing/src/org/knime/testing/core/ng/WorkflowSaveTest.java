@@ -62,31 +62,17 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.LockFailedException;
 
 /**
- * Saves the workflow after execution and reports execeptions as failures.
+ * Saves the workflow after execution and reports exceptions as failures.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class WorkflowSaveTest extends WorkflowTest {
-    private final TestrunConfiguration m_runConfiguration;
+    private final File m_saveLocation;
 
-    private final File m_workflowDir;
-
-    private final File m_testcaseRoot;
-
-    WorkflowSaveTest(final String workflowName, final IProgressMonitor monitor, final TestrunConfiguration runConfig,
-                     final File testcaseRoot, final File workflowDir, final WorkflowTestContext context) {
+    WorkflowSaveTest(final String workflowName, final IProgressMonitor monitor, final File saveLocation,
+                     final WorkflowTestContext context) {
         super(workflowName, monitor, context);
-        m_runConfiguration = runConfig;
-        m_testcaseRoot = testcaseRoot;
-        m_workflowDir = workflowDir;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int countTestCases() {
-        return 1;
+        m_saveLocation = saveLocation;
     }
 
     /**
@@ -94,7 +80,7 @@ class WorkflowSaveTest extends WorkflowTest {
      */
     @Override
     public void run(final TestResult result) {
-        if (m_runConfiguration.getSaveLocation() != null) {
+        if (m_saveLocation != null) {
             result.startTest(this);
             try {
                 saveWorkflow();
@@ -115,14 +101,7 @@ class WorkflowSaveTest extends WorkflowTest {
     }
 
     private void saveWorkflow() throws IOException, CanceledExecutionException, LockFailedException {
-        // path from root to current flow dir
-        String postfix = m_workflowDir.getAbsolutePath().substring(m_testcaseRoot.getAbsolutePath().length());
-        if (postfix.isEmpty()) {
-            // seems the test was in the testRoot dir
-            postfix = m_workflowDir.getName();
-        }
-
-        File saveLocation = new File(m_runConfiguration.getSaveLocation(), postfix);
+        File saveLocation = new File(m_saveLocation, m_workflowName);
         if (!saveLocation.isDirectory() && !saveLocation.mkdirs()) {
             throw new IOException("Could not create destination directory for workflow: "
                     + saveLocation.getAbsolutePath());

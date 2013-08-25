@@ -52,7 +52,7 @@ import com.knime.enterprise.client.filesystem.util.WorkflowDownloadApplication;
 public class TestflowRunnerApplication implements IApplication {
     private String m_testNamePattern;
 
-    private Collection<File> m_rootDirs = new ArrayList<File>();
+    private final Collection<File> m_rootDirs = new ArrayList<File>();
 
     private String m_serverUri;
 
@@ -102,6 +102,11 @@ public class TestflowRunnerApplication implements IApplication {
 
         context.applicationRunning();
 
+        if ((m_rootDirs.size() > 0) && m_runConfiguration.isLoadSaveLoad()) {
+            // copy all workflows into a temporary directory because they will be modified by the load-save-load test
+            copyRootDirs();
+        }
+
         if (m_serverUri != null) {
             m_rootDirs.add(downloadWorkflows());
         }
@@ -110,6 +115,22 @@ public class TestflowRunnerApplication implements IApplication {
         RepositoryManager.INSTANCE.toString();
 
         return runAllTests(resultWriter);
+    }
+
+
+    private void copyRootDirs() throws IOException {
+        Collection<File> newRootDirs = new ArrayList<File>();
+
+        File tempDir = FileUtil.createTempDir("tempTestRootDirs");
+
+        for (File rootDir : m_rootDirs) {
+            File tempRoot = new File(tempDir, rootDir.getName());
+            FileUtil.copyDir(rootDir, tempRoot);
+            newRootDirs.add(tempRoot);
+        }
+
+        m_rootDirs.clear();
+        m_rootDirs.addAll(newRootDirs);
     }
 
     /**
@@ -322,6 +343,13 @@ public class TestflowRunnerApplication implements IApplication {
                 continue;
             }
 
+            if ((stringArgs[i] != null) && stringArgs[i].equals("-loadSaveLoad")) {
+                m_runConfiguration.setLoadSaveLoad(true);
+                i++;
+                continue;
+            }
+
+
             System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
             printUsage();
             return false;
@@ -344,12 +372,13 @@ public class TestflowRunnerApplication implements IApplication {
         System.err.println("    -xmlResultDir <directory_name>: specifies the directory "
                 + " into which each test result is written to as an XML files. Either -xmlResult or -xmlResultDir must"
                 + " be provided.");
+        System.err.println("    -loadSaveLoad: optional, loads, saves, and loads the workflow before execution.");
+        System.err.println("    -deprecated: optional, reports deprecated nodes in workflows as failures.");
+        System.err.println("    -views: optional, opens all views during a workflow test.");
+        System.err.println("    -dialogs: optional, additional tests all node dialogs.");
+        System.err.println("    -logMessages: optional, checks for required or unexpected log messages.");
         System.err.println("    -save <directory_name>: optional, specifies the directory "
                 + " into which each testflow is saved after execution. If not specified the workflows are not saved.");
-        System.err.println("    -dialogs: optional, additional tests all node dialogs.");
-        System.err.println("    -views: optional, opens all views during a workflow test.");
-        System.err.println("    -logMessages: optional, checks for required or unexpected log messages.");
-        System.err.println("    -deprecated: optional, reports deprecated nodes in workflows as failures.");
         System.err.println("    -timeout <seconds>: optional, specifies the timeout for each individual workflow.");
     }
 

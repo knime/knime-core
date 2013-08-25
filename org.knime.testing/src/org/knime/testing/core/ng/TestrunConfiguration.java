@@ -74,6 +74,8 @@ public class TestrunConfiguration {
 
     private boolean m_checkLogMessages = true;
 
+    private boolean m_loadSaveLoad;
+
     private File m_saveLocation;
 
     private boolean m_closeWorkflowAfterTest = true;
@@ -226,12 +228,36 @@ public class TestrunConfiguration {
     }
 
     /**
-     * Returnss whether the workflow should be closed as part of the tests. Sometimes the workflow should not be closed,
+     * Returns whether the workflow should be closed as part of the tests. Sometimes the workflow should not be closed,
      * e.g. when the test is run in the KNIME GUI. The default is <code>true</code>.
      *
      * @return <code>true</code> when the workflow should be closed, <code>false</code> otherwise
      */
     public boolean isCloseWorkflowAfterTest() {
         return m_closeWorkflowAfterTest;
+    }
+
+    /**
+     * Sets whether the workflows should be loaded, saved into a temporary directory, and loaded from there again before
+     * it is executed. This is useful in order to check whether format conversion are done properly. If set to
+     * <code>false</code> the workflow is only loaded once from the original location.
+     *
+     * @param loadSaveLoad <code>true</code> when the workflows should be loaded, saved, and loaded again,
+     *            <code>false</code> otherwise
+     */
+    public void setLoadSaveLoad(final boolean loadSaveLoad) {
+        m_loadSaveLoad = loadSaveLoad;
+    }
+
+    /**
+     * Returns whether the workflows should be loaded, saved into a temporary directory, and loaded from there again
+     * before it is executed. This is useful in order to check whether format conversion are done properly. If set to
+     * <code>false</code> the workflow is only loaded once from the original location. The default is <code>false</code>.
+     *
+     * @return <code>true</code> when the workflows should be loaded, saved, and loaded again, <code>false</code>
+     *         otherwise
+     */
+    public boolean isLoadSaveLoad() {
+        return m_loadSaveLoad;
     }
 }

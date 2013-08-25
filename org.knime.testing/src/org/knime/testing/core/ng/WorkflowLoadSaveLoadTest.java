@@ -46,35 +46,29 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   02.08.2013 (thor): created
+ *   23.08.2013 (thor): created
  */
 package org.knime.testing.core.ng;
 
 import java.io.File;
-import java.io.IOException;
 
-import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
-import org.knime.core.node.workflow.WorkflowContext;
-import org.knime.core.node.workflow.WorkflowLoadHelper;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.util.LockFailedException;
 
 /**
- * Testcase that monitors loading a workflow. Errors and if desired also warnings during load are reported as failures.
+ * Test that loads the workflow, saves it (potentially converting it into a new format), and finally loading it again.
+ * The workflow manager of the second load is then put into the test context for further use.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class WorkflowLoadTest extends WorkflowTest {
+class WorkflowLoadSaveLoadTest extends WorkflowTest {
+    private final static NodeLogger LOGGER = NodeLogger.getLogger(WorkflowLoadSaveLoadTest.class);
+
     private final File m_workflowDir;
 
     private final File m_testcaseRoot;
@@ -91,9 +85,9 @@ class WorkflowLoadTest extends WorkflowTest {
      * @param runConfiguration the run configuration
      * @param context the test context, must not be <code>null</code>
      */
-    public WorkflowLoadTest(final File workflowDir, final File testcaseRoot, final String workflowName,
-                            final IProgressMonitor monitor, final TestrunConfiguration runConfiguration,
-                            final WorkflowTestContext context) {
+    public WorkflowLoadSaveLoadTest(final File workflowDir, final File testcaseRoot, final String workflowName,
+                                    final IProgressMonitor monitor, final TestrunConfiguration runConfiguration,
+                                    final WorkflowTestContext context) {
         super(workflowName, monitor, context);
         m_workflowDir = workflowDir;
         m_testcaseRoot = testcaseRoot;
@@ -107,8 +101,20 @@ class WorkflowLoadTest extends WorkflowTest {
     public void run(final TestResult result) {
         result.startTest(this);
         try {
-            m_context.setWorkflowManager(loadWorkflow(this, result, m_workflowDir, m_testcaseRoot, m_runConfiguration));
-            m_context.recordPreExecutedNodes(m_context.getWorkflowManager());
+            LOGGER.info("Loading workflow '" + m_workflowName + "'");
+            WorkflowManager manager =
+                    WorkflowLoadTest.loadWorkflow(this, result, m_workflowDir, m_testcaseRoot, m_runConfiguration);
+
+            LOGGER.info("Saving workflow '" + m_workflowName + "'");
+            manager.save(m_workflowDir, new ExecutionMonitor(), true);
+            manager.shutdown();
+            manager.getParent().removeNode(manager.getID());
+
+            LOGGER.info("Loading workflow '" + m_workflowName + "' again");
+            manager = WorkflowLoadTest.loadWorkflow(this, result, m_workflowDir, m_testcaseRoot, m_runConfiguration);
+
+            m_context.setWorkflowManager(manager);
+            m_context.recordPreExecutedNodes(manager);
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {
@@ -121,33 +127,6 @@ class WorkflowLoadTest extends WorkflowTest {
      */
     @Override
     public String getName() {
-        return "load workflow (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
-    }
-
-    static WorkflowManager loadWorkflow(final WorkflowTest test, final TestResult result, final File workflowDir,
-                                        final File testcaseRoot, final TestrunConfiguration runConfig)
-            throws IOException, InvalidSettingsException, CanceledExecutionException,
-            UnsupportedWorkflowVersionException, LockFailedException {
-        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper() {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public WorkflowContext getWorkflowContext() {
-                WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowDir);
-                fac.setMountpointRoot(testcaseRoot);
-                return fac.createContext();
-            }
-        };
-
-        WorkflowLoadResult loadRes = WorkflowManager.loadProject(workflowDir, new ExecutionMonitor(), loadHelper);
-        if (loadRes.hasErrors()) {
-            result.addFailure(test, new AssertionFailedError(loadRes.getFilteredError("", LoadResultEntryType.Error)));
-        }
-        if (runConfig.isCheckForLoadWarnings() && loadRes.hasWarningEntries()) {
-            result.addFailure(test, new AssertionFailedError(loadRes.getFilteredError("", LoadResultEntryType.Warning)));
-        }
-
-        return loadRes.getWorkflowManager();
+        return "load-save-load workflow (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
     }
 }
