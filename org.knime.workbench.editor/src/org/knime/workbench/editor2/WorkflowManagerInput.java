@@ -149,7 +149,8 @@ public class WorkflowManagerInput implements IEditorInput {
             return false;
         }
         WorkflowManagerInput in = (WorkflowManagerInput)obj;
-        return m_manager.equals(in.getWorkflowManager());
+        return m_manager.equals(in.getWorkflowManager())
+            || ((m_workflowLocation != null) && m_workflowLocation.equals(in.m_workflowLocation));
     }
 
     /**
