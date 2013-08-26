@@ -50,6 +50,8 @@
  */
 package org.knime.testing.core.ng;
 
+import javax.swing.JFrame;
+
 import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
@@ -106,8 +108,12 @@ class WorkflowDialogsTest extends WorkflowTest {
 
             if (node instanceof SingleNodeContainer) {
                 LOGGER.debug("Opening dialog of node " + ((SingleNodeContainer) node).getName());
+                JFrame testFrame = new JFrame("Dialog for " + node.getName());
                 try {
                     NodeDialogPane dlg = node.getDialogPaneWithSettings();
+                    testFrame.getContentPane().add(dlg.getPanel());
+                    testFrame.pack();
+                    testFrame.setVisible(true);
                     NodeSettings settings = new NodeSettings("bla");
                     dlg.finishEditingAndSaveSettingsTo(settings);
                     dlg.callOnClose();
@@ -118,6 +124,8 @@ class WorkflowDialogsTest extends WorkflowTest {
                     AssertionFailedError error = new AssertionFailedError(msg);
                     error.initCause(ex);
                     result.addFailure(this, error);
+                } finally {
+                    testFrame.dispose();
                 }
             } else if (node instanceof WorkflowManager) {
                 checkDialogs(result, (WorkflowManager)node);
