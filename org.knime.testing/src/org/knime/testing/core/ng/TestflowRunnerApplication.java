@@ -27,6 +27,7 @@ import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.regex.Pattern;
 
 import javax.xml.transform.TransformerException;
 
@@ -63,6 +64,8 @@ public class TestflowRunnerApplication implements IApplication {
     private final TestrunConfiguration m_runConfiguration = new TestrunConfiguration();
 
     private volatile boolean m_stopped = false;
+
+    private UntestedNodesTest m_untestedNodesTest;
 
     /**
      * {@inheritDoc}
@@ -172,7 +175,20 @@ public class TestflowRunnerApplication implements IApplication {
                 sysout.println("OK");
             }
             resultWriter.addResult(result);
+
+            if (m_untestedNodesTest != null) {
+                m_untestedNodesTest.addNodesUnderTest(testFlow.m_context.getNodesUnderTest());
+            }
         }
+
+        if (m_untestedNodesTest != null) {
+            // check for untested nodes
+            WorkflowTestResult result = new WorkflowTestResult(m_untestedNodesTest);
+            result.addListener(resultWriter);
+            m_untestedNodesTest.run(result);
+            resultWriter.addResult(result);
+        }
+
         resultWriter.endSuites();
 
         return EXIT_OK;
@@ -289,7 +305,7 @@ public class TestflowRunnerApplication implements IApplication {
                 continue;
             }
 
-            // "-xmlResultDir" specifies the result directory
+            // "-save" specifies the destination directory for saved workflows
             if ((stringArgs[i] != null) && stringArgs[i].equals("-save")) {
                 if (m_runConfiguration.getSaveLocation() != null) {
                     System.err.println("Multiple -save arguments not allowed");
@@ -318,6 +334,20 @@ public class TestflowRunnerApplication implements IApplication {
                 m_runConfiguration.setTimeout(Integer.parseInt(stringArgs[i++]));
                 continue;
             }
+
+
+            if ((stringArgs[i] != null) && stringArgs[i].equals("-untestedNodes")) {
+                i++;
+                // requires another argument
+                if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
+                    System.err.println("Missing <regex> for option -untestedNodes.");
+                    printUsage();
+                    return false;
+                }
+                m_untestedNodesTest = new UntestedNodesTest(Pattern.compile(stringArgs[i++]));
+                continue;
+            }
+
 
             if ((stringArgs[i] != null) && stringArgs[i].equals("-dialogs")) {
                 m_runConfiguration.setTestDialogs(true);
@@ -377,6 +407,8 @@ public class TestflowRunnerApplication implements IApplication {
         System.err.println("    -views: optional, opens all views during a workflow test.");
         System.err.println("    -dialogs: optional, additional tests all node dialogs.");
         System.err.println("    -logMessages: optional, checks for required or unexpected log messages.");
+        System.err.println("    -untestedNodes <regex>: optional, checks for untested nodes, only node factories "
+                + "matching the regular expression are reported");
         System.err.println("    -save <directory_name>: optional, specifies the directory "
                 + " into which each testflow is saved after execution. If not specified the workflows are not saved.");
         System.err.println("    -timeout <seconds>: optional, specifies the timeout for each individual workflow.");

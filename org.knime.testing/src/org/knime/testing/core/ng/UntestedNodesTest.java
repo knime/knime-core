@@ -46,52 +46,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   23.08.2013 (thor): created
+ *   27.08.2013 (thor): created
  */
 package org.knime.testing.core.ng;
 
-import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Pattern;
 
+import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.knime.core.node.ExecutionMonitor;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowManager;
 
 /**
- * Test that loads the workflow, saves it (potentially converting it into a new format), and finally loading it again.
- * The workflow manager of the second load is then put into the test context for further use.
+ * Testcase that records all nodes in the loaded test workflows and compares them with the list
+ * of all available nodes (by querying the extension point).
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class WorkflowLoadSaveLoadTest extends WorkflowTest {
-    private final static NodeLogger LOGGER = NodeLogger.getLogger(WorkflowLoadSaveLoadTest.class);
+class UntestedNodesTest implements TestWithName {
+    private final Set<String> m_testedNodes = new HashSet<String>();
 
-    private final File m_workflowDir;
+    private final Pattern m_includePattern;
 
-    private final File m_testcaseRoot;
-
-    private final TestrunConfiguration m_runConfiguration;
+    UntestedNodesTest(final Pattern pattern) {
+        m_includePattern = pattern;
+    }
 
     /**
-     * Creates a new test for loading a workflow.
-     *
-     * @param workflowDir the workflow dir
-     * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
-     * @param workflowName a unique name for the workflow
-     * @param monitor a progress monitor, may be <code>null</code>
-     * @param runConfiguration the run configuration
-     * @param context the test context, must not be <code>null</code>
+     * {@inheritDoc}
      */
-    public WorkflowLoadSaveLoadTest(final File workflowDir, final File testcaseRoot, final String workflowName,
-                                    final IProgressMonitor monitor, final TestrunConfiguration runConfiguration,
-                                    final WorkflowTestContext context) {
-        super(workflowName, monitor, context);
-        m_workflowDir = workflowDir;
-        m_testcaseRoot = testcaseRoot;
-        m_runConfiguration = runConfiguration;
+    @Override
+    public int countTestCases() {
+        return 1;
     }
 
     /**
@@ -100,20 +93,9 @@ class WorkflowLoadSaveLoadTest extends WorkflowTest {
     @Override
     public void run(final TestResult result) {
         result.startTest(this);
+
         try {
-            LOGGER.info("Loading workflow '" + m_workflowName + "'");
-            WorkflowManager manager =
-                    WorkflowLoadTest.loadWorkflow(this, result, m_workflowDir, m_testcaseRoot, m_runConfiguration);
-
-            LOGGER.info("Saving workflow '" + m_workflowName + "'");
-            manager.save(m_workflowDir, new ExecutionMonitor(), true);
-            manager.shutdown();
-            manager.getParent().removeNode(manager.getID());
-
-            LOGGER.info("Loading workflow '" + m_workflowName + "' again");
-            manager = WorkflowLoadTest.loadWorkflow(this, result, m_workflowDir, m_testcaseRoot, m_runConfiguration);
-
-            m_context.setWorkflowManager(manager);
+            checkTestedNodes(result);
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {
@@ -121,11 +103,51 @@ class WorkflowLoadSaveLoadTest extends WorkflowTest {
         }
     }
 
+    private void checkTestedNodes(final TestResult result) {
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        IExtensionPoint point = registry.getExtensionPoint("org.knime.workbench.repository.nodes");
+        if (point == null) {
+            throw new IllegalStateException("Invalid extension point : org.knime.workbench.repository.nodes");
+
+        }
+
+        Set<String> allAvailableNodes = new HashSet<String>();
+        for (IExtension ext : point.getExtensions()) {
+            for (IConfigurationElement e : ext.getConfigurationElements()) {
+                allAvailableNodes.add(e.getAttribute("factory-class"));
+            }
+        }
+
+        allAvailableNodes.removeAll(m_testedNodes);
+        for (String factoryClassName : allAvailableNodes) {
+            if (m_includePattern.matcher(factoryClassName).matches()) {
+                result.addFailure(this, new AssertionFailedError("No testflow with " + factoryClassName + " found"));
+            }
+        }
+    }
+
+    /**
+     * Adds the given set of factory class names to the nodes under test.
+     *
+     * @param set a set with factory class names
+     */
+    public void addNodesUnderTest(final Set<String> set) {
+        m_testedNodes.addAll(set);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public String getName() {
-        return "load-save-load workflow (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+        return "untested nodes (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getSuiteName() {
+        return getClass().getName();
     }
 }

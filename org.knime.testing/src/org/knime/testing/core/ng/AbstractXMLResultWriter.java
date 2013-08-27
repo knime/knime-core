@@ -162,7 +162,7 @@ public abstract class AbstractXMLResultWriter implements TestListener {
     protected final Element createTestsuiteElement(final WorkflowTestResult result, final Document doc) {
         Element testSuite = doc.createElement("testsuite");
 
-        testSuite.setAttribute("name", formatWorkflowName(result.getSuite().getName()));
+        testSuite.setAttribute("name", result.getSuite().getSuiteName());
         testSuite.setAttribute("tests", Integer.toString(result.runCount()));
         testSuite.setAttribute("failures", Integer.toString(result.failureCount()));
         testSuite.setAttribute("errors", Integer.toString(result.errorCount()));
@@ -193,8 +193,8 @@ public abstract class AbstractXMLResultWriter implements TestListener {
         Map<Test, Element> testcases = new HashMap<Test, Element>();
 
         for (Test t : result.getAllTests()) {
-            if ((t instanceof WorkflowTest) && !(t instanceof WorkflowTestSuite)) {
-                Element tc = createTestcaseElement((WorkflowTest)t, doc);
+            if ((t instanceof TestWithName) && !(t instanceof WorkflowTestSuite)) {
+                Element tc = createTestcaseElement((TestWithName)t, doc);
                 testSuite.appendChild(tc);
                 testcases.put(t, tc);
             }
@@ -212,7 +212,7 @@ public abstract class AbstractXMLResultWriter implements TestListener {
             Element tc = testcases.get(f.failedTest());
             if (tc == null) {
                 // strange, but we add an element anyway
-                tc = createTestcaseElement((WorkflowTest)f.failedTest(), doc);
+                tc = createTestcaseElement((TestWithName)f.failedTest(), doc);
                 testSuite.appendChild(tc);
                 testcases.put(f.failedTest(), tc);
             }
@@ -228,40 +228,12 @@ public abstract class AbstractXMLResultWriter implements TestListener {
         }
     }
 
-    private Element createTestcaseElement(final WorkflowTest test, final Document doc) {
+    private Element createTestcaseElement(final TestWithName test, final Document doc) {
         Element tc = doc.createElement("testcase");
         tc.setAttribute("name", test.getName());
-        tc.setAttribute("classname", formatWorkflowName(test.getWorkflowName()));
+        tc.setAttribute("classname", test.getSuiteName());
         tc.setAttribute("time", Double.toString((m_endTimes.get(test) - m_startTimes.get(test)) / 1000.0));
         return tc;
-    }
-
-    private static String formatWorkflowName(final String workflowName) {
-        StringBuilder buf = new StringBuilder(workflowName.length());
-
-        boolean uppercaseNextChar = false;
-        boolean lowercaseNextChar = true;
-        for (int i = 0; i < workflowName.length(); i++) {
-            char c = workflowName.charAt(i);
-            if ((c == '/') || (c == '\\')) {
-                buf.append('.');
-                lowercaseNextChar = true;
-            } else if ((c == ' ') || (c == '(')) {
-                uppercaseNextChar = true;
-            } else if (Character.isJavaIdentifierPart(c)) {
-                if (uppercaseNextChar) {
-                    buf.append(Character.toUpperCase(c));
-                    uppercaseNextChar = false;
-                } else if (lowercaseNextChar) {
-                    buf.append(Character.toLowerCase(c));
-                    lowercaseNextChar = false;
-                } else {
-                    buf.append(c);
-                }
-            }
-        }
-
-        return buf.toString();
     }
 
     /**

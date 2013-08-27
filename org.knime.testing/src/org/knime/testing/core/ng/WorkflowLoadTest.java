@@ -108,7 +108,6 @@ class WorkflowLoadTest extends WorkflowTest {
         result.startTest(this);
         try {
             m_context.setWorkflowManager(loadWorkflow(this, result, m_workflowDir, m_testcaseRoot, m_runConfiguration));
-            m_context.recordPreExecutedNodes(m_context.getWorkflowManager());
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {

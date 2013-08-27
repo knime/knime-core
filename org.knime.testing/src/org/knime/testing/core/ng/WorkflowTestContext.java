@@ -51,6 +51,7 @@
 package org.knime.testing.core.ng;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -77,6 +78,8 @@ public class WorkflowTestContext {
 
     private final Set<NodeID> m_preExecutedNodes = new HashSet<NodeID>();
 
+    private final Set<String> m_nodesUnderTest = new HashSet<String>();
+
     private final List<Pair<Thread, Throwable>> m_uncaughtExceptions = new ArrayList<Pair<Thread, Throwable>>();
 
     private WorkflowManager m_manager;
@@ -101,11 +104,14 @@ public class WorkflowTestContext {
     }
 
     /**
-     * Sets the workflow manager.
+     * Sets the workflow manager and records the nodes (executed and loaded) in the workflow.
      *
      * @param manager a workflow manager
      */
     public void setWorkflowManager(final WorkflowManager manager) {
+        if (manager != null) {
+            recordNodes(manager);
+        }
         m_manager = manager;
     }
 
@@ -116,15 +122,6 @@ public class WorkflowTestContext {
      */
     public List<Pair<Thread, Throwable>> getUncaughtExceptions() {
         return m_uncaughtExceptions;
-    }
-
-    /**
-     * Adds a node to the list of pre-executed nodes.
-     *
-     * @param node a node container
-     */
-    public void addPreExecutedNode(final NodeContainer node) {
-        m_preExecutedNodes.add(node.getID());
     }
 
     /**
@@ -142,18 +139,29 @@ public class WorkflowTestContext {
      *
      * @param manager a workflow manager
      */
-    public void recordPreExecutedNodes(final WorkflowManager manager) {
+    private void recordNodes(final WorkflowManager manager) {
         for (NodeContainer node : manager.getNodeContainers()) {
             if (node instanceof SingleNodeContainer) {
                 if (((SingleNodeContainer)node).getNodeContainerState().isExecuted()) {
-                    addPreExecutedNode(node);
+                    m_preExecutedNodes.add(node.getID());
+                } else {
+                    m_nodesUnderTest.add(((SingleNodeContainer)node).getNode().getFactory().getClass().getName());
                 }
             } else if (node instanceof WorkflowManager) {
-                recordPreExecutedNodes((WorkflowManager)node);
+                recordNodes((WorkflowManager)node);
             } else {
                 throw new IllegalStateException("Unknown node container type: " + node.getClass());
             }
         }
+    }
+
+    /**
+     * Returns a set with node factory class names for all nodes in the current workflow manager.
+     *
+     * @return a set with node factory class names
+     */
+    public Set<String> getNodesUnderTest() {
+        return Collections.unmodifiableSet(m_nodesUnderTest);
     }
 
     /**
@@ -164,5 +172,6 @@ public class WorkflowTestContext {
         m_uncaughtExceptions.clear();
         m_preExecutedNodes.clear();
         m_manager = null;
+        // m_nodesUnderTest is deliberately not cleared since the values are used later on
     }
 }

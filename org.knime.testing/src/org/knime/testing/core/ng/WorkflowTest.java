@@ -50,8 +50,6 @@
  */
 package org.knime.testing.core.ng;
 
-import junit.framework.Test;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
@@ -61,7 +59,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
  * @author Thorsten Meinl, University of Konstanz
  * @since 2.9
  */
-public abstract class WorkflowTest implements Test {
+public abstract class WorkflowTest implements TestWithName {
     /**
      * The workflow's name.
      */
@@ -107,11 +105,13 @@ public abstract class WorkflowTest implements Test {
     }
 
     /**
-     * Returns a name for the specific test.
-     *
-     * @return a name
+     * {@inheritDoc}
      */
-    public abstract String getName();
+    @Override
+    public String getSuiteName() {
+        return formatWorkflowName(m_workflowName);
+    }
+
 
     /**
      * {@inheritDoc}
@@ -135,5 +135,34 @@ public abstract class WorkflowTest implements Test {
     @Override
     public int countTestCases() {
         return 1;
+    }
+
+
+    private static String formatWorkflowName(final String workflowName) {
+        StringBuilder buf = new StringBuilder(workflowName.length());
+
+        boolean uppercaseNextChar = false;
+        boolean lowercaseNextChar = true;
+        for (int i = 0; i < workflowName.length(); i++) {
+            char c = workflowName.charAt(i);
+            if ((c == '/') || (c == '\\')) {
+                buf.append('.');
+                lowercaseNextChar = true;
+            } else if ((c == ' ') || (c == '(')) {
+                uppercaseNextChar = true;
+            } else if (Character.isJavaIdentifierPart(c)) {
+                if (uppercaseNextChar) {
+                    buf.append(Character.toUpperCase(c));
+                    uppercaseNextChar = false;
+                } else if (lowercaseNextChar) {
+                    buf.append(Character.toLowerCase(c));
+                    lowercaseNextChar = false;
+                } else {
+                    buf.append(c);
+                }
+            }
+        }
+
+        return buf.toString();
     }
 }

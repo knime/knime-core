@@ -88,7 +88,6 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
         } finally {
             result.endTest(this);
         }
-
     }
 
     /**

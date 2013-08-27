@@ -46,105 +46,32 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   19.08.2013 (thor): created
+ *   27.08.2013 (thor): created
  */
 package org.knime.testing.core.ng;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import junit.framework.Test;
-import junit.framework.TestResult;
 
 /**
- * Extension of {@link TestResult} which collects some additional information.
+ * Simple extension for a test that has a name.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-public class WorkflowTestResult extends TestResult {
-    private final TestWithName m_suite;
-
-    private final StringBuilder m_sysout = new StringBuilder();
-
-    private final StringBuilder m_syserr = new StringBuilder();
-
-    private final List<Test> m_allTests = new ArrayList<Test>();
-
+interface TestWithName extends Test {
     /**
-     * Creates a new test result for the given test suite.
+     * Returns a name for the specific test.
      *
-     * @param suite a test suite
+     * @return a name
      */
-    public WorkflowTestResult(final TestWithName suite) {
-        m_suite = suite;
-    }
+    String getName();
+
 
     /**
-     * Handles output to <tt>System.out</tt>.
+     * Returns a name for the suite this test belongs to. This name must look like a fully qualified class name,
+     * i.e. it must not contains spaces or other characters that are not allowed in class and package names.
      *
-     * @param cbuf array of characters
-     * @param off offset from which to start writing characters
-     * @param len number of characters to write
+     * @return a suite name
      */
-    public void handleSystemOut(final char[] cbuf, final int off, final int len) {
-        m_sysout.append(cbuf, off, len);
-    }
+    String getSuiteName();
 
-    /**
-     * Handles output to <tt>System.err</tt>.
-     *
-     * @param cbuf array of characters
-     * @param off offset from which to start writing characters
-     * @param len number of characters to write
-     */
-    public void handleSystemErr(final char[] cbuf, final int off, final int len) {
-        m_syserr.append(cbuf, off, len);
-    }
-
-    /**
-     * Returns the collected output to <tt>System.out</tt>.
-     *
-     * @return the output
-     */
-    public String getSystemOut() {
-        return m_sysout.toString();
-    }
-
-    /**
-     * Returns the collected output to <tt>System.err</tt>.
-     *
-     * @return the output
-     */
-    public String getSystemErr() {
-        return m_syserr.toString();
-    }
-
-    /**
-     * Returns the suite to which this result belongs.
-     *
-     * @return a test suite
-     */
-    public TestWithName getSuite() {
-        return m_suite;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void startTest(final Test test) {
-        super.startTest(test);
-        m_allTests.add(test);
-    }
-
-    /**
-     * Returns a list with all tests that have been run as part of this workflow test. The order in the list is the
-     * order in which they have been started.
-     *
-     * @return a list with tests
-     */
-    public List<Test> getAllTests() {
-        return Collections.unmodifiableList(m_allTests);
-    }
 }
