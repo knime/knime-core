@@ -27,6 +27,10 @@ import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 import javax.xml.transform.TransformerException;
@@ -36,6 +40,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.FileUtil;
@@ -88,7 +93,7 @@ public class TestflowRunnerApplication implements IApplication {
             return EXIT_OK;
         }
 
-        AbstractXMLResultWriter resultWriter;
+        final AbstractXMLResultWriter resultWriter;
         if (m_xmlResultDir != null) {
             File xmlResultDir = new File(m_xmlResultDir);
             if (!xmlResultDir.exists() && !xmlResultDir.mkdirs()) {
@@ -117,9 +122,35 @@ public class TestflowRunnerApplication implements IApplication {
         // this is to load the repository plug-in
         RepositoryManager.INSTANCE.toString();
 
-        return runAllTests(resultWriter);
+        final Display display = Display.getCurrent();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Callable<Integer> callabale = new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                Thread.currentThread().setName("Testflow executor");
+                try {
+                    return runAllTests(resultWriter);
+                } finally {
+                    stop();
+                    display.wake();
+                }
+            }
+        };
+        Future<Integer> result = executor.submit(callabale);
+        dispatchLoop(display);
+
+        return result.get();
     }
 
+
+
+    private void dispatchLoop(final Display display) {
+        while (!m_stopped) {
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
+        }
+    }
 
     private void copyRootDirs() throws IOException {
         Collection<File> newRootDirs = new ArrayList<File>();
