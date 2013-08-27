@@ -142,19 +142,19 @@ class WorkflowOpenViewsTest extends WorkflowTest {
     private void openView(final SingleNodeContainer node, final int index) {
         // test NodeViews
         LOGGER.debug("opening view nr. " + index + " for node " + node.getName());
-        final AbstractNodeView<? extends NodeModel> view = node.getView(index);
-        // store the view in order to close is after the test finishes
-        List<AbstractNodeView<? extends NodeModel>> l = m_context.getNodeViews().get(node);
-        if (l == null) {
-            l = new ArrayList<AbstractNodeView<? extends NodeModel>>(2);
-            m_context.getNodeViews().put(node, l);
-        }
-        l.add(view);
-        // open it now.
         ViewUtils.invokeAndWaitInEDT(new Runnable() {
             /** {@inheritDoc} */
             @Override
             public void run() {
+                final AbstractNodeView<? extends NodeModel> view = node.getView(index);
+                // store the view in order to close it after the test finishes
+                List<AbstractNodeView<? extends NodeModel>> l = m_context.getNodeViews().get(node);
+                if (l == null) {
+                    l = new ArrayList<AbstractNodeView<? extends NodeModel>>(2);
+                    m_context.getNodeViews().put(node, l);
+                }
+                l.add(view);
+                // open it now.
                 Node.invokeOpenView(view, "View #" + index);
             }
         });
