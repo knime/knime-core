@@ -44,6 +44,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.FileUtil;
+import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.repository.RepositoryManager;
 import org.osgi.framework.FrameworkUtil;
 
@@ -121,6 +122,9 @@ public class TestflowRunnerApplication implements IApplication {
 
         // this is to load the repository plug-in
         RepositoryManager.INSTANCE.toString();
+        // and this initialized the image repository in the main thread; otherwise resolving old node factories
+        // in SingleNodeContainerPersistorVersion1xx will fail (see bug# 4464)
+        ImageRepository.class.toString();
 
         final Display display = Display.getCurrent();
         ExecutorService executor = Executors.newSingleThreadExecutor();
