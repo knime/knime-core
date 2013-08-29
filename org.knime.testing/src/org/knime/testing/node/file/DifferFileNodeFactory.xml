@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Other">
+<knimeNode type="Other" icon="equals.png">
 	<name>File Difference Checker</name>
 	
 	<shortDescription>
@@ -11,9 +11,11 @@
 		<intro>
 			<p>
 			Used in regression tests to test if two files are equal. The node will 
-			compare two files and 
+			compare two files given by flow variable and 
 			fails with an exception if the files are not equal. In that case 
 			the node stays not executed and the test will fail.</p>
+            <p>If you want to compare many files given by URIs you can also use the standard Table Difference Checker
+            and use the <i>URI Contents</i> checker for the URI column</p>
 		</intro>
 		<option name="Test File">The file to compare with the reference file. 
 		   It can be a local file on disk or an URL. 

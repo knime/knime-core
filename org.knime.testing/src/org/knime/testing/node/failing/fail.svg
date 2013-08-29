@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="145.41119"
+   height="145.41119"
+   id="svg2862"
+   sodipodi:version="0.32"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="fail.svg"
+   version="1.0"
+   inkscape:export-filename="/home/thor/workspace/KNIME-trunk-3.7/plugins/org.knime.testing/src/org/knime/testing/node/failing/fail.png"
+   inkscape:export-xdpi="9.8999996"
+   inkscape:export-ydpi="9.8999996">
+  <defs
+     id="defs2864" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     gridtolerance="10000"
+     guidetolerance="10"
+     objecttolerance="10"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.979899"
+     inkscape:cx="12.522819"
+     inkscape:cy="96.578729"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="true"
+     inkscape:grid-points="true"
+     inkscape:window-width="1200"
+     inkscape:window-height="925"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-56.246185,-507.11852)">
+    <path
+       sodipodi:type="arc"
+       style="fill:#ff0000;fill-opacity:1;stroke:#000000;stroke-width:5;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="path3504"
+       sodipodi:cx="13.637059"
+       sodipodi:cy="75.746185"
+       sodipodi:rx="95.459412"
+       sodipodi:ry="95.459412"
+       d="m 109.09647,75.746185 c 0,52.720775 -42.738634,95.459415 -95.459411,95.459415 -52.720777,0 -95.459411,-42.73864 -95.459411,-95.459415 0,-52.720777 42.738634,-95.459411 95.459411,-95.459411 52.720777,0 95.459411,42.738634 95.459411,95.459411 z"
+       transform="matrix(0.74220125,0,0,0.74220125,118.83034,523.6052)" />
+    <path
+       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.90998638px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 106.20212,534.32479 22.74966,22.74966 22.74966,-22.74966 22.74966,22.74966 -22.74966,22.74966 22.74966,22.74966 -22.74966,22.74966 -22.74966,-22.74966 -22.74966,22.74966 -22.749655,-22.74966 22.749655,-22.74966 -22.749655,-22.74966 22.749655,-22.74966 z"
+       id="path2892"
+       inkscape:connector-curvature="0" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer5"
+     inkscape:label="2"
+     transform="translate(-56.246185,-507.11852)" />
+  <metadata
+     id="metadata3502">
+    <rdf:RDF>
+      <cc:Work>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/publicdomain/" />
+        <dc:publisher>
+          <cc:Agent
+             rdf:about="http://openclipart.org/">
+            <dc:title>Open Clip Art Library</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:title></dc:title>
+        <dc:date>2012-08-01T19:43:20</dc:date>
+        <dc:description />
+        <dc:source>http://openclipart.org/detail/171390/error-by-lpenz-171390</dc:source>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>lpenz</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>clip art</rdf:li>
+            <rdf:li>clipart</rdf:li>
+            <rdf:li>wrong error fail x check</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/publicdomain/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+</svg>
