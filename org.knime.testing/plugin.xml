@@ -135,6 +135,9 @@
       <DifferenceCheckerFactory
             class="org.knime.testing.internal.diffcheckers.PngHistogramDifferenceChecker$Factory">
       </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.URIContentDifferenceChecker$Factory">
+      </DifferenceCheckerFactory>
    </extension>
    <extension
          id="NGTestflowRunner"

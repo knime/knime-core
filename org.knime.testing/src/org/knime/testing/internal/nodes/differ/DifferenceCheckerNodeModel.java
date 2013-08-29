@@ -186,8 +186,9 @@ class DifferenceCheckerNodeModel extends NodeModel {
                 } else {
                     Result res = checker.check(testCell, refCell);
                     if (!res.ok()) {
-                        throw new IllegalStateException("Wrong value in column '" + colSpec.getName() + "': "
-                                + res.getMessage() + " (using checker '" + checker.getDescription() + "')");
+                        throw new IllegalStateException("Wrong value in row '" + refRow.getKey() + "' and column '"
+                                + colSpec.getName() + "': " + res.getMessage() + " (using checker '"
+                                + checker.getDescription() + "')");
                     }
                 }
             } else {
