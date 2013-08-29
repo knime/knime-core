@@ -146,8 +146,12 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     private STRING_TYPES m_type = STRING_TYPES.BIT;
 
     private final SettingsModelString m_stringColumn = createStringColModel();
-    
+
     private final SettingsModelFilterString m_includedColumns;
+
+    /** when saved in version <2.0 then there are no include columns. Keep that information to omit the saving
+     * of the includeColumns upon saveSettingsTo */
+    private boolean m_loadedSettingsDontHaveIncludeColumns = false;
 
     private static final String FILE_NAME = "bitVectorParams";
 
@@ -174,11 +178,11 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
      */
     public BitVectorGeneratorNodeModel() {
         super(1, 1);
-        // set to true in order to ensure that all numeric columns are only 
+        // set to true in order to ensure that all numeric columns are only
         // included for backward compatibility (not as auto-guessing)
         // see also #configure
         m_fromString = true;
-        // because from string is true -> disable the column selection for 
+        // because from string is true -> disable the column selection for
         // numeric input
         m_includedColumns = createColumnFilterModel();
         m_includedColumns.setEnabled(false);
@@ -224,7 +228,9 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         settings.addDouble(CFG_THRESHOLD, m_threshold);
         settings.addBoolean(CFG_FROM_STRING, m_fromString);
         m_stringColumn.saveSettingsTo(settings);
-        m_includedColumns.saveSettingsTo(settings);
+        if (!m_loadedSettingsDontHaveIncludeColumns) {
+            m_includedColumns.saveSettingsTo(settings);
+        }
         settings.addBoolean(CFG_USE_MEAN, m_useMean);
         settings.addInt(CFG_MEAN_THRESHOLD, m_meanPercentage);
         settings.addString(CFG_STRING_TYPE, m_type.name());
@@ -263,7 +269,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                         "No numeric input columns selected.");
             }
         }
-            
+
     }
 
     /**
@@ -276,7 +282,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         m_fromString = settings.getBoolean(CFG_FROM_STRING);
         m_stringColumn.loadSettingsFrom(settings);
         m_stringColumn.setEnabled(m_fromString);
-        
+
         m_useMean = settings.getBoolean(CFG_USE_MEAN);
         m_meanPercentage = settings.getInt(CFG_MEAN_THRESHOLD);
         String type = settings.getString(CFG_STRING_TYPE);
@@ -291,7 +297,11 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             // for backward compatibility try to load it
             m_includedColumns.loadSettingsFrom(settings);
         } catch (InvalidSettingsException ise) {
-            // if not available: use all numeric columns
+            // if not available this node was saved with <2.0: use all numeric columns
+        }
+        if (m_includedColumns.getIncludeList().isEmpty()) {
+            // prior 2.0 we did not have include lists - keep that information (real validation in #validate)
+            m_loadedSettingsDontHaveIncludeColumns = true;
         }
         m_includedColumns.setEnabled(!m_fromString);
     }
@@ -357,7 +367,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             int index = data.getDataTableSpec().findColumnIndex(colName);
             if (index < 0) {
                 throw new IllegalArgumentException(
-                        "Column " + colName + " is not available in " 
+                        "Column " + colName + " is not available in "
                         + "current data. Please re-configure the node.");
             }
             colIndices.add(index);
@@ -387,7 +397,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                 exec);
         return new BufferedDataTable[]{out};
     }
-    
+
     private BufferedDataTable[] createBitVectorsFromStrings(
             final BufferedDataTable data,
             final int stringColIndex, final ExecutionContext exec)
@@ -505,11 +515,11 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         if (!m_fromString) {
             // numeric input
             // check if there is at least one numeric column selected
-            if (m_includedColumns.isEnabled() 
+            if (m_includedColumns.isEnabled()
                     && m_includedColumns.getIncludeList().isEmpty()) {
-                // the includeColumns model can not be empty 
+                // the includeColumns model can not be empty
                 // through the dialog (see #validateSettings)
-                // only case where !m_fromString and includeColumns evaluates 
+                // only case where !m_fromString and includeColumns evaluates
                 // to true is for old workflows.
                 // For backward compatiblity include all numeric columns
                 // which was the behavior before 2.0
@@ -520,13 +530,14 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                     }
                 }
                 m_includedColumns.setIncludeList(allNumericColumns);
+                m_loadedSettingsDontHaveIncludeColumns = false;
             }
             for (String inclColName : m_includedColumns.getIncludeList()) {
                 DataColumnSpec colSpec = spec.getColumnSpec(inclColName);
                 if (colSpec == null) {
                     throw new InvalidSettingsException(
-                            "Column " + inclColName 
-                            + " not found in input table. " 
+                            "Column " + inclColName
+                            + " not found in input table. "
                             + "Please re-configure the node.");
                 }
                 if (!colSpec.getType().isCompatible(
@@ -537,13 +548,13 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                 }
             }
         } else {
-            // parse from string column 
+            // parse from string column
             if (m_stringColumn.getStringValue() == null) {
                 throw new InvalidSettingsException(
-                        "No string column selected. " 
+                        "No string column selected. "
                         + "Please (re-)configure the node.");
             }
-                // -> check if selected column is a string column 
+                // -> check if selected column is a string column
             if (!spec.containsName(m_stringColumn.getStringValue())
                     || !(spec.getColumnSpec(m_stringColumn.getStringValue())
                             .getType().isCompatible(StringValue.class))) {
@@ -566,10 +577,10 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                 ColumnRearranger colR = new ColumnRearranger(spec);
                 colR.remove(m_includedColumns.getIncludeList().toArray(
                         new String[m_includedColumns.getIncludeList().size()]));
-                newSpec = new DataTableSpec(colR.createSpec(), 
+                newSpec = new DataTableSpec(colR.createSpec(),
                         new DataTableSpec(newColSpec));
             } else {
-                newSpec = new DataTableSpec(spec, 
+                newSpec = new DataTableSpec(spec,
                         new DataTableSpec(newColSpec));
             }
             return new DataTableSpec[]{newSpec};
@@ -634,13 +645,13 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     static SettingsModelString createStringColModel() {
         return new SettingsModelString("STRING_COLUMN", null);
     }
-    
+
     /**
-     * 
+     *
      * @return the settings model for included numeric columns
      */
     static SettingsModelFilterString createColumnFilterModel() {
         return new SettingsModelFilterString("included.numeric.columns");
     }
-    
+
 }
