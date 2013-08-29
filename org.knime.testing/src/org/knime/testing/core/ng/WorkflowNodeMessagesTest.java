@@ -56,7 +56,6 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
@@ -95,7 +94,7 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
      */
     @Override
     public String getName() {
-        return "node messages (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+        return "node messages";
     }
 
     private void checkNodeMessages(final TestResult result, final WorkflowManager wfm,

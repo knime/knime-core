@@ -58,7 +58,6 @@ import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.AbstractNodeView;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.SingleNodeContainer;
@@ -94,7 +93,7 @@ class WorkflowCloseViewsTest extends WorkflowTest {
      */
     @Override
     public String getName() {
-        return "close views (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+        return "close views";
     }
 
     private void closeViews(final TestResult result) {

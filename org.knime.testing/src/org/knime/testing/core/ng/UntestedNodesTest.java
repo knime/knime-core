@@ -140,7 +140,7 @@ class UntestedNodesTest implements TestWithName {
      */
     @Override
     public String getName() {
-        return "untested nodes (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+        return "untested nodes";
     }
 
     /**
@@ -148,6 +148,6 @@ class UntestedNodesTest implements TestWithName {
      */
     @Override
     public String getSuiteName() {
-        return getClass().getName();
+        return getClass().getName() + ".assertions_" + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off");
     }
 }

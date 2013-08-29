@@ -66,7 +66,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.knime.core.node.KNIMEConstants;
 
 /**
  * Testcase that checks for expected log messages and reported unexpected ERRORs and FATALs. An appender to the root
@@ -141,7 +140,7 @@ class WorkflowLogMessagesTest extends WorkflowTest {
      */
     @Override
     public String getName() {
-        return "log messages (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+        return "log messages";
     }
 
     private void checkLogMessages(final TestResult result, final TestflowConfiguration flowConfiguration) {

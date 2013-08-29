@@ -52,6 +52,7 @@ package org.knime.testing.core.ng;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.knime.core.node.KNIMEConstants;
 
 /**
  * Abstract base class for workflow tests.
@@ -109,7 +110,7 @@ public abstract class WorkflowTest implements TestWithName {
      */
     @Override
     public String getSuiteName() {
-        return formatWorkflowName(m_workflowName);
+        return nameToPackage(m_workflowName) + ".assertions_" + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off");
     }
 
 
@@ -138,7 +139,7 @@ public abstract class WorkflowTest implements TestWithName {
     }
 
 
-    private static String formatWorkflowName(final String workflowName) {
+    private static String nameToPackage(final String workflowName) {
         StringBuilder buf = new StringBuilder(workflowName.length());
 
         boolean uppercaseNextChar = false;

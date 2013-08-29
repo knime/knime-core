@@ -54,7 +54,6 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -90,7 +89,7 @@ class WorkflowDeprecationTest extends WorkflowTest {
      */
     @Override
     public String getName() {
-        return "deprecated nodes (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+        return "deprecated nodes";
     }
 
     private void checkForDeprecatedNodes(final TestResult result, final WorkflowManager wfm) {

@@ -58,7 +58,6 @@ import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.AbstractNodeView;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -100,7 +99,7 @@ class WorkflowOpenViewsTest extends WorkflowTest {
      */
     @Override
     public String getName() {
-        return "open views (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+        return "open views";
     }
 
     private void openViews(final TestResult result, final WorkflowManager wfm) {

@@ -58,7 +58,6 @@ import junit.framework.TestResult;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.LockFailedException;
 
 /**
@@ -97,7 +96,7 @@ class WorkflowSaveTest extends WorkflowTest {
      */
     @Override
     public String getName() {
-        return "save workflow (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+        return "save workflow";
     }
 
     private void saveWorkflow() throws IOException, CanceledExecutionException, LockFailedException {

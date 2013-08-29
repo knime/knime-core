@@ -54,7 +54,6 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.Pair;
 
 /**
@@ -115,6 +114,6 @@ class WorkflowUncaughtExceptionsTest extends WorkflowTest {
      */
     @Override
     public String getName() {
-        return "uncaught exceptions (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+        return "uncaught exceptions";
     }
 }

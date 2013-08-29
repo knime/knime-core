@@ -59,7 +59,6 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
@@ -100,7 +99,7 @@ class WorkflowDialogsTest extends WorkflowTest {
      */
     @Override
     public String getName() {
-        return "check dialogs (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+        return "check dialogs";
     }
 
     private void checkDialogs(final TestResult result, final WorkflowManager wfm) {

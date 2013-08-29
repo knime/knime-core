@@ -65,7 +65,6 @@ import junit.framework.TestListener;
 import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
 
@@ -202,7 +201,7 @@ public class WorkflowTestSuite extends WorkflowTest {
      */
     @Override
     public String getName() {
-        return getWorkflowName() + " (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+        return getWorkflowName();
     }
 
     /**

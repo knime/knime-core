@@ -60,7 +60,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
@@ -120,7 +119,7 @@ class WorkflowLoadTest extends WorkflowTest {
      */
     @Override
     public String getName() {
-        return "load workflow (assertions " + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")";
+        return "load workflow";
     }
 
     static WorkflowManager loadWorkflow(final WorkflowTest test, final TestResult result, final File workflowDir,
