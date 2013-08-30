@@ -202,13 +202,15 @@ public class TestflowRunnerApplication implements IApplication {
                 break;
             }
             sysout.printf("=> Running %-" + maxNameLength + "s...", testFlow.getName());
+            long startTime = System.currentTimeMillis();
             WorkflowTestResult result = WorkflowTestSuite.runTest(testFlow, resultWriter);
+            long duration = System.currentTimeMillis() - startTime;
             if (result.errorCount() > 0) {
-                sysout.println("ERROR");
+                sysout.printf("%-7s (%.3f s)%n", "ERROR", (duration / 1000.0));
             } else if (result.failureCount() > 0) {
-                sysout.println("FAILURE");
+                sysout.printf("%-7s (%.3f s)%n", "FAILURE", (duration / 1000.0));
             } else {
-                sysout.println("OK");
+                sysout.printf("%-7s (%.3f s)%n", "OK", (duration / 1000.0));
             }
             resultWriter.addResult(result);
 
