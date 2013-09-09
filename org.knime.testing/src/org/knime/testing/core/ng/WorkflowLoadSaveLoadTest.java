@@ -103,6 +103,7 @@ class WorkflowLoadSaveLoadTest extends WorkflowTest {
             LOGGER.info("Loading workflow '" + m_workflowName + "'");
             WorkflowManager manager =
                     WorkflowLoadTest.loadWorkflow(this, result, m_workflowDir, m_testcaseRoot, m_runConfiguration);
+            m_context.setWorkflowManager(manager);
 
             LOGGER.info("Saving workflow '" + m_workflowName + "'");
             manager.save(m_workflowDir, new ExecutionMonitor(), true);
