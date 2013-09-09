@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Dec 17, 2005 (wiswedel): created
  */
@@ -65,7 +65,7 @@ import javax.swing.plaf.basic.BasicComboBoxRenderer;
 /**
  * Panel that contains an editable Combo Box to choose or edit a string. The
  * string being selected are memorized by means of a {@link StringHistory}.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class StringHistoryPanel extends JPanel {
@@ -77,7 +77,7 @@ public final class StringHistoryPanel extends JPanel {
     /**
      * Creates new instance, sets properties, for instance renderer,
      * accordingly.
-     * @param historyID Identifier for the string history, 
+     * @param historyID Identifier for the string history,
      *        see {@link StringHistory}.
      */
     public StringHistoryPanel(final String historyID) {
@@ -92,7 +92,7 @@ public final class StringHistoryPanel extends JPanel {
         add(m_textBox);
         updateHistory();
     }
-    
+
     /**
      * Calls the respective method on the underlying text box.
      * @param s The reference object
@@ -104,7 +104,7 @@ public final class StringHistoryPanel extends JPanel {
 
     /**
      * Get currently selected entry.
-     * 
+     *
      * @return the current entry
      * @see javax.swing.JComboBox#getSelectedItem()
      */
@@ -113,15 +113,15 @@ public final class StringHistoryPanel extends JPanel {
     }
 
     /**
-     * Set the default entry.  
-     * 
+     * Set the default entry.
+     *
      * @param entry the entry to choose.
      * @see javax.swing.JComboBox#setSelectedItem(java.lang.Object)
      */
     public void setSelectedString(final String entry) {
         m_textBox.setSelectedItem(entry);
     }
-    
+
     /** Adds the currently selected element to the string history. */
     public void commitSelectedToHistory() {
         StringHistory history = StringHistory.getInstance(m_historyID);
@@ -132,7 +132,7 @@ public final class StringHistoryPanel extends JPanel {
     public void updateHistory() {
         StringHistory history = StringHistory.getInstance(m_historyID);
         String[] allVals = history.getHistory();
-        DefaultComboBoxModel comboModel = 
+        DefaultComboBoxModel comboModel =
             (DefaultComboBoxModel)m_textBox.getModel();
         comboModel.removeAllElements();
         for (String s : allVals) {
@@ -143,13 +143,20 @@ public final class StringHistoryPanel extends JPanel {
         Dimension newMin = new Dimension(0, getPreferredSize().height);
         setMinimumSize(newMin);
     }
-    
+
     /** Access to combo box component. This method allows one to change
      * the font being used, for instance.
      * @return The used combo box component.
      */
     public JComboBox getComboBox() {
         return m_textBox;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setEnabled(final boolean enabled) {
+        super.setEnabled(enabled);
+        m_textBox.setEnabled(enabled);
     }
 
     /** renderer that also supports to show customized tooltip. */
