@@ -89,25 +89,26 @@ class WorkflowExecuteTest extends WorkflowTest {
 
         TimerTask watchdog = null;
         try {
-            TestflowConfiguration flowConfiguration = new TestflowConfiguration(m_context.getWorkflowManager());
+            final TestflowConfiguration flowConfiguration = new TestflowConfiguration(m_context.getWorkflowManager());
 
-            final long timeout =
-                    System.currentTimeMillis()
-                            + ((flowConfiguration.getTimeout() > 0) ? flowConfiguration.getTimeout()
-                                    : m_runConfiguration.getTimeout()) * 1000;
             watchdog = new TimerTask() {
+                private final long timeout =
+                        ((flowConfiguration.getTimeout() > 0) ? flowConfiguration.getTimeout() : m_runConfiguration
+                                .getTimeout()) * 1000;
+                private final long startTime = System.currentTimeMillis();
+
                 @Override
                 public void run() {
                     if (m_progressMonitor.isCanceled()) {
                         result.addError(WorkflowExecuteTest.this, new InterruptedException("Testflow canceled by user"));
                         m_context.getWorkflowManager().getParent().cancelExecution(m_context.getWorkflowManager());
                         this.cancel();
-                    } else if (System.currentTimeMillis() > timeout) {
+                    } else if (System.currentTimeMillis() > startTime + timeout) {
                         String status =
                                 m_context.getWorkflowManager().printNodeSummary(m_context.getWorkflowManager().getID(),
                                                                                 0);
                         result.addFailure(WorkflowExecuteTest.this, new AssertionFailedError(
-                                "Worklow running longer than " + timeout + " seconds.\n" + status));
+                                "Worklow running longer than " + (timeout / 1000.0) + " seconds.\n" + status));
                         m_context.getWorkflowManager().getParent().cancelExecution(m_context.getWorkflowManager());
                         this.cancel();
                     }
