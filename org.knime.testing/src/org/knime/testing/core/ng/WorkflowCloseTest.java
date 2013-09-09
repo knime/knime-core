@@ -87,8 +87,7 @@ class WorkflowCloseTest extends WorkflowTest {
                         + " dangling workflows detected: " + openWorkflows));
             } else if ((openWorkflows.size() == 1)
                     && !openWorkflows.iterator().next().getName().contains("MetaNode Repository")) {
-                result.addFailure(this, new AssertionFailedError(openWorkflows.size()
-                        + " dangling workflows detected: " + openWorkflows));
+                result.addFailure(this, new AssertionFailedError("1 dangling workflow detected: " + openWorkflows));
             }
         } catch (Throwable t) {
             result.addError(this, t);
