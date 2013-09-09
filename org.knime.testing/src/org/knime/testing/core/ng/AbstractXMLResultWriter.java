@@ -170,7 +170,7 @@ public abstract class AbstractXMLResultWriter implements TestListener {
                 .getSuite())) / 1000.0));
         testSuite.setAttribute("timestamp", m_timestampFormat.format(new Date(m_startTimes.get(result.getSuite()))));
         try {
-            testSuite.setAttribute("hostname", InetAddress.getLocalHost().getCanonicalHostName());
+            testSuite.setAttribute("hostname", InetAddress.getLocalHost().getHostName());
         } catch (UnknownHostException ex) {
             // TODO add log output
             testSuite.setAttribute("hostname", "<unknown>");
