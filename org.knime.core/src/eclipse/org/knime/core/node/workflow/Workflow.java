@@ -1318,12 +1318,12 @@ class Workflow {
                if (end != null) {
                    return end;
                } else {
-                   return null;
+                   throw new IllegalLoopException("Could not find matching loop end node!");
                }
            }
        }
        assert false : "Failed to find NodeGraphAnnotation for node from this very workflow.";
-       return null;
+       throw new IllegalLoopException("Could not find matching loop end node (missing node annotation)!");
     }
 
     /** Return matching LoopStart node for the given LoopEnd.
@@ -1352,12 +1352,12 @@ class Workflow {
                if (start != null) {
                    return start;
                } else {
-                   return null;
+                   throw new IllegalLoopException("Could not find matching loop start node!");
                }
            }
        }
        assert false : "Failed to find NodeGraphAnnotation for node from this very workflow.";
-       return null;
+       throw new IllegalLoopException("Could not find matching loop start node (missing node annotation)!");
     }
 
     /** Create list of nodes (id)s that are part of a loop body. Note that
@@ -1493,7 +1493,7 @@ class Workflow {
                 m_nodeAnnotationCache.add(nls);
             }
         }
-        // 2) follow chain of nodes and keep adding until we reach and end or a metanode outport.
+        // 2) follow chain of nodes and keep adding until we reach an end or a metanode outport.
         int currIndex = 0;
         while (currIndex < m_nodeAnnotationCache.size()) {
             NodeGraphAnnotation currNGA = m_nodeAnnotationCache.get(currIndex);
