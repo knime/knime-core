@@ -310,7 +310,6 @@ public final class NodeGraphAnnotation implements Comparable<NodeGraphAnnotation
      * @param ngas NodeGraphAnnocation from the node connected to each outport.
      */
     void setAndMergeBackwards(final Set<NodeGraphAnnotation> ngas) {
-        m_connectedMetaOutPorts = new LinkedHashSet<Integer>();
         if (ngas.size() == 0) {
             m_endNodeStack = new Stack<NodeID>();
         } else {
