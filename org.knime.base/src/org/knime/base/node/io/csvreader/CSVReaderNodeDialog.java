@@ -305,6 +305,8 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
             return "\t";
         } else if ("\\n".equals(s)) {
             return "\n";
+        } else if ("\\r".equals(s)) {
+            return "\r";
         } else if ("\\r\\n".equals(s)) {
             return "\r\n";
         } else {
@@ -317,6 +319,8 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
             return "\\t";
         } else if ("\n".equals(s)) {
             return "\\n";
+        } else if ("\r".equals(s)) {
+            return "\\r";
         } else if ("\r\n".equals(s)) {
             return "\\r\\n";
         } else {
