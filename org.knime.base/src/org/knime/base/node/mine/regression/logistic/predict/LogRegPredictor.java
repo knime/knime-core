@@ -178,6 +178,9 @@ public final class LogRegPredictor extends AbstractCellFactory {
         newColsSpec.add(targetColSpecCreator.createSpec());
 
         if (includeProbabilites) {
+            if (!targetColSpec.getDomain().hasValues()) {
+                return null;
+            }
             List<DataCell> targetCategories = new ArrayList<DataCell>();
             targetCategories.addAll(targetColSpec.getDomain().getValues());
             Collections.sort(targetCategories,
