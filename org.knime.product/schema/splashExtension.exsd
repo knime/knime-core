@@ -115,18 +115,22 @@
          <meta.section type="examples"/>
       </appInfo>
       <documentation>
-         &lt;extension point=&quot;org.knime.product.splashExtension&quot;&gt;
-	&lt;splashExtension
-		icon=&quot;icons/weka_splash_50.png&quot;
-        icon24=&quot;icons/weka_splash_24.png&quot;
-        icon32=&quot;icons/weka_splash_32.png&quot;
-        id=&quot;Weka&quot;
-        tooltip=&quot;The Weka Project&quot;&gt;
-	&lt;/splashExtension&gt;
-&lt;/extension&gt;
+         The following is an example of the extension point: 
 
+&lt;pre&gt;
+&lt;extension point=&quot;org.knime.product.splashExtension&quot;&gt;
+   &lt;splashExtension
+      icon=&quot;icons/weka_splash_50.png&quot;
+      icon24=&quot;icons/weka_splash_24.png&quot;
+      icon32=&quot;icons/weka_splash_32.png&quot;
+      id=&quot;Weka&quot;
+      tooltip=&quot;The Weka Project&quot;&gt;
+   &lt;/splashExtension&gt;
+&lt;/extension&gt;
+&lt;/pre&gt;
       </documentation>
    </annotation>
+
 
 
    <annotation>
@@ -137,6 +141,5 @@
          (C) 2013 - KNIME GmbH, Konstanz, Germany.
       </documentation>
    </annotation>
-
 
 </schema>
