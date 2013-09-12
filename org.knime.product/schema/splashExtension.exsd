@@ -6,7 +6,7 @@
          <meta.schema plugin="org.knime.product" id="splashExtension" name="Splash Extensions"/>
       </appInfo>
       <documentation>
-         [Enter description of this extension point.]
+         Via this extension point you can add an icon for your extension to the splash screen. The icon should be provided in several resolutions because the splash screen will show smaller icons when more extensions are installed. The default icon should be 48x48 pixel (attribute &quot;icon&quot;), the smaller version should have 32x32 pixels (attribute &quot;icon32&quot;), and 24x24 pixels (attribute &quot;icon24&quot;), respectively. If only one icon is provided it will scaled to the correct size (and may look a bit ugly).
       </documentation>
    </annotation>
 
@@ -103,19 +103,10 @@
 
    <annotation>
       <appInfo>
-         <meta.section type="apiInfo"/>
-      </appInfo>
-      <documentation>
-         [Enter API information here.]
-      </documentation>
-   </annotation>
-
-   <annotation>
-      <appInfo>
          <meta.section type="since"/>
       </appInfo>
       <documentation>
-         [Enter the first release in which this extension point appears.]
+         2.0
       </documentation>
    </annotation>
 
@@ -124,16 +115,26 @@
          <meta.section type="examples"/>
       </appInfo>
       <documentation>
-         [Enter extension point usage example here.]
+         &lt;extension point=&quot;org.knime.product.splashExtension&quot;&gt;
+	&lt;splashExtension
+		icon=&quot;icons/weka_splash_50.png&quot;
+        icon24=&quot;icons/weka_splash_24.png&quot;
+        icon32=&quot;icons/weka_splash_32.png&quot;
+        id=&quot;Weka&quot;
+        tooltip=&quot;The Weka Project&quot;&gt;
+	&lt;/splashExtension&gt;
+&lt;/extension&gt;
+
       </documentation>
    </annotation>
 
+
    <annotation>
       <appInfo>
-         <meta.section type="implementation"/>
+         <meta.section type="copyright"/>
       </appInfo>
       <documentation>
-         [Enter information about supplied implementation of this extension point.]
+         (C) 2013 - KNIME GmbH, Konstanz, Germany.
       </documentation>
    </annotation>
 
