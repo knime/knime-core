@@ -57,7 +57,7 @@ public class PMMLCellContent extends XMLCellContent implements PMMLValue {
      * @throws ParserConfigurationException If {@link DocumentBuilder} cannot
      *          be created.
      * @throws SAXException If xmlString cannot be parsed
-     * @throws XMLStreamException
+     * @throws XMLStreamException no valid PMML/XML stream
      */
     PMMLCellContent(final String xmlString) throws IOException,
             ParserConfigurationException, SAXException, XMLStreamException {
@@ -73,7 +73,7 @@ public class PMMLCellContent extends XMLCellContent implements PMMLValue {
      * @throws ParserConfigurationException If {@link DocumentBuilder} cannot
      *          be created.
      * @throws SAXException If xmlString cannot be parsed.
-     * @throws XMLStreamException
+     * @throws XMLStreamException no valid PMML/XML stream
      */
     PMMLCellContent(final InputStream is) throws IOException,
             ParserConfigurationException, SAXException, XMLStreamException {
@@ -117,9 +117,12 @@ public class PMMLCellContent extends XMLCellContent implements PMMLValue {
     @Override
     public List<Node> getModels(final PMMLModelType type) {
         List<Node> nodes = new LinkedList<Node>();
-        NodeList list = getDocument().getElementsByTagName(type.toString());
-        for (int i = 0; i < list.getLength(); i++) {
-            nodes.add(list.item(i));
+        Node pmml = getDocument().getElementsByTagName("PMML").item(0);
+        NodeList children = pmml.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            if (children.item(i).getNodeName().equals(type.toString())) {
+                nodes.add(children.item(i));
+            }
         }
         return nodes;
     }
