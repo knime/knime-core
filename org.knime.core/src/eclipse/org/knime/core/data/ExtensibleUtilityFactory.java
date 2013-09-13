@@ -127,7 +127,7 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
             @Override
             public void preferenceChange(final PreferenceChangeEvent event) {
                 if (event.getKey().equals(getPreferenceKey(m_valueClass))) {
-                    setPreferredRenderer(event.getNewValue().toString());
+                    setPreferredRenderer((String) event.getNewValue());
                 }
             }
         });
