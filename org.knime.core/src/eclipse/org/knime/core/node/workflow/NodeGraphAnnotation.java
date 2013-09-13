@@ -321,14 +321,25 @@ public final class NodeGraphAnnotation implements Comparable<NodeGraphAnnotation
             while (it.hasNext()) {
                 nga = it.next();
                 Stack<NodeID> backScopes2 = nga.cloneScopeStackForPredeccessor();
-                // merge those two - it's actually fairly easy: we only consider the intersection of
-                // the two stacks plus the elements have to appear in exactly the same order.
-                if (m_endNodeStack.size() == 0 || backScopes2.size() == 0) {
+                // merge the two stacks. In principle this is easy: we only consider the intersection of
+                // the two stacks and the elements have to appear in exactly the same order. There
+                // are a few border cases to check first, though:
+                // 1) check if one of the two is a side branch, leaving a loop:
+                if ((m_endNodeStack.size() == 0) && m_connectedMetaOutPorts.size() == 0) {
+                    // current node is part of side branch use info from the other node
+                    m_endNodeStack = backScopes2;
+                } else if ((backScopes2.size() == 0) && (nga.m_connectedMetaOutPorts.size() == 0)) {
+                    // previous node is part of side branch - use info from the other node
+                    // m_endNodeStack already correctly assigned.
+                } else if (m_endNodeStack.size() == 0 || backScopes2.size() == 0) {
+                    // 2) if one of the two stacks is empty but the ports aren't: empty intersection!
+                    //    (this will later result in a failure)
                     m_endNodeStack = new Stack<NodeID>();
                 } else if (m_endNodeStack.equals(backScopes2)) {
-                    // do nothing, original stack remains.
+                    // 3) do nothing, stack the same in both nodes
                 } else {
-                    // This can only happen if the top of the two stacks are exactly the same:
+                    // This should only happen if the top of the two stacks are exactly the same
+                    // (otherwise the wiring is incorrect as one branch skips over an end node!)
                     Stack<NodeID> newBackwardScopes = new Stack<NodeID>();
                     for (int i = 0; i < Math.min(m_endNodeStack.size(), backScopes2.size()); i++) {
                         if (m_endNodeStack.get(i).equals(backScopes2.get(i))) {
@@ -340,6 +351,7 @@ public final class NodeGraphAnnotation implements Comparable<NodeGraphAnnotation
                     }
                     m_endNodeStack = newBackwardScopes;
                 }
+                // and finally merge the connected output ports of the enclosing metanodes: the the union.
                 m_connectedMetaOutPorts.addAll(nga.m_connectedMetaOutPorts);
             }
         }

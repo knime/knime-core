@@ -2558,11 +2558,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             if (!(e instanceof IllegalLoopException)) {
                                 // handle unexpected exceptions properly (i.e.
                                 // clean up loop) but report them as error!
-                                LOGGER.error("Error in parallelizeLoop: " + e);
+                                LOGGER.error("Error in parallelizeLoop: " + e, e);
                             } else {
                                 // can happen during regular use
                                 // (e.g. wrong end node)
-                                LOGGER.debug("parallelizeLoop failed: " + e);
+                                LOGGER.debug("parallelizeLoop failed: " + e, e);
                             }
                             // make sure the start node is reset and
                             // and approriate message is set.

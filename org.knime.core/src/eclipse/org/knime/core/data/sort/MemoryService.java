@@ -122,13 +122,10 @@ public final class MemoryService {
             final long minAvailableMemory,
             final boolean useCollectionUsage) {
         // Determine the memory pool to be observed
-        List<String> toObserve = Arrays.asList("Tenured Gen", "PS Old Gen");
-        for (MemoryPoolMXBean memoryPool
-                : ManagementFactory.getMemoryPoolMXBeans()) {
-            if (memoryPool.isUsageThresholdSupported()) {
-                if (toObserve.contains(memoryPool.getName())) {
-                    m_memPool = memoryPool;
-                }
+        List<String> toObserve = Arrays.asList("Tenured Gen", "PS Old Gen", "CMS Old Gen", "G1 Old Gen");
+        for (MemoryPoolMXBean memoryPool : ManagementFactory.getMemoryPoolMXBeans()) {
+            if (memoryPool.isUsageThresholdSupported() && toObserve.contains(memoryPool.getName())) {
+                m_memPool = memoryPool;
             }
         }
         // When memory pool could not be found. This happens with sun's jvm with

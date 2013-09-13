@@ -27,10 +27,6 @@
             A detailed description of the available aggregation methods can be
             found on the 'Description' tab in the node dialog.
    		   </p>
-            <p>
-            If the 'Sort in memory' option is checked the complete table is 
-            loaded into the memory to speed up the sorting process.
-            </p>
     	</intro>
     	<tab name="Group settings">
           <option name="Group columns">

@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
     <resource path="META-INF/MANIFEST.MF">
+        <filter id="924844039">
+            <message_arguments>
+                <message_argument value="2.8.2"/>
+                <message_argument value="2.8.0"/>
+            </message_arguments>
+        </filter>
         <filter id="927989779">
             <message_arguments>
                 <message_argument value="2.8.0"/>
@@ -37,6 +43,34 @@
             <message_arguments>
                 <message_argument value="org.knime.core.data.sort.MemoryService"/>
                 <message_argument value="createTestCaseMemoryService(long)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/util/memory/MemoryAlertObject.java" type="org.knime.core.data.util.memory.MemoryAlertObject">
+        <filter comment="made public in 2.8.2 to allow text processing to use it (part of bug fix)" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.util.memory.MemoryAlertObject"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/util/memory/MemoryObjectTracker.java" type="org.knime.core.data.util.memory.MemoryObjectTracker">
+        <filter comment="made public in 2.8.2 to allow text processing to use it (part of bug fix)" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.util.memory.MemoryObjectTracker"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/util/memory/MemoryReleasable.java" type="org.knime.core.data.util.memory.MemoryReleasable">
+        <filter comment="made public in 2.8.2 to allow text processing to use it (part of bug fix)" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.util.memory.MemoryReleasable"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/util/memory/MemoryWarningSystem.java" type="org.knime.core.data.util.memory.MemoryWarningSystem">
+        <filter comment="made public in 2.8.2 to allow text processing to use it (part of bug fix)" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.util.memory.MemoryWarningSystem"/>
             </message_arguments>
         </filter>
     </resource>

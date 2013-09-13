@@ -257,6 +257,7 @@ public final class DatabaseReaderConnection {
         final Connection conn = initConnection(cp);
         exec.setMessage("Waiting for free database connection...");
         synchronized (m_conn.syncConnection(conn)) {
+            exec.setMessage("Start reading rows from database...");
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
             final Statement stmt = initStatement(cp, conn);
