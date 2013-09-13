@@ -219,6 +219,7 @@ import org.knime.workbench.editor2.pervasive.PervasiveJobExecutorHelper;
 import org.knime.workbench.editor2.svgexport.WorkflowSVGExport;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 import org.knime.workbench.explorer.filesystem.ExplorerFileSystem;
+import org.knime.workbench.explorer.filesystem.LocalExplorerFileStore;
 import org.knime.workbench.explorer.view.actions.validators.FileStoreNameValidator;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
@@ -796,9 +797,13 @@ public class WorkflowEditor extends GraphicalEditor implements
             if ("file".equals(uri.getScheme())) {
                 wfFile = new File(uri);
                 try {
-                    mountPointRoot =
-                        ExplorerFileSystem.INSTANCE.fromLocalFile(wfFile).getContentProvider().getFileStore("/")
-                            .toLocalFile();
+                    LocalExplorerFileStore fs = ExplorerFileSystem.INSTANCE.fromLocalFile(wfFile);
+                    if ((fs == null) || (fs.getContentProvider() == null)) {
+                        LOGGER.info("Could not determine mount point root for " + wfFile.getParent()
+                            + ", looks like it is a linked ressource");
+                    } else {
+                        mountPointRoot = fs.getContentProvider().getFileStore("/").toLocalFile();
+                    }
                 } catch (CoreException ex) {
                     LOGGER.warn(
                         "Could not determine mount point root for " + wfFile.getParent() + ": " + ex.getMessage(), ex);
