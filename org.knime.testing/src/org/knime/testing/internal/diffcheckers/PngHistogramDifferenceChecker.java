@@ -98,7 +98,7 @@ public class PngHistogramDifferenceChecker implements DifferenceChecker<PNGImage
         }
     }
 
-    private static final String DESCRIPTION = "PNG images (historgram)";
+    private static final String DESCRIPTION = "PNG images (histogram)";
 
     private final SettingsModelDoubleBounded m_allowedDifference = new SettingsModelDoubleBounded("allowedDifference",
             5, 0, 100);
