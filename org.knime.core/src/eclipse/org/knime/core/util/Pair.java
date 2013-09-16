@@ -112,4 +112,22 @@ public final class Pair<T, M> {
         int secondHash = m_second == null ? 0 : m_second.hashCode();
         return firstHash ^ (secondHash << 2);
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return "<" + m_first +  ";" + m_second + ">";
+    }
+
+    /** Factory method that infers the generic arguments, equivalent to {@link #Pair(Object, Object) constructor}.
+     * @param first The first element
+     * @param second The second element
+     * @return a new pair
+     * @param <T> Type of first element
+     * @param <M> Type of second element
+     * @since 2.9
+     */
+    public static final <T, M> Pair<T, M> create(final T first, final M second) {
+        return new Pair<T, M>(first, second);
+    }
 }
