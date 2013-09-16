@@ -214,7 +214,7 @@ public final class DataColumnProperties implements Cloneable {
         }
 
         // avoid a deadlock, see bug #4444
-        if (System.identityHashCode(this) < System.identityHashCode(obj)) {
+        if (System.identityHashCode(m_props) < System.identityHashCode(((DataColumnProperties)obj).m_props)) {
             return m_props.equals(((DataColumnProperties)obj).m_props);
         } else {
             return ((DataColumnProperties)obj).m_props.equals(m_props);
