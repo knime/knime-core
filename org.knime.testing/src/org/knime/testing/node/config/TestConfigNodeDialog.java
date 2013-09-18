@@ -276,7 +276,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         c2.insets = new Insets(2, 2, 2, 2);
         c2.gridx = 0;
         c2.gridy = 0;
-        p2.add(new JLabel("Node must not be executed   "), c2);
+        p2.add(new JLabel("Node is expected to fail   "), c2);
         c2.gridx = 1;
         p2.add(m_mustFail, c2);
 

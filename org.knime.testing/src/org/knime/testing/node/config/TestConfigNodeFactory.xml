@@ -36,10 +36,9 @@
             </option>
         </tab>
         <tab name="Node settings">
-            <option name="Node must fail">
-                If the node selected in the list above must fail for a successful test,
-                check this
-                option.
+            <option name="Node is expected to fail">
+                If the node selected in the list above is expected to fail for a successful test,
+                check this option.
             </option>
             <option name="Required error message">
                 Enter the error message on the node selected above that must be
