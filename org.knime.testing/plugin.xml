@@ -138,6 +138,9 @@
       <DifferenceCheckerFactory
             class="org.knime.testing.internal.diffcheckers.URIContentDifferenceChecker$Factory">
       </DifferenceCheckerFactory>
+      <DifferenceCheckerFactory
+            class="org.knime.testing.internal.diffcheckers.IgnoreChecker$Factory">
+      </DifferenceCheckerFactory>
    </extension>
    <extension
          id="NGTestflowRunner"
