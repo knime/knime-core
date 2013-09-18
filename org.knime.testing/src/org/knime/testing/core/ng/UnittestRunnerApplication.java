@@ -80,6 +80,7 @@ public class UnittestRunnerApplication implements IApplication {
             }
 
             sysout.printf("=> Running %-" + maxNameLength + "s ...", testClass.getName());
+            long startTime = System.currentTimeMillis();
             JUnitTest junitTest = new JUnitTest(testClass.getName());
             final JUnitTestRunner runner =
                     new JUnitTestRunner(junitTest, false, false, false, testClass.getClassLoader());
@@ -136,18 +137,19 @@ public class UnittestRunnerApplication implements IApplication {
 
             out.close();
 
+            long duration = System.currentTimeMillis() - startTime;
             switch (runner.getRetCode()) {
                 case JUnitTestRunnerMirror.SUCCESS:
-                    sysout.println("OK");
+                    sysout.printf("%-7s (%.3f s)%n", "OK", (duration / 1000.0));
                     break;
                 case JUnitTestRunnerMirror.FAILURES:
-                    sysout.println("FAILURE");
+                    sysout.printf("%-7s (%.3f s)%n", "FAILURE", (duration / 1000.0));
                     break;
                 case JUnitTestRunnerMirror.ERRORS:
-                    sysout.println("ERROR");
+                    sysout.printf("%-7s (%.3f s)%n", "ERROR", (duration / 1000.0));
                     break;
                 default:
-                    sysout.println("UNKNOWN");
+                    sysout.printf("%-7s (%.3f s)%n", "UNKNOWN", (duration / 1000.0));
                     break;
             }
         }
