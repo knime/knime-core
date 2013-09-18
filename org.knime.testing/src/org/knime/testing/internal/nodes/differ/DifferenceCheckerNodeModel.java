@@ -109,16 +109,24 @@ class DifferenceCheckerNodeModel extends NodeModel {
             throw new InvalidSettingsException("No reference table available");
         }
 
-        for (DataColumnSpec dcs : inSpecs[1]) {
-            DifferenceCheckerFactory<? extends DataValue> fac = m_settings.checkerFactory(dcs.getName());
-            if (fac == null) {
-                throw new InvalidSettingsException("No checker configured for column '" + dcs.getName() + "'");
+        if (m_settings.configuredColumns().size() == 0) {
+            // auto-configure
+            for (DataColumnSpec dcs : inSpecs[1]) {
+                m_settings.checkerFactory(dcs.getName(), new EqualityChecker.Factory());
             }
+        } else {
+            for (DataColumnSpec dcs : inSpecs[1]) {
+                DifferenceCheckerFactory<? extends DataValue> fac = m_settings.checkerFactory(dcs.getName());
+                if (fac == null) {
+                    throw new InvalidSettingsException("No checker configured for column '" + dcs.getName() + "'");
+                }
 
-            DataType type = dcs.getType().isCollectionType() ? dcs.getType().getCollectionElementType() : dcs.getType();
-            if (!type.isCompatible(fac.getType())) {
-                throw new InvalidSettingsException("Difference checker '" + fac.getDescription()
-                        + "' is not compatible with data type " + dcs.getType());
+                DataType type =
+                        dcs.getType().isCollectionType() ? dcs.getType().getCollectionElementType() : dcs.getType();
+                if (!type.isCompatible(fac.getType())) {
+                    throw new InvalidSettingsException("Difference checker '" + fac.getDescription()
+                            + "' is not compatible with data type " + dcs.getType());
+                }
             }
         }
 
@@ -176,10 +184,11 @@ class DifferenceCheckerNodeModel extends NodeModel {
             DataCell refCell = refRow.getCell(i);
 
             if (refCell.isMissing() && !testCell.isMissing()) {
-                throw new IllegalStateException("Expected missing cell in row '" + refRow.getKey() + "' but got '"
-                        + testCell + "'");
+                throw new IllegalStateException("Expected missing cell in row '" + refRow.getKey() + "' and column '"
+                        + colSpec.getName() + "' but got '" + testCell + "'");
             } else if (!refCell.isMissing() && testCell.isMissing()) {
-                throw new IllegalStateException("Unexpected missing cell in row '" + refRow.getKey() + "'");
+                throw new IllegalStateException("Unexpected missing cell in row '" + refRow.getKey() + "' and column '"
+                        + colSpec.getName() + "'");
             } else if (!refCell.isMissing() && !testCell.isMissing()) {
                 if (colSpec.getType().isCollectionType() && !(checker instanceof EqualityChecker)) {
                     compareCollection(colSpec, checker, testCell, refCell);
