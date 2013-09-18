@@ -64,6 +64,11 @@ public class TestrunConfiguration {
      */
     public static final int DEFAULT_TIMEOUT = 300;
 
+    /**
+     * The default maximum allowed memory increase per testflow (currently {@value} bytes).
+     */
+    public static final int DEFAULT_ALLOWED_MEMORY_INCREASE = 1024 * 1024;
+
     private boolean m_testDialogs;
 
     private boolean m_testViews = true;
@@ -81,6 +86,10 @@ public class TestrunConfiguration {
     private boolean m_closeWorkflowAfterTest = true;
 
     private int m_timeout = DEFAULT_TIMEOUT;
+
+    private boolean m_checkMemoryLeaks = false;
+
+    private int m_allowedMemoryIncrease = DEFAULT_ALLOWED_MEMORY_INCREASE;
 
     /**
      * Sets if dialogs for all nodes in the workflow should be tested, i.e. load settings and save settings after the
@@ -252,12 +261,53 @@ public class TestrunConfiguration {
     /**
      * Returns whether the workflows should be loaded, saved into a temporary directory, and loaded from there again
      * before it is executed. This is useful in order to check whether format conversion are done properly. If set to
-     * <code>false</code> the workflow is only loaded once from the original location. The default is <code>false</code>.
+     * <code>false</code> the workflow is only loaded once from the original location. The default is <code>false</code>
+     * .
      *
      * @return <code>true</code> when the workflows should be loaded, saved, and loaded again, <code>false</code>
      *         otherwise
      */
     public boolean isLoadSaveLoad() {
         return m_loadSaveLoad;
+    }
+
+    /**
+     * Sets whether the memory usage before and after the execution of a testflow should be tested.
+     *
+     * @param checkMemoryLeaks <code>true</code> if a check for memory leaks should be performed, <code>false</code>
+     *            otherwise.
+     */
+    public void setCheckMemoryLeaks(final boolean checkMemoryLeaks) {
+        m_checkMemoryLeaks = checkMemoryLeaks;
+    }
+
+    /**
+     * Returns whether the memory usage before and after the execution of a testflow should be tested. The default is to
+     * not check for memory leaks.
+     *
+     * @return <code>true</code> if a check for memory leaks should be performed, <code>false</code> otherwise.
+     */
+    public boolean isCheckMemoryLeaks() {
+        return m_checkMemoryLeaks;
+    }
+
+    /**
+     * Returns the maximum allowed increase in heap usage after each testflow. If the increase is greater than this
+     * threshold a failure will be reported (if the memory leaks are tested).
+     *
+     * @return the maximum allowed memory increase in bytes
+     */
+    public int getAllowedMemoryIncrease() {
+        return m_allowedMemoryIncrease;
+    }
+
+    /**
+     * Sets the maximum allowed increase in heap usage after each testflow. If the increase is greater than this
+     * threshold a failure will be reported (if the memory leaks are tested).
+     *
+     * @param allowedMemoryIncrease the maximum allowed memory increase in bytes
+     */
+    public void setAllowedMemoryIncrease(final int allowedMemoryIncrease) {
+        m_allowedMemoryIncrease = allowedMemoryIncrease;
     }
 }

@@ -373,7 +373,6 @@ public class TestflowRunnerApplication implements IApplication {
                 continue;
             }
 
-
             if ((stringArgs[i] != null) && stringArgs[i].equals("-untestedNodes")) {
                 i++;
                 // requires another argument
@@ -383,6 +382,18 @@ public class TestflowRunnerApplication implements IApplication {
                     return false;
                 }
                 m_untestedNodesTest = new UntestedNodesTest(Pattern.compile(stringArgs[i++]));
+                continue;
+            }
+
+            if ((stringArgs[i] != null) && stringArgs[i].equals("-memLeaks")) {
+                i++;
+                // requires another argument
+                if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
+                    System.err.println("Missing <bytes> for option -memLeaks.");
+                    printUsage();
+                    return false;
+                }
+                m_runConfiguration.setAllowedMemoryIncrease(Integer.parseInt(stringArgs[i++]));
                 continue;
             }
 
@@ -450,6 +461,8 @@ public class TestflowRunnerApplication implements IApplication {
         System.err.println("    -save <directory_name>: optional, specifies the directory "
                 + " into which each testflow is saved after execution. If not specified the workflows are not saved.");
         System.err.println("    -timeout <seconds>: optional, specifies the timeout for each individual workflow.");
+        System.err.println("    -memLeaks <bytes>: optional, specifies the maximum allowed increaes in heap usage for "
+                + "each testflow. If not specified no test for memory leaks is performed.");
     }
 
     @Override

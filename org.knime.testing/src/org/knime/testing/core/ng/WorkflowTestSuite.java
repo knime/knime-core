@@ -151,6 +151,10 @@ public class WorkflowTestSuite extends WorkflowTest {
         }
 
         m_allTests.add(new WorkflowUncaughtExceptionsTest(m_workflowName, m_progressMonitor, m_context));
+
+        if (runConfig.isCheckMemoryLeaks()) {
+            m_allTests.add(new WorkflowMemLeakTest(m_workflowName, m_progressMonitor, runConfig, m_context));
+        }
     }
 
     /**
