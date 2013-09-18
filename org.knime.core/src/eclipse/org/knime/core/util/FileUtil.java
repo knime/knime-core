@@ -776,7 +776,7 @@ public final class FileUtil {
      * @throws IOException if the directory could not be created
      */
     public static File createTempDir(final String prefix) throws IOException {
-        return createTempDir(prefix, null);
+        return createTempDir(prefix, null, true);
     }
 
     /**
@@ -791,6 +791,23 @@ public final class FileUtil {
      * @throws IOException if the directory could not be created
      */
     public static File createTempDir(final String prefix, final File dir) throws IOException {
+        return createTempDir(prefix, dir, true);
+    }
+
+    /**
+     * Creates a temporary directory that is automatically deleted when the JVM shuts down. If no root directory is
+     * specified, the files are created in the temp dir associated with the workflow (set in the {@link WorkflowContext}
+     * ), or - if that is null - in the global temp dir.
+     *
+     * @param prefix the prefix string to be used in generating the file's name
+     * @param dir the directory in which the file is to be created, or <code>null</code> if the default temporary-file
+     *            directory is to be used
+     * @param deleteOnExit if <code>true</code>, the file is deleted when the JVM shuts down
+     * @return an abstract pathname denoting a newly-created empty directory
+     * @throws IOException if the directory could not be created
+     */
+    public static File createTempDir(final String prefix, final File dir, final boolean deleteOnExit)
+            throws IOException {
         File rootDir = dir;
         if (rootDir == null) {
             rootDir = getTmpDir();
@@ -802,7 +819,9 @@ public final class FileUtil {
         if (!tempDir.mkdirs()) {
             throw new IOException("Cannot create temporary directory '" + tempDir.getCanonicalPath() + "'.");
         }
-        TEMP_FILES.add(tempDir);
+        if (deleteOnExit) {
+            TEMP_FILES.add(tempDir);
+        }
         return tempDir;
     }
 
