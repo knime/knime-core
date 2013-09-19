@@ -121,13 +121,6 @@ class DBReaderNodeModel extends NodeModel
         }
     }
 
-    /**
-     * Parses the given R command and replaces the variables.
-     * @param rCommand the R command to parse
-     * @param model delegator to to retrieve variables
-     * @return the R script where the variables have been replace with
-     *         their actual value
-     */
     private String parseQuery(final String query) {
         return DBVariableSupportNodeModel.Resolver.parse(query, this);
     }
