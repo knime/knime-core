@@ -172,6 +172,10 @@ public class ImageColumnWriterNodeModel extends NodeModel {
                 throw new IOException("File '" + imageFile.getAbsolutePath()
                         + "' already exists");
             }
+            final File parentDir = imageFile.getParentFile();
+            if (!parentDir.isDirectory()) {
+                parentDir.mkdirs();
+            }
             ImageContent content = v.getImageContent();
             OutputStream os = new FileOutputStream(imageFile);
             content.save(os);
