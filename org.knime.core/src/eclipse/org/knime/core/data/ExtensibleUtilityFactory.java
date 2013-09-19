@@ -60,8 +60,8 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.knime.core.data.DataValue.UtilityFactory;
 import org.knime.core.data.renderer.DataValueRenderer;
@@ -79,6 +79,12 @@ import org.osgi.framework.FrameworkUtil;
 public abstract class ExtensibleUtilityFactory extends UtilityFactory {
     private static final String EXT_POINT_ID = "org.knime.core.DataValueRenderer";
 
+    private static final IEclipsePreferences CORE_PREFS = InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(
+        DataValueRendererFactory.class).getSymbolicName());
+
+    private static final IEclipsePreferences CORE_DEFAULT_PREFS = DefaultScope.INSTANCE.getNode(FrameworkUtil
+        .getBundle(DataValueRendererFactory.class).getSymbolicName());
+
     /**
      * A logger for this factory.
      */
@@ -91,14 +97,8 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
 
     private final Map<String, DataValueRendererFactory> m_renderers = new HashMap<String, DataValueRendererFactory>();
 
-    private DataValueRendererFactory m_defaultRenderer;
-
-    private DataValueRendererFactory m_preferredRenderer;
-
     private static final Map<Class<? extends DataValue>, ExtensibleUtilityFactory> ALL_FACTORIES =
         new HashMap<Class<? extends DataValue>, ExtensibleUtilityFactory>();
-
-    private boolean m_preferencesRead = false;
 
     /**
      * Creates a new utility factory that is responsible for the given value class.
@@ -114,40 +114,22 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
                 ExtensibleUtilityFactory existingFactory = ALL_FACTORIES.get(valueClass);
 
                 throw new IllegalArgumentException("There is already a factory registered for " + valueClass + ": "
-                        + existingFactory.getClass().getName());
+                    + existingFactory.getClass().getName());
             } else {
                 ALL_FACTORIES.put(valueClass, this);
             }
         }
-
-        IEclipsePreferences corePrefs =
-            InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(DataValueRendererFactory.class).getSymbolicName());
-
-        corePrefs.addPreferenceChangeListener(new IEclipsePreferences.IPreferenceChangeListener() {
-            @Override
-            public void preferenceChange(final PreferenceChangeEvent event) {
-                if (event.getKey().equals(getPreferenceKey(m_valueClass))) {
-                    setPreferredRenderer((String) event.getNewValue());
-                }
-            }
-        });
     }
 
     /**
      * Reads and sets the preferred renderers from the preferences.
+     *
+     * @deprecated this method is only used for reading old renderer settings from the MoleculeUtilityFactory. Do not
+     *             call or override this method.
      */
-    protected synchronized void readPreferredRendererFromPreferences() {
-        if (m_preferencesRead) {
-            return;
-        }
-        IEclipsePreferences corePrefs =
-            InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(DataValueRendererFactory.class).getSymbolicName());
-
-        String rendererId = corePrefs.get("preferredRendererFor_" + m_valueClass.getName(), null);
-        if (rendererId != null) {
-            setPreferredRenderer(rendererId);
-        }
-        m_preferencesRead = true;
+    @Deprecated
+    protected void readPreferredRendererFromPreferences() {
+        // nothing to do here any more
     }
 
     /**
@@ -158,11 +140,11 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      */
     public final void setPreferredRenderer(final String rendererId) {
         if (rendererId == null) {
-            m_preferredRenderer = null;
+            CORE_PREFS.put(getPreferenceKey(), null);
         } else {
             DataValueRendererFactory matchedFactory = m_renderers.get(rendererId);
             if (matchedFactory != null) {
-                m_preferredRenderer = matchedFactory;
+                CORE_PREFS.put(getPreferenceKey(), rendererId);
                 m_logger.debug("Setting " + rendererId + " as preferred renderer for " + m_valueClass.getName());
             } else {
                 m_logger.warn("Preferred renderer " + rendererId + " for " + m_valueClass.getName() + " was not found");
@@ -175,6 +157,7 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
         assert point != null : "Invalid extension point id: " + EXT_POINT_ID;
 
+        String defaultRendererId = null;
         for (IExtension ext : point.getExtensions()) {
             IConfigurationElement[] elements = ext.getConfigurationElements();
             for (IConfigurationElement valueClassElement : elements) {
@@ -194,8 +177,9 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
 
                         m_renderers.put(rendererFactory.getId(), rendererFactory);
 
-                        if (suggestAsDefault || (m_defaultRenderer == null)) {
-                            m_defaultRenderer = rendererFactory;
+                        if (suggestAsDefault || (defaultRendererId == null)) {
+                            defaultRendererId = rendererFactory.getId();
+                            CORE_DEFAULT_PREFS.put(getPreferenceKey(), defaultRendererId);
                         }
                     } catch (CoreException ex) {
                         m_logger.error(
@@ -219,7 +203,9 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      */
     protected final void addRendererFactory(final DataValueRendererFactory fac, final boolean suggestAsDefault) {
         m_renderers.put(fac.getId(), fac);
-        m_defaultRenderer = fac;
+        if (suggestAsDefault) {
+            CORE_DEFAULT_PREFS.put(getPreferenceKey(), fac.getId());
+        }
     }
 
     /**
@@ -243,7 +229,14 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      * @return a renderer factory or <code>null</code>
      */
     public DataValueRendererFactory getDefaultRenderer() {
-        return m_defaultRenderer;
+        String defaultId = CORE_DEFAULT_PREFS.get(getPreferenceKey(), null);
+
+        DataValueRendererFactory matchedFactory = m_renderers.get(defaultId);
+        if (matchedFactory != null) {
+            return matchedFactory;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -253,8 +246,14 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      * @return a renderer factory or <code>null</code>
      */
     public DataValueRendererFactory getPreferredRenderer() {
-        readPreferredRendererFromPreferences();
-        return m_preferredRenderer;
+        String prefId = CORE_PREFS.get(getPreferenceKey(), null);
+
+        DataValueRendererFactory matchedFactory = m_renderers.get(prefId);
+        if (matchedFactory != null) {
+            return matchedFactory;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -272,13 +271,16 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
         DataValueRenderer[] renderers = new DataValueRenderer[m_renderers.size()];
         int i = 0;
         readPreferredRendererFromPreferences();
-        if (m_preferredRenderer != null) {
-            renderers[i++] = m_preferredRenderer.createRenderer(spec);
-        } else if (m_defaultRenderer != null) {
-            renderers[i++] = m_defaultRenderer.createRenderer(spec);
+        DataValueRendererFactory prefRenderer = getPreferredRenderer();
+        DataValueRendererFactory defaultRenderer = getDefaultRenderer();
+
+        if (prefRenderer != null) {
+            renderers[i++] = prefRenderer.createRenderer(spec);
+        } else if (defaultRenderer != null) {
+            renderers[i++] = defaultRenderer.createRenderer(spec);
         }
         for (DataValueRendererFactory fac : m_renderers.values()) {
-            if (fac.equals(m_preferredRenderer) || ((m_preferredRenderer == null) && fac.equals(m_defaultRenderer))) {
+            if (fac.equals(prefRenderer) || ((prefRenderer == null) && fac.equals(defaultRenderer))) {
                 continue;
             }
             renderers[i++] = fac.createRenderer(spec);
