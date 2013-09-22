@@ -50,6 +50,7 @@
  */
 package org.knime.workbench.ui.wrapper;
 
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
@@ -107,6 +108,14 @@ public class Panel2CompositeWrapper extends Composite {
         }
         // use panel as root
         m_awtComponent = panel;
+
+        // the size of the composite is 0x0 at this point. The above SWT_AWT.newFrame() determines the client
+        // size BEFORE this constructor completes (via ViewUtils#invokeAndWaitInEDT - see below);
+        // setting a dimension here in order to have reasonable defaults.
+        // see bug 4431 (and the original bug 4418)
+        Dimension size = panel.getPreferredSize();
+        this.setSize(size.width, size.height);
+
         /* Create another root pane container (JApplet) to enable swing/awt
          * components and SWT frames/dialogs to work smoothly together:
          * http://www.eclipse.org/articles/article.php?file=Article-Swing-SWT-Integration/index.html

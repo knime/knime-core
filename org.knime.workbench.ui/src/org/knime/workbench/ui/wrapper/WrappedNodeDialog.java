@@ -661,12 +661,6 @@ public class WrappedNodeDialog extends Dialog {
     @Override
     protected Point getInitialSize() {
         final JPanel panel = m_dialogPane.getPanel();
-        ViewUtils.invokeAndWaitInEDT(new Runnable() {
-            @Override
-            public void run() {
-                panel.doLayout();
-            }
-        });
 
         // underlying pane sizes
         int width = panel.getPreferredSize().width;
