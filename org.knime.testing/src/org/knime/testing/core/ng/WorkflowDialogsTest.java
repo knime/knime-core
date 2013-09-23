@@ -50,6 +50,7 @@
  */
 package org.knime.testing.core.ng;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JFrame;
@@ -102,7 +103,8 @@ class WorkflowDialogsTest extends WorkflowTest {
         return "check dialogs";
     }
 
-    private void checkDialogs(final TestResult result, final WorkflowManager wfm) {
+    private void checkDialogs(final TestResult result, final WorkflowManager wfm) throws InterruptedException,
+            InvocationTargetException {
         for (final NodeContainer node : wfm.getNodeContainers()) {
             if (m_context.isPreExecutedNode(node)) {
                 continue;
@@ -111,7 +113,7 @@ class WorkflowDialogsTest extends WorkflowTest {
             if (node instanceof SingleNodeContainer) {
                 LOGGER.debug("Opening dialog of node " + ((SingleNodeContainer)node).getName());
                 final AtomicReference<Exception> exRef = new AtomicReference<Exception>();
-                SwingUtilities.invokeLater(new Runnable() {
+                SwingUtilities.invokeAndWait(new Runnable() {
                     @Override
                     public void run() {
                         final JFrame testFrame = new JFrame("Dialog for " + node.getName());
