@@ -151,7 +151,7 @@ public class ExtensibleUtilityFactoryTest {
         DataValueRendererFactory invalidRendererFactory = new MultiLineStringValueRenderer.Factory();
         corePrefs.put(ExtensibleUtilityFactory.getPreferenceKey(TestDataValue.class), invalidRendererFactory.getId());
         assertThat("Unexpected preferred renderer after trying to set invalid preferred renderer",
-                   utilityFactory.getPreferredRenderer(), is(rendererFactory));
+                   utilityFactory.getPreferredRenderer(), is(IsNull.nullValue()));
     }
 
     /**
