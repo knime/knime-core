@@ -92,6 +92,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.TableColumn;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
@@ -105,6 +106,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.tableview.TableRowHeaderView;
 import org.knime.core.node.tableview.TableView;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.ViewUtils;
@@ -1672,7 +1674,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             });
         }
 
-        // set this - even before displaying it
+         // set this - even before displaying it
         m_previewTable = table;
 
         ViewUtils.invokeLaterInEDT(new Runnable() {
@@ -1680,6 +1682,22 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             public void run() {
                 // set the new table in the view
                 m_previewTableView.setDataTable(table);
+                if (table != null) {
+                    final TableColumn column = m_previewTableView.getHeaderTable().getColumnModel().getColumn(0);
+                    // bug fix 4418 (to be removed for 2.9): http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=4418
+                    ViewUtils.invokeLaterInEDT(new Runnable() {
+                        @Override
+                        public void run() {
+                            column.setMinWidth(75);
+                            column.setWidth(75);
+                            column.setPreferredWidth(75);
+                            TableRowHeaderView headerTable = m_previewTableView.getHeaderTable();
+                            Dimension newSize = new Dimension(75, 0);
+                            headerTable.setPreferredScrollableViewportSize(newSize);
+                        }
+                    });
+                }
+
 
                 // properly dispose of the old table
                 if (oldTable != null) {
