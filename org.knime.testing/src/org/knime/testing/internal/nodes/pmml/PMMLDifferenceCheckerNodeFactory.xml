@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="./pmmldiff.png" type="Other" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+    <name>PMML Difference Checker</name>
+    
+    <shortDescription>
+        This node checks two PMML documents for equality without caring for the order of XML nodes in the document.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+            The node recursively compares PMML documents and produces an error when it detects differences.
+            Differences are missing attributes or nodes and different attribute values or node content. The order of
+            XML nodes in the document does not affect the outcome of the equality check.
+            Integers and double values that are the same are also treated as same (e.g. "1" and "1.0").
+        </intro>
+        <option name="Check Data Dictionary">Determines whether the data dictionaries are included in the equality check</option>
+        <option name="Check Transformation Dictionary">Determines whether the transformation dictionaries are included in the equality check</option>
+        <option name="Check Header">Determines whether the headers are included in the equality check</option>
+        <option name="Check Mining Build Task">Determines whether the mining build tasks are included in the equality check</option>
+        <option name="Check Model Verification">Determines whether model verifications are included in the equality check</option>
+        <option name="Check Extensions">Determines whether extension elements are included in the equality check</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="PMML document 1">A PMML document</inPort>
+        <inPort index="1" name="PMML document 2">A PMML document</inPort>
+    </ports>    
+</knimeNode>

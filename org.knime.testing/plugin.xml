@@ -86,6 +86,12 @@
             expert-flag="false"
             factory-class="org.knime.testing.node.config.TestConfigNodeFactory"
             id="org.knime.testing.node.config.TestConfigNodeFactory">
+      </node>
+      <node
+            category-path="/testing"
+            expert-flag="false"
+            factory-class="org.knime.testing.internal.nodes.pmml.PMMLDifferenceCheckerNodeFactory"
+            id="org.knime.testing.internal.nodes.pmml.PMMLDifferenceCheckerNodeFactory">
       </node>     
    </extension>
    <extension
