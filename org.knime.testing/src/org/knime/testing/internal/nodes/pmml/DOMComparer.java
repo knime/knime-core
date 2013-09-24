@@ -51,6 +51,7 @@ package org.knime.testing.internal.nodes.pmml;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -92,6 +93,21 @@ public final class DOMComparer {
         // Different names means different nodes
         if (!node1.getNodeName().equals(node2.getNodeName())) {
             return new CompareResult(node1, depth, false);
+        }
+        
+        // Check attributes
+        NamedNodeMap attributes1 = node1.getAttributes();
+        NamedNodeMap attributes2 = node2.getAttributes();
+        
+        if (attributes1.getLength() != attributes2.getLength()) {
+        	return new CompareResult(node1, depth, false);
+        } else {
+        	for (int i = 0; i < attributes1.getLength(); i++) {
+        		Node attr = attributes1.item(i);
+        		if (!attr.isEqualNode(attributes2.getNamedItem(attr.getNodeName()))) {
+        			return new CompareResult(node1, depth, false);
+        		}
+        	}
         }
 
         NodeList children1 = node1.getChildNodes();
