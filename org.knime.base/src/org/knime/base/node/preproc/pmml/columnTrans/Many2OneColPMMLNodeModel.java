@@ -104,7 +104,6 @@ public class Many2OneColPMMLNodeModel extends NodeModel {
         RegExpPattern
     }
 
-
     /**The port were the  model expects the in data.*/
     public static final int DATA_IN_PORT = 0;
 
@@ -248,6 +247,10 @@ public class Many2OneColPMMLNodeModel extends NodeModel {
 
 
         if (m_pmmlEnabled) {
+            if (IncludeMethod.valueOf(m_includeMethod.getStringValue()) == IncludeMethod.RegExpPattern) {
+                setWarningMessage("Regular Expressions are not supported in PMML. "
+                    + "The generated PMML document is invalid.");
+            }
             // the optional PMML in port (can be null)
             PMMLPortObject inPMMLPort = (PMMLPortObject)inObjects[1];
 
@@ -264,7 +267,8 @@ public class Many2OneColPMMLNodeModel extends NodeModel {
             }
 
             PMMLMany2OneTranslator trans = new PMMLMany2OneTranslator(
-                    cellFactory.getAppendedColumnName(), sourceColNames);
+                    cellFactory.getAppendedColumnName(), sourceColNames,
+                    IncludeMethod.valueOf(m_includeMethod.getStringValue()));
 
             PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
                     inPMMLPort, outData.getDataTableSpec());

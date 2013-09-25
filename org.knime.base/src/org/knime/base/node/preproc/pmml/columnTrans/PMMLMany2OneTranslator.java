@@ -55,6 +55,7 @@ import org.dmg.pmml.DerivedFieldDocument.DerivedField;
 import org.dmg.pmml.LocalTransformationsDocument.LocalTransformations;
 import org.dmg.pmml.OPTYPE;
 import org.dmg.pmml.TransformationDictionaryDocument.TransformationDictionary;
+import org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeModel.IncludeMethod;
 import org.knime.core.node.port.pmml.preproc.PMMLPreprocTranslator;
 
 
@@ -70,15 +71,28 @@ public class PMMLMany2OneTranslator implements PMMLPreprocTranslator {
 
     private String m_appendedCol;
     private String[] m_sourceCols;
+    private IncludeMethod m_method;
 
     /**
      * Constructor for PMMLMany2OneTranslator.
      * @param appendedCol The name of the column that is appended to the input table
      * @param sourceCols The columns that are evaluated to determine the content of the appended column
+     * @param method How the columns should be condensed into one
+     * @since 2.8
      */
-    public PMMLMany2OneTranslator(final String appendedCol, final String[] sourceCols) {
+    public PMMLMany2OneTranslator(final String appendedCol, final String[] sourceCols, final IncludeMethod method) {
         m_appendedCol = appendedCol;
         m_sourceCols = sourceCols.clone();
+        m_method = method;
+    }
+
+    /**
+     * Constructor for PMMLMany2OneTranslator using <code>IncludeMethod.Binary</code>.
+     * @param appendedCol The name of the column that is appended to the input table
+     * @param sourceCols The columns that are evaluated to determine the content of the appended column
+     */
+    public PMMLMany2OneTranslator(final String appendedCol, final String[] sourceCols) {
+        this(appendedCol, sourceCols, IncludeMethod.Binary);
     }
 
     /**
@@ -127,7 +141,15 @@ public class PMMLMany2OneTranslator implements PMMLPreprocTranslator {
             Apply innerIf = ifApply.addNewApply();
             innerIf.setFunction("equal");
             innerIf.addNewFieldRef().setField(col);
-            innerIf.addNewConstant().setStringValue("1");
+            if (m_method == IncludeMethod.Maximum || m_method == IncludeMethod.Minimum) {
+                Apply a = innerIf.addNewApply();
+                a.setFunction(IncludeMethod.Maximum == m_method ? "max" : "min");
+                for (String s : m_sourceCols) {
+                    a.addNewFieldRef().setField(s);
+                }
+            } else { // if (m_method == IncludeMethod.Binary) {
+                innerIf.addNewConstant().setStringValue("1");
+            }
             ifApply.addNewConstant().setStringValue(col);
             parentApply = ifApply;
         }
