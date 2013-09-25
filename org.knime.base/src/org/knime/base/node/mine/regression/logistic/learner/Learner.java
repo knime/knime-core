@@ -98,7 +98,7 @@ final class Learner {
      * @param spec The {@link PMMLPortObjectSpec} of the output table.
      */
     Learner(final PMMLPortObjectSpec spec) {
-        this(spec, 30, 1e-8);
+        this(spec, 30, 1e-14);
     }
 
     /**

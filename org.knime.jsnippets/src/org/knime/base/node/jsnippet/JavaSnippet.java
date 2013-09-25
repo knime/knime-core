@@ -349,34 +349,33 @@ public final class JavaSnippet {
      * @return file object of a jar file with all compiled manipulators
      * @throws IOException if jar file cannot be created
      */
-    private File createJSnippetJarFile() throws IOException {
-            File jarFile = new File(m_tempClassPathDir, "jsnippet.jar");
-            JarOutputStream jar = new JarOutputStream(new FileOutputStream(jarFile));
+    private static File createJSnippetJarFile() throws IOException {
+        File jarFile = FileUtil.createTempFile("jsnippet", ".jar", new File(KNIMEConstants.getKNIMETempDir()), true);
+        JarOutputStream jar = new JarOutputStream(new FileOutputStream(jarFile));
 
-            Collection<Object> classes = new ArrayList<Object>();
-            classes.add(AbstractJSnippet.class);
-            classes.add(Abort.class);
-            classes.add(Cell.class);
-            classes.add(ColumnException.class);
-            classes.add(FlowVariableException.class);
-            classes.add(Type.class);
-            classes.add(TypeException.class);
-            classes.add(NodeLogger.class);
+        Collection<Object> classes = new ArrayList<Object>();
+        classes.add(AbstractJSnippet.class);
+        classes.add(Abort.class);
+        classes.add(Cell.class);
+        classes.add(ColumnException.class);
+        classes.add(FlowVariableException.class);
+        classes.add(Type.class);
+        classes.add(TypeException.class);
+        classes.add(NodeLogger.class);
 
-            // create tree structure for classes
-            DefaultMutableTreeNode root = createTree(classes);
-            try {
-                createJar(root, jar, null);
-            } finally {
-                jar.close();
-            }
-
+        // create tree structure for classes
+        DefaultMutableTreeNode root = createTree(classes);
+        try {
+            createJar(root, jar, null);
+        } finally {
+            jar.close();
+        }
 
         return jarFile;
     }
 
 
-    private DefaultMutableTreeNode createTree(
+    private static DefaultMutableTreeNode createTree(
             final Collection<? extends Object> classes) {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("build");
         for (Object o : classes) {
@@ -400,7 +399,7 @@ public final class JavaSnippet {
     }
 
 
-    private DefaultMutableTreeNode getChild(final DefaultMutableTreeNode curr,
+    private static DefaultMutableTreeNode getChild(final DefaultMutableTreeNode curr,
             final String p) {
         for (int i = 0; i < curr.getChildCount(); i++) {
             DefaultMutableTreeNode child =
@@ -413,7 +412,7 @@ public final class JavaSnippet {
     }
 
 
-    private void createJar(final DefaultMutableTreeNode node,
+    private static void createJar(final DefaultMutableTreeNode node,
             final JarOutputStream jar,
             final String path) throws IOException {
         Object o = node.getUserObject();

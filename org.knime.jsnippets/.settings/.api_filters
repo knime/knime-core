@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.jsnippets" version="2">
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulationNodeDialog.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeDialog">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeDialog"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulationNodeFactory.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulationNodeModel.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeModel">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeModel"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulationSettings.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulationSettings">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulationSettings"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulatorProvider.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulatorProvider">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulatorProvider"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

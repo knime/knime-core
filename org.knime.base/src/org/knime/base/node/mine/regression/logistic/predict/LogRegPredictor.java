@@ -51,14 +51,17 @@
 package org.knime.base.node.mine.regression.logistic.predict;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLPCell;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLParameter;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.core.data.DataCell;
@@ -72,7 +75,9 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 import Jama.Matrix;
@@ -83,6 +88,7 @@ import Jama.Matrix;
  * @author Heiko Hofer
  */
 public final class LogRegPredictor extends AbstractCellFactory {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(LogRegPredictor.class);
     private PMMLGeneralRegressionContent m_content;
     private PPMatrix m_ppMatrix;
     /** A mapping of the parameter name to its index of the
@@ -101,6 +107,11 @@ public final class LogRegPredictor extends AbstractCellFactory {
     // Number of Cols: numTargetCategories
     private Matrix m_beta = null;
     private boolean m_includeProbs;
+    /** maps the indices of the values from m_targetCategories to the domain values of the target column. */
+    private Map<Integer, Integer> m_targetCategoryIndex;
+    /** the number of domain values of the target column. */
+    private int m_targetDomainValuesCount;
+
 
     /**
      * Creates the spec of the output if possible.
@@ -170,11 +181,12 @@ public final class LogRegPredictor extends AbstractCellFactory {
             if (!targetColSpec.getDomain().hasValues()) {
                 return null;
             }
-            List<DataCell> targetValues = new ArrayList<DataCell>();
-            targetValues.addAll(targetColSpec.getDomain().getValues());
-            Collections.sort(targetValues,
-                    targetColSpec.getType().getComparator());
-            for (DataCell value : targetValues) {
+            List<DataCell> targetCategories = new ArrayList<DataCell>();
+            targetCategories.addAll(targetColSpec.getDomain().getValues());
+            Collections.sort(targetCategories,
+                targetColSpec.getType().getComparator());
+
+            for (DataCell value : targetCategories) {
                 String name = "P(" + targetCol + "=" + value.toString() + ")";
                 String newColName =
                         DataTableSpec.getUniqueColumnName(tableSpec, name);
@@ -246,12 +258,11 @@ public final class LogRegPredictor extends AbstractCellFactory {
         }
 
         m_trainingSpec = portSpec.getDataTableSpec();
-        DataColumnSpec targetCol =
-            m_trainingSpec.getColumnSpec(targetVariableName);
-        m_targetCategories = new ArrayList<DataCell>();
-        m_targetCategories.addAll(targetCol.getDomain().getValues());
-        Collections.sort(m_targetCategories,
-                targetCol.getType().getComparator());
+        DataColumnSpec targetColSpec = m_trainingSpec.getColumnSpec(targetVariableName);
+
+        m_targetCategories = determineTargetCategories(targetColSpec, content);
+        m_targetCategoryIndex = createTargetCategoryToOutputMap(m_targetCategories, targetColSpec);
+        m_targetDomainValuesCount = targetColSpec.getDomain().getValues().size();
 
         m_values = new HashMap<String, List<DataCell>>();
 
@@ -267,6 +278,72 @@ public final class LogRegPredictor extends AbstractCellFactory {
         m_beta = getBetaMatrix();
     }
 
+
+
+    /**
+     * Create the mapping from the indices of the values from m_targetCategories to
+     * the domain values of the target column.
+     * @param targetCategories the target categories from PMML general regression
+     * @param targetColSpec the spec of the target column
+     * @return the mapping from the indices of the values from m_targetCategories to
+     * the domain values of the target column.
+     */
+    private Map<Integer, Integer> createTargetCategoryToOutputMap(final List<DataCell> targetCategories,
+        final DataColumnSpec targetColSpec) {
+        Map<Integer, Integer> targetCategoryIndex = new HashMap<Integer, Integer>();
+        List<DataCell> domainValues = new ArrayList<DataCell>();
+        domainValues.addAll(targetColSpec.getDomain().getValues());
+        int i = 0;
+        for (DataCell cell : targetCategories) {
+            int index = domainValues.indexOf(cell);
+            targetCategoryIndex.put(i, index);
+            i++;
+        }
+        return targetCategoryIndex;
+    }
+
+
+    /**
+     * Retrieve the target values from the PMML model.
+     * @throws InvalidSettingsException if PMML model is inconsistent or ambiguous
+     */
+    private static List<DataCell> determineTargetCategories(final DataColumnSpec targetCol,
+            final PMMLGeneralRegressionContent content) throws InvalidSettingsException {
+        List<DataCell> targetCategories = new ArrayList<DataCell>();
+        targetCategories.addAll(targetCol.getDomain().getValues());
+        Collections.sort(targetCategories,
+                targetCol.getType().getComparator());
+        // Collect target categories from model
+        Set<String> modelTargetCategories = new HashSet<String>();
+        for (PMMLPCell cell : content.getParamMatrix()) {
+            modelTargetCategories.add(cell.getTargetCategory());
+        }
+        String targetReferenceCategory = content.getTargetReferenceCategory();
+        if (targetReferenceCategory == null || targetReferenceCategory.isEmpty()) {
+            if (targetCategories.size() == modelTargetCategories.size() + 1) {
+                targetReferenceCategory = targetCategories.get(targetCategories.size() - 1).toString();
+                // the last target category is the target reference category
+                LOGGER.debug("The target reference category is not explicitly set in PMML. Automatically choose : "
+                        + targetReferenceCategory);
+            } else {
+                throw new InvalidSettingsException("Please set the attribute \"targetReferenceCategory\" of the"
+                        + "\"GeneralRegression\" element in the PMML file.");
+            }
+        }
+        modelTargetCategories.add(targetReferenceCategory);
+        // Remove all target categories not found in the logistic regression model. When PMML is load from file the
+        // spec of the target column may contain more domain values than used for training the
+        // logistic regression model.
+        for (Iterator<DataCell> iter = targetCategories.iterator(); iter.hasNext();) {
+            String str = iter.next().toString();
+            if (!modelTargetCategories.contains(str)) {
+                iter.remove();
+            }
+        }
+        return targetCategories;
+    }
+
+
     /**
      * {@inheritDoc}
      */
@@ -276,11 +353,11 @@ public final class LogRegPredictor extends AbstractCellFactory {
             return createMissingOutput();
         }
 
-        int numTargetCategories = m_targetCategories.size();
-
         DataCell[] cells = m_includeProbs
-                                ? new DataCell[1 + numTargetCategories]
+                                ? new DataCell[1 + m_targetDomainValuesCount]
                                 : new DataCell[1];
+        Arrays.fill(cells, new IntCell(0));
+
         // column vector
         Matrix x = new Matrix(1, m_parameters.size());
         for (int i = 0; i < m_parameters.size(); i++) {
@@ -346,7 +423,7 @@ public final class LogRegPredictor extends AbstractCellFactory {
 
         if (m_includeProbs) {
             // compute probabilities of the target categories
-            for (int i = 0; i < numTargetCategories; i++) {
+            for (int i = 0; i < m_targetCategories.size(); i++) {
                 // test if calculation would overflow
                 boolean overflow = false;
                 for (int k = 0; k < r.getColumnDimension(); k++) {
@@ -359,9 +436,9 @@ public final class LogRegPredictor extends AbstractCellFactory {
                     for (int k = 0; k < r.getColumnDimension(); k++) {
                         sum += Math.exp(r.get(0, k) - r.get(0, i));
                     }
-                    cells[i + 1] = new DoubleCell(1.0 / sum);
+                    cells[m_targetCategoryIndex.get(i) + 1] = new DoubleCell(1.0 / sum);
                 } else {
-                    cells[i + 1] = new DoubleCell(0);
+                    cells[m_targetCategoryIndex.get(i) + 1] = new DoubleCell(0);
                 }
             }
         }

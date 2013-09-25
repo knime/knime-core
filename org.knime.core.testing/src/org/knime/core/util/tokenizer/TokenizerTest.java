@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 
 /**
  * JUnit test for the <code>Tokenizer</code>.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public final class TokenizerTest extends TestCase {
@@ -36,7 +36,7 @@ public final class TokenizerTest extends TestCase {
      * System entry point calls the
      * <code>junit.textui.TestRunner.run(TokenizerTest.class)</code> to
      * start this <code>TestCase</code>.
-     * 
+     *
      * @param args Command line parameter(s).
      */
     public static void main(final String[] args) {
@@ -53,7 +53,7 @@ public final class TokenizerTest extends TestCase {
         // The default doesn't support any comment, delimiter, or quotes.
         // So, this string should come back in one piece.
         String token;
-        final String inputString = 
+        final String inputString =
             "123,234,\",,3 4 5\n,'456'\n\na�?#~\\,,\n\n";
         Tokenizer ft = new Tokenizer(new StringReader(inputString));
 
@@ -61,7 +61,6 @@ public final class TokenizerTest extends TestCase {
         assertEquals(token, "123,234,\",,3 4 5\n,'456'\n\na�?#~\\,,\n\n");
         token = ft.nextToken();
         assertNull(token);
-        System.out.println("Tokenizer constructor: Done.");
     }
 
     /**
@@ -88,8 +87,6 @@ public final class TokenizerTest extends TestCase {
         // once more
         ft.setSettings(ft.getSettings());
         assertEquals(ftsFirst, ft.getSettings().toString());
-        System.out.println("Tokenizer SetSettings: Done.");
-
     }
 
     /**
@@ -144,9 +141,6 @@ public final class TokenizerTest extends TestCase {
         } catch (IllegalStateException ise) {
             // ending up here is fine.
         }
-
-        System.out.println("Tokenizer ResetToDefault: Done.");
-
     } // testResetToDefault()
 
     /**
@@ -158,7 +152,7 @@ public final class TokenizerTest extends TestCase {
      */
     public void testNextToken() throws TokenizerException {
         String token;
-        final String inputString = 
+        final String inputString =
             "1,2\n\n\n\n3\t����,4\b\r\"�^�`'#";
         StringReader strReader = new StringReader(inputString);
         TokenizerSettings fts = new TokenizerSettings();
@@ -192,8 +186,6 @@ public final class TokenizerTest extends TestCase {
             token = ft.nextToken();
             assertNull(token);
         }
-        System.out.println("Tokenizer NextToken: Done.");
-
     }
 
     /**
@@ -236,8 +228,6 @@ public final class TokenizerTest extends TestCase {
         ft.pushBack();
         token = ft.nextToken();
         assertNull(token);
-
-        System.out.println("Tokenizer PushBack: Done.");
     } // testPushBack()
 
     /**
@@ -273,10 +263,10 @@ public final class TokenizerTest extends TestCase {
         token = ft.nextToken();
         assertNull(token);
 
- 
+
         // reset stream
         strReader = new StringReader(inputString);
-        
+
         ft = new Tokenizer(strReader);
         fts = new TokenizerSettings();
         fts.addDelimiterPattern("\n", false, false, false);
@@ -374,9 +364,6 @@ public final class TokenizerTest extends TestCase {
         assertFalse(ft.lastTokenWasQuoted());
         assertNull(ft.getLastQuoteBeginPattern());
         assertNull(ft.getLastQuoteEndPattern());
-
-        System.out.println("Tokenizer LastTokenWasQuoted: Done.");
-
     } // testLastTokenWasQuoted()
 
     /**
@@ -491,9 +478,6 @@ public final class TokenizerTest extends TestCase {
         token = ft.nextToken();
         assertNull(token);
         assertFalse(ft.lastTokenWasQuoted());
-
-        System.out.println("Tokenizer AddQuotePattern: Done.");
-
     } // testAddQuotePattern()
 
     /**
@@ -567,7 +551,7 @@ public final class TokenizerTest extends TestCase {
         token = ft.nextToken();
         assertNull(token);
         // delimiter coming back as separate token.
-        
+
         // = "123, 234, , , , 456,,567, 678, , 789, end"
         // reset stream
         strReader = new StringReader(inputString);
@@ -584,15 +568,15 @@ public final class TokenizerTest extends TestCase {
         token = ft.nextToken();
         assertEquals(token, ", ");
         token = ft.nextToken();
-        assertEquals(token, ""); 
+        assertEquals(token, "");
         token = ft.nextToken();
         assertEquals(token, ", ");
         token = ft.nextToken();
-        assertEquals(token, ""); 
-        token = ft.nextToken(); 
+        assertEquals(token, "");
+        token = ft.nextToken();
         assertEquals(token, ", ");
         token = ft.nextToken();
-        assertEquals(token, ""); 
+        assertEquals(token, "");
         token = ft.nextToken();
         assertEquals(token, ", ");
         token = ft.nextToken();
@@ -604,7 +588,7 @@ public final class TokenizerTest extends TestCase {
         token = ft.nextToken();
         assertEquals(token, ", ");
         token = ft.nextToken();
-        assertEquals(token, ""); 
+        assertEquals(token, "");
         token = ft.nextToken();
         assertEquals(token, ", ");
         token = ft.nextToken();
@@ -615,7 +599,7 @@ public final class TokenizerTest extends TestCase {
         assertEquals(token, "end");
         token = ft.nextToken();
         assertNull(token);
-        
+
     }
 
     /**
@@ -642,7 +626,7 @@ public final class TokenizerTest extends TestCase {
         token = ft.nextToken();
         assertEquals(token, "+");
         token = ft.nextToken();
-        assertEquals(token, "");        
+        assertEquals(token, "");
         token = ft.nextToken();
         assertEquals(token, "+");
         token = ft.nextToken();
@@ -722,8 +706,8 @@ public final class TokenizerTest extends TestCase {
         token = ft.nextToken();
         assertEquals(token, "7");
 
-        
-        // ensure line continuation chars between tokens don't break combining 
+
+        // ensure line continuation chars between tokens don't break combining
         inputString = "123---234-345--\\\n-243";
         strReader = new StringReader(inputString);
         fts = new TokenizerSettings();
@@ -752,8 +736,6 @@ public final class TokenizerTest extends TestCase {
         assertEquals(token, "243");
         token = ft.nextToken();
         assertNull(token);
-        
-        System.out.println("Tokenizer AddDelimiterPattern: Done.");
     } // testAddDelimiterPatter()
 
     /**
@@ -837,9 +819,6 @@ public final class TokenizerTest extends TestCase {
         assertEquals(token, "234/*comment*/345");
         token = ft.nextToken();
         assertNull(token);
-
-        System.out.println("Tokenizer AddCommentPattern: Done.");
-
     } // testAddCommentPattern()
 
     /**
@@ -901,9 +880,6 @@ public final class TokenizerTest extends TestCase {
         } catch (IllegalArgumentException iae) {
             // we should end up here.
         }
-
-        System.out.println("TokenizerSettings PatternCombinations: Done.");
-
     } // testPatternCombinations()
 
     /**
@@ -1061,7 +1037,7 @@ public final class TokenizerTest extends TestCase {
      * handle it. Also tests if a change of the cont character has an effect.
      * @throws TokenizerException if somethings goes wrong.
      */
-    public void testSetLineContinuationCharacter() 
+    public void testSetLineContinuationCharacter()
             throws TokenizerException {
         String token;
         String inputString;
@@ -1162,9 +1138,6 @@ public final class TokenizerTest extends TestCase {
         } catch (IllegalStateException ise) {
             // ending up here is gooood.
         }
-
-        System.out.println("Tokenizer SetLineContinuationCharacter: Done.");
-
     } // testSetLineContinuationCharacter()
 
     /**
@@ -1172,7 +1145,7 @@ public final class TokenizerTest extends TestCase {
      * Also, after EOF, and after changing it - and always.
      * @throws TokenizerException if somethings goes wrong.
      */
-    public void testGetLineContinuationCharacter() 
+    public void testGetLineContinuationCharacter()
             throws TokenizerException {
         String inputString = "123";
         StringReader strReader = new StringReader(inputString);
@@ -1201,18 +1174,15 @@ public final class TokenizerTest extends TestCase {
         // should be still the same
         fts = ft.getSettings();
         assertEquals(fts.getLineContinuationCharacter(), "g");
-
-        System.out.println("Tokenizer GetLineContinuationCharacter: Done.");
-
     }
-    
+
     public void testNewLineInQuotes() {
         TokenizerSettings fts = new TokenizerSettings();
         fts.addDelimiterPattern(",", false, false, false);
         fts.addDelimiterPattern("\n", false, true, false);
         fts.addQuotePattern("\"", "\"");
         String inputString = "A,B,\"C\"\n\"\",\"first\nsecond\"\n\"\n\",\"KNIME\n\",\"\nData\",\"\nfoo\n\",D,F";
-        
+
         StringReader stringReader = new StringReader(inputString);
         Tokenizer ft = new Tokenizer(stringReader);
         ft.setSettings(fts);
@@ -1225,7 +1195,7 @@ public final class TokenizerTest extends TestCase {
         token = ft.nextToken();
         assertEquals(token, "C");
         token = ft.nextToken();
-        assertEquals(token, "\n");        
+        assertEquals(token, "\n");
         token = ft.nextToken();
         assertEquals(token, "");
         try {
@@ -1248,7 +1218,7 @@ public final class TokenizerTest extends TestCase {
         token = ft.nextToken();
         assertEquals(token, "C");
         token = ft.nextToken();
-        assertEquals(token, "\n");        
+        assertEquals(token, "\n");
         token = ft.nextToken();
         assertEquals(token, "");
         token = ft.nextToken();
@@ -1284,7 +1254,7 @@ public final class TokenizerTest extends TestCase {
         assertEquals(token, "C");
         token = ft.nextToken();
         assertEquals(token, "\n");  // delimiter
-        assertTrue(ft.lastTokenWasDelimiter());        
+        assertTrue(ft.lastTokenWasDelimiter());
         token = ft.nextToken();
         assertEquals(token, ",");
         assertFalse(ft.lastTokenWasDelimiter());  // not the delimiter
@@ -1295,7 +1265,7 @@ public final class TokenizerTest extends TestCase {
         assertEquals(token, " \tA\tB");
         token = ft.nextToken();
         assertEquals(token, "\n");  // delimiter
-        assertTrue(ft.lastTokenWasDelimiter());        
+        assertTrue(ft.lastTokenWasDelimiter());
         token = ft.nextToken();
         assertEquals(token, "erster");
         token = ft.nextToken();
@@ -1304,7 +1274,7 @@ public final class TokenizerTest extends TestCase {
         assertEquals(token, " AB");
         token = ft.nextToken();
         assertEquals(token, "\n");  // delimiter
-        assertTrue(ft.lastTokenWasDelimiter());        
+        assertTrue(ft.lastTokenWasDelimiter());
         token = ft.nextToken();
         assertEquals(token, "erster");
         token = ft.nextToken();
@@ -1313,9 +1283,7 @@ public final class TokenizerTest extends TestCase {
         assertEquals(token, " \nA\nB");
         token = ft.nextToken();
         assertEquals(token, "\n");  // delimiter
-        assertTrue(ft.lastTokenWasDelimiter());        
-
-        System.out.println("Tokenizer NewLinesInQuotes: Done.");
+        assertTrue(ft.lastTokenWasDelimiter());
     }
 
     /**
@@ -1453,13 +1421,10 @@ public final class TokenizerTest extends TestCase {
         assertEquals(token, "");
         token = ft.nextToken();
         assertEquals(token, ";");
-        token = ft.nextToken(); 
+        token = ft.nextToken();
         assertEquals(token, "567");
         token = ft.nextToken();
         assertNull(token);
-        
-        System.out.println("Tokenizer CombineMultipleDelimiters: Done.");
-
     }
 
     /**
@@ -1486,7 +1451,7 @@ public final class TokenizerTest extends TestCase {
         token = ft.nextToken();
         assertNull(token);
 
-        
+
         // no ws chars - all spaces should appear
         inputString = "123 \t 234   345, 567";
         strReader = new StringReader(inputString);
@@ -1504,7 +1469,7 @@ public final class TokenizerTest extends TestCase {
         assertEquals(token, " 567");
         token = ft.nextToken();
         assertNull(token);
-        
+
         // space is a whitespace AND delimiter. Delimiter should win.
         inputString = "123  234 345";
         strReader = new StringReader(inputString);
@@ -1526,7 +1491,7 @@ public final class TokenizerTest extends TestCase {
         assertNull(token);
 
         // define '_' and '=' and '-' as whitespace
-        inputString = "=123=  _234_ =345= ---------------" 
+        inputString = "=123=  _234_ =345= ---------------"
                 + " ------1_2_3_4_5-------";
         strReader = new StringReader(inputString);
         fts = new TokenizerSettings();
@@ -1551,7 +1516,7 @@ public final class TokenizerTest extends TestCase {
         assertEquals(token, "1_2_3_4_5");
         token = ft.nextToken();
         assertNull(token);
-        
+
         // make sure whitespaces are not swallowed if quoted
         inputString = "\"123 \", \" 234\" ,  34 5 , \" 5 6 7 \"  , \"987 \" ";
         strReader = new StringReader(inputString);
@@ -1596,8 +1561,5 @@ public final class TokenizerTest extends TestCase {
         assertEquals(token, "5 6 7");
         token = ft.nextToken();
         assertNull(token);
-
-        System.out.println("Tokenizer AddWhiteSpaceCharacter: Done.");
-
     }
 } // TokenizerTest

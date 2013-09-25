@@ -1,75 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
-<knimeNode type="Manipulator" icon="./rule_engine_splitter.png" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+<knimeNode type="Manipulator" icon="./rule_engine_splitter.png"
+	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
 	<name>Rule-based Row Splitter</name>
 	<shortDescription>
 		 Splits the input table based on user-defined business rules
 	</shortDescription>
-	
+
 	<fullDescription>
-		<intro>This node takes a list of user-defined rules and tries to match them to each
-        row in the input table. Depending on a rule match and settings, the row will be sent to the first or second output table.
-        <p>
-        The comments start with <tt>//</tt>, and anything after that is not interpreted as a rule in that line.
-	 	Rules consist of a condition part (antecedent), which must evaluate to <i>true</i>
-        or <i>false</i>, and possibly an outcome (consequent, after the => symbol) that is ignored.
-        Each rule is represented by a line.
-        The most simple rule is a comparison between a column and another column, a constant number or string.
-        </p>
-        <p>
-        Columns are given by their name surrounded by $, numbers are given in the usual decimal representation. Note that
-        strings must not contain (double-)quotes. The flow variables are represented by <b>$${</b>TypeCharacterAndFlowVarName<b>}$$</b>.
-        The TypeCharacter should be 'D' for double (real) values, 'I' for integer values and 'S' for strings.
-        </p>
-        <p>The logical expressions can (and should) be grouped with parentheses because there is no pre-defined
-        operator precedence for the logical connectives (NOT, AND, OR, XOR) (comparison operators always take precedence
-        over logical connectives).
-        All operators are case-sensitive.
-        The NOT operator negates all following expressions, not just the direct following expression.
-        </p>
-        <p>The <tt>ROWID</tt> represents the row key string, the <tt>ROWINDEX</tt> is a the index of the row (first row has <tt>0</tt> value),
-        while <tt>ROWCOUNT</tt> stands for the number of rows in the table.</p>
-        <p>Some example rules (each should be in one line):</p>
-        <pre>
+		<intro>
+			This node takes a list of user-defined rules and tries to match them
+			to each row in the input table in the defined order. If a rule matches and the outcome is
+			<tt>TRUE</tt>, the row will be selected for inclusion in the first output table. If the first matching rule
+            yields <tt>FALSE</tt> the row will be included in the second output table.
+			If no rule matches this row will be put to the second output table (like when the last rule would be <tt>TRUE => FALSE</tt>).
+            The roles of first and second output table can be exchanged, see option below.
+			<p>
+				Each rule is represented by a line.
+				The comments start with
+				<tt>//</tt>
+				in a line, and anything after that is not interpreted as a rule in
+				that line.
+				Rules consist of a condition part (antecedent), which must
+				evaluate to
+				<i>true</i>
+				or
+				<i>false</i>
+				, and an outcome (consequent, after the => symbol) which is either
+				<tt>TRUE</tt>
+				or
+				<tt>FALSE</tt>
+				.
+			</p>
+			<p>
+				If no rule matches, the outcome is treated as if it were
+				<tt>FALSE</tt>
+				.
+			</p>
+			<p>
+				Columns are given by their name surrounded by $, numbers are given
+				in the usual decimal representation. Note that strings must not
+				contain (double-)quotes. The flow variables are
+				represented by
+				<b>$${</b>
+				TypeCharacterAndFlowVarName
+				<b>}$$</b>
+				.
+				The TypeCharacter should be 'D' for double (real) values, 'I' for
+				integer values and 'S' for strings.
+			</p>
+			<p>The logical expressions can be grouped with parentheses. The
+				precedence rules for them are the following: <tt>NOT</tt> binds most, <tt>AND</tt>,
+				<tt>XOR</tt> and finally <tt>OR</tt> the least.
+				Comparison operators always take
+				precedence over logical connectives.
+				All operators (and their names)
+				are case-sensitive.
+			</p>
+			<p>
+				The
+				<tt>ROWID</tt>
+				represents the row key string, the
+				<tt>ROWINDEX</tt>
+				is a the index of the row (first row has
+				<tt>0</tt>
+				value), while
+				<tt>ROWCOUNT</tt>
+				stands for the number of rows in the table.
+			</p>
+			<p>Some example rules (each should be in one line):</p>
+			<pre>
 // This is a comment
-$Col0$ > 5
+$Col0$ > 0 => TRUE
 </pre>
-        When the value in Col0 is greater than 5, it will match.
-<pre>
-$Col0$ = "Active" AND $Col1$ &lt;= 5
+			When the values in Col0 are greater than 0, we select the row to the
+			first outport (if no previous rule matched with FALSE outcome).
+			<pre>
+$Col0$ = "Active" AND $Col1$ &lt;= 5 => TRUE
 </pre>
-        You can combine conditions.
-<pre>
+			You can combine conditions.
+			<pre>
 $Col0$ LIKE "Market Street*" AND 
     ($Col1$ IN ("married", "divorced") 
-        OR $Col2$ > 40) => "Strange"
+        OR $Col2$ > 40) => FALSE
 </pre>
-        This way you can combine multiple conditions.
-<pre>
-$Col0$ CONTAINS $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$
+			With parentheses you can combine multiple conditions.
+			<pre>
+$Col0$ MATCHES $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$ =>
+    FALSE
 </pre>
-        The flow variables can be used with most operators.
-<pre>
-"Hello world" CONTAINS "ll+o" => "Always true"
-        </pre>
-        The regular expression ll+o (at least two ls followed by an o) will always be present in Hello, so this rule will match.
-        <p>
-        You can use either Ctrl+Space to insert predefined parts, or select them from the upper controls.
-        </p>
+			The flow variables, table constants can also appear in conditions.
+			<p>
+				You can use either Ctrl+Space to insert predefined parts, or
+				select them from the upper controls.
+			</p>
 		</intro>
-		
-		<option name="Column List">Available columns, which can be used as variables in a rule.</option>
-		<option name="Flow Variable List">Available flow variables, which can be used as variables in a rule.</option>
+
+		<option name="Column List">Available columns, which can be used as variables
+			in a rule.
+		</option>
+		<option name="Flow Variable List">Available flow variables, which can be used as
+			variables in a rule.
+		</option>
 		<option name="Category">The operator categories.</option>
-		<option name="Function">A list of valid operators in the selected category.</option>
+		<option name="Function">A list of valid operators in the selected
+			category.
+		</option>
 		<option name="Description">Short help about the operator.</option>
-		<option name="Expression">The rule editor. You can complete the expressions with Ctrl+Space. Each row represents a rule. The background of the line signals errors (pink), or comments (yellow). The right side of the editor can show an error icon.</option>
-		<option name="any rule matches -> first, others second">The row will be included in the first output if any of the rules matches, the rest go to second.</option>
-		<option name="any rule matches -> second, others -> first">The row will be included in the second output if any of the rules matches, the rest go to first.</option>
+		<option name="Expression">The rule editor. You can complete the expressions
+            with Ctrl+Space. Each row represents a rule. A red background of the
+            line signals an error and the left side of the editor then shows an error icon.
+		</option>
+		<option
+			name="TRUE to first, FALSE to second output table">
+			A row will be included in the first output table if the first
+			rule that matches has TRUE outcome. If the first matching rule yields FALSE the row will go to the second
+            output table. If unchecked, the roles of the first and second output table will be switched.
+		</option>
+
 	</fullDescription>
-	
+
 	<ports>
-		<inPort index="0" name="To be filtered">Datatable from which to filter rows.</inPort>
-		<outPort index="0" name="Filtered">Datatable with rows matching any of the conditions, or matching none if that selected.</outPort>
-        <outPort index="1" name="Filtered Out">Datatable with rows not meeting the specified criteria</outPort>
+		<inPort index="0" name="Input table">Any data table that should be splitted</inPort>
+		<outPort index="0" name="First output">First output table with rows that are evaluated to TRUE</outPort>
+		<outPort index="1" name="Second output">Second output table with rows that are evaluated to FALSE</outPort>
 	</ports>
 </knimeNode>

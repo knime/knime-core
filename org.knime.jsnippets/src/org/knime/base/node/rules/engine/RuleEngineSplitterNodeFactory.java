@@ -64,8 +64,8 @@ public final class RuleEngineSplitterNodeFactory extends RuleEngineFilterNodeFac
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new RuleEngineNodeDialog("any rule matches -> first, others second",
-                "any rule matches -> second, others -> first");
+//        return new RuleEngineNodeDialog("TRUE to first, FALSE to second output table");
+        return new RuleEngineNodeDialog(RuleNodeSettings.RuleSplitter);
     }
 
     /**

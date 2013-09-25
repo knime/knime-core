@@ -229,9 +229,11 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 File portDir = portDirRef.getFile();
                 subProgress.setMessage("Cleaning directory " + portDir.getAbsolutePath());
                 FileUtil.deleteRecursively(portDir);
-                portDir.mkdir();
-                if (!portDir.isDirectory() || !portDir.canWrite()) {
-                    throw new IOException("Can not write port directory " + portDir.getAbsolutePath());
+                if (!portDir.mkdir() && !portDir.isDirectory()) {
+                    throw new IOException("Can not create port directory " + portDir.getAbsolutePath());
+                }
+                if (!portDir.canWrite()) {
+                    throw new IOException("Can not write to port directory " + portDir.getAbsolutePath());
                 }
                 savePort(node, portDir, singlePortSetting, savedTableIDs, subProgress, i, saveData);
             } else {

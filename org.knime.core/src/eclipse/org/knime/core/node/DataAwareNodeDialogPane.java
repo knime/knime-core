@@ -56,10 +56,11 @@ import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * Subclass of {@link NodeDialogPane} that requires the full input data to
- * define a configuration.
- *
- * <p>
- * Pending API! Not to be implemented (as of yet).
+ * define a configuration. Subclasses can overwrite both {@link #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])}
+ * and #loadSettingsFrom(NodeSettingsRO, PortObject[]). It depends then on the user selection whether or not the
+ * dialog is configured with data (upon opening the dialog the user is prompted whether he wants to execute upstream
+ * nodes). The default implementation of #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[]) throws an
+ * <code>NotConfigurableException</code>, indicating that the node requires all input data in order to be configured.
  *
  * @since 2.6
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland

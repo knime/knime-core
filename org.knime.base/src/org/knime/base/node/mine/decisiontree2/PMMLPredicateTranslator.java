@@ -72,15 +72,16 @@ public final class PMMLPredicateTranslator {
     private PMMLPredicateTranslator() {
         // hiding constructor of utility class
     }
+
     /**
      * @param predicate the predicate to export
      * @param node the Node element to add the predicate to
      */
-    public static void exportTo(final PMMLPredicate predicate,
-            final Node node) {
-        /** Is basically a duplicate of the other export methods
-         * but there is no common parent class and therefore the code is not
-         * really reusable. */
+    public static void exportTo(final PMMLPredicate predicate, final Node node) {
+        /**
+         * Is basically a duplicate of the other export methods but there is no common parent class and therefore the
+         * code is not really reusable.
+         */
         if (predicate instanceof PMMLFalsePredicate) {
             node.addNewFalse();
         } else if (predicate instanceof PMMLTruePredicate) {
@@ -105,8 +106,14 @@ public final class PMMLPredicateTranslator {
         }
     }
 
-    private static void initSimpleSetPred(final PMMLSimpleSetPredicate sp,
-            final SimpleSetPredicate setPred) {
+    /**
+     * Converts a {@link PMMLSimpleSetPredicate} ({@code sp}) to a {@link SimpleSetPredicate} ({@code setPred}).
+     *
+     * @param sp A {@link PMMLSimpleSetPredicate}.
+     * @param setPred The {@link SimpleSetPredicate} to initialize.
+     * @since 2.9
+     */
+    public static void initSimpleSetPred(final PMMLSimpleSetPredicate sp, final SimpleSetPredicate setPred) {
         setPred.setField(sp.getSplitAttribute());
         setPred.setBooleanOperator(getOperator(sp.getSetOperator()));
         ArrayType array = setPred.addNewArray();
@@ -132,8 +139,7 @@ public final class PMMLPredicateTranslator {
         xmlCursor.dispose();
     }
 
-    private static void initSimplePredicate(final PMMLSimplePredicate sp,
-            final SimplePredicate simplePred) {
+    private static void initSimplePredicate(final PMMLSimplePredicate sp, final SimplePredicate simplePred) {
         simplePred.setField(sp.getSplitAttribute());
         simplePred.setOperator(getOperator(sp.getOperator()));
         simplePred.setValue(sp.getThreshold());
@@ -143,11 +149,11 @@ public final class PMMLPredicateTranslator {
      * @param predicate the predicate to export
      * @param compound the CompundPredicate element to add the predicate to
      */
-    public static void exportTo(final PMMLPredicate predicate,
-            final CompoundPredicate compound) {
-        /** Is basically a duplicate of the other export methods
-         * but there is no common parent class and therefore the code is not
-         * really reusable. */
+    public static void exportTo(final PMMLPredicate predicate, final CompoundPredicate compound) {
+        /**
+         * Is basically a duplicate of the other export methods but there is no common parent class and therefore the
+         * code is not really reusable.
+         */
         if (predicate instanceof PMMLFalsePredicate) {
             compound.addNewFalse();
         } else if (predicate instanceof PMMLTruePredicate) {
@@ -176,24 +182,25 @@ public final class PMMLPredicateTranslator {
      * @param predicate the predicate to export
      * @param simpleRule the SimpleRule element to add the predicate to
      */
-    public static void exportTo(final PMMLPredicate predicate,
-            final SimpleRule simpleRule) {
-        throw new UnsupportedOperationException(
-            "SimpleRule exporting is not supported.");
+    public static void exportTo(final PMMLPredicate predicate, final SimpleRule simpleRule) {
+        throw new UnsupportedOperationException("SimpleRule exporting is not supported.");
     }
 
     /**
-     * @param predicate  the predicate to export
+     * @param predicate the predicate to export
      * @param compoundRule the CompoundRule element to add the predicate to
      */
-    public static void exportTo(final PMMLPredicate predicate,
-            final CompoundRule compoundRule) {
-        throw new UnsupportedOperationException(
-                "CompoundRule exporting is not supported.");
+    public static void exportTo(final PMMLPredicate predicate, final CompoundRule compoundRule) {
+        throw new UnsupportedOperationException("CompoundRule exporting is not supported.");
     }
 
-    private static SimplePredicate.Operator.Enum getOperator(
-            final PMMLOperator op) {
+    /**
+     * @param op A {@link PMMLOperator}.
+     * @return The {@link org.dmg.pmml.SimplePredicateDocument.SimplePredicate.Operator.Enum} equivalent of {@code op},
+     *         or {@code null}.
+     * @since 2.9
+     */
+    public static SimplePredicate.Operator.Enum getOperator(final PMMLOperator op) {
         switch (op) {
             case EQUAL:
                 return SimplePredicate.Operator.EQUAL;
@@ -215,8 +222,7 @@ public final class PMMLPredicateTranslator {
         return null;
     }
 
-    private static SimpleSetPredicate.BooleanOperator.Enum getOperator(
-            final PMMLSetOperator op) {
+    private static SimpleSetPredicate.BooleanOperator.Enum getOperator(final PMMLSetOperator op) {
         switch (op) {
             case IS_IN:
                 return SimpleSetPredicate.BooleanOperator.IS_IN;
@@ -226,8 +232,13 @@ public final class PMMLPredicateTranslator {
         return null;
     }
 
-    private static CompoundPredicate.BooleanOperator.Enum getOperator(
-            final PMMLBooleanOperator op) {
+    /**
+     * @param op A {@link PMMLBooleanOperator}.
+     * @return The {@link org.dmg.pmml.CompoundPredicateDocument.CompoundPredicate.BooleanOperator.Enum} equivalent of
+     *         {@code op}, or {@code null}.
+     * @since 2.9
+     */
+    public static CompoundPredicate.BooleanOperator.Enum getOperator(final PMMLBooleanOperator op) {
         switch (op) {
             case AND:
                 return CompoundPredicate.BooleanOperator.AND;
@@ -243,12 +254,12 @@ public final class PMMLPredicateTranslator {
 
     private static ArrayType.Type.Enum getType(final PMMLArrayType type) {
         switch (type) {
-        case INT:
-            return ArrayType.Type.INT;
-        case REAL:
-            return ArrayType.Type.REAL;
-        case STRING:
-            return ArrayType.Type.STRING;
+            case INT:
+                return ArrayType.Type.INT;
+            case REAL:
+                return ArrayType.Type.REAL;
+            case STRING:
+                return ArrayType.Type.STRING;
         }
         return null;
     }

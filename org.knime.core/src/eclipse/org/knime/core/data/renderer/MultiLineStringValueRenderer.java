@@ -54,6 +54,7 @@ import java.awt.Font;
 import javax.swing.SwingConstants;
 
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.StringValue;
 
 /**
  * This class renders strings that consist of more than one line.
@@ -136,6 +137,8 @@ public class MultiLineStringValueRenderer extends DefaultDataValueRenderer {
     protected void setValue(final Object value) {
         if (value == null) {
             super.setValue("?");
+        } else if (value instanceof StringValue) {
+            super.setValue(((StringValue)value).getStringValue());
         } else {
             super.setValue(value.toString());
         }

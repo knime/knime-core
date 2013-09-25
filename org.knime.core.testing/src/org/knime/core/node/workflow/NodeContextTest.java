@@ -163,7 +163,7 @@ public class NodeContextTest {
      */
     @Test
     public void testStack() {
-        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+        List<NodeContainer> containers = new ArrayList<NodeContainer>(wfm.getNodeContainers());
 
         NodeContext.pushContext(containers.get(0)); // Table Creator
         NodeContext.pushContext(containers.get(1)); // Shuffle
@@ -199,10 +199,10 @@ public class NodeContextTest {
      */
     @Test
     public void testStackWithMetanode() {
-        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+        List<NodeContainer> containers = new ArrayList<NodeContainer>(wfm.getNodeContainers());
 
         WorkflowManager metaNode = (WorkflowManager)containers.get(2); // this is the metanode
-        containers = new ArrayList<>(metaNode.getNodeContainers());
+        containers = new ArrayList<NodeContainer>(metaNode.getNodeContainers());
         NodeContext.pushContext(containers.get(0)); // Shuffle in metanode
         assertThat("Unexpected node container on top of context stack", NodeContext.getContext().getNodeContainer(),
                    is(containers.get(0)));
@@ -225,7 +225,7 @@ public class NodeContextTest {
      */
     @Test
     public void testPushContext() {
-        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+        List<NodeContainer> containers = new ArrayList<NodeContainer>(wfm.getNodeContainers());
 
         NodeContext.pushContext(containers.get(0)); // Table Creator
         NodeContext.pushContext(NodeContext.getContext()); // Table Creator
@@ -244,7 +244,7 @@ public class NodeContextTest {
      */
     @Test
     public void testContextInThreadpool() throws Exception {
-        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+        List<NodeContainer> containers = new ArrayList<NodeContainer>(wfm.getNodeContainers());
 
         NodeContext.pushContext(containers.get(0)); // Table Creator
 
@@ -295,7 +295,7 @@ public class NodeContextTest {
      */
     @Test
     public void testContextInAWTEventQueue() throws InterruptedException {
-        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+        List<NodeContainer> containers = new ArrayList<NodeContainer>(wfm.getNodeContainers());
 
         NodeContext.pushContext(containers.get(0)); // Table Creator
         final AtomicReference<NodeContext> ref = new AtomicReference<NodeContext>();
@@ -358,7 +358,7 @@ public class NodeContextTest {
      */
     @Test
     public void testRunnableWithContext() throws Exception {
-        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+        List<NodeContainer> containers = new ArrayList<NodeContainer>(wfm.getNodeContainers());
 
         NodeContext.pushContext(containers.get(0)); // Table Creator
         final AtomicReference<NodeContext> ref = new AtomicReference<NodeContext>();
@@ -397,7 +397,7 @@ public class NodeContextTest {
      */
     @Test
     public void testCallableWithContext() throws Exception {
-        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+        List<NodeContainer> containers = new ArrayList<NodeContainer>(wfm.getNodeContainers());
 
         NodeContext.pushContext(containers.get(0)); // Table Creator
         Callable<NodeContext> callable = new Callable<NodeContext>() {
@@ -434,7 +434,7 @@ public class NodeContextTest {
      */
     @Test
     public void testThreadWithContext() throws Exception {
-        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+        List<NodeContainer> containers = new ArrayList<NodeContainer>(wfm.getNodeContainers());
 
         NodeContext.pushContext(containers.get(0)); // Table Creator
         final AtomicReference<NodeContext> ref = new AtomicReference<NodeContext>();
@@ -469,7 +469,7 @@ public class NodeContextTest {
      */
     @Test
     public void testExecutorWithContext() throws Exception {
-        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+        List<NodeContainer> containers = new ArrayList<NodeContainer>(wfm.getNodeContainers());
 
         NodeContext.pushContext(containers.get(0)); // Table Creator
         final AtomicReference<NodeContext> ref = new AtomicReference<NodeContext>();
@@ -509,7 +509,7 @@ public class NodeContextTest {
      */
     @Test
     public void testExecutorServiceWithContext() throws Exception {
-        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+        List<NodeContainer> containers = new ArrayList<NodeContainer>(wfm.getNodeContainers());
 
         NodeContext.pushContext(containers.get(0)); // Table Creator
         final AtomicReference<NodeContext> ref = new AtomicReference<NodeContext>();
@@ -593,7 +593,7 @@ public class NodeContextTest {
      */
     @Test
     public void testSwingWorkerWithContext() throws Exception {
-        List<NodeContainer> containers = new ArrayList<>(wfm.getNodeContainers());
+        List<NodeContainer> containers = new ArrayList<NodeContainer>(wfm.getNodeContainers());
 
         NodeContext.pushContext(containers.get(0)); // Table Creator
         final AtomicReference<NodeContext> refInBackground = new AtomicReference<NodeContext>();

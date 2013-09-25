@@ -66,7 +66,8 @@ public class RuleEngineFilterNodeFactory extends NodeFactory<RuleEngineFilterNod
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new RuleEngineNodeDialog("include if any rule matches", "exclude if any rule matches");
+//        return new RuleEngineNodeDialog("include if first matching rule is TRUE");
+        return new RuleEngineNodeDialog(RuleNodeSettings.RuleFilter);
     }
 
     /**

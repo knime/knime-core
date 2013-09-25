@@ -111,6 +111,12 @@
 		    decimal separator for floating point numbers. It replaces the default 
 		    character '.' then.
 		    </option>
+        <option name="Line Ending">
+            In the tab "Advanced" you can select the line endings that are written to the file. Default value is the
+            system default value, which is system dependent (LF on Linux/Unix systems, CR+LF on Windows systems). You 
+            can enforce a certain line ending to generate a file that is readable on a different operating system. 
+        </option>
+		    
 	</fullDescription>
 	
 	<ports>

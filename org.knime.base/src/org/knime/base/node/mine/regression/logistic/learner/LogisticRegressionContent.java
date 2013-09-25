@@ -505,6 +505,7 @@ public final class LogisticRegressionContent {
                     ppMatrix.toArray(new PMMLPPCell[0]),
                     pCovMatrix.toArray(new PMMLPCovCell[0]),
                     paramMatrix.toArray(new PMMLPCell[0]));
+        content.setTargetReferenceCategory(m_targetCategories.get(m_targetCategories.size() - 1).toString());
         return content;
     }
 
@@ -632,8 +633,12 @@ public final class LogisticRegressionContent {
         // standard Gaussian cumulative distributaion function,
         // uses Taylor approximation
         public static double Phi(final double z) {
-            if (z < -8.0) return 0.0;
-            if (z >  8.0) return 1.0;
+            if (z < -8.0) {
+                return 0.0;
+            }
+            if (z >  8.0) {
+                return 1.0;
+            }
             double sum = 0.0, term = z;
             for (int i = 3; sum + term != sum; i += 2) {
                 sum  = sum + term;

@@ -28,11 +28,12 @@ package org.knime.core.data.def;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import junit.framework.TestCase;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
-
-import junit.framework.TestCase;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Test the default cell iterator class.
@@ -53,10 +54,9 @@ public class DefaultCellIteratorTest extends TestCase {
             assertEquals(dCell.getDoubleValue(), d[i]);
             try {
                 it.remove();
-                fail();
-            } catch (UnsupportedOperationException uoe) {
-                System.out.println("Caught UnsupportedOperationException: "
-                        + uoe.getMessage());
+                fail("Expected " + UnsupportedOperationException.class + " not thrown");
+            } catch (UnsupportedOperationException e) {
+                NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass(), e);
             }
             i++;
         }
@@ -64,11 +64,9 @@ public class DefaultCellIteratorTest extends TestCase {
         assertEquals(i, d.length);
         try {
             it.next();
-            fail();
-        } catch (NoSuchElementException nse) {
-            System.out.println("Caught NoSuchElementException: "
-                    + nse.getMessage());
+            fail("Expected " + NoSuchElementException.class + " not thrown");
+        } catch (NoSuchElementException e) {
+            NodeLogger.getLogger(getClass()).debug("Got expected exception: " + e.getClass(), e);
         }
     }
-
 }

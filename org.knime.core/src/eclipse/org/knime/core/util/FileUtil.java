@@ -68,7 +68,6 @@ import java.net.URLDecoder;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
@@ -96,8 +95,6 @@ public final class FileUtil {
             .getLogger(FileUtil.class);
 
     private static final Set<File> TEMP_FILES = Collections.synchronizedSet(new HashSet<File>());
-
-    private static final Random RANDOM = new Random();
 
     private static final AtomicLong TEMP_DIR_UNIFIER = new AtomicLong((int)(100000 * Math.random()));
 
@@ -221,8 +218,8 @@ public final class FileUtil {
                     + "\" does not exist.");
         }
         if (sourceDir.isDirectory()) {
-            if (!targetDir.exists()) {
-                targetDir.mkdirs();
+            if (!targetDir.isDirectory() && !targetDir.mkdirs()) {
+                throw new IOException("Cannot create target directory \"" + targetDir.getAbsolutePath() + "\"");
             }
             if (sourceDir.list() == null) {
                 throw new IOException("Can't copy directory \"" + sourceDir
@@ -847,6 +844,28 @@ public final class FileUtil {
         return rootDir;
     }
 
+
+    /**
+     * Creates a temp file in the temp directory associated with the flow/node.
+     *
+     * @param prefix see {@link File#createTempFile(String, String)}
+     * @param suffix see {@link File#createTempFile(String, String)}
+     * @param rootDir the directory in which the file should be created
+     * @param deleteOnExit if <code>true</code>, the file is deleted when the JVM shuts down
+     * @return see {@link File#createTempFile(String, String)}
+     * @throws IOException see {@link File#createTempFile(String, String)}
+     * @since 2.9
+     */
+    public static File
+        createTempFile(final String prefix, final String suffix, final File rootDir, final boolean deleteOnExit)
+            throws IOException {
+        File tmpFile = File.createTempFile(prefix, suffix, rootDir);
+        if (deleteOnExit) {
+            TEMP_FILES.add(tmpFile);
+        }
+        return tmpFile;
+    }
+
     /**
      * Creates a temp file in the temp directory associated with the flow/node.
      *
@@ -859,11 +878,7 @@ public final class FileUtil {
      */
     public static File createTempFile(final String prefix, final String suffix, final boolean deleteOnExit)
         throws IOException {
-        File tmpFile = File.createTempFile(prefix, suffix, getTmpDir());
-        if (deleteOnExit) {
-            TEMP_FILES.add(tmpFile);
-        }
-        return tmpFile;
+        return createTempFile(prefix, suffix, getTmpDir(), deleteOnExit);
     }
 
     /**

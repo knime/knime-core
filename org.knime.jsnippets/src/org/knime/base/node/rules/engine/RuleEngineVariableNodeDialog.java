@@ -50,18 +50,14 @@
  */
 package org.knime.base.node.rules.engine;
 
-import org.fife.rsta.ac.LanguageSupportFactory;
-import org.knime.base.node.rules.engine.manipulator.RuleManipulatorProvider;
-import org.knime.base.node.util.KnimeCompletionProvider;
+import org.knime.base.node.rules.engine.rsyntax.VariableRuleParser;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
  * Rule Engine node dialog, but also usable for rule engine filter/splitter.
@@ -72,9 +68,9 @@ import org.knime.core.node.workflow.FlowVariable.Type;
  */
 public class RuleEngineVariableNodeDialog extends NodeDialogPane {
     static {
-        new RuleParser.RuleLanguageSupport();
-        LanguageSupportFactory.get().addLanguageSupport(RuleParser.SYNTAX_STYLE_RULE,
-                                                        RuleParser.RuleLanguageSupport.class.getName());
+        new VariableRuleParser.RuleLanguageSupport();
+//        LanguageSupportFactory.get().addLanguageSupport(RuleParser.SYNTAX_STYLE_RULE,
+//                                                        RuleParser.RuleLanguageSupport.class.getName());
     }
 
     /** Default default label. */
@@ -84,7 +80,11 @@ public class RuleEngineVariableNodeDialog extends NodeDialogPane {
     static final String NEW_COL_NAME = "prediction";
 
     /** The default text for the rule editor. */
-    static final String RULE_LABEL = "Enter condition...";
+    /** The default text for the rule editor. */
+    static final String RULE_LABEL = "// enter ordered set of rules, e.g.:\n"+
+    "// $${Ddouble variable name}$$ > 5.0 => \"large\"\n" +
+    "// $${Sstring column name}$$ LIKE \"*blue*\" => \"small and blue\"\n" +
+    "// TRUE => \"default outcome\"\n";
 
     private final boolean m_warnOnColRefsInStrings;
 
@@ -100,11 +100,7 @@ public class RuleEngineVariableNodeDialog extends NodeDialogPane {
     /**
      * Constructs a {@link RuleEngineVariableNodeDialog}.
      *
-     * @param hasOutputColumn Whether there should be a control for output column name.
-     * @param hasDefaultOutcome Whether there should be an option for default outcome.
      * @param warnOnColRefsInStrings Whether to warn if there are column references in the outcome strings.
-     * @param inclusion The label for the inclusion (only when no output column and no default outcome is specified).
-     * @param exclusion The label for the exclusion (only when no output column and no default outcome is specified).
      */
     RuleEngineVariableNodeDialog(final boolean warnOnColRefsInStrings) {
         this.m_warnOnColRefsInStrings = warnOnColRefsInStrings;
@@ -119,27 +115,20 @@ public class RuleEngineVariableNodeDialog extends NodeDialogPane {
      * @return The {@link RulePanel}.
      */
     private RulePanel createRulePanel() {
-        return new RulePanel(true/*hasOutput*/, true/*hasDefaultOutcome*/, m_warnOnColRefsInStrings,
-                false/*showColumns*/, null, null, RuleManipulatorProvider.getProvider(),
-                new KnimeCompletionProvider() {
-                    @Override
-                    public String escapeColumnName(final String colName) {
-                        throw new UnsupportedOperationException("No columns!");
-                    }
-
-                    @Override
-                    public String escapeFlowVariableName(final String varName) {
-                        return "$${" + varName + "}$$";
-                    }
-                }) {
-            private static final long serialVersionUID = 5022739491267638254L;
-
-            @Override
-            protected FlowVariableModel createFlowVariableModel() {
-                return RuleEngineVariableNodeDialog.this.createFlowVariableModel(RuleEngineSettings.CFG_DEFAULT_LABEL,
-                                                                         Type.STRING);
-            }
-        };
+//        return new RulePanel(true/*hasOutput*/, true/*hasDefaultOutcome*/, m_warnOnColRefsInStrings,
+//                false/*showColumns*/, null, RuleManipulatorProvider.getVariableProvider(),
+//                new KnimeCompletionProvider() {
+//                    @Override
+//                    public String escapeColumnName(final String colName) {
+//                        throw new UnsupportedOperationException("No columns!");
+//                    }
+//
+//                    @Override
+//                    public String escapeFlowVariableName(final String varName) {
+//                        return "$${" + varName + "}$$";
+//                    }
+//                });
+        return new RulePanel(RuleNodeSettings.VariableRule, m_warnOnColRefsInStrings);
     }
 
     /**

@@ -73,7 +73,31 @@ public class FileWriterSettings {
         ALWAYS,
         /** don't use quotes, replace separator pattern in data. */
         REPLACE
-    };
+    }
+
+    /**
+     * Mode specifying how to end a line in the file written.
+     * @since 2.9
+     */
+    public enum LineEnding {
+        /** System default. Null will cause the writer to read the system property */
+        SYST(null),
+        /** LF only. */
+        LF(new String(new char[] {10})),
+        /** CR + LF. */
+        CRLF(new String(new char[] {13, 10})),
+        /** CR only. */
+        CR(new String(new char[] {13}));
+
+        private final String m_ending;
+        private LineEnding(final String ending) {
+            m_ending = ending;
+        }
+        /** @return the mode specific line ending. */
+        public String getEndString() {
+            return m_ending;
+        }
+    }
 
     private static final String CFGKEY_SEPARATOR = "colSeparator";
 
@@ -96,6 +120,8 @@ public class FileWriterSettings {
     private static final String CFGKEY_MISSING = "missing";
 
     private static final String CFGKEY_DEC_SEPARATOR = "decimalSeparator";
+
+    private static final String CFGKEY_LINEENDING = "lineEndingMode";
 
     private String m_colSeparator;
 
@@ -120,6 +146,8 @@ public class FileWriterSettings {
 
     private char m_decimalSeparator;
 
+    private LineEnding m_lineEnding;
+
     /**
      * Creates a settings object with default settings (backward compatible to
      * the old CSV writer). I. e. Comma as separator, always quote with double
@@ -139,6 +167,8 @@ public class FileWriterSettings {
         m_writeRowID = false;
 
         m_decimalSeparator = '.';
+
+        m_lineEnding = LineEnding.SYST;
     }
 
     /**
@@ -160,6 +190,7 @@ public class FileWriterSettings {
         m_writeRowID = settings.m_writeRowID;
 
         m_decimalSeparator = settings.m_decimalSeparator;
+        m_lineEnding = settings.m_lineEnding;
     }
 
     /**
@@ -182,13 +213,11 @@ public class FileWriterSettings {
         m_colSeparator = settings.getString(CFGKEY_SEPARATOR, ",");
         m_quoteBegin = settings.getString(CFGKEY_QUOTE_BEGIN, "\"");
         m_quoteEnd = settings.getString(CFGKEY_QUOTE_END, "\"");
+        String mode = settings.getString(CFGKEY_QUOTE_MODE, quoteMode.STRINGS.name());
         try {
-            m_quoteMode =
-                    Enum.valueOf(quoteMode.class, settings.getString(
-                            CFGKEY_QUOTE_MODE, quoteMode.STRINGS.name()));
+            m_quoteMode = Enum.valueOf(quoteMode.class, mode);
         } catch (IllegalArgumentException iae) {
-            throw new InvalidSettingsException("Specified quotation mode ('"
-                    + m_quoteMode + "') is unknown.");
+            throw new InvalidSettingsException("Specified quotation mode ('" + mode + "') is unknown.");
         }
 
         m_quoteReplacement = settings.getString(CFGKEY_QUOTE_REPL, "");
@@ -199,6 +228,13 @@ public class FileWriterSettings {
         // available since 2.0
         m_decimalSeparator = settings.getChar(CFGKEY_DEC_SEPARATOR, '.');
 
+        // available since 2.8.1
+        String lineMode = settings.getString(CFGKEY_LINEENDING, LineEnding.SYST.name());
+        try {
+            m_lineEnding = Enum.valueOf(LineEnding.class, lineMode);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidSettingsException("Specified line ending mode ('" + lineMode + "') is unknown.");
+        }
     }
 
     /**
@@ -223,7 +259,7 @@ public class FileWriterSettings {
         settings.addBoolean(CFGKEY_ROWHEADER, m_writeRowID);
 
         settings.addChar(CFGKEY_DEC_SEPARATOR, m_decimalSeparator);
-
+        settings.addString(CFGKEY_LINEENDING, m_lineEnding.name());
     }
 
     /*
@@ -389,6 +425,23 @@ public class FileWriterSettings {
      */
     void setDecimalSeparator(final char newSeparator) {
         m_decimalSeparator = newSeparator;
+    }
+
+    /**
+     * @return the selected line ending mode
+     * @since 2.9
+     */
+    public LineEnding getLineEndingMode() {
+        return m_lineEnding;
+    }
+
+    /**
+     * Set a new line ending mode.
+     * @param mode to set
+     * @since 2.9
+     */
+    public void setLineEndingMode(final LineEnding mode) {
+        m_lineEnding = mode;
     }
 
     /**

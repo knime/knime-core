@@ -66,7 +66,7 @@ public class RuleEngineNodeFactory extends NodeFactory<RuleEngineNodeModel> {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new RuleEngineNodeDialog();
+        return new RuleEngineNodeDialog(RuleNodeSettings.RuleEngine);
     }
 
     /**

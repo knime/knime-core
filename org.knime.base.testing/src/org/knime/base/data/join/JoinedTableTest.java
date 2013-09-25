@@ -28,6 +28,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Random;
 
+import junit.framework.TestCase;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -42,8 +44,7 @@ import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-
-import junit.framework.TestCase;
+import org.knime.core.node.NodeLogger;
 
 /**
  *
@@ -106,26 +107,26 @@ public class JoinedTableTest extends TestCase {
             new JoinedTable(null, rightTable);
             fail();
         } catch (NullPointerException ne) {
-            System.out.println(ne.getMessage());
+            NodeLogger.getLogger(JoinedTableTest.class).debug("Got expected exception: " + ne.getClass(), ne);
         }
         try {
             new JoinedTable(leftTable, null);
             fail();
         } catch (NullPointerException ne) {
-            System.out.println(ne.getMessage());
+            NodeLogger.getLogger(JoinedTableTest.class).debug("Got expected exception: " + ne.getClass(), ne);
         }
         try {
             new JoinedTable(leftTable, leftTable);
             fail();
         } catch (IllegalArgumentException iae) {
-            System.out.println(iae.getMessage());
+            NodeLogger.getLogger(JoinedTableTest.class).debug("Got expected exception: " + iae.getClass(), iae);
         }
 
         try {
             new JoinedTable(leftTable, leftTable);
             fail();
         } catch (IllegalArgumentException iae) {
-            System.out.println(iae.getMessage());
+            NodeLogger.getLogger(JoinedTableTest.class).debug("Got expected exception: " + iae.getClass(), iae);
         }
         rightCols[1] = leftCols[2];
         rightTable = new DefaultTable(new DataRow[0], new DataTableSpec(
@@ -134,7 +135,7 @@ public class JoinedTableTest extends TestCase {
             new JoinedTable(leftTable, rightTable);
             fail();
         } catch (IllegalArgumentException iae) {
-            System.out.println(iae.getMessage());
+            NodeLogger.getLogger(JoinedTableTest.class).debug("Got expected exception: " + iae.getClass(), iae);
         }
     }
 

@@ -50,6 +50,8 @@
  */
 package org.knime.workbench.editor2;
 
+import java.net.URI;
+
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
@@ -60,14 +62,20 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowManagerInput implements IEditorInput {
-
     private final WorkflowManager m_manager;
     private final WorkflowEditor m_parent;
+    private final URI m_workflowLocation;
 
-    public WorkflowManagerInput(final WorkflowManager manager,
-            final WorkflowEditor parent) {
+    public WorkflowManagerInput(final WorkflowManager manager, final WorkflowEditor parent) {
         m_manager = manager;
         m_parent = parent;
+        m_workflowLocation = null;
+    }
+
+    public WorkflowManagerInput(final WorkflowManager manager, final URI workflowLocation) {
+        m_manager = manager;
+        m_parent = null;
+        m_workflowLocation = workflowLocation;
     }
 
     public WorkflowManager getWorkflowManager() {
@@ -78,9 +86,14 @@ public class WorkflowManagerInput implements IEditorInput {
         return m_parent;
     }
 
+    public URI getWorkflowLocation() {
+        return m_workflowLocation;
+    }
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean exists() {
         return m_manager != null;
     }
@@ -88,6 +101,7 @@ public class WorkflowManagerInput implements IEditorInput {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ImageDescriptor getImageDescriptor() {
         return null;
     }
@@ -95,6 +109,7 @@ public class WorkflowManagerInput implements IEditorInput {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getName() {
          return m_manager.getDisplayLabel();
     }
@@ -103,6 +118,7 @@ public class WorkflowManagerInput implements IEditorInput {
     /**
      * {@inheritDoc}
      */
+    @Override
     public IPersistableElement getPersistable() {
         // TODO: what if?
         return null;
@@ -118,6 +134,7 @@ public class WorkflowManagerInput implements IEditorInput {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object getAdapter(final Class adapter) {
         return null;
     }
@@ -132,7 +149,8 @@ public class WorkflowManagerInput implements IEditorInput {
             return false;
         }
         WorkflowManagerInput in = (WorkflowManagerInput)obj;
-        return m_manager.equals(in.getWorkflowManager());
+        return m_manager.equals(in.getWorkflowManager())
+            || ((m_workflowLocation != null) && m_workflowLocation.equals(in.m_workflowLocation));
     }
 
     /**
@@ -143,5 +161,4 @@ public class WorkflowManagerInput implements IEditorInput {
     public int hashCode() {
         return m_manager.hashCode();
     }
-
 }

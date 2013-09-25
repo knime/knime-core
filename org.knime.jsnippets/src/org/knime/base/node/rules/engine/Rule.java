@@ -66,34 +66,12 @@ public interface Rule {
     /**
      * @return The {@link Condition} of the {@link Rule}.
      */
-    public Condition getCondition();
+    Condition getCondition();
+
     /**
      * @return The {@link Outcome} of rule application.
      */
-    public Outcome getOutcome();
-
-
-//    /**
-//     * @return The possible side effects of rule application.
-//     */
-//    public SideEffect getSideEffect();
-
-    /**
-     * This enum specifies how the {@link Outcome} should be interpreted.
-     *
-     * @author Gabor Bakos
-     * @since 2.8
-     */
-    public static enum OutcomeKind {
-        /** As-is, no changes, it is a {@link StringCell}. */
-        PlainText,
-        /** The outcome is computed using a column. */
-        Column,
-        /** The outcome comes from a flow variable. */
-        FlowVariable,
-        /** The outcome is computed using the result as a pattern for string interpolation. */
-        StringInterpolation;
-    }
+    Outcome getOutcome();
 
     /**
      * This interface specifies how the outcome can be computed for a {@link Rule}.
@@ -101,7 +79,7 @@ public interface Rule {
      * @author Gabor Bakos
      * @since 2.8
      */
-    public interface Outcome {
+    interface Outcome {
         /**
          * Computes the resulting cell using the {@code row} and the {@code provider}.
          *
@@ -123,7 +101,7 @@ public interface Rule {
          * @author Gabor Bakos
          * @since 2.8
          */
-        static final class NoOutcome implements Outcome {
+        final class NoOutcome implements Outcome {
             private static final NoOutcome INSTANCE = new NoOutcome();
 
             /**
@@ -204,78 +182,6 @@ public interface Rule {
 
     }
 
-//    /**
-//     * An interface describing the possible side effects of a {@link Rule} application.
-//     *
-//     * @author Gabor Bakos
-//     * @since 2.8
-//     */
-//    public interface SideEffect {
-//        /**
-//         * This method will be called on a successful match.
-//         *
-//         * @param row The {@link DataRow}.
-//         * @param provider The {@link VariableProvider}.
-//         */
-//        void perform(DataRow row, VariableProvider provider);
-//
-//        /**
-//         * Default implementation for no {@link SideEffect}.
-//         *
-//         * @author Gabor
-//         * @since 2.8
-//         */
-//        class NoEffect implements SideEffect {
-//            private static NoEffect INSTANCE = new NoEffect();
-//
-//            private NoEffect() {
-//                super();
-//            }
-//
-//            /**
-//             * {@inheritDoc}
-//             */
-//            @Override
-//            public void perform(final DataRow row, final VariableProvider provider) {
-//                //Do nothing
-//            }
-//
-//            /**
-//             * @return the instance
-//             */
-//            public static NoEffect getInstance() {
-//                return INSTANCE;
-//            }
-//        }
-//    }
-
-//    /**
-//     * A logging {@link SideEffect}.
-//     * <br/>
-//     * <strong>Note: Not used yet</strong>
-//     *
-//     * @author Gabor Bakos
-//     * @since 2.8
-//     */
-//    public interface LogEffect extends SideEffect {
-//        /**
-//         * @return The lowest {@link LEVEL} the message should be emitted.
-//         */
-//        LEVEL getLevel();
-//
-////        /**
-////         * @return The {@link Formatter} String used to generate the log message.
-////         */
-////        String getMessageTemplate();
-//
-//        /**
-//         * @param row The {@link DataRow}.
-//         * @param provider The {@link VariableProvider}.
-//         * @return The message to be printed.
-//         */
-//        String getMessage(DataRow row, VariableProvider provider);
-//    }
-
     /**
      * Reference to something with a type.
      *
@@ -292,15 +198,15 @@ public interface Rule {
     /**
      * Reference to a table property.
      *
-     * @author Gabor
+     * @author Gabor Bakos
      * @since 2.8
      */
     static enum TableReference implements Reference {
-        /** Refers to the row index (the first row is {@code 0}) */
+        /** Refers to the row index (the first row is {@code 1}). */
         RowIndex(org.knime.ext.sun.nodes.script.expression.Expression.ROWINDEX, IntCell.TYPE),
-        /** The row key's string representation */
+        /** The row key's string representation. */
         RowId(org.knime.ext.sun.nodes.script.expression.Expression.ROWID, StringCell.TYPE),
-        /** All rows in the table */
+        /** All rows in the table. */
         RowCount(org.knime.ext.sun.nodes.script.expression.Expression.ROWCOUNT, IntCell.TYPE);
         private final String m_name;
 
@@ -348,8 +254,6 @@ public interface Rule {
 
         private final Outcome m_outcome;
 
-//        private SideEffect m_sideEffect;
-
         /**
          * Constructs a rule with the text of the rule, the {@link Condition} and the {@link Outcome} without
          * {@link SideEffect}s.
@@ -359,23 +263,10 @@ public interface Rule {
          * @param outcome The parsed {@link Outcome}.
          */
         GenericRule(final String text, final Condition condition, final Outcome outcome) {
-//            this(text, condition, outcome, NoEffect.getInstance());
-//        }
-//
-//        /**
-//         * Constructs a rule with the text of the rule, the {@link Condition} and the {@link Outcome} without {@link SideEffect}s.
-//         *
-//         * @param text The text from which the rule was parsed.
-//         * @param condition The parsed {@link Condition}.
-//         * @param outcome The parsed {@link Outcome}.
-//         * @param sideEffect The desired {@link SideEffect} when the rule is applied.
-//         */
-//        GenericRule(final String text, final Condition condition, final Outcome outcome, final SideEffect sideEffect) {
             super();
             this.m_text = text;
             this.m_condition = condition;
             this.m_outcome = outcome == null ? NoOutcome.getInstance() : outcome;
-//            this.m_sideEffect = sideEffect == null ? NoEffect.getInstance() : sideEffect;
         }
 
         /**
@@ -393,21 +284,6 @@ public interface Rule {
         public Outcome getOutcome() {
             return m_outcome;
         }
-
-//        /**
-//         * {@inheritDoc}
-//         */
-//        @Override
-//        public SideEffect getSideEffect() {
-//            return m_sideEffect;
-//        }
-//
-//        /**
-//         * @param sideEffect the sideEffect to set
-//         */
-//        void setSideEffect(final SideEffect sideEffect) {
-//            this.m_sideEffect = sideEffect;
-//        }
 
         /**
          * {@inheritDoc}
@@ -448,10 +324,8 @@ public interface Rule {
         MISSING,
         /** Wildcard matching (* and ? as wildcards). */
         LIKE,
-        /** Regex matches */
+        /** Regex matches. */
         MATCHES,
-        /** Regex find */
-        CONTAINS,
         /** Set matching. */
         IN;
 
@@ -476,5 +350,16 @@ public interface Rule {
             }
             return super.toString();
         }
+    }
+    /**
+     * The boolean constants for rules.
+     *
+     * @since 2.9
+     */
+    public enum BooleanConstants {
+        /** The representation of {@code false}. */
+        FALSE,
+        /** The representation of {@code true}. */
+        TRUE;
     }
 }

@@ -31,6 +31,7 @@ import java.util.Random;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.knime.core.node.NodeLogger;
 
 /**
  *
@@ -59,11 +60,12 @@ public class DuplicateCheckerTest {
             }
             dc.checkForDuplicates();
         } catch (DuplicateKeyException ex) {
-            ex.printStackTrace();
+            NodeLogger.getLogger(getClass()).error("No duplicates inserted but exception was thrown", ex);
             Assert.fail("No duplicates inserted but exception was thrown");
+        } finally {
+            dc.clear();
         }
-        dc.clear();
-        System.out.println((System.currentTimeMillis() - t) + "ms");
+        NodeLogger.getLogger(getClass()).info((System.currentTimeMillis() - t) + "ms");
     }
 
     @Test
@@ -75,19 +77,19 @@ public class DuplicateCheckerTest {
     @Test
     public void testArbitraryStringsNoDuplicates() throws IOException {
         long seed = System.currentTimeMillis();
-        System.out.println("Using seed " + seed);
+        NodeLogger.getLogger(getClass()).info("Using seed " + seed);
         internalTestArbitraryStrings(false, seed);
     }
 
     @Test
     public void testArbitraryStringsDuplicates() throws IOException {
         long seed = System.currentTimeMillis();
-        System.out.println("Using seed " + seed);
+        NodeLogger.getLogger(getClass()).info("Using seed " + seed);
         internalTestArbitraryStrings(true, seed);
 
         // this one generates invalid UTF-16 strings
         seed = 1343253055319L;
-        System.out.println("Using seed " + seed);
+        NodeLogger.getLogger(getClass()).info("Using seed " + seed);
         internalTestArbitraryStrings(true, seed);
     }
 
@@ -142,7 +144,7 @@ public class DuplicateCheckerTest {
                 Assert.assertEquals(dupl, e.getKey());
                 return;
             } else {
-                e.printStackTrace();
+                NodeLogger.getLogger(getClass()).error("No duplicates inserted but exception was thrown", e);
                 Assert.fail("Duplicate detected even though no duplicates are present");
             }
         }

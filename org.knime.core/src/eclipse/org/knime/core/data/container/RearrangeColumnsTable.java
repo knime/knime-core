@@ -496,7 +496,7 @@ public final class RearrangeColumnsTable
             DataCell[] fromFac = factory.getCells(row);
             if (fromFac.length != list.size()) {
                 String error = String.format("New cells array length conflict: expected %d, actual %d (class %s)",
-                                             fromFac.length, list.size(), factory.getClass().getName());
+                                             list.size(), fromFac.length, factory.getClass().getName());
                 if (fromFac.length < list.size()) {
                     throw new IndexOutOfBoundsException(error);
                 } else {

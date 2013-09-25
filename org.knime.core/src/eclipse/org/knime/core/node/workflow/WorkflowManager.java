@@ -7553,7 +7553,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {
                     @Override
                     public void run() {
-                        FileUtil.deleteRecursively(m_tmpDir);
+                        if (m_tmpDir.isDirectory() && !FileUtil.deleteRecursively(m_tmpDir)) {
+                            LOGGER.info("Could not delete temporary directory for workflow " + getName() + " at "
+                                + m_tmpDir);
+                        }
                     }
                 });
             }

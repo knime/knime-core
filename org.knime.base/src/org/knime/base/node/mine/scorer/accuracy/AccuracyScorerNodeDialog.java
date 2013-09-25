@@ -52,6 +52,8 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -59,9 +61,14 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.border.TitledBorder;
 
+import org.knime.base.util.SortingOptionPanel;
+import org.knime.base.util.SortingStrategy;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -71,16 +78,11 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
  * A dialog for the scorer to set the two table columns to score for.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class AccuracyScorerNodeDialog extends NodeDialogPane {
-    /*
-     * The main panel in this view.
-     */
-    private final JPanel m_p;
-
     /*
      * The text field for the first column to compare The first column
      * represents the real classes of the data
@@ -92,13 +94,25 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
      * represents the predicted classes of the data
      */
     private final JComboBox m_secondColumns;
-    
+
+    /*
+     * The sorting option for the values.
+     */
+    private final SortingOptionPanel m_sortingOptions;
+
     /* The check box specifying if a prefix should be added or not. */
     private JCheckBox m_flowvariableBox;
 
     /* The text field specifying the prefix for the flow variables. */
     private JTextField m_flowVariablePrefixTextField;
-    
+
+    private static final SortingStrategy[] SUPPORTED_NUMBER_SORT_STRATEGIES = new SortingStrategy[] {
+        SortingStrategy.InsertionOrder, SortingStrategy.Numeric, SortingStrategy.Lexical
+    };
+
+    private static final SortingStrategy[] SUPPORTED_STRING_SORT_STRATEGIES = new SortingStrategy[] {
+        SortingStrategy.InsertionOrder, SortingStrategy.Lexical
+    };
 
     /**
      * Creates a new {@link NodeDialogPane} for scoring in order to set the two
@@ -107,13 +121,15 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
     public AccuracyScorerNodeDialog() {
         super();
 
-        m_p = new JPanel();
-        m_p.setLayout(new BoxLayout(m_p, BoxLayout.Y_AXIS));
+        JPanel p = new JPanel();
+        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
 
         m_firstColumns = new JComboBox();
         m_firstColumns.setRenderer(new DataColumnSpecListCellRenderer());
         m_secondColumns = new JComboBox();
         m_secondColumns.setRenderer(new DataColumnSpecListCellRenderer());
+        m_sortingOptions = new SortingOptionPanel();
+        m_sortingOptions.setBorder(new TitledBorder("Sorting of values in tables"));
 
         JPanel firstColumnPanel = new JPanel(new GridLayout(1, 1));
         firstColumnPanel.setBorder(BorderFactory
@@ -127,15 +143,16 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
                 .createTitledBorder("Second Column"));
         flowLayout = new JPanel(new FlowLayout());
         flowLayout.add(m_secondColumns);
+
         secondColumnPanel.add(flowLayout);
-        
-        
+
+
         m_flowvariableBox = new JCheckBox("Use name prefix");
         m_flowVariablePrefixTextField = new JTextField(10);
         m_flowVariablePrefixTextField.setSize(new Dimension(10, 3));
-        
+
         m_flowvariableBox.addActionListener(new ActionListener() {
-            
+
             @Override
             public void actionPerformed(final ActionEvent arg0) {
                 if (m_flowvariableBox.isSelected()) {
@@ -143,12 +160,12 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
                 } else {
                     m_flowVariablePrefixTextField.setEnabled(false);
                 }
-                
+
             }
         });
         m_flowvariableBox.doClick(); // sync states
-        
-        
+
+
         JPanel thirdColumnPanel = new JPanel(new GridLayout(1, 1));
         thirdColumnPanel.setBorder(BorderFactory
                 .createTitledBorder("Provide scores as flow variables"));
@@ -156,22 +173,46 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
         flowLayout.add(m_flowvariableBox);
         flowLayout.add(m_flowVariablePrefixTextField);
         thirdColumnPanel.add(flowLayout);
-        
 
-        m_p.add(firstColumnPanel);
 
-        m_p.add(secondColumnPanel);
+        p.add(firstColumnPanel);
 
-        m_p.add(thirdColumnPanel);
-        
-        super.addTab("Scorer", m_p);
+        p.add(secondColumnPanel);
+
+        p.add(m_sortingOptions);
+
+        p.add(thirdColumnPanel);
+
+        final ItemListener colChangeListener = new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                DataColumnSpec specFirst = (DataColumnSpec)m_firstColumns.getSelectedItem();
+                DataColumnSpec specSecond = (DataColumnSpec)m_secondColumns.getSelectedItem();
+                if (specFirst == null || specSecond == null) {
+                    return;
+                }
+                if (specFirst.getType().isCompatible(DoubleValue.class)
+                    && specSecond.getType().isCompatible(DoubleValue.class)) {
+                    m_sortingOptions.setPossibleSortingStrategies(SUPPORTED_NUMBER_SORT_STRATEGIES);
+                } else if (specFirst.getType().isCompatible(StringValue.class)
+                    && specSecond.getType().isCompatible(StringValue.class)) {
+                    m_sortingOptions.setPossibleSortingStrategies(SUPPORTED_STRING_SORT_STRATEGIES);
+                } else {
+                    m_sortingOptions.setPossibleSortingStrategies(SortingStrategy.InsertionOrder);
+                }
+            }
+        };
+        m_firstColumns.addItemListener(colChangeListener);
+        m_secondColumns.addItemListener(colChangeListener);
+        m_sortingOptions.updateControls();
+        super.addTab("Scorer", p);
     } // ScorerNodeDialog(NodeModel)
 
     /**
      * Fills the two combo boxes with all column names retrieved from the input
      * table spec. The second and last column will be selected by default unless
      * the settings object contains others.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -181,7 +222,7 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
 
         m_firstColumns.removeAllItems();
         m_secondColumns.removeAllItems();
-        
+
         DataTableSpec spec = specs[AccuracyScorerNodeModel.INPORT];
 
         if ((spec == null) || (spec.getNumColumns() < 2)) {
@@ -196,34 +237,39 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
             m_secondColumns.addItem(c);
         }
         // if at least two columns available
-        DataColumnSpec col2 =
-                (numCols > 0) ? spec.getColumnSpec(numCols - 1) : null;
+        String col2DefaultName = (numCols > 0) ? spec.getColumnSpec(numCols - 1).getName() : null;
+        String col1DefaultName = (numCols > 1) ? spec.getColumnSpec(numCols - 2).getName() : col2DefaultName;
         DataColumnSpec col1 =
-                (numCols > 1) ? spec.getColumnSpec(numCols - 2) : col2;
-        col1 = spec.getColumnSpec(settings.getString(
-                    AccuracyScorerNodeModel.FIRST_COMP_ID, col1.getName()));
-        col2 = spec.getColumnSpec(settings.getString(
-                    AccuracyScorerNodeModel.SECOND_COMP_ID, col2.getName()));
+            spec.getColumnSpec(settings.getString(AccuracyScorerNodeModel.FIRST_COMP_ID, col1DefaultName));
+        DataColumnSpec col2 =
+            spec.getColumnSpec(settings.getString(AccuracyScorerNodeModel.SECOND_COMP_ID, col2DefaultName));
         m_firstColumns.setSelectedItem(col1);
         m_secondColumns.setSelectedItem(col2);
-        
+
         String varPrefix = settings.getString(
         		AccuracyScorerNodeModel.FLOW_VAR_PREFIX, null);
 
         boolean useFlowVar = varPrefix != null;
-        
+
         if (m_flowvariableBox.isSelected() != useFlowVar) {
         	m_flowvariableBox.doClick();
         }
         if (varPrefix != null) {
         	m_flowVariablePrefixTextField.setText(varPrefix);
         }
-        
+
+        try {
+            m_sortingOptions.loadDefault(settings);
+        } catch (InvalidSettingsException e) {
+            m_sortingOptions.setSortingStrategy(SortingStrategy.InsertionOrder);
+            m_sortingOptions.setReverseOrder(false);
+        }
+        m_sortingOptions.updateControls();
     }
 
     /**
      * Sets the selected columns inside the {@link AccuracyScorerNodeModel}.
-     * 
+     *
      * @param settings the object to write the settings into
      * @throws InvalidSettingsException if the column selection is invalid
      */
@@ -249,14 +295,15 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
         settings.addString(AccuracyScorerNodeModel.FIRST_COMP_ID, firstColumn);
         settings.addString(
             AccuracyScorerNodeModel.SECOND_COMP_ID, secondColumn);
-        
-        
+
+
         boolean useFlowVar = m_flowvariableBox.isSelected();
-       
+
         String flowVariableName = m_flowVariablePrefixTextField.getText();
-        
+
         settings.addString(AccuracyScorerNodeModel.FLOW_VAR_PREFIX,
         		useFlowVar ? flowVariableName : null);
-        
+
+        m_sortingOptions.saveDefault(settings);
     }
 }

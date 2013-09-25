@@ -51,7 +51,6 @@ package org.knime.base.node.util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 
 import javax.swing.ToolTipManager;
 
@@ -170,10 +169,7 @@ public class KnimeSyntaxTextArea extends RSyntaxTextArea {
      * @throws IOException Problem with loading.
      */
     protected void applySyntaxColors() throws IOException {
-        Package pack = JSnippetTextArea.class.getPackage();
-        String base = pack.getName().replace(".", "/") + "/";
-        URL url = this.getClass().getClassLoader().getResource(base + "eclipse.xml");
-        InputStream in = url.openStream();
+        InputStream in = JSnippetTextArea.class.getResourceAsStream("eclipse.xml");
         Theme theme = Theme.load(in);
         theme.apply(this);
     }

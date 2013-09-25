@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   18.04.2006 (mb): created
  */
@@ -69,15 +69,17 @@ import org.knime.core.node.port.PortObjectSpec;
  * (NodeModel, NodeDialog) and the need to unify and simplify this. It also
  * enables the user to register to change-events so that other models/components
  * can be updated accordingly (enable/disable...).
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public abstract class SettingsModel {
 
     /**
      * Models write some internal settings into the settings object.
+     * @noreference No public API
+     * @since 2.9
      */
-    private static final String CFGKEY_INTERNAL = "_Internals";
+    public static final String CFGKEY_INTERNAL = "_Internals";
 
     /**
      * for example to ensure that the model reading the value from the object is
@@ -110,7 +112,7 @@ public abstract class SettingsModel {
      * the model will be retrieved from the specified settings object. If the
      * settings object doesn't contain a (valid) value it will throw an
      * InvalidSettingsException.
-     * 
+     *
      * @param <T> the actual type
      * @param settings the object to read the new model's value(s) from
      * @return a new settings model with the same constraints and configName but
@@ -147,7 +149,7 @@ public abstract class SettingsModel {
      * back. Otherwise an assertion will go off. Make sure to provide a unique
      * ID - and to re-use that ID in all compatible models. IntegerModels for
      * example should use the same ID as BoundedInteger models.
-     * 
+     *
      * @return a string that identifies all models that are able (and empowered)
      *         to read the values stored by this model.
      */
@@ -166,11 +168,11 @@ public abstract class SettingsModel {
      * the model is disabled it should not throw the exception.<br>
      * This method must always notify change listeners!!<br>
      * NOTE: Do not call this method directly, rather call dlgLoadSettingsFrom
-     * 
+     *
      * @param settings The <code>NodeSettings</code> to read from.
      * @param specs The input specs.
      * @throws NotConfigurableException if the specs are not good enough to
-     * 
+     *
      */
     protected abstract void loadSettingsForDialog(
             final NodeSettingsRO settings, final PortObjectSpec[] specs)
@@ -180,7 +182,7 @@ public abstract class SettingsModel {
      * This is the method called from the default dialog component to load the
      * model specific settings from the settings object. It calls the model
      * specific implementations.
-     * 
+     *
      * @param settings The <code>NodeSettings</code> to read from.
      * @param specs The input specs.
      * @throws NotConfigurableException if the specs are not good enough to load
@@ -207,7 +209,7 @@ public abstract class SettingsModel {
      * Write value(s) of this component model to configuration object. Called
      * only from within the components using this model.<br>
      * NOTE: Don't call this method directly, rather use dlgSaveSettingsTo.
-     * 
+     *
      * @param settings The {@link org.knime.core.node.NodeSettings} to read
      *            from.
      * @throws InvalidSettingsException if the user has entered wrong values.
@@ -219,7 +221,7 @@ public abstract class SettingsModel {
      * This method is called by the default dialog to save the model specific
      * settings into the settings object. It saves the model's ID before it
      * delegates to the derived implementation.
-     * 
+     *
      * @param settings The {@link org.knime.core.node.NodeSettings} to read
      *            from.
      * @throws InvalidSettingsException if the user has entered wrong values.
@@ -247,7 +249,7 @@ public abstract class SettingsModel {
      * Adds a listener (to the end of the listener list) which is notified,
      * whenever a new values is set in the model or the enable status changes.
      * Does nothing if the listener is already registered.
-     * 
+     *
      * @param l listener to add.
      */
     public void addChangeListener(final ChangeListener l) {
@@ -260,7 +262,7 @@ public abstract class SettingsModel {
      * Adds a listener (to the beginning of the listener list) which is
      * notified, whenever a new values is set in the model or the enable status
      * changes. Does nothing if the listener is already registered.
-     * 
+     *
      * @param l listener to add.
      */
     protected void prependChangeListener(final ChangeListener l) {
@@ -271,7 +273,7 @@ public abstract class SettingsModel {
 
     /**
      * Remove a specific listener.
-     * 
+     *
      * @param l listener to remove.
      */
     public void removeChangeListener(final ChangeListener l) {
@@ -293,7 +295,7 @@ public abstract class SettingsModel {
      * validate new values or save it's current value into a settings object.
      * Also loading will be skipped. (The model does store its enable status in
      * the settings object though.)
-     * 
+     *
      * @param enabled the new enable status. If true the model
      *            saves/validates/loads its value, if false, all these
      *            operations are skipped.
@@ -317,7 +319,7 @@ public abstract class SettingsModel {
     /**
      * Read the expected values from the settings object, without assigning them
      * to the internal variables!
-     * 
+     *
      * @param settings the object to read the value(s) from
      * @throws InvalidSettingsException if the value(s) in the settings object
      *             are invalid.
@@ -344,7 +346,7 @@ public abstract class SettingsModel {
      * Read the expected values from the settings object, without assigning them
      * to the internal variables! (Is not called when the model was disabled at
      * the time the settings were saved.)
-     * 
+     *
      * @param settings the object to read the value(s) from
      * @throws InvalidSettingsException if the value(s) in the settings object
      *             are invalid.
@@ -355,7 +357,7 @@ public abstract class SettingsModel {
     /**
      * Read value(s) of this component model from configuration object. If the
      * value is not stored in the config, an exception will be thrown.
-     * 
+     *
      * @param settings The {@link org.knime.core.node.NodeSettings} to read
      *            from.
      * @throws InvalidSettingsException if load fails.
@@ -382,7 +384,7 @@ public abstract class SettingsModel {
      * Read value(s) of this settings model from the configuration object. If
      * the value is not stored in the config, an exception will be thrown. <br>
      * NOTE: Don't call this method directly, rather call loadSettingsFrom.<br>
-     * 
+     *
      * @param settings The {@link org.knime.core.node.NodeSettings} to read
      *            from.
      * @throws InvalidSettingsException if load fails.
@@ -392,7 +394,7 @@ public abstract class SettingsModel {
 
     /**
      * Write value(s) of this setttings model to configuration object.
-     * 
+     *
      * @param settings The {@link org.knime.core.node.NodeSettings} to write
      *            into.
      */
@@ -407,7 +409,7 @@ public abstract class SettingsModel {
     /**
      * Write value(s) of this settings model to configuration object.<br>
      * NOTE: Don't call this method directly, rather call saveSettingsTo.
-     * 
+     *
      * @param settings The {@link org.knime.core.node.NodeSettings} to write
      *            into.
      */
@@ -418,7 +420,7 @@ public abstract class SettingsModel {
      * if it doesn't match the ID of this model. It also reads the enabled
      * status back in - and throws an exeption if any of these settings is
      * missing (the enabled status will remain unchanged then).
-     * 
+     *
      * @param settings the config object to read the enable state and model ID
      *            from
      */
@@ -450,7 +452,7 @@ public abstract class SettingsModel {
     /**
      * Saves this' model id and the current enable status into the specified
      * settings object. It creates a new sub config for that.
-     * 
+     *
      * @param settings the settings object to add the settings to.
      */
     private void saveEnableStatusAndModelID(final NodeSettingsWO settings) {
@@ -465,7 +467,7 @@ public abstract class SettingsModel {
      * Derived classes should print their class name plus the config name for
      * nice and useful error messages. Like that,<br>
      * return getClass().getSimpleName() + " ('" + m_configName + "')";
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

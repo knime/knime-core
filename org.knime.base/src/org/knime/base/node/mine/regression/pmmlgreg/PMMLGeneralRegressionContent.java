@@ -109,6 +109,8 @@ public final class PMMLGeneralRegressionContent {
 
     private PMMLPCell[] m_paramMatrix;
 
+    private String m_targetReferenceCategory;
+
     /** Empty Contstuctor used when reading xml file. */
     PMMLGeneralRegressionContent() {
         // Fields are defined by setters.
@@ -285,5 +287,21 @@ public final class PMMLGeneralRegressionContent {
      */
     void setParamMatrix(final PMMLPCell[] paramMatrix) {
         m_paramMatrix = paramMatrix;
+    }
+
+    /**
+     * @return the target reference category or null if not set
+     * @since 2.9
+     */
+    public String getTargetReferenceCategory() {
+        return m_targetReferenceCategory;
+    }
+
+    /**
+     * @param targetReferenceCategory the target reference category
+     * @since 2.9
+     */
+    public void setTargetReferenceCategory(final String targetReferenceCategory) {
+        m_targetReferenceCategory = targetReferenceCategory;
     }
 }

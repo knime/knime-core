@@ -137,6 +137,8 @@ public class JSnippetPanel extends JPanel {
 
     private final boolean m_showColumns;
 
+    private final boolean m_showFlowVariables;
+
     /**
      * Create new instance.
      *
@@ -161,10 +163,26 @@ public class JSnippetPanel extends JPanel {
      * @since 2.8
      */
     public JSnippetPanel(final ManipulatorProvider manipulatorProvider,
-            final KnimeCompletionProvider completionProvider, final boolean showColumns) {
+        final KnimeCompletionProvider completionProvider, final boolean showColumns) {
+        this(manipulatorProvider, completionProvider, showColumns, true);
+    }
+    /**
+     * Create new instance.
+     *
+     * @param manipulatorProvider a manipulation provider that provides all
+     *            available functions
+     * @param completionProvider a completion provider used for autocompletion
+     *            in the editor
+     * @param showColumns Show the columns panel, or hide it?
+     * @param showFlowVariables Show the flow variables panel, or hide it?
+     * @since 2.9
+     */
+    public JSnippetPanel(final ManipulatorProvider manipulatorProvider,
+            final KnimeCompletionProvider completionProvider, final boolean showColumns, final boolean showFlowVariables) {
         m_manipProvider = manipulatorProvider;
         m_completionProvider = completionProvider;
         this.m_showColumns = showColumns;
+        this.m_showFlowVariables = showFlowVariables;
         setLayout(new BorderLayout());
         initCompletionProvider();
         initComponents();
@@ -173,7 +191,7 @@ public class JSnippetPanel extends JPanel {
 
     private void createStringManipulationPanel() {
         final JComponent leftComponent;
-        if (m_showColumns) {
+        if (m_showColumns && m_showFlowVariables) {
             final JSplitPane varSplitPane;
             leftComponent = varSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
             JScrollPane colListPane = new JScrollPane(m_colList);
@@ -186,9 +204,14 @@ public class JSnippetPanel extends JPanel {
             varSplitPane.setBottomComponent(pane);
             varSplitPane.setOneTouchExpandable(true);
             varSplitPane.setResizeWeight(0.9);
-        } else {
+        } else if (m_showColumns && !m_showFlowVariables) {
+            leftComponent = new JScrollPane(m_colList);
+            leftComponent.setBorder(createEmptyTitledBorder("Column List"));
+        } else if (m_showFlowVariables) {
             leftComponent = new JScrollPane(m_flowVarsList);
             leftComponent.setBorder(createEmptyTitledBorder("Flow Variable List"));
+        } else {
+            leftComponent = new JPanel();
         }
         JPanel centerPanel = new JPanel(new GridLayout(0, 1));
         JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);

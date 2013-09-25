@@ -149,6 +149,7 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
            throw new IllegalArgumentException("The attribute \"cumulativeLink\""
                    + " is currently not supported.");
        }
+       m_content.setTargetReferenceCategory(reg.getTargetReferenceCategory());
 
        // read the parameter list
        ParameterList pmmlParamList = reg.getParameterList();
@@ -278,6 +279,10 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
         String modelName = m_content.getModelName();
         if (modelName != null && !modelName.isEmpty()) {
             reg.setModelName(modelName);
+        }
+        String targetReferenceCategory = m_content.getTargetReferenceCategory();
+        if(targetReferenceCategory != null && !targetReferenceCategory.isEmpty()) {
+            reg.setTargetReferenceCategory(targetReferenceCategory);
         }
 
         // add parameter list

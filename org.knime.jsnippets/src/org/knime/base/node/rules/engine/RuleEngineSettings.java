@@ -53,9 +53,7 @@ package org.knime.base.node.rules.engine;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.knime.base.node.rules.engine.Rule.OutcomeKind;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -66,17 +64,9 @@ import org.knime.core.node.NodeSettingsWO;
  * @since 2.8
  */
 public class RuleEngineSettings {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(RuleEngineSettings.class);
-
-    static final String CFG_DEFAULT_LABEL = "default-label";
-
     private final List<String> m_rules = new ArrayList<String>();
 
-    private String m_defaultLabel = RuleEngineNodeDialog.DEFAULT_LABEL;
-
     private String m_newColName = RuleEngineNodeDialog.NEW_COL_NAME;
-
-    private OutcomeKind m_defaultOutputType = OutcomeKind.PlainText;
 
     /**
      * Sets the name of the new column containing the matching rule's outcome.
@@ -88,65 +78,12 @@ public class RuleEngineSettings {
     }
 
     /**
-     * Sets the label that should be used if no rule matches.
-     *
-     * @param defaultLabel the default label
-     */
-    public void setDefaultLabel(final String defaultLabel) {
-        m_defaultLabel = defaultLabel;
-    }
-
-    /**
-     * @param b If {@code true} {@link OutcomeKind#Column} will be the default outcome kind, else the previous value.
-     * @see #setDefaultOutputType(OutcomeKind)
-     */
-    @Deprecated
-    public void setDefaultLabelIsColumn(final boolean b) {
-        if (b) {
-            m_defaultOutputType = Rule.OutcomeKind.Column;
-        }
-    }
-
-    /**
-     * @param defaultOutputType the defaultOutputType to set
-     */
-    public void setDefaultOutputType(final Rule.OutcomeKind defaultOutputType) {
-        this.m_defaultOutputType = defaultOutputType;
-    }
-
-    /**
-     * Returns the name of the new column containing the matching rule's
-     * outcome.
+     * Returns the name of the new column containing the matching rule's outcome.
      *
      * @return the column's name
      */
     public String getNewColName() {
         return m_newColName;
-    }
-
-    /**
-     * Returns the label that should be used if no rule matches.
-     *
-     * @return the default label
-     */
-    public String getDefaultLabel() {
-        return m_defaultLabel;
-    }
-
-    /**
-     * @return default output kind is {@link OutcomeKind#Column}
-     * @see #getDefaultOutputType()
-     */
-    @Deprecated
-    public boolean getDefaultLabelIsColumn() {
-        return m_defaultOutputType == Rule.OutcomeKind.Column;
-    }
-
-    /**
-     * @return the defaultOutputType
-     */
-    public Rule.OutcomeKind getDefaultOutputType() {
-        return m_defaultOutputType;
     }
 
     /**
@@ -180,8 +117,7 @@ public class RuleEngineSettings {
      * @param settings a node settings object
      * @throws InvalidSettingsException if some settings are missing
      */
-    public void loadSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    public void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         String[] rules = settings.getStringArray("rules");
 
         m_rules.clear();
@@ -189,45 +125,12 @@ public class RuleEngineSettings {
             m_rules.add(r);
         }
 
-        m_defaultLabel = settings.getString(CFG_DEFAULT_LABEL);
-        setDefaultOutcomeType(settings);
         m_newColName = settings.getString("new-column-name");
     }
 
     /**
-     * Sets the default outcome based on {@code settings}.
-     *
-     * @param settings a node settings object
-     */
-    private void setDefaultOutcomeType(final NodeSettingsRO settings) {
-        m_defaultOutputType = readOutcomeType(settings);
-    }
-
-    /**
-     * @param settings a node settings object
-     * @return The {@link OutcomeKind} for the default label.
-     */
-    private OutcomeKind readOutcomeType(final NodeSettingsRO settings) {
-        try {
-            final byte outputType = settings.getByte("defaultLabelType");
-            return OutcomeKind.values()[outputType];
-        } catch (InvalidSettingsException e) {
-            try {
-                LOGGER.debug("Problem reading the defaultLabelType setting. Trying the old defaultLabelIsColumn setting.");
-                boolean defaultIsColumn = settings.getBoolean("defaultLabelIsColumn");
-                LOGGER.warn("Read an old setting. After save you will not be able to read the workflow with older (<2.8) KNIME versions.");
-                return defaultIsColumn ? OutcomeKind.Column : OutcomeKind.PlainText;
-            } catch (InvalidSettingsException e1) {
-                LOGGER.error("Could not interpret the default outcome.", e);
-                LOGGER.error("Could not interpret the default outcome.", e1);
-                return OutcomeKind.PlainText;
-            }
-        }
-    }
-
-    /**
-     * Loads the settings from the settings object for use in the dialog, i.e.
-     * default values are used for missing settings.
+     * Loads the settings from the settings object for use in the dialog, i.e. default values are used for missing
+     * settings.
      *
      * @param settings a node settings object
      */
@@ -238,13 +141,7 @@ public class RuleEngineSettings {
         for (String r : rules) {
             m_rules.add(r);
         }
-        m_defaultLabel =
-                settings.getString(CFG_DEFAULT_LABEL,
-                        RuleEngineNodeDialog.DEFAULT_LABEL);
-        setDefaultOutcomeType(settings);
-        m_newColName =
-                settings.getString("new-column-name",
-                        RuleEngineNodeDialog.NEW_COL_NAME);
+        m_newColName = settings.getString("new-column-name", RuleEngineNodeDialog.NEW_COL_NAME);
     }
 
     /**
@@ -253,10 +150,7 @@ public class RuleEngineSettings {
      * @param settings a node settings object
      */
     public void saveSettings(final NodeSettingsWO settings) {
-        settings.addStringArray("rules", m_rules.toArray(new String[m_rules
-                .size()]));
-        settings.addString(CFG_DEFAULT_LABEL, m_defaultLabel);
-        settings.addByte("defaultLabelType", m_defaultOutputType == null ? (byte)-1 : (byte)m_defaultOutputType.ordinal());
+        settings.addStringArray("rules", m_rules.toArray(new String[m_rules.size()]));
         settings.addString("new-column-name", m_newColName);
     }
 }

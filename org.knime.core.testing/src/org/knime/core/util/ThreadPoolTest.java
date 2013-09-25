@@ -30,6 +30,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import junit.framework.TestCase;
 
+import org.knime.core.node.NodeLogger;
+
 /**
  * Testcase for the thread pool.
  *
@@ -64,15 +66,14 @@ public class ThreadPoolTest extends TestCase {
         @Override
         public void run() {
             m_running.incrementAndGet();
-            System.out.println("[ " + m_name + " ] starting from pool "
-                    + m_pool);
+            NodeLogger.getLogger(ThreadPoolTest.class).info("[ " + m_name + " ] starting from pool " + m_pool);
             try {
                 ack(3, 10);
                 Thread.sleep((int) (Math.random() * 300));
             } catch (InterruptedException ex) {
-                ex.printStackTrace();
+                NodeLogger.getLogger(ThreadPoolTest.class).warn(ex.getMessage(), ex);
             }
-            System.out.println("[ " + m_name + " ] finished");
+            NodeLogger.getLogger(ThreadPoolTest.class).info("[ " + m_name + " ] finished");
             m_running.decrementAndGet();
             m_finished.incrementAndGet();
         }
@@ -100,8 +101,8 @@ public class ThreadPoolTest extends TestCase {
 
         for (int i = 1; i <= loops; i++) {
             root.submit(new Tester(root));
-            System.out.println("Submitted task " + i + ", " + m_running.get()
-                    + " running threads");
+            NodeLogger.getLogger(ThreadPoolTest.class).info("Submitted task " + i + ", " + m_running.get()
+                                                                    + " running threads");
             if (i % LOOPS_MODULO == 0) {
                 root.setMaxThreads(root.getMaxThreads() + 1);
             }
@@ -119,8 +120,8 @@ public class ThreadPoolTest extends TestCase {
         root.setMaxThreads(3);
         for (int i = 1; i <= loops; i++) {
             root.submit(new Tester(root));
-            System.out.println("Submitted task " + i + ", " + m_running.get()
-                    + " running threads");
+            NodeLogger.getLogger(ThreadPoolTest.class).info("Submitted task " + i + ", " + m_running.get()
+                                                                    + " running threads");
             if (Math.random() > 0.95) {
                 root.setMaxThreads(root.getMaxThreads() + 1);
             } else if ((root.getMaxThreads() > 1) && (Math.random() > 0.98)) {
@@ -153,8 +154,8 @@ public class ThreadPoolTest extends TestCase {
                     } catch (InterruptedException ex) {
                         ex.printStackTrace();
                     }
-                    System.out.println("Submitted task " + i + ", "
-                            + m_running.get() + " running threads");
+                    NodeLogger.getLogger(ThreadPoolTest.class).info("Submitted task " + i + ", " + m_running.get()
+                                                                            + " running threads");
                     if (i % LOOPS_MODULO == 0) {
                         root.setMaxThreads(root.getMaxThreads() + 1);
                     }
@@ -204,8 +205,8 @@ public class ThreadPoolTest extends TestCase {
             final int k = (int) (Math.random() * pools.length);
 
             pools[k].submit(new Tester(pools[k]));
-            System.out.println("Submitted task " + i + ", " + m_running.get()
-                    + " running threads");
+            NodeLogger.getLogger(ThreadPoolTest.class).info("Submitted task " + i + ", " + m_running.get()
+                                                                    + " running threads");
             if (i % LOOPS_MODULO == 0) {
                 pools[k].setMaxThreads(pools[k].getMaxThreads() + 1);
             }
@@ -250,8 +251,8 @@ public class ThreadPoolTest extends TestCase {
                             ex.printStackTrace();
                         }
                     }
-                    System.out.println("Submitted task " + i + ", "
-                            + m_running.get() + " running threads");
+                    NodeLogger.getLogger(ThreadPoolTest.class).info("Submitted task " + i + ", " + m_running.get()
+                                                                            + " running threads");
                     assertTrue(root.getRunningThreads()
                             <= root.getMaxThreads());
                 }
@@ -262,10 +263,10 @@ public class ThreadPoolTest extends TestCase {
         Runnable main = new Runnable() {
             @Override
             public void run() {
-                System.out.println("Running invisible");
+                NodeLogger.getLogger(ThreadPoolTest.class).info("Running invisible");
                 try {
                     sub2.runInvisible(submitter);
-                    System.out.println("Finished invisible");
+                    NodeLogger.getLogger(ThreadPoolTest.class).info("Finished invisible");
                 } catch (ExecutionException ex) {
                     ex.printStackTrace();
                 }
@@ -294,9 +295,9 @@ public class ThreadPoolTest extends TestCase {
             } else {
                 root.submit(new Tester(root));
             }
-            System.out.println("Submitted task " + i + ", " + m_running.get()
-                    + " running threads, " + root.getQueueSize()
-                    + " queued jobs");
+            NodeLogger.getLogger(ThreadPoolTest.class).info("Submitted task " + i + ", " + m_running.get()
+                                                                    + " running threads, " + root.getQueueSize()
+                                                                    + " queued jobs");
             if (i % LOOPS_MODULO == 0) {
                 root.setMaxThreads(root.getMaxThreads() + 1);
             }
@@ -320,9 +321,9 @@ public class ThreadPoolTest extends TestCase {
                 root.submit(new Tester(root));
             }
 
-            System.out.println("Submitted task " + i + ", " + m_running.get()
-                    + " running threads, " + root.getQueueSize()
-                    + " queued jobs");
+            NodeLogger.getLogger(ThreadPoolTest.class).info("Submitted task " + i + ", " + m_running.get()
+                                                                    + " running threads, " + root.getQueueSize()
+                                                                    + " queued jobs");
             if (Math.random() > 0.95) {
                 root.setMaxThreads(root.getMaxThreads() + 1);
             } else if ((root.getMaxThreads() > 1) && (Math.random() > 0.98)) {
@@ -360,9 +361,9 @@ public class ThreadPoolTest extends TestCase {
             } else {
                 pools[k].submit(new Tester(pools[k]));
             }
-            System.out.println("Submitted task " + i + ", " + m_running.get()
-                    + " running threads, " + root.getQueueSize()
-                    + " queued jobs");
+            NodeLogger.getLogger(ThreadPoolTest.class).info("Submitted task " + i + ", " + m_running.get()
+                                                                    + " running threads, " + root.getQueueSize()
+                                                                    + " queued jobs");
             if (i % LOOPS_MODULO == 0) {
                 pools[k].setMaxThreads(pools[k].getMaxThreads() + 1);
             }

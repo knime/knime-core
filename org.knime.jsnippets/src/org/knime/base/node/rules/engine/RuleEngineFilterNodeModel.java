@@ -64,7 +64,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.util.MutableInteger;
 
 /**
  * This is the model for the business rule node. It takes the user-defined rules and assigns the row to the first or the
@@ -74,8 +73,10 @@ import org.knime.core.util.MutableInteger;
  * @since 2.8
  */
 public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
+    /** Configuration key for include on match parameter. */
     static final String CFGKEY_INCLUDE_ON_MATCH = "include";
 
+    /** Default value for the include on match parameter. */
     static final boolean DEFAULT_INCLUDE_ON_MATCH = true;
 
     private SettingsModelBoolean m_includeOnMatch = new SettingsModelBoolean(CFGKEY_INCLUDE_ON_MATCH,
@@ -96,9 +97,9 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         try {
-            parseRules(inSpecs[0], true);
+            parseRules(inSpecs[0], RuleNodeSettings.RuleFilter);
         } catch (ParseException ex) {
-            throw new InvalidSettingsException(ex);
+            throw new InvalidSettingsException(ex.getMessage(), ex);
         }
         final DataTableSpec[] ret = new DataTableSpec[getNrOutPorts()];
         for (int i = 0; i < ret.length; i++) {
@@ -113,7 +114,7 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
             throws Exception {
-        final List<Rule> rules = parseRules(inData[0].getDataTableSpec(), true);
+        final List<Rule> rules = parseRules(inData[0].getDataTableSpec(), RuleNodeSettings.RuleFilter);
         final BufferedDataContainer first = exec.createDataContainer(inData[0].getDataTableSpec(), true);
         final int nrOutPorts = getNrOutPorts();
         final RowAppender second =
@@ -129,7 +130,7 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
 
         final BufferedDataTable[] ret = new BufferedDataTable[nrOutPorts];
         try {
-            final MutableInteger rowIdx = new MutableInteger(0);
+            final int[] rowIdx = new int[]{0};
             final int rows = inData[0].getRowCount();
             final VariableProvider provider = new VariableProvider() {
                 @Override
@@ -144,12 +145,12 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
 
                 @Override
                 public int getRowIndex() {
-                    return rowIdx.intValue();
+                    return rowIdx[0];
                 }
             };
             for (DataRow row : inData[0]) {
-                exec.setProgress(rowIdx.intValue() / (double)rows, "Adding row " + (rowIdx.intValue() + 1) + " of "
-                    + rows);
+                rowIdx[0]++;
+                exec.setProgress(rowIdx[0] / (double)rows, "Adding row " + rowIdx[0] + " of " + rows);
                 exec.checkCanceled();
                 boolean wasMatch = false;
                 for (Rule r : rules) {
@@ -163,7 +164,6 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
                 if (!wasMatch) {
                     containers[otherIndex].addRowToTable(row);
                 }
-                rowIdx.inc();
             }
         } finally {
             first.close();

@@ -618,6 +618,7 @@ public final class NodeLogger {
         if (o != null) {
             if (o != FILE_APPENDER) {
                 Logger.getRootLogger().removeAppender(o);
+                WRITER.remove(writer);
             }
         } else {
             getLogger(NodeLogger.class).warn(

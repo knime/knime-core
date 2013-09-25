@@ -62,6 +62,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 import org.knime.ext.sun.nodes.script.compile.CompilationFailedException;
@@ -392,22 +393,23 @@ public final class Expression {
     private static synchronized void ensureTempClassPathExists()
         throws IOException {
         // the temp directory may get deleted under Linux if it has not been
-        // access for some time, see bug #3319
+        // accessed for some time, see bug #3319
         if ((tempClassPath == null) || !tempClassPath.isDirectory()) {
-            File tempClassPathDir = FileUtil.createTempDir("knime_javasnippet");
-            tempClassPathDir.deleteOnExit();
+            File tempClassPathDir =
+                FileUtil.createTempDir("knime_javasnippet", new File(KNIMEConstants.getKNIMETempDir()));
             for (Class<?> cl : REQUIRED_COMPILATION_UNITS) {
                 Package pack = cl.getPackage();
                 File childDir = tempClassPathDir;
                 for (String subDir : pack.getName().split("\\.")) {
                     childDir = new File(childDir, subDir);
-                    childDir.deleteOnExit();
                 }
-                childDir.mkdirs();
+                if (!childDir.isDirectory() && !childDir.mkdirs()) {
+                    throw new IOException("Could not create temporary directory for Java Snippet class files: "
+                        + childDir.getAbsolutePath());
+                }
                 String className = cl.getSimpleName();
                 className = className.concat(".class");
                 File classFile = new File(childDir, className);
-                classFile.deleteOnExit();
                 ClassLoader loader = cl.getClassLoader();
                 InputStream inStream = loader.getResourceAsStream(
                         cl.getName().replace('.', '/') + ".class");
