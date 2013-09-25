@@ -49,7 +49,10 @@
  */
 package org.knime.base.node.rules.engine.manipulator;
 
+import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
+
 /**
+ * Common {@link Manipulator} class for constants for Rule Engine nodes.
  *
  * @author Gabor Bakos
  * @since 2.9
@@ -57,13 +60,16 @@ package org.knime.base.node.rules.engine.manipulator;
 public class ConstantManipulator extends AbstractManipulator {
 
     /**
-     * @param name
-     * @param category
-     * @param displayName
-     * @param description
-     * @param returnType
+     * Constructs a {@link ConstantManipulator}.
+     *
+     * @param name Name of the operator.
+     * @param category Category name of the operator.
+     * @param displayName Name to display.
+     * @param description Description of the operator.
+     * @param returnType The class of the result.
      */
-    public ConstantManipulator(final String name, final String category, final String displayName, final String description, final Class<?> returnType) {
+    public ConstantManipulator(final String name, final String category, final String displayName,
+        final String description, final Class<?> returnType) {
         super(name, category, displayName, description, returnType);
     }
 

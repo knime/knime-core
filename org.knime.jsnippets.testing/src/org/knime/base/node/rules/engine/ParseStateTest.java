@@ -8,7 +8,7 @@ import java.text.ParseException;
 
 import org.junit.Test;
 import org.knime.base.node.rules.engine.Rule.Operators;
-import org.knime.base.node.rules.engine.SimpleRuleParser.ParseState;
+import org.knime.base.node.rules.engine.BaseRuleParser.ParseState;
 
 /**
  * Tests for {@link ParseState}.

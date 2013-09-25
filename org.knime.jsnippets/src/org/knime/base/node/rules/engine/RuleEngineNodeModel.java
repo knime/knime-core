@@ -59,7 +59,6 @@ import java.util.Map;
 
 import org.knime.base.node.rules.engine.Condition.MatchOutcome.MatchState;
 import org.knime.base.node.rules.engine.Rule.Outcome;
-import org.knime.base.node.rules.engine.Rule.OutcomeKind;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -69,7 +68,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.BooleanCell;
-import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
@@ -118,17 +116,17 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
      * Parses all rules in the settings object.
      *
      * @param spec the spec of the table on which the rules are applied.
-     * @param allowNoOutcome Whether to allow no outcome ({@code true}), or is it required ({@code false}).
+     * @param nodeType The type of the node from this method is called.
      * @return a list of parsed rules
      * @throws ParseException if a rule cannot be parsed
-     * @since 2.8
+     * @since 2.9
      */
-    protected List<Rule> parseRules(final DataTableSpec spec, final boolean allowNoOutcome) throws ParseException {
+    protected List<Rule> parseRules(final DataTableSpec spec, final RuleNodeSettings nodeType) throws ParseException {
         ArrayList<Rule> rules = new ArrayList<Rule>();
 
         final Map<String, FlowVariable> availableFlowVariables = getAvailableFlowVariables();
         //SimpleRuleParser ruleParser = new SimpleRuleParser(spec, availableFlowVariables);
-        RuleFactory factory = allowNoOutcome ? RuleFactory.getFilterInstance() : RuleFactory.getInstance();
+        RuleFactory factory = RuleFactory.getInstance(nodeType);
         for (String s : m_settings.rules()) {
             final Rule rule = factory.parse(s, spec, availableFlowVariables);
             if (rule.getCondition().isEnabled()) {
@@ -146,7 +144,7 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
         String newColName = DataTableSpec.getUniqueColumnName(inSpec, m_settings.getNewColName());
 
         final DataType outType =
-                computeOutputType(inSpec, rules);
+                computeOutputType(rules, RuleNodeSettings.RuleEngine);
 
         DataColumnSpec cs = new DataColumnSpecCreator(newColName, outType).createSpec();
 
@@ -185,72 +183,13 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
     }
 
     /**
-     * Finds the column index for the default label.
+     * Computes the output's type based on the types of the outcomes and on the option of allowed boolean outcome.
      *
-     * @param inSpec The input table specification.
-     * @param defaultOutcomeType How to interpret the {@code defaultLabel} parameter.
-     * @param defaultLabel {@link String} representation of the default value, can be empty, but cannot be {@code null}.
-     * @return The index of the column, or {@code -1} when it is not requested {@code defaultOutcomeType} is not
-     *         {@value OutcomeKind#Column}.
-     * @throws InvalidSettingsException When {@code defaultLabel} is inconsistent, eg. not properly escaped column name.
-     * @see OutcomeKind
+     * @param types The type of outcomes.
+     * @param allowBooleanOutcome Allow or not boolean results in outcome?
+     * @return The {@link DataType} specifying the result's type.
      */
-    @Deprecated
-    static int findDefaultLabelColumnIndex(final DataTableSpec inSpec, final Rule.OutcomeKind defaultOutcomeType,
-                                           final String defaultLabel) throws InvalidSettingsException {
-        if (defaultOutcomeType == null) {
-            return -1;
-        }
-        final int defaultLabelColumnIndex;
-        switch (defaultOutcomeType) {
-            case Column:
-                if (defaultLabel.length() < "$_$".length()) {
-                    throw new InvalidSettingsException("Default label is not a column reference");
-                }
-
-                if (defaultLabel.charAt(0) != '$' || !defaultLabel.endsWith("$")) {
-                    throw new InvalidSettingsException("Column references in default label must be enclosed in $");
-                }
-                String colRef = defaultLabel.substring(1, defaultLabel.length() - 1);
-                defaultLabelColumnIndex = inSpec.findColumnIndex(colRef/*defaultLabel*/);
-                if (defaultLabelColumnIndex == -1) {
-                    throw new InvalidSettingsException("Column '" + defaultLabel
-                            + "' for default label does not exist in input table");
-                }
-                break;
-            case PlainText:
-                defaultLabelColumnIndex = -1;
-                break;
-            case FlowVariable:
-                defaultLabelColumnIndex = -1;
-                break;
-            case StringInterpolation:
-                defaultLabelColumnIndex = -1;
-                break;
-            default:
-                throw new UnsupportedOperationException("Not supported outcome type: " + defaultOutcomeType);
-        }
-        return defaultLabelColumnIndex;
-    }
-
-    /**
-     * Computes the result type based on the the rules (and the column types).
-     *
-     * @param inSpec The input table specification.
-     * @param rules The {@link Rule}s.
-     * @return The {@link DataType} representing the output's type.
-     */
-    static DataType computeOutputType(final DataTableSpec inSpec, final List<Rule> rules) {
-        return computeOutputType(inSpec, rules, true);
-    }
-    static DataType computeOutputType(final DataTableSpec inSpec, final List<Rule> rules, final boolean allowBooleanOutcome) {
-        // determine output type
-        List<DataType> types = new ArrayList<DataType>();
-        // add outcome column types
-        for (Rule r : rules) {
-            types.add(r.getOutcome().getType());
-        }
-
+    public static DataType computeOutputType(final List<DataType> types, final boolean allowBooleanOutcome) {
         final DataType outType;
         if (types.size() > 0) {
             DataType temp = types.get(0);
@@ -261,72 +200,28 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
                 // a non-native type, we replace it with string
                 temp = StringCell.TYPE;
             }
-            outType = allowBooleanOutcome ? temp : temp.isASuperTypeOf(BooleanCell.TYPE) ? IntCell.TYPE : temp;
+            outType = allowBooleanOutcome ? temp : BooleanCell.TYPE.isASuperTypeOf(temp) ? IntCell.TYPE : temp;
         } else {
             outType = StringCell.TYPE;
         }
         return outType;
     }
+
     /**
-     * Computes the result type based on the default value and the rules (and the column types).
+     * Computes the outcome's type.
      *
-     * @param inSpec The input table specification.
      * @param rules The {@link Rule}s.
-     * @param defaultLabelColumnIndex The index of column referred by the default label, or a negative number (eg.
-     *            {@code -1}).
-     * @param defaultLabel The text coming as the default. It can have encoded column name or flow variable (both
-     *            without escaping), although that information is not used, their type is decided by the
-     *            {@code defaultLabelColumnIndex} and the {@code flowVarType} parameters. Can be {@code null}.
-     * @param flowVarType {@link DataType} of the referenced flow variable.
-     * @return The {@link DataType} representing the output's type.
+     * @param nodeType The {@link RuleNodeSettings}.
+     * @return The type of the output according to {@code rules} and {@code nodeType}.
      */
-    @Deprecated
-    static DataType computeOutputType(final DataTableSpec inSpec, final List<Rule> rules,
-                                      final int defaultLabelColumnIndex, final String defaultLabel,
-                                      final DataType flowVarType) {
+    public static DataType computeOutputType(final List<Rule> rules, final RuleNodeSettings nodeType) {
         // determine output type
         List<DataType> types = new ArrayList<DataType>();
         // add outcome column types
         for (Rule r : rules) {
             types.add(r.getOutcome().getType());
         }
-
-        if (defaultLabelColumnIndex >= 0) {
-            types.add(inSpec.getColumnSpec(defaultLabelColumnIndex).getType());
-        } else {
-            if (defaultLabel != null && defaultLabel.length() > 0) {
-                if (flowVarType != null) {
-                    types.add(flowVarType);
-                } else {
-                    try {
-                        Integer.parseInt(defaultLabel);
-                        types.add(IntCell.TYPE);
-                    } catch (NumberFormatException ex) {
-                        try {
-                            Double.parseDouble(defaultLabel);
-                            types.add(DoubleCell.TYPE);
-                        } catch (NumberFormatException ex1) {
-                            types.add(StringCell.TYPE);
-                        }
-                    }
-                }
-            }
-        }
-        final DataType outType;
-        if (types.size() > 0) {
-            DataType temp = types.get(0);
-            for (int i = 1; i < types.size(); i++) {
-                temp = DataType.getCommonSuperType(temp, types.get(i));
-            }
-            if ((temp.getValueClasses().size() == 1) && temp.getValueClasses().contains(DataValue.class)) {
-                // a non-native type, we replace it with string
-                temp = StringCell.TYPE;
-            }
-            outType = temp;
-        } else {
-            outType = StringCell.TYPE;
-        }
-        return outType;
+        return computeOutputType(types, nodeType.allowBooleanOutcome());
     }
 
     /** {@inheritDoc} */
@@ -358,10 +253,10 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         try {
             m_rowCount = -1;
-            ColumnRearranger crea = createRearranger(inSpecs[0], parseRules(inSpecs[0], false));
+            ColumnRearranger crea = createRearranger(inSpecs[0], parseRules(inSpecs[0], RuleNodeSettings.RuleEngine));
             return new DataTableSpec[]{crea.createSpec()};
         } catch (ParseException ex) {
-            throw new InvalidSettingsException(ex);
+            throw new InvalidSettingsException(ex.getMessage(), ex);
         }
     }
 
@@ -373,7 +268,7 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
             throws Exception {
         m_rowCount = inData[0].getRowCount();
         try {
-            List<Rule> rules = parseRules(inData[0].getDataTableSpec(), false);
+            List<Rule> rules = parseRules(inData[0].getDataTableSpec(), RuleNodeSettings.RuleEngine);
             ColumnRearranger crea = createRearranger(inData[0].getDataTableSpec(), rules);
 
             return new BufferedDataTable[]{exec.createColumnRearrangeTable(inData[0], crea, exec)};
@@ -388,6 +283,7 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        // No internal state
     }
 
     /**
@@ -411,6 +307,7 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
+        //No internal state
     }
 
     /**
@@ -429,4 +326,5 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
         RuleEngineSettings s = new RuleEngineSettings();
         s.loadSettings(settings);
     }
+
 }

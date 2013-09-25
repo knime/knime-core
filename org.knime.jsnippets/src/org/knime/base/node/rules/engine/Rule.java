@@ -74,23 +74,6 @@ public interface Rule {
     Outcome getOutcome();
 
     /**
-     * This enum specifies how the {@link Outcome} should be interpreted.
-     *
-     * @author Gabor Bakos
-     * @since 2.8
-     */
-    public static enum OutcomeKind {
-        /** As-is, no changes, it is a {@link StringCell}. */
-        PlainText,
-        /** The outcome is computed using a column. */
-        Column,
-        /** The outcome comes from a flow variable. */
-        FlowVariable,
-        /** The outcome is computed using the result as a pattern for string interpolation. */
-        StringInterpolation;
-    }
-
-    /**
      * This interface specifies how the outcome can be computed for a {@link Rule}.
      *
      * @author Gabor Bakos

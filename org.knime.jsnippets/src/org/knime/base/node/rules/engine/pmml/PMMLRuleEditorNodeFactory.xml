@@ -1,14 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
-<knimeNode type="Predictor" icon="./rule_engine.png" xmlns="http://knime.org/node/v2.8"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./rule_engine.png" type="Learner"
+	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Rule Engine</name>
+	<name>PMML Rule Editor</name>
+
 	<shortDescription>
-		 Applies user-defined business rules to the input table
-	</shortDescription>
+        Edits PMML RuleSets.
+    </shortDescription>
 
 	<fullDescription>
 		<intro>
+			Using the rules specified, it creates a PMML
+			<a href="http://www.dmg.org/v4-1/RuleSet.html">RuleSet</a>
+			model.
+			It also applies the rules to the input table.
 			This node takes a list of user-defined rules and tries to match them
 			to each row in the input table. If a rule matches, its outcome value
 			is added into a new column.
@@ -27,8 +32,9 @@
 				, and an outcome (consequent, after the => symbol) which is put into
 				the new column if the rule matches.
 			</p>
-			<p>The outcome of a rule may be any of the following: a string, a number, a boolean constant, a reference
-                to another column or the value of a flow variable value.
+			<p>The outcome of a rule can either be a constant string, a constant
+				number or boolean constant, or a reference to another column or flow
+				variable value.
 				The type of the outcome column is the common super
 				type of all possible
 				outcomes (including the rules that can never
@@ -38,15 +44,7 @@
 			<p>
 				Columns are given by their name surrounded by $, numbers are given
 				in the usual decimal representation. Note that strings must not
-				contain (double-)quotes. Flow variables are represented by
-				<b>$${</b>
-				TypeCharacterAndFlowVarName
-				<b>}$$</b>
-				.
-				The TypeCharacter should be 'D' for double (real) values, 'I' for
-				integer values and 'S' for strings.
-                You can insert column names or flow variables by hand or by clicking in the respective lists in the
-                dialog.
+				contain (double-)quotes.
 			</p>
             <p>The logical expressions can be grouped with parentheses. The
                 precedence rules for them are the following: <tt>NOT</tt> binds most, <tt>AND</tt>,
@@ -56,17 +54,6 @@
                 All operators (and their names)
                 are case-sensitive.
             </p>
-			<p>
-				The
-				<tt>ROWID</tt>
-				represents the row key string, the
-				<tt>ROWINDEX</tt>
-				is a the index of the row (first row has
-				<tt>0</tt>
-				value), while
-				<tt>ROWCOUNT</tt>
-				stands for the number of rows in the table.
-			</p>
 			<p>Some example rules (each should be in one line):</p>
 			<pre>
 // This is a comment
@@ -78,19 +65,6 @@ $Col0$ > 0 => "Positive"
 $Col0$ = "Active" AND $Col1$ &lt;= 5 => "Outlier"
 </pre>
 			You can combine conditions.
-			<pre>
-$Col0$ LIKE "Market Street*" AND 
-    ($Col1$ IN ("married", "divorced") 
-        OR $Col2$ > 40) => "Strange"
-$Col0$ MATCHES $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$ =>
-    $Col0$
-</pre>
-			With parentheses you can combine multiple conditions. The result in
-			the second case comes from one of the columns.
-			<pre>
-$Col0$ > 5 => $${SCol1}$$
-</pre>
-			The result can also come from a flow variable.
 			<p>
 				You can use either Ctrl+Space to insert predefined parts, or
 				select them from the upper controls.
@@ -100,17 +74,15 @@ $Col0$ > 5 => $${SCol1}$$
 		<option name="Column List">Available columns, which can be used as variables
 			in a rule.
 		</option>
-		<option name="Flow Variable List">Available flow variables, which can be used as
-			variables in a rule.
-		</option>
 		<option name="Category">The operator categories.</option>
 		<option name="Function">A list of valid operators in the selected
 			category.
 		</option>
 		<option name="Description">Short help about the operator.</option>
 		<option name="Expression">The rule editor. You can complete the expressions
-			with Ctrl+Space. Each row represents a rule. A red background of the
-			line signals an error and the left side of the editor then shows an error icon.
+			with Ctrl+Space. Each row represents a rule. The background of the
+			line signals errors (pink), or comments (yellow). The right side of
+			the editor can show an error icon.
 		</option>
 		<option name="Appended column name">Name of the newly appended column,
 			which contains
@@ -119,9 +91,11 @@ $Col0$ > 5 => $${SCol1}$$
 	</fullDescription>
 
 	<ports>
-		<inPort index="0" name="Table">Any datatable</inPort>
-		<outPort index="0" name="Classified values">The input table with an additional
-			column containing the outcome of the matching rule for each row.
+		<inPort index="0" name="Table">A table with the columns to be used in the rules.
+		</inPort>
+		<outPort index="0" name="Classified values">The table with the rules applied.
+		</outPort>
+		<outPort index="1" name="RuleSet model">The PMML RuleSet model.
 		</outPort>
 	</ports>
 </knimeNode>

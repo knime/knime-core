@@ -45,34 +45,50 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   11.04.2008 (thor): created
+ * Created on 2013.08.17. by Gabor Bakos
  */
-package org.knime.base.node.rules.engine;
+package org.knime.base.node.rules.engine.pmml;
 
-import org.knime.core.node.NodeDialogPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * This factory creates all necessary object for the business rule node.
+ * <code>NodeDialog</code> for the "PMMLRuleSetPredictor" Node. Applies the rules to the input table.
  *
- * @author Thorsten Meinl, University of Konstanz
- * @since 2.8
+ * This node dialog derives from {@link DefaultNodeSettingsPane} which allows creation of a simple dialog with standard
+ * components. If you need a more complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
+ *
+ * @author Gabor Bakos
  */
-public final class RuleEngineSplitterNodeFactory extends RuleEngineFilterNodeFactory {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-//        return new RuleEngineNodeDialog("TRUE to first, FALSE to second output table");
-        return new RuleEngineNodeDialog(RuleNodeSettings.RuleSplitter);
-    }
+public class PMMLRuleSetPredictorNodeDialog extends DefaultNodeSettingsPane {
 
     /**
-     * {@inheritDoc}
+     * New pane for configuring the PMMLRuleSetPredictor node.
      */
-    @Override
-    public RuleEngineFilterNodeModel createNodeModel() {
-        return new RuleEngineFilterNodeModel(false);
+    protected PMMLRuleSetPredictorNodeDialog() {
+        addDialogComponent(new DialogComponentString(new SettingsModelString(
+            PMMLRuleSetPredictorNodeModel.CFGKEY_OUTPUT_COLUMN, PMMLRuleSetPredictorNodeModel.DEFAULT_OUTPUT_COLUMN),
+            "Output column"));
+        createNewGroup("Confidence");
+        final SettingsModelBoolean computeConfidenceModel = new SettingsModelBoolean(PMMLRuleSetPredictorNodeModel.CFGKEY_ADD_CONFIDENCE, PMMLRuleSetPredictorNodeModel.DEFAULT_ADD_CONFIDENCE);
+        addDialogComponent(new DialogComponentBoolean(computeConfidenceModel, "Compute confidence."));
+        final SettingsModelString confidenceColumnModel = new SettingsModelString(PMMLRuleSetPredictorNodeModel.CFGKEY_CONFIDENCE_COLUMN, PMMLRuleSetPredictorNodeModel.DEFAULT_CONFIDENCE_COLUN);
+        ChangeListener listener = new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                confidenceColumnModel.setEnabled(computeConfidenceModel.getBooleanValue());
+            }
+        };
+        computeConfidenceModel.addChangeListener(listener);
+        addDialogComponent(new DialogComponentString(confidenceColumnModel, "Confidence column"));
+        listener.stateChanged(null);
+        //TODO add option to select the rule selection method from the possible options.
+        //TODO disable output column when not isScorable.
     }
 }

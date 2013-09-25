@@ -45,34 +45,85 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   11.04.2008 (thor): created
+ * Created on 2013.08.25. by Gabor Bakos
  */
-package org.knime.base.node.rules.engine;
+package org.knime.base.node.rules.engine.rsyntax;
 
-import org.knime.core.node.NodeDialogPane;
+import org.fife.ui.rsyntaxtextarea.TokenMaker;
+import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.parser.Parser;
+import org.knime.base.node.rules.engine.Rule;
+import org.knime.base.node.rules.engine.Rule.Operators;
+import org.knime.base.node.rules.engine.RuleNodeSettings;
 
 /**
- * This factory creates all necessary object for the business rule node.
+ * {@link Parser} for the Rule Engine Variable node.
  *
- * @author Thorsten Meinl, University of Konstanz
- * @since 2.8
+ * @author Gabor Bakos
  */
-public final class RuleEngineSplitterNodeFactory extends RuleEngineFilterNodeFactory {
+public class VariableRuleParser extends AbstractRuleParser {
+    /** The syntax style key for Rule Engine variable. */
+    public static String SYNTAX_STYLE_VARIABLE_RULE = SYNTAX_STYLE_RULE + "+variable";
+
     /**
-     * {@inheritDoc}
+     * Language support class for the rule engine variable language.
+     *
+     * @author Gabor Bakos
+     * @since 2.9
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-//        return new RuleEngineNodeDialog("TRUE to first, FALSE to second output table");
-        return new RuleEngineNodeDialog(RuleNodeSettings.RuleSplitter);
+    public static class RuleLanguageSupport extends AbstractRuleParser.AbstractRuleLanguageSupport<VariableRuleParser> {
+        /**
+         * Constructs {@link RuleLanguageSupport}.
+         */
+        public RuleLanguageSupport() {
+            super(VariableRuleParser.SYNTAX_STYLE_VARIABLE_RULE, RuleLanguageSupport.class, KnimeTokenMaker.class);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected VariableRuleParser createParser() {
+            return new VariableRuleParser(true);
+        }
+    }
+
+    /**
+     * Wraps a {@link TokenMaker} and makes the {@link Operators} {@link Operators#toString()} a keyword.
+     *
+     * @author Gabor Bakos
+     * @since 2.9
+     */
+    public static class KnimeTokenMaker extends AbstractRuleParser.WrappedTokenMaker {
+
+        /**
+         * Constructs a {@link Rule} token maker based on the Java {@link TokenMaker}.
+         */
+        public KnimeTokenMaker() {
+            super(TokenMakerFactory.getDefaultInstance().getTokenMaker("text/java"), new VariableRuleParser(true)
+                .getOperators());
+        }
+    }
+
+    /**
+     * Creates the default instance.
+     */
+    public VariableRuleParser() {
+        this(true);
+    }
+
+    /**
+     * @param warnOnColRefsInStrings Warns when there is a possible reference in a {@link String}.
+     */
+    public VariableRuleParser(final boolean warnOnColRefsInStrings) {
+        super(warnOnColRefsInStrings, RuleNodeSettings.VariableRule);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public RuleEngineFilterNodeModel createNodeModel() {
-        return new RuleEngineFilterNodeModel(false);
+    protected boolean isNotApplicable(final String style) {
+        return !style.equals(SYNTAX_STYLE_VARIABLE_RULE);
     }
 }

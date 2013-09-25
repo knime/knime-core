@@ -56,6 +56,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -74,17 +75,17 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 
-import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.parser.Parser;
 import org.fife.ui.rtextarea.Gutter;
-import org.knime.base.node.util.KnimeCompletionProvider;
+import org.knime.base.node.rules.engine.rsyntax.AbstractRuleParser;
+import org.knime.base.node.rules.engine.rsyntax.PMMLRuleParser;
+import org.knime.base.node.rules.engine.rsyntax.RuleParser;
+import org.knime.base.node.rules.engine.rsyntax.VariableRuleParser;
 import org.knime.base.node.util.KnimeSyntaxTextArea;
-import org.knime.base.node.util.ManipulatorProvider;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
@@ -102,14 +103,14 @@ import org.knime.core.util.ThreadUtils;
  * @since 2.8
  */
 @SuppressWarnings({"serial"})
-class RulePanel extends JPanel {
+public class RulePanel extends JPanel {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(RulePanel.class);
 
-    private final boolean m_hasOutputColumn;
+    //    private final boolean m_hasOutputColumn;
 
     private JCheckBox m_inclusionBox;
 
-    private final String m_inclusionLabel;
+    //    private final String m_inclusionLabel;
 
     private JLabel m_outputType;
 
@@ -128,63 +129,47 @@ class RulePanel extends JPanel {
 
     private Map<String, FlowVariable> m_flowVariables;
 
-    private RuleParser m_parser;
+    private AbstractRuleParser m_parser;
 
-    private final boolean m_showColumns;
+    //    private final boolean m_showColumns;
+
+    private RuleNodeSettings m_nodeType;
 
     /**
-     * Constructs the {@link RulePanel}. It shows the columns too.
+     * Constructs the {@link RulePanel}.
      *
-     * @param hasOutputColumn Should we create a control for output column?
-     * @param hasDefaultOutcome The default outcome can be specified?
-     * @param warnOnColRefsInStrings Whether warn if the outcomes contain $ signs.
-     * @param inclusion The inclusion text for filter (matches go to the first outport).
-     * @param manipulatorProvider The {@link ManipulatorProvider} to use.
-     * @param completionProvider The {@link CompletionProvider} to use.
+     * @param nodeType The {@link RuleNodeSettings} to configure the {@link RulePanel}.
      */
-    public RulePanel(final boolean hasOutputColumn, final boolean hasDefaultOutcome,
-        final boolean warnOnColRefsInStrings, final String inclusion, final ManipulatorProvider manipulatorProvider,
-        final KnimeCompletionProvider completionProvider) {
-        this(hasOutputColumn, hasDefaultOutcome, warnOnColRefsInStrings, true/*showColumns*/, inclusion,
-            manipulatorProvider, completionProvider);
+    public RulePanel(final RuleNodeSettings nodeType) {
+        this(nodeType, true);
     }
 
     /**
      * Constructs the {@link RulePanel}.
      *
-     * @param hasOutputColumn Should we create a control for output column?
-     * @param hasDefaultOutcome The default outcome can be specified?
-     * @param warnOnColRefsInStrings Whether warn if the outcomes contain $ signs.
-     * @param showColumns Show the columns panel or hide it.
-     * @param inclusion The inclusion text for filter (matches go to the first outport).
-     * @param manipulatorProvider The {@link ManipulatorProvider} to use.
-     * @param completionProvider The {@link CompletionProvider} to use.
+     * @param nodeType The {@link RuleNodeSettings} to configure the {@link RulePanel}.
+     * @param warnOnColRefsInStrings Warn on suspicious column references in strings?
      */
-    public RulePanel(final boolean hasOutputColumn, final boolean hasDefaultOutcome,
-        final boolean warnOnColRefsInStrings, final boolean showColumns, final String inclusion,
-        final ManipulatorProvider manipulatorProvider, final KnimeCompletionProvider completionProvider) {
-        super(new BorderLayout());
-        this.m_showColumns = showColumns;
-
-        this.m_hasOutputColumn = hasOutputColumn;
-        this.m_inclusionLabel = inclusion;
+    public RulePanel(final RuleNodeSettings nodeType, final boolean warnOnColRefsInStrings) {
+        this.m_nodeType = nodeType;
+        setLayout(new BorderLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
-        m_mainPanel = new RuleMainPanel(manipulatorProvider, completionProvider, showColumns);
+        m_mainPanel = new RuleMainPanel(nodeType);
         for (int i = 0; i < m_mainPanel.getTextEditor().getParserCount(); ++i) {
             Parser p = m_mainPanel.getTextEditor().getParser(i);
-            if (p instanceof RuleParser) {
-                final RuleParser parser = (RuleParser)p;
+            if (p instanceof AbstractRuleParser) {
+                final AbstractRuleParser parser = (AbstractRuleParser)p;
                 m_parser = parser;
                 m_parser.setWarnOnColRefsInStrings(warnOnColRefsInStrings);
-                m_parser.setAllowNoOutcome(!hasDefaultOutcome);
-                m_parser.setAllowTableReferences(showColumns);
+                m_parser.setAllowNoOutcome(false);
+                m_parser.setAllowTableReferences(nodeType.allowTableProperties());
             }
         }
         if (m_parser == null) {
-            m_parser = new RuleParser(warnOnColRefsInStrings, !hasDefaultOutcome, showColumns);
+            m_parser = createParser(warnOnColRefsInStrings, nodeType);
             m_mainPanel.getTextEditor().addParser(m_parser);
         }
         m_parser.setDataTableSpec(m_spec);
@@ -216,6 +201,28 @@ class RulePanel extends JPanel {
     }
 
     /**
+     * Creates the {@link Parser} for the {@link RSyntaxTextArea}.
+     *
+     * @param warnOnColRefsInStrings Warn on suspicious references in {@link String}s?
+     * @param nodeType The {@link RuleNodeSettings}.
+     * @return The {@link Parser} for {@link RSyntaxTextArea}.
+     */
+    protected AbstractRuleParser createParser(final boolean warnOnColRefsInStrings, final RuleNodeSettings nodeType) {
+        switch (nodeType) {
+            case VariableRule:
+                return new VariableRuleParser(warnOnColRefsInStrings);
+            case PMMLRule:
+                return new PMMLRuleParser(warnOnColRefsInStrings);
+            case RuleEngine:
+            case RuleFilter:
+            case RuleSplitter:
+                return new RuleParser(warnOnColRefsInStrings, nodeType);
+            default:
+                throw new UnsupportedOperationException("Not supported node type: " + nodeType);
+        }
+    }
+
+    /**
      * @return The output controls. Either the column name with default value selection controls or the kind of
      *         filtering to do.
      */
@@ -223,13 +230,13 @@ class RulePanel extends JPanel {
         JPanel ret = new JPanel();
         ret.setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
-        if (m_hasOutputColumn) {
+        if (m_nodeType.hasOutput()) {
             constraints.weighty = .25;
             ret.add(
-                createNewColumnTextFieldWithLabel("prediction", 35, m_showColumns ? "Appended column name"
+                createNewColumnTextFieldWithLabel("prediction", 35, m_nodeType.allowColumns() ? "Appended column name"
                     : "New flow variable name"), constraints);
         } else {
-            m_inclusionBox = new JCheckBox(m_inclusionLabel);
+            m_inclusionBox = new JCheckBox(m_nodeType.inclusionText());
             ret.add(m_inclusionBox, constraints);
         }
         return ret;
@@ -286,7 +293,7 @@ class RulePanel extends JPanel {
      * Refreshes the outcome's type.
      */
     protected void updateOutputType() {
-        if (!m_hasOutputColumn) {
+        if (!m_nodeType.hasOutput()) {
             return;
         }
         Runnable runnable = new Runnable() {
@@ -295,7 +302,7 @@ class RulePanel extends JPanel {
                 final long startDate = new Date().getTime();
                 try {
                     final List<Rule> rules = computeRules();
-                    final DataType outputType = RuleEngineNodeModel.computeOutputType(m_spec, rules, m_showColumns);
+                    final DataType outputType = RuleEngineNodeModel.computeOutputType(rules, m_nodeType);
                     ViewUtils.invokeLaterInEDT(new Runnable() {
                         @Override
                         public void run() {
@@ -344,7 +351,7 @@ class RulePanel extends JPanel {
                     if (outputTypes[i] == null && !(i < lines.length && lines[i].trim().isEmpty())) { //error
                         gutter.addLineTrackingIcon(i, RuleMainPanel.ERROR_ICON);
                         textArea.addLineHighlight(i, Color.PINK);
-                    } else if (m_hasOutputColumn && outputTypes[i] != null) {
+                    } else if (m_nodeType.hasOutput() && outputTypes[i] != null) {
                         gutter.addLineTrackingIcon(i, outputTypes[i].getIcon());
                     }
                 } catch (BadLocationException e) {
@@ -383,9 +390,13 @@ class RulePanel extends JPanel {
         throws ParseException {
         List<Rule> ret = new ArrayList<Rule>();
         String text = m_mainPanel.getExpression();
-        final Map<String, FlowVariable> availableFlowVariables = m_flowVariables;
+        if (text == null) {
+            return ret;
+        }
+        final Map<String, FlowVariable> availableFlowVariables =
+            m_nodeType.allowFlowVariables() ? m_flowVariables : Collections.<String, FlowVariable> emptyMap();
         int lineNo = 0;
-        RuleFactory factory = m_hasOutputColumn ? RuleFactory.getInstance() : RuleFactory.getFilterInstance();
+        final RuleFactory factory = RuleFactory.getInstance(m_nodeType);
         for (String line : text.split("\n", -1)) {
             lineNo++;
             //Skip empty lines
@@ -444,7 +455,9 @@ class RulePanel extends JPanel {
      * @param text The new text to show.
      */
     public void updateText(final String text) {
-        m_mainPanel.update(text, m_spec, m_flowVariables);
+        m_mainPanel.update(text, m_spec,
+            m_nodeType.allowFlowVariables() ? m_flowVariables : Collections.<String, FlowVariable> emptyMap(),
+            m_nodeType.expressions());
     }
 
     /**
@@ -456,7 +469,8 @@ class RulePanel extends JPanel {
     public void update(final DataTableSpec spec, final Map<String, FlowVariable> flowVariables) {
         m_spec = spec;
         this.m_flowVariables = flowVariables;
-        m_mainPanel.update(m_mainPanel.getExpression(), spec, flowVariables);
+        m_mainPanel.update(m_mainPanel.getExpression(), spec, m_nodeType.allowFlowVariables() ? flowVariables
+            : Collections.<String, FlowVariable> emptyMap(), m_nodeType.expressions());
     }
 
     /**
@@ -468,7 +482,7 @@ class RulePanel extends JPanel {
      */
     public void saveSettings(final NodeSettingsWO settings) throws InvalidSettingsException {
         RuleEngineSettings ruleSettings = new RuleEngineSettings();
-        if (m_hasOutputColumn) {
+        if (m_nodeType.hasOutput()) {
             ruleSettings.setNewcolName(m_newColumnName.getText());
         } else {
             ruleSettings.setNewcolName("");
@@ -484,7 +498,7 @@ class RulePanel extends JPanel {
             }
         }
         ruleSettings.saveSettings(settings);
-        if (!m_hasOutputColumn) {
+        if (!m_nodeType.hasOutput()) {
             final SettingsModelBoolean settingsModelBoolean =
                 new SettingsModelBoolean(RuleEngineFilterNodeModel.CFGKEY_INCLUDE_ON_MATCH,
                     RuleEngineFilterNodeModel.DEFAULT_INCLUDE_ON_MATCH);
@@ -501,7 +515,7 @@ class RulePanel extends JPanel {
      * @param availableFlowVariables The {@link FlowVariable}s.
      * @throws NotConfigurableException The information in the {@code settings} model is invalid.
      */
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs,
+    public void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs,
         final Map<String, FlowVariable> availableFlowVariables) throws NotConfigurableException {
         if (specs == null || specs.length == 0 || specs[0] == null /*|| specs[0].getNumColumns() == 0*/) {
             throw new NotConfigurableException("No columns available!");
@@ -513,14 +527,14 @@ class RulePanel extends JPanel {
         update(m_spec, availableFlowVariables);
         RuleEngineSettings ruleSettings = new RuleEngineSettings();
         ruleSettings.loadSettingsForDialog(settings);
-        if (m_hasOutputColumn) {
+        if (m_nodeType.hasOutput()) {
             String newColName = ruleSettings.getNewColName();
             m_newColumnName.setText(newColName);
         }
         final KnimeSyntaxTextArea textEditor = m_mainPanel.getTextEditor();
         textEditor.setText("");
         int line = 0;
-        final RuleFactory factory = m_hasOutputColumn ? RuleFactory.getInstance() : RuleFactory.getFilterInstance();
+        final RuleFactory factory = RuleFactory.getInstance(m_nodeType);
         StringBuilder text = new StringBuilder();
         for (Iterator<String> it = ruleSettings.rules().iterator(); it.hasNext();) {
             final String rs = it.next();
@@ -537,19 +551,19 @@ class RulePanel extends JPanel {
             }
         }
         if (!ruleSettings.rules().iterator().hasNext()) {
-            final String defaultText;
-            if (!m_hasOutputColumn) {
-                defaultText = RuleEngineNodeDialog.FILTER_RULE_LABEL;
-            } else if (m_showColumns) {
-                defaultText = RuleEngineNodeDialog.RULE_LABEL;
-            } else {
-                defaultText = RuleEngineVariableNodeDialog.RULE_LABEL;
-            }
+            final String defaultText = m_nodeType.defaultText();
+            //            if (!m_hasOutputColumn) {
+            //                defaultText = RuleEngineNodeDialog.FILTER_RULE_LABEL;
+            //            } else if (m_showColumns) {
+            //                defaultText = RuleEngineNodeDialog.RULE_LABEL;
+            //            } else {
+            //                defaultText = RuleEngineVariableNodeDialog.RULE_LABEL;
+            //            }
             final String noText = RuleSupport.toComment(defaultText);
             textEditor.setText(noText);
             text.append(noText);
         }
-        if (!m_hasOutputColumn) {
+        if (!m_nodeType.hasOutput()) {
             try {
                 final SettingsModelBoolean includeOnMatch =
                     new SettingsModelBoolean(RuleEngineFilterNodeModel.CFGKEY_INCLUDE_ON_MATCH,
@@ -561,15 +575,5 @@ class RulePanel extends JPanel {
             }
         }
         updateText(text.toString());
-    }
-
-    /**
-     * Called when the default label has to be specified and we want to ease the flow variable support.
-     *
-     * @return The {@link FlowVariableModel}.
-     */
-    @Deprecated
-    protected FlowVariableModel createFlowVariableModel() {
-        throw new IllegalStateException("Deprecated");
     }
 }

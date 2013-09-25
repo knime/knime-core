@@ -67,12 +67,13 @@ import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.IconRowHeader;
 import org.fife.ui.rtextarea.RTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
+import org.knime.base.node.rules.engine.manipulator.ConstantManipulator;
 import org.knime.base.node.rules.engine.manipulator.InfixManipulator;
 import org.knime.base.node.rules.engine.manipulator.PrefixUnaryManipulator;
+import org.knime.base.node.rules.engine.manipulator.RuleManipulatorProvider;
 import org.knime.base.node.util.JSnippetPanel;
-import org.knime.base.node.util.KnimeCompletionProvider;
 import org.knime.base.node.util.KnimeSyntaxTextArea;
-import org.knime.base.node.util.ManipulatorProvider;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 
@@ -83,7 +84,7 @@ import org.knime.core.node.NodeLogger;
  * @since 2.8
  */
 @SuppressWarnings("serial")
-class RuleMainPanel extends JSnippetPanel {
+public class RuleMainPanel extends JSnippetPanel {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(RuleMainPanel.class);
 
     /** Error icon to signal problems in rows */
@@ -101,6 +102,8 @@ class RuleMainPanel extends JSnippetPanel {
     private KnimeSyntaxTextArea m_textEditor;
 
     private Gutter m_gutter;
+
+    private final String m_syntaxStyle;
 
     private static class ToggleRuleAction extends AbstractAction {
         private static final long serialVersionUID = 5930758516767278299L;
@@ -120,7 +123,7 @@ class RuleMainPanel extends JSnippetPanel {
              */
             @SuppressWarnings("hiding")
             public LinePosition(final Object source, final int id, final String command, final int modifiers,
-                                final int lineNumber) {
+                final int lineNumber) {
                 super(source, id, command, modifiers);
                 this.m_lineNumber = lineNumber;
             }
@@ -204,25 +207,12 @@ class RuleMainPanel extends JSnippetPanel {
     }
 
     /**
-     * Constructs the main panel.
-     *
-     * @param manipulatorProvider The {@link ManipulatorProvider}.
-     * @param completionProvider The {@link KnimeCompletionProvider}.
+     * @param nodeType
      */
-    public RuleMainPanel(final ManipulatorProvider manipulatorProvider, final KnimeCompletionProvider completionProvider) {
-        this(manipulatorProvider, completionProvider, true);
-    }
-
-    /**
-     * Constructs the main panel.
-     *
-     * @param manipulatorProvider The {@link ManipulatorProvider}.
-     * @param completionProvider The {@link KnimeCompletionProvider}.
-     * @param showColumns Show the columns panel, or hide it?
-     */
-    public RuleMainPanel(final ManipulatorProvider manipulatorProvider,
-                         final KnimeCompletionProvider completionProvider, final boolean showColumns) {
-        super(manipulatorProvider, completionProvider, showColumns);
+    public RuleMainPanel(final RuleNodeSettings nodeType) {
+        super(RuleManipulatorProvider.getProvider(nodeType), nodeType.completionProvider(), nodeType.allowColumns(), nodeType.allowFlowVariables());
+        m_syntaxStyle = nodeType.syntaxKey();
+        m_textEditor.setSyntaxEditingStyle(m_syntaxStyle);
     }
 
     /**
@@ -243,7 +233,7 @@ class RuleMainPanel extends JSnippetPanel {
 
         ac.install(textArea);
         setExpEdit(textArea);
-        textArea.setSyntaxEditingStyle(RuleParser.SYNTAX_STYLE_RULE);
+        textArea.setSyntaxEditingStyle(m_syntaxStyle);
 
         textArea.getPopupMenu().add(new ToggleRuleAction("Toggle comment", textArea));
         RTextScrollPane textScrollPane = new RTextScrollPane(textArea);
@@ -259,8 +249,8 @@ class RuleMainPanel extends JSnippetPanel {
                 if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
                     try {
                         new ToggleRuleAction(textArea).actionPerformed(new ToggleRuleAction.LinePosition(textArea,
-                                (int)(new Date().getTime() & 0x7fffffff), "toggle comment", e.getModifiers(), textArea
-                                        .getLineOfOffset(textArea.viewToModel(e.getPoint()))));
+                            (int)(new Date().getTime() & 0x7fffffff), "toggle comment", e.getModifiers(), textArea
+                                .getLineOfOffset(textArea.viewToModel(e.getPoint()))));
                     } catch (BadLocationException e1) {
                         LOGGER.debug(e1.getMessage(), e1);
                     }
@@ -292,7 +282,7 @@ class RuleMainPanel extends JSnippetPanel {
             String textToInsert = infix.getName() + " ";
             try {
                 if (m_textEditor.getCaretPosition() == 0 || m_textEditor.getText().isEmpty()
-                        || m_textEditor.getText(m_textEditor.getCaretPosition(), 1).charAt(0) != ' ') {
+                    || m_textEditor.getText(m_textEditor.getCaretPosition(), 1).charAt(0) != ' ') {
                     textToInsert = " " + textToInsert;
                 }
             } catch (BadLocationException e) {
@@ -300,8 +290,8 @@ class RuleMainPanel extends JSnippetPanel {
             }
             m_textEditor.insert(textToInsert, m_textEditor.getCaretPosition());
             m_textEditor.requestFocus();
-        } else if (selected instanceof PrefixUnaryManipulator) {
-            PrefixUnaryManipulator prefix = (PrefixUnaryManipulator)selected;
+        } else if (selected instanceof PrefixUnaryManipulator || selected instanceof ConstantManipulator) {
+            Manipulator prefix = (Manipulator)selected;
             m_textEditor.replaceSelection(prefix.getName() + " ");
 
             m_textEditor.requestFocus();

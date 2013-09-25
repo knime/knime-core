@@ -166,8 +166,8 @@ public interface Condition extends Line {
                 super();
                 this.m_state = state;
                 this.m_matchedObjects =
-                        matchedObjects.isEmpty() ? Collections.<String, Map<String, String>> emptyMap() : Collections
-                                .unmodifiableMap(Util.clone(matchedObjects));
+                    matchedObjects.isEmpty() ? Collections.<String, Map<String, String>> emptyMap() : Collections
+                        .unmodifiableMap(Util.clone(matchedObjects));
             }
 
             /**
@@ -350,7 +350,7 @@ public interface Condition extends Line {
             final ExpressionValue value = m_expression.evaluate(row, provider);
             if (value.getValue().isMissing()) {
                 return new MatchOutcome.GenericMatchOutcome(MatchState.skipped,
-                        Collections.<String, Map<String, String>> emptyMap());
+                    Collections.<String, Map<String, String>> emptyMap());
             }
             final DataCell cell = value.getValue();
             if (cell instanceof BooleanValue) {
@@ -359,7 +359,7 @@ public interface Condition extends Line {
                     return new MatchOutcome.GenericMatchOutcome(MatchState.matchedAndStop, value.getMatchedObjects());
                 }
                 return new MatchOutcome.GenericMatchOutcome(MatchState.nonMatched,
-                        Collections.<String, Map<String, String>> emptyMap());
+                    Collections.<String, Map<String, String>> emptyMap());
             }
             return new MatchOutcome.GenericMatchOutcome(MatchState.stopProcessing, value.getMatchedObjects());
         }
@@ -378,7 +378,8 @@ public interface Condition extends Line {
          * @see #isConstantFalse()
          */
         private boolean checkValue(final boolean value) {
-            if (m_expression.isConstant()) { DataCell rawValue = m_expression.evaluate(null, null).getValue();
+            if (m_expression.isConstant()) {
+                DataCell rawValue = m_expression.evaluate(null, null).getValue();
                 if (rawValue instanceof BooleanValue) {
                     BooleanValue bv = (BooleanValue)rawValue;
                     return bv.getBooleanValue() == value;

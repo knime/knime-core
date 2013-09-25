@@ -45,34 +45,67 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   11.04.2008 (thor): created
+ * Created on 2013.08.15. by Gabor Bakos
  */
-package org.knime.base.node.rules.engine;
+package org.knime.base.node.rules.engine.pmml;
 
-import org.knime.core.node.NodeDialogPane;
+import org.knime.base.node.mine.decisiontree2.PMMLOperator;
+import org.knime.base.node.mine.decisiontree2.PMMLSimplePredicate;
 
 /**
- * This factory creates all necessary object for the business rule node.
+ * A special version of {@link PMMLSimplePredicate} to allow getting the threshold/value.
  *
- * @author Thorsten Meinl, University of Konstanz
- * @since 2.8
+ * @author Gabor Bakos
  */
-public final class RuleEngineSplitterNodeFactory extends RuleEngineFilterNodeFactory {
+public class PMMLRuleSimplePredicate extends PMMLSimplePredicate {
+    private String m_threshold;
+
     /**
-     * {@inheritDoc}
+     * Constructs {@link PMMLRuleSimplePredicate} from the {@link PMMLSimplePredicate}.
+     * @see PMMLSimplePredicate#PMMLSimplePredicate()
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-//        return new RuleEngineNodeDialog("TRUE to first, FALSE to second output table");
-        return new RuleEngineNodeDialog(RuleNodeSettings.RuleSplitter);
+    public PMMLRuleSimplePredicate() {
+        super();
+    }
+
+    /**
+     * Constructs {@link PMMLRuleSimplePredicate} from the {@link PMMLSimplePredicate}.
+     * @param field The field/column name.
+     * @param operator The relational operator.
+     * @param value The argument to compare to.
+     * @see PMMLSimplePredicate#PMMLSimplePredicate(String, String, String)
+     */
+    public PMMLRuleSimplePredicate(final String field, final String operator, final String value) {
+        super(field, operator, value);
+        setThreshold(value);
+    }
+
+    /**
+     * Constructs {@link PMMLRuleSimplePredicate} from the {@link PMMLSimplePredicate}.
+     *
+     * @param field The field/column name.
+     * @param operator The relational operator.
+     * @param value The argument to compare to.
+     * @see PMMLSimplePredicate#PMMLSimplePredicate(String, PMMLOperator, String)
+     */
+    public PMMLRuleSimplePredicate(final String field, final PMMLOperator operator, final String value) {
+        super(field, operator, value);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public RuleEngineFilterNodeModel createNodeModel() {
-        return new RuleEngineFilterNodeModel(false);
+    public void setThreshold(final String threshold) {
+        super.setThreshold(threshold);
+        this.m_threshold = threshold;
+    }
+
+    /**
+     * @return The threshold/value of the relation.
+     */
+    @SuppressWarnings("all")
+    public String getThreshold() {
+        return this.m_threshold;
     }
 }

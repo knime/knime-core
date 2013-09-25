@@ -126,9 +126,15 @@ public class PMMLSimplePredicate extends PMMLPredicate {
         assert getPreviousIndex() != -1;
         DataCell cell = row.getCell(getPreviousIndex());
         if (cell.isMissing()) {
+            if (getOperator() == PMMLOperator.IS_MISSING || getOperator() == PMMLOperator.IS_NOT_MISSING) {
+                return getOperator().evaluate(null, m_threshold);
+            }
             return null;
         }
         if (cell.getType().isCompatible(DoubleValue.class)) {
+            if (m_threshold == null || m_threshold.isEmpty()) {
+                return getOperator().evaluate(((DoubleValue)cell).getDoubleValue(), null);
+            }
             double current = Double.parseDouble(m_threshold);
             double value = ((DoubleValue)cell).getDoubleValue();
             return getOperator().evaluate(value, current);
@@ -143,14 +149,15 @@ public class PMMLSimplePredicate extends PMMLPredicate {
     @Override
     public String toString() {
         String value = m_threshold;
-        try {
-            double v = Double.parseDouble(m_threshold);
-            value = DoubleFormat.formatDouble(v);
-        } catch (NumberFormatException nfe) {
-            // not a double, use fallback
+        if (value != null) {
+            try {
+                double v = Double.parseDouble(value);
+                value = DoubleFormat.formatDouble(v);
+            } catch (NumberFormatException nfe) {
+                // not a double, use fallback
+            }
         }
-        return getSplitAttribute() + " " + getOperator().getSymbol() + " "
-                + value;
+        return getSplitAttribute() + " " + getOperator().getSymbol() + " " + value;
     }
 
     /** {@inheritDoc} */

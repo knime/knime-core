@@ -53,9 +53,7 @@ package org.knime.base.node.rules.engine;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.knime.base.node.rules.engine.Rule.OutcomeKind;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -66,12 +64,6 @@ import org.knime.core.node.NodeSettingsWO;
  * @since 2.8
  */
 public class RuleEngineSettings {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(RuleEngineSettings.class);
-
-    /** Default label settings key. */
-    @Deprecated
-    static final String CFG_DEFAULT_LABEL = "default-label";
-
     private final List<String> m_rules = new ArrayList<String>();
 
     private String m_newColName = RuleEngineNodeDialog.NEW_COL_NAME;
@@ -86,73 +78,12 @@ public class RuleEngineSettings {
     }
 
     /**
-     * Sets the label that should be used if no rule matches.
-     *
-     * @param defaultLabel the default label
-     * @deprecated Use a rule like {@code TRUE=>...}.
-     */
-    @Deprecated
-    public void setDefaultLabel(final String defaultLabel) {
-        LOGGER.coding("Invoked deprecated setDefaultLabel");
-    }
-
-    /**
-     * @param b If {@code true} {@link OutcomeKind#Column} will be the default outcome kind, else the previous value.
-     * @see #setDefaultOutputType(OutcomeKind)
-     */
-    @Deprecated
-    public void setDefaultLabelIsColumn(final boolean b) {
-        LOGGER.coding("Invoked deprecated setDefaultLabelIsColumn");
-    }
-
-    /**
-     * @param defaultOutputType the defaultOutputType to set
-     * @deprecated Cannot set, use a {@code TRUE=>...} rule with the preferred outcome.
-     */
-    @Deprecated
-    public void setDefaultOutputType(final Rule.OutcomeKind defaultOutputType) {
-        LOGGER.coding("Invoked deprecated setDefaultOutputType");
-    }
-
-    /**
      * Returns the name of the new column containing the matching rule's outcome.
      *
      * @return the column's name
      */
     public String getNewColName() {
         return m_newColName;
-    }
-
-    /**
-     * Returns the label that should be used if no rule matches.
-     *
-     * @return the default label
-     * @deprecated use a {@code TRUE=>...} rule instead.
-     */
-    @Deprecated
-    public String getDefaultLabel() {
-        LOGGER.coding("Invoked deprecated getDefaultLabel");
-        throw new IllegalStateException("Deprecated");
-    }
-
-    /**
-     * @return default output kind is {@link OutcomeKind#Column}
-     * @see #getDefaultOutputType()
-     */
-    @Deprecated
-    public boolean getDefaultLabelIsColumn() {
-        LOGGER.coding("Invoked deprecated getDefaultLabelIsColumn");
-        throw new IllegalStateException("Deprecated");
-    }
-
-    /**
-     * @return the defaultOutputType
-     * @deprecated Should not be used any longer.
-     */
-    @Deprecated
-    public Rule.OutcomeKind getDefaultOutputType() {
-        LOGGER.coding("Invoked deprecated getDefaultOutputType");
-        throw new IllegalStateException("Deprecated");
     }
 
     /**

@@ -45,34 +45,63 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   11.04.2008 (thor): created
+ * Created on 2013.08.17. by Gabor Bakos
  */
-package org.knime.base.node.rules.engine;
+package org.knime.base.node.rules.engine.pmml;
 
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * This factory creates all necessary object for the business rule node.
+ * <code>NodeFactory</code> for the "PMMLRuleSetPredictor" Node.
+ * Applies the rules to the input table.
  *
- * @author Thorsten Meinl, University of Konstanz
- * @since 2.8
+ * @author Gabor Bakos
  */
-public final class RuleEngineSplitterNodeFactory extends RuleEngineFilterNodeFactory {
+public class PMMLRuleSetPredictorNodeFactory
+        extends NodeFactory<PMMLRuleSetPredictorNodeModel> {
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-//        return new RuleEngineNodeDialog("TRUE to first, FALSE to second output table");
-        return new RuleEngineNodeDialog(RuleNodeSettings.RuleSplitter);
+    public PMMLRuleSetPredictorNodeModel createNodeModel() {
+        return new PMMLRuleSetPredictorNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public RuleEngineFilterNodeModel createNodeModel() {
-        return new RuleEngineFilterNodeModel(false);
+    public int getNrNodeViews() {
+        return 0;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<PMMLRuleSetPredictorNodeModel> createNodeView(final int viewIndex,
+            final PMMLRuleSetPredictorNodeModel nodeModel) {
+        throw new IndexOutOfBoundsException("No views: " + viewIndex);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new PMMLRuleSetPredictorNodeDialog();
+    }
+
 }
+

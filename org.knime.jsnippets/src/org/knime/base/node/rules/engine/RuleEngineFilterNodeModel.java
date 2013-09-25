@@ -97,9 +97,9 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         try {
-            parseRules(inSpecs[0], true);
+            parseRules(inSpecs[0], RuleNodeSettings.RuleFilter);
         } catch (ParseException ex) {
-            throw new InvalidSettingsException(ex);
+            throw new InvalidSettingsException(ex.getMessage(), ex);
         }
         final DataTableSpec[] ret = new DataTableSpec[getNrOutPorts()];
         for (int i = 0; i < ret.length; i++) {
@@ -114,7 +114,7 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
             throws Exception {
-        final List<Rule> rules = parseRules(inData[0].getDataTableSpec(), true);
+        final List<Rule> rules = parseRules(inData[0].getDataTableSpec(), RuleNodeSettings.RuleFilter);
         final BufferedDataContainer first = exec.createDataContainer(inData[0].getDataTableSpec(), true);
         final int nrOutPorts = getNrOutPorts();
         final RowAppender second =

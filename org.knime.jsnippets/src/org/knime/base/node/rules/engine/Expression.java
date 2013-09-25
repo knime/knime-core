@@ -49,6 +49,9 @@
  */
 package org.knime.base.node.rules.engine;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.knime.core.data.DataRow;
@@ -61,6 +64,50 @@ import org.knime.core.data.DataType;
  * @since 2.8
  */
 public interface Expression {
+    /**
+     * The type of the expression.
+     *
+     * @since 2.9
+     */
+    public enum ASTType {
+        /** Reference to a column. */
+        ColRef,
+        /** Reference to a flow variable */
+        FlowVarRef,
+        /** Reference to a table property. */
+        TableRef,
+        /** A constant. */
+        Constant,
+        /** {@code <} */
+        Less,
+        /** {@code =} */
+        Equals,
+        /** {@code >} */
+        Greater,
+        /** {@code <=} */
+        LessOrEquals,
+        /** {@code >=} */
+        GreaterOrEquals,
+        /** Missing operator. */
+        Missing,
+        /** List constructor. */
+        List,
+        /** In operator. */
+        In,
+        /** Regular expression match. */
+        Matches,
+        /** SQL-like like. @see org.knime.base.util.WildcardMatcher */
+        Like,
+        /** Logical negation. */
+        Not,
+        /** Logical conjunction. */
+        And,
+        /** Logical disjunction. */
+        Or,
+        /** Xor. */
+        Xor;
+    }
+
     /**
      * @return {@link DataType} of input arguments (can be empty).
      */
@@ -84,4 +131,43 @@ public interface Expression {
      * @return {@code true} means it can be evaluated during construction.
      */
     boolean isConstant();
+
+    /** @return The type of the {@link Expression}. */
+    ASTType getTreeType();
+
+    /** @return The contained sub{@link Expression}s. */
+    List<Expression> getChildren();
+
+    /**
+     * Base class for {@link Expression}s. It handles {@link #getChildren()}. No setter for them.
+     *
+     * @since 2.9
+     */
+    public abstract class Base implements Expression {
+        private final List<Expression> m_children;
+
+        /**
+         * Constructs {@link Expression} using its children.
+         * @param children The contained subexpressions.
+         */
+        public Base(final Expression... children) {
+            this.m_children = Arrays.asList(children.clone());
+        }
+
+        /**
+         * Constructs {@link Expression} using its children.
+         * @param children The contained subexpressions.
+         */
+        public Base(final List<Expression> children) {
+            this.m_children = new ArrayList<Expression>(children);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public List<Expression> getChildren() {
+            return Collections.unmodifiableList(m_children);
+        }
+    }
 }

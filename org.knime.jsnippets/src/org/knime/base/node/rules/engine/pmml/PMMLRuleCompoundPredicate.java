@@ -45,34 +45,36 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   11.04.2008 (thor): created
+ * Created on 2013.08.15. by Gabor Bakos
  */
-package org.knime.base.node.rules.engine;
+package org.knime.base.node.rules.engine.pmml;
 
-import org.knime.core.node.NodeDialogPane;
+import org.knime.base.node.mine.decisiontree2.PMMLBooleanOperator;
+import org.knime.base.node.mine.decisiontree2.PMMLCompoundPredicate;
 
 /**
- * This factory creates all necessary object for the business rule node.
+ * A special version of {@link PMMLCompoundPredicate} to allow getting the operator using the {@link #getConnective()}
+ * method.
  *
- * @author Thorsten Meinl, University of Konstanz
- * @since 2.8
+ * @author Gabor Bakos
  */
-public final class RuleEngineSplitterNodeFactory extends RuleEngineFilterNodeFactory {
+public class PMMLRuleCompoundPredicate extends PMMLCompoundPredicate {
+    private final PMMLBooleanOperator m_booleanOperator;
+
     /**
-     * {@inheritDoc}
+     * Constructs the object.
+     *
+     * @param operator The type of the connective.
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-//        return new RuleEngineNodeDialog("TRUE to first, FALSE to second output table");
-        return new RuleEngineNodeDialog(RuleNodeSettings.RuleSplitter);
+    public PMMLRuleCompoundPredicate(final PMMLBooleanOperator operator) {
+        super(operator);
+        m_booleanOperator = operator;
     }
 
     /**
-     * {@inheritDoc}
+     * @return the booleanOperator.
      */
-    @Override
-    public RuleEngineFilterNodeModel createNodeModel() {
-        return new RuleEngineFilterNodeModel(false);
+    public PMMLBooleanOperator getConnective() {
+        return m_booleanOperator;
     }
 }

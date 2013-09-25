@@ -50,8 +50,13 @@
 package org.knime.base.node.rules.engine;
 
 import java.text.ParseException;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
+import org.knime.base.node.rules.engine.BaseRuleParser.ParseState;
+import org.knime.base.node.rules.engine.Rule.Operators;
+import org.knime.base.node.rules.engine.pmml.PMMLRuleParser;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.workflow.FlowVariable;
 
@@ -61,39 +66,44 @@ import org.knime.core.node.workflow.FlowVariable;
  * @author Gabor Bakos
  * @since 2.8
  */
-public final class RuleFactory {
-    private static final RuleFactory INSTANCE = new RuleFactory(null, true);
+public class RuleFactory {
+    private static final RuleFactory INSTANCE = new RuleFactory(null, true,
+        RuleNodeSettings.RuleEngine.supportedOperators());
 
-    private static final RuleFactory FILTER_INSTANCE = new RuleFactory(true, true);
+    private static final RuleFactory FILTER_INSTANCE = new RuleFactory(true, true,
+        RuleNodeSettings.RuleFilter.supportedOperators());
 
-    private static final RuleFactory VARIABLE_INSTANCE = new RuleFactory(false, false);
+    private static final RuleFactory VARIABLE_INSTANCE = new RuleFactory(false, false,
+        RuleNodeSettings.VariableRule.supportedOperators());
+
+    private static final RuleFactory PMML_INSTANCE = new RuleFactory(null, false,
+        RuleNodeSettings.PMMLRule.supportedOperators()) {
+        @Override
+        public Rule parse(final String rule, final DataTableSpec spec,
+            final java.util.Map<String, FlowVariable> flowVariables) throws ParseException {
+            if (!RuleSupport.isComment(rule)) {
+                ParseState state = new ParseState(rule);
+                PMMLRuleParser pmmlRuleParser = new PMMLRuleParser(spec, Collections.<String, FlowVariable> emptyMap());
+                pmmlRuleParser.parseBooleanExpression(state);
+                state.skipWS();
+                state.consumeText("=>");
+                pmmlRuleParser.parseOutcomeOperand(state, null);
+            }
+            return super.parse(rule, spec, flowVariables);
+        }
+    };
 
     private final Boolean m_booleanOutcome;
 
     private final boolean m_allowTableReference;
 
-    private RuleFactory(final Boolean booleanOutcome, final boolean allowTableReference) {
+    private final Set<Operators> m_operators;
+
+    private RuleFactory(final Boolean booleanOutcome, final boolean allowTableReference, final Set<Operators> operators) {
         super();
         this.m_booleanOutcome = booleanOutcome;
         this.m_allowTableReference = allowTableReference;
-    }
-
-    /**
-     * Enum to help selecting the proper {@link RuleFactory}.
-     *
-     * @author Gabor Bakos
-     * @since 2.8
-     */
-    enum RuleSet {
-        /** Both outcome and table references are allowed. */
-        Full,
-        /** The outcome is optional, not used. */
-        Filter,
-        /**
-         * Outcomes are required, but table references are disallowed. (Column references are allowed, but you can pass
-         * an empty {@link DataTableSpec} as the parameter.)
-         */
-        Variable;
+        this.m_operators = operators;
     }
 
     /**
@@ -107,48 +117,29 @@ public final class RuleFactory {
      * @since 2.8
      */
     public Rule parse(final String rule, final DataTableSpec spec, final Map<String, FlowVariable> flowVariables)
-            throws ParseException {
-        return new SimpleRuleParser(spec, flowVariables, m_allowTableReference).parse(rule, m_booleanOutcome);
+        throws ParseException {
+        return new SimpleRuleParser(spec, flowVariables, ExpressionFactory.getInstance(),
+            ExpressionFactory.getInstance(), m_allowTableReference, m_operators).parse(rule, m_booleanOutcome);
     }
 
     /**
-     * @return the instance for general rules
+     * @param nodeType The {@link RuleNodeSettings}.
+     * @return The instance belonging the the node.
+     * @since 2.9
      */
-    public static RuleFactory getInstance() {
-        return INSTANCE;
-    }
-
-    /**
-     * @return the instance for rules with possibly no outcome.
-     */
-    public static RuleFactory getFilterInstance() {
-        return FILTER_INSTANCE;
-    }
-
-    /**
-     * @return the instance for rules without reference to table properties ({@code $$ROWID$$}, {@code $$ROWINDEX$$},
-     *         {@code $$ROWCOUNT$$}).
-     */
-    public static RuleFactory getVariableInstance() {
-        return VARIABLE_INSTANCE;
-    }
-
-    /**
-     * Selects the proper {@link RuleFactory} instance.
-     *
-     * @param ruleSet The {@link RuleSet} to select.
-     * @return The {@link RuleFactory} parsing that kind of rules.
-     */
-    static RuleFactory getInstance(final RuleSet ruleSet) {
-        switch (ruleSet) {
-            case Full:
+    public static RuleFactory getInstance(final RuleNodeSettings nodeType) {
+        switch (nodeType) {
+            case PMMLRule:
+                return PMML_INSTANCE;
+            case RuleEngine:
                 return INSTANCE;
-            case Filter:
+            case RuleFilter:
+            case RuleSplitter:
                 return FILTER_INSTANCE;
-            case Variable:
+            case VariableRule:
                 return VARIABLE_INSTANCE;
             default:
-                throw new UnsupportedOperationException("Unknown ruleset: " + ruleSet);
+                throw new UnsupportedOperationException("Not supported: " + nodeType);
         }
     }
 }

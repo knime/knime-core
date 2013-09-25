@@ -65,7 +65,6 @@ import org.knime.base.util.WildcardMatcher;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
@@ -86,14 +85,15 @@ import org.knime.core.node.workflow.FlowVariable.Scope;
  * @author Gabor Bakos
  * @since 2.8
  */
-public class ExpressionFactory {
+public class ExpressionFactory implements RuleExpressionFactory<Expression, Expression>,
+    ReferenceExpressionFactory {
     /**
      * {@link Expression} for constants.
      *
      * @author Gabor
      * @since 2.8
      */
-    private static final class ConstantExpression implements Expression {
+    private static final class ConstantExpression extends Expression.Base {
         private final ExpressionValue m_value;
 
         /**
@@ -102,6 +102,7 @@ public class ExpressionFactory {
          * @param value The value to return.
          */
         private ConstantExpression(final ExpressionValue value) {
+            super();
             this.m_value = value;
         }
 
@@ -144,6 +145,14 @@ public class ExpressionFactory {
         public String toString() {
             return m_value.getValue().toString();
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ASTType getTreeType() {
+            return ASTType.Constant;
+        }
     }
 
     /**
@@ -153,7 +162,7 @@ public class ExpressionFactory {
      * @author Gabor Bakos
      * @since 2.8
      */
-    private abstract class RegExExpression implements Expression {
+    private abstract class RegExExpression extends Expression.Base {
         private final Expression m_right;
 
         private final Expression m_left;
@@ -180,6 +189,7 @@ public class ExpressionFactory {
          */
         private RegExExpression(final Expression left, final Expression right, final String opName,
             final boolean match, final String key) throws IllegalStateException {
+            super(left, right);
             this.m_right = right;
             this.m_left = left;
             this.m_opName = opName;
@@ -324,18 +334,14 @@ public class ExpressionFactory {
     }
 
     /**
-     * Negates the result of an {@link Expression}. For missing values it will return missing value.<br/>
-     * No optimization is done for {@link Expression#isConstant()} {@link Expression}.
-     *
-     * @param expressionToNegate A {@link BooleanValue} {@link Expression}. If a non-Boolean and non-missing value is
-     *            matched, and {@link IllegalStateException} will be thrown.
-     * @return The negated expression.
+     * {@inheritDoc}
      */
+    @Override
     public Expression not(final Expression expressionToNegate) {
         if (!expressionToNegate.getOutputType().isCompatible(BooleanValue.class)) {
             throw new IllegalStateException("Expected a boolean expression, got: " + expressionToNegate);
         }
-        return new Expression() {
+        return new Expression.Base(expressionToNegate) {
 
             /**
              * {@inheritDoc}
@@ -385,22 +391,24 @@ public class ExpressionFactory {
             public String toString() {
                 return "not(" + expressionToNegate + ")";
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                return ASTType.Not;
+            }
         };
     }
 
     /**
-     * Creates a new {@link Expression} with the conjunction of the arguments. Missing values will cause missing value
-     * result, but a {@link BooleanCell#FALSE} will result in a {@value BooleanCell#FALSE} result because of the
-     * short-circuit evaluation. When no arguments passed, a {@value Boolean#TRUE} result will be returned. <br/>
-     * No optimization is done for {@link Expression#isConstant()} {@link Expression}s.
-     *
-     * @param boolExpressions Some {@link Expression}s with {@link BooleanValue} result. If non-missing, non-Boolean
-     *            expression results occur, an IllegalStateException will be thrown.
-     * @return The conjunction of the arguments as an {@link Expression}.
+     * {@inheritDoc}
      */
-    public Expression and(final Expression... boolExpressions) {
+    @Override
+    public Expression and(final List<Expression> boolExpressions) {
         final boolean allIsConstant = checkBooleansAndConstant(boolExpressions);
-        return new Expression() {
+        return new Expression.Base(boolExpressions) {
 
             /**
              * {@inheritDoc}
@@ -458,7 +466,15 @@ public class ExpressionFactory {
              */
             @Override
             public String toString() {
-                return "and(" + Arrays.toString(boolExpressions) + ")";
+                return "and(" + boolExpressions + ")";
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                return ASTType.And;
             }
         };
     }
@@ -467,31 +483,25 @@ public class ExpressionFactory {
      * @param boolExpressions
      * @return
      */
-    private boolean checkBooleansAndConstant(final Expression... boolExpressions) {
+    private boolean checkBooleansAndConstant(final List<Expression> boolExpressions) {
         boolean allIsConstant = true;
         for (Expression expression : boolExpressions) {
             allIsConstant &= expression.isConstant();
             if (!expression.getOutputType().isCompatible(BooleanValue.class)) {
                 throw new IllegalStateException("Expected a boolean expression, got: " + expression + " in "
-                    + Arrays.toString(boolExpressions));
+                    + boolExpressions.toString());
             }
         }
         return allIsConstant;
     }
 
     /**
-     * Creates a new {@link Expression} with the disjunction of the arguments. Missing values will cause missing value
-     * result, but a {@link BooleanCell#TRUE} will result in a {@value BooleanCell#TRUE} result because of the
-     * short-circuit evaluation. When no arguments passed, a {@value Boolean#FALSE} result will be returned. <br/>
-     * No optimization is done for {@link Expression#isConstant()} {@link Expression}s.
-     *
-     * @param boolExpressions Some {@link Expression}s with {@link BooleanValue} result. If non-missing, non-Boolean
-     *            expression results occur, an IllegalStateException will be thrown.
-     * @return The disjunction of the arguments as an {@link Expression}.
+     * {@inheritDoc}
      */
-    public Expression or(final Expression... boolExpressions) {
+    @Override
+    public Expression or(final List<Expression> boolExpressions) {
         final boolean allIsConstant = checkBooleansAndConstant(boolExpressions);
-        return new Expression() {
+        return new Expression.Base(boolExpressions) {
 
             /**
              * {@inheritDoc}
@@ -549,27 +559,29 @@ public class ExpressionFactory {
              */
             @Override
             public String toString() {
-                return "or(" + Arrays.toString(boolExpressions) + ")";
+                return "or(" + boolExpressions + ")";
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                return ASTType.Or;
             }
         };
     }
 
     /**
-     * Creates a new {@link Expression} with the exclusive or of the arguments. Missing values will cause missing value
-     * result. When no arguments passed, an {@link IllegalStateException} will be thrown. <br/>
-     * No optimization is done for {@link Expression#isConstant()} {@link Expression}s.
-     *
-     * @param boolExpressions At least one {@link Expression}s with {@link BooleanValue} result. If non-missing,
-     *            non-Boolean expression results occur, an IllegalStateException will be thrown.
-     * @return The conjunction of the arguments as an {@link Expression}.
-     * @throws IllegalStateException When no expression is specified.
+     * {@inheritDoc}
      */
-    public Expression xor(final Expression... boolExpressions) {
-        if (boolExpressions.length < 1) {
+    @Override
+    public Expression xor(final List<Expression> boolExpressions) {
+        if (boolExpressions.size() < 1) {
             throw new IllegalStateException("xor requires at least one argument.");
         }
         final boolean allIsConstant = checkBooleansAndConstant(boolExpressions);
-        return new Expression() {
+        return new Expression.Base(boolExpressions) {
 
             /**
              * {@inheritDoc}
@@ -592,7 +604,7 @@ public class ExpressionFactory {
              */
             @Override
             public ExpressionValue evaluate(final DataRow row, final VariableProvider provider) {
-                ExpressionValue val = boolExpressions[0].evaluate(row, provider);
+                ExpressionValue val = boolExpressions.get(0).evaluate(row, provider);
                 DataCell valCell = val.getValue();
                 assert !valCell.isMissing();
                 if (valCell.isMissing()) {
@@ -603,8 +615,8 @@ public class ExpressionFactory {
                 }
                 BooleanCell ret = (BooleanCell)valCell;
                 Map<String, Map<String, String>> matchedObjects = val.getMatchedObjects();
-                for (int i = 1; i < boolExpressions.length; ++i) {
-                    Expression boolExpression = boolExpressions[i];
+                for (int i = 1; i < boolExpressions.size(); ++i) {
+                    Expression boolExpression = boolExpressions.get(i);
                     ExpressionValue v = boolExpression.evaluate(row, provider);
                     DataCell cell = v.getValue();
                     if (cell.isMissing()) {
@@ -634,20 +646,25 @@ public class ExpressionFactory {
              */
             @Override
             public String toString() {
-                return "xor(" + Arrays.toString(boolExpressions) + ")";
+                return "xor(" + boolExpressions + ")";
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                return ASTType.Xor;
             }
         };
     }
 
     /**
-     * Creates an {@link Expression} for checking for missing values.
-     *
-     * @param reference Any non-{@code null} {@link Expression}.
-     * @return An {@link Expression} which result {@link BooleanCell#TRUE} if the wrapped {@link Expression} returns a
-     *         missing value, and {@link BooleanCell#FALSE} if it is not missing.
+     * {@inheritDoc}
      */
+    @Override
     public Expression missing(final Expression reference) {
-        return new Expression() {
+        return new Expression.Base(reference) {
 
             /**
              * {@inheritDoc}
@@ -690,18 +707,23 @@ public class ExpressionFactory {
             public String toString() {
                 return "missing(" + reference + ")";
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                return ASTType.Missing;
+            }
         };
     }
 
     /**
-     * Creates an {@link Expression} for checking for missing values.
-     *
-     * @param reference Any non-{@code null} {@link Expression}.
-     * @return An {@link Expression} which result {@link BooleanCell#TRUE} if the wrapped {@link Expression} returns a
-     *         missing value, and {@link BooleanCell#FALSE} if it is not missing.
+     * {@inheritDoc}
      */
+    @Override
     public Expression missingBoolean(final Expression reference) {
-        return new Expression() {
+        return new Expression.Base(reference) {
 
             /**
              * {@inheritDoc}
@@ -744,31 +766,29 @@ public class ExpressionFactory {
             public String toString() {
                 return "missing(" + reference + ")";
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                return ASTType.Missing;
+            }
         };
     }
 
     /**
-     * Creates a reference {@link Expression} to a column in a {@link DataTable}.
-     *
-     * @param spec The {@link DataTableSpec}.
-     * @param columnRef Name of the column in the {@code spec}. (As-is, no escapes.)
-     * @return The {@link Expression} computing the value of the column.
-     * @throws IllegalStateException If the {@code columnRef} is not present in {@code spec}.
+     * {@inheritDoc}
      */
+    @Override
     public Expression columnRef(final DataTableSpec spec, final String columnRef) {
         return columnRefImpl(spec, columnRef, false);
     }
 
     /**
-     * Creates a reference {@link Expression} to a boolean column in a {@link DataTable} for missing operator. Cannot be
-     * called with non-Boolean columns.
-     *
-     * @param spec The {@link DataTableSpec}.
-     * @param columnRef Name of the column in the {@code spec}. (As-is, no escapes.)
-     * @return The {@link Expression} computing the value of the column, or false if that value is missing for a boolean
-     *         column.
-     * @throws IllegalStateException If the {@code columnRef} is not present in {@code spec}.
+     * {@inheritDoc}
      */
+    @Override
     public Expression columnRefForMissing(final DataTableSpec spec, final String columnRef) {
         return columnRefImpl(spec, columnRef, true);
     }
@@ -792,7 +812,7 @@ public class ExpressionFactory {
         final DataType type = spec.getColumnSpec(position).getType();
         final boolean isBoolean = type.isCompatible(BooleanValue.class);
         assert (!booleanArgumentOfMissing || isBoolean) : type;
-        return new Expression() {
+        return new Expression.Base() {
 
             /**
              * {@inheritDoc}
@@ -840,18 +860,21 @@ public class ExpressionFactory {
             public String toString() {
                 return "$" + columnRef + "$";
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                return ASTType.ColRef;
+            }
         };
     }
 
     /**
-     * Creates a reference {@link Expression} to a flow variable.<br/>
-     * It performs {@link Expression#isConstant()} optimization.
-     *
-     * @param flowVariables All available flow variables.
-     * @param flowVarRef The name of the flow variable. (As-is, no escapes.)
-     * @return An Expression computing the flow variable's value.
-     * @throws IllegalStateException If the {@code flowVarRef} is not present in the {@code flowVariables}.
+     * {@inheritDoc}
      */
+    @Override
     public Expression flowVarRef(final Map<String, FlowVariable> flowVariables, final String flowVarRef) {
         if (!flowVariables.containsKey(flowVarRef) || flowVariables.get(flowVarRef) == null) {
             throw new IllegalStateException("Not a valid flow variable: " + flowVarRef + " (" + flowVariables + ")");
@@ -859,7 +882,7 @@ public class ExpressionFactory {
         final FlowVariable var = flowVariables.get(flowVarRef);
         final boolean isConstant = var.getScope() != Scope.Local;
         final ExpressionValue constant = isConstant ? Util.readFlowVarToExpressionValue(var) : null;
-        return new Expression() {
+        return new Expression.Base() {
 
             /**
              * {@inheritDoc}
@@ -913,19 +936,21 @@ public class ExpressionFactory {
             public String toString() {
                 return "$$" + flowVarRef + "$$";
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                return ASTType.FlowVarRef;
+            }
         };
     }
 
     /**
-     * Creates a constant {@link Expression} from a {@link String} using the {@link DataType}'s single argument (
-     * {@link String}) constructor. Can be used to create xml or svg cells too.
-     *
-     * @param text The constant text of the result.
-     * @param type The DataType of the result.
-     * @return An {@link Expression} always returning the same text.
-     * @throws IllegalStateException if cannot create the specified {@link DataCell}. (Should not happen with
-     *             {@link StringCell}s.)
+     * {@inheritDoc}
      */
+    @Override
     public Expression constant(final String text, final DataType type) {
         try {
             final Class<? extends DataCell> cellClass = type.getCellClass();
@@ -951,11 +976,9 @@ public class ExpressionFactory {
     }
 
     /**
-     * Creates a constant expression for a double value.
-     *
-     * @param real The value to return.
-     * @return A new constant expression always returning {@code real}.
+     * {@inheritDoc}
      */
+    @Override
     public Expression constant(final double real) {
         final DoubleCell cell = new DoubleCell(real);
         final ExpressionValue value = new ExpressionValue(cell, EMPTY_MAP);
@@ -963,11 +986,9 @@ public class ExpressionFactory {
     }
 
     /**
-     * Creates a constant expression for an int value.
-     *
-     * @param integer The value to return.
-     * @return A new constant expression always returning {@code integer}.
+     * {@inheritDoc}
      */
+    @Override
     public Expression constant(final int integer) {
         final IntCell cell = new IntCell(integer);
         final ExpressionValue value = new ExpressionValue(cell, EMPTY_MAP);
@@ -975,12 +996,9 @@ public class ExpressionFactory {
     }
 
     /**
-     * Creates an {@link Expression} generating {@link ListCell} values. The matched objects get merged. <br/>
-     * It performs {@link Expression#isConstant()} optimization.
-     *
-     * @param operands The expressions.
-     * @return An {@link Expression} generating {@link ListCell}s from the {@code operands}' results.
+     * {@inheritDoc}
      */
+    @Override
     public Expression list(final List<Expression> operands) {
         boolean allIsConstantTmp = true;
         for (Expression expression : operands) {
@@ -999,7 +1017,7 @@ public class ExpressionFactory {
             constantTmp = new ExpressionValue(CollectionCellFactory.createListCell(cells), matchedObjects);
         }
         final ExpressionValue constant = constantTmp;
-        return new Expression() {
+        return new Expression.Base(operands) {
 
             /**
              * {@inheritDoc}
@@ -1056,21 +1074,21 @@ public class ExpressionFactory {
             public String toString() {
                 return operands.toString();
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                return ASTType.List;
+            }
         };
     }
 
     /**
-     * Creates a new {@link Expression} checking for inclusion in a collection. <br/>
-     * It performs {@link Expression#isConstant()} optimization.
-     *
-     * @param left The left {@link Expression} is what we are looking for.
-     * @param right The right {@link Expression} contains the possible values in a {@link CollectionDataValue} (
-     *            {@link ListCell}).
-     * @return An {@link Expression} returning {@link BooleanCell#TRUE} the left value is contained in the right values,
-     *         missing if the right value is missing and {@link BooleanCell#FALSE} if left is not contained in the
-     *         right. (Throws {@link IllegalStateException} if the right operand is neither missing nor collection.)
-     * @throws IllegalStateException If the right {@link Expression} does not returns a collection type.
+     * {@inheritDoc}
      */
+    @Override
     public Expression in(final Expression left, final Expression right) {
         if (!right.getOutputType().isCollectionType()) {
             throw new IllegalStateException("The m_right operand of operator 'IN' is not a collection: "
@@ -1104,7 +1122,7 @@ public class ExpressionFactory {
             }
         }
         final ExpressionValue constant = constantTmp;
-        return new Expression() {
+        return new Expression.Base(left, right) {
 
             /**
              * {@inheritDoc}
@@ -1168,6 +1186,14 @@ public class ExpressionFactory {
             public String toString() {
                 return left + " in " + right;
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                return ASTType.In;
+            }
         };
     }
 
@@ -1182,22 +1208,12 @@ public class ExpressionFactory {
     private static final int[] EQ = new int[]{0};
 
     /**
-     * Creates a comparison {@link Expression} with the acceptable outcomes. The matched objects are combined (in
-     * left-right order). <br/>
-     * No optimization is done for {@link Expression#isConstant()} {@link Expression}s.
-     *
-     * @param left The {@link Expression} representing the left operand.
-     * @param right The {@link Expression} of the right operand.
-     * @param cmp The {@link DataValueComparator} to compare the {@code left} and {@code right} values.
-     * @param possibleValues The signum values for the {@code cmp} outcomes: {@code -1} means left is smaller, {@code 0}
-     *            - they are the same, {@code 1} - left is larger.
-     * @return An {@link Expression} comparing the {@code left} and {@code right} values. If the comparison from the
-     *         {@code cmp} results in any of the {@code possibleValues} a {@link BooleanCell#TRUE} will be returned,
-     *         else a {@link BooleanCell#FALSE}.
+     * {@inheritDoc}
      */
+    @Override
     public Expression compare(final Expression left, final Expression right, final DataValueComparator cmp,
         final int... possibleValues) {
-        return new Expression() {
+        return new Expression.Base(left, right) {
 
             /**
              * {@inheritDoc}
@@ -1260,19 +1276,36 @@ public class ExpressionFactory {
                 }
                 return left + rel + right;
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                if (Arrays.equals(possibleValues, LT)) {
+                    return ASTType.Less;
+                }
+                if (Arrays.equals(possibleValues, LE)) {
+                    return ASTType.LessOrEquals;
+                }
+                if (Arrays.equals(possibleValues, GT)) {
+                    return ASTType.Greater;
+                }
+                if (Arrays.equals(possibleValues, GE)) {
+                    return ASTType.GreaterOrEquals;
+                }
+                if (Arrays.equals(possibleValues, EQ)) {
+                    return ASTType.Equals;
+                }
+                throw new IllegalStateException("" + Arrays.toString(possibleValues));
+            }
         };
     }
 
     /**
-     * Constructs a wild-card matcher {@link Expression}. <br/>
-     * {@link Expression#isConstant()} optimization is only done on the {@code right} (pattern) {@link Expression}.
-     *
-     * @param left A {@link StringValue}'d {@link Expression}.
-     * @param right Another {@link StringValue}'d {@link Expression}, but this is for the wild-card pattern.
-     * @param key The key for the matched objects. Can be {@code null}.
-     * @return An {@link Expression} representing an SQL-like LIKE operator.
-     * @throws IllegalStateException When the constant right expression is an invalid pattern. (Most probably never.)
+     * {@inheritDoc}
      */
+    @Override
     public Expression like(final Expression left, final Expression right, final String key)
         throws IllegalStateException {
         return new RegExExpression(left, right, " like ", true, key) {
@@ -1285,19 +1318,20 @@ public class ExpressionFactory {
                 return WildcardMatcher.wildcardToRegex(string);
             }
 
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                return ASTType.Like;
+            }
         };
     }
 
     /**
-     * Constructs a regular expression {@line Matcher#find()}er {@link Expression}. <br/>
-     * {@link Expression#isConstant()} optimization is only done on the {@code right} (pattern) {@link Expression}.
-     *
-     * @param left A {@link StringValue}'d {@link Expression}.
-     * @param right Another {@link StringValue}'d {@link Expression}, but this is for the regular expression pattern.
-     * @param key The key for the matched objects. Can be {@code null}.
-     * @return An {@link Expression} representing a regular expression finding operator.
-     * @throws IllegalStateException When the constant right expression is an invalid pattern.
+     * {@inheritDoc}
      */
+    @Override
     public Expression contains(final Expression left, final Expression right, final String key)
         throws IllegalStateException {
         return new RegExExpression(left, right, " contains ", false, key) {
@@ -1310,19 +1344,20 @@ public class ExpressionFactory {
                 return string;
             }
 
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                throw new UnsupportedOperationException("contains");
+            }
         };
     }
 
     /**
-     * Constructs a regular expression {@line Matcher#matches()()} {@link Expression}. <br/>
-     * {@link Expression#isConstant()} optimization is only done on the {@code right} (pattern) {@link Expression}.
-     *
-     * @param left A {@link StringValue}'d {@link Expression}.
-     * @param right Another {@link StringValue}'d {@link Expression}, but this is for the regular expression pattern.
-     * @param key The key for the matched objects. Can be {@code null}.
-     * @return An {@link Expression} representing a regular expression matcher operator.
-     * @throws IllegalStateException When the constant right expression is an invalid pattern.
+     * {@inheritDoc}
      */
+    @Override
     public Expression matches(final Expression left, final Expression right, final String key)
         throws IllegalStateException {
         return new RegExExpression(left, right, " matches ", true, key) {
@@ -1335,18 +1370,22 @@ public class ExpressionFactory {
                 return string;
             }
 
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                return ASTType.Matches;
+            }
         };
     }
 
     /**
-     * Constructs an {@link Expression} for the table specific expressions.<br/>
-     * No optimization is done for {@link Expression#isConstant()} {@link Expression}.
-     *
-     * @param reference A {@link TableReference} enum.
-     * @return An {@link Expression} to compute the value referred by {@code reference}.
+     * {@inheritDoc}
      */
+    @Override
     public Expression tableRef(final TableReference reference) {
-        return new Expression() {
+        return new Expression.Base() {
 
             /**
              * {@inheritDoc}
@@ -1398,12 +1437,21 @@ public class ExpressionFactory {
             public String toString() {
                 return reference.toString();
             }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public ASTType getTreeType() {
+                return ASTType.TableRef;
+            }
         };
     }
 
     /**
-     * @return A constant {@code true} {@link Expression}.
+     * {@inheritDoc}
      */
+    @Override
     public Expression trueValue() {
         return booleanValue(true);
     }
@@ -1418,9 +1466,37 @@ public class ExpressionFactory {
     }
 
     /**
-     * @return A constant {@code false} {@link Expression}.
+     * {@inheritDoc}
      */
+    @Override
     public Expression falseValue() {
         return booleanValue(false);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Expression trueRefValue() {
+        return trueValue();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Expression falseRefValue() {
+        return falseValue();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Expression boolAsPredicate(final Expression expression) {
+        if (!BooleanCell.TYPE.isASuperTypeOf(expression.getOutputType())) {
+            throw new IllegalArgumentException(expression + " is not a Boolean");
+        }
+        return expression;
     }
 }

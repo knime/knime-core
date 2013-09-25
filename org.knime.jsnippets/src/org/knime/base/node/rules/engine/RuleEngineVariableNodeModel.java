@@ -112,9 +112,8 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
      */
     protected List<Rule> parseRules() throws ParseException {
         ArrayList<Rule> rules = new ArrayList<Rule>();
-
         final Map<String, FlowVariable> availableFlowVariables = getAvailableFlowVariables();
-        final RuleFactory factory = RuleFactory.getVariableInstance();
+        final RuleFactory factory = RuleFactory.getInstance(RuleNodeSettings.VariableRule);
         final DataTableSpec spec = new DataTableSpec();
         for (String s : m_settings.rules()) {
             final Rule rule = factory.parse(s, spec, availableFlowVariables);
@@ -122,7 +121,6 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
                 rules.add(rule);
             }
         }
-
         return rules;
     }
 
@@ -198,9 +196,7 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
      * Computes the result's {@link DataType}.
      *
      * @param rules The rules.
-     * @param defaultLabel The value for default value.
-     * @param flowVarType The data type of flow variable if it is selected in the default value. Can be {@code null}.
-     * @return The common base type of the outcomes and the default value.
+     * @return The common base type of the outcomes.
      */
     static DataType computeOutputType(final List<Rule> rules) {
         // determine output type
@@ -256,10 +252,9 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         try {
             parseRules();
-            //            ColumnRearranger crea = createRearranger(inSpecs[0], parseRules());
             return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
         } catch (ParseException ex) {
-            throw new InvalidSettingsException(ex);
+            throw new InvalidSettingsException(ex.getMessage(), ex);
         }
     }
 

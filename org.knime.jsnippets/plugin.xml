@@ -1,56 +1,32 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.2"?>
-<plugin>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?eclipse version="3.2"?><plugin>
    <extension-point id="templaterepository" name="JavaSnippet Template Repository" schema="schema/templaterepository.exsd"/>
    
-   <extension
-         point="org.knime.workbench.repository.nodes">
-      <node
-            category-path="/manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory"
-            id="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory">
+   <extension point="org.knime.workbench.repository.nodes">
+      <node category-path="/manipulation/column/column-transform" factory-class="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory" id="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory">
       </node>
-      <node
-            category-path="/misc/java-snippet"
-            factory-class="org.knime.base.node.jsnippet.JavaSnippetNodeFactory"
-            id="org.knime.base.node.jsnippet.JavaSnippetNodeFactory">
+      <node category-path="/misc/java-snippet" factory-class="org.knime.base.node.jsnippet.JavaSnippetNodeFactory" id="org.knime.base.node.jsnippet.JavaSnippetNodeFactory">
       </node>
-      <node
-            category-path="/flowcontrol/variables"
-            factory-class="org.knime.base.node.jsnippet.JavaEditVarNodeFactory"
-            id="org.knime.base.node.jsnippet.JavaEditVarNodeFactory">
+      <node category-path="/flowcontrol/variables" factory-class="org.knime.base.node.jsnippet.JavaEditVarNodeFactory" id="org.knime.base.node.jsnippet.JavaEditVarNodeFactory">
       </node>      
-      <node
-            category-path="/manipulation/row/row-other"
-            factory-class="org.knime.base.node.rules.engine.RuleEngineNodeFactory"
-            id="org.knime.base.node.rules.engine.RuleEngineNodeFactory">
+      <node category-path="/manipulation/row/row-other" factory-class="org.knime.base.node.rules.engine.RuleEngineNodeFactory" id="org.knime.base.node.rules.engine.RuleEngineNodeFactory">
       </node>
-      <node
-            category-path="/manipulation/row/row-filter"
-            factory-class="org.knime.base.node.rules.engine.RuleEngineFilterNodeFactory"
-            id="org.knime.base.node.rules.engine.RuleEngineFilterNodeFactory">
+      <node category-path="/manipulation/row/row-filter" factory-class="org.knime.base.node.rules.engine.RuleEngineFilterNodeFactory" id="org.knime.base.node.rules.engine.RuleEngineFilterNodeFactory">
       </node>
-      <node
-            category-path="/manipulation/row/row-filter"
-            factory-class="org.knime.base.node.rules.engine.RuleEngineSplitterNodeFactory"
-            id="org.knime.base.node.rules.engine.RuleEngineSplitterNodeFactory">
+      <node category-path="/manipulation/row/row-filter" factory-class="org.knime.base.node.rules.engine.RuleEngineSplitterNodeFactory" id="org.knime.base.node.rules.engine.RuleEngineSplitterNodeFactory">
       </node>
-      <node
-            category-path="/flowcontrol/variables"
-            factory-class="org.knime.base.node.rules.engine.RuleEngineVariableNodeFactory"
-            id="org.knime.base.node.rules.engine.RuleEngineVariableNodeFactory">
+      <node category-path="/flowcontrol/variables" factory-class="org.knime.base.node.rules.engine.RuleEngineVariableNodeFactory" id="org.knime.base.node.rules.engine.RuleEngineVariableNodeFactory">
+      </node>
+      <node category-path="/manipulation/pmml" factory-class="org.knime.base.node.rules.engine.pmml.PMMLRuleEditorNodeFactory" id="org.knime.base.node.rules.engine.pmml.PMMLRuleEditorNodeFactory">
+      </node>
+      <node category-path="/manipulation/pmml" factory-class="org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeFactory" id="org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeFactory">
       </node>
    </extension>
-   <extension
-         point="org.knime.jsnippets.templaterepository">
-         <template-repository
-               provider-class="org.knime.base.node.jsnippet.template.DefaultFileTemplateRepositoryProvider"
-               id="org.knime.base.node.jsnippet.template.DefaultFileTemplateRepositoryProvider">
+   <extension point="org.knime.jsnippets.templaterepository">
+         <template-repository id="org.knime.base.node.jsnippet.template.DefaultFileTemplateRepositoryProvider" provider-class="org.knime.base.node.jsnippet.template.DefaultFileTemplateRepositoryProvider">
          </template-repository>
-         <template-repository
-               provider-class="org.knime.base.node.jsnippet.template.PluginFileTemplateRepositoryProvider"
-               id="org.knime.base.node.jsnippet.template.PluginFileTemplateRepositoryProvider">
-         </template-repository>                  
+         <template-repository id="org.knime.base.node.jsnippet.template.PluginFileTemplateRepositoryProvider" provider-class="org.knime.base.node.jsnippet.template.PluginFileTemplateRepositoryProvider">
+         </template-repository>
    </extension>
 
 </plugin>

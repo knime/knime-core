@@ -64,6 +64,7 @@ import java.util.TreeSet;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.base.node.rules.engine.Rule.BooleanConstants;
 import org.knime.base.node.rules.engine.Rule.Operators;
+import org.knime.base.node.rules.engine.RuleNodeSettings;
 import org.knime.base.node.util.ManipulatorProvider;
 import org.knime.core.util.Pair;
 
@@ -74,13 +75,56 @@ import org.knime.core.util.Pair;
  * @since 2.8
  */
 public class RuleManipulatorProvider implements ManipulatorProvider {
-    private static final RuleManipulatorProvider PROVIDER = new RuleManipulatorProvider();
+    private static final RuleManipulatorProvider PROVIDER = new RuleManipulatorProvider(true, true);
+
+    private static final RuleManipulatorProvider VARIABLE_PROVIDER = new RuleManipulatorProvider(true, false);
+
+    private static final RuleManipulatorProvider PMML_PROVIDER = new RuleManipulatorProvider(false, true);
 
     /**
-     * @return the provider
+     * @return the provider for rules with missing and regexes.
      */
     public static RuleManipulatorProvider getProvider() {
         return PROVIDER;
+    }
+
+    /**
+     * @return the provider for PMML rules.
+     * @since 2.9
+     */
+    public static RuleManipulatorProvider getPMMLProvider() {
+        return PMML_PROVIDER;
+    }
+
+    /**
+     * The provider applicable for the node.
+     *
+     * @param rns The type of node.
+     * @return The provider.
+     */
+    public static RuleManipulatorProvider getProvider(final RuleNodeSettings rns) {
+        switch (rns) {
+            case PMMLRule:
+                return PMML_PROVIDER;
+            case RuleEngine:
+                return PROVIDER;
+            case RuleFilter:
+                return PROVIDER;
+            case RuleSplitter:
+                return PROVIDER;
+            case VariableRule:
+                return VARIABLE_PROVIDER;
+            default:
+                throw new IllegalArgumentException("Unknown node type: " + rns);
+        }
+    }
+
+    /**
+     * @return the provider for rules without columns. (So no missing operator.)
+     * @since 2.9
+     */
+    public static RuleManipulatorProvider getVariableProvider() {
+        return VARIABLE_PROVIDER;
     }
 
     private final EnumSet<Operators> m_infixOps = EnumSet.of(Operators.AND, /*Operators.CONTAINS,*/Operators.EQ,
@@ -117,8 +161,6 @@ public class RuleManipulatorProvider implements ManipulatorProvider {
         String compareFormat = "Left %s right";
         m_operatorDescriptions.put(Operators.AND, String.format(connectiveFormat, "and", "AND", "OR", "XOR")
             + shortCircuit);
-        //        m_operatorDescriptions.put(Operators.CONTAINS,
-        //                                   "The regular expression on the right can be found in the string in the left.");
         m_operatorDescriptions.put(Operators.EQ, String.format(compareFormat, "="));
         m_operatorDescriptions.put(Operators.GE, String.format(compareFormat, "&ge;"));
         m_operatorDescriptions.put(Operators.GT, String.format(compareFormat, "&gt;"));
@@ -141,8 +183,11 @@ public class RuleManipulatorProvider implements ManipulatorProvider {
 
     /**
      * Constructs the default manipulators based on the information about {@link Operators}.
+     *
+     * @param includeRegEx Include the string operators, or not.
+     * @param includeMissing Include the missing operator, or not.
      */
-    protected RuleManipulatorProvider() {
+    protected RuleManipulatorProvider(final boolean includeRegEx, final boolean includeMissing) {
         super();
         @SuppressWarnings("unchecked")
         final List<Pair<String, EnumSet<Operators>>> categs =
@@ -151,6 +196,12 @@ public class RuleManipulatorProvider implements ManipulatorProvider {
                     "Collection", m_collectionOps), new Pair<String, EnumSet<Operators>>("String", m_stringOps),
                 new Pair<String, EnumSet<Operators>>("Column", m_columnOps));
         for (final Pair<String, EnumSet<Operators>> pair : categs) {
+            if (pair.getSecond().equals(m_stringOps) && !includeRegEx) {
+                continue;
+            }
+            if (pair.getSecond().equals(m_columnOps) && !includeMissing) {
+                continue;
+            }
             m_manipulators.put(pair.getFirst(), createCollection());
             for (final Operators op : pair.getSecond()) {
                 final Manipulator manipulator;

@@ -50,9 +50,7 @@
  */
 package org.knime.base.node.rules.engine;
 
-import org.fife.rsta.ac.LanguageSupportFactory;
-import org.knime.base.node.rules.engine.manipulator.RuleManipulatorProvider;
-import org.knime.base.node.util.JavaScriptingCompletionProvider;
+import org.knime.base.node.rules.engine.rsyntax.RuleParser;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -70,8 +68,8 @@ import org.knime.core.node.NotConfigurableException;
 public class RuleEngineNodeDialog extends NodeDialogPane {
     static {
         new RuleParser.RuleLanguageSupport();
-        LanguageSupportFactory.get().addLanguageSupport(RuleParser.SYNTAX_STYLE_RULE,
-                                                        RuleParser.RuleLanguageSupport.class.getName());
+//        LanguageSupportFactory.get().addLanguageSupport(RuleParser.SYNTAX_STYLE_RULE,
+//                                                        RuleParser.RuleLanguageSupport.class.getName());
     }
 
     /** Default default label. */
@@ -91,63 +89,15 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
             "// $string column name$ LIKE \"*blue*\" => FALSE\n" +
             "// TRUE => TRUE\n";
 
-    private final boolean m_hasOutputColumn;
-
-    private final boolean m_hasDefaultOutcome;
-
-    private final boolean m_warnOnColRefsInStrings;
-
-    private final String m_inclusionLabel;
-
     private RulePanel m_rulePanel;
-
-    /**
-     * Constructs the default {@link RuleEngineNodeDialog}.
-     */
-    public RuleEngineNodeDialog() {
-        this(true, true, true, null);
-    }
-
-    /**
-     * Constructs a rule engine filter dialog with the {@code inclusion} and {@code exclusion} labels.
-     *
-     * @param inclusion Label for the option: match goes to the first output port.
-     */
-    public RuleEngineNodeDialog(final String inclusion) {
-        this(false, false, false, inclusion);
-    }
 
     /**
      * Constructs a {@link RuleEngineNodeDialog}.
      *
-     * @param hasOutputColumn Whether there should be a control for output column name.
-     * @param hasDefaultOutcome Whether there should be an option for default outcome.
-     * @param warnOnColRefsInStrings Whether to warn if there are column references in the outcome strings.
-     * @param inclusion The label for the inclusion (only when no output column and no default outcome is specified).
+     * @param nodeType The {@link RuleNodeSettings}.
      */
-    RuleEngineNodeDialog(final boolean hasOutputColumn, final boolean hasDefaultOutcome,
-                         final boolean warnOnColRefsInStrings, final String inclusion) {
-        this.m_hasOutputColumn = hasOutputColumn;
-        this.m_hasDefaultOutcome = hasDefaultOutcome;
-        this.m_warnOnColRefsInStrings = warnOnColRefsInStrings;
-        if (hasOutputColumn != hasDefaultOutcome) {
-            throw new UnsupportedOperationException(
-                    "Please review the code when you want output column without default outcome!");
-        }
-        m_inclusionLabel = inclusion;
-        initializeComponent();
-    }
-
-    private void initializeComponent() {
-        addTab("Rule Editor", m_rulePanel = createRulePanel());
-    }
-
-    /**
-     * @return The {@link RulePanel}.
-     */
-    private RulePanel createRulePanel() {
-        return new RulePanel(m_hasOutputColumn, m_hasDefaultOutcome, m_warnOnColRefsInStrings, m_inclusionLabel,
-                RuleManipulatorProvider.getProvider(), new JavaScriptingCompletionProvider());
+    RuleEngineNodeDialog(final RuleNodeSettings nodeType) {
+        addTab("Rule Editor", m_rulePanel = new RulePanel(nodeType));
     }
 
     /**

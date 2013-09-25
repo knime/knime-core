@@ -47,10 +47,12 @@
  *
  * Created on 2013.04.16. by Gabor
  */
-package org.knime.base.node.rules.engine;
+package org.knime.base.node.rules.engine.rsyntax;
 
 import java.net.URL;
 import java.text.ParseException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -61,6 +63,7 @@ import javax.swing.text.Element;
 import javax.swing.text.Segment;
 
 import org.fife.rsta.ac.AbstractLanguageSupport;
+import org.fife.rsta.ac.LanguageSupport;
 import org.fife.rsta.ac.LanguageSupportFactory;
 import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
@@ -75,8 +78,11 @@ import org.fife.ui.rsyntaxtextarea.parser.ExtendedHyperlinkListener;
 import org.fife.ui.rsyntaxtextarea.parser.ParseResult;
 import org.fife.ui.rsyntaxtextarea.parser.Parser;
 import org.fife.ui.rsyntaxtextarea.parser.ParserNotice;
-import org.knime.base.node.rules.engine.Rule.BooleanConstants;
+import org.knime.base.node.rules.engine.Rule;
 import org.knime.base.node.rules.engine.Rule.Operators;
+import org.knime.base.node.rules.engine.RuleFactory;
+import org.knime.base.node.rules.engine.RuleNodeSettings;
+import org.knime.base.node.rules.engine.rsyntax.RuleParser.RuleLanguageSupport;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.workflow.FlowVariable;
 
@@ -84,27 +90,41 @@ import org.knime.core.node.workflow.FlowVariable;
  * Wraps a normal parser for the rules and provides the {@link Parser} interface.
  *
  * @author Gabor Bakos
- * @since 2.8
+ * @since 2.9
  */
-public class RuleParser implements Parser {
-    /** Syntax style key for rules. */
-    static final String SYNTAX_STYLE_RULE = "text/knime-rule";
+public class AbstractRuleParser implements Parser {
+    /** Syntax style key for rules of Rule Engine. */
+    public static final String SYNTAX_STYLE_RULE = "text/knime-rule";
 
     /**
-     * Language support class for the rule language.
+     * An abstract {@link RuleLanguageSupport} class, which registers the class to the {@link LanguageSupportFactory} in
+     * the constructor.
      *
-     * @author Gabor Bakos
-     * @since 2.8
+     * @param <ParserType> The type of {@link Parser}.
+     * @since 2.9
      */
-    public static class RuleLanguageSupport extends AbstractLanguageSupport {
+    protected static abstract class AbstractRuleLanguageSupport<ParserType extends Parser> extends
+        AbstractLanguageSupport {
+        private final Class<? extends AbstractRuleLanguageSupport<?>> m_langSupportClass;
+
+        private final Class<? extends TokenMaker> m_tokenMakerClass;
+
         /**
-         * Constructs the {@link RuleLanguageSupport}.
+         * Constructs the {@link RuleParser.RuleLanguageSupport}.
+         *
+         * @param styleKey The style key.
+         * @param langSupportClass The class of {@link LanguageSupport} class.
+         * @param tokenMakerClass The {@link TokenMaker} class.
          */
-        public RuleLanguageSupport() {
-            LanguageSupportFactory.get().addLanguageSupport(SYNTAX_STYLE_RULE, RuleLanguageSupport.class.getName());
-            ((AbstractTokenMakerFactory)TokenMakerFactory.getDefaultInstance()).putMapping(
-                RuleParser.SYNTAX_STYLE_RULE, KnimeTokenMaker.class.getName(),
-                RuleLanguageSupport.class.getClassLoader());
+        public AbstractRuleLanguageSupport(final String styleKey,
+            final Class<? extends AbstractRuleLanguageSupport<?>> langSupportClass,
+            final Class<? extends TokenMaker> tokenMakerClass) {
+            super();
+            this.m_langSupportClass = langSupportClass;
+            this.m_tokenMakerClass = tokenMakerClass;
+            LanguageSupportFactory.get().addLanguageSupport(styleKey, langSupportClass.getName());
+            ((AbstractTokenMakerFactory)TokenMakerFactory.getDefaultInstance()).putMapping(styleKey,
+                m_tokenMakerClass.getName(), m_langSupportClass.getClassLoader());
         }
 
         /**
@@ -112,56 +132,58 @@ public class RuleParser implements Parser {
          */
         @Override
         public void install(final RSyntaxTextArea textArea) {
-            RuleParser parser = new RuleParser();
+            ParserType parser = createParser();
             textArea.addParser(parser);
             textArea.putClientProperty(PROPERTY_LANGUAGE_PARSER, parser);
         }
+
+        /**
+         * @return Creates the parser of type parameter.
+         */
+        protected abstract ParserType createParser();
 
         /**
          * {@inheritDoc}
          */
         @Override
         public void uninstall(final RSyntaxTextArea textArea) {
-            RuleParser parser = findParser(textArea);
+            AbstractRuleParser parser = findParser(textArea, AbstractRuleParser.class);
             if (parser != null) {
                 textArea.removeParser(parser);
             }
         }
 
         /**
-         * @param textArea
-         * @return
+         * @param textArea An {@link RSyntaxTextArea}.
+         * @param cls The class of the {@link Parser}.
+         * @return The {@link Parser} belonging to the {@code textArea}, or {@code null}.
          */
-        private RuleParser findParser(final RSyntaxTextArea textArea) {
+        protected static <T extends Parser> T findParser(final RSyntaxTextArea textArea, final Class<? extends T> cls) {
             Object parser = textArea.getClientProperty(PROPERTY_LANGUAGE_PARSER);
-            if (parser instanceof RuleParser) {
-                return (RuleParser)parser;
+            if (cls.isInstance(parser)) {
+                return cls.cast(parser);
             }
             return null;
         }
     }
 
     /**
-     * Wraps a {@link TokenMaker} and makes the {@link Operators} {@link Operators#toString()} a keyword.
-     *
-     * @author Gabor Bakos
-     * @since 2.8
+     * Wraps a {@link TokenMaker} and allows to special case certain methods.
      */
-    public static class KnimeTokenMaker implements TokenMaker {
+    public static class WrappedTokenMaker implements TokenMaker {
         private final TokenMaker m_wrapped;
 
         private final Set<String> m_operators;
 
         /**
-         * Constructs a {@link Rule} token maker based on the Java {@link TokenMaker}.
+         * Constructs {@link WrappedTokenMaker} to highlight the oparator arguments.
+         *
+         * @param wrapped A {@link TokenMaker}.
+         * @param operators The operator names to convert to reserved words.
          */
-        public KnimeTokenMaker() {
-            this(TokenMakerFactory.getDefaultInstance().getTokenMaker("text/java"));
-        }
-
-        private KnimeTokenMaker(final TokenMaker wrapped) {
+        protected WrappedTokenMaker(final TokenMaker wrapped, final Collection<String> operators) {
             m_wrapped = wrapped;
-            m_operators = new HashSet<String>(new RuleParser().m_operators);
+            m_operators = new HashSet<String>(operators);
         }
 
         /**
@@ -239,7 +261,7 @@ public class RuleParser implements Parser {
             Token tokenList = m_wrapped.getTokenList(text, initialTokenType, startOffset);
             Token token = tokenList;
             while (token != null && token.isPaintable()) {
-                switch (token.type ) {
+                switch (token.type) {
                     case TokenTypes.RESERVED_WORD:
                     case TokenTypes.RESERVED_WORD_2:
                     case TokenTypes.LITERAL_BOOLEAN:
@@ -247,6 +269,10 @@ public class RuleParser implements Parser {
                     case TokenTypes.COMMENT_DOCUMENTATION:
                     case TokenTypes.COMMENT_MULTILINE:
                         token.type = TokenTypes.IDENTIFIER;
+                        break;
+                    default:
+                        //Do nothing.
+                        break;
                 }
                 if (m_operators.contains(token.getLexeme())) {
                     token.type = TokenTypes.RESERVED_WORD;
@@ -286,7 +312,7 @@ public class RuleParser implements Parser {
 
     private Map<String, FlowVariable> m_flowVariables;
 
-    private Set<String> m_operators = new HashSet<String>();
+    private final Set<String> m_operators = new HashSet<String>();
 
     private boolean m_isEnabled;
 
@@ -296,65 +322,21 @@ public class RuleParser implements Parser {
 
     private boolean m_allowTableReferences;
 
-    /**
-     * Constructs a {@link RuleParser}. It requires outcomes in the rules.
-     *
-     * @param warnOnColRefsInStrings In outcome strings signal a warning if it starts with and ends with {@code $}
-     *            signs.
-     * @see #RuleParser(boolean, boolean)
-     */
-    public RuleParser(final boolean warnOnColRefsInStrings) {
-        this(warnOnColRefsInStrings, false, true);
-
-    }
+    private final RuleNodeSettings m_nodeType;
 
     /**
-     * Constructs the {@link RuleParser} to allow or disallow no outcomes and to warn or not on {@code $} characters in
-     * the outcomes.
-     *
-     * @param warnOnColRefsInStrings In outcome strings signal a warning if it starts with and ends with {@code $}
-     *            signs.
-     * @param allowNoOutcome Whether or not allow omitting the outcome.
+     * @param warnOnColRefsInStrings Warn on suspicious references in {@link String}s.
+     * @param nodeType The {@link RuleNodeSettings}.
      */
-    public RuleParser(final boolean warnOnColRefsInStrings, final boolean allowNoOutcome) {
-        this(warnOnColRefsInStrings, allowNoOutcome, true);
-    }
-
-    /**
-     * Constructs the {@link RuleParser} to allow or disallow no outcomes and to warn or not on {@code $} characters in
-     * the outcomes.
-     *
-     * @param warnOnColRefsInStrings In outcome strings signal a warning if it starts with and ends with {@code $}
-     *            signs.
-     * @param allowNoOutcome Whether or not allow omitting the outcome.
-     * @param allowTableReferences Enable to parse {@code $$ROWINDEX$$}, {@code $$ROWID$$} or {@code $$ROWCOUNT$$}.
-     */
-    public RuleParser(final boolean warnOnColRefsInStrings, final boolean allowNoOutcome,
-        final boolean allowTableReferences) {
-        if (allowNoOutcome && !allowTableReferences) {
-            throw new UnsupportedOperationException(
-                "Not supported combination of parameters: allow no outcome and not allowing table references.");
-        }
+    public AbstractRuleParser(final boolean warnOnColRefsInStrings, final RuleNodeSettings nodeType) {
         this.m_warnOnColRefsInStrings = warnOnColRefsInStrings;
-        this.m_allowNoOutcome = allowNoOutcome;
-        this.m_allowTableReferences = allowTableReferences;
-        m_isEnabled = true;
-        for (Rule.Operators op : Rule.Operators.values()) {
+        this.m_nodeType = nodeType;
+        this.m_allowNoOutcome = false;
+        this.m_allowTableReferences = nodeType.allowTableProperties();
+        for (Operators op : nodeType.supportedOperators()) {
             m_operators.add(op.toString());
         }
-        for (BooleanConstants constant : BooleanConstants.values()) {
-            m_operators.add(constant.toString());
-        }
-    }
-
-    /**
-     * Constructs the {@link RuleParser} with warnings for {@code $} characters in {@link String}s and disallowing the
-     * missing outcome option.
-     *
-     * @see #RuleParser(boolean, boolean)
-     */
-    public RuleParser() {
-        this(true);
+        m_isEnabled = true;
     }
 
     /**
@@ -395,15 +377,11 @@ public class RuleParser implements Parser {
      */
     @Override
     public ParseResult parse(final RSyntaxDocument doc, final String style) {
-        if (!RuleParser.SYNTAX_STYLE_RULE.equals(style) || !m_isEnabled
-            || (m_dataTableSpec == null && m_allowTableReferences)) {
+        if (isNotApplicable(style)) {
             return new DefaultParseResult(this);
         }
         DefaultParseResult res = new DefaultParseResult(this);
         Element rootElement = doc.getDefaultRootElement();
-        final RuleFactory factory =
-            m_allowNoOutcome ? RuleFactory.getFilterInstance() : m_allowTableReferences ? RuleFactory.getInstance()
-                : RuleFactory.getVariableInstance();
         boolean wasCatchAllRule = false;
         for (int line = 0; line < rootElement.getElementCount(); ++line) {
             String lastString = null;
@@ -413,7 +391,7 @@ public class RuleParser implements Parser {
             while (token != null && token.isPaintable()) {
                 String lexeme = token.getLexeme();
                 //If it is an operator, make it a reserved word.
-                if (m_operators.contains(lexeme)) {
+                if (getOperators().contains(lexeme)) {
                     token.type = TokenTypes.RESERVED_WORD;
                     token.setLanguageIndex(0);
                 }
@@ -430,7 +408,7 @@ public class RuleParser implements Parser {
                     String lastContent =
                         lastString != null && lastString.length() > 2 ? lastString
                             .substring(1, lastString.length() - 1) : lastString;
-                    //TODO better check
+                    //ENH better check
                     if (lastContent != null && lastContent.endsWith("$") && lastContent.charAt(0) == '$') {
                         DefaultParserNotice notice =
                             new DefaultParserNotice(this,
@@ -444,17 +422,7 @@ public class RuleParser implements Parser {
                     }
                 }
                 if (!lineText.isEmpty()) {
-                    Rule rule = factory.parse(lineText, m_dataTableSpec, m_flowVariables);
-                    if (rule.getCondition().isEnabled() && (wasCatchAllRule || rule.getCondition().isConstantFalse())) {
-                        DefaultParserNotice notice =
-                            new DefaultParserNotice(this, wasCatchAllRule
-                                ? "There was a rule that will always match, this rule will never be used."
-                                : "This rule will never match.", line, doc.getTokenListForLine(line).offset,
-                                lineText.length());
-                        notice.setLevel(ParserNotice.WARNING);
-                        res.addNotice(notice);
-                    }
-                    wasCatchAllRule |= rule.getCondition().isCatchAll();
+                    wasCatchAllRule |= parseAndWarn(doc, res, wasCatchAllRule, line, lineText);
                 }
             } catch (ParseException e) {
                 DefaultParserNotice notice;
@@ -469,6 +437,65 @@ public class RuleParser implements Parser {
             }
         }
         return res;
+    }
+
+    /**
+     * Parses the line and warns about possible problems.
+     *
+     * @param doc The document.
+     * @param res The {@link ParseResult}.
+     * @param wasCatchAllRule Whether there was a catchAll rule before.
+     * @param line The line index starting from {@code 0}.
+     * @param lineText The rule text.
+     * @return The rule's condition will always be true.
+     * @throws ParseException Problem during parsing.
+     */
+    protected boolean parseAndWarn(final RSyntaxDocument doc, final DefaultParseResult res, final boolean wasCatchAllRule, final int line,
+        final String lineText) throws ParseException {
+        Rule rule = RuleFactory.getInstance(m_nodeType).parse(lineText, m_dataTableSpec, m_flowVariables);
+        if (rule.getCondition().isEnabled() && (wasCatchAllRule || rule.getCondition().isConstantFalse())) {
+            addWarningNotice(doc, res, wasCatchAllRule, line, lineText);
+        }
+        return rule.getCondition().isCatchAll();
+    }
+
+    /**
+     * Adds a warning about unreachability or FALSE conditions.
+     *
+     * @param doc The document.
+     * @param res The {@link ParseResult}.
+     * @param wasCatchAllRule Whether there was a catchAll rule before.
+     * @param line The line index starting from {@code 0}.
+     * @param lineText The rule text.
+     */
+    protected void addWarningNotice(final RSyntaxDocument doc, final DefaultParseResult res,
+        final boolean wasCatchAllRule, final int line, final String lineText) {
+        DefaultParserNotice notice =
+            new DefaultParserNotice(this, wasCatchAllRule
+                ? "There was a rule that might always match, this rule will probably never be used."
+                : "This rule might never match.", line, doc.getTokenListForLine(line).offset,
+                lineText.length());
+        notice.setLevel(ParserNotice.WARNING);
+        res.addNotice(notice);
+    }
+
+    /**
+     * Checks whether this parser is applicable to the input or not.
+     *
+     * @param style The style key of the grammar to use. (Default implementation checks for
+     *            {@link AbstractRuleParser#SYNTAX_STYLE_RULE}.)
+     * @return If <em>not</em> applicable, return {@code true}, if applicable, return {@code false}.
+     */
+    protected boolean isNotApplicable(final String style) {
+        return !AbstractRuleParser.SYNTAX_STYLE_RULE.equals(style) || !m_isEnabled
+            || (m_dataTableSpec == null && m_allowTableReferences);
+    }
+
+    /**
+     * @return the m_operators
+     */
+    public Collection<String> getOperators() {
+        return m_operators;
     }
 
     /**
@@ -532,7 +559,7 @@ public class RuleParser implements Parser {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        RuleParser other = (RuleParser)obj;
+        AbstractRuleParser other = (AbstractRuleParser)obj;
         if (m_dataTableSpec == null) {
             if (other.m_dataTableSpec != null) {
                 return false;
@@ -550,5 +577,19 @@ public class RuleParser implements Parser {
             return false;
         }
         return true;
+    }
+
+    /**
+     * @return the dataTableSpec
+     */
+    protected DataTableSpec getSpec() {
+        return m_dataTableSpec;
+    }
+
+    /**
+     * @return the flowVariables
+     */
+    protected Map<String, FlowVariable> getFlowVariables() {
+        return Collections.unmodifiableMap(m_flowVariables);
     }
 }

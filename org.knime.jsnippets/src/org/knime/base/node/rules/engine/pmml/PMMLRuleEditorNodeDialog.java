@@ -45,32 +45,34 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   11.04.2008 (thor): created
+ * Created on 2013.08.11. by Gabor Bakos
  */
-package org.knime.base.node.rules.engine;
+package org.knime.base.node.rules.engine.pmml;
 
-import org.knime.base.node.rules.engine.rsyntax.VariableRuleParser;
+import org.knime.base.node.rules.engine.RuleNodeSettings;
+import org.knime.base.node.rules.engine.RulePanel;
+import org.knime.base.node.rules.engine.rsyntax.AbstractRuleParser;
+import org.knime.base.node.rules.engine.rsyntax.PMMLRuleParser;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * Rule Engine node dialog, but also usable for rule engine filter/splitter.
+ * <code>NodeDialog</code> for the "PMML41RuleEditor" Node. Edits PMML RuleSets.
  *
- * @author Thorsten Meinl, University of Konstanz
+ * This node dialog derives from {@link DefaultNodeSettingsPane} which allows creation of a simple dialog with standard
+ * components. If you need a more complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
+ *
  * @author Gabor Bakos
- * @since 2.8
  */
-public class RuleEngineVariableNodeDialog extends NodeDialogPane {
+public class PMMLRuleEditorNodeDialog extends NodeDialogPane {
     static {
-        new VariableRuleParser.RuleLanguageSupport();
-//        LanguageSupportFactory.get().addLanguageSupport(RuleParser.SYNTAX_STYLE_RULE,
-//                                                        RuleParser.RuleLanguageSupport.class.getName());
+        new org.knime.base.node.rules.engine.rsyntax.PMMLRuleParser.PMMLRuleLanguageSupport();
     }
 
     /** Default default label. */
@@ -80,31 +82,18 @@ public class RuleEngineVariableNodeDialog extends NodeDialogPane {
     static final String NEW_COL_NAME = "prediction";
 
     /** The default text for the rule editor. */
-    /** The default text for the rule editor. */
-    static final String RULE_LABEL = "// enter ordered set of rules, e.g.:\n"+
-    "// $${Ddouble variable name}$$ > 5.0 => \"large\"\n" +
-    "// $${Sstring column name}$$ LIKE \"*blue*\" => \"small and blue\"\n" +
-    "// TRUE => \"default outcome\"\n";
-
-    private final boolean m_warnOnColRefsInStrings;
+    public static final String RULE_LABEL = "// enter ordered set of rules, e.g.:\n"
+        + "// $double column name$ > 5.0 => \"large\"\n" + "// $string column name$ = \"blue\" => \"small and blue\"\n"
+        + "// TRUE => \"default outcome\"\n";
 
     private RulePanel m_rulePanel;
 
     /**
-     * Constructs the default {@link RuleEngineVariableNodeDialog}.
+     * New pane for configuring the PMML41RuleEditor node.
      */
-    public RuleEngineVariableNodeDialog() {
-        this(true);
-    }
-
-    /**
-     * Constructs a {@link RuleEngineVariableNodeDialog}.
-     *
-     * @param warnOnColRefsInStrings Whether to warn if there are column references in the outcome strings.
-     */
-    RuleEngineVariableNodeDialog(final boolean warnOnColRefsInStrings) {
-        this.m_warnOnColRefsInStrings = warnOnColRefsInStrings;
+    protected PMMLRuleEditorNodeDialog() {
         initializeComponent();
+//        this(true, false, true);
     }
 
     private void initializeComponent() {
@@ -115,20 +104,18 @@ public class RuleEngineVariableNodeDialog extends NodeDialogPane {
      * @return The {@link RulePanel}.
      */
     private RulePanel createRulePanel() {
-//        return new RulePanel(true/*hasOutput*/, true/*hasDefaultOutcome*/, m_warnOnColRefsInStrings,
-//                false/*showColumns*/, null, RuleManipulatorProvider.getVariableProvider(),
-//                new KnimeCompletionProvider() {
-//                    @Override
-//                    public String escapeColumnName(final String colName) {
-//                        throw new UnsupportedOperationException("No columns!");
-//                    }
-//
-//                    @Override
-//                    public String escapeFlowVariableName(final String varName) {
-//                        return "$${" + varName + "}$$";
-//                    }
-//                });
-        return new RulePanel(RuleNodeSettings.VariableRule, m_warnOnColRefsInStrings);
+        return new RulePanel(RuleNodeSettings.PMMLRule) {
+            private static final long serialVersionUID = 1989431706527387707L;
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            protected AbstractRuleParser createParser(final boolean warnOnColRefsInStrings,
+                final RuleNodeSettings nodeType) {
+                return new PMMLRuleParser();
+            }
+        };
     }
 
     /**
@@ -136,8 +123,9 @@ public class RuleEngineVariableNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-            throws NotConfigurableException {
-        m_rulePanel.loadSettingsFrom(settings, new DataTableSpec[] {new DataTableSpec()}, getAvailableFlowVariables());
+        throws NotConfigurableException {
+        //final DataTableSpec[] specsMod = new DataTableSpec[]{PMMLRuleEditorNodeModel.computeSpecs(specs)};
+        m_rulePanel.loadSettingsFrom(settings, new DataTableSpec[] {(DataTableSpec)specs[0]}, getAvailableFlowVariables());
     }
 
     /**

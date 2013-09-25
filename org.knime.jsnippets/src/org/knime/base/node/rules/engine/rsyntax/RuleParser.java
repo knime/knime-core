@@ -45,34 +45,82 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   11.04.2008 (thor): created
+ * Created on 2013.08.09. by Gabor Bakos
  */
-package org.knime.base.node.rules.engine;
+package org.knime.base.node.rules.engine.rsyntax;
 
-import org.knime.core.node.NodeDialogPane;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.TokenMaker;
+import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
+import org.knime.base.node.rules.engine.Rule;
+import org.knime.base.node.rules.engine.Rule.BooleanConstants;
+import org.knime.base.node.rules.engine.Rule.Operators;
+import org.knime.base.node.rules.engine.RuleNodeSettings;
 
 /**
- * This factory creates all necessary object for the business rule node.
+ * The {@link RuleParser} for the {@link RSyntaxTextArea}.
  *
- * @author Thorsten Meinl, University of Konstanz
- * @since 2.8
+ * @since 2.9
+ * @author Gabor Bakos
  */
-public final class RuleEngineSplitterNodeFactory extends RuleEngineFilterNodeFactory {
+public class RuleParser extends AbstractRuleParser {
+
     /**
-     * {@inheritDoc}
+     * Language support class for the rule language.
+     *
+     * @author Gabor Bakos
+     * @since 2.8
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-//        return new RuleEngineNodeDialog("TRUE to first, FALSE to second output table");
-        return new RuleEngineNodeDialog(RuleNodeSettings.RuleSplitter);
+    public static class RuleLanguageSupport extends AbstractRuleParser.AbstractRuleLanguageSupport<AbstractRuleParser> {
+        /**
+         * Constructs {@link RuleLanguageSupport}.
+         */
+        public RuleLanguageSupport() {
+            super(AbstractRuleParser.SYNTAX_STYLE_RULE, RuleLanguageSupport.class, KnimeTokenMaker.class);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected RuleParser createParser() {
+            return new RuleParser(true, RuleNodeSettings.RuleEngine);
+        }
     }
 
     /**
-     * {@inheritDoc}
+     * Wraps a {@link TokenMaker} and makes the {@link Operators} {@link Operators#toString()} a keyword.
+     *
+     * @author Gabor Bakos
+     * @since 2.8
      */
-    @Override
-    public RuleEngineFilterNodeModel createNodeModel() {
-        return new RuleEngineFilterNodeModel(false);
+    public static class KnimeTokenMaker extends AbstractRuleParser.WrappedTokenMaker {
+
+        /**
+         * Constructs a {@link Rule} token maker based on the Java {@link TokenMaker}.
+         */
+        public KnimeTokenMaker() {
+            super(TokenMakerFactory.getDefaultInstance().getTokenMaker("text/java"), new AbstractRuleParser(true,
+                RuleNodeSettings.RuleEngine).getOperators());
+        }
+    }
+
+    /**
+     * Constructs the default instance.
+     * @since 2.9
+     */
+    public RuleParser() {
+        this(true, RuleNodeSettings.RuleEngine);
+    }
+
+    /**
+     * @param warnOnColRefsInStrings Warn on suspicious references in {@link String}s.
+     * @param nodeType The {@link RuleNodeSettings}.
+     */
+    public RuleParser(final boolean warnOnColRefsInStrings, final RuleNodeSettings nodeType) {
+        super(warnOnColRefsInStrings, nodeType);
+        for (BooleanConstants constant : BooleanConstants.values()) {
+            getOperators().add(constant.toString());
+        }
     }
 }
