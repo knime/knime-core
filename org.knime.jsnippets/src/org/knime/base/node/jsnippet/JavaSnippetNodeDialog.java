@@ -242,6 +242,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
                 JSplitPane.HORIZONTAL_SPLIT);
         centerSplitPane.setLeftComponent(colsAndVars);
         centerSplitPane.setRightComponent(snippet);
+        centerSplitPane.setResizeWeight(0.3); // colsAndVars expands to 0.3, the snippet to 0.7
 
         m_inFieldsTable = createInFieldsTable();
         m_outFieldsTable = createOutFieldsTable();
@@ -261,6 +262,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
         fieldsPane.setPreferredSize(fieldsPane.getMinimumSize());
         mainSplitPane.setBottomComponent(fieldsPane);
         mainSplitPane.setOneTouchExpandable(true);
+        mainSplitPane.setResizeWeight(0.7); // snippet gets more space, table with in/out gets less extra space
 
         centerPanel.add(mainSplitPane);
 
