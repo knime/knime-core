@@ -54,8 +54,8 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreUtil;
+import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -93,8 +93,8 @@ public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandle
 
     /** {@inheritDoc} */
     @Override
-    public FileStoreKey translateToLocal(final FileStore fs, final FileStoreCell fsOwner) {
-        final FileStoreKey result = m_loopStartFSHandler.translateToLocal(fs, fsOwner);
+    public FileStoreKey translateToLocal(final FileStore fs, final FlushCallback flushCallback) {
+        final FileStoreKey result = m_loopStartFSHandler.translateToLocal(fs, flushCallback);
         // might be called after node is closed, e.g. when workflow is saved
         boolean isClosed = m_fileStoresInLoopCache == null;
         if (!isClosed && m_loopStartFSHandler.isCreatedInThisLoop(result)) {

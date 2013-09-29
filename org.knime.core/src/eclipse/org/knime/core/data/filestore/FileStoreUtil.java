@@ -54,7 +54,10 @@ import java.io.IOException;
 
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.FileStoreKey;
+import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
+import org.knime.core.node.NodeLogger;
 
 /** Internal helper class, not to be used by clients.
  *
@@ -84,8 +87,31 @@ public final class FileStoreUtil {
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
-    public static void invokeFlush(final FileStoreCell cell) throws IOException {
-        cell.flushToFileStore();
+    public static FileStore getFileStore(final FileStorePortObject po) {
+        return po.getFileStore();
+    }
+
+    /** @noreference This method is not intended to be referenced by clients. */
+    public static IFileStoreHandler getFileStoreHandler(final FileStoreCell cell) {
+        return getFileStoreHandler(cell.getFileStore());
+    }
+
+    /** @noreference This method is not intended to be referenced by clients. */
+    public static IFileStoreHandler getFileStoreHandler(final FileStore filestore) {
+        return filestore.getFileStoreHandler();
+    }
+
+    /** @noreference This method is not intended to be referenced by clients. */
+    public static void invokeFlush(final FlushCallback flushCallback) throws IOException {
+        if (flushCallback instanceof FileStoreCell) {
+            ((FileStoreCell)flushCallback).flushToFileStore();
+        } else if (flushCallback instanceof FileStorePortObject) {
+            ((FileStorePortObject)flushCallback).flushToFileStore();
+        } else {
+            NodeLogger.getLogger(FileStoreUtil.class).coding("Unknown implementation of a "
+                    + FlushCallback.class.getSimpleName() + ": "
+                    + flushCallback == null ? "<null>" : flushCallback.getClass().getName());
+        }
     }
 
     /** @noreference This method is not intended to be referenced by clients. */

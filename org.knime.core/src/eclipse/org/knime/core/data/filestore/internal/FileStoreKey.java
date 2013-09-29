@@ -56,6 +56,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
+
 /** Wraps name and enumerated number to a file store object.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
@@ -148,6 +152,34 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
             input.readFully(nestedLoopPath);
         }
         return new FileStoreKey(uuid, index, nestedLoopPath, iterationIndex, name);
+    }
+
+    public void save(final ModelContentWO output) {
+        output.addString("storeUUID", m_storeUUID.toString());
+        output.addInt("index", m_index);
+        output.addString("name", m_name);
+        output.addInt("iterationIndex", m_iterationIndex);
+        if (m_iterationIndex >= 0) {
+            output.addByteArray("nestedLoopPath", m_nestedLoopPath);
+        }
+    }
+
+    public static FileStoreKey load(final ModelContentRO input) throws InvalidSettingsException {
+        UUID storeUUID;
+        final String storeUUIDs = input.getString("storeUUID");
+        try {
+            storeUUID = UUID.fromString(storeUUIDs);
+        } catch (Exception e) {
+            throw new InvalidSettingsException("Can't parse storeUUID from \"" + storeUUIDs + "\"", e);
+        }
+        int index = input.getInt("index");
+        String name = input.getString("name");
+        int iterationIndex = input.getInt("iterationIndex");
+        byte[] nestedLoopPath = null;
+        if (iterationIndex >= 0) {
+            nestedLoopPath = input.getByteArray("nestedLoopPath");
+        }
+        return new FileStoreKey(storeUUID, index, nestedLoopPath, iterationIndex, name);
     }
 
     /** {@inheritDoc} */

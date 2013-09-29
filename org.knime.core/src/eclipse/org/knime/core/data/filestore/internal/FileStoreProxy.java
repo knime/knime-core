@@ -40,13 +40,12 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   Jul 17, 2012 (wiswedel): created
+ * Created on Sep 17, 2013 by wiswedel
  */
 package org.knime.core.data.filestore.internal;
 
@@ -54,68 +53,90 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
+import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
-import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
-import org.knime.core.node.ExecutionContext;
-
+import org.knime.core.node.NodeLogger;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class ROWriteFileStoreHandler extends EmptyFileStoreHandler implements IWriteFileStoreHandler {
+public final class FileStoreProxy {
 
-    /**
-     * @param fileStoreHandlerRepository */
-    public ROWriteFileStoreHandler(final FileStoreHandlerRepository fileStoreHandlerRepository) {
-        super(fileStoreHandlerRepository);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(FileStorePortObject.class);
+
+    private FileStoreKey m_fileStoreKey;
+    private IFileStoreHandler m_fileStoreHandler;
+
+    /** Standard client constructor.
+     * @param fileStore Non null file store object to wrap. */
+    public FileStoreProxy(final FileStore fileStore) {
+        m_fileStoreKey = FileStoreUtil.getFileStoreKey(fileStore);
+        m_fileStoreHandler = FileStoreUtil.getFileStoreHandler(fileStore);
+    }
+
+    /** Used when read from persisted stream. */
+    public FileStoreProxy() {
+    }
+
+    /** @return the fileStoreKey */
+    public FileStoreKey getFileStoreKey() {
+        return m_fileStoreKey;
+    }
+
+    /** @noreference This method is not intended to be referenced by clients. */
+    public void retrieveFileStoreHandlerFrom(final FileStoreKey key,
+            final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
+        m_fileStoreKey = key;
+        UUID id = key.getStoreUUID();
+        m_fileStoreHandler = fileStoreHandlerRepository.getHandlerNotNull(id);
+    }
+
+    public FileStore getFileStore() {
+        if (m_fileStoreHandler == null) {
+            throw new IllegalStateException("Can't read file store object, "
+                    + "the proxy has not been fully initialized");
+        }
+        return m_fileStoreHandler.getFileStore(m_fileStoreKey);
     }
 
     /** {@inheritDoc} */
     @Override
-    public FileStore createFileStore(final String name) throws IOException {
-        throw new IllegalStateException("read only file store handler");
+    public String toString() {
+        return m_fileStoreKey.toString();
     }
 
     /** {@inheritDoc} */
     @Override
-    public void open(final ExecutionContext exec) {
-        throw new IllegalStateException("read only file store handler");
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof FileStoreProxy)) {
+            return false;
+        }
+        final FileStoreKey oKey = ((FileStoreProxy)obj).m_fileStoreKey;
+        return m_fileStoreKey.equals(oKey);
+
     }
 
     /** {@inheritDoc} */
     @Override
-    public void addToRepository(final FileStoreHandlerRepository repository) {
-        throw new IllegalStateException("read only file store handler");
+    public int hashCode() {
+        return m_fileStoreKey.hashCode();
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public void close() {
-        throw new IllegalStateException("read only file store handler");
-    }
+    /** Marker interface implemented by the {@link FileStorePortObject} and {@link FileStoreCell}. Both classes
+     * have a (protected) flush method, which gets called by the framework when the content needs to be written
+     * to the file.
+     *
+     * <p>This interface doesn't require this method so that the method can stay protected. (This interface was
+     * added after the flush method had been added to the FileStoreCell. Also, it seems wrong to make it public as it
+     * should only be called by the framework.)
+     */
+    public interface FlushCallback {
 
-    /** {@inheritDoc} */
-    @Override
-    public FileStoreKey translateToLocal(final FileStore fs, final FlushCallback flushCallback) {
-        return FileStoreUtil.getFileStoreKey(fs);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean mustBeFlushedPriorSave(final FileStore fs) {
-        return false;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public UUID getStoreUUID() {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void ensureOpenAfterLoad() {
     }
 
 

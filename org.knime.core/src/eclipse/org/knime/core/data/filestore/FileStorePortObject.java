@@ -40,56 +40,46 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   Jun 26, 2012 (wiswedel): created
+ * Created on Sep 17, 2013 by wiswedel
  */
 package org.knime.core.data.filestore;
 
 import java.io.IOException;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.FileStoreKey;
 import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.PortObject;
 
 /**
+ * Abstract super class of {@link PortObject}, which reference files.
  *
+ * <p>Pending API. Don't extend (yet).
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @since 2.6
+ * @since 2.9
  */
-public abstract class FileStoreCell extends DataCell implements FlushCallback {
+public abstract class FileStorePortObject implements PortObject, FlushCallback {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(FileStoreCell.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(FileStorePortObject.class);
 
     private FileStoreProxy m_fileStoreProxy;
 
-
-    /**
-     *  */
-    protected FileStoreCell(final FileStore fileStore) {
+    /** Standard client constructor.
+     * @param fileStore Non null file store object to wrap. */
+    protected FileStorePortObject(final FileStore fileStore) {
         m_fileStoreProxy = new FileStoreProxy(fileStore);
     }
 
-    /** Used when read from persisted stream.
-     *  */
-    protected FileStoreCell() {
+    /** Used when read from persisted stream. */
+    protected FileStorePortObject() {
         m_fileStoreProxy = new FileStoreProxy();
-    }
-
-    /** @return the fileStoreKey */
-    final FileStoreKey getFileStoreKey() {
-        return m_fileStoreProxy.getFileStoreKey();
-    }
-
-    protected FileStore getFileStore() {
-        return m_fileStoreProxy.getFileStore();
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
@@ -110,11 +100,9 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
     /** Called before the cell about to be serialized. Subclasses may override it to make sure the content
      * is sync'ed with the file (e.g. in-memory content is written to the FileStore).
      *
-     * <p>This method is also called when the file underlying the cell is copied into a another context (from
-     * a BufferedDataTable to DataTable).
-     * @throws IOException If thrown, the cell will be replaced by a missing value in the data stream and
-     * an error will be reported to the log.
-     * @since 2.8 */
+     * <p>This method is also called when the file underlying object is copied into a another context (e.g. persisted
+     * outside the scope of the corresponding workflow).
+     * @throws IOException If unable to flush. */
     protected void flushToFileStore() throws IOException {
         // no op.
     }
@@ -125,11 +113,25 @@ public abstract class FileStoreCell extends DataCell implements FlushCallback {
         return m_fileStoreProxy.toString();
     }
 
+    /** Access to the underlying file store. Derived class will use it to read the content of the file when needed.
+     * This method must not be called in the {@link #FileStorePortObject() serialization constructor}
+     * (use {@link #postConstruct()} instead.
+     * @return The file store
+     */
+    protected FileStore getFileStore() {
+        return m_fileStoreProxy.getFileStore();
+    }
+
     /** {@inheritDoc} */
     @Override
-    protected boolean equalsDataCell(final DataCell dc) {
-        FileStoreProxy otherFileStoreProxy = ((FileStoreCell)dc).m_fileStoreProxy;
-        return m_fileStoreProxy.equals(otherFileStoreProxy);
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof FileStorePortObject)) {
+            return false;
+        }
+        return m_fileStoreProxy.equals(((FileStorePortObject)obj).m_fileStoreProxy);
     }
 
     /** {@inheritDoc} */

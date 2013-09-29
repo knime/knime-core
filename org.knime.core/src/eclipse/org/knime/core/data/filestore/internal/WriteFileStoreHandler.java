@@ -55,8 +55,8 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreUtil;
+import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
@@ -159,10 +159,10 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
 
     /** {@inheritDoc} */
     @Override
-    public FileStoreKey translateToLocal(final FileStore fs, final FileStoreCell fsOwner) {
+    public FileStoreKey translateToLocal(final FileStore fs, final FlushCallback flushCallback) {
         final FileStoreKey key = FileStoreUtil.getFileStoreKey(fs);
         if (getOwnerHandler(key) == null) {
-            return copyFileStore(fs, fsOwner);
+            return copyFileStore(fs, flushCallback);
         }
         return key;
     }
@@ -176,7 +176,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
         return getOwnerHandler(key) == null;
     }
 
-    private synchronized FileStoreKey copyFileStore(final FileStore fs, final FileStoreCell fsOwner) {
+    private synchronized FileStoreKey copyFileStore(final FileStore fs, final FlushCallback flushCallback) {
         FileStoreKey key = FileStoreUtil.getFileStoreKey(fs);
         if (m_createdFileStoreKeys == null) {
             LOGGER.debug("Duplicating file store objects - file store handler id "
@@ -193,7 +193,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
         try {
             // fixes problem with file store cell that keep things in memory until serialized:
             // notify them that a copy is taken place and that they need to flush their in memory content
-            FileStoreUtil.invokeFlush(fsOwner);
+            FileStoreUtil.invokeFlush(flushCallback);
             newStore = createFileStoreInternal(getNextIndex() + "_" + key.getName(), null, -1);
             FileUtil.copy(fs.getFile(), newStore.getFile());
         } catch (IOException e) {

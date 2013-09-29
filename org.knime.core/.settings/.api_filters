@@ -38,6 +38,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreUtil.java" type="org.knime.core.data.filestore.FileStoreUtil">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="invokeFlush(FileStoreCell)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/sort/MemoryService.java" type="org.knime.core.data.sort.MemoryService">
         <filter id="338792546">
             <message_arguments>
@@ -186,6 +194,13 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.config.ConfigEditTreeModel"/>
                 <message_argument value="create(ConfigBase, ConfigBase)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/PortUtil.java" type="org.knime.core.node.port.PortUtil">
+        <filter comment="no public api" id="1143996420">
+            <message_arguments>
+                <message_argument value="writeObjectToStream(PortObject, OutputStream, IWriteFileStoreHandler, ExecutionMonitor)"/>
             </message_arguments>
         </filter>
     </resource>
