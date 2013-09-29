@@ -159,10 +159,9 @@ public final class PortUtil {
     }
 
     public static void writeObjectToStream(final PortObject po,
-            final OutputStream output, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        final ZipOutputStream out = new ZipOutputStream(
-                new BufferedOutputStream(output));
+        final OutputStream output, final ExecutionMonitor exec)
+                throws IOException, CanceledExecutionException {
+        final ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(output));
         out.setLevel(0);
 
         PortObjectSpec spec = po.getSpec();
@@ -171,20 +170,23 @@ public final class PortUtil {
         toc.addInt("version", 1);
         toc.addString("port_spec_class", spec.getClass().getName());
         toc.addString("port_object_class", po.getClass().getName());
+//        if (po instanceof FileStorePortObject) {
+//            final FileStorePortObject fileStorePO = (FileStorePortObject)po;
+//            FileStore fileStore = FileStoreUtil.getFileStore(fileStorePO);
+//            FileStoreKey fileStoreKey = fileStoreHandler.translateToLocal(fileStore, fileStorePO);
+//            ModelContentWO fileStoreModelContent = toc.addModelContent("port_file_store_key");
+//            fileStoreKey.save(fileStoreModelContent);
+//        }
         toc.saveToXML(new NonClosableOutputStream.Zip(out));
 
         out.putNextEntry(new ZipEntry("objectSpec.file"));
-        PortObjectSpecZipOutputStream specOut =
-            getPortObjectSpecZipOutputStream(
-                    new NonClosableOutputStream.Zip(out));
-        PortObjectSpecSerializer specSer =
-            getPortObjectSpecSerializer(spec.getClass());
+        PortObjectSpecZipOutputStream specOut = getPortObjectSpecZipOutputStream(new NonClosableOutputStream.Zip(out));
+        PortObjectSpecSerializer specSer = getPortObjectSpecSerializer(spec.getClass());
         specSer.savePortObjectSpec(spec, specOut);
         specOut.close(); // will propagate as closeEntry
 
         out.putNextEntry(new ZipEntry("object.file"));
-        PortObjectZipOutputStream objOut = getPortObjectZipOutputStream(
-                new NonClosableOutputStream.Zip(out));
+        PortObjectZipOutputStream objOut = getPortObjectZipOutputStream(new NonClosableOutputStream.Zip(out));
         PortObjectSerializer objSer = getPortObjectSerializer(po.getClass());
         objSer.savePortObject(po, objOut, exec);
         objOut.close(); // will propagate as closeEntry
