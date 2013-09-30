@@ -611,7 +611,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
                     return new ExpressionValue(valCell, EMPTY_MAP);
                 }
                 if (valCell.getType() != BooleanCell.TYPE) {
-                    throw new IllegalStateException("Not a boolean m_value: " + valCell.getType());
+                    throw new IllegalStateException("Not a boolean value: " + valCell.getType());
                 }
                 BooleanCell ret = (BooleanCell)valCell;
                 Map<String, Map<String, String>> matchedObjects = val.getMatchedObjects();
@@ -627,7 +627,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
                         matchedObjects = Util.mergeObjects(matchedObjects, v.getMatchedObjects());
                         ret = BooleanCell.get(ret.getBooleanValue() ^ bool.getBooleanValue());
                     } else {
-                        throw new IllegalStateException("Not boolean: " + v.getValue());
+                        throw new IllegalStateException("Not a boolean value: " + v.getValue());
                     }
                 }
                 return new ExpressionValue(ret, matchedObjects);
