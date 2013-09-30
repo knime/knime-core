@@ -610,10 +610,12 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
                 if (valCell.isMissing()) {
                     return new ExpressionValue(valCell, EMPTY_MAP);
                 }
-                if (valCell.getType() != BooleanCell.TYPE) {
-                    throw new IllegalStateException("Not a boolean value: " + valCell.getType());
+                if (valCell instanceof BooleanValue) {
+                    throw new IllegalStateException("Not a boolean value in row '" + row.getKey() + "': "
+                        + valCell.getType());
                 }
-                BooleanCell ret = (BooleanCell)valCell;
+
+                BooleanCell ret = BooleanCell.get(((BooleanValue) valCell).getBooleanValue());
                 Map<String, Map<String, String>> matchedObjects = val.getMatchedObjects();
                 for (int i = 1; i < boolExpressions.size(); ++i) {
                     Expression boolExpression = boolExpressions.get(i);
@@ -621,8 +623,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
                     DataCell cell = v.getValue();
                     if (cell.isMissing()) {
                         return new ExpressionValue(ret, EMPTY_MAP);
-                    }
-                    if (cell instanceof BooleanValue) {
+                    } else if (cell instanceof BooleanValue) {
                         BooleanValue bool = (BooleanValue)cell;
                         matchedObjects = Util.mergeObjects(matchedObjects, v.getMatchedObjects());
                         ret = BooleanCell.get(ret.getBooleanValue() ^ bool.getBooleanValue());
@@ -1495,7 +1496,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
     @Override
     public Expression boolAsPredicate(final Expression expression) {
         if (!BooleanCell.TYPE.isASuperTypeOf(expression.getOutputType())) {
-            throw new IllegalArgumentException(expression + " is not a Boolean");
+            throw new IllegalArgumentException(expression + " is not a boolean");
         }
         return expression;
     }
