@@ -103,7 +103,11 @@ public final class DOMComparer {
         NamedNodeMap attributes1 = node1.getAttributes();
         NamedNodeMap attributes2 = node2.getAttributes();
 
-        if (attributes1.getLength() != attributes2.getLength()) {
+        if ((attributes1 == null) && (attributes2 == null)) {
+            // do nothing
+        } else if ((attributes1 != null) ^ (attributes2 != null)) {
+            return new CompareResult(node1, depth, false);
+        } else if (attributes1.getLength() != attributes2.getLength()) {
         	return new CompareResult(node1, depth, false);
         } else {
         	for (int i = 0; i < attributes1.getLength(); i++) {
