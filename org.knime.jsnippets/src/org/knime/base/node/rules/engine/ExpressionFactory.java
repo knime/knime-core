@@ -609,8 +609,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
                 assert !valCell.isMissing();
                 if (valCell.isMissing()) {
                     return new ExpressionValue(valCell, EMPTY_MAP);
-                }
-                if (valCell instanceof BooleanValue) {
+                } else if (!(valCell instanceof BooleanValue)) {
                     throw new IllegalStateException("Not a boolean value in row '" + row.getKey() + "': "
                         + valCell.getType());
                 }
