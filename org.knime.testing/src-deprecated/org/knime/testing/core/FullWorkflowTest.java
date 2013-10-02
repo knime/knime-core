@@ -72,6 +72,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeContext;
@@ -950,11 +951,11 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
         return new MsgPattern(splits[1]);
     }
 
-    private SingleNodeContainer findConfigNode() {
+    private NativeNodeContainer findConfigNode() {
         for (NodeContainer cont : m_manager.getNodeContainers()) {
-            if ((cont instanceof SingleNodeContainer)
-                    && (((SingleNodeContainer)cont).getNodeModel() instanceof TestConfigNodeModel)) {
-                return (SingleNodeContainer)cont;
+            if ((cont instanceof NativeNodeContainer)
+                    && (((NativeNodeContainer)cont).getNodeModel() instanceof TestConfigNodeModel)) {
+                return (NativeNodeContainer)cont;
             }
         }
         return null;
@@ -1100,7 +1101,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
         readNodeStatusFile(new File(workflowDir, STATUS_FILE));
     }
 
-    private void readConfigFromNode(final SingleNodeContainer configNode)
+    private void readConfigFromNode(final NativeNodeContainer configNode)
             throws InvalidSettingsException {
         NodeSettings s = new NodeSettings("");
         NodeContext.pushContext(configNode);
@@ -1558,7 +1559,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
             logger.debug("Workflow loaded ----------------------------"
                     + "--------------");
 
-            SingleNodeContainer configNode = findConfigNode();
+            NativeNodeContainer configNode = findConfigNode();
             if (configNode != null) {
                 readConfigFromNode(configNode);
             } else {

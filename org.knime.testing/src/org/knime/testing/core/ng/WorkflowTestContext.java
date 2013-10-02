@@ -60,9 +60,11 @@ import java.util.Set;
 
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.Pair;
 
@@ -141,12 +143,14 @@ public class WorkflowTestContext {
      */
     private void recordNodes(final WorkflowManager manager) {
         for (NodeContainer node : manager.getNodeContainers()) {
-            if (node instanceof SingleNodeContainer) {
-                if (((SingleNodeContainer)node).getNodeContainerState().isExecuted()) {
+            if (node instanceof NativeNodeContainer) {
+                if (((NativeNodeContainer)node).getNodeContainerState().isExecuted()) {
                     m_preExecutedNodes.add(node.getID());
                 } else {
-                    m_nodesUnderTest.add(((SingleNodeContainer)node).getNode().getFactory().getClass().getName());
+                    m_nodesUnderTest.add(((NativeNodeContainer)node).getNode().getFactory().getClass().getName());
                 }
+            } else if (node instanceof SubNodeContainer) {
+                recordNodes(((SubNodeContainer)node).getWorkflowManager());
             } else if (node instanceof WorkflowManager) {
                 recordNodes((WorkflowManager)node);
             } else {

@@ -68,10 +68,10 @@ import java.util.regex.Pattern;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.testing.node.config.TestConfigNodeModel;
 import org.knime.testing.node.config.TestConfigSettings;
@@ -121,9 +121,9 @@ class TestflowConfiguration {
 
         boolean loaded = false;
         for (NodeContainer cont : m_manager.getNodeContainers()) {
-            if ((cont instanceof SingleNodeContainer)
-                    && (((SingleNodeContainer)cont).getNodeModel() instanceof TestConfigNodeModel)) {
-                load((SingleNodeContainer)cont);
+            if ((cont instanceof NativeNodeContainer)
+                    && (((NativeNodeContainer)cont).getNodeModel() instanceof TestConfigNodeModel)) {
+                load((NativeNodeContainer)cont);
                 loaded = true;
             }
         }
@@ -133,7 +133,7 @@ class TestflowConfiguration {
         }
     }
 
-    private void load(final SingleNodeContainer configNode) throws InvalidSettingsException {
+    private void load(final NativeNodeContainer configNode) throws InvalidSettingsException {
         NodeSettings s = new NodeSettings("");
         NodeContext.pushContext(configNode);
         try {

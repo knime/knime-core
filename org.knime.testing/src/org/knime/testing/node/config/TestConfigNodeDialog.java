@@ -89,10 +89,11 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
-import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -453,11 +454,15 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
     private void fillNodeList(final WorkflowManager root, final Set<String> existingNodeIds) {
         for (NodeContainer cont : root.getNodeContainers()) {
-            if (cont instanceof SingleNodeContainer) {
-                if (((SingleNodeContainer)cont).getNode().getDialogPane() != this) {
+            if (cont instanceof NativeNodeContainer) {
+                if (((NativeNodeContainer)cont).getNode().getDialogPane() != this) {
                     m_allNodesModel.addElement(cont);
                     existingNodeIds.add(TestConfigSettings.getNodeIDWithoutRootPrefix(getNodeContext().getWorkflowManager(), cont));
                 }
+            } else if (cont instanceof SubNodeContainer) {
+                m_allNodesModel.addElement(cont);
+                existingNodeIds.add(TestConfigSettings.getNodeIDWithoutRootPrefix(getNodeContext().getWorkflowManager(), cont));
+                fillNodeList(((SubNodeContainer)cont).getWorkflowManager(), existingNodeIds);
             } else if (cont instanceof WorkflowManager) {
                 m_allNodesModel.addElement(cont);
                 existingNodeIds.add(TestConfigSettings.getNodeIDWithoutRootPrefix(getNodeContext().getWorkflowManager(), cont));
