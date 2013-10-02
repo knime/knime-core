@@ -52,9 +52,9 @@ package org.knime.workbench.editor2.pervasive;
 import java.net.URL;
 
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
-import org.knime.core.node.workflow.SingleNodeContainer;
 
 /** A temporary class that returns some job manager icons until Pervasive changes their node execution job manager.
  *
@@ -88,10 +88,10 @@ public final class PervasiveJobExecutorHelper {
     }
 
     public static URL getIconForChild(final NodeContainer child) {
-        if ( child instanceof SingleNodeContainer ) {
-            //first check to see if we are native streaming (if no we will never be forced)
-            SingleNodeContainer snc = (SingleNodeContainer)child;
-            NodeModel model = snc.getNodeModel();
+        if ( child instanceof NativeNodeContainer ) {
+            // first check to see if we are native streaming (if no we will never be forced)
+            NativeNodeContainer nnc = (NativeNodeContainer)child;
+            NodeModel model = nnc.getNodeModel();
             Class cl = model.getClass();
             if (cl.getName().contains("pervasive")) {
                 return KRUNNER_NATIVE;

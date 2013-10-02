@@ -59,8 +59,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -138,12 +138,10 @@ public class OpenViewAction extends Action {
             // This fix is to be reverted in future versions,
             // see bug 2137 for details
             boolean isSchrodinger = false;
-            if (m_nodeContainer instanceof SingleNodeContainer) {
-                SingleNodeContainer snc = (SingleNodeContainer)m_nodeContainer;
-                String clName = snc.getNodeReferenceBug2136().
-                    getFactory().getClass().getName();
-                isSchrodinger = clName.startsWith(
-                        "com.schrodinger.knime.node.");
+            if (m_nodeContainer instanceof NativeNodeContainer) {
+                NativeNodeContainer snc = (NativeNodeContainer)m_nodeContainer;
+                String clName = snc.getNodeReferenceBug2136().getFactory().getClass().getName();
+                isSchrodinger = clName.startsWith("com.schrodinger.knime.node.");
             }
             if (isSchrodinger) {
                 Display.getDefault().asyncExec(runner);

@@ -806,10 +806,12 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         String fileName;
         if (container instanceof WorkflowManager) {
             fileName = WorkflowPersistorVersion200.save((WorkflowManager)container, nodeDirectoryRef, exec, isSaveData);
-        } else {
+        } else if (container instanceof NativeNodeContainer) {
             fileName =
-                SingleNodeContainerPersistorVersion200.save((SingleNodeContainer)container, nodeDirectoryRef, exec,
+                SingleNodeContainerPersistorVersion200.save((NativeNodeContainer)container, nodeDirectoryRef, exec,
                     isSaveData);
+        } else {
+            throw new IOException("Sorry, can't save SubnodeContainers yet...");
         }
         saveFileLocation(settings, nodeDirID + "/" + fileName);
         saveIsMeta(settings, container);

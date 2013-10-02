@@ -63,13 +63,11 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ViewUtils;
 
 /**
- * The implementation of an OutPort of a SingleNodeContainer - e.g. a "real"
- * node.
+ * The implementation of an OutPort of a SingleNodeContainer - e.g. a native node.
  *
  * @author M. Berthold, University of Konstanz
  */
-public class NodeContainerOutPort extends NodePortAdaptor
-    implements NodeOutPort {
+public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort {
 
     private final Set<NodeStateChangeListener>m_listener;
 
@@ -90,13 +88,11 @@ public class NodeContainerOutPort extends NodePortAdaptor
      * @param snc the underlying SingleNodeContainer.
      * @param portIndex the (output) port index.
      */
-    public NodeContainerOutPort(final SingleNodeContainer snc,
-            final int portIndex) {
-        super(portIndex, snc.getNode().getOutputType(portIndex));
+    public NodeContainerOutPort(final SingleNodeContainer snc, final int portIndex) {
+        super(portIndex, snc.getOutputType(portIndex));
         m_snc = snc;
         m_portView = null;
-        // TODO register this object as listener to spec/object... changes
-        //   with Node!!
+        // TODO register this object as listener to spec/object... changes with Node!!
         m_snc.addNodeStateChangeListener(this);
         m_listener = new HashSet<NodeStateChangeListener>();
     }
@@ -106,7 +102,7 @@ public class NodeContainerOutPort extends NodePortAdaptor
      */
     @Override
     public PortObjectSpec getPortObjectSpec() {
-        return m_snc.getNode().getOutputSpec(getPortIndex());
+        return m_snc.getOutputSpec(getPortIndex());
     }
 
     /**
@@ -118,14 +114,14 @@ public class NodeContainerOutPort extends NodePortAdaptor
         // the PortObjects after a Node.execute() until the state of the
         // SNC/WFM has been adjusted to "EXECUTED"
         return m_snc.getInternalState().equals(InternalNodeContainerState.EXECUTED)
-                      ? m_snc.getNode().getOutputObject(getPortIndex()) : null;
+                      ? m_snc.getOutputObject(getPortIndex()) : null;
     }
 
     /** {@inheritDoc} */
     @Override
     public String getPortSummary() {
         return m_snc.getInternalState().equals(InternalNodeContainerState.EXECUTED)
-            ? m_snc.getNode().getOutputObjectSummary(getPortIndex()) : null;
+            ? m_snc.getOutputObjectSummary(getPortIndex()) : null;
     }
 
     /** {@inheritDoc} */
@@ -139,7 +135,7 @@ public class NodeContainerOutPort extends NodePortAdaptor
      */
     @Override
     public HiLiteHandler getHiLiteHandler() {
-        return m_snc.getNode().getOutputHiLiteHandler(getPortIndex());
+        return m_snc.getOutputHiLiteHandler(getPortIndex());
     }
 
     /** Lets the underlying {@link SingleNodeContainer} create an outgoing
@@ -202,16 +198,12 @@ public class NodeContainerOutPort extends NodePortAdaptor
     private void openPortViewInEDT(final String name) {
         assert SwingUtilities.isEventDispatchThread();
         if (m_portView == null) {
-            setPortView(new OutPortView(m_snc.getDisplayLabel(),
-                getPortName()));
+            setPortView(new OutPortView(m_snc.getDisplayLabel(), getPortName()));
         } else {
             // the custom name might have changed meanwhile
-            m_portView.setTitle(getPortName() + " - "
-                    + m_snc.getDisplayLabel());
+            m_portView.setTitle(getPortName() + " - " + m_snc.getDisplayLabel());
         }
-        m_portView.update(getPortObject(), getPortObjectSpec(),
-            getFlowObjectStack(),
-            m_snc.getNode().getCredentialsProvider());
+        m_portView.update(getPortObject(), getPortObjectSpec(), getFlowObjectStack(), m_snc.getCredentialsProvider());
         m_portView.openView();
     }
 
@@ -262,7 +254,7 @@ public class NodeContainerOutPort extends NodePortAdaptor
         return m_snc.getInternalState();
     }
 
-    /** @@inheritDoc}
+    /** {@inheritDoc}
      * @since 2.8 */
     @Override
     public NodeContainerState getNodeContainerState() {
@@ -306,7 +298,7 @@ public class NodeContainerOutPort extends NodePortAdaptor
                 if (m_portView != null) {
                     try {
                         m_portView.update(getPortObject(), getPortObjectSpec(), getFlowObjectStack(),
-                                m_snc.getNode().getCredentialsProvider());
+                                m_snc.getCredentialsProvider());
                     } catch (Exception e) {
                         NodeLogger.getLogger(getClass()).error("Failed to update port view.", e);
                     }

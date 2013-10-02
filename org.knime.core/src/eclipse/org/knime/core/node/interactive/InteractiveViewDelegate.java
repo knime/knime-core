@@ -50,9 +50,9 @@
 package org.knime.core.node.interactive;
 
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -71,10 +71,10 @@ final class InteractiveViewDelegate<V extends ViewContent> {
         m_nodeID = id;
         NodeContainer nc = m_wfm.getNodeContainer(m_nodeID);
         assert m_wfm.getNodeContainer(m_nodeID) == nc;  // !! constructor argument matches this info...
-        if (!(nc instanceof SingleNodeContainer)) {
+        if (!(nc instanceof NativeNodeContainer)) {
             throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
         }
-        NodeModel nm = ((SingleNodeContainer)nc).getNodeModel();
+        NodeModel nm = ((NativeNodeContainer)nc).getNodeModel();
         if (!(nm instanceof InteractiveNode)) {
             throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
         }

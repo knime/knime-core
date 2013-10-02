@@ -67,15 +67,15 @@ public class Trycatch extends WorkflowTestCase {
         checkState(m_catch, InternalNodeContainerState.EXECUTED);
         assertFalse(((SingleNodeContainer)(getManager().getNodeContainer(m_catch))).isInactive());
         // check variable in scope and hiding outside
-        SingleNodeContainer endifSNC = (SingleNodeContainer)(getManager().getNodeContainer(m_endif));
+        NativeNodeContainer endifNNC = (NativeNodeContainer)(getManager().getNodeContainer(m_endif));
         try {
-        	endifSNC.getNode().getNodeModel().peekFlowVariableString("innerScopeVariable");
+        	endifNNC.getNode().getNodeModel().peekFlowVariableString("innerScopeVariable");
         } catch (NoSuchElementException nsee) {
         	Assert.fail("Variable does not exist but should!");
         };
         SingleNodeContainer finalnodeSNC = (SingleNodeContainer)(getManager().getNodeContainer(m_finalnode));
         try {
-        	finalnodeSNC.getNode().getNodeModel().peekFlowVariableString("innerScopeVariable");
+        	finalnodeSNC.getOutgoingFlowObjectStack().peekFlowVariable("innerScopeVariable", FlowVariable.Type.STRING);
         	Assert.fail("Variable exists but shouldn't!");
         } catch (NoSuchElementException nsee) {};
     }

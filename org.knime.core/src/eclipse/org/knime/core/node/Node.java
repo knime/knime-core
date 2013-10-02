@@ -1328,7 +1328,6 @@ public final class Node implements NodeModelWarningListener {
         setPauseLoopExecution(false);
         m_model.resetModel();
         clearNodeMessageAndNotify();
-        cleanOutPorts(false);
     }
 
     /** Sets output objects to null, disposes tables that are created by

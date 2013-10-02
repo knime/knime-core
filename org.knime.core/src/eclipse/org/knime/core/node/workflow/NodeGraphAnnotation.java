@@ -123,11 +123,11 @@ public final class NodeGraphAnnotation implements Comparable<NodeGraphAnnotation
         m_connectedMetaOutPorts = new LinkedHashSet<Integer>();
         m_error = null;
         if (node instanceof SingleNodeContainer) {
-            if (((SingleNodeContainer)node).getNodeModel() instanceof ScopeStartNode) {
+            if (((SingleNodeContainer)node).isModelCompatibleTo(ScopeStartNode.class)) {
                 m_startNodeStack.push(m_id);
                 m_role = Role.START;
             }
-            if (((SingleNodeContainer)node).getNodeModel() instanceof ScopeEndNode) {
+            if (((SingleNodeContainer)node).isModelCompatibleTo(ScopeEndNode.class)) {
                 if (m_startNodeStack.size() < 1) {
                     m_error = "Missing Start Node.";
                 }

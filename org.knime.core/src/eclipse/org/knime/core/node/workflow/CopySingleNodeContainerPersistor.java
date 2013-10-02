@@ -111,16 +111,13 @@ final class CopySingleNodeContainerPersistor implements
      *        {@link WorkflowManager#copy(boolean, WorkflowCopyContent)}
      *        for details.)
      */
-    public CopySingleNodeContainerPersistor(
-            final SingleNodeContainer original,
-            final boolean preserveDeletableFlag,
-            final boolean isUndoableDeleteCommand) {
+    public CopySingleNodeContainerPersistor(final NativeNodeContainer original,
+            final boolean preserveDeletableFlag, final boolean isUndoableDeleteCommand) {
         Node originalNode = original.getNode();
         FlowObjectStack stack = original.getFlowObjectStack();
         List<FlowObject> objs;
         if (stack != null) {
-            objs = stack.getFlowObjectsOwnedBy(original.getID(),
-                    /*exclude*/Scope.Local);
+            objs = stack.getFlowObjectsOwnedBy(original.getID(), /*exclude*/Scope.Local);
         } else {
             objs = Collections.emptyList();
         }
@@ -131,8 +128,7 @@ final class CopySingleNodeContainerPersistor implements
         m_sncSettings = original.getSingleNodeContainerSettings().clone();
         m_nodeFactory = originalNode.getFactory();
         m_nodePersistor = originalNode.createCopyPersistor();
-        m_metaPersistor = new CopyNodeContainerMetaPersistor(
-                original, preserveDeletableFlag, isUndoableDeleteCommand);
+        m_metaPersistor = new CopyNodeContainerMetaPersistor(original, preserveDeletableFlag, isUndoableDeleteCommand);
     }
 
     /** {@inheritDoc} */
@@ -153,8 +149,7 @@ final class CopySingleNodeContainerPersistor implements
         if (m_flowObjectList.isEmpty()) {
             return Collections.emptyList();
         }
-        List<FlowObject> clones =
-            new ArrayList<FlowObject>(m_flowObjectList.size());
+        List<FlowObject> clones = new ArrayList<FlowObject>(m_flowObjectList.size());
         for (FlowObject o : m_flowObjectList) {
             clones.add(o.clone());
         }
@@ -169,9 +164,8 @@ final class CopySingleNodeContainerPersistor implements
 
     /** {@inheritDoc} */
     @Override
-    public NodeContainer getNodeContainer(final WorkflowManager parent,
-            final NodeID id) {
-        return new SingleNodeContainer(parent, id, this);
+    public NodeContainer getNodeContainer(final WorkflowManager parent, final NodeID id) {
+        return new NativeNodeContainer(parent, id, this);
     }
 
     /** {@inheritDoc} */

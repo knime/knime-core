@@ -251,7 +251,7 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
     /** {@inheritDoc} */
     @Override
     public SingleNodeContainer getNodeContainer(final WorkflowManager wm, final NodeID id) {
-        return new SingleNodeContainer(wm, id, this);
+        return new NativeNodeContainer(wm, id, this);
     }
 
     NodePersistorVersion1xx createNodePersistor(final NodeSettingsRO settings) {

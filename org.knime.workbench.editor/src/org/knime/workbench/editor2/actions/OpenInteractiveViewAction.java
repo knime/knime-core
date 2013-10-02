@@ -59,9 +59,9 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.interactive.InteractiveWebNodeView;
 import org.knime.core.node.interactive.WebViewTemplate;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -123,7 +123,8 @@ public class OpenInteractiveViewAction extends Action {
                 WebViewTemplate template = m_nodeContainer.getInteractiveWebViewTemplate();
                 NodeContext.pushContext(m_nodeContainer);
                 try {
-                    view = new InteractiveWebNodeView(((SingleNodeContainer)m_nodeContainer).getNodeModel(), template);
+                    // TODO: this needs to be changed to also work for SubNodeContainers
+                    view = new InteractiveWebNodeView(((NativeNodeContainer)m_nodeContainer).getNodeModel(), template);
                 } finally {
                     NodeContext.removeLastContext();
                 }

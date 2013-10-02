@@ -81,8 +81,8 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -146,18 +146,19 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
      * Saves the node, node settings, and all internal structures, spec, data, and models, to the given node directory
      * (located at the node file).
 
-     * @param snc ...
+     * @param nnc ...
      * @param settings ...
      * @param execMon Used to report progress during saving.
      * @param nodeDirRef Directory associated with node - will create internals folder in it
      * @param isSaveData  ...
      * @throws IOException If the node file can't be found or read.
      * @throws CanceledExecutionException If the saving has been canceled.
+     * @since 2.9
      */
-    public static void save(final SingleNodeContainer snc, final NodeSettingsWO settings,
+    public static void save(final NativeNodeContainer nnc, final NodeSettingsWO settings,
         final ExecutionMonitor execMon, final ReferencedFile nodeDirRef,
         final boolean isSaveData) throws IOException, CanceledExecutionException {
-        final Node node = snc.getNode();
+        final Node node = nnc.getNode();
 
         saveCustomName(node, settings);
         saveHasContent(node, settings);
@@ -178,7 +179,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             isSaveInternals = node.isInactiveBranchConsumer() || !node.isInactive();
         }
         if (isSaveInternals) {
-            NodeContext.pushContext(snc);
+            NodeContext.pushContext(nnc);
             try {
                 saveNodeInternDirectory(node, nodeInternDir, settings, internalMon);
             } finally {

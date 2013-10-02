@@ -204,11 +204,11 @@ public class SingleNodeContainerPersistorVersion200 extends SingleNodeContainerP
         return false;
     }
 
-    protected static String save(final SingleNodeContainer snc, final ReferencedFile nodeDirRef,
+    protected static String save(final NativeNodeContainer nnc, final ReferencedFile nodeDirRef,
         final ExecutionMonitor exec, final boolean isSaveData) throws CanceledExecutionException, IOException {
-        String settingsDotXML = snc.getParent().getCipherFileName(SETTINGS_FILE_NAME);
-        ReferencedFile sncWorkingDirRef = snc.getNodeContainerDirectory();
-        if (nodeDirRef.equals(sncWorkingDirRef) && !snc.isDirty()) {
+        String settingsDotXML = nnc.getParent().getCipherFileName(SETTINGS_FILE_NAME);
+        ReferencedFile sncWorkingDirRef = nnc.getNodeContainerDirectory();
+        if (nodeDirRef.equals(sncWorkingDirRef) && !nnc.isDirty()) {
             return settingsDotXML;
         }
         File nodeDir = nodeDirRef.getFile();
@@ -251,24 +251,24 @@ public class SingleNodeContainerPersistorVersion200 extends SingleNodeContainerP
             }
         }
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
-        saveNodeFactory(settings, snc);
-        saveNodeFileName(snc, settings, nodeDirRef); // only to allow 2.7- clients to load 2.8+ workflows
-        saveFlowObjectStack(settings, snc);
-        saveSNCSettings(settings, snc);
-        NodeContainerMetaPersistorVersion200.save(settings, snc, nodeDirRef);
-        NodePersistorVersion200.save(snc, settings, exec, nodeDirRef,
-            isSaveData && snc.getInternalState().equals(InternalNodeContainerState.EXECUTED));
+        saveNodeFactory(settings, nnc);
+        saveNodeFileName(nnc, settings, nodeDirRef); // only to allow 2.7- clients to load 2.8+ workflows
+        saveFlowObjectStack(settings, nnc);
+        saveSNCSettings(settings, nnc);
+        NodeContainerMetaPersistorVersion200.save(settings, nnc, nodeDirRef);
+        NodePersistorVersion200.save(nnc, settings, exec, nodeDirRef,
+            isSaveData && nnc.getInternalState().equals(InternalNodeContainerState.EXECUTED));
         File nodeSettingsXMLFile = new File(nodeDir, settingsDotXML);
         OutputStream os = new FileOutputStream(nodeSettingsXMLFile);
-        os = snc.getParent().cipherOutput(os);
+        os = nnc.getParent().cipherOutput(os);
         settings.saveToXML(os);
         if (sncWorkingDirRef == null) {
             // set working dir so that we can unset the dirty flag
             sncWorkingDirRef = nodeDirRef;
-            snc.setNodeContainerDirectory(sncWorkingDirRef);
+            nnc.setNodeContainerDirectory(sncWorkingDirRef);
         }
         if (nodeDirRef.equals(sncWorkingDirRef)) {
-            snc.unsetDirty();
+            nnc.unsetDirty();
         }
         exec.setProgress(1.0);
         return settingsDotXML;
@@ -277,8 +277,8 @@ public class SingleNodeContainerPersistorVersion200 extends SingleNodeContainerP
     /**
      * @noreference This method is not intended to be referenced by clients.
      */
-    protected static void saveNodeFactory(final NodeSettingsWO settings, final SingleNodeContainer nc) {
-        final Node node = nc.getNode();
+    protected static void saveNodeFactory(final NodeSettingsWO settings, final NativeNodeContainer nnc) {
+        final Node node = nnc.getNode();
         // node info to missing node is the info to the actual instance, not MissingNodeFactory
         NodeAndBundleInformation nodeInfo = node.getNodeAndBundleInformation();
         nodeInfo.save(settings);

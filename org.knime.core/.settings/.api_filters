@@ -172,19 +172,9 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/NodePersistorVersion200.java" type="org.knime.core.node.NodePersistorVersion200">
-        <filter comment="no API" id="338792546">
+        <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.NodePersistorVersion200"/>
-                <message_argument value="save(SingleNodeContainer, ReferencedFile, ExecutionMonitor, boolean)"/>
-            </message_arguments>
-        </filter>
-        <filter id="1143996420">
-            <message_arguments>
-                <message_argument value="NodePersistorVersion200(SingleNodeContainerPersistorVersion200, WorkflowPersistorVersion200.LoadVersion, NodeSettingsRO)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="internal API" id="1143996420">
-            <message_arguments>
                 <message_argument value="save(SingleNodeContainer, NodeSettingsWO, ExecutionMonitor, ReferencedFile, boolean)"/>
             </message_arguments>
         </filter>
@@ -228,35 +218,154 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/SingleNodeContainer.java" type="org.knime.core.node.workflow.SingleNodeContainer$SingleNodeContainerSettings">
-        <filter comment="workflow version/persistor change" id="337768515">
+    <resource path="src/eclipse/org/knime/core/node/workflow/SingleNodeContainer.java" type="org.knime.core.node.workflow.SingleNodeContainer">
+        <filter id="336695337">
             <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings"/>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getOutputHiLiteHandler(int)"/>
             </message_arguments>
         </filter>
-        <filter comment="workflow version/persistor change" id="1143996420">
+        <filter id="336695337">
             <message_arguments>
-                <message_argument value="getModelSettings()"/>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getOutputObject(int)"/>
             </message_arguments>
         </filter>
-        <filter comment="workflow version/persistor change" id="1143996420">
+        <filter id="336695337">
             <message_arguments>
-                <message_argument value="getModelSettingsClone()"/>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getOutputObjectSummary(int)"/>
             </message_arguments>
         </filter>
-        <filter comment="workflow version/persistor change" id="1143996420">
+        <filter id="336695337">
             <message_arguments>
-                <message_argument value="getVariablesSettings()"/>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getOutputSpec(int)"/>
             </message_arguments>
         </filter>
-        <filter comment="workflow version/persistor change" id="1143996420">
+        <filter id="336695337">
             <message_arguments>
-                <message_argument value="setModelSettings(NodeSettings)"/>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getOutputType(int)"/>
             </message_arguments>
         </filter>
-        <filter comment="workflow version/persistor change" id="1143996420">
+        <filter id="337764418">
             <message_arguments>
-                <message_argument value="setVariablesSettings(NodeSettings)"/>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="clearFileStoreHandler()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="createExecutionResult(ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getInternalHeldTables()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getLoopRole()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getLoopStatus()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getNode()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getNodeModel()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getNodeReferenceBug2136()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer.LoopStatus"/>
+                <message_argument value="org.knime.core_2.9.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="421650549">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="createExecutionContext()"/>
+            </message_arguments>
+        </filter>
+        <filter id="421650549">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getFlowObjectStack()"/>
+            </message_arguments>
+        </filter>
+        <filter id="421650549">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getOutgoingFlowObjectStack()"/>
+            </message_arguments>
+        </filter>
+        <filter id="421650549">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getXMLDescription()"/>
+            </message_arguments>
+        </filter>
+        <filter id="421650549">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="isInactive()"/>
+            </message_arguments>
+        </filter>
+        <filter id="421650549">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="isInactiveBranchConsumer()"/>
+            </message_arguments>
+        </filter>
+        <filter id="421650549">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="isModelCompatibleTo(Class&lt;?&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter id="421650549">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="performExecuteNode(PortObject[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="1227882500">
+            <message_arguments>
+                <message_argument value="getFlowObjectStack()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/SingleNodeContainerPersistorVersion200.java" type="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="save(NativeNodeContainer, ReferencedFile, ExecutionMonitor, boolean)"/>
             </message_arguments>
         </filter>
     </resource>

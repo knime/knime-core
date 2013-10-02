@@ -74,12 +74,13 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.NativeNodeContainer.LoopStatus;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.figures.ProgressFigure.ProgressMode;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -543,7 +544,10 @@ public class NodeContainerFigure extends RectangleFigure {
         if (nc instanceof SingleNodeContainer) {
             SingleNodeContainer snc = (SingleNodeContainer)nc;
             isInactive = snc.isInactive();
-            loopStatus = snc.getLoopStatus();
+            if (snc instanceof NativeNodeContainer) {
+                NativeNodeContainer nnc = (NativeNodeContainer)snc;
+                loopStatus = nnc.getLoopStatus();
+            }
         }
         NodeContainerState state = nc.getNodeContainerState();
         if (!isInactive) {

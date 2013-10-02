@@ -242,8 +242,8 @@ public abstract class WorkflowTestCase extends TestCase {
 
     protected File getFileStoresDirectory(final NodeID id) throws Exception {
         NodeContainer nc = findNodeContainer(id);
-        if (nc instanceof SingleNodeContainer) {
-            IFileStoreHandler fsh = ((SingleNodeContainer)nc).getNode().getFileStoreHandler();
+        if (nc instanceof NativeNodeContainer) {
+            IFileStoreHandler fsh = ((NativeNodeContainer)nc).getNode().getFileStoreHandler();
             if (fsh instanceof WriteFileStoreHandler) {
                 return ((WriteFileStoreHandler)fsh).getBaseDir();
             }
