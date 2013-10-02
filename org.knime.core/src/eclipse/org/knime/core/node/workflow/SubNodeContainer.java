@@ -88,41 +88,199 @@ import org.w3c.dom.Element;
  */
 public class SubNodeContainer extends SingleNodeContainer {
 
-    /**
-     * @param parent
-     * @param id
+    private WorkflowManager m_wfm;
+
+    /** Create new, empty SubNodeContainer.
+     *
+     * @param parent ...
+     * @param id ...
      */
     public SubNodeContainer(final WorkflowManager parent, final NodeID id) {
         super(parent, id);
-        // TODO Auto-generated constructor stub
+        // TODO: create empty WFM
     }
 
-    /**
-     * @param parent
-     * @param id
-     * @param persistor
+    /** Load workflow from persistor.
+     *
+     * @param parent ...
+     * @param id ...
+     * @param persistor ...
      */
     public SubNodeContainer(final WorkflowManager parent, final NodeID id, final NodeContainerMetaPersistor persistor) {
         super(parent, id, persistor);
-        // TODO Auto-generated constructor stub
+        // TODO load content from persistor
     }
+
+    /** Create new SubNode from existing Metanode (=WorkflowManager).
+     *
+     * @param parent ...
+     * @param id ...
+     * @param content ...
+     */
+    public SubNodeContainer(final WorkflowManager parent, final NodeID id, final WorkflowManager content) {
+        super(parent, id);
+        // TODO copy content from other workflow.
+    }
+
+    /* -------------------- NodeContainer info properties -------------- */
 
     /**
      * {@inheritDoc}
      */
     @Override
-    void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ExecutionContext createExecutionContext() {
-        // TODO Auto-generated method stub
+    public Element getXMLDescription() {
+        // TODO return real description.
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public URL getIcon() {
+        // TODO return useful Icons
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeType getType() {
+        // TODO create and return matching icon
+        return NodeType.Other;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getName() {
+        // TODO well...
+        return "I am a SubNode";
+    }
+
+    /* ------------------- Specific Interna ------------------- */
+
+    /**
+     * @return underlying workflow.
+     */
+    public WorkflowManager getWorkflowManager() {
+        return m_wfm;
+    }
+
+    /* -------------------- Dialog Handling ------------------ */
+
+    // TODO: enable dialog handling!
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs, final PortObject[] inData)
+        throws NotConfigurableException {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    NodeDialogPane getDialogPane() {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean areDialogAndNodeSettingsEqual() {
+        return true;
+    }
+
+    /* -------------------- Views ------------------ */
+
+    // TODO: enable view handling!
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getNodeViewName(final int i) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AbstractNodeView<NodeModel> getNodeView(final int i) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasInteractiveView() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasInteractiveWebView() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getInteractiveViewName() {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView() {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WebViewTemplate getInteractiveWebViewTemplate() {
+        return null;
+    }
+
+    /* -------------- Configuration/Execution ------------------- */
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    void performReset() {
+        m_wfm.resetAllNodesInWFM();
     }
 
     /**
@@ -138,33 +296,6 @@ public class SubNodeContainer extends SingleNodeContainer {
      * {@inheritDoc}
      */
     @Override
-    void performLoadModelSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    void performReset() {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    void cleanOutPorts(final boolean isLoopRestart) {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public NodeContainerExecutionStatus performExecuteNode(final PortObject[] inObjects) {
         // TODO Auto-generated method stub
         return null;
@@ -174,9 +305,146 @@ public class SubNodeContainer extends SingleNodeContainer {
      * {@inheritDoc}
      */
     @Override
+    public ExecutionContext createExecutionContext() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeContainerExecutionResult createExecutionResult(final ExecutionMonitor exec)
+            throws CanceledExecutionException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* ------------- Ports and related stuff --------------- */
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrInPorts() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeInPort getInPort(final int index) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrOutPorts() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeOutPort getOutPort(final int index) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    void cleanOutPorts(final boolean isLoopRestart) {
+        // TODO Auto-generated method stub
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
+        // TODO Auto-generated method stub
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public HiLiteHandler getOutputHiLiteHandler(final int portIndex) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PortType getOutputType(final int portIndex) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PortObjectSpec getOutputSpec(final int portIndex) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PortObject getOutputObject(final int portIndex) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getOutputObjectSummary(final int portIndex) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /* ------------------ Load&Save ------------------------- */
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    boolean performAreModelSettingsValid(final NodeSettingsRO modelSettings) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    void performLoadModelSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        // TODO Auto-generated method stub
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     WorkflowCopyContent performLoadContent(final SingleNodeContainerPersistor nodePersistor,
-        final Map<Integer, BufferedDataTable> tblRep, final FlowObjectStack inStack, final ExecutionMonitor exec, final LoadResult loadResult,
-        final boolean preserveNodeMessage) throws CanceledExecutionException {
+        final Map<Integer, BufferedDataTable> tblRep, final FlowObjectStack inStack, final ExecutionMonitor exec,
+        final LoadResult loadResult, final boolean preserveNodeMessage) throws CanceledExecutionException {
         // TODO Auto-generated method stub
         return null;
     }
@@ -194,10 +462,14 @@ public class SubNodeContainer extends SingleNodeContainer {
      * {@inheritDoc}
      */
     @Override
-    boolean performAreModelSettingsValid(final NodeSettingsRO modelSettings) {
+    protected NodeContainerPersistor getCopyPersistor(final HashMap<Integer, ContainerTable> tableRep,
+        final FileStoreHandlerRepository fileStoreHandlerRepository, final boolean preserveDeletableFlags,
+        final boolean isUndoableDeleteCommand) {
         // TODO Auto-generated method stub
-        return false;
+        return null;
     }
+
+    /* -------------------- Credentials/Stacks ------------------ */
 
     /**
      * {@inheritDoc}
@@ -244,12 +516,13 @@ public class SubNodeContainer extends SingleNodeContainer {
         return null;
     }
 
+    /* -------------- SingleNodeContainer methods without meaningful equivalent --------- */
+
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean isModelCompatibleTo(final Class<?> nodeModelClass) {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -258,7 +531,6 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public boolean isInactive() {
-        // TODO Auto-generated method stub
         return false;
     }
 
@@ -267,259 +539,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public boolean isInactiveBranchConsumer() {
-        // TODO Auto-generated method stub
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Element getXMLDescription() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs, final PortObject[] inData)
-        throws NotConfigurableException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    NodeDialogPane getDialogPane() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean areDialogAndNodeSettingsEqual() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrInPorts() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeInPort getInPort(final int index) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeOutPort getOutPort(final int index) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrOutPorts() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getNodeViewName(final int i) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public AbstractNodeView<NodeModel> getNodeView(final int i) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasInteractiveView() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasInteractiveWebView() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getInteractiveViewName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WebViewTemplate getInteractiveWebViewTemplate() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public URL getIcon() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeType getType() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeContainerPersistor getCopyPersistor(final HashMap<Integer, ContainerTable> tableRep,
-        final FileStoreHandlerRepository fileStoreHandlerRepository, final boolean preserveDeletableFlags,
-        final boolean isUndoableDeleteCommand) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeContainerExecutionResult createExecutionResult(final ExecutionMonitor exec) throws CanceledExecutionException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /* ---------- Leftovers --------------- */
-
-    public WorkflowManager getWorkflowManager() {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PortType getOutputType(final int portIndex) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PortObjectSpec getOutputSpec(final int portIndex) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PortObject getOutputObject(final int portIndex) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getOutputObjectSummary(final int portIndex) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public HiLiteHandler getOutputHiLiteHandler(final int portIndex) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }
