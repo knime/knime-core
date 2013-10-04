@@ -50,19 +50,38 @@
 */
 package org.knime.core.node.workflow;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
-import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
+import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
+import org.knime.core.util.FileUtil;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
 class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeContainerMetaPersistorVersion1xx.class);
+
+    private static final String CFG_STATE = "state";
+
+    private static final String CFG_IS_DELETABLE = "isDeletable";
+
+    private static final String CFG_JOB_MANAGER_CONFIG = "job.manager";
+
+    private static final String CFG_JOB_MANAGER_DIR = "job.manager.dir";
+
+    private static final String CFG_JOB_CONFIG = "execution.job";
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
@@ -317,9 +336,18 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      */
     protected NodeAnnotationData loadNodeAnnotationData(final NodeSettingsRO settings,
         final NodeSettingsRO parentSettings) throws InvalidSettingsException {
-        String customName = parentSettings.getString(KEY_CUSTOM_NAME, null);
-
-        return NodeAnnotationData.createFromObsoleteCustomName(customName);
+        if (getLoadVersion().isOlderThan(LoadVersion.V250)) {
+            String customName = settings.getString(KEY_CUSTOM_NAME, null);
+            return NodeAnnotationData.createFromObsoleteCustomName(customName);
+        } else {
+            if (settings.containsKey("nodeAnnotation")) {
+                NodeSettingsRO anno = settings.getNodeSettings("nodeAnnotation");
+                NodeAnnotationData result = new NodeAnnotationData(false);
+                result.load(anno, getLoadVersion());
+                return result;
+            }
+            return new NodeAnnotationData(true);
+        }
     }
 
     /**
@@ -332,10 +360,19 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      */
     protected String loadCustomDescription(final NodeSettingsRO settings, final NodeSettingsRO parentSettings)
         throws InvalidSettingsException {
-        if (!parentSettings.containsKey(KEY_CUSTOM_DESCRIPTION)) {
-            return null;
+        if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
+            if (!parentSettings.containsKey(KEY_CUSTOM_DESCRIPTION)) {
+                return null;
+            }
+            return parentSettings.getString(KEY_CUSTOM_DESCRIPTION);
+        } else {
+            // custom description was not saved in v2.5.0 (but again in v2.5.1)
+            // see bug 3034
+            if (!settings.containsKey(KEY_CUSTOM_DESCRIPTION)) {
+                return null;
+            }
+            return settings.getString(KEY_CUSTOM_DESCRIPTION);
         }
-        return parentSettings.getString(KEY_CUSTOM_DESCRIPTION);
     }
 
     /**
@@ -348,7 +385,14 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      */
     protected NodeExecutionJobManager loadNodeExecutionJobManager(final NodeSettingsRO settings)
         throws InvalidSettingsException {
-        return null;
+        if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
+            return null;
+        }
+        if (!settings.containsKey(CFG_JOB_MANAGER_CONFIG)) {
+            return null;
+        }
+        return NodeExecutionJobManagerPool.load(settings.getNodeSettings(CFG_JOB_MANAGER_CONFIG));
+
     }
 
     /**
@@ -361,7 +405,13 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      */
     protected NodeSettingsRO loadNodeExecutionJobSettings(final NodeSettingsRO settings)
         throws InvalidSettingsException {
-        return null;
+        if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
+            return null;
+        }
+        if (!settings.containsKey(CFG_JOB_CONFIG)) {
+            return null;
+        }
+        return settings.getNodeSettings(CFG_JOB_CONFIG);
     }
 
     /**
@@ -376,7 +426,17 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      */
     protected ReferencedFile loadJobManagerInternalsDirectory(final ReferencedFile parentDir,
         final NodeSettingsRO settings) throws InvalidSettingsException {
-        return null;
+        if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
+            return null;
+        }
+        if (!settings.containsKey(CFG_JOB_MANAGER_DIR)) {
+            return null;
+        }
+        String dir = settings.getString(CFG_JOB_MANAGER_DIR);
+        if (dir == null) {
+            throw new InvalidSettingsException("Job manager internals dir is null");
+        }
+        return new ReferencedFile(parentDir, dir);
     }
 
     /**
@@ -389,24 +449,36 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      */
     protected InternalNodeContainerState loadState(final NodeSettingsRO settings, final NodeSettingsRO parentSettings)
         throws InvalidSettingsException {
-        boolean isOldAutoExecutable = false;
-        if (parentSettings.containsKey("factory")) {
-            String factory = parentSettings.getString("factory");
-            int dotLocation = factory.lastIndexOf('.');
-            String simpleName = factory;
-            if (dotLocation >= 0 && factory.length() > dotLocation + 1) {
-                simpleName = factory.substring(dotLocation + 1);
+        if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
+            boolean isOldAutoExecutable = false;
+            if (parentSettings.containsKey("factory")) {
+                String factory = parentSettings.getString("factory");
+                int dotLocation = factory.lastIndexOf('.');
+                String simpleName = factory;
+                if (dotLocation >= 0 && factory.length() > dotLocation + 1) {
+                    simpleName = factory.substring(dotLocation + 1);
+                }
+                isOldAutoExecutable = NodePersistorVersion1xx.OLD_AUTOEXECUTABLE_NODEFACTORIES.contains(simpleName);
             }
-            isOldAutoExecutable = NodePersistorVersion1xx.OLD_AUTOEXECUTABLE_NODEFACTORIES.contains(simpleName);
-        }
-        boolean isExecuted = parentSettings.getBoolean("isExecuted");
-        boolean isConfigured = parentSettings.getBoolean("isConfigured");
-        if (isExecuted && !isOldAutoExecutable) {
-            return InternalNodeContainerState.EXECUTED;
-        } else if (isConfigured) {
-            return InternalNodeContainerState.CONFIGURED;
+            boolean isExecuted = parentSettings.getBoolean("isExecuted");
+            boolean isConfigured = parentSettings.getBoolean("isConfigured");
+            if (isExecuted && !isOldAutoExecutable) {
+                return InternalNodeContainerState.EXECUTED;
+            } else if (isConfigured) {
+                return InternalNodeContainerState.CONFIGURED;
+            } else {
+                return InternalNodeContainerState.IDLE;
+            }
         } else {
-            return InternalNodeContainerState.IDLE;
+            String stateString = settings.getString(CFG_STATE);
+            if (stateString == null) {
+                throw new InvalidSettingsException("State information is null");
+            }
+            try {
+                return InternalNodeContainerState.valueOf(stateString);
+            } catch (IllegalArgumentException e) {
+                throw new InvalidSettingsException("Unable to parse state \"" + stateString + "\"");
+            }
         }
     }
 
@@ -418,7 +490,35 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      * @throws InvalidSettingsException If this fails.
      */
     protected NodeMessage loadNodeMessage(final NodeSettingsRO settings) throws InvalidSettingsException {
-        return null;
+        if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
+            return null;
+        } else {
+            final String key;
+            // in 2.8 we merged the "settings.xml" with the "node.xml". Both files contained the node_message,
+            // therefore we write the NC message under a new name to allow old KNIME instances (2.7-) to load
+            // the node message in the Node class.
+            if (getLoadVersion().ordinal() >= WorkflowPersistorVersion1xx.LoadVersion.V280.ordinal()) {
+                key = "nodecontainer_message";
+            } else {
+                key = "node_message";
+            }
+            if (settings.containsKey(key)) {
+                NodeSettingsRO sub = settings.getNodeSettings(key);
+                String typeS = sub.getString("type");
+                if (typeS == null) {
+                    throw new InvalidSettingsException("Message type must not be null");
+                }
+                Type type;
+                try {
+                    type = Type.valueOf(typeS);
+                } catch (IllegalArgumentException iae) {
+                    throw new InvalidSettingsException("Invalid message type: " + typeS, iae);
+                }
+                String message = sub.getString("message");
+                return new NodeMessage(type, message);
+            }
+            return null;
+        }
     }
 
     /**
@@ -428,6 +528,118 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      * @return true in this implementation, sub-classes overwrite this behavior
      */
     protected boolean loadIsDeletable(final NodeSettingsRO settings) {
-        return true;
+        if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
+            return true;
+        }
+        return settings.getBoolean(CFG_IS_DELETABLE, true);
     }
+
+    public static void save(final NodeSettingsWO settings, final NodeContainer nc, final ReferencedFile targetDir) {
+        synchronized (nc.m_nodeMutex) {
+            saveNodeAnnotation(settings, nc);
+            saveCustomDescription(settings, nc);
+            saveNodeExecutionJobManager(settings, nc);
+            boolean mustAlsoSaveExecutorSettings = saveState(settings, nc);
+            if (mustAlsoSaveExecutorSettings) {
+                saveNodeExecutionJob(settings, nc);
+            }
+            saveJobManagerInternalsDirectory(settings, nc, targetDir);
+            saveNodeMessage(settings, nc);
+            saveIsDeletable(settings, nc);
+        }
+    }
+
+    protected static void saveNodeExecutionJobManager(final NodeSettingsWO settings, final NodeContainer nc) {
+        NodeExecutionJobManager jobManager = nc.getJobManager();
+        if (jobManager != null) {
+            NodeSettingsWO s = settings.addNodeSettings(CFG_JOB_MANAGER_CONFIG);
+            NodeExecutionJobManagerPool.saveJobManager(jobManager, s);
+        }
+    }
+
+    protected static void saveNodeExecutionJob(final NodeSettingsWO settings, final NodeContainer nc) {
+        assert nc.findJobManager().canDisconnect(nc.getExecutionJob()) : "Execution job can be saved/disconnected";
+        nc.saveNodeExecutionJobReconnectInfo(settings.addNodeSettings(CFG_JOB_CONFIG));
+    }
+
+    protected static void saveJobManagerInternalsDirectory(final NodeSettingsWO settings, final NodeContainer nc,
+        final ReferencedFile targetDir) {
+        NodeExecutionJobManager jobManager = nc.getJobManager();
+        if (jobManager != null && jobManager.canSaveInternals()) {
+            String dirName = "job_manager_internals";
+            File dir = new File(targetDir.getFile(), dirName);
+            if (dir.exists()) {
+                LOGGER.warn("Directory \"" + dir.getAbsolutePath() + "\"" + " already exists; deleting it");
+                FileUtil.deleteRecursively(dir);
+            }
+            if (!dir.mkdirs()) {
+                LOGGER.error("Unable to create directory \"" + dir.getAbsolutePath() + "\"");
+                return;
+            }
+            try {
+                jobManager.saveInternals(new ReferencedFile(targetDir, dirName));
+                settings.addString(CFG_JOB_MANAGER_DIR, dirName);
+            } catch (Throwable e) {
+                if (!(e instanceof IOException)) {
+                    LOGGER.coding("Saving internals of job manager should " + "only throw IOException, caught "
+                        + e.getClass().getSimpleName());
+                }
+                String error = "Saving job manager internals failed: " + e.getMessage();
+                LOGGER.error(error, e);
+            }
+        }
+    }
+
+    protected static boolean saveState(final NodeSettingsWO settings, final NodeContainer nc) {
+        String state;
+        boolean mustAlsoSaveExecutorSettings = false;
+        switch (nc.getInternalState()) {
+            case IDLE:
+            case UNCONFIGURED_MARKEDFOREXEC:
+                state = InternalNodeContainerState.IDLE.toString();
+                break;
+            case EXECUTED:
+                state = InternalNodeContainerState.EXECUTED.toString();
+                break;
+            case EXECUTINGREMOTELY:
+                if (nc.findJobManager().canDisconnect(nc.getExecutionJob())) {
+                    // state will also be CONFIGURED only ... we set executing later
+                    mustAlsoSaveExecutorSettings = true;
+                }
+                state = InternalNodeContainerState.EXECUTINGREMOTELY.toString();
+                break;
+            default:
+                state = InternalNodeContainerState.CONFIGURED.toString();
+        }
+        settings.addString(CFG_STATE, state);
+        return mustAlsoSaveExecutorSettings;
+    }
+
+    protected static void saveNodeAnnotation(final NodeSettingsWO settings, final NodeContainer nc) {
+        NodeAnnotation annotation = nc.getNodeAnnotation();
+        if (annotation != null && !annotation.getData().isDefault()) {
+            NodeSettingsWO anno = settings.addNodeSettings("nodeAnnotation");
+            annotation.save(anno);
+        }
+    }
+
+    protected static void saveCustomDescription(final NodeSettingsWO settings, final NodeContainer nc) {
+        settings.addString(KEY_CUSTOM_DESCRIPTION, nc.getCustomDescription());
+    }
+
+    protected static void saveIsDeletable(final NodeSettingsWO settings, final NodeContainer nc) {
+        if (!nc.isDeletable()) {
+            settings.addBoolean(CFG_IS_DELETABLE, false);
+        }
+    }
+
+    protected static void saveNodeMessage(final NodeSettingsWO settings, final NodeContainer nc) {
+        NodeMessage message = nc.getNodeMessage();
+        if (message != null && !message.getMessageType().equals(Type.RESET)) {
+            NodeSettingsWO sub = settings.addNodeSettings("nodecontainer_message");
+            sub.addString("type", message.getMessageType().name());
+            sub.addString("message", message.getMessage());
+        }
+    }
+
 }

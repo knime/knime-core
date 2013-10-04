@@ -67,7 +67,7 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
-import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
+import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 
 /**
  * @author Bernd Wiswedel, University of Konstanz
@@ -293,8 +293,8 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public LoadVersion getLoadVersion() {
-        return LoadVersion.UNKNOWN;
+    public WorkflowPersistorVersion1xx.LoadVersion getLoadVersion() {
+        return WorkflowPersistorVersion1xx.LoadVersion.UNKNOWN;
     }
 
     /** {@inheritDoc} */

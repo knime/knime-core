@@ -24,7 +24,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
+import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 
 /**
  * Stores workflow editor specific settings (like grid settings and zoom level, etc.).
@@ -98,8 +98,8 @@ public class EditorUIInformation implements UIInformation {
      * {@inheritDoc}
      */
     @Override
-    public void load(final NodeSettingsRO config, final LoadVersion loadVersion) throws InvalidSettingsException {
-        if (loadVersion.ordinal() < LoadVersion.V260.ordinal()) {
+    public void load(final NodeSettingsRO config, final WorkflowPersistorVersion1xx.LoadVersion loadVersion) throws InvalidSettingsException {
+        if (loadVersion.ordinal() < WorkflowPersistorVersion1xx.LoadVersion.V260.ordinal()) {
             m_snapToGrid = false;
             m_showGrid = false;
             m_gridX = -1;

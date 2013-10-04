@@ -54,7 +54,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
+import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 
 /**
  * Special <code>NodeExtraInfo</code> object used by the workflow editor.
@@ -144,11 +144,11 @@ public class NodeUIInformation implements UIInformation {
      * {@inheritDoc}
      */
     @Override
-    public void load(final NodeSettingsRO conf, final LoadVersion loadVersion)
+    public void load(final NodeSettingsRO conf, final WorkflowPersistorVersion1xx.LoadVersion loadVersion)
         throws InvalidSettingsException {
         final int loadOrdinal = loadVersion.ordinal();
         m_bounds = conf.getIntArray(KEY_BOUNDS);
-        m_symbolRelative = loadOrdinal >= LoadVersion.V230.ordinal();
+        m_symbolRelative = loadOrdinal >= WorkflowPersistorVersion1xx.LoadVersion.V230.ordinal();
 
     }
 

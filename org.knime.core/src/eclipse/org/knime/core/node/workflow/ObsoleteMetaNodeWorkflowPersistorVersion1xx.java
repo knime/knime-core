@@ -69,7 +69,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
+import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 
 /**
  *
@@ -112,7 +112,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
             final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
             final ReferencedFile workflowKNIMEFile,
             final WorkflowLoadHelper loadHelper,
-            final LoadVersion version) {
+            final WorkflowPersistorVersion1xx.LoadVersion version) {
         super(globalRep, fileStoreHandlerRepository,
                 workflowKNIMEFile, loadHelper, version, false);
     }
@@ -426,7 +426,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
                 final WorkflowPersistorVersion1xx workflowPersistor,
                 final ReferencedFile nodeSettingsFile,
                 final WorkflowLoadHelper loadHelper,
-                final LoadVersion version) {
+                final WorkflowPersistorVersion1xx.LoadVersion version) {
             super(workflowPersistor, nodeSettingsFile, loadHelper, version);
         }
 

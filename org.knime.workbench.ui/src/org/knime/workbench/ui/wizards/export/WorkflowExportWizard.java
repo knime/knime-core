@@ -77,7 +77,7 @@ import org.eclipse.ui.internal.dialogs.ExportWizard;
 import org.eclipse.ui.internal.wizards.datatransfer.ArchiveFileExportOperation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistor;
-import org.knime.core.node.NodePersistorVersion200;
+import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.util.VMFileLocker;
@@ -262,15 +262,15 @@ public class WorkflowExportWizard extends ExportWizard
         switch (resource.getType()) {
             case IResource.FOLDER:
                 if (name.startsWith(
-                        NodePersistorVersion200.PORT_FOLDER_PREFIX)) {
+                        NodePersistorVersion1xx.PORT_FOLDER_PREFIX)) {
                     return true;
                 }
                 if (name.startsWith(
-                        NodePersistorVersion200.INTERNAL_TABLE_FOLDER_PREFIX)) {
+                        NodePersistorVersion1xx.INTERNAL_TABLE_FOLDER_PREFIX)) {
                     return true;
                 }
                 if (name.startsWith(
-                        NodePersistorVersion200.FILESTORE_FOLDER_PREFIX)) {
+                        NodePersistorVersion1xx.FILESTORE_FOLDER_PREFIX)) {
                     return true;
                 }
                 if (name.startsWith(NodePersistor.INTERN_FILE_DIR)) {

@@ -68,7 +68,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
-import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
+import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 
 /**
  * Persistor that is used to represent, for instance the clipboard content.
@@ -167,7 +167,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public LoadVersion getLoadVersion() {
+    public WorkflowPersistorVersion1xx.LoadVersion getLoadVersion() {
         throwUnsupportedOperationException();
         return null;
     }

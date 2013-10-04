@@ -63,7 +63,7 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
-import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
+import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 
 /**
  * Persistor that is used when a workflow (a project) is loaded. It is used
@@ -136,7 +136,7 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public LoadVersion getLoadVersion() {
+    public WorkflowPersistorVersion1xx.LoadVersion getLoadVersion() {
         return m_wfmPersistor.getLoadVersion();
     }
 

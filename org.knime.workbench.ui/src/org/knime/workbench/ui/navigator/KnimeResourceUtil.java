@@ -83,7 +83,7 @@ import org.eclipse.ui.dialogs.IOverwriteQuery;
 import org.eclipse.ui.wizards.datatransfer.ImportOperation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
+import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 
@@ -113,7 +113,7 @@ public final class KnimeResourceUtil {
 
     // This is a not published part of our API - internal use only
     private static final Path NODE_FILE =
-            new Path(SingleNodeContainerPersistorVersion200.SETTINGS_FILE_NAME);
+            new Path(SingleNodeContainerPersistorVersion1xx.SETTINGS_FILE_NAME);
 
     private KnimeResourceUtil() {
         // utility class

@@ -139,7 +139,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResult
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
-import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
+import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -6458,25 +6458,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         HashMap<Integer, ContainerTable> tableRep = new GlobalTableRepository();
         WorkflowFileStoreHandlerRepository fileStoreHandlerRepository =
             new WorkflowFileStoreHandlerRepository();
-        LoadVersion version;
-        if ((version = WorkflowPersistorVersion200.canReadVersionV200(
-                versionString)) != null) {
-            persistor = new WorkflowPersistorVersion200(tableRep,
-                    fileStoreHandlerRepository, workflowknimeRef, loadHelper,
-                    version, isProject);
-        } else if ((version = WorkflowPersistorVersion1xx.canReadVersionV1X0(
-                versionString)) != null) {
-            LOGGER.warn("The current KNIME version (" + KNIMEConstants.VERSION
-                    + ") is different from the one that created the"
-                    + " workflow (" + version
-                    + ") you are trying to load. In some rare cases, it"
-                    + " might not be possible to load all data"
-                    + " or some nodes can't be configured."
-                    + " Please re-configure and/or re-execute these nodes.");
-            persistor = new WorkflowPersistorVersion1xx(tableRep,
-                    fileStoreHandlerRepository, workflowknimeRef,
-                    loadHelper, version, isProject);
-        } else {
+        LoadVersion version = WorkflowPersistorVersion1xx.parseVersion(versionString);
+        if (version == null) { // future version
             StringBuilder versionDetails = new StringBuilder(versionString);
             String createdBy = settings.getString(CFG_CREATED_BY, null);
             if (createdBy != null) {
@@ -6487,15 +6470,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             switch (loadHelper.getUnknownKNIMEVersionLoadPolicy(v)) {
             case Abort:
                 throw new UnsupportedWorkflowVersionException(
-                        "Unable to load workflow, version string \"" + v
-                        + "\" is unknown");
+                        "Unable to load workflow, version string \"" + v + "\" is unknown");
             default:
                 version = LoadVersion.FUTURE;
-                persistor = new WorkflowPersistorVersion200(tableRep,
-                        fileStoreHandlerRepository,
-                        workflowknimeRef, loadHelper, version, isProject);
+                persistor = new WorkflowPersistorVersion1xx(tableRep, fileStoreHandlerRepository, workflowknimeRef,
+                        loadHelper, version, isProject);
                 persistor.setDirtyAfterLoad();
             }
+        } else {
+            if (version.isOlderThan(LoadVersion.V200)) {
+                LOGGER.warn("The current KNIME version (" + KNIMEConstants.VERSION + ") is different from the one that "
+                        + "created the workflow (" + version + ") you are trying to load. In some rare cases, it  "
+                        + "might not be possible to load all data or some nodes can't be configured. "
+                        + "Please re-configure and/or re-execute these nodes.");
+            }
+            persistor = new WorkflowPersistorVersion1xx(tableRep, fileStoreHandlerRepository, workflowknimeRef,
+                loadHelper, version, isProject);
         }
         return persistor;
     }
@@ -7048,8 +7038,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             try {
                 final boolean isWorkingDirectory =
                     workflowDirRef.equals(getNodeContainerDirectory());
-                final LoadVersion saveVersion =
-                    WorkflowPersistorVersion200.VERSION_LATEST;
+                final LoadVersion saveVersion = WorkflowPersistorVersion1xx.VERSION_LATEST;
                 if (m_loadVersion != null
                         && !m_loadVersion.equals(saveVersion)) {
                     LOGGER.info("Workflow was created with another version "
@@ -7067,7 +7056,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     m_authorInformation = new AuthorInformation(m_authorInformation);
                 }
                 workflowDirRef.getFile().mkdirs();
-                WorkflowPersistorVersion200.save(
+                WorkflowPersistorVersion1xx.save(
                         this, workflowDirRef, exec, isSaveData);
             } finally {
                 workflowDirRef.writeUnlock();

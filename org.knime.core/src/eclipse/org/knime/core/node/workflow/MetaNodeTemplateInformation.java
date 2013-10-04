@@ -56,7 +56,7 @@ import java.util.Date;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
+import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 
 
 /**
@@ -298,7 +298,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      * @throws InvalidSettingsException If that fails.
      */
     public static MetaNodeTemplateInformation load(
-            final NodeSettingsRO settings, final LoadVersion version)
+            final NodeSettingsRO settings, final WorkflowPersistorVersion1xx.LoadVersion version)
         throws InvalidSettingsException {
         String roleS = settings.getString("role");
         Role role;
