@@ -54,6 +54,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.util.Pair;
 
 /**
@@ -64,6 +65,8 @@ import org.knime.core.util.Pair;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class WorkflowUncaughtExceptionsTest extends WorkflowTest {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowUncaughtExceptionsTest.class);
+
     WorkflowUncaughtExceptionsTest(final String workflowName, final IProgressMonitor monitor,
                                    final WorkflowTestContext context) {
         super(workflowName, monitor, context);
@@ -80,6 +83,8 @@ class WorkflowUncaughtExceptionsTest extends WorkflowTest {
             public void uncaughtException(final Thread t, final Throwable e) {
                 synchronized (m_context.getUncaughtExceptions()) {
                     m_context.getUncaughtExceptions().add(new Pair<Thread, Throwable>(t, e));
+                    LOGGER.debug("Uncaught " + e.getClass().getName() + " in thread " + t.getName() + ": "
+                                         + e.getMessage(), e);
                 }
             }
         });
