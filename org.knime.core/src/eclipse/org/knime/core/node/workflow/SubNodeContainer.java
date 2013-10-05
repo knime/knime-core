@@ -50,6 +50,7 @@
 package org.knime.core.node.workflow;
 
 import java.net.URL;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -74,10 +75,17 @@ import org.knime.core.node.interactive.WebViewTemplate;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
+import org.knime.core.node.workflow.virtual.VirtualNodeInput;
+import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory;
+import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeModel;
+import org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory;
+import org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeModel;
 import org.w3c.dom.Element;
 
 /** Implementation of a {@link NodeContainer} holding a set of nodes via a {@link WorkflowManager}
@@ -90,8 +98,21 @@ public class SubNodeContainer extends SingleNodeContainer {
 
     private WorkflowManager m_wfm;
 
-    private SubNodeInPort[] m_inports;
-    private WorkflowOutPort[] m_outports;
+    private NodeInPort[] m_inports;
+    private NodeContainerOutPort[] m_outports;
+    /** Keeps outgoing information (specs, objects, HiLiteHandlers...). */
+    static class Output {
+        String name = "none";
+        PortType type;
+        PortObjectSpec spec;
+        PortObject object;
+        HiLiteHandler hiliteHdl;
+        String summary = "no summary";
+    }
+    private Output[] m_outputs;
+
+    private VirtualPortObjectInNodeModel m_inportNodeModel;
+    private VirtualPortObjectOutNodeModel m_outportNodeModel;
 
     private FlowObjectStack m_incomingStack;
     private FlowObjectStack m_outgoingStack;
@@ -125,42 +146,64 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     public SubNodeContainer(final WorkflowManager parent, final NodeID id, final WorkflowManager content) {
         super(parent, id);
-        // assemble types:
-        PortType[] inTypes = new PortType[content.getNrInPorts()];
-        for (int i = 0; i < inTypes.length; i++) {
-            inTypes[i] = content.getInPort(i).getPortType();
-        }
-        PortType[] outTypes = new PortType[content.getNrOutPorts()];
-        for (int i = 0; i < outTypes.length; i++) {
-            outTypes[i] = content.getOutPort(i).getPortType();
-        }
         // Create new, internal workflow manager:
-        m_wfm = new WorkflowManager(getParent(), id, inTypes, outTypes, /*isProject=*/false, content.getContext(),
-            "This is a SubNode");
-    }
-
-    /** Copy content of an existing metanode into the Subnode. Make sure by then the parent
-     * is actually aware of the workflow so that configures can be properly propagated up.
-     *
-     * @param content ...
-     */
-    public void pasteContent(final WorkflowManager content) {
+        m_wfm = new WorkflowManager(getParent(), id, new PortType[]{}, new PortType[]{},
+            /*isProject=*/true, content.getContext(), "This is a SubNode");
         // and copy content
         WorkflowCopyContent c = new WorkflowCopyContent();
         c.setAnnotation(content.getWorkflowAnnotations().toArray(new WorkflowAnnotation[0]));
         c.setNodeIDs(content.getWorkflow().getNodeIDs().toArray(new NodeID[0]));
-        c.setIncludeInOutConnections(true);
+        c.setIncludeInOutConnections(false);
         WorkflowPersistor wp = content.copy(c);
-        m_wfm.paste(wp);
-//        m_wfm = new WorkflowManager(getParent(), id, wp);
-        // initialize ports - for now we simply point to the WFM ports
-        m_inports = new SubNodeInPort[m_wfm.getNrInPorts()];
-        for (int i = 0; i < m_inports.length; i++) {
-            m_inports[i] = new SubNodeInPort(i, m_wfm.getInPort(i).getPortType());
+        WorkflowCopyContent wcc = m_wfm.paste(wp);
+        // create map of NodeIDs for quick lookup/search
+        Collection<NodeContainer> ncs = content.getNodeContainers();
+        NodeID[] orgIDs = new NodeID[ncs.size()];
+        int j = 0;
+        for (NodeContainer nc : ncs) {
+            orgIDs[j] = nc.getID();
+            j++;
         }
-        m_outports = new WorkflowOutPort[m_wfm.getNrOutPorts()];
-        for (int i = 0; i < m_outports.length; i++) {
-            m_outports[i] = m_wfm.getOutPort(i);
+        NodeID[] newIDs = wcc.getNodeIDs();
+        Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
+        for (j = 0; j < orgIDs.length; j++) {
+            oldIDsHash.put(orgIDs[j], newIDs[j]);
+        }
+        // initialize NodeContainer ports
+        m_inports = new NodeInPort[content.getNrInPorts() + 1];
+        PortType[] inTypes = new PortType[content.getNrInPorts()];
+        for (int i = 0; i < content.getNrInPorts(); i++) {
+            inTypes[i] = content.getInPort(i).getPortType();
+            m_inports[i + 1] = new SubNodeInPort(i + 1, inTypes[i]);
+        }
+        inTypes[0] = FlowVariablePortObject.TYPE;
+        m_inports[0] = new SubNodeInPort(0, inTypes[0]);
+
+        m_outports = new NodeContainerOutPort[content.getNrOutPorts()];
+        PortType[] outTypes = new PortType[content.getNrOutPorts()];
+        m_outputs = new Output[content.getNrOutPorts() + 1];
+        for (int i = 0; i < content.getNrOutPorts(); i++) {
+            outTypes[i] = content.getOutPort(i).getPortType();
+            m_outputs[i + 1] = new Output();
+            m_outputs[i + 1].type = content.getOutPort(i).getPortType();
+            m_outports[i + 1] = new NodeContainerOutPort(this, i);
+        }
+        m_outputs[0] = new Output();
+        m_outputs[0].type = FlowVariablePortObject.TYPE;
+        m_outports[0] = new NodeContainerOutPort(this, 0);
+
+        // add virtual in/out nodes and connect them
+        NodeID inNodeID = m_wfm.addNode(new VirtualPortObjectInNodeFactory(inTypes));
+        m_inportNodeModel = (VirtualPortObjectInNodeModel)
+                                    ((NativeNodeContainer)m_wfm.getNodeContainer(inNodeID)).getNodeModel();
+        for (ConnectionContainer cc : content.getWorkflow().getConnectionsBySource(content.getID())) {
+            m_wfm.addConnection(inNodeID, cc.getSourcePort() + 1, oldIDsHash.get(cc.getDest()), cc.getDestPort());
+        }
+        NodeID outNodeID = m_wfm.addNode(new VirtualPortObjectOutNodeFactory(outTypes));
+        m_outportNodeModel = (VirtualPortObjectOutNodeModel)
+                                    ((NativeNodeContainer)m_wfm.getNodeContainer(outNodeID)).getNodeModel();
+        for (ConnectionContainer cc : content.getWorkflow().getConnectionsByDest(content.getID())) {
+            m_wfm.addConnection(oldIDsHash.get(cc.getDest()), cc.getSourcePort(), outNodeID, cc.getDestPort() + 1);
         }
     }
 
@@ -332,12 +375,19 @@ public class SubNodeContainer extends SingleNodeContainer {
     boolean performConfigure(final PortObjectSpec[] inSpecs, final NodeConfigureHelper nch) {
         assert inSpecs.length == m_inports.length;
         // copy specs into underlying WFM inports
+        PortObject[] inObjects = new PortObject[inSpecs.length];
         for (int i = 0; i < inSpecs.length; i++) {
-            m_inports[i].setPortObjectSpec(inSpecs[i]);
+            inObjects[i] = InactiveBranchPortObject.INSTANCE;
         }
+        m_inportNodeModel.setVirtualNodeInput(new VirtualNodeInput(inObjects, 0));
         // and launch a configure on entire sub workflow
         // TODO this should more properly call only configure - reset is handled elsewhere!
         m_wfm.resetAndConfigureAll();
+        // retrieve results and copy specs to outports
+        PortObject[] outputs = m_outportNodeModel.getOutObjects();
+        for (int i = 0; i < outputs.length; i++) {
+            m_outputs[i].spec = outputs[i].getSpec();
+        }
         // TODO return status - configure may fail ;-)
         return true;
     }
@@ -349,13 +399,16 @@ public class SubNodeContainer extends SingleNodeContainer {
     public NodeContainerExecutionStatus performExecuteNode(final PortObject[] inObjects) {
         assert inObjects.length == m_inports.length;
         // copy objects into underlying WFM inports
-        for (int i = 0; i < inObjects.length; i++) {
-            m_inports[i].setPortObject(inObjects[i]);
-        }
+        m_inportNodeModel.setVirtualNodeInput(new VirtualNodeInput(inObjects, 0));
         // and launch execute on entire sub workflow
         m_wfm.executeAll();
-        // TODO: return result
-        return null;
+        // retrieve results and copy to outports
+        PortObject[] outputs = m_outportNodeModel.getOutObjects();
+        for (int i = 0; i < outputs.length; i++) {
+            m_outputs[i].spec = outputs[i].getSpec();
+            m_outputs[i].object = outputs[i];
+        }
+        return NodeContainerExecutionStatus.SUCCESS;
     }
 
     /**
@@ -408,7 +461,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public NodeOutPort getOutPort(final int index) {
-        return m_outports[index].getUnderlyingPort();
+        return m_outports[index];
     }
 
     /**
@@ -416,8 +469,9 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     void cleanOutPorts(final boolean isLoopRestart) {
-        for (WorkflowOutPort op : m_outports) {
-            op.setUnderlyingPort(null);
+        for (Output o : m_outputs) {
+            o.spec = null;
+            o.object = null;
         }
     }
 
@@ -426,7 +480,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public PortType getOutputType(final int portIndex) {
-        return m_outports[portIndex].getPortType();
+        return m_outputs[portIndex].type;
     }
 
     /**
@@ -434,7 +488,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public PortObjectSpec getOutputSpec(final int portIndex) {
-        return m_outports[portIndex].getPortObjectSpec();
+        return m_outputs[portIndex].spec;
     }
 
     /**
@@ -442,7 +496,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public PortObject getOutputObject(final int portIndex) {
-        return m_outports[portIndex].getPortObject();
+        return m_outputs[portIndex].object;
     }
 
     /**
@@ -450,7 +504,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public String getOutputObjectSummary(final int portIndex) {
-        return "SubNode Output: " + m_outports[portIndex].getPortSummary();
+        return "SubNode Output: " + m_outputs[portIndex].summary;
     }
 
     /* ------------- HiLite Support ---------------- */
