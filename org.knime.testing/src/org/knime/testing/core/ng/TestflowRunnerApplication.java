@@ -124,7 +124,7 @@ public class TestflowRunnerApplication implements IApplication {
         // this is to load the repository plug-in
         RepositoryManager.INSTANCE.toString();
         // and this initialized the image repository in the main thread; otherwise resolving old node factories
-        // in SingleNodeContainerPersistorVersion1xx will fail (see bug# 4464)
+        // in FileSingleNodeContainerPersistor will fail (see bug# 4464)
         ImageRepository.getImage(SharedImages.Busy);
 
         final Display display = Display.getCurrent();
