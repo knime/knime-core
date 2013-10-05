@@ -90,6 +90,12 @@ public class SubNodeContainer extends SingleNodeContainer {
 
     private WorkflowManager m_wfm;
 
+    private SubNodeInPort[] m_inports;
+    private WorkflowOutPort[] m_outports;
+
+    private FlowObjectStack m_incomingStack;
+    private FlowObjectStack m_outgoingStack;
+
     /** Create new, empty SubNodeContainer.
      *
      * @param parent ...
@@ -119,7 +125,43 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     public SubNodeContainer(final WorkflowManager parent, final NodeID id, final WorkflowManager content) {
         super(parent, id);
-        // TODO copy content from other workflow.
+        // assemble types:
+        PortType[] inTypes = new PortType[content.getNrInPorts()];
+        for (int i = 0; i < inTypes.length; i++) {
+            inTypes[i] = content.getInPort(i).getPortType();
+        }
+        PortType[] outTypes = new PortType[content.getNrOutPorts()];
+        for (int i = 0; i < outTypes.length; i++) {
+            outTypes[i] = content.getOutPort(i).getPortType();
+        }
+        // Create new, internal workflow manager:
+        m_wfm = new WorkflowManager(getParent(), id, inTypes, outTypes, /*isProject=*/false, content.getContext(),
+            "This is a SubNode");
+    }
+
+    /** Copy content of an existing metanode into the Subnode. Make sure by then the parent
+     * is actually aware of the workflow so that configures can be properly propagated up.
+     *
+     * @param content ...
+     */
+    public void pasteContent(final WorkflowManager content) {
+        // and copy content
+        WorkflowCopyContent c = new WorkflowCopyContent();
+        c.setAnnotation(content.getWorkflowAnnotations().toArray(new WorkflowAnnotation[0]));
+        c.setNodeIDs(content.getWorkflow().getNodeIDs().toArray(new NodeID[0]));
+        c.setIncludeInOutConnections(true);
+        WorkflowPersistor wp = content.copy(c);
+        m_wfm.paste(wp);
+//        m_wfm = new WorkflowManager(getParent(), id, wp);
+        // initialize ports - for now we simply point to the WFM ports
+        m_inports = new SubNodeInPort[m_wfm.getNrInPorts()];
+        for (int i = 0; i < m_inports.length; i++) {
+            m_inports[i] = new SubNodeInPort(i, m_wfm.getInPort(i).getPortType());
+        }
+        m_outports = new WorkflowOutPort[m_wfm.getNrOutPorts()];
+        for (int i = 0; i < m_outports.length; i++) {
+            m_outports[i] = m_wfm.getOutPort(i);
+        }
     }
 
     /* -------------------- NodeContainer info properties -------------- */
@@ -288,8 +330,16 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     boolean performConfigure(final PortObjectSpec[] inSpecs, final NodeConfigureHelper nch) {
-        // TODO Auto-generated method stub
-        return false;
+        assert inSpecs.length == m_inports.length;
+        // copy specs into underlying WFM inports
+        for (int i = 0; i < inSpecs.length; i++) {
+            m_inports[i].setPortObjectSpec(inSpecs[i]);
+        }
+        // and launch a configure on entire sub workflow
+        // TODO this should more properly call only configure - reset is handled elsewhere!
+        m_wfm.resetAndConfigureAll();
+        // TODO return status - configure may fail ;-)
+        return true;
     }
 
     /**
@@ -297,7 +347,14 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public NodeContainerExecutionStatus performExecuteNode(final PortObject[] inObjects) {
-        // TODO Auto-generated method stub
+        assert inObjects.length == m_inports.length;
+        // copy objects into underlying WFM inports
+        for (int i = 0; i < inObjects.length; i++) {
+            m_inports[i].setPortObject(inObjects[i]);
+        }
+        // and launch execute on entire sub workflow
+        m_wfm.executeAll();
+        // TODO: return result
         return null;
     }
 
@@ -327,8 +384,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public int getNrInPorts() {
-        // TODO Auto-generated method stub
-        return 0;
+        return m_inports.length;
     }
 
     /**
@@ -336,8 +392,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public NodeInPort getInPort(final int index) {
-        // TODO Auto-generated method stub
-        return null;
+        return m_inports[index];
     }
 
     /**
@@ -345,8 +400,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public int getNrOutPorts() {
-        // TODO Auto-generated method stub
-        return 0;
+        return m_outports.length;
     }
 
     /**
@@ -354,8 +408,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public NodeOutPort getOutPort(final int index) {
-        // TODO Auto-generated method stub
-        return null;
+        return m_outports[index].getUnderlyingPort();
     }
 
     /**
@@ -363,24 +416,9 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     void cleanOutPorts(final boolean isLoopRestart) {
-        // TODO Auto-generated method stub
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
-        // TODO Auto-generated method stub
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public HiLiteHandler getOutputHiLiteHandler(final int portIndex) {
-        // TODO Auto-generated method stub
-        return null;
+        for (WorkflowOutPort op : m_outports) {
+            op.setUnderlyingPort(null);
+        }
     }
 
     /**
@@ -388,8 +426,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public PortType getOutputType(final int portIndex) {
-        // TODO Auto-generated method stub
-        return null;
+        return m_outports[portIndex].getPortType();
     }
 
     /**
@@ -397,8 +434,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public PortObjectSpec getOutputSpec(final int portIndex) {
-        // TODO Auto-generated method stub
-        return null;
+        return m_outports[portIndex].getPortObjectSpec();
     }
 
     /**
@@ -406,8 +442,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public PortObject getOutputObject(final int portIndex) {
-        // TODO Auto-generated method stub
-        return null;
+        return m_outports[portIndex].getPortObject();
     }
 
     /**
@@ -415,7 +450,25 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public String getOutputObjectSummary(final int portIndex) {
-        // TODO Auto-generated method stub
+        return "SubNode Output: " + m_outports[portIndex].getPortSummary();
+    }
+
+    /* ------------- HiLite Support ---------------- */
+
+    /* TODO: enable if this ever makes sense. */
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public HiLiteHandler getOutputHiLiteHandler(final int portIndex) {
         return null;
     }
 
@@ -426,7 +479,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     boolean performAreModelSettingsValid(final NodeSettingsRO modelSettings) {
-        // TODO Auto-generated method stub
+        // TODO once dialogs are supported
         return false;
     }
 
@@ -435,7 +488,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     void performLoadModelSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO Auto-generated method stub
+        // TODO  once dialogs are supported
     }
 
     /**
@@ -445,7 +498,7 @@ public class SubNodeContainer extends SingleNodeContainer {
     WorkflowCopyContent performLoadContent(final SingleNodeContainerPersistor nodePersistor,
         final Map<Integer, BufferedDataTable> tblRep, final FlowObjectStack inStack, final ExecutionMonitor exec,
         final LoadResult loadResult, final boolean preserveNodeMessage) throws CanceledExecutionException {
-        // TODO Auto-generated method stub
+        // TODO needed for load/save...
         return null;
     }
 
@@ -454,8 +507,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     void performSaveModelSettingsTo(final NodeSettings modelSettings) {
-        // TODO Auto-generated method stub
-
+        // TODO  once dialogs are supported
     }
 
     /**
@@ -465,7 +517,7 @@ public class SubNodeContainer extends SingleNodeContainer {
     protected NodeContainerPersistor getCopyPersistor(final HashMap<Integer, ContainerTable> tableRep,
         final FileStoreHandlerRepository fileStoreHandlerRepository, final boolean preserveDeletableFlags,
         final boolean isUndoableDeleteCommand) {
-        // TODO Auto-generated method stub
+        // TODO needed for copy...
         return null;
     }
 
@@ -476,8 +528,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     void performSetCredentialsProvider(final CredentialsProvider cp) {
-        // TODO Auto-generated method stub
-
+        // TODO needed once we want to support workflow credentials
     }
 
     /**
@@ -485,7 +536,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     CredentialsProvider getCredentialsProvider() {
-        // TODO Auto-generated method stub
+        // TODO needed once we want to support workflow credentials
         return null;
     }
 
@@ -494,8 +545,8 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     void setFlowObjectStack(final FlowObjectStack st, final FlowObjectStack outgoingStack) {
-        // TODO Auto-generated method stub
-
+        m_incomingStack = st;
+        m_outgoingStack = outgoingStack;
     }
 
     /**
@@ -503,8 +554,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public FlowObjectStack getFlowObjectStack() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_incomingStack;
     }
 
     /**
@@ -512,8 +562,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public FlowObjectStack getOutgoingFlowObjectStack() {
-        // TODO Auto-generated method stub
-        return null;
+        return m_outgoingStack;
     }
 
     /* -------------- SingleNodeContainer methods without meaningful equivalent --------- */
