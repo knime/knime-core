@@ -3310,6 +3310,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             NodeUIInformation uii = subWFM.getUIInformation();
             subNC.setUIInformation(uii);
             this.removeNode(subWFM.getID());
+            configureNodeAndSuccessors(subNC.getID(), /*configureMyself=*/true);
         }
     }
 

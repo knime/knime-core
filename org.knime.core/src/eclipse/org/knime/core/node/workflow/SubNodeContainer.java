@@ -76,6 +76,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -117,16 +118,6 @@ public class SubNodeContainer extends SingleNodeContainer {
     private FlowObjectStack m_incomingStack;
     private FlowObjectStack m_outgoingStack;
 
-    /** Create new, empty SubNodeContainer.
-     *
-     * @param parent ...
-     * @param id ...
-     */
-    public SubNodeContainer(final WorkflowManager parent, final NodeID id) {
-        super(parent, id);
-        // TODO: create empty WFM
-    }
-
     /** Load workflow from persistor.
      *
      * @param parent ...
@@ -148,7 +139,7 @@ public class SubNodeContainer extends SingleNodeContainer {
         super(parent, id);
         // Create new, internal workflow manager:
         m_wfm = new WorkflowManager(getParent(), id, new PortType[]{}, new PortType[]{},
-            /*isProject=*/true, content.getContext(), "This is a SubNode");
+                                /*isProject=*/true, content.getContext(), "This is a SubNode");
         // and copy content
         WorkflowCopyContent c = new WorkflowCopyContent();
         c.setAnnotation(content.getWorkflowAnnotations().toArray(new WorkflowAnnotation[0]));
@@ -169,15 +160,17 @@ public class SubNodeContainer extends SingleNodeContainer {
         for (j = 0; j < orgIDs.length; j++) {
             oldIDsHash.put(orgIDs[j], newIDs[j]);
         }
-        // initialize NodeContainer ports
+        // initialize NodeContainer inports
+        // (metanodes don't have hidden variable port 0, SingleNodeContainers do!)
         m_inports = new NodeInPort[content.getNrInPorts() + 1];
         PortType[] inTypes = new PortType[content.getNrInPorts()];
         for (int i = 0; i < content.getNrInPorts(); i++) {
             inTypes[i] = content.getInPort(i).getPortType();
             m_inports[i + 1] = new NodeInPort(i + 1, inTypes[i]);
         }
-        m_inports[0] = new NodeInPort(0, inTypes[0]);
-
+        m_inports[0] = new NodeInPort(0, FlowVariablePortObject.TYPE);
+        // initialize NodeContainer outports
+        // (metanodes don't have hidden variable port 0, SingleNodeContainers do!)
         m_outports = new NodeContainerOutPort[content.getNrOutPorts() + 1];
         PortType[] outTypes = new PortType[content.getNrOutPorts()];
         m_outputs = new Output[content.getNrOutPorts() + 1];
@@ -190,7 +183,6 @@ public class SubNodeContainer extends SingleNodeContainer {
         m_outputs[0] = new Output();
         m_outputs[0].type = FlowVariablePortObject.TYPE;
         m_outports[0] = new NodeContainerOutPort(this, 0);
-
         // add virtual in/out nodes and connect them
         NodeID inNodeID = m_wfm.addNode(new VirtualPortObjectInNodeFactory(inTypes));
         m_inportNodeModel = (VirtualPortObjectInNodeModel)
@@ -204,6 +196,7 @@ public class SubNodeContainer extends SingleNodeContainer {
         for (ConnectionContainer cc : content.getWorkflow().getConnectionsByDest(content.getID())) {
             m_wfm.addConnection(oldIDsHash.get(cc.getSource()), cc.getSourcePort(), outNodeID, cc.getDestPort() + 1);
         }
+        setInternalState(m_wfm.getInternalState());
     }
 
     /* -------------------- NodeContainer info properties -------------- */
@@ -371,22 +364,27 @@ public class SubNodeContainer extends SingleNodeContainer {
      * {@inheritDoc}
      */
     @Override
-    boolean performConfigure(final PortObjectSpec[] inSpecs, final NodeConfigureHelper nch) {
-        assert inSpecs.length == m_inports.length;
+    boolean performConfigure(final PortObjectSpec[] rawInSpecs, final NodeConfigureHelper nch) {
+        assert rawInSpecs.length == m_inports.length;
         // copy specs into underlying WFM inports
-        PortObject[] inObjects = new PortObject[inSpecs.length];
+        // (skip port 0 - SingleNodeContains know about the hidden var port, NodeModels don't!)
+        PortObject[] inSpecs = new PortObject[rawInSpecs.length - 1];
         for (int i = 0; i < inSpecs.length; i++) {
-            inObjects[i] = InactiveBranchPortObject.INSTANCE;
+            inSpecs[i] = InactiveBranchPortObject.INSTANCE;
         }
-        m_inportNodeModel.setVirtualNodeInput(new VirtualNodeInput(inObjects, 0));
+        m_inportNodeModel.setVirtualNodeInput(new VirtualNodeInput(inSpecs, 0));
         // and launch a configure on entire sub workflow
         // TODO this should more properly call only configure - reset is handled elsewhere!
         m_wfm.resetAndConfigureAll();
         // retrieve results and copy specs to outports
-        PortObject[] outputs = m_outportNodeModel.getOutObjects();
-        for (int i = 0; i < outputs.length; i++) {
-            m_outputs[i].spec = outputs[i].getSpec();
+        if (m_outportNodeModel.getOutSpecs() != null) {
+            for (int i = 1; i < m_outputs.length; i++) {
+                m_outputs[i].spec = m_outportNodeModel.getOutSpecs()[i - 1];
+            }
         }
+        m_outputs[0].spec = FlowVariablePortObjectSpec.INSTANCE;
+        setInternalState(InternalNodeContainerState.CONFIGURED);
+//        setInternalState(m_wfm.getInternalState());
         // TODO return status - configure may fail ;-)
         return true;
     }
@@ -395,18 +393,27 @@ public class SubNodeContainer extends SingleNodeContainer {
      * {@inheritDoc}
      */
     @Override
-    public NodeContainerExecutionStatus performExecuteNode(final PortObject[] inObjects) {
-        assert inObjects.length == m_inports.length;
+    public NodeContainerExecutionStatus performExecuteNode(final PortObject[] rawInObjects) {
+        assert rawInObjects.length == m_inports.length;
         // copy objects into underlying WFM inports
+        // (skip port 0 - SingleNodeContains know about the hidden var port, NodeModels don't!)
+        PortObject[] inObjects = new PortObject[rawInObjects.length - 1];
+        for (int i = 0; i < inObjects.length; i++) {
+            inObjects[i] = rawInObjects[i + 1 ];
+        }
         m_inportNodeModel.setVirtualNodeInput(new VirtualNodeInput(inObjects, 0));
         // and launch execute on entire sub workflow
         m_wfm.executeAll();
         // retrieve results and copy to outports
-        PortObject[] outputs = m_outportNodeModel.getOutObjects();
-        for (int i = 0; i < outputs.length; i++) {
-            m_outputs[i].spec = outputs[i].getSpec();
-            m_outputs[i].object = outputs[i];
+        PortObject[] internalOutputs = m_outportNodeModel.getOutObjects();
+        for (int i = 1; i < m_outputs.length; i++) {
+            m_outputs[i].spec = internalOutputs[i - 1].getSpec();
+            m_outputs[i].object = internalOutputs[i - 1];
         }
+        m_outputs[0].spec = FlowVariablePortObjectSpec.INSTANCE;
+        m_outputs[0].object = rawInObjects[0];
+//        setInternalState(m_wfm.getInternalState());
+        // TODO return status - execute may fail ;-)
         return NodeContainerExecutionStatus.SUCCESS;
     }
 
