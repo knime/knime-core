@@ -174,10 +174,10 @@ public class SubNodeContainer extends SingleNodeContainer {
         PortType[] inTypes = new PortType[content.getNrInPorts()];
         for (int i = 0; i < content.getNrInPorts(); i++) {
             inTypes[i] = content.getInPort(i).getPortType();
-            m_inports[i + 1] = new SubNodeInPort(i + 1, inTypes[i]);
+            m_inports[i + 1] = new NodeInPort(i + 1, inTypes[i]);
         }
         inTypes[0] = FlowVariablePortObject.TYPE;
-        m_inports[0] = new SubNodeInPort(0, inTypes[0]);
+        m_inports[0] = new NodeInPort(0, inTypes[0]);
 
         m_outports = new NodeContainerOutPort[content.getNrOutPorts()];
         PortType[] outTypes = new PortType[content.getNrOutPorts()];
