@@ -56,7 +56,7 @@ import java.io.IOException;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodePersistorVersion1xx;
+import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
@@ -69,9 +69,9 @@ import org.knime.core.util.FileUtil;
  *
  * @author wiswedel, University of Konstanz
  */
-class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor {
+class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeContainerMetaPersistorVersion1xx.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(FileNodeContainerMetaPersistor.class);
 
     private static final String CFG_STATE = "state";
 
@@ -116,7 +116,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      * @param loadHelper The load helper to query for additional information.
      * @param version The load version, not null.
      */
-    NodeContainerMetaPersistorVersion1xx(final ReferencedFile settingsFile, final WorkflowLoadHelper loadHelper,
+    FileNodeContainerMetaPersistor(final ReferencedFile settingsFile, final WorkflowLoadHelper loadHelper,
         final LoadVersion version) {
         m_nodeSettingsFile = settingsFile;
         // the root folder is usually locked during load, one exception
@@ -458,7 +458,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
                 if (dotLocation >= 0 && factory.length() > dotLocation + 1) {
                     simpleName = factory.substring(dotLocation + 1);
                 }
-                isOldAutoExecutable = NodePersistorVersion1xx.OLD_AUTOEXECUTABLE_NODEFACTORIES.contains(simpleName);
+                isOldAutoExecutable = FileNodePersistor.OLD_AUTOEXECUTABLE_NODEFACTORIES.contains(simpleName);
             }
             boolean isExecuted = parentSettings.getBoolean("isExecuted");
             boolean isConfigured = parentSettings.getBoolean("isConfigured");

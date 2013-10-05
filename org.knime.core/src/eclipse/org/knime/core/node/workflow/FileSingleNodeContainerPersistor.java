@@ -53,24 +53,17 @@ package org.knime.core.node.workflow;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -78,24 +71,18 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformation;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
-import org.knime.core.node.NodePersistorVersion1xx;
+import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.missing.MissingNodeFactory;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
-import org.knime.core.node.workflow.WorkflowPersistor.NodeFactoryUnknownException;
+import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -104,34 +91,16 @@ import org.knime.core.util.FileUtil;
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
-public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersistor,
+public abstract class FileSingleNodeContainerPersistor implements SingleNodeContainerPersistor,
     FromFileNodeContainerPersistor {
 
-    private static final Method REPOS_LOAD_METHOD;
-    private static final Object REPOS_MANAGER;
-    static {
-        Class<?> repManClass;
-        try {
-            repManClass = Class.forName("org.knime.workbench.repository.RepositoryManager");
-            Field instanceField = repManClass.getField("INSTANCE");
-            REPOS_MANAGER = instanceField.get(null);
-            REPOS_LOAD_METHOD = repManClass.getMethod("getRoot");
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    private static final NodeLogger SAVE_LOGGER = NodeLogger.getLogger(SingleNodeContainerPersistorVersion1xx.class);
-    public static final String NODE_FILE = "node.xml";
-
+    private static final NodeLogger SAVE_LOGGER = NodeLogger.getLogger(FileSingleNodeContainerPersistor.class);
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
-    private final WorkflowPersistorVersion1xx.LoadVersion m_version;
-
-    private Node m_node;
+    private final LoadVersion m_version;
 
     /** Meta persistor, only set when used to load a workflow. */
-    private final NodeContainerMetaPersistorVersion1xx m_metaPersistor;
+    private final FileNodeContainerMetaPersistor m_metaPersistor;
 
     /** WFM persistor, only set when used to load a workflow. */
     private final WorkflowPersistorVersion1xx m_wfmPersistor;
@@ -152,9 +121,9 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
 
 
     /** Load persistor. */
-    SingleNodeContainerPersistorVersion1xx(final WorkflowPersistorVersion1xx workflowPersistor,
-        final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper, final WorkflowPersistorVersion1xx.LoadVersion version) {
-        this(workflowPersistor, new NodeContainerMetaPersistorVersion1xx(nodeSettingsFile, loadHelper, version),
+    FileSingleNodeContainerPersistor(final WorkflowPersistorVersion1xx workflowPersistor,
+        final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper, final LoadVersion version) {
+        this(workflowPersistor, new FileNodeContainerMetaPersistor(nodeSettingsFile, loadHelper, version),
             version);
     }
 
@@ -165,8 +134,8 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
      * @param metaPersistor
      * @param wfmPersistor
      */
-    SingleNodeContainerPersistorVersion1xx(final WorkflowPersistorVersion1xx wfmPersistor,
-        final NodeContainerMetaPersistorVersion1xx metaPersistor, final WorkflowPersistorVersion1xx.LoadVersion version) {
+    FileSingleNodeContainerPersistor(final WorkflowPersistorVersion1xx wfmPersistor,
+        final FileNodeContainerMetaPersistor metaPersistor, final LoadVersion version) {
         if (version == null || wfmPersistor == null) {
             throw new NullPointerException();
         }
@@ -175,7 +144,7 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
         m_wfmPersistor = wfmPersistor;
     }
 
-    protected final WorkflowPersistorVersion1xx.LoadVersion getLoadVersion() {
+    protected final LoadVersion getLoadVersion() {
         return m_version;
     }
 
@@ -212,7 +181,7 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
     }
 
     @Override
-    public NodeContainerMetaPersistorVersion1xx getMetaPersistor() {
+    public FileNodeContainerMetaPersistor getMetaPersistor() {
         return m_metaPersistor;
     }
 
@@ -222,32 +191,28 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
         return m_metaPersistor.getNodeContainerDirectory();
     }
 
-    /** Called by {@link Node} to update the message field in the {@link NodeModel} class.
-     * @return the msg or null.
-     * @since 2.8
-     */
-    public String getNodeMessage() {
-        NodeMessage nodeMessage = getMetaPersistor().getNodeMessage();
-        if (nodeMessage != null && !nodeMessage.getMessageType().equals(NodeMessage.Type.RESET)) {
-            return nodeMessage.getMessage();
-        }
-        return null;
-    }
-
     public WorkflowLoadHelper getLoadHelper() {
         return m_metaPersistor.getLoadHelper();
     }
 
     /** {@inheritDoc} */
     @Override
-    public Node getNode() {
-        return m_node;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public SingleNodeContainerSettings getSNCSettings() {
         return m_sncSettings;
+    }
+
+    /**
+     * @return the nodeSettings
+     */
+    public NodeSettingsRO getNodeSettings() {
+        return m_nodeSettings;
+    }
+
+    /**
+     * @return the parentPersistor
+     */
+    WorkflowPersistor getParentPersistor() {
+        return m_parentPersistor;
     }
 
     /** {@inheritDoc} */
@@ -258,23 +223,12 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
 
     /** {@inheritDoc} */
     @Override
-    public SingleNodeContainer getNodeContainer(final WorkflowManager wm, final NodeID id) {
-        return new NativeNodeContainer(wm, id, this);
-    }
-
-    NodePersistorVersion1xx createNodePersistor(final NodeSettingsRO settings) {
-        return new NodePersistorVersion1xx(this, getLoadVersion(), settings);
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
         final LoadResult result) throws InvalidSettingsException, IOException {
         m_parentPersistor = parentPersistor;
-        NodeContainerMetaPersistorVersion1xx meta = getMetaPersistor();
+        FileNodeContainerMetaPersistor meta = getMetaPersistor();
         final ReferencedFile settingsFileRef = meta.getNodeSettingsFile();
         File settingsFile = settingsFileRef.getFile();
-        String error;
         if (!settingsFile.isFile()) {
             setDirtyAfterLoad();
             throw new IOException("Can't read node file \"" + settingsFile.getAbsolutePath() + "\"");
@@ -299,44 +253,6 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
             setDirtyAfterLoad();
         }
 
-        NodeAndBundleInformation nodeInfo;
-        try {
-            nodeInfo = loadNodeFactoryInfo(parentSettings, settings);
-        } catch (InvalidSettingsException e) {
-            if (settingsFile.getName().equals(WorkflowPersistor.WORKFLOW_FILE)) {
-                error = "Can't load meta flows in this version";
-            } else {
-                error = "Can't load node factory class name";
-            }
-            setDirtyAfterLoad();
-            throw new InvalidSettingsException(error, e);
-        }
-        NodeSettingsRO additionalFactorySettings;
-        try {
-            additionalFactorySettings = loadAdditionalFactorySettings(settings);
-        } catch (Exception e) {
-            error = "Unable to load additional factory settings for \"" + nodeInfo + "\"";
-            setDirtyAfterLoad();
-            throw new InvalidSettingsException(error, e);
-        }
-        NodeFactory<NodeModel> nodeFactory;
-        try {
-            nodeFactory = loadNodeFactory(nodeInfo.getFactoryClass());
-        } catch (Exception e) {
-            // setDirtyAfterLoad(); // don't set dirty, missing node placeholder will be used instead
-            throw new NodeFactoryUnknownException(nodeInfo, additionalFactorySettings, e);
-        }
-
-        try {
-            if (additionalFactorySettings != null) {
-                nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
-            }
-        } catch (Exception e) {
-            error = "Unable to load additional factory settings into node factory (node \"" + nodeInfo + "\")";
-            setDirtyAfterLoad();
-            throw new InvalidSettingsException(error, e);
-        }
-        m_node = new Node(nodeFactory);
     }
 
     /** {@inheritDoc} */
@@ -345,10 +261,9 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
         final LoadResult result) throws InvalidSettingsException, CanceledExecutionException, IOException {
         final NodeSettingsRO settingsForNode = loadSettingsForNode(result);
         m_settingsFailPolicy = translateToFailPolicy(m_metaPersistor.getState());
-        NodePersistorVersion1xx nodePersistor = createNodePersistor(settingsForNode);
         m_sncSettings = new SingleNodeContainerSettings();
         try {
-            m_sncSettings.setMemoryPolicy(loadMemoryPolicySettings(m_nodeSettings, nodePersistor));
+            m_sncSettings.setMemoryPolicy(loadMemoryPolicySettings(m_nodeSettings));
         } catch (InvalidSettingsException e) {
             String error = "Unable to load SNC settings: " + e.getMessage();
             result.addError(error);
@@ -356,71 +271,24 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
             setDirtyAfterLoad();
             return;
         }
+        NodeSettingsRO modelSettings = null;
         try {
-            NodeSettings modelSettings = loadModelSettings(settingsForNode);
-            if (modelSettings != null) { // null if the node never had settings - no reason to load them
-                // this also validates the settings
-                m_node.loadModelSettingsFrom(modelSettings);
-
-                // previous versions of KNIME (2.7 and before) kept the model settings only in the node;
-                // NodeModel#saveSettingsTo was always called before the dialog was opened (some dialog implementations
-                // rely on the exact structure of the NodeSettings ... which may change between versions).
-                // We wash the settings through the node so that the model settings are updated (they possibly
-                // no longer map to the variable settings loaded further down below - if so, the inconsistency
-                // is warned later during configuration)
-                NodeSettings washedSettings = new NodeSettings("model");
-                m_node.saveModelSettingsTo(washedSettings);
-                m_sncSettings.setModelSettings(washedSettings);
-            }
-        } catch (Exception e) {
-            final String error;
-            if (e instanceof InvalidSettingsException) {
-                error = "Loading model settings failed: " + e.getMessage();
-            } else {
-                error = "Caught \"" + e.getClass().getSimpleName() + "\", "
-                        + "Loading model settings failed: " + e.getMessage();
-            }
-            LoadNodeModelSettingsFailPolicy pol = getModelSettingsFailPolicy();
-            if (pol == null) {
-                if (!nodePersistor.isConfigured()) {
-                    pol = LoadNodeModelSettingsFailPolicy.IGNORE;
-                } else if (nodePersistor.isExecuted()) {
-                    pol = LoadNodeModelSettingsFailPolicy.WARN;
-                } else {
-                    pol = LoadNodeModelSettingsFailPolicy.FAIL;
-                }
-            }
-            switch (pol) {
-                case IGNORE:
-                    if (!(e instanceof InvalidSettingsException)) {
-                        m_logger.coding(error, e);
-                    }
-                    break;
-                case FAIL:
-                    result.addError(error);
-                    m_node.createErrorMessageAndNotify(error, e);
-                    setNeedsResetAfterLoad();
-                    break;
-                case WARN:
-                    m_node.createWarningMessageAndNotify(error, e);
-                    result.addWarning(error);
-                    setDirtyAfterLoad();
-                    break;
-            }
-        }
-        try {
-            WorkflowPersistorVersion1xx wfmPersistor = getWorkflowManagerPersistor();
-            HashMap<Integer, ContainerTable> globalTableRepository = wfmPersistor.getGlobalTableRepository();
-            WorkflowFileStoreHandlerRepository fileStoreHandlerRepository =
-                wfmPersistor.getFileStoreHandlerRepository();
-            nodePersistor.load(m_node, m_parentPersistor, exec, tblRep, globalTableRepository,
-                fileStoreHandlerRepository, result);
-        } catch (final Exception e) {
-            String error = "Error loading node content: " + e.getMessage();
-            getLogger().warn(error, e);
-            needsResetAfterLoad();
+            modelSettings = loadModelSettings(settingsForNode);
+        } catch (InvalidSettingsException ise) {
+            String error = "Unable to load model settings: " + ise.getMessage();
             result.addError(error);
+            getLogger().debug(error, ise);
+            setDirtyAfterLoad();
         }
+        try {
+            modelSettings = loadNCAndWashModelSettings(settingsForNode, modelSettings, tblRep, exec, result);
+        } catch (InvalidSettingsException ise) {
+            String error = "Unable to load node container and wash settings: " + ise.getMessage();
+            result.addError(error);
+            getLogger().debug(error, ise);
+            setDirtyAfterLoad();
+        }
+        m_sncSettings.setModelSettings(modelSettings);
         try {
             m_sncSettings.setVariablesSettings(loadVariableSettings(settingsForNode));
         } catch (InvalidSettingsException e) {
@@ -439,121 +307,37 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
             setDirtyAfterLoad();
             setNeedsResetAfterLoad();
         }
-        if (nodePersistor.isDirtyAfterLoad()) {
-            setDirtyAfterLoad();
-        }
-        if (nodePersistor.needsResetAfterLoad()) {
-            setNeedsResetAfterLoad();
-        }
         exec.setProgress(1.0);
     }
 
-    /** Loads the settings passed to the NodePersistor class. It includes node settings, variable settings,
+    /**
+     * Called by {@link #loadNodeContainer(Map, ExecutionMonitor, LoadResult)}. Will instantiate the node and load the
+     * model settings into it.
+     *
+     * @param settingsForNode the settings for the node, including the hasContent flag etc (the whole settings.xml)
+     * @param modelSettings The model settings (the child "model").
+     * @param tblRep Workflow's table repository
+     * @param exec ...
+     * @param result
+     * @return The washed model settings. Usually this is the modelSettings argument but the node may modify it during
+     *         save & load
+     * @throws InvalidSettingsException ...
+     * @throws CanceledExecutionException ...
+     * @throws IOException ...
+     */
+    abstract NodeSettingsRO loadNCAndWashModelSettings(final NodeSettingsRO settingsForNode,
+        final NodeSettingsRO modelSettings,
+        final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec, final LoadResult result)
+                throws InvalidSettingsException, CanceledExecutionException, IOException;
+
+        /** Loads the settings passed to the NodePersistor class. It includes node settings, variable settings,
      * file store information (but not node factory information). In 2.7 and before it was contained in a separate
      * node.xml, in 2.8+ it's all in one file.
      * @param loadResult ...
      * @return ...
-     * @throws FileNotFoundException ...
      * @throws IOException ...
      */
-    private NodeSettingsRO loadSettingsForNode(final LoadResult loadResult) throws FileNotFoundException, IOException {
-        if (getLoadVersion().ordinal() < WorkflowPersistorVersion1xx.LoadVersion.V280.ordinal()) {
-            ReferencedFile nodeFile;
-            try {
-                nodeFile = loadNodeFile(m_nodeSettings);
-            } catch (InvalidSettingsException e) {
-                String error = "Unable to load node settings file for node with ID suffix "
-                        + m_metaPersistor.getNodeIDSuffix() + " (node \"" + m_node.getName() + "\"): " + e.getMessage();
-                loadResult.addError(error);
-                getLogger().debug(error, e);
-                setDirtyAfterLoad();
-                return new NodeSettings("empty");
-            }
-            File configFile = nodeFile.getFile();
-            if (configFile == null || !configFile.isFile() || !configFile.canRead()) {
-                String error = "Unable to read node settings file for node with ID suffix "
-                        + m_metaPersistor.getNodeIDSuffix() + " (node \"" + m_node.getName() + "\"), file \""
-                        + configFile + "\"";
-                loadResult.addError(error);
-                setNeedsResetAfterLoad(); // also implies dirty
-                return new NodeSettings("empty");
-            } else {
-                InputStream in = new FileInputStream(configFile);
-                try {
-                    in = m_parentPersistor.decipherInput(in);
-                    return NodeSettings.loadFromXML(new BufferedInputStream(in));
-                } finally {
-                    try {
-                        in.close();
-                    } catch (IOException e) {
-                        getLogger().error("Failed to close input stream on \""
-                                + configFile.getAbsolutePath() + "\"", e);
-                    }
-                }
-            }
-        } else {
-            return m_nodeSettings;
-        }
-    }
-
-    /**
-     * Load factory name.
-     *
-     * @param parentSettings settings of outer workflow (old style workflows have it in there)
-     * @param settings settings of this node, ignored in this implementation
-     * @return Factory information.
-     * @throws InvalidSettingsException If that fails for any reason.
-     */
-    NodeAndBundleInformation loadNodeFactoryInfo(final NodeSettingsRO parentSettings, final NodeSettingsRO settings)
-        throws InvalidSettingsException {
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V200)) {
-            String factoryName = parentSettings.getString("factory");
-            // This is a hack to load old J48 Nodes Model from pre-2.0 workflows
-            if ("org.knime.ext.weka.j48_2.WEKAJ48NodeFactory2".equals(factoryName)
-                || "org.knime.ext.weka.j48.WEKAJ48NodeFactory".equals(factoryName)) {
-                factoryName = "org.knime.ext.weka.knimeJ48.KnimeJ48NodeFactory";
-            }
-            return new NodeAndBundleInformation(factoryName, null, null, null, null);
-        } else {
-            return NodeAndBundleInformation.load(settings, getLoadVersion());
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName) throws InvalidSettingsException,
-        InstantiationException, IllegalAccessException, ClassNotFoundException {
-        // use global Class Creator utility for Eclipse "compatibility"
-        try {
-            NodeFactory<NodeModel> f =
-                (NodeFactory<NodeModel>)((GlobalClassCreator.createClass(factoryClassName)).newInstance());
-            return f;
-        } catch (ClassNotFoundException ex) {
-            try {
-                // Because of the changed startup process, not all factories
-                // may be loaded. Therefore in order to search for a matching
-                // factory below we need to initialize the whole repository
-                // first
-                REPOS_LOAD_METHOD.invoke(REPOS_MANAGER);
-            } catch (Exception ex1) {
-                getLogger().error("Could not load repository manager", ex1);
-            }
-
-            String[] x = factoryClassName.split("\\.");
-            String simpleClassName = x[x.length - 1];
-
-            for (String s : NodeFactory.getLoadedNodeFactories()) {
-                if (s.endsWith("." + simpleClassName)) {
-                    NodeFactory<NodeModel> f =
-                        (NodeFactory<NodeModel>)((GlobalClassCreator.createClass(s)).newInstance());
-                    getLogger().warn(
-                        "Substituted '" + f.getClass().getName() + "' for unknown factory '" + factoryClassName + "'");
-                    return f;
-                }
-            }
-            throw ex;
-        }
-    }
-
+    abstract NodeSettingsRO loadSettingsForNode(final LoadResult loadResult) throws IOException;
     /**
      * Called during load by the Node instance to determine whether or not the flow variable output port is to be
      * populated with the FlowVariablePortObjectSpec singleton.
@@ -599,7 +383,7 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
      */
     ReferencedFile loadNodeFile(final NodeSettingsRO settings) throws InvalidSettingsException {
         ReferencedFile nodeDir = getMetaPersistor().getNodeContainerDirectory();
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V200)) {
+        if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
             return new ReferencedFile(nodeDir, SETTINGS_FILE_NAME);
         } else {
             return new ReferencedFile(nodeDir, settings.getString("node_file"));
@@ -609,20 +393,18 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
     /**
      * Load configuration of node.
      *
-     * @param settings to load from (used in sub-classes)
-     * @param nodePersistor persistor to allow this implementation to load old-style
+     * @param nodeSettings to load from (used in sub-classes)
      * @return node config
      * @throws InvalidSettingsException if that fails for any reason.
      */
-    MemoryPolicy loadMemoryPolicySettings(final NodeSettingsRO settings,
-        final NodePersistorVersion1xx nodePersistor) throws InvalidSettingsException {
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V210_Pre)) {
+    MemoryPolicy loadMemoryPolicySettings(final NodeSettingsRO nodeSettings) throws InvalidSettingsException {
+        if (getLoadVersion().isOlderThan(LoadVersion.V210_Pre)) {
             // in versions before KNIME 1.2.0, there were no misc settings
             // in the dialog, we must use caution here: if they are not present
             // we use the default, i.e. small data are kept in memory
-            if (settings.containsKey(Node.CFG_MISC_SETTINGS)
-                && settings.getNodeSettings(Node.CFG_MISC_SETTINGS).containsKey(SingleNodeContainer.CFG_MEMORY_POLICY)) {
-                NodeSettingsRO sub = settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
+            if (nodeSettings.containsKey(Node.CFG_MISC_SETTINGS)
+                && nodeSettings.getNodeSettings(Node.CFG_MISC_SETTINGS).containsKey(SingleNodeContainer.CFG_MEMORY_POLICY)) {
+                NodeSettingsRO sub = nodeSettings.getNodeSettings(Node.CFG_MISC_SETTINGS);
                 String memoryPolicy =
                     sub.getString(SingleNodeContainer.CFG_MEMORY_POLICY, MemoryPolicy.CacheSmallInMemory.toString());
                 if (memoryPolicy == null) {
@@ -639,7 +421,7 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
         } else {
             // any version after 2.0 saves the snc settings in the settings.xml
             // (previously these settings were saves as part of the node.xml)
-            NodeSettingsRO sub = settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
+            NodeSettingsRO sub = nodeSettings.getNodeSettings(Node.CFG_MISC_SETTINGS);
             String memoryPolicy =
                 sub.getString(SingleNodeContainer.CFG_MEMORY_POLICY, MemoryPolicy.CacheSmallInMemory.toString());
             if (memoryPolicy == null) {
@@ -685,12 +467,12 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
      * @throws InvalidSettingsException if that fails for any reason.
      */
     List<FlowObject> loadFlowObjects(final NodeSettingsRO settings) throws InvalidSettingsException {
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V200)) {
+        if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
             return Collections.emptyList();
         }
         List<FlowObject> result = new ArrayList<FlowObject>();
         NodeSettingsRO stackSet;
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V220)) {
+        if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
             stackSet = settings.getNodeSettings("scope_stack");
         } else {
             stackSet = settings.getNodeSettings("flow_stack");
@@ -724,7 +506,7 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
     }
 
     boolean shouldFixModelPortOrder() {
-        return getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V200);
+        return getLoadVersion().isOlderThan(LoadVersion.V200);
     }
 
     WorkflowPersistorVersion1xx getWorkflowManagerPersistor() {
@@ -751,113 +533,6 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
             default:
                 return LoadNodeModelSettingsFailPolicy.FAIL;
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 2.7
-     */
-    @Override
-    public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformation nodeInfo,
-        final NodeSettingsRO additionalFactorySettings, final ArrayList<PersistorWithPortIndex> upstreamNodes,
-        final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
-        if (m_node == null) {
-            /* Input ports from the connection table. */
-            // first is flow var port
-            PortType[] inPortTypes = new PortType[Math.max(upstreamNodes.size() - 1, 0)];
-            Arrays.fill(inPortTypes, BufferedDataTable.TYPE); // default to BDT for unconnected ports
-            for (int i = 0; i < inPortTypes.length; i++) {
-                PersistorWithPortIndex p = upstreamNodes.get(i + 1); // first is flow var port
-                if (p != null) {
-                    PortType portTypeFromUpstreamNode = p.getPersistor().getUpstreamPortType(p.getPortIndex());
-                    if (portTypeFromUpstreamNode != null) { // null if upstream is missing, too
-                        inPortTypes[i] = portTypeFromUpstreamNode;
-                    }
-                }
-            }
-
-            /* Output ports from node settings (saved ports) -- if possible (executed) */
-            String nodeName = nodeInfo.getNodeNameNotNull();
-            PortType[] outPortTypes;
-            try {
-                LoadResult guessLoadResult = new LoadResult("Port type guessing for missing node \"" + nodeName + "\"");
-                NodeSettingsRO settingsForNode = loadSettingsForNode(guessLoadResult);
-                NodePersistorVersion1xx nodePersistor = createNodePersistor(settingsForNode);
-                outPortTypes = nodePersistor.guessOutputPortTypes(m_parentPersistor, guessLoadResult, nodeName);
-                if (guessLoadResult.hasErrors()) {
-                    getLogger().debug(
-                        "Errors guessing port types for missing node \"" + nodeName + "\": "
-                            + guessLoadResult.getFilteredError("", LoadResultEntryType.Error));
-                }
-            } catch (Exception e) {
-                getLogger().debug("Unable to guess port types for missing node \"" + nodeName + "\"", e);
-                outPortTypes = null;
-            }
-            if (outPortTypes == null) { // couldn't guess port types from looking at node settings (e.g. not executed)
-                // default to BDT for unconnected ports
-                outPortTypes = new PortType[Math.max(downstreamNodes.size() - 1, 0)];
-            }
-            for (int i = 0; i < outPortTypes.length; i++) {
-                PortType type = outPortTypes[i];
-                // output types may be partially filled by settings guessing above, list may be empty or too short
-                List<PersistorWithPortIndex> list = i < downstreamNodes.size() - 1 ? downstreamNodes.get(i + 1) : null;
-                if (list != null) {
-                    assert !list.isEmpty();
-                    for (PersistorWithPortIndex p : list) {
-                        PortType current = p.getPersistor().getDownstreamPortType(p.getPortIndex());
-                        if (current == null) {
-                            // ignore, downstream node is also missing
-                        } else if (type == null) {
-                            type = current;
-                        } else if (type.equals(current)) {
-                            // keep type
-                        } else {
-                            // this shouldn't really happen - someone changed port types between versions
-                            type = new PortType(PortObject.class);
-                        }
-                    }
-                    outPortTypes[i] = type;
-                }
-                if (outPortTypes[i] == null) {
-                    // might still be null if missing node is only connected to missing node, fallback: BDT
-                    outPortTypes[i] = BufferedDataTable.TYPE;
-                }
-            }
-            MissingNodeFactory nodefactory =
-                new MissingNodeFactory(nodeInfo, additionalFactorySettings, inPortTypes, outPortTypes);
-            if (getLoadVersion().ordinal() < WorkflowPersistorVersion1xx.VERSION_LATEST.ordinal()) {
-                nodefactory.setCopyInternDirForWorkflowVersionChange(true);
-            }
-            nodefactory.init();
-            m_node = new Node((NodeFactory)nodefactory); // unclear why this needs a cast
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 2.7
-     */
-    @Override
-    public PortType getDownstreamPortType(final int index) {
-        if (m_node != null && index < m_node.getNrInPorts()) {
-            return m_node.getInputType(index);
-        }
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @since 2.7
-     */
-    @Override
-    public PortType getUpstreamPortType(final int index) {
-        if (m_node != null && index < m_node.getNrOutPorts()) {
-            return m_node.getOutputType(index);
-        }
-        return null;
     }
 
     protected static String save(final NativeNodeContainer nnc, final ReferencedFile nodeDirRef,
@@ -911,8 +586,8 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
         saveNodeFileName(nnc, settings, nodeDirRef); // only to allow 2.7- clients to load 2.8+ workflows
         saveFlowObjectStack(settings, nnc);
         saveSNCSettings(settings, nnc);
-        NodeContainerMetaPersistorVersion1xx.save(settings, nnc, nodeDirRef);
-        NodePersistorVersion1xx.save(nnc, settings, exec, nodeDirRef,
+        FileNodeContainerMetaPersistor.save(settings, nnc, nodeDirRef);
+        FileNodePersistor.save(nnc, settings, exec, nodeDirRef,
             isSaveData && nnc.getInternalState().equals(InternalNodeContainerState.EXECUTED));
         File nodeSettingsXMLFile = new File(nodeDir, settingsDotXML);
         OutputStream os = new FileOutputStream(nodeSettingsXMLFile);

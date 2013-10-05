@@ -81,7 +81,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
-import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx;
+import org.knime.core.node.workflow.FileSingleNodeContainerPersistor;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -128,7 +128,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
 
     /** Path representation of the node settings file. */
     public static final Path NODE_FILE = new Path(
-            SingleNodeContainerPersistorVersion1xx.SETTINGS_FILE_NAME);
+            FileSingleNodeContainerPersistor.SETTINGS_FILE_NAME);
 
     /**
      * Returns a workbench label provider that is hooked up to the decorator

@@ -1,0 +1,487 @@
+/*
+ * ------------------------------------------------------------------------
+ *
+ *  Copyright (C) 2003 - 2013
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
+ *  Website: http://www.knime.org; Email: contact@knime.org
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License, Version 3, as
+ *  published by the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful, but
+ *  WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, see <http://www.gnu.org/licenses>.
+ *
+ *  Additional permission under GNU GPL version 3 section 7:
+ *
+ *  KNIME interoperates with ECLIPSE solely via ECLIPSE's plug-in APIs.
+ *  Hence, KNIME and ECLIPSE are both independent programs and are not
+ *  derived from each other. Should, however, the interpretation of the
+ *  GNU GPL Version 3 ("License") under any applicable laws result in
+ *  KNIME and ECLIPSE being a combined program, KNIME GMBH herewith grants
+ *  you the additional permission to use and propagate KNIME together with
+ *  ECLIPSE with only the license terms in place for ECLIPSE applying to
+ *  ECLIPSE and the GNU GPL Version 3 applying for KNIME, provided the
+ *  license terms of ECLIPSE themselves allow for the respective use and
+ *  propagation of ECLIPSE together with KNIME.
+ *
+ *  Additional permission relating to nodes for KNIME that extend the Node
+ *  Extension (and in particular that are based on subclasses of NodeModel,
+ *  NodeDialog, and NodeView) and that only interoperate with KNIME through
+ *  standard APIs ("Nodes"):
+ *  Nodes are deemed to be separate and independent programs and to not be
+ *  covered works.  Notwithstanding anything to the contrary in the
+ *  License, the License does not apply to Nodes, you are not required to
+ *  license Nodes under the License, and you are granted a license to
+ *  prepare and propagate Nodes, in each case even if such Nodes are
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  may freely choose the license terms applicable to such Node, including
+ *  when such Node is propagated with or for interoperation with KNIME.
+ * ---------------------------------------------------------------------
+ *
+ * Created on Oct 4, 2013 by wiswedel
+ */
+package org.knime.core.node.workflow;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
+import org.knime.core.eclipseUtil.GlobalClassCreator;
+import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
+import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
+import org.knime.core.node.FileNodePersistor;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.missing.MissingNodeFactory;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.WorkflowPersistor.NodeFactoryUnknownException;
+import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
+
+/**
+ *
+ * @author wiswedel
+ */
+public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPersistor
+    implements NativeNodeContainerPersistor {
+
+    public static final String NODE_FILE = "node.xml";
+
+    private static final Method REPOS_LOAD_METHOD;
+    private static final Object REPOS_MANAGER;
+    static {
+        Class<?> repManClass;
+        try {
+            repManClass = Class.forName("org.knime.workbench.repository.RepositoryManager");
+            Field instanceField = repManClass.getField("INSTANCE");
+            REPOS_MANAGER = instanceField.get(null);
+            REPOS_LOAD_METHOD = repManClass.getMethod("getRoot");
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private Node m_node;
+
+    /**
+     * @param wfmPersistor
+     * @param metaPersistor
+     * @param version
+     */
+    public FileNativeNodeContainerPersistor(final WorkflowPersistorVersion1xx wfmPersistor,
+        final FileNodeContainerMetaPersistor metaPersistor, final LoadVersion version) {
+        super(wfmPersistor, metaPersistor, version);
+        // TODO Auto-generated constructor stub
+    }
+
+    /**
+     * @param workflowPersistor
+     * @param nodeSettingsFile
+     * @param loadHelper
+     * @param version
+     */
+    public FileNativeNodeContainerPersistor(final WorkflowPersistorVersion1xx workflowPersistor,
+        final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper, final LoadVersion version) {
+        super(workflowPersistor, nodeSettingsFile, loadHelper, version);
+        // TODO Auto-generated constructor stub
+    }
+
+    /** Called by {@link Node} to update the message field in the {@link NodeModel} class.
+     * @return the msg or null.
+     */
+    public String getNodeMessage() {
+        NodeMessage nodeMessage = getMetaPersistor().getNodeMessage();
+        if (nodeMessage != null && !nodeMessage.getMessageType().equals(NodeMessage.Type.RESET)) {
+            return nodeMessage.getMessage();
+        }
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Node getNode() {
+        return m_node;
+    }
+
+    FileNodePersistor createNodePersistor(final NodeSettingsRO settings) {
+        return new FileNodePersistor(this, getLoadVersion(), settings);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NativeNodeContainer getNodeContainer(final WorkflowManager wm, final NodeID id) {
+        return new NativeNodeContainer(wm, id, this);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
+        final NodeSettingsRO parentSettings, final LoadResult result) throws InvalidSettingsException, IOException {
+        super.preLoadNodeContainer(parentPersistor, parentSettings, result);
+        NodeSettingsRO settings = getNodeSettings();
+        String error;
+        NodeAndBundleInformation nodeInfo;
+        try {
+            nodeInfo = loadNodeFactoryInfo(parentSettings, settings);
+        } catch (InvalidSettingsException e) {
+            setDirtyAfterLoad();
+            throw e;
+        }
+        NodeSettingsRO additionalFactorySettings;
+        try {
+            additionalFactorySettings = loadAdditionalFactorySettings(settings);
+        } catch (Exception e) {
+            error = "Unable to load additional factory settings for \"" + nodeInfo + "\"";
+            setDirtyAfterLoad();
+            throw new InvalidSettingsException(error, e);
+        }
+        NodeFactory<NodeModel> nodeFactory;
+        try {
+            nodeFactory = loadNodeFactory(nodeInfo.getFactoryClass());
+        } catch (Exception e) {
+            // setDirtyAfterLoad(); // don't set dirty, missing node placeholder will be used instead
+            throw new NodeFactoryUnknownException(nodeInfo, additionalFactorySettings, e);
+        }
+
+        try {
+            if (additionalFactorySettings != null) {
+                nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
+            }
+        } catch (Exception e) {
+            error = "Unable to load additional factory settings into node factory (node \"" + nodeInfo + "\")";
+            setDirtyAfterLoad();
+            throw new InvalidSettingsException(error, e);
+        }
+        m_node = new Node(nodeFactory);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    NodeSettingsRO loadNCAndWashModelSettings(final NodeSettingsRO settingsForNode,
+        final NodeSettingsRO modelSettings,
+        final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec, final LoadResult result)
+                throws InvalidSettingsException, CanceledExecutionException, IOException {
+        FileNodePersistor nodePersistor = createNodePersistor(settingsForNode);
+        NodeSettingsRO washedModelSettings = modelSettings;
+        try {
+            if (modelSettings != null) { // null if the node never had settings - no reason to load them
+                // this also validates the settings
+                m_node.loadModelSettingsFrom(modelSettings);
+
+                // previous versions of KNIME (2.7 and before) kept the model settings only in the node;
+                // NodeModel#saveSettingsTo was always called before the dialog was opened (some dialog implementations
+                // rely on the exact structure of the NodeSettings ... which may change between versions).
+                // We wash the settings through the node so that the model settings are updated (they possibly
+                // no longer map to the variable settings loaded further down below - if so, the inconsistency
+                // is warned later during configuration)
+                NodeSettings washedSettings = new NodeSettings("model");
+                m_node.saveModelSettingsTo(washedSettings);
+                washedModelSettings = modelSettings;
+            }
+        } catch (Exception e) {
+            final String error;
+            if (e instanceof InvalidSettingsException) {
+                error = "Loading model settings failed: " + e.getMessage();
+            } else {
+                error = "Caught \"" + e.getClass().getSimpleName() + "\", " + "Loading model settings failed: "
+                        + e.getMessage();
+            }
+            LoadNodeModelSettingsFailPolicy pol = getModelSettingsFailPolicy();
+            if (pol == null) {
+                if (!nodePersistor.isConfigured()) {
+                    pol = LoadNodeModelSettingsFailPolicy.IGNORE;
+                } else if (nodePersistor.isExecuted()) {
+                    pol = LoadNodeModelSettingsFailPolicy.WARN;
+                } else {
+                    pol = LoadNodeModelSettingsFailPolicy.FAIL;
+                }
+            }
+            switch (pol) {
+                case IGNORE:
+                    if (!(e instanceof InvalidSettingsException)) {
+                        getLogger().coding(error, e);
+                    }
+                    break;
+                case FAIL:
+                    result.addError(error);
+                    m_node.createErrorMessageAndNotify(error, e);
+                    setNeedsResetAfterLoad();
+                    break;
+                case WARN:
+                    m_node.createWarningMessageAndNotify(error, e);
+                    result.addWarning(error);
+                    setDirtyAfterLoad();
+                    break;
+            }
+        }
+        try {
+            WorkflowPersistorVersion1xx wfmPersistor = getWorkflowManagerPersistor();
+            HashMap<Integer, ContainerTable> globalTableRepository = wfmPersistor.getGlobalTableRepository();
+            WorkflowFileStoreHandlerRepository fileStoreHandlerRepository =
+                wfmPersistor.getFileStoreHandlerRepository();
+            nodePersistor.load(m_node, getParentPersistor(), exec, tblRep, globalTableRepository,
+                fileStoreHandlerRepository, result);
+        } catch (final Exception e) {
+            String error = "Error loading node content: " + e.getMessage();
+            getLogger().warn(error, e);
+            needsResetAfterLoad();
+            result.addError(error);
+        }
+        if (nodePersistor.isDirtyAfterLoad()) {
+            setDirtyAfterLoad();
+        }
+        if (nodePersistor.needsResetAfterLoad()) {
+            setNeedsResetAfterLoad();
+        }
+        return washedModelSettings;
+    }
+
+    /**
+     * Load factory name.
+     *
+     * @param parentSettings settings of outer workflow (old style workflows have it in there)
+     * @param settings settings of this node, ignored in this implementation
+     * @return Factory information.
+     * @throws InvalidSettingsException If that fails for any reason.
+     */
+    NodeAndBundleInformation loadNodeFactoryInfo(final NodeSettingsRO parentSettings, final NodeSettingsRO settings)
+        throws InvalidSettingsException {
+        if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
+            String factoryName = parentSettings.getString("factory");
+            // This is a hack to load old J48 Nodes Model from pre-2.0 workflows
+            if ("org.knime.ext.weka.j48_2.WEKAJ48NodeFactory2".equals(factoryName)
+                || "org.knime.ext.weka.j48.WEKAJ48NodeFactory".equals(factoryName)) {
+                factoryName = "org.knime.ext.weka.knimeJ48.KnimeJ48NodeFactory";
+            }
+            return new NodeAndBundleInformation(factoryName, null, null, null, null);
+        } else {
+            return NodeAndBundleInformation.load(settings, getLoadVersion());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName) throws InvalidSettingsException,
+        InstantiationException, IllegalAccessException, ClassNotFoundException {
+        // use global Class Creator utility for Eclipse "compatibility"
+        try {
+            NodeFactory<NodeModel> f =
+                (NodeFactory<NodeModel>)((GlobalClassCreator.createClass(factoryClassName)).newInstance());
+            return f;
+        } catch (ClassNotFoundException ex) {
+            try {
+                // Because of the changed startup process, not all factories
+                // may be loaded. Therefore in order to search for a matching
+                // factory below we need to initialize the whole repository
+                // first
+                REPOS_LOAD_METHOD.invoke(REPOS_MANAGER);
+            } catch (Exception ex1) {
+                getLogger().error("Could not load repository manager", ex1);
+            }
+
+            String[] x = factoryClassName.split("\\.");
+            String simpleClassName = x[x.length - 1];
+
+            for (String s : NodeFactory.getLoadedNodeFactories()) {
+                if (s.endsWith("." + simpleClassName)) {
+                    NodeFactory<NodeModel> f =
+                        (NodeFactory<NodeModel>)((GlobalClassCreator.createClass(s)).newInstance());
+                    getLogger().warn(
+                        "Substituted '" + f.getClass().getName() + "' for unknown factory '" + factoryClassName + "'");
+                    return f;
+                }
+            }
+            throw ex;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    NodeSettingsRO loadSettingsForNode(final LoadResult loadResult) throws IOException {
+        NodeSettingsRO nodeSettings = getNodeSettings();
+        if (getLoadVersion().ordinal() < LoadVersion.V280.ordinal()) {
+            FileNodeContainerMetaPersistor metaPersistor = getMetaPersistor();
+
+            ReferencedFile nodeFile;
+            try {
+                nodeFile = loadNodeFile(nodeSettings);
+            } catch (InvalidSettingsException e) {
+                String error = "Unable to load node settings file for node with ID suffix "
+                        + metaPersistor.getNodeIDSuffix() + " (node \"" + m_node.getName() + "\"): " + e.getMessage();
+                loadResult.addError(error);
+                getLogger().debug(error, e);
+                setDirtyAfterLoad();
+                return new NodeSettings("empty");
+            }
+            File configFile = nodeFile.getFile();
+            if (configFile == null || !configFile.isFile() || !configFile.canRead()) {
+                String error = "Unable to read node settings file for node with ID suffix "
+                        + metaPersistor.getNodeIDSuffix() + " (node \"" + m_node.getName() + "\"), file \""
+                        + configFile + "\"";
+                loadResult.addError(error);
+                setNeedsResetAfterLoad(); // also implies dirty
+                return new NodeSettings("empty");
+            } else {
+                InputStream in = new FileInputStream(configFile);
+                try {
+                    in = getParentPersistor().decipherInput(in);
+                    return NodeSettings.loadFromXML(new BufferedInputStream(in));
+                } finally {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        getLogger().error("Failed to close input stream on \""
+                                + configFile.getAbsolutePath() + "\"", e);
+                    }
+                }
+            }
+        } else {
+            return nodeSettings;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformation nodeInfo,
+        final NodeSettingsRO additionalFactorySettings, final ArrayList<PersistorWithPortIndex> upstreamNodes,
+        final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
+        if (m_node == null) {
+            /* Input ports from the connection table. */
+            // first is flow var port
+            PortType[] inPortTypes = new PortType[Math.max(upstreamNodes.size() - 1, 0)];
+            Arrays.fill(inPortTypes, BufferedDataTable.TYPE); // default to BDT for unconnected ports
+            for (int i = 0; i < inPortTypes.length; i++) {
+                PersistorWithPortIndex p = upstreamNodes.get(i + 1); // first is flow var port
+                if (p != null) {
+                    PortType portTypeFromUpstreamNode = p.getPersistor().getUpstreamPortType(p.getPortIndex());
+                    if (portTypeFromUpstreamNode != null) { // null if upstream is missing, too
+                        inPortTypes[i] = portTypeFromUpstreamNode;
+                    }
+                }
+            }
+
+            /* Output ports from node settings (saved ports) -- if possible (executed) */
+            String nodeName = nodeInfo.getNodeNameNotNull();
+            PortType[] outPortTypes;
+            try {
+                LoadResult guessLoadResult = new LoadResult("Port type guessing for missing node \"" + nodeName + "\"");
+                NodeSettingsRO settingsForNode = loadSettingsForNode(guessLoadResult);
+                FileNodePersistor nodePersistor = createNodePersistor(settingsForNode);
+                outPortTypes = nodePersistor.guessOutputPortTypes(getParentPersistor(), guessLoadResult, nodeName);
+                if (guessLoadResult.hasErrors()) {
+                    getLogger().debug(
+                        "Errors guessing port types for missing node \"" + nodeName + "\": "
+                            + guessLoadResult.getFilteredError("", LoadResultEntryType.Error));
+                }
+            } catch (Exception e) {
+                getLogger().debug("Unable to guess port types for missing node \"" + nodeName + "\"", e);
+                outPortTypes = null;
+            }
+            if (outPortTypes == null) { // couldn't guess port types from looking at node settings (e.g. not executed)
+                // default to BDT for unconnected ports
+                outPortTypes = new PortType[Math.max(downstreamNodes.size() - 1, 0)];
+            }
+            for (int i = 0; i < outPortTypes.length; i++) {
+                PortType type = outPortTypes[i];
+                // output types may be partially filled by settings guessing above, list may be empty or too short
+                List<PersistorWithPortIndex> list = i < downstreamNodes.size() - 1 ? downstreamNodes.get(i + 1) : null;
+                if (list != null) {
+                    assert !list.isEmpty();
+                    for (PersistorWithPortIndex p : list) {
+                        PortType current = p.getPersistor().getDownstreamPortType(p.getPortIndex());
+                        if (current == null) {
+                            // ignore, downstream node is also missing
+                        } else if (type == null) {
+                            type = current;
+                        } else if (type.equals(current)) {
+                            // keep type
+                        } else {
+                            // this shouldn't really happen - someone changed port types between versions
+                            type = new PortType(PortObject.class);
+                        }
+                    }
+                    outPortTypes[i] = type;
+                }
+                if (outPortTypes[i] == null) {
+                    // might still be null if missing node is only connected to missing node, fallback: BDT
+                    outPortTypes[i] = BufferedDataTable.TYPE;
+                }
+            }
+            MissingNodeFactory nodefactory =
+                new MissingNodeFactory(nodeInfo, additionalFactorySettings, inPortTypes, outPortTypes);
+            if (getLoadVersion().ordinal() < WorkflowPersistorVersion1xx.VERSION_LATEST.ordinal()) {
+                nodefactory.setCopyInternDirForWorkflowVersionChange(true);
+            }
+            nodefactory.init();
+            m_node = new Node((NodeFactory)nodefactory);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public PortType getDownstreamPortType(final int index) {
+        if (m_node != null && index < m_node.getNrInPorts()) {
+            return m_node.getInputType(index);
+        }
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public PortType getUpstreamPortType(final int index) {
+        if (m_node != null && index < m_node.getNrOutPorts()) {
+            return m_node.getOutputType(index);
+        }
+        return null;
+    }
+
+}

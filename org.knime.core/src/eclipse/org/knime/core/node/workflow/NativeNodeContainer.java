@@ -143,7 +143,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
      * @param id the identifier
      * @param persistor to read from
      */
-    NativeNodeContainer(final WorkflowManager parent, final NodeID id, final SingleNodeContainerPersistor persistor) {
+    NativeNodeContainer(final WorkflowManager parent, final NodeID id, final NativeNodeContainerPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
         m_node = persistor.getNode();
         assert m_node != null : persistor.getClass().getSimpleName()
@@ -882,7 +882,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
             final FileStoreHandlerRepository fileStoreHandlerRepository,
             final boolean preserveDeletableFlags,
             final boolean isUndoableDeleteCommand) {
-        return new CopySingleNodeContainerPersistor(this,
+        return new CopyNativeNodeContainerPersistor(this,
                 preserveDeletableFlags, isUndoableDeleteCommand);
     }
 

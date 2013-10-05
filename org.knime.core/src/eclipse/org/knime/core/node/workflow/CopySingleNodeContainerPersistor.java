@@ -53,20 +53,9 @@ package org.knime.core.node.workflow;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CopyNodePersistor;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.Node;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
  * Used when a node (or a set of nodes) is copied via the clipboard (Ctrl-C, Ctrl-V). This class
@@ -74,33 +63,11 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-final class CopySingleNodeContainerPersistor implements
-        SingleNodeContainerPersistor {
+abstract class CopySingleNodeContainerPersistor implements SingleNodeContainerPersistor {
 
-    private final NodeFactory<NodeModel> m_nodeFactory;
-    private final CopyNodePersistor m_nodePersistor;
     private final List<FlowObject> m_flowObjectList;
     private final SingleNodeContainerSettings m_sncSettings;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
-
-    /** The node instance that was created last. It fixes bug 4404 (comes up when a node is pasted
-     * multiple times). The usual pattern is:
-     * 1) User hits Ctrl-C: and object of this class is instantiated
-     * 2) User hits Ctrl-V:
-     * 2.1) Paste routine in WFM calls {@link #getNodeContainer(WorkflowManager, NodeID)}
-     *      (also assigns m_lastCreatedNode)
-     * 2.2) Paste routine in WFM calls {@link #loadNodeContainer(Map, ExecutionMonitor, LoadResult)}
-     *      (fills m_lastCreatedNode)
-     * 2.3) Node is inserted and has all members initialized
-     * 3) User hits Ctrl-V again:
-     * 3.1) See 2.1)
-     * 3.2) See 2.2)
-     *
-     * Alternatively, we could also do the stuff from 2.2 (loading the configuration into the node)
-     * in 2.1 but that feels wrong as it's done directly from the constructor of SingleNodeContainer
-     * (for instance no context is available but we call client code already).
-     */
-    private Node m_lastCreatedNode;
 
     /** Create copy persistor.
      * @param original To copy from
@@ -111,9 +78,8 @@ final class CopySingleNodeContainerPersistor implements
      *        {@link WorkflowManager#copy(boolean, WorkflowCopyContent)}
      *        for details.)
      */
-    public CopySingleNodeContainerPersistor(final NativeNodeContainer original,
+    CopySingleNodeContainerPersistor(final SingleNodeContainer original,
             final boolean preserveDeletableFlag, final boolean isUndoableDeleteCommand) {
-        Node originalNode = original.getNode();
         FlowObjectStack stack = original.getFlowObjectStack();
         List<FlowObject> objs;
         if (stack != null) {
@@ -126,21 +92,7 @@ final class CopySingleNodeContainerPersistor implements
             m_flowObjectList.add(o.cloneAndUnsetOwner());
         }
         m_sncSettings = original.getSingleNodeContainerSettings().clone();
-        m_nodeFactory = originalNode.getFactory();
-        m_nodePersistor = originalNode.createCopyPersistor();
         m_metaPersistor = new CopyNodeContainerMetaPersistor(original, preserveDeletableFlag, isUndoableDeleteCommand);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public Node getNode() {
-        Node node = new Node(m_nodeFactory);
-        // we don't load any settings into the node instance here as this method is called
-        // from the constructor of SingleNodeContainer - it doesn't have a context set and therefore
-        // cannot resolve URLs etc (knime://knime.workflow/some-path)
-        // Settings are loaded in loadNodeContainer
-        m_lastCreatedNode = node;
-        return node;
     }
 
     /** {@inheritDoc} */
@@ -160,29 +112,6 @@ final class CopySingleNodeContainerPersistor implements
     @Override
     public NodeContainerMetaPersistor getMetaPersistor() {
         return m_metaPersistor;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeContainer getNodeContainer(final WorkflowManager parent, final NodeID id) {
-        return new NativeNodeContainer(parent, id, this);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void loadNodeContainer(
-            final Map<Integer, BufferedDataTable> tblRep,
-            final ExecutionMonitor exec, final LoadResult loadResult) {
-        try {
-            final NodeSettingsRO modelSettings = m_sncSettings.getModelSettings();
-            if (modelSettings != null) {
-                m_lastCreatedNode.loadModelSettingsFrom(modelSettings);
-            }
-        } catch (InvalidSettingsException e) {
-            NodeLogger.getLogger(CopySingleNodeContainerPersistor.class).debug(
-                "Failed to copy settings into node target: " + e.getMessage(), e);
-        }
-        m_nodePersistor.loadInto(m_lastCreatedNode);
     }
 
     /** {@inheritDoc} */

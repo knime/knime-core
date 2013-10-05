@@ -69,7 +69,6 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 
 /**
  *
@@ -198,7 +197,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
 
     /** {@inheritDoc} */
     @Override
-    protected SingleNodeContainerPersistorVersion1xx
+    protected FileSingleNodeContainerPersistor
         createSingleNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
                 this, nodeFile, getLoadHelper(), getLoadVersion());
@@ -417,7 +416,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     }
 
     private class ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx
-        extends SingleNodeContainerPersistorVersion1xx {
+        extends FileNativeNodeContainerPersistor {
 
         /**
          *

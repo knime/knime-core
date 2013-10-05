@@ -53,7 +53,7 @@ package org.knime.core.util;
 
 import java.io.File;
 
-import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx;
+import org.knime.core.node.workflow.FileSingleNodeContainerPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor;
 
 
@@ -104,8 +104,8 @@ public final class KnimeFileUtil {
                 // workflow template
                 || new File(file, WorkflowPersistor.TEMPLATE_FILE).exists()
                 // node
-                || new File(file, SingleNodeContainerPersistorVersion1xx.
-                        NODE_FILE).exists()) {
+                || new File(file, FileSingleNodeContainerPersistor.
+                        SETTINGS_FILE_NAME).exists()) {
             return false;
         }
         return true;

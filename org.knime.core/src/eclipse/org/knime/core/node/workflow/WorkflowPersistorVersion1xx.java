@@ -212,7 +212,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
 
     private final HashSet<ConnectionContainerTemplate> m_connectionSet;
 
-    private final NodeContainerMetaPersistorVersion1xx m_metaPersistor;
+    private final FileNodeContainerMetaPersistor m_metaPersistor;
 
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
 
@@ -289,7 +289,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
         m_globalTableRepository = tableRep;
         m_fileStoreRepository = fileStoreHandlerRepository;
         m_versionString = version;
-        m_metaPersistor = new NodeContainerMetaPersistorVersion1xx(workflowKNIMEFile, loadHelper, version);
+        m_metaPersistor = new FileNodeContainerMetaPersistor(workflowKNIMEFile, loadHelper, version);
         m_nodeContainerLoaderMap = new TreeMap<Integer, FromFileNodeContainerPersistor>();
         m_connectionSet = new HashSet<ConnectionContainerTemplate>();
         m_obsoleteNodeDirectories = new ArrayList<ReferencedFile>();
@@ -317,7 +317,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
      * @return the workflowDir
      */
     ReferencedFile getWorkflowKNIMEFile() {
-        NodeContainerMetaPersistorVersion1xx meta = getMetaPersistor();
+        FileNodeContainerMetaPersistor meta = getMetaPersistor();
         if (meta == null) {
             throw new RuntimeException("Persistor not created for loading " + "workflow, meta persistor is null");
         }
@@ -350,7 +350,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
 
     /** {@inheritDoc} */
     @Override
-    public NodeContainerMetaPersistorVersion1xx getMetaPersistor() {
+    public FileNodeContainerMetaPersistor getMetaPersistor() {
         return m_metaPersistor;
     }
 
@@ -1144,7 +1144,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
     void fixSourcePortIfNecessary(final NodeContainerPersistor sourcePersistor, final ConnectionContainerTemplate c) {
         // v2.1 and before did not have flow variable ports (index 0)
         if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
-            if (sourcePersistor instanceof SingleNodeContainerPersistorVersion1xx) {
+            if (sourcePersistor instanceof FileSingleNodeContainerPersistor) {
                 // correct port index only for ordinary nodes (no new flow
                 // variable ports on meta nodes)
                 int index = c.getSourcePort();
@@ -1163,8 +1163,8 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
      */
     void fixDestPortIfNecessary(final NodeContainerPersistor destPersistor, final ConnectionContainerTemplate c) {
         if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
-            if (destPersistor instanceof SingleNodeContainerPersistorVersion1xx) {
-                SingleNodeContainerPersistorVersion1xx pers = (SingleNodeContainerPersistorVersion1xx)destPersistor;
+            if (destPersistor instanceof FileNativeNodeContainerPersistor) {
+                FileNativeNodeContainerPersistor pers = (FileNativeNodeContainerPersistor)destPersistor;
                 /* workflows saved with 1.x.x have misleading port indices for
                  * incoming ports. Data ports precede the model ports (in their
                  * index), although the GUI and the true ordering is the other
@@ -1201,7 +1201,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
             }
         } else if (getLoadVersion().isOlderThan(LoadVersion.V220)) {
             // v2.1 and before did not have flow variable ports (index 0)
-            if (destPersistor instanceof SingleNodeContainerPersistorVersion1xx) {
+            if (destPersistor instanceof FileSingleNodeContainerPersistor) {
                 // correct port index only for ordinary nodes (no new flow
                 // variable ports on meta nodes)
                 int index = c.getDestPort();
@@ -1764,8 +1764,8 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
         return new File(workflowDir, SAVED_WITH_DATA_FILE).isFile();
     }
 
-    SingleNodeContainerPersistorVersion1xx createSingleNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
-        return new SingleNodeContainerPersistorVersion1xx(this, nodeFile, getLoadHelper(), getLoadVersion());
+    FileSingleNodeContainerPersistor createSingleNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
+        return new FileNativeNodeContainerPersistor(this, nodeFile, getLoadHelper(), getLoadVersion());
     }
 
     WorkflowPersistorVersion1xx createWorkflowPersistorLoad(final ReferencedFile wfmFile) {
@@ -1885,7 +1885,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
             saveWorkflowCipher(settings, wm.getWorkflowCipher());
             saveTemplateInformation(wm.getTemplateInformation(), settings);
             saveAuthorInformation(wm.getAuthorInformation(), settings);
-            NodeContainerMetaPersistorVersion1xx.save(settings, wm, workflowDirRef);
+            FileNodeContainerMetaPersistor.save(settings, wm, workflowDirRef);
             saveWorkflowVariables(wm, settings);
             saveCredentials(wm, settings);
             saveWorkflowAnnotations(wm, settings);
@@ -2108,7 +2108,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
         if (container instanceof WorkflowManager) {
             fileName = WorkflowPersistorVersion1xx.save((WorkflowManager)container, nodeDirectoryRef, exec, isSaveData);
         } else if (container instanceof NativeNodeContainer) {
-            fileName =  SingleNodeContainerPersistorVersion1xx.save(
+            fileName =  FileSingleNodeContainerPersistor.save(
                 (NativeNodeContainer)container, nodeDirectoryRef, exec, isSaveData);
         } else {
             throw new IOException("Sorry, can't save SubnodeContainers yet...");

@@ -88,13 +88,12 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.workflow.NativeNodeContainer;
+import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -103,7 +102,7 @@ import org.knime.core.util.FileUtil;
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
-public class NodePersistorVersion1xx implements NodePersistor {
+public class FileNodePersistor implements NodePersistor {
 
     /* Contains all fully qualified path names of previously existing
      *  PMMLPortObjects that have been removed in version v2.4. This is
@@ -136,7 +135,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
-    private final SingleNodeContainerPersistorVersion1xx m_sncPersistor;
+    private final FileNativeNodeContainerPersistor m_nncPersistor;
 
     private final NodeSettingsRO m_settings;
 
@@ -185,16 +184,16 @@ public class NodePersistorVersion1xx implements NodePersistor {
     /**
      * Creates persistor for both load and save.
      *
-     * @param sncPersistor The corresponding SNC persistor.
+     * @param nncPersistor The corresponding node container persistor.
      * @param version The version string, see {@link #getLoadVersion()} for details
      * @param settings The settings from the settings file stored in the node folder (not null).
      */
-    public NodePersistorVersion1xx(final SingleNodeContainerPersistorVersion1xx sncPersistor,
+    public FileNodePersistor(final FileNativeNodeContainerPersistor nncPersistor,
         final WorkflowPersistorVersion1xx.LoadVersion version, final NodeSettingsRO settings) {
-        if (sncPersistor == null || settings == null) {
+        if (nncPersistor == null || settings == null) {
             throw new NullPointerException();
         }
-        m_sncPersistor = sncPersistor;
+        m_nncPersistor = nncPersistor;
         m_loadVersion = version;
         m_settings = settings;
     }
@@ -760,12 +759,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
     /**
      * @return the singleNodeContainerPersistor
      */
-    SingleNodeContainerPersistorVersion1xx getSingleNodeContainerPersistor() {
-        return m_sncPersistor;
+    FileNativeNodeContainerPersistor getNativeNodeContainerPersistor() {
+        return m_nncPersistor;
     }
 
     WorkflowLoadHelper getLoadHelper() {
-        return m_sncPersistor.getLoadHelper();
+        return m_nncPersistor.getLoadHelper();
     }
 
     /**
@@ -826,7 +825,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     /** {@inheritDoc} */
     @Override
     public boolean mustWarnOnDataLoadError() {
-        return getSingleNodeContainerPersistor().mustWarnOnDataLoadError();
+        return getNativeNodeContainerPersistor().mustWarnOnDataLoadError();
     }
 
     /**
@@ -1003,7 +1002,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             // state of the node at this point)
             return null;
         } else {
-            LoadNodeModelSettingsFailPolicy result = getSingleNodeContainerPersistor().getModelSettingsFailPolicy();
+            LoadNodeModelSettingsFailPolicy result = getNativeNodeContainerPersistor().getModelSettingsFailPolicy();
             if (isInactive()) {
                 // silently ignore invalid settings for dead branches
                 // (nodes may be saved as EXECUTED but they were never actually
@@ -1017,7 +1016,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     }
 
     protected final ReferencedFile getNodeDirectory() {
-        return m_sncPersistor.getNodeContainerDirectory();
+        return m_nncPersistor.getNodeContainerDirectory();
     }
 
     /** {@inheritDoc} */
@@ -1029,14 +1028,14 @@ public class NodePersistorVersion1xx implements NodePersistor {
     /** {@inheritDoc} */
     @Override
     public String getWarningMessage() {
-        return getSingleNodeContainerPersistor().getNodeMessage();
+        return getNativeNodeContainerPersistor().getNodeMessage();
     }
 
     /** {@inheritDoc} */
     @Override
     public PortObject getPortObject(final int outportIndex) {
         if (outportIndex == 0) {
-            if (!m_sncPersistor.hasConfiguredState()) {
+            if (!m_nncPersistor.hasConfiguredState()) {
                 return null;
             } else if (m_isInactive) {
                 return InactiveBranchPortObject.INSTANCE;
@@ -1066,7 +1065,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     @Override
     public PortObjectSpec getPortObjectSpec(final int outportIndex) {
         if (outportIndex == 0) {
-            if (!m_sncPersistor.hasConfiguredState()) {
+            if (!m_nncPersistor.hasConfiguredState()) {
                 return null;
             } else if (m_isInactive) {
                 return InactiveBranchPortObjectSpec.INSTANCE;

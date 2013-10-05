@@ -5817,7 +5817,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             Set<ConnectionContainer> outConns = getOutgoingConnectionsFor(id);
 
             removeNode(id);
-            NodeContainerMetaPersistorVersion1xx metaPersistor =
+            FileNodeContainerMetaPersistor metaPersistor =
                 loadPersistor.getMetaPersistor();
             metaPersistor.setNodeIDSuffix(id.getIndex());
             metaPersistor.setUIInfo(newUI);

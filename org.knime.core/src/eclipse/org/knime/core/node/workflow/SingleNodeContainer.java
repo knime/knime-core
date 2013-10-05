@@ -1210,7 +1210,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
         /**
          * @param modelSettings the modelSettings to set
          */
-        public void setModelSettings(final NodeSettings modelSettings) {
+        public void setModelSettings(final NodeSettingsRO modelSettings) {
             m_modelSettings = modelSettings;
         }
 
