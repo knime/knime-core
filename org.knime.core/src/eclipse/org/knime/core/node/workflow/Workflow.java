@@ -301,7 +301,7 @@ class Workflow {
         return bfsSortedNodes;
     }
 
-    /** Return map of node ids connected to the given outpot of the given node
+    /** Return map of node ids connected to the given outport of the given node
      * sorted in breadth first order mapped to a set of portIDs.
      * See also {@link #getBreadthFirstListOfNodeAndSuccessors()}
      *
@@ -936,7 +936,7 @@ class Workflow {
      * @param id of node to start search from
      * @param index of port the outgoing connection connected to
      */
-    private void completeSetBackwards(final HashSet<NodeID> nodes, final NodeID id, final int outgoingPortIndex) {
+    void completeSetBackwards(final HashSet<NodeID> nodes, final NodeID id, final int outgoingPortIndex) {
         NodeContainer thisNode = m_nodes.get(id);
         for (ConnectionContainer cc : m_connectionsByDest.get(id)) {
             NodeID prevNodeID = cc.getSource();
