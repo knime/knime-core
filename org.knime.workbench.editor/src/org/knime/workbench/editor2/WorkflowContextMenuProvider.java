@@ -77,6 +77,7 @@ import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.ChangeMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
+import org.knime.workbench.editor2.actions.ConvertMetaNodeToSubNodeAction;
 import org.knime.workbench.editor2.actions.DisconnectMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
@@ -250,6 +251,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         ((AbstractNodeAction)action).update();
         // expand meta nodes
         action = m_actionRegistry.getAction(ExpandMetaNodeAction.ID);
+        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        ((AbstractNodeAction)action).update();
+        // convert meta node to subnode
+        action = m_actionRegistry.getAction(ConvertMetaNodeToSubNodeAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
         // insert "select loop" if loop nodes are selected
