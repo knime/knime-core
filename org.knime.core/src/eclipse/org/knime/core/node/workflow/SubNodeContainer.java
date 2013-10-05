@@ -176,17 +176,16 @@ public class SubNodeContainer extends SingleNodeContainer {
             inTypes[i] = content.getInPort(i).getPortType();
             m_inports[i + 1] = new NodeInPort(i + 1, inTypes[i]);
         }
-        inTypes[0] = FlowVariablePortObject.TYPE;
         m_inports[0] = new NodeInPort(0, inTypes[0]);
 
-        m_outports = new NodeContainerOutPort[content.getNrOutPorts()];
+        m_outports = new NodeContainerOutPort[content.getNrOutPorts() + 1];
         PortType[] outTypes = new PortType[content.getNrOutPorts()];
         m_outputs = new Output[content.getNrOutPorts() + 1];
         for (int i = 0; i < content.getNrOutPorts(); i++) {
             outTypes[i] = content.getOutPort(i).getPortType();
             m_outputs[i + 1] = new Output();
             m_outputs[i + 1].type = content.getOutPort(i).getPortType();
-            m_outports[i + 1] = new NodeContainerOutPort(this, i);
+            m_outports[i + 1] = new NodeContainerOutPort(this, i + 1);
         }
         m_outputs[0] = new Output();
         m_outputs[0].type = FlowVariablePortObject.TYPE;
@@ -203,7 +202,7 @@ public class SubNodeContainer extends SingleNodeContainer {
         m_outportNodeModel = (VirtualPortObjectOutNodeModel)
                                     ((NativeNodeContainer)m_wfm.getNodeContainer(outNodeID)).getNodeModel();
         for (ConnectionContainer cc : content.getWorkflow().getConnectionsByDest(content.getID())) {
-            m_wfm.addConnection(oldIDsHash.get(cc.getDest()), cc.getSourcePort(), outNodeID, cc.getDestPort() + 1);
+            m_wfm.addConnection(oldIDsHash.get(cc.getSource()), cc.getSourcePort(), outNodeID, cc.getDestPort() + 1);
         }
     }
 
