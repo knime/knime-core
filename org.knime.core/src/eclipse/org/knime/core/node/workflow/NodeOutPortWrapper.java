@@ -73,7 +73,7 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
     private NodeOutPort m_underlyingPort;
 
     /**
-     * Creates a new output port with a fixed type and index (should unique
+     * Creates a new output port with a fixed type and index (should be unique
      * to all other output ports of this node) for the given node.
      *
      * @param pType The port's type
