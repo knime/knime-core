@@ -298,7 +298,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Constructor - create new child workflow container with a parent,
      * a new ID, and the number and type of in/outports as specified.
      */
-    private WorkflowManager(final WorkflowManager parent, final NodeID id,
+    WorkflowManager(final WorkflowManager parent, final NodeID id,
             final PortType[] inTypes, final PortType[] outTypes,
             final boolean isProject, final WorkflowContext context, final String name) {
         super(parent, id);
@@ -345,7 +345,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** Constructor - create new workflow from persistor.
      */
-    private WorkflowManager(final WorkflowManager parent, final NodeID id, final WorkflowPersistor persistor) {
+    WorkflowManager(final WorkflowManager parent, final NodeID id, final WorkflowPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
         ReferencedFile ncDir = super.getNodeContainerDirectory();
         if (ncDir != null) {
@@ -468,9 +468,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return internalAddNewNode(factory, null);
     }
 
+    /** Create new Node based on given factory and add to workflow.
+     *
+     * @param factory ...
+     * @return unique ID of the newly created and inserted node.
+     * @since 2.9
+     */
+    public NodeID addNode(final NodeFactory<?> factory) {
+        return addNodeAndApplyContext(factory, null);
+    }
+
     /**
-     * @param factory
-     * @param context
+     * @param factory ...
+     * @param context the context provided by the framework (e.g. the URL of the file that was dragged on the canvas)
      * @return the node id of the created node.
      */
     public NodeID addNodeAndApplyContext(final NodeFactory<?> factory,
@@ -3131,8 +3141,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return copied content containing nodes and annotations
      * @throws IllegalArgumentException if expand can not be done
      */
-    public WorkflowCopyContent expandMetaNode(final NodeID wfmID)
-    throws IllegalArgumentException {
+    public WorkflowCopyContent expandMetaNode(final NodeID wfmID) throws IllegalArgumentException {
         synchronized (m_workflowMutex) {
             // check again, to be sure...
             String res = canExpandMetaNode(wfmID);
@@ -3263,6 +3272,47 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /** Convert the selected metanode into a subnode.
+     *
+     * @param wfmID the id of the metanode to be converted.
+//     * @throws IllegalArgumentException if expand can not be done
+     * @since 2.9
+     */
+    public void convertMetaNodeToSubNode(final NodeID wfmID) {
+// throws IllegalArgumentException {
+        synchronized (m_workflowMutex) {
+            // check again, to be sure...
+//            String res = canExpandMetaNode(wfmID);
+//            if (res != null) {
+//                throw new IllegalArgumentException(res);
+//            }
+            //
+            WorkflowManager subWFM = (WorkflowManager)getNodeContainer(wfmID);
+            SubNodeContainer subNC = new SubNodeContainer(this, m_workflow.createUniqueID(), subWFM);
+            this.addNodeContainer(subNC, /*propagateChanges=*/true);
+            // rewire connections TO the old metanode:
+            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(subWFM.getID())) {
+                this.addConnection(cc.getSource(), cc.getSourcePort(), subNC.getID(), cc.getDestPort() + 1);
+            }
+            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(subWFM.getID())) {
+                this.removeConnection(cc);
+            }
+            // rewire connections FROM the sub workflow
+            ArrayList<ConnectionContainer> tempCCs = new ArrayList<ConnectionContainer>();
+            for (ConnectionContainer cc : m_workflow.getConnectionsBySource(subWFM.getID())) {
+                tempCCs.add(cc);
+            }
+            for (ConnectionContainer cc : tempCCs) {
+                this.removeConnection(cc);
+                this.addConnection(subNC.getID(), cc.getSourcePort() + 1, cc.getDest(), cc.getDestPort());
+            }
+            // move SubNode to position of old Metanode (and remove it)
+            NodeUIInformation uii = subWFM.getUIInformation();
+            subNC.setUIInformation(uii);
+            this.removeNode(subWFM.getID());
+        }
+    }
+
     /** Check if we can collapse selected set of nodes into a metanode.
      * This essentially checks if the nodes can be moved (=deleted from
      * the original WFM), if they are executed, or if moving them would
@@ -3280,8 +3330,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (NodeID id : orgIDs) {
                 if (!canRemoveNode(id)) {
                     // we can not - bail!
-                    return "Can not move all "
-                            + "selected nodes (successor executing?).";
+                    return "Can not move all selected nodes (successor executing?).";
                 }
             }
             // Check if any of those nodes are executed
@@ -3297,11 +3346,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             //    part of the list
             HashSet<NodeID> ncNodes = new HashSet<NodeID>();
             for (NodeID id : orgIDs) {
-                for (ConnectionContainer cc
-                        : m_workflow.getConnectionsBySource(id)) {
+                for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
                     NodeID destID = cc.getDest();
-                    if ((!this.getID().equals(destID))
-                            && (!orgIDsHash.contains(destID))) {
+                    if ((!this.getID().equals(destID)) && (!orgIDsHash.contains(destID))) {
                         // successor which is not part of list - remember it!
                         ncNodes.add(destID);
                     }
@@ -3311,14 +3358,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             while (!ncNodes.isEmpty()) {
                 NodeID thisID = ncNodes.iterator().next();
                 ncNodes.remove(thisID);
-                for (ConnectionContainer cc
-                        : m_workflow.getConnectionsBySource(thisID)) {
+                for (ConnectionContainer cc : m_workflow.getConnectionsBySource(thisID)) {
                     NodeID destID = cc.getDest();
                     if (!this.getID().equals(destID)) {
                         if (orgIDsHash.contains(destID)) {
                             // successor is in our original list - bail!
-                            return "Can not move "
-                                    + "nodes - selected set is not closed!";
+                            return "Can not move nodes - selected set is not closed!";
                         }
                         ncNodes.add(destID);
                     }
@@ -3853,8 +3898,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // (a) this node is resetable
             // (b) no successors is running or queued.
-            return (nc.canPerformReset()
-                    && (!hasSuccessorInProgress(nodeID)));
+            return (nc.canPerformReset() && (!hasSuccessorInProgress(nodeID)));
         }
     }
 
@@ -3929,6 +3973,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         return false;
     }
+
     //////////////////////////////////////////////////////////
     // NodeContainer implementations (WFM acts as meta node)
     //////////////////////////////////////////////////////////
@@ -4191,6 +4236,79 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             return nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED);
         }
     }
+
+    /** Check if a node can be executed either directly or via chain of nodes that
+     * include an executable node.
+    *
+    * @param nodeID id of node
+    * @return true of node is configured and all immediate predecessors are executed.
+    * @since 2.9
+    */
+   public boolean canExecuteNodeDirectlyOrIndirectly(final NodeID nodeID) {
+       synchronized (m_workflowMutex) {
+           NodeContainer nc = m_workflow.getNode(nodeID);
+           if (nc == null) {
+               return false;
+           }
+           // don't allow individual execution of nodes in a remote exec flow
+           if (!isLocalWFM()) {
+               return false;
+           }
+           // check for WorkflowManager - which we handle differently
+           if (nc instanceof WorkflowManager) {
+               return ((WorkflowManager)nc).hasExecutableNode();
+           }
+           // check node itself:
+           if (nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED)) {
+               return true;
+           }
+           // check predecessors:
+           return hasExecutablePredecessor(nodeID);
+       }
+   }
+
+   /**
+     * Test if any of the predecessors of the given node is executable (=configured).
+     *
+     * @param nodeID id of node
+     * @return true if at least one predecessor can be executed.
+     */
+    private boolean hasExecutablePredecessor(final NodeID nodeID) {
+        if (this.getID().equals(nodeID)) {  // we are talking about this WFM
+            return getParent().hasExecutablePredecessor(nodeID);
+        }
+        NodeContainer nc = m_workflow.getNode(nodeID);
+        if (nc == null) {  // somehow the node has disappeared...
+            return false;
+        }
+        // get all predeccessors of the node, including the WFM itself if there are incoming connections:
+        HashSet<NodeID> nodes = new HashSet<NodeID>();
+        m_workflow.completeSetBackwards(nodes, nodeID, -1);
+        // make sure we only consider successors, not node itself!
+        // (would result in strange effects when we step out of the metanode with executable successors
+        // of the original node)
+        nodes.remove(nodeID);
+        for (NodeID id : nodes) {
+            if (this.getID().equals(id)) {
+                // skip outgoing connections for now (handled below)
+            } else {
+                NodeContainer currentNC = getNodeContainer(id);
+                if (currentNC.getInternalState().equals(InternalNodeContainerState.CONFIGURED)) {
+                    return true;
+                }
+            }
+        }
+        // now also check predecessors of the metanode itself
+        if (nodes.contains(this.getID())) {
+            // TODO check only nodes connection to the specific WF inport
+            if (getParent().hasExecutablePredecessor(getID())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 
     /** Returns true if all required input data is available to the node.
      * Unconnected optional inputs are OK.
