@@ -381,8 +381,7 @@ class Workflow {
      * @param index of port the incoming connection connected to
      *   (useful when start node is a metanode!)
      */
-    private void completeSet(final HashSet<NodeID> nodes, final NodeID id,
-            final int incomingPortIndex) {
+    private void completeSet(final HashSet<NodeID> nodes, final NodeID id, final int incomingPortIndex) {
         if (nodes.add(id)) {  // only if id was not already contained in set!
             NodeContainer thisNode = m_nodes.get(id);
             for (ConnectionContainer cc : m_connectionsBySource.get(id)) {
@@ -401,11 +400,9 @@ class Workflow {
                             // TODO check for unconnected metaoutports?
                             completeSet(nodes, nextNodeID, cc.getDestPort());
                         } else {
-                            Set<Integer> outports = wfm.getWorkflow()
-                                           .connectedOutPorts(cc.getDestPort());
+                            Set<Integer> outports = wfm.getWorkflow().connectedOutPorts(cc.getDestPort());
                             if (outports.contains(cc.getSourcePort())) {
-                                completeSet(nodes, nextNodeID,
-                                            cc.getDestPort());
+                                completeSet(nodes, nextNodeID, cc.getDestPort());
                             }
                         }
                     }
@@ -994,6 +991,10 @@ class Workflow {
      */
     private void completePredecessorSet(final HashSet<NodeID> nodes, final NodeID id, final int outgoingPortIndex) {
         if (nodes.add(id)) {  // only if the node is not already contained:
+            if (id.equals(this.getID())) {
+                // don't continue outside of this WFM.
+                return;
+            }
             NodeContainer thisNode = m_nodes.get(id);
             for (ConnectionContainer cc : m_connectionsByDest.get(id)) {
                 NodeID prevNodeID = cc.getSource();
