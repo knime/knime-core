@@ -4217,10 +4217,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Check if a node can be executed directly.
      *
      * @param nodeID id of node
-     * @return true of node is configured and all immediate predecessors are
-     *              executed.
+     * @return true if node is configured and all immediate predecessors are executed.
      */
-    public boolean canExecuteNode(final NodeID nodeID) {
+    private boolean canExecuteNodeDirectly(final NodeID nodeID) {
         synchronized (m_workflowMutex) {
             NodeContainer nc = m_workflow.getNode(nodeID);
             if (nc == null) {
@@ -4242,25 +4241,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * include an executable node.
     *
     * @param nodeID id of node
-    * @return true of node is configured and all immediate predecessors are executed.
-    * @since 2.9
+    * @return true if node can be executed.
     */
-   public boolean canExecuteNodeDirectlyOrIndirectly(final NodeID nodeID) {
+   public boolean canExecuteNode(final NodeID nodeID) {
        synchronized (m_workflowMutex) {
            NodeContainer nc = m_workflow.getNode(nodeID);
-           if (nc == null) {
-               return false;
-           }
-           // don't allow individual execution of nodes in a remote exec flow
-           if (!isLocalWFM()) {
-               return false;
-           }
-           // check for WorkflowManager - which we handle differently
-           if (nc instanceof WorkflowManager) {
-               return ((WorkflowManager)nc).hasExecutableNode();
-           }
            // check node itself:
-           if (nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED)) {
+           if (canExecuteNodeDirectly(nodeID)) {
                return true;
            }
            // check predecessors:
@@ -4278,23 +4265,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (this.getID().equals(nodeID)) {  // we are talking about this WFM
             return getParent().hasExecutablePredecessor(nodeID);
         }
-        NodeContainer nc = m_workflow.getNode(nodeID);
-        if (nc == null) {  // somehow the node has disappeared...
-            return false;
-        }
-        // get all predeccessors of the node, including the WFM itself if there are incoming connections:
-        HashSet<NodeID> nodes = new HashSet<NodeID>();
-        m_workflow.completeSetBackwards(nodes, nodeID, -1);
-        // make sure we only consider successors, not node itself!
-        // (would result in strange effects when we step out of the metanode with executable successors
-        // of the original node)
-        nodes.remove(nodeID);
+        // get all predeccessors of the node, including the WFM itself if there are  connections:
+        Set<NodeID> nodes = m_workflow.getPredecessors(nodeID);
         for (NodeID id : nodes) {
             if (this.getID().equals(id)) {
                 // skip outgoing connections for now (handled below)
             } else {
-                NodeContainer currentNC = getNodeContainer(id);
-                if (currentNC.getInternalState().equals(InternalNodeContainerState.CONFIGURED)) {
+                if (canExecuteNodeDirectly(id)) {
                     return true;
                 }
             }

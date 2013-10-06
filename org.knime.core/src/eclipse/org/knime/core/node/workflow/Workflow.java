@@ -929,14 +929,13 @@ class Workflow {
 
     /** Complete set of nodes backwards depth-first starting with node id.
      * Note that this function does not pursue connections leaving this
-     * workflow. We will only add our own ID (the workflow) as "last" node
-     * in the chain.
+     * workflow. We will only add our own ID (the workflow) in that case.
      *
      * @param nodes set of nodes to be completed
      * @param id of node to start search from
      * @param index of port the outgoing connection connected to
      */
-    void completeSetBackwards(final HashSet<NodeID> nodes, final NodeID id, final int outgoingPortIndex) {
+    private void completeSetBackwards(final HashSet<NodeID> nodes, final NodeID id, final int outgoingPortIndex) {
         NodeContainer thisNode = m_nodes.get(id);
         for (ConnectionContainer cc : m_connectionsByDest.get(id)) {
             NodeID prevNodeID = cc.getSource();
@@ -967,6 +966,66 @@ class Workflow {
             } else {
                 // make sure the WFM itself is in the list (if reached)
                 nodes.add(prevNodeID);
+            }
+        }
+    }
+
+    /** Create (fairly unordered) set of predecessors of the given node. The list stops at the
+     * parent WFM itself (it's ID is included if any connection from the give node does reach
+     * it, though). The node itself is not included in this list!
+     *
+     * @param id ...
+     * @return set of predecessors.
+     */
+    public Set<NodeID> getPredecessors(final NodeID id) {
+        final HashSet<NodeID> result = new HashSet<NodeID>();
+        completePredecessorSet(result, id, -1);
+        result.remove(id);
+        return result;
+    }
+
+    /** Complete set of nodes backwards depth-first starting with node id.
+     * Note that this function does not pursue connections leaving this
+     * workflow. We will only add our own ID (the workflow) in that case.
+     *
+     * @param nodes set of nodes to be completed
+     * @param id of node to start search from
+     * @param index of port the outgoing connection connected to
+     */
+    private void completePredecessorSet(final HashSet<NodeID> nodes, final NodeID id, final int outgoingPortIndex) {
+        if (nodes.add(id)) {  // only if the node is not already contained:
+            NodeContainer thisNode = m_nodes.get(id);
+            for (ConnectionContainer cc : m_connectionsByDest.get(id)) {
+                NodeID prevNodeID = cc.getSource();
+                if (!prevNodeID.equals(getID())) {
+                    // avoid to follow any connections leaving the workflow!
+                    if (thisNode instanceof SingleNodeContainer) {
+                        // easy - just continue with predecessors of normal nodes
+                        completePredecessorSet(nodes, prevNodeID, cc.getSourcePort());
+                    } else {
+                        assert thisNode instanceof WorkflowManager;
+                        WorkflowManager wfm = (WorkflowManager)thisNode;
+                        // not so easy - we need to find out who is connected
+                        // through this WFM (if we have a port index, of course)
+                        if (outgoingPortIndex < 0) {
+                            // we ignore the connection structure of the metanode inside since we
+                            // do not seem to care about it's outports (likely this was the starting point):
+                            completePredecessorSet(nodes, prevNodeID, cc.getSourcePort());
+                        } else {
+                            // find out which inports are connected through this
+                            // WFM to the given outport
+                            Set<Integer> inports = wfm.getWorkflow().connectedInPorts(cc.getSourcePort());
+                            // and only add the predeccessor if he is connected
+                            // to one of those
+                            if (inports.contains(cc.getDestPort())) {
+                                completePredecessorSet(nodes, prevNodeID, cc.getSourcePort());
+                            }
+                        }
+                    }
+                } else {
+                    // add the WFM itself if reached but don't continue the search:
+                    nodes.add(prevNodeID);
+                }
             }
         }
     }

@@ -138,8 +138,8 @@ public class SubNodeContainer extends SingleNodeContainer {
     public SubNodeContainer(final WorkflowManager parent, final NodeID id, final WorkflowManager content) {
         super(parent, id);
         // Create new, internal workflow manager:
-        m_wfm = new WorkflowManager(getParent(), id, new PortType[]{}, new PortType[]{},
-                                /*isProject=*/true, content.getContext(), "This is a SubNode");
+        m_wfm = new WorkflowManager(parent, id, new PortType[]{}, new PortType[]{},
+                                /*isProject=*/true, parent.getContext(), "This is a SubNode");
         // and copy content
         WorkflowCopyContent c = new WorkflowCopyContent();
         c.setAnnotation(content.getWorkflowAnnotations().toArray(new WorkflowAnnotation[0]));
