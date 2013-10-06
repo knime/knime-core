@@ -2299,7 +2299,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             Set<ConnectionContainer> predConn = m_workflow.getConnectionsByDest(id);
             if (nc.getNrInPorts() == 0) {
                 assert predConn.size() == 0;
-                if (canExecuteNode(nc.getID())) {
+                if (canExecuteNodeDirectly(nc.getID())) {
                     nc.markForExecution(true);
                     // no need to go through "official" route for SNC as the following queuing will update
                     // state and also state of encapsulating metanode!
@@ -2696,7 +2696,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 currNode.addWaitingLoop(slc);
                 return;
             }
-            if (this.canExecuteNode(id)) {
+            if (this.canExecuteNodeDirectly(id)) {
                 // we missed some nodes during the initial marking - because
                 // these are part of untouched branches which
                 // were not selected to be executed initially.
@@ -4218,8 +4218,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @param nodeID id of node
      * @return true if node is configured and all immediate predecessors are executed.
+     * @since 2.9
      */
-    private boolean canExecuteNodeDirectly(final NodeID nodeID) {
+    public boolean canExecuteNodeDirectly(final NodeID nodeID) {
         synchronized (m_workflowMutex) {
             NodeContainer nc = m_workflow.getNode(nodeID);
             if (nc == null) {
@@ -4245,7 +4246,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     */
    public boolean canExecuteNode(final NodeID nodeID) {
        synchronized (m_workflowMutex) {
-           NodeContainer nc = m_workflow.getNode(nodeID);
            // check node itself:
            if (canExecuteNodeDirectly(nodeID)) {
                return true;

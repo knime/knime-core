@@ -144,7 +144,7 @@ public class StepLoopAction extends AbstractNodeAction {
                 return true;
             }
             WorkflowManager wm = getEditor().getWorkflowManager();
-            if (wm.canExecuteNode(nc.getID())) {
+            if (wm.canExecuteNodeDirectly(nc.getID())) {
                 // ...or we can execute it (than this will be the first step)
                 return true;
             }
@@ -168,7 +168,7 @@ public class StepLoopAction extends AbstractNodeAction {
                 NativeNodeContainer nnc = (NativeNodeContainer)nc;
                 if (nnc.isModelCompatibleTo(LoopEndNode.class) && nnc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                     manager.resumeLoopExecution(nnc, /*oneStep=*/true);
-                } else if (manager.canExecuteNode(nc.getID())) {
+                } else if (manager.canExecuteNodeDirectly(nc.getID())) {
                     manager.executeUpToHere(nc.getID());
                     manager.pauseLoopExecution(nc);
                 }

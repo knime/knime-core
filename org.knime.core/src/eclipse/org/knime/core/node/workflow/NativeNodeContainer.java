@@ -248,8 +248,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
             m_inputPorts = new NodeInPort[getNrInPorts()];
         }
         if (m_inputPorts[index] == null) {
-            m_inputPorts[index] =
-                    new NodeInPort(index, m_node.getInputType(index));
+            m_inputPorts[index] = new NodeInPort(index, m_node.getInputType(index));
         }
         return m_inputPorts[index];
     }
