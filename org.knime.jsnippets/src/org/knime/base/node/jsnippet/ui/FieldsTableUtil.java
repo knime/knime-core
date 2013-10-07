@@ -149,7 +149,7 @@ final class FieldsTableUtil {
         StringBuilder builder = new StringBuilder();
         builder.append(prefix);
         int i = 0;
-        final int identifierLength = 10;
+        final int identifierLength = 100;
         while (builder.length() < identifierLength && i < c.length) {
             if (Character.isJavaIdentifierPart(c[i])) {
                 builder.append(c[i]);
