@@ -239,6 +239,7 @@ public class EditorGridSettingsDialog extends Dialog {
                 settingsChanged();
             }
         });
+        addSelectOnFocusToText(m_xGrid);
 
         Composite vert = new Composite(border, SWT.NONE);
         vert.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
@@ -259,8 +260,33 @@ public class EditorGridSettingsDialog extends Dialog {
                 settingsChanged();
             }
         });
+        addSelectOnFocusToText(m_yGrid);
 
     }
+
+    /** Add listener to argument text object to do a select-all when focus is gained. */
+    private static void addSelectOnFocusToText(final Text text) {
+        Listener listener = new Listener() {
+            @Override
+            public void handleEvent(final Event e) {
+                switch (e.type) {
+                case SWT.FocusIn: // selected via keyboard, bug 4322
+                    Text t = (Text) e.widget;
+                    t.selectAll();
+                    break;
+                case SWT.FocusOut:
+                    t = (Text) e.widget;
+                    t.clearSelection();
+                    break;
+                default:
+                }
+            }
+        };
+        text.addListener(SWT.FocusIn, listener);
+        text.addListener(SWT.FocusOut, listener);
+    }
+
+
 
     private void settingsChanged() {
 
