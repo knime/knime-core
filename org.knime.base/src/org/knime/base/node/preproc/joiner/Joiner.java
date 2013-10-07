@@ -1027,19 +1027,40 @@ public final class Joiner {
     private JoinedRowKeyFactory createRowKeyFactory(
             final BufferedDataTable leftTable,
             final BufferedDataTable rightTable) {
-        List<Integer> leftTableJoinIndices = getLeftJoinIndices(leftTable);
-        List<Integer> rightTableJoinIndices = getRightJoinIndices(rightTable);
 
-        if (leftTableJoinIndices.size() == 1
-                && leftTableJoinIndices.get(0) == -1
-                && rightTableJoinIndices.size() == 1
-                && rightTableJoinIndices.get(0) == -1) {
+
+        if (useSingleRowKeyFactory(leftTable, rightTable)) {
             // This is the special case of row key match row key
             return new UseSingleRowKeyFactory();
         } else {
             return new ConcatenateJoinedRowKeyFactory(
                     m_settings.getRowKeySeparator());
         }
+    }
+
+    /**
+     * Gives true when the SingleRowKeyFactory should be used.
+     */
+    private boolean useSingleRowKeyFactory(
+           final BufferedDataTable leftTable,
+           final BufferedDataTable rightTable) {
+        List<Integer> leftTableJoinIndices = getLeftJoinIndices(leftTable);
+        List<Integer> rightTableJoinIndices = getRightJoinIndices(rightTable);
+
+        boolean joinRowIdsOnly = true;
+        boolean joinRowIds = false;
+        for (int i = 0; i < leftTableJoinIndices.size(); i++) {
+            joinRowIdsOnly = joinRowIdsOnly
+                && leftTableJoinIndices.get(i) == -1
+                && rightTableJoinIndices.get(i) == -1;
+            joinRowIds = joinRowIds
+                || (leftTableJoinIndices.get(i) == -1
+                && rightTableJoinIndices.get(i) == -1);
+        }
+        return joinRowIdsOnly
+            || (joinRowIds && !m_matchAny
+                && m_settings.getJoinMode().equals(JoinMode.InnerJoin)
+                && m_settings.useEnhancedRowIdHandling());
     }
 
     private InputRow.Settings createInputDataRowSettings(

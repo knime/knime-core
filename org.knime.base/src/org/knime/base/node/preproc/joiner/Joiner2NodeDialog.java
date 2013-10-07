@@ -476,7 +476,8 @@ public class Joiner2NodeDialog extends NodeDialogPane {
             m_settings.setDuplicateHandling(DuplicateHandling.AppendSuffix);
             m_settings.setDuplicateColumnSuffix(suffix);
         }
-        m_settings.setVersion(Joiner2Settings.VERSION_2_1);
+        m_settings.setVersion(Joiner2Settings.VERSION_3);
+        m_settings.setDuplicateColumnSuffix("");
 
         m_settings.setLeftIncludeCols(
                 m_leftFilterPanel.getIncludedColumnSet().toArray(

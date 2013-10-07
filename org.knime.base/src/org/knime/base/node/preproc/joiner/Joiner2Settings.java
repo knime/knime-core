@@ -94,6 +94,11 @@ public class Joiner2Settings {
      * @since 2.7
      */
     public static final String VERSION_2_1 = "version_2.1";
+    /**
+     * The version for Joiner nodes for KNIME v2.8 and later.
+     * @since 2.9
+     */
+    public static final String VERSION_3 = "version_3";
 
     /**
      * This enum holds all ways of handling duplicate column names in the two
@@ -184,7 +189,7 @@ public class Joiner2Settings {
     private String m_rowKeySeparator = "_";
     private boolean m_enableHiLite = false;
 
-    private String m_version = VERSION_2;
+    private String m_version = VERSION_3;
 
 
     /**
@@ -201,7 +206,19 @@ public class Joiner2Settings {
     }
 
     /**
-     * Set the version either VERSION_1 or VERSION_2.
+     * Returns true when the enhance RowID handling introduced in KNIME 2.8
+     * should be used.
+     *
+     * @return true when the enhance RowID handling should be used
+     * @since 2.9
+     *
+     */
+    public boolean useEnhancedRowIdHandling() {
+        return !(m_version.equals(VERSION_1) || m_version.equals(VERSION_2) || m_version.equals(VERSION_2_1));
+    }
+
+    /**
+     * Set the version either VERSION_1, VERSION_2 or VERSION_3.
      *
      * @param version the version to set
      * @since 2.7
