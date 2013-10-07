@@ -4246,6 +4246,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     */
    public boolean canExecuteNode(final NodeID nodeID) {
        synchronized (m_workflowMutex) {
+           NodeContainer nc = m_workflow.getNode(nodeID);
+           if (nc == null) {
+               return false;
+           }
            // check node itself:
            if (canExecuteNodeDirectly(nodeID)) {
                return true;
