@@ -487,10 +487,11 @@ public final class BufferedDataTable implements DataTable, PortObject {
                     int index = referenceDirs.size();
                     String dirName = TABLE_SUB_DIR + "_" + index;
                     File subDir = new File(dir, dirName);
-                    subDir.mkdir();
-                    if (!subDir.exists() || !subDir.canWrite()) {
-                        throw new IOException("Unable to write directory "
-                                + subDir.getAbsolutePath());
+                    if (!subDir.mkdir() && !subDir.isDirectory()) {
+                        throw new IOException("Could not create directory " + subDir.getAbsolutePath());
+                    }
+                    if (!subDir.canWrite()) {
+                        throw new IOException("Unable to write directory " + subDir.getAbsolutePath());
                     }
                     referenceDirs.add(dirName);
                     reference.save(subDir, savedTableIDs, exec);
