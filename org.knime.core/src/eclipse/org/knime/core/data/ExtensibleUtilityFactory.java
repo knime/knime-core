@@ -152,6 +152,28 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
         }
     }
 
+    /**
+     * Sets the default renderer using the ID of its factory. The default renderer must never be <code>null</code> and
+     * it must exist.
+     *
+     * @param rendererId the factory's ID name
+     * @since 2.9
+     */
+    public final void setDefaultRenderer(final String rendererId) {
+        if (rendererId == null) {
+            throw new IllegalArgumentException("Default renderer ID must not be null");
+        } else {
+            DataValueRendererFactory matchedFactory = m_renderers.get(rendererId);
+            if (matchedFactory != null) {
+                CORE_DEFAULT_PREFS.put(getPreferenceKey(), rendererId);
+                m_logger.debug("Setting " + rendererId + " as default renderer for " + m_valueClass.getName());
+            } else {
+                throw new IllegalArgumentException("Default renderer with ID '" + rendererId + "' does not exist");
+            }
+        }
+    }
+
+
     private void readRenderersFromExtensionPoint() {
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
