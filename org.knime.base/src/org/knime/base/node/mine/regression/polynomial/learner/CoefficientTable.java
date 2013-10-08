@@ -64,7 +64,7 @@ import javax.swing.table.AbstractTableModel;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class CoefficientTable extends JPanel {
-    private PolyRegLearnerNodeModel m_model;
+    private PolyRegViewData m_viewData;
     private static final NumberFormat FORMATTER = new DecimalFormat("0.0000");
     private final AbstractTableModel m_tableModel = new AbstractTableModel() {
         /**
@@ -72,7 +72,7 @@ public class CoefficientTable extends JPanel {
          */
         @Override
         public int getColumnCount() {
-            return 2 + m_model.getDegree();
+            return 2 + m_viewData.degree;
         }
 
         /**
@@ -80,9 +80,13 @@ public class CoefficientTable extends JPanel {
          */
         @Override
         public int getRowCount() {
-            if (m_model == null) { return 0; }
-            if (m_model.getColumnNames() == null) { return 0; }
-            return m_model.getColumnNames().length;
+            if (m_viewData == null) {
+                return 0;
+            }
+            if (m_viewData.columnNames == null) {
+                return 0;
+            }
+            return m_viewData.columnNames.length;
         }
 
         /**
@@ -91,10 +95,10 @@ public class CoefficientTable extends JPanel {
         @Override
         public Object getValueAt(final int rowIndex, final int columnIndex) {
             if (columnIndex == 0) {
-                return m_model.getColumnNames()[rowIndex];
+                return m_viewData.columnNames[rowIndex];
             } else  {
-                return FORMATTER.format(m_model.getBetas()
-                        [rowIndex * m_model.getDegree() + (columnIndex - 1)]);
+                return FORMATTER.format(m_viewData.betas
+                        [rowIndex * m_viewData.degree + (columnIndex - 1)]);
             }
         }
 
@@ -121,7 +125,7 @@ public class CoefficientTable extends JPanel {
      */
     public CoefficientTable(final PolyRegLearnerNodeModel nodeModel) {
         super(new BorderLayout());
-        m_model = nodeModel;
+        m_viewData = nodeModel.getViewData();
         m_table = new JTable(m_tableModel);
 
         m_table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -135,7 +139,7 @@ public class CoefficientTable extends JPanel {
     public void update() {
         m_tableModel.fireTableStructureChanged();
         m_squaredError.setText("  Squared error (per row):  "
-                + m_model.getSquaredError());
+                + m_viewData.squaredError);
 
         for (int i = 0; i < m_tableModel.getColumnCount(); i++) {
             m_table.getTableHeader().getColumnModel().getColumn(i)

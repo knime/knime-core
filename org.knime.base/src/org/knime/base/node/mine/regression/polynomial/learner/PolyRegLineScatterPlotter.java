@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 6, 2006 (wiswedel): created
  */
@@ -71,7 +71,7 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
  * This class is the plotter used inside the {@link PolyRegLineNodeView}.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class PolyRegLineScatterPlotter extends ScatterPlotter {
@@ -79,7 +79,7 @@ public class PolyRegLineScatterPlotter extends ScatterPlotter {
         private final ColumnSelectionComboxBox m_xColumn =
                 new ColumnSelectionComboxBox((Border)null, DoubleValue.class);
         /**
-         * 
+         *
          */
         MyProperties() {
             JPanel p = new JPanel();
@@ -97,24 +97,27 @@ public class PolyRegLineScatterPlotter extends ScatterPlotter {
 
     private final PolyRegLearnerNodeModel m_model;
 
+    private PolyRegViewData m_viewData;
+
     private DataTableSpec m_filteredSpec;
 
     /**
      * Creates a new plotter for showing the regression lines.
-     * 
+     *
      * @param model the node model
      */
     PolyRegLineScatterPlotter(final PolyRegLearnerNodeModel model) {
         super(new ScatterPlotterDrawingPane(), new MyProperties());
         setDataProvider(model);
-        
+
         m_model = model;
-        
+
         final MyProperties props = (MyProperties)getProperties();
         props.m_xColumn.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 reset();
-                
+
                 DataTable table = m_model.getDataArray(0);
                 if (table != null) {
                     m_xColumnSpec = table.getDataTableSpec()
@@ -132,22 +135,23 @@ public class PolyRegLineScatterPlotter extends ScatterPlotter {
         modelChanged();
     }
 
-    
+
     /**
      * This method must be called if the model has changed. It updates the
      * plotter to show the new model's values.
      */
     public void modelChanged() {
         DataTable data = m_model.getDataArray(0);
+        m_viewData = m_model.getViewData();
         if (data != null) {
             final DataTableSpec origSpec = data.getDataTableSpec();
             final MyProperties props = (MyProperties)getProperties();
-    
+
             DataColumnSpec[] colSpecs =
                     new DataColumnSpec[origSpec.getNumColumns() - 1];
             int i = 0;
             for (DataColumnSpec cs : origSpec) {
-                if (!m_model.getTargetColumn().equals(cs.getName())) {
+                if (!m_viewData.targetColumn.equals(cs.getName())) {
                     colSpecs[i++] = cs;
                 } else {
                     m_yColumnSpec = cs;
@@ -156,7 +160,7 @@ public class PolyRegLineScatterPlotter extends ScatterPlotter {
             }
             m_xColumnSpec = colSpecs[0];
             getXAxis().setCoordinate(Coordinate.createCoordinate(colSpecs[0]));
-    
+
             m_filteredSpec = new DataTableSpec(colSpecs);
             try {
                 props.m_xColumn.update(m_filteredSpec, colSpecs[0].getName());
@@ -164,12 +168,12 @@ public class PolyRegLineScatterPlotter extends ScatterPlotter {
                 // cannot happen
                 assert false : ex.getMessage();
             }
-    
+
             reset();
             updatePaintModel();
         }
    }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -188,7 +192,7 @@ public class PolyRegLineScatterPlotter extends ScatterPlotter {
 
     /**
      * Calculates also the line to draw.
-     * 
+     *
      * @see ScatterPlotter#updatePaintModel()
      */
     @Override
@@ -215,12 +219,11 @@ public class PolyRegLineScatterPlotter extends ScatterPlotter {
 
         int colIndex = m_filteredSpec.findColumnIndex(m_xColumnSpec.getName());
         double[] yValues = new double[xValues.length];
-        double[] betas = m_model.getBetas();
-        double[] means = m_model.getMeanValues().clone();
+        double[] means = m_viewData.meanValues.clone();
         for (int i = 0; i < xValues.length; i++) {
             means[colIndex] = xValues[i];
-            yValues[i] = computeYValue(means, betas);
-        }        
+            yValues[i] = computeYValue(means, m_viewData.betas);
+        }
         addLine(xValues, yValues, Color.CYAN, null);
         super.updatePaintModel();
     }
@@ -231,7 +234,7 @@ public class PolyRegLineScatterPlotter extends ScatterPlotter {
 
         for (int i = 0; i < xValues.length; i++) {
             double x = xValues[i];
-            for (int deg = 1; deg <= m_model.getDegree(); deg++) {
+            for (int deg = 1; deg <= m_viewData.degree; deg++) {
                 value += x * betas[betaIndex++];
                 x *= xValues[i];
             }

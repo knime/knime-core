@@ -122,6 +122,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
 
     private boolean[] m_colSelected;
 
+    private PolyRegViewData m_viewData;
+
     /**
      * Creates a new model for the polynomial regression learner node.
      */
@@ -239,7 +241,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
             for (int i = 0; i < row.getNumCells(); i++) {
                 if ((m_colSelected[i] || (i == dependentIndex))
                         && row.getCell(i).isMissing()) {
-                    throw new Exception(
+                    throw new IllegalArgumentException(
                             "Missing values are not supported by this node.");
                 }
 
@@ -290,10 +292,6 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
         final double[][] betas = MathUtils.multiply(xxInverse, xyMat);
         exec.setProgress(0.4);
 
-        // ColumnRearranger crea =
-        // new ColumnRearranger(inData[1].getDataTableSpec());
-        // crea.append(createCellFactory(betas, inData));
-
         m_betas = new double[independentVariables * degree + 1];
         for (int i = 0; i < betas.length; i++) {
             m_betas[i] = betas[i][0];
@@ -341,6 +339,10 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
                         createPMMLModel(inPMMLPort,
                                 inTable.getDataTableSpec())};
         m_squaredError /= rowCount;
+
+        m_viewData =
+            new PolyRegViewData(m_meanValues, m_betas, m_squaredError, m_columnNames, m_settings.getDegree(),
+                m_settings.getTargetColumn());
         return bdt;
     }
 
@@ -451,12 +453,15 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
                     NodeSettings.loadFromXML(new BufferedInputStream(
                             new FileInputStream(f)));
             try {
-                m_betas = internals.getDoubleArray("betas");
-                m_columnNames = internals.getStringArray("columnNames");
-                m_squaredError = internals.getDouble("squaredError");
-                m_meanValues = internals.getDoubleArray("meanValues");
+                double[] betas = internals.getDoubleArray("betas");
+                String[] columnNames = internals.getStringArray("columnNames");
+                double squaredError = internals.getDouble("squaredError");
+                double[] meanValues = internals.getDoubleArray("meanValues");
+                m_viewData =
+                    new PolyRegViewData(meanValues, betas, squaredError, columnNames, m_settings.getDegree(),
+                        m_settings.getTargetColumn());
             } catch (InvalidSettingsException ex) {
-                throw new IOException("Old or corrupt internals");
+                throw new IOException("Old or corrupt internals", ex);
             }
         } else {
             throw new FileNotFoundException("Internals do not exist");
@@ -486,6 +491,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
      */
     @Override
     protected void reset() {
+        m_viewData = null;
         m_betas = null;
         m_columnNames = null;
         m_squaredError = 0;
@@ -501,12 +507,12 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        if (m_betas != null) {
+        if (m_viewData != null) {
             NodeSettings internals = new NodeSettings("internals");
-            internals.addDoubleArray("betas", m_betas);
-            internals.addStringArray("columnNames", m_columnNames);
-            internals.addDouble("squaredError", m_squaredError);
-            internals.addDoubleArray("meanValues", m_meanValues);
+            internals.addDoubleArray("betas", m_viewData.betas);
+            internals.addStringArray("columnNames", m_viewData.columnNames);
+            internals.addDouble("squaredError", m_viewData.squaredError);
+            internals.addDoubleArray("meanValues", m_viewData.meanValues);
 
             internals.saveToXML(new BufferedOutputStream(new FileOutputStream(
                     new File(nodeInternDir, "internals.xml"))));
@@ -574,59 +580,6 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
         return includes;
     }
 
-    /**
-     * Returns the learned beta values.
-     *
-     * @return the beta values
-     */
-    double[] getBetas() {
-        return m_betas;
-    }
-
-    /**
-     * Returns the column names.
-     *
-     * @return the column names
-     */
-    String[] getColumnNames() {
-        return m_columnNames;
-    }
-
-    /**
-     * Returns the total squared error.
-     *
-     * @return the squared error
-     */
-    double getSquaredError() {
-        return m_squaredError;
-    }
-
-    /**
-     * Returns the degree of the regression function.
-     *
-     * @return the degree
-     */
-    int getDegree() {
-        return m_settings.getDegree();
-    }
-
-    /**
-     * Returns the target column's name.
-     *
-     * @return the target column's name
-     */
-    String getTargetColumn() {
-        return m_settings.getTargetColumn();
-    }
-
-    /**
-     * Returns the mean value of each input column.
-     *
-     * @return the mean values
-     */
-    double[] getMeanValues() {
-        return m_meanValues;
-    }
 
     /**
      * {@inheritDoc}
@@ -634,5 +587,14 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
     @Override
     public DataArray getDataArray(final int index) {
         return m_rowContainer;
+    }
+
+    /**
+     * Returns the data for the two views. Is <code>null</code> when the node is not executed.
+     *
+     * @return the view data or <code>null</code>
+     */
+    PolyRegViewData getViewData() {
+        return m_viewData;
     }
 }
