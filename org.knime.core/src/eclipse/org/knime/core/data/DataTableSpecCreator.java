@@ -55,9 +55,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Creator for {@link DataTableSpec}. This class can be used to set different fields (columns, name, properties).
+/**
+ * Creator for {@link DataTableSpec}. This class can be used to set different fields (columns, name, properties).
  *
- * <p>Node implementations can use the constructors of {@link DataTableSpec} directly. This class is merely for clients,
+ * <p>
+ * Node implementations can use the constructors of {@link DataTableSpec} directly. This class is merely for clients,
  * which are interested in setting {@linkplain DataTableSpec#getProperties() properties} on a table spec.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
@@ -66,18 +68,23 @@ import java.util.Map;
 public final class DataTableSpecCreator {
 
     private List<DataColumnSpec> m_columnSpecs = new ArrayList<DataColumnSpec>();
+
     private Map<String, Integer> m_columnSpecMap = new HashMap<String, Integer>();
 
     private String m_name;
+
     private Map<String, String> m_properties = new LinkedHashMap<String, String>();
 
-    /** Start with empty spec.
+    /**
+     * Start with empty spec.
+     *
      * @since 2.8
      */
     public DataTableSpecCreator() {
     }
 
-    /** Start with an existing spec.
+    /**
+     * Start with an existing spec.
      *
      * @param spec the original DataTableSpec
      * @since 2.8
@@ -88,7 +95,9 @@ public final class DataTableSpecCreator {
         putProperties(spec.getProperties());
     }
 
-    /** Adds argument columns to list of already added columns.
+    /**
+     * Adds argument columns to list of already added columns.
+     *
      * @param columns to add
      * @return this
      * @throws IllegalArgumentException If duplicate is encountered
@@ -107,7 +116,9 @@ public final class DataTableSpecCreator {
         return this;
     }
 
-    /** Analogous to {@link #addColumns(DataColumnSpec...)} using the columns from the argument spec.
+    /**
+     * Analogous to {@link #addColumns(DataColumnSpec...)} using the columns from the argument spec.
+     *
      * @param fromSpec ...
      * @return this
      */
@@ -116,7 +127,9 @@ public final class DataTableSpecCreator {
         return this;
     }
 
-    /** Sets name on output table spec.
+    /**
+     * Sets name on output table spec.
+     *
      * @param name New name (may be null - then using a default).
      * @return this
      * @see DataTableSpec#getName()
@@ -126,7 +139,9 @@ public final class DataTableSpecCreator {
         return this;
     }
 
-    /** Adds all properties from the argument to the prop list.
+    /**
+     * Adds all properties from the argument to the prop list.
+     *
      * @param properties to add
      * @return this
      * @throws IllegalArgumentException If any key is null or an empty string.
@@ -140,7 +155,9 @@ public final class DataTableSpecCreator {
         return this;
     }
 
-    /** Adds one key/value pair.
+    /**
+     * Adds one key/value pair.
+     *
      * @param key ...
      * @param value ...
      * @return this
@@ -154,11 +171,14 @@ public final class DataTableSpecCreator {
         return this;
     }
 
-    /** Drop domains of all columns.
+    /**
+     * Drop domains of all columns.
+     *
+     * @return this
      *
      * @since 2.8
      */
-    public void dropAllDomains() {
+    public DataTableSpecCreator dropAllDomains() {
         ArrayList<DataColumnSpec> newColumnSpecs = new ArrayList<DataColumnSpec>();
         for (int i = 0; i < m_columnSpecs.size(); i++) {
             DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(m_columnSpecs.get(i));
@@ -166,9 +186,25 @@ public final class DataTableSpecCreator {
             newColumnSpecs.add(colSpecCreator.createSpec());
         }
         m_columnSpecs = newColumnSpecs;
+        return this;
     }
 
-    /** Takes all settings and creates the table spec.
+    /**
+     * Removes all columns.
+     *
+     * @return this
+     *
+     * @since 2.9
+     */
+    public DataTableSpecCreator dropAllColumns() {
+        m_columnSpecs.clear();
+        m_columnSpecMap.clear();
+        return this;
+    }
+
+    /**
+     * Takes all settings and creates the table spec.
+     *
      * @return A new table spec.
      */
     public DataTableSpec createSpec() {
