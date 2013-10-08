@@ -85,6 +85,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/DataTableSpecCreator.java" type="org.knime.core.data.DataTableSpecCreator">
+        <filter comment="return type added - not used in partner code (pretty confident)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.DataTableSpecCreator"/>
+                <message_argument value="dropAllDomains()"/>
+            </message_arguments>
+        </filter>
         <filter comment="return type added - not used in partner code (pretty confident)" id="1141899266">
             <message_arguments>
                 <message_argument value="2.8"/>
