@@ -80,9 +80,6 @@ public class CoefficientTable extends JPanel {
          */
         @Override
         public int getRowCount() {
-            if (m_viewData == null) {
-                return 0;
-            }
             if (m_viewData.columnNames == null) {
                 return 0;
             }

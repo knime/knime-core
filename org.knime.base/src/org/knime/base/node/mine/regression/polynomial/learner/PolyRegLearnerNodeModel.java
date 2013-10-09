@@ -99,16 +99,13 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 import org.xml.sax.SAXException;
 
 /**
- * This node performs polynomial regression on an input table with numeric-only
- * columns. The user can choose the maximum degree the built polynomial should
- * have.
+ * This node performs polynomial regression on an input table with numeric-only columns. The user can choose the maximum
+ * degree the built polynomial should have.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class PolyRegLearnerNodeModel extends NodeModel implements
-        DataProvider {
-    private final PolyRegLearnerSettings m_settings =
-            new PolyRegLearnerSettings();
+public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
+    private final PolyRegLearnerSettings m_settings = new PolyRegLearnerSettings();
 
     private double[] m_betas;
 
@@ -122,38 +119,34 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
 
     private boolean[] m_colSelected;
 
-    private PolyRegViewData m_viewData;
+    private PolyRegViewData m_viewData = new PolyRegViewData(new double[0], new double[0], Double.NaN, new String[0],
+        0, "N/A");
 
     /**
      * Creates a new model for the polynomial regression learner node.
      */
     public PolyRegLearnerNodeModel() {
-        super(new PortType[] {BufferedDataTable.TYPE,
-                new PortType(PMMLPortObject.class, true)},
-                    new PortType[] {BufferedDataTable.TYPE,
-                            PMMLPortObject.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE, new PortType(PMMLPortObject.class, true)}, new PortType[]{
+            BufferedDataTable.TYPE, PMMLPortObject.TYPE});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
         PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
         String[] selectedCols = computeSelectedColumns(tableSpec);
         for (String colName : selectedCols) {
             DataColumnSpec dcs = tableSpec.getColumnSpec(colName);
             if (dcs == null) {
-                throw new InvalidSettingsException("Selected column '"
-                        + colName + "' does not exist in input table");
+                throw new InvalidSettingsException("Selected column '" + colName + "' does not exist in input table");
             }
 
             if (!dcs.getType().isCompatible(DoubleValue.class)) {
-                throw new InvalidSettingsException("Selected column '"
-                        + dcs.getName()
-                        + "' from the input table is not a numeric column.");
+                throw new InvalidSettingsException("Selected column '" + dcs.getName()
+                    + "' from the input table is not a numeric column.");
             }
         }
 
@@ -161,29 +154,23 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
             throw new InvalidSettingsException("No target column selected");
         }
         if (tableSpec.findColumnIndex(m_settings.getTargetColumn()) == -1) {
-            throw new InvalidSettingsException("Target column '"
-                    + m_settings.getTargetColumn() + "' does not exist.");
+            throw new InvalidSettingsException("Target column '" + m_settings.getTargetColumn() + "' does not exist.");
         }
 
-        DataColumnSpecCreator crea = new DataColumnSpecCreator(
-                "PolyReg prediction", DoubleCell.TYPE);
+        DataColumnSpecCreator crea = new DataColumnSpecCreator("PolyReg prediction", DoubleCell.TYPE);
         DataColumnSpec col1 = crea.createSpec();
 
         crea = new DataColumnSpecCreator("Prediction Error", DoubleCell.TYPE);
         DataColumnSpec col2 = crea.createSpec();
 
-        return new PortObjectSpec[]{
-                AppendedColumnTable.getTableSpec(tableSpec, col1, col2),
-                createModelSpec(pmmlSpec, tableSpec)};
+        return new PortObjectSpec[]{AppendedColumnTable.getTableSpec(tableSpec, col1, col2),
+            createModelSpec(pmmlSpec, tableSpec)};
     }
 
-    private PMMLPortObjectSpec createModelSpec(
-            final PMMLPortObjectSpec inModelSpec,
-            final DataTableSpec inDataSpec)
+    private PMMLPortObjectSpec createModelSpec(final PMMLPortObjectSpec inModelSpec, final DataTableSpec inDataSpec)
         throws InvalidSettingsException {
         String[] selectedCols = computeSelectedColumns(inDataSpec);
-        DataColumnSpec[] usedColumns =
-            new DataColumnSpec[selectedCols.length + 1];
+        DataColumnSpec[] usedColumns = new DataColumnSpec[selectedCols.length + 1];
         int k = 0;
         Set<String> hash = new HashSet<String>(Arrays.asList(selectedCols));
         for (DataColumnSpec dcs : inDataSpec) {
@@ -192,12 +179,10 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
             }
         }
 
-        usedColumns[k++] = inDataSpec.getColumnSpec(
-                m_settings.getTargetColumn());
+        usedColumns[k++] = inDataSpec.getColumnSpec(m_settings.getTargetColumn());
 
         DataTableSpec tableSpec = new DataTableSpec(usedColumns);
-        PMMLPortObjectSpecCreator crea =
-                new PMMLPortObjectSpecCreator(inModelSpec, inDataSpec);
+        PMMLPortObjectSpecCreator crea = new PMMLPortObjectSpecCreator(inModelSpec, inDataSpec);
         crea.setLearningCols(tableSpec);
         crea.setTargetCol(usedColumns[k - 1]);
         return crea.createSpec();
@@ -207,8 +192,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) throws Exception {
+    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         BufferedDataTable inTable = (BufferedDataTable)inData[0];
         DataTableSpec inSpec = inTable.getDataTableSpec();
 
@@ -217,19 +201,15 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
         Set<String> hash = new HashSet<String>(Arrays.asList(selectedCols));
         m_colSelected = new boolean[colCount];
         for (int i = 0; i < colCount; i++) {
-            m_colSelected[i] = hash.contains(
-                    inTable.getDataTableSpec().getColumnSpec(i).getName());
+            m_colSelected[i] = hash.contains(inTable.getDataTableSpec().getColumnSpec(i).getName());
         }
 
         final int rowCount = inTable.getRowCount();
         final int independentVariables = selectedCols.length;
         final int degree = m_settings.getDegree();
-        final int dependentIndex =
-                inTable.getDataTableSpec().findColumnIndex(
-                        m_settings.getTargetColumn());
+        final int dependentIndex = inTable.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn());
 
-        double[][] xMat =
-                new double[rowCount][1 + independentVariables * degree];
+        double[][] xMat = new double[rowCount][1 + independentVariables * degree];
         double[][] yMat = new double[rowCount][1];
 
         int rowIndex = 0;
@@ -239,10 +219,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
             xMat[rowIndex][0] = 1;
             int colIndex = 1;
             for (int i = 0; i < row.getNumCells(); i++) {
-                if ((m_colSelected[i] || (i == dependentIndex))
-                        && row.getCell(i).isMissing()) {
-                    throw new IllegalArgumentException(
-                            "Missing values are not supported by this node.");
+                if ((m_colSelected[i] || (i == dependentIndex)) && row.getCell(i).isMissing()) {
+                    throw new IllegalArgumentException("Missing values are not supported by this node.");
                 }
 
                 if (m_colSelected[i]) {
@@ -284,8 +262,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
             exec.setProgress(0.36);
             exec.checkCanceled();
         } catch (ArithmeticException ex) {
-            throw new ArithmeticException("The attributes of the data samples"
-                    + " are not mutually independent.");
+            throw new ArithmeticException("The attributes of the data samples" + " are not mutually independent.");
         }
 
         // compute (X'X)^-1 * (X'Y)
@@ -303,20 +280,15 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
         temp[temp.length - 1] = m_settings.getTargetColumn();
         FilterColumnTable filteredTable = new FilterColumnTable(inTable, temp);
 
-        m_rowContainer =
-                new DefaultDataArray(filteredTable, 1, m_settings
-                        .getMaxRowsForView());
-        int ignore =
-                m_rowContainer.getDataTableSpec().findColumnIndex(
-                        m_settings.getTargetColumn());
+        m_rowContainer = new DefaultDataArray(filteredTable, 1, m_settings.getMaxRowsForView());
+        int ignore = m_rowContainer.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn());
 
         m_meanValues = new double[independentVariables];
         for (DataRow row : m_rowContainer) {
             int k = 0;
             for (int i = 0; i < row.getNumCells(); i++) {
                 if (i != ignore) {
-                    m_meanValues[k++] +=
-                            ((DoubleValue)row.getCell(i)).getDoubleValue();
+                    m_meanValues[k++] += ((DoubleValue)row.getCell(i)).getDoubleValue();
                 }
             }
         }
@@ -324,20 +296,15 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
             m_meanValues[i] /= m_rowContainer.size();
         }
 
-        ColumnRearranger crea =
-                new ColumnRearranger(inTable.getDataTableSpec());
-        crea.append(getCellFactory(inTable.getDataTableSpec().findColumnIndex(
-                m_settings.getTargetColumn())));
+        ColumnRearranger crea = new ColumnRearranger(inTable.getDataTableSpec());
+        crea.append(getCellFactory(inTable.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn())));
 
         // handle the optional PMML input
         PMMLPortObject inPMMLPort = (PMMLPortObject)inData[1];
 
         PortObject[] bdt =
-                new PortObject[]{
-                        exec.createColumnRearrangeTable(inTable, crea, exec
-                                .createSubProgress(0.6)),
-                        createPMMLModel(inPMMLPort,
-                                inTable.getDataTableSpec())};
+            new PortObject[]{exec.createColumnRearrangeTable(inTable, crea, exec.createSubProgress(0.6)),
+                createPMMLModel(inPMMLPort, inTable.getDataTableSpec())};
         m_squaredError /= rowCount;
 
         m_viewData =
@@ -346,28 +313,23 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
         return bdt;
     }
 
-    private PMMLPortObject createPMMLModel(final PMMLPortObject inPMMLPort,
-            final DataTableSpec inSpec)
+    private PMMLPortObject createPMMLModel(final PMMLPortObject inPMMLPort, final DataTableSpec inSpec)
         throws InvalidSettingsException, SAXException {
         NumericPredictor[] preds = new NumericPredictor[m_betas.length - 1];
 
         int deg = m_settings.getDegree();
         for (int i = 0; i < m_columnNames.length; i++) {
             for (int k = 0; k < deg; k++) {
-                preds[i * deg + k] =
-                        new NumericPredictor(m_columnNames[i], k + 1, m_betas[i
-                                * deg + k + 1]);
+                preds[i * deg + k] = new NumericPredictor(m_columnNames[i], k + 1, m_betas[i * deg + k + 1]);
             }
         }
 
-        RegressionTable tab =
-                new RegressionTable(m_betas[0], preds);
+        RegressionTable tab = new RegressionTable(m_betas[0], preds);
         PMMLPortObjectSpec pmmlSpec = null;
         if (inPMMLPort != null) {
             pmmlSpec = inPMMLPort.getSpec();
         }
         PMMLPortObjectSpec spec = createModelSpec(pmmlSpec, inSpec);
-
 
         /* To maintain compatibility with the previous SAX-based implementation.
          * */
@@ -377,12 +339,10 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
             targetField = targetFields.get(0);
         }
 
-        PMMLPortObject outPMMLPort = new PMMLPortObject(spec,
-                inPMMLPort, inSpec);
+        PMMLPortObject outPMMLPort = new PMMLPortObject(spec, inPMMLPort, inSpec);
 
-        PMMLRegressionTranslator trans = new PMMLRegressionTranslator(
-                "KNIME Polynomial Regression", "PolynomialRegression",
-                tab, targetField);
+        PMMLRegressionTranslator trans =
+            new PMMLRegressionTranslator("KNIME Polynomial Regression", "PolynomialRegression", tab, targetField);
         outPMMLPort.addModelTranslater(trans);
 
         return outPMMLPort;
@@ -399,9 +359,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
                 double y = 0;
                 for (int col = 0; col < row.getNumCells(); col++) {
                     if ((col != dependentIndex) && m_colSelected[col]) {
-                        final double value =
-                                ((DoubleValue)row.getCell(col))
-                                        .getDoubleValue();
+                        final double value = ((DoubleValue)row.getCell(col)).getDoubleValue();
                         double poly = 1;
                         for (int d = 1; d <= degree; d++) {
                             poly *= value;
@@ -420,21 +378,17 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
 
             @Override
             public DataColumnSpec[] getColumnSpecs() {
-                DataColumnSpecCreator crea =
-                        new DataColumnSpecCreator("PolyReg prediction",
-                                DoubleCell.TYPE);
+                DataColumnSpecCreator crea = new DataColumnSpecCreator("PolyReg prediction", DoubleCell.TYPE);
                 DataColumnSpec col1 = crea.createSpec();
 
-                crea =
-                        new DataColumnSpecCreator("Prediction Error",
-                                DoubleCell.TYPE);
+                crea = new DataColumnSpecCreator("Prediction Error", DoubleCell.TYPE);
                 DataColumnSpec col2 = crea.createSpec();
                 return new DataColumnSpec[]{col1, col2};
             }
 
             @Override
-            public void setProgress(final int curRowNr, final int rowCount,
-                    final RowKey lastKey, final ExecutionMonitor execMon) {
+            public void setProgress(final int curRowNr, final int rowCount, final RowKey lastKey,
+                final ExecutionMonitor execMon) {
                 // do nothing
             }
         };
@@ -444,14 +398,11 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
         File f = new File(nodeInternDir, "internals.xml");
         if (f.exists()) {
-            NodeSettingsRO internals =
-                    NodeSettings.loadFromXML(new BufferedInputStream(
-                            new FileInputStream(f)));
+            NodeSettingsRO internals = NodeSettings.loadFromXML(new BufferedInputStream(new FileInputStream(f)));
             try {
                 double[] betas = internals.getDoubleArray("betas");
                 String[] columnNames = internals.getStringArray("columnNames");
@@ -481,8 +432,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_settings.loadSettingsFrom(settings);
     }
 
@@ -491,7 +441,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
      */
     @Override
     protected void reset() {
-        m_viewData = null;
+        m_viewData = new PolyRegViewData(new double[0], new double[0], Double.NaN, new String[0], 0, "N/A");
         m_betas = null;
         m_columnNames = null;
         m_squaredError = 0;
@@ -504,9 +454,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
         if (m_viewData != null) {
             NodeSettings internals = new NodeSettings("internals");
             internals.addDoubleArray("betas", m_viewData.betas);
@@ -514,8 +463,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
             internals.addDouble("squaredError", m_viewData.squaredError);
             internals.addDoubleArray("meanValues", m_viewData.meanValues);
 
-            internals.saveToXML(new BufferedOutputStream(new FileOutputStream(
-                    new File(nodeInternDir, "internals.xml"))));
+            internals
+                .saveToXML(new BufferedOutputStream(new FileOutputStream(new File(nodeInternDir, "internals.xml"))));
 
             File dataFile = new File(nodeInternDir, "data.zip");
             DataContainer.writeToZip(m_rowContainer, dataFile, exec);
@@ -534,8 +483,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         PolyRegLearnerSettings s = new PolyRegLearnerSettings();
         s.loadSettingsFrom(settings);
 
@@ -544,15 +492,15 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
         }
     }
 
-    /** Depending on whether the includeAll flag is set, it determines the list
-     * of learning (independent) columns. If the flag is not set, it returns
-     * the list stored in m_settings.
+    /**
+     * Depending on whether the includeAll flag is set, it determines the list of learning (independent) columns. If the
+     * flag is not set, it returns the list stored in m_settings.
+     *
      * @param spec to get column names from.
      * @return The list of learning columns.
      * @throws InvalidSettingsException If no valid columns are in the spec.
      */
-    private String[] computeSelectedColumns(final DataTableSpec spec)
-    throws InvalidSettingsException {
+    private String[] computeSelectedColumns(final DataTableSpec spec) throws InvalidSettingsException {
         String[] includes;
         String target = m_settings.getTargetColumn();
         if (m_settings.isIncludeAll()) {
@@ -568,7 +516,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
             includes = includeList.toArray(new String[includeList.size()]);
             if (includes.length == 0) {
                 throw new InvalidSettingsException("No double-compatible "
-                        + "variables (learning columns) in input table");
+                    + "variables (learning columns) in input table");
             }
         } else {
             Set<String> selSettings = m_settings.getSelectedColumns();
@@ -580,7 +528,6 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
         return includes;
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -590,9 +537,9 @@ public class PolyRegLearnerNodeModel extends NodeModel implements
     }
 
     /**
-     * Returns the data for the two views. Is <code>null</code> when the node is not executed.
+     * Returns the data for the two views. Is never <code>null</code>.
      *
-     * @return the view data or <code>null</code>
+     * @return the view data
      */
     PolyRegViewData getViewData() {
         return m_viewData;
