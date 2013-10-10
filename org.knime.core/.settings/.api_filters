@@ -44,6 +44,86 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.DefaultWebViewTemplate">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.DefaultWebViewTemplate"/>
+                <message_argument value="org.knime.core_2.9.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.InteractiveWebNode">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveWebNode"/>
+                <message_argument value="org.knime.core_2.9.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.InteractiveWebNodeFactoryExtension">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveWebNodeFactoryExtension"/>
+                <message_argument value="org.knime.core_2.9.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.InteractiveWebNodeView">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveWebNodeView"/>
+                <message_argument value="org.knime.core_2.9.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.JSONViewContent">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.JSONViewContent"/>
+                <message_argument value="org.knime.core_2.9.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.QuickFormNode">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.QuickFormNode"/>
+                <message_argument value="org.knime.core_2.9.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.WebDependency">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.WebDependency"/>
+                <message_argument value="org.knime.core_2.9.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.WebResourceLocator">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.WebResourceLocator"/>
+                <message_argument value="org.knime.core_2.9.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.WebViewContent">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.WebViewContent"/>
+                <message_argument value="org.knime.core_2.9.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.WebViewTemplate">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.WebViewTemplate"/>
+                <message_argument value="org.knime.core_2.9.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.InactiveBranchFlowLoopContext">
         <filter id="305324134">
             <message_arguments>
@@ -152,12 +232,6 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/CopyNodePersistor.java" type="org.knime.core.node.CopyNodePersistor">
-        <filter comment="workflow version/persistor change" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.CopyNodePersistor"/>
-                <message_argument value="getSettings()"/>
-            </message_arguments>
-        </filter>
         <filter id="643842064">
             <message_arguments>
                 <message_argument value="IFileStoreHandler"/>
@@ -174,16 +248,16 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
-        <filter comment="removed. Bernd agrees." id="338792546">
+        <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.Node"/>
-                <message_argument value="closeAllViews()"/>
+                <message_argument value="getInteractiveWebViewTemplate()"/>
             </message_arguments>
         </filter>
-        <filter comment="workflow version/persistor change" id="338792546">
+        <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.Node"/>
-                <message_argument value="configure(PortObjectSpec[], NodePostConfigure)"/>
+                <message_argument value="hasInteractiveWebView()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -192,13 +266,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.NodeAndBundleInformation"/>
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/NodeConfigureHelper.java" type="org.knime.core.node.NodeConfigureHelper">
-        <filter comment="workflow version/persistor change" id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.NodeConfigureHelper"/>
             </message_arguments>
         </filter>
     </resource>
@@ -211,34 +278,17 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/NodeModel.java" type="org.knime.core.node.NodeModel">
-        <filter comment="added new execute method in NodeModel to enable &quot;re-execution&quot; of interactive nodes" id="338792546">
+    <resource path="src/eclipse/org/knime/core/node/interactive/InteractiveNode.java" type="org.knime.core.node.interactive.InteractiveNode">
+        <filter id="403804204">
             <message_arguments>
-                <message_argument value="org.knime.core.node.NodeModel"/>
-                <message_argument value="executeModel(PortObject[], ExecutionContext)"/>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+                <message_argument value="loadViewContent(VC)"/>
             </message_arguments>
         </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/NodePersistor.java" type="org.knime.core.node.NodePersistor">
-        <filter comment="workflow version/persistor change" id="405901410">
+        <filter id="405901410">
             <message_arguments>
-                <message_argument value="org.knime.core.node.NodePersistor"/>
-                <message_argument value="getSettings()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/config/ConfigEditTreeModel.java" type="org.knime.core.node.config.ConfigEditTreeModel">
-        <filter comment="workflow version/persistor change" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.config.ConfigEditTreeModel"/>
-                <message_argument value="create(ConfigBase, ConfigBase)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/port/PortUtil.java" type="org.knime.core.node.port.PortUtil">
-        <filter comment="no public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="writeObjectToStream(PortObject, OutputStream, IWriteFileStoreHandler, ExecutionMonitor)"/>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+                <message_argument value="reExecute(V, PortObject[], ExecutionContext)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -328,27 +378,11 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerOutPort.java" type="org.knime.core.node.workflow.NodeContainerOutPort">
-        <filter comment="added new node states and changed visibility of State class" id="338792546">
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainer.java" type="org.knime.core.node.workflow.NodeContainer">
+        <filter id="338792546">
             <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.NodeContainerOutPort"/>
-                <message_argument value="getNodeState()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/NodeOutPort.java" type="org.knime.core.node.workflow.NodeOutPort">
-        <filter comment="added new node states and changed visibility of State class" id="405901410">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.NodeOutPort"/>
-                <message_argument value="getNodeState()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/NodeOutPortWrapper.java" type="org.knime.core.node.workflow.NodeOutPortWrapper">
-        <filter comment="added new node states and changed visibility of State class" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.NodeOutPortWrapper"/>
-                <message_argument value="getNodeState()"/>
+                <message_argument value="org.knime.core.node.workflow.NodeContainer"/>
+                <message_argument value="getInteractiveWebViewTemplate()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -437,6 +471,12 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
                 <message_argument value="createExecutionResult(ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
+                <message_argument value="getInteractiveWebViewTemplate()"/>
             </message_arguments>
         </filter>
         <filter id="338792546">
@@ -571,39 +611,15 @@
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
-                <message_argument value="createAndAddProject(String)"/>
+                <message_argument value="getInteractiveWebViewTemplate()"/>
             </message_arguments>
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistor.java" type="org.knime.core.node.workflow.WorkflowPersistor">
-        <filter id="403767336">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
-                <message_argument value="SVG_TEMPLATE_FILE"/>
-            </message_arguments>
-        </filter>
-        <filter comment="added svg export fields in non api interface" id="403767336">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
-                <message_argument value="SVG_WORKFLOW_FILE"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor changes" id="403804204">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
-                <message_argument value="getAuthorInformation()"/>
-            </message_arguments>
-        </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
                 <message_argument value="getLoadVersion()"/>
-            </message_arguments>
-        </filter>
-        <filter id="403804204">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
-                <message_argument value="getWorkflowContext()"/>
             </message_arguments>
         </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="405901410">

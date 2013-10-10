@@ -45,45 +45,28 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 30.04.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * Created on 21.08.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-package org.knime.core.node.interactive;
+package org.knime.core.node.dialog;
+
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Use {@link DefaultWebViewTemplate}.
- * @noimplement This interface is not intended to be implemented by clients.
- * @noextend This interface is not intended to be extended by clients.
+ *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
- * @since 2.8
+ * @param <V> The value class of the dialog node value.
+ * @since 2.9
  */
-public interface WebViewTemplate {
+public abstract class DialogNodeValue {
 
     /**
-     * @return An array of {@link WebResourceLocator}, which is the actual
-     * implementation of the view. These can be Javascript, CSS or other files.
+     * @param settings
      */
-    public WebResourceLocator[] getWebResources();
+    public abstract void saveToNodeSettings(final NodeSettingsWO settings);
 
     /**
-     * @return An array of {@link WebDependency}, which are the Javascript dependencies
-     * the view uses.
+     * @param settings
      */
-    public WebDependency[] getDependencies();
-
-    /**
-     * @return An optional namespace, which is prepended to all method calls of the
-     * view implementation.
-     */
-    public String getNamespace();
-
-    /**
-     * @return The init-method's name.
-     */
-    public String getInitMethodName();
-
-    /**
-     * @return The pullViewContent-method's name.
-     */
-    public String getPullViewContentMethodName();
-
+    public abstract void loadFromNodeSettings(final NodeSettingsRO settings);
 }

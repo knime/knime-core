@@ -81,10 +81,7 @@ import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveNodeFactoryExtension;
 import org.knime.core.node.interactive.InteractiveView;
-import org.knime.core.node.interactive.InteractiveWebNode;
-import org.knime.core.node.interactive.InteractiveWebNodeFactoryExtension;
 import org.knime.core.node.interactive.ViewContent;
-import org.knime.core.node.interactive.WebViewTemplate;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.missing.MissingNodeModel;
 import org.knime.core.node.port.PortObject;
@@ -103,6 +100,8 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.wizard.WizardNodeFactoryExtension;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.ExecutionEnvironment;
 import org.knime.core.node.workflow.FlowLoopContext;
@@ -1737,14 +1736,14 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * Returns true if this node can provide the content for an interactive web view.
-     * @return <code>true</code> if {@link WebViewTemplate} is available.
-     * @since 2.8
+     * @return <code>true</code> if is wizard node.
+     * @since 2.9
      */
-    public boolean hasInteractiveWebView() {
-        if (!(m_factory instanceof InteractiveWebNodeFactoryExtension)) {
+    public boolean hasWizardView() {
+        if (!(m_factory instanceof WizardNodeFactoryExtension)) {
             return false;
         }
-        if (!(m_model instanceof InteractiveWebNode)) {
+        if (!(m_model instanceof WizardNode<?>)) {
             return false;
         }
         return true;
@@ -1785,19 +1784,6 @@ public final class Node implements NodeModelWarningListener {
             m_logger.error(errorMsg, e);
             throw new RuntimeException(errorMsg, e);
         }
-    }
-
-    /**
-     * @return the template for an interactive web view.
-     * @since 2.8
-     */
-    public WebViewTemplate getInteractiveWebViewTemplate() {
-        if (!(m_factory instanceof InteractiveWebNodeFactoryExtension)) {
-            String errorMsg = "Interactive WebView instantiation failed: wrong factory!";
-            m_logger.error(errorMsg);
-            throw new RuntimeException(errorMsg);
-        }
-        return ((InteractiveWebNodeFactoryExtension<?, ?>)m_factory).getInteractiveWebViewTemplate();
     }
 
     /**

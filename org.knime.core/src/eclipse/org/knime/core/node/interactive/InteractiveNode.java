@@ -49,34 +49,29 @@
  */
 package org.knime.core.node.interactive;
 
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.port.PortObject;
+
+
 
 /** Interface for NodeModels that support interactive views and repeated
  * execution when the view has been modified by the user.
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @param <V> The concrete class of the {@link ViewContent}
+ * @param <VC> The concrete class of the {@link ViewContent}
  * @since 2.8
  */
-public interface InteractiveNode<V extends ViewContent> {
-
-    /** Execute an executed node again. Called with a modified content from
-     * the interactive view.
-     *
-     * @param content information from view to be used during re-execution
-     * @param data the input data (should be the same as during initial execute call)
-     * @param ec the execution context to create tables and monitor cancelation
-     * @return updated output objects.
-     * @throws CanceledExecutionException when interrupted by user
-     */
-    PortObject[] reExecute(V content, PortObject[] data, ExecutionContext ec)
-            throws CanceledExecutionException;
+public interface InteractiveNode<VC extends ViewContent> {
 
     /**
      * Create content which can be used by the interactive view implementation.
      * @return Content required for the interactive view.
+     * @since 2.9
      */
-    abstract V createViewContent();
+    VC createViewContent();
+
+    /**
+     * @param viewContent The view content to load.
+     * @since 2.9
+     */
+    void loadViewContent(VC viewContent);
+
 }

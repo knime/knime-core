@@ -49,16 +49,16 @@
  */
 package org.knime.base.node.preproc.select.value;
 
-import org.knime.core.node.interactive.WebDependency;
-import org.knime.core.node.interactive.WebResourceLocator;
-import org.knime.core.node.interactive.WebResourceLocator.WebResourceType;
-import org.knime.core.node.interactive.WebViewTemplate;
+import org.knime.core.node.web.WebDependency;
+import org.knime.core.node.web.WebResourceLocator;
+import org.knime.core.node.web.WebResourceLocator.WebResourceType;
+import org.knime.core.node.web.WebTemplate;
 
 /**
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-public class InteractiveValueSelectWebViewTemplate implements WebViewTemplate {
+public class InteractiveValueSelectWebViewTemplate implements WebTemplate {
 
 
 

@@ -555,8 +555,12 @@ public abstract class NodeModel {
         if (!exEnv.reExecute()) {
             outData = execute(data, exec);
         } else {
+            //FIXME: implement reexecution with loading view content and execute
             if (this instanceof InteractiveNode) {
-                outData = ((InteractiveNode)this).reExecute(exEnv.getPreExecuteViewContent(), data, exec);
+                InteractiveNode iThis = (InteractiveNode)this;
+                ViewContent viewContent = exEnv.getPreExecuteViewContent();
+                iThis.loadViewContent(viewContent);
+                outData = execute(data, exec);
             } else if (this instanceof LoopStartNode) {
                 outData = execute(data, exec);
             } else {

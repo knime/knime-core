@@ -57,8 +57,8 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.interactive.InteractiveWebNodeView;
-import org.knime.core.node.interactive.WebViewTemplate;
+import org.knime.core.node.web.WebTemplate;
+import org.knime.core.node.wizard.WizardNodeView;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
@@ -120,15 +120,15 @@ public class OpenInteractiveViewAction extends Action {
             if (m_nodeContainer.hasInteractiveView()) {
                 view = m_nodeContainer.getInteractiveView();
             } else if (m_nodeContainer.hasInteractiveWebView()) {
-                WebViewTemplate template = m_nodeContainer.getInteractiveWebViewTemplate();
+                WebTemplate template = m_nodeContainer.getWebTemplate();
                 NodeContext.pushContext(m_nodeContainer);
                 try {
                     // TODO: this needs to be changed to also work for SubNodeContainers
-                    view = new InteractiveWebNodeView(((NativeNodeContainer)m_nodeContainer).getNodeModel(), template);
+                    view = new WizardNodeView(((NativeNodeContainer)m_nodeContainer).getNodeModel(), template);
                 } finally {
                     NodeContext.removeLastContext();
                 }
-                ((InteractiveWebNodeView)view).setWorkflowManagerAndNodeID(m_nodeContainer.getParent(),
+                ((WizardNodeView)view).setWorkflowManagerAndNodeID(m_nodeContainer.getParent(),
                                                                            m_nodeContainer.getID());
             } else {
                 Assert.isNotNull(view, "Interactive view could not be instantiated. Probably a coding error.");

@@ -70,15 +70,14 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.defaultnodesettings.SettingsModelStringArray;
-import org.knime.core.node.interactive.InteractiveWebNode;
-import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.wizard.WizardNode;
 
 /**
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-public class InteractiveValueSelectNodeModel extends NodeModel implements InteractiveWebNode<InteractiveValueSelectViewContent> {
+public class InteractiveValueSelectNodeModel extends NodeModel implements WizardNode<InteractiveValueSelectViewContent> {
 
     static SettingsModelStringArray createSelectedValuesArray() {
         return new SettingsModelStringArray("selectedValuesKey", new String[] {});
@@ -139,16 +138,6 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Intera
         }
         possibleValues.setStringArrayValue(pValues);
         return new BufferedDataTable[] {createResult(new String[] {}, exec)};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PortObject[] reExecute(final InteractiveValueSelectViewContent viewContent, final PortObject[] data, final ExecutionContext ec)
-            throws CanceledExecutionException {
-        selectedValues.setStringArrayValue(viewContent.getSelectedValues());
-        return new PortObject[] {createResult(selectedValues.getStringArrayValue(), ec)};
     }
 
     private BufferedDataTable createResult(final String[] values, final ExecutionContext ec) throws CanceledExecutionException {
@@ -229,6 +218,22 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Intera
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void loadViewContent(final InteractiveValueSelectViewContent viewContent) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getJavascriptObjectID() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

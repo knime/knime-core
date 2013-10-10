@@ -47,7 +47,7 @@
  *
  * Created on Apr 22, 2013 by Berthold
  */
-package org.knime.core.node.interactive;
+package org.knime.core.node.wizard;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -76,32 +76,42 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.interactive.ConfigureCallback;
+import org.knime.core.node.interactive.DefaultReexecutionCallback;
+import org.knime.core.node.interactive.InteractiveView;
+import org.knime.core.node.interactive.InteractiveViewDelegate;
+import org.knime.core.node.interactive.ReexecutionCallback;
+import org.knime.core.node.web.WebDependency;
+import org.knime.core.node.web.WebResourceLocator;
+import org.knime.core.node.web.WebTemplate;
+import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /** Standard implementation for interactive views which are launched on the client side via
  * an integrated browser. They only have indirect access to the NodeModel via get and
- * setViewContent methods and therefore simulate the behaviour of the same view in the
+ * setViewContent methods and therefore simulate the behavior of the same view in the
  * WebPortal.
  *
  * @author B. Wiswedel, M. Berthold, Th. Gabriel, C. Albrecht
- * @param <T> requires a {@link NodeModel} implementing {@link InteractiveWebNode} as well
+ * @param <T> requires a {@link NodeModel} implementing {@link WizardNode} as well
  * @param <VC> the {@link WebViewContent} implementation used
- * @since 2.8
+ * @since 2.9
  */
-public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNode<VC>, VC extends WebViewContent>
+public final class WizardNodeView<T extends NodeModel & WizardNode<VC>, VC extends WebViewContent>
                 extends AbstractNodeView<T> implements InteractiveView<T, VC> {
 
     private static final String CONTAINER_ID = "view";
     private final InteractiveViewDelegate<VC> m_delegate;
-    private final WebViewTemplate m_template;
+    private final WebTemplate m_template;
     private File m_tempFolder;
 
     /**
      * @param nodeModel the underlying model
      * @param wvt the template to be used for the web view
+     * @since 2.9
      */
-    public InteractiveWebNodeView(final T nodeModel, final WebViewTemplate wvt) {
+    public WizardNodeView(final T nodeModel, final WebTemplate wvt) {
         super(nodeModel);
         m_template = wvt;
         m_delegate = new InteractiveViewDelegate<VC>();
@@ -165,7 +175,7 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
         final String jsonViewContent;
         try {
             VC vc = getViewContentFromNode();
-            jsonViewContent = ((ByteArrayOutputStream)vc.saveTo()).toString("UTF-8");
+            jsonViewContent = ((ByteArrayOutputStream)vc.saveToStream()).toString("UTF-8");
         } catch (Exception e) {
             throw new IllegalArgumentException("No view content available!");
         }
@@ -198,7 +208,6 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
                 applyTriggered(browser);
             }
         });
-
 
         closeButton.addSelectionListener(new SelectionAdapter() {
             @Override
@@ -314,11 +323,6 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
      */
     private ArrayList<WebResourceLocator> getResourceFileList() {
         ArrayList<WebResourceLocator> resourceFiles = new ArrayList<WebResourceLocator>();
-        if (m_template.getWebResources() != null) {
-            for (WebResourceLocator resFile : m_template.getWebResources()) {
-                resourceFiles.add(resFile);
-            }
-        }
         if (m_template.getDependencies() != null) {
             for (WebDependency dependency : m_template.getDependencies()) {
                 if (dependency.getResourceLocators() != null) {
@@ -326,6 +330,12 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
                         resourceFiles.add(resFile);
                     }
                 }
+            }
+        }
+
+        if (m_template.getWebResources() != null) {
+            for (WebResourceLocator resFile : m_template.getWebResources()) {
+                resourceFiles.add(resFile);
             }
         }
         return resourceFiles;
@@ -372,19 +382,24 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
     }
 
     private String initJSView(final String jsonViewContent) {
+        //String rootCall = getJSMethodCall(null);
         String initMethod = m_template.getInitMethodName();
-        return getJSMethodName(initMethod, jsonViewContent, CONTAINER_ID);
+        String initCall = getJSMethodCall(initMethod, jsonViewContent, CONTAINER_ID);
+        return /*rootCall +*/ initCall;
     }
 
-    private String getJSMethodName(final String method, final String... parameters) {
+    private String getJSMethodCall(final String method, final String... parameters) {
         String namespace = m_template.getNamespace();
         StringBuilder methodCallBuilder = new StringBuilder();
 
         if (namespace != null && !namespace.isEmpty()) {
             methodCallBuilder.append(namespace);
-            methodCallBuilder.append(".");
+
+            if (method != null) {
+                methodCallBuilder.append(".");
+                methodCallBuilder.append(method);
+            }
         }
-        methodCallBuilder.append(method);
 
         methodCallBuilder.append("(");
         if (parameters != null && parameters.length > 0) {
@@ -395,7 +410,7 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
             }
             methodCallBuilder.delete(methodCallBuilder.length() - 2, methodCallBuilder.length());
         }
-        methodCallBuilder.append(")");
+        methodCallBuilder.append(");");
 
         return methodCallBuilder.toString();
     }
@@ -408,18 +423,18 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
         StringBuilder builder = new StringBuilder();
         builder.append("try {");
         builder.append(jsCode);
-        builder.append("} catch(err) {}");
+        builder.append("} catch(err) {console.error(err);}");
         return builder.toString();
     }
 
 
     private void applyTriggered(final Browser browser) {
         String pullMethod = m_template.getPullViewContentMethodName();
-        String evalCode = wrapInTryCatch("return " + getJSMethodName(pullMethod, CONTAINER_ID));
+        String evalCode = wrapInTryCatch("return " + getJSMethodCall(pullMethod, CONTAINER_ID));
         String jsonString = (String)browser.evaluate(evalCode);
         try {
             VC viewContent = getNodeModel().createEmptyInstance();
-            viewContent.loadFrom(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
+            viewContent.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
             loadViewContentIntoNode(viewContent);
         } catch (Exception e) {
             //TODO error message

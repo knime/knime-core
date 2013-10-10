@@ -71,7 +71,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
-import org.knime.core.node.interactive.WebViewTemplate;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -79,6 +78,7 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -346,7 +346,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      * {@inheritDoc}
      */
     @Override
-    public WebViewTemplate getInteractiveWebViewTemplate() {
+    public WebTemplate getWebTemplate() {
         return null;
     }
 

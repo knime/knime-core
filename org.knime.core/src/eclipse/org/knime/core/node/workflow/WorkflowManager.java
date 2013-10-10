@@ -114,7 +114,6 @@ import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReexecutionCallback;
 import org.knime.core.node.interactive.ViewContent;
-import org.knime.core.node.interactive.WebViewTemplate;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -123,6 +122,7 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
@@ -7492,7 +7492,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
-    public WebViewTemplate getInteractiveWebViewTemplate() {
+    public WebTemplate getWebTemplate() {
         return null;
     }
 

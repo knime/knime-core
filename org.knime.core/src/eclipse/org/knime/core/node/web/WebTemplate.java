@@ -45,25 +45,47 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 07.05.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * Created on 30.04.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-package org.knime.core.node.interactive;
+package org.knime.core.node.web;
+
 
 
 /**
- * Interface for NodeModels that support interactive web-enabled views and repeated
- * execution when the view has been modified by the user. All communication between
- * the node model and the view is realized via a {@link WebViewContent} object.
- *
+ * Use {@link DefaultWebTemplate}.
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
- * @param <V> The concrete class of the {@link WebViewContent}
- * @since 2.8
+ * @since 2.9
  */
-public interface InteractiveWebNode<V extends WebViewContent> extends InteractiveNode<V> {
+public interface WebTemplate {
 
     /**
-     * @return an empty instance of the concrete {@link WebViewContent} implementation
+     * @return An array of {@link WebResourceLocator}, which is the actual
+     * implementation of the view. These can be Javascript, CSS or other files.
      */
-    public V createEmptyInstance();
+    public WebResourceLocator[] getWebResources();
+
+    /**
+     * @return An array of {@link WebDependency}, which are the Javascript dependencies
+     * the view uses.
+     */
+    public WebDependency[] getDependencies();
+
+    /**
+     * @return An optional namespace, which is prepended to all method calls of the
+     * view implementation.
+     */
+    public String getNamespace();
+
+    /**
+     * @return The init-method's name.
+     */
+    public String getInitMethodName();
+
+    /**
+     * @return The pullViewContent-method's name.
+     */
+    public String getPullViewContentMethodName();
 
 }

@@ -52,15 +52,14 @@ package org.knime.base.node.preproc.select.value;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.interactive.InteractiveWebNodeFactoryExtension;
-import org.knime.core.node.interactive.WebViewTemplate;
+import org.knime.core.node.wizard.WizardNodeFactoryExtension;
 
 /**
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
 public class InteractiveValueSelectNodeFactory extends NodeFactory<InteractiveValueSelectNodeModel>
-                implements InteractiveWebNodeFactoryExtension<InteractiveValueSelectNodeModel,
+                implements WizardNodeFactoryExtension<InteractiveValueSelectNodeModel,
                 InteractiveValueSelectViewContent> {
 
     /**
@@ -107,6 +106,13 @@ public class InteractiveValueSelectNodeFactory extends NodeFactory<InteractiveVa
     /**
      * {@inheritDoc}
      */
+    public String getWizardViewName() {
+        return getInteractiveViewName();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     /*@SuppressWarnings("unchecked")
     @Override
     public InteractiveWebNodeView<InteractiveValueSelectNodeModel, InteractiveValueSelectViewContent>
@@ -114,14 +120,4 @@ public class InteractiveValueSelectNodeFactory extends NodeFactory<InteractiveVa
         return new InteractiveWebNodeView<InteractiveValueSelectNodeModel, InteractiveValueSelectViewContent>(
                 model, getInteractiveWebViewTemplate(), InteractiveValueSelectViewContent.class);
     }*/
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WebViewTemplate getInteractiveWebViewTemplate() {
-        return new InteractiveValueSelectWebViewTemplate();
-    }
-
 }

@@ -49,7 +49,9 @@
  */
 package org.knime.base.node.preproc.select.value;
 
-import org.knime.core.node.interactive.JSONViewContent;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.web.JSONViewContent;
 
 /**
  *
@@ -98,6 +100,25 @@ public class InteractiveValueSelectViewContent extends JSONViewContent {
      */
     public void setSelectedValues(final String[] selectedValues) {
         this.m_selectedValues = selectedValues;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveToNodeSettings(final NodeSettingsWO settings) {
+        settings.addStringArray("possibleValues", m_possibleValues);
+        settings.addStringArray("selectedValues", m_selectedValues);
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadFromNodeSettings(final NodeSettingsRO settings) {
+        m_possibleValues = settings.getStringArray("possibleValues", new String[0]);
+        m_selectedValues = settings.getStringArray("selectedValues", new String[0]);
     }
 
 }

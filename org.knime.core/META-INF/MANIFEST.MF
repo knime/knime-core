@@ -38,6 +38,7 @@ Export-Package: log4j,
  org.knime.core.node,
  org.knime.core.node.config,
  org.knime.core.node.defaultnodesettings,
+ org.knime.core.node.dialog,
  org.knime.core.node.exec,
  org.knime.core.node.icon,
  org.knime.core.node.interactive,
@@ -58,6 +59,8 @@ Export-Package: log4j,
  org.knime.core.node.util,
  org.knime.core.node.util.filter,
  org.knime.core.node.util.filter.column,
+ org.knime.core.node.web,
+ org.knime.core.node.wizard,
  org.knime.core.node.workflow,
  org.knime.core.node.workflow.execresult,
  org.knime.core.node.workflow.virtual,
@@ -105,8 +108,7 @@ Require-Bundle: org.eclipse.osgi;bundle-version="[3.6.0,4.0.0)";visibility:=reex
  org.knime.core.pmml;bundle-version="[2.5.0,3.0.0)";visibility:=reexport,
  org.apache.commons.httpclient;bundle-version="[3.1.0,3.2.0)",
  org.eclipse.swt;bundle-version="[3.7.2,3.8.0)",
- org.codehaus.jackson.core;bundle-version="[1.6.0,2.0.0)",
- org.codehaus.jackson.mapper;bundle-version="[1.6.0,2.0.0)"
+ com.fasterxml.jackson;bundle-version="[2.2.2,3.0.0)"
 Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy

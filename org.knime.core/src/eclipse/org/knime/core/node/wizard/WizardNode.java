@@ -45,50 +45,35 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 22, 2013 by Berthold
+ * Created on 08.10.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-package org.knime.core.node.interactive;
+package org.knime.core.node.wizard;
 
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.interactive.InteractiveNode;
+import org.knime.core.node.web.WebViewContent;
 
 /**
- * Delegate class that can be used in an {@link InteractiveView} implementation.
  *
- * @author B. Wiswedel, M. Berthold, Th. Gabriel, C. Albrecht
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @param <VC> The concrete class of the {@link WebViewContent}
  * @since 2.9
  */
-public final class InteractiveViewDelegate<V extends ViewContent> {
+public interface WizardNode<VC extends WebViewContent> extends InteractiveNode<VC> {
 
-    private WorkflowManager m_wfm;
-    private NodeID m_nodeID;
+    /**
+     * Create content which can be used by the web view implementation.
+     * @return Content required for the web view.
+     */
+    @Override
+    VC createViewContent();
 
-    public void setWorkflowManagerAndNodeID(final WorkflowManager wfm, final NodeID id) {
-        m_wfm = wfm;
-        m_nodeID = id;
-        NodeContainer nc = m_wfm.getNodeContainer(m_nodeID);
-        assert m_wfm.getNodeContainer(m_nodeID) == nc;  // !! constructor argument matches this info...
-        if (!(nc instanceof NativeNodeContainer)) {
-            throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
-        }
-        NodeModel nm = ((NativeNodeContainer)nc).getNodeModel();
-        if (!(nm instanceof InteractiveNode)) {
-            throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
-        }
-    }
+    /**
+     * @return an empty instance of the concrete {@link WebViewContent} implementation
+     */
+    public VC createEmptyInstance();
 
-    public boolean canReExecute() {
-        return m_wfm.canReExecuteNode(m_nodeID);
-    }
-
-    public void triggerReExecution(final V vc, final ReexecutionCallback rec) {
-        m_wfm.reExecuteNode(m_nodeID, vc, rec);
-    }
-
-    public void setNewDefaultConfiguration(final ConfigureCallback ccb) {
-        m_wfm.saveNodeSettingsToDefault(m_nodeID);
-     }
+    /**
+     * @return The object id used in the javascript implementation of the view.
+     */
+    public String getJavascriptObjectID();
 }

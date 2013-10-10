@@ -45,50 +45,89 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 22, 2013 by Berthold
+ * Created on 30.04.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-package org.knime.core.node.interactive;
+package org.knime.core.node.web;
 
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+
+import org.eclipse.core.runtime.FileLocator;
 
 /**
- * Delegate class that can be used in an {@link InteractiveView} implementation.
  *
- * @author B. Wiswedel, M. Berthold, Th. Gabriel, C. Albrecht
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @since 2.9
  */
-public final class InteractiveViewDelegate<V extends ViewContent> {
+public final class WebResourceLocator {
 
-    private WorkflowManager m_wfm;
-    private NodeID m_nodeID;
+    /**
+     *
+     * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+     */
+    public enum WebResourceType {
 
-    public void setWorkflowManagerAndNodeID(final WorkflowManager wfm, final NodeID id) {
-        m_wfm = wfm;
-        m_nodeID = id;
-        NodeContainer nc = m_wfm.getNodeContainer(m_nodeID);
-        assert m_wfm.getNodeContainer(m_nodeID) == nc;  // !! constructor argument matches this info...
-        if (!(nc instanceof NativeNodeContainer)) {
-            throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
-        }
-        NodeModel nm = ((NativeNodeContainer)nc).getNodeModel();
-        if (!(nm instanceof InteractiveNode)) {
-            throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
-        }
+        /**
+         * Javascript file.
+         */
+        JAVASCRIPT,
+
+        /**
+         * CSS file.
+         */
+        CSS,
+
+        /**
+         * General file or folder to be available.
+         */
+        FILE
     }
 
-    public boolean canReExecute() {
-        return m_wfm.canReExecuteNode(m_nodeID);
+    private final String m_pluginName;
+    private final String m_relativePath;
+    private final WebResourceType m_type;
+
+    /**
+     * @param pluginName
+     * @param relativePath
+     *
+     */
+    public WebResourceLocator(final String pluginName, final String relativePath, final WebResourceType type) {
+        m_pluginName = pluginName;
+        m_relativePath = relativePath.startsWith("/") ? relativePath : "/" + relativePath;
+        m_type = type;
     }
 
-    public void triggerReExecution(final V vc, final ReexecutionCallback rec) {
-        m_wfm.reExecuteNode(m_nodeID, vc, rec);
+    /**
+     * @return the m_pluginName
+     */
+    public String getPluginName() {
+        return m_pluginName;
     }
 
-    public void setNewDefaultConfiguration(final ConfigureCallback ccb) {
-        m_wfm.saveNodeSettingsToDefault(m_nodeID);
-     }
+    /**
+     * @return the m_relativePath
+     */
+    public String getRelativePath() {
+        return m_relativePath;
+    }
+
+    /**
+     * @return the m_type
+     */
+    public WebResourceType getType() {
+        return m_type;
+    }
+
+    /**
+     * @noreference This method is not intended to be referenced by clients.
+     * @return the {@link File} that is denoted through this locator.
+     * @throws IOException if resource cannot be resolved.
+     */
+    public File getResource() throws IOException {
+        URL url = new URL("platform:/plugin/" + m_pluginName);
+        File dir = new File(FileLocator.resolve(url).getFile());
+        return new File(dir, m_relativePath);
+    }
 }

@@ -45,77 +45,29 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 06.05.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * Created on 08.10.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-package org.knime.core.node.interactive;
+package org.knime.core.node.dialog;
+
 
 /**
- * Default {@lin WebViewTemplate} implementation.
- * 
+ *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
- * @since 2.8
+ * @param <REP> The configuration content of the dialog node.
+ * @param <VAL> The node value implementation of the dialog node.
+ * @param <V> The value class of the dialog node.
+ * @since 2.9
  */
-public final class DefaultWebViewTemplate implements WebViewTemplate {
-
-    private final WebResourceLocator[] m_webResources;
-    private final WebDependency[] m_dependencies;
-    private final String m_namespace;
+public interface DialogNode<REP extends DialogNodeRepresentation, VAL extends DialogNodeValue> {
 
     /**
-     * @param webResources An array of {@link WebResourceLocator}, which is the actual implementation of the view.
-     * These can be Javascript, CSS or other files.
-     * @param dependencies An array of {@link WebDependency}, which are the Javascript dependencies the view uses.
-     * @param namespace An optional namespace, which is prepended to all method calls of the view implementation.
-     *
+     * @return The representation content of the dialog node.
      */
-    public DefaultWebViewTemplate(final WebResourceLocator[] webResources,
-                                  final WebDependency[] dependencies, final String namespace) {
-        this.m_webResources = webResources;
-        this.m_dependencies = dependencies;
-        this.m_namespace = namespace;
-
-    }
+    public REP createNodeRepresentation();
 
     /**
-     * {@inheritDoc}
+     * @return The node value content of the dialog node.
      */
-    @Override
-    public WebResourceLocator[] getWebResources() {
-        return m_webResources;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WebDependency[] getDependencies() {
-        return m_dependencies;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getNamespace() {
-        return m_namespace;
-    }
-
-    /**
-     * @noreference This method is not intended to be referenced by clients.
-     * {@inheritDoc}
-     */
-    @Override
-    public String getInitMethodName() {
-        return "init";
-    }
-
-    /**
-     * @noreference This method is not intended to be referenced by clients.
-     * {@inheritDoc}
-     */
-    @Override
-    public String getPullViewContentMethodName() {
-        return "pullViewContent";
-    }
+    public VAL createNodeValue();
 
 }

@@ -92,11 +92,11 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
-import org.knime.core.node.interactive.WebViewTemplate;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
@@ -300,7 +300,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /** {@inheritDoc} */
     @Override
     public boolean hasInteractiveWebView() {
-        return m_node.hasInteractiveWebView();
+        return m_node.hasWizardView();
     }
 
     /** {@inheritDoc} */
@@ -334,12 +334,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public WebViewTemplate getInteractiveWebViewTemplate() {
-        return m_node.getInteractiveWebViewTemplate();
-    }
-
+    
     /* ------------------ Job Handling ---------------- */
 
     /** {@inheritDoc} */
@@ -1014,6 +1009,15 @@ public class NativeNodeContainer extends SingleNodeContainer {
     @Override
     public HiLiteHandler getOutputHiLiteHandler(final int portIndex) {
         return getNode().getOutputHiLiteHandler(portIndex);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WebTemplate getWebTemplate() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 

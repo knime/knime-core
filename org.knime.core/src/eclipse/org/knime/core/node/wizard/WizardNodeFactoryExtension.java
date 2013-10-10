@@ -45,21 +45,33 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
+ * Created on 08.10.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-package org.knime.core.node.interactive;
+package org.knime.core.node.wizard;
 
-/** Interface for NodeModels that support interactive views in the Execution Wizard
- * or WebPortal together with repeated execution when the view has been modified by
- * the user.
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.web.WebViewContent;
+
+/**
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @since 2.8
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @param <T> requires {@link NodeModel} implementing {@link WizardNode}
+ * @param <VC>
+ * @since 2.9
  */
-public interface QuickFormNode extends InteractiveNode {
+public interface WizardNodeFactoryExtension<T extends NodeModel & WizardNode<VC>, VC extends WebViewContent> {
 
     /**
-     * @return true of the view is to be displayed in the Wizard/WebPortal
+     * Creates and returns a new instance of the node's corresponding model.
+     *
+     * @return A new NodeModel for this node. Never <code>null</code>!
      */
-    public boolean isVisible();
+    public T createNodeModel();
+
+    /**
+     * @return name of the interactive web view.
+     * @since 2.8
+     */
+    public String getWizardViewName();
+
 }

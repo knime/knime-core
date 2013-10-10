@@ -45,89 +45,66 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 30.04.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * Created on 08.05.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-package org.knime.core.node.interactive;
+package org.knime.core.node.web;
 
-import java.io.File;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.URL;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
 
-import org.eclipse.core.runtime.FileLocator;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 
 /**
+ * ViewContent that creates and reads from a JSON string.
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
- * @since 2.8
+ * @since 2.9
  */
-public final class WebResourceLocator {
+@JsonAutoDetect
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
+public abstract class JSONViewContent extends WebViewContent {
 
     /**
+     * {@inheritDoc}
+     * @throws IOException
+     * @throws JsonProcessingException
+     */
+    @Override
+    @JsonIgnore
+    public final void loadFromStream(final InputStream viewContentStream) throws JsonProcessingException, IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectReader reader = mapper.readerForUpdating(this);
+        reader.readValue(viewContentStream);
+    }
+
+    /**
+     * {@inheritDoc}
      *
-     * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+     * @return An {@link OutputStream} containing the JSON string in UTF-8 format.
+     * @throws IOException
+     * @throws JsonMappingException
+     * @throws JsonGenerationException
      */
-    public enum WebResourceType {
-
-        /**
-         * Javascript file.
-         */
-        JAVASCRIPT,
-
-        /**
-         * CSS file.
-         */
-        CSS,
-
-        /**
-         * General file or folder to be available.
-         */
-        FILE
+    @Override
+    @JsonIgnore
+    public final OutputStream saveToStream() throws JsonGenerationException, JsonMappingException, IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        String viewContentString = mapper.writeValueAsString(this);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        out.write(viewContentString.getBytes(Charset.forName("UTF-8")));
+        out.flush();
+        return out;
     }
 
-    private final String m_pluginName;
-    private final String m_relativePath;
-    private final WebResourceType m_type;
-
-    /**
-     * @param pluginName
-     * @param relativePath
-     *
-     */
-    public WebResourceLocator(final String pluginName, final String relativePath, final WebResourceType type) {
-        m_pluginName = pluginName;
-        m_relativePath = relativePath.startsWith("/") ? relativePath : "/" + relativePath;
-        m_type = type;
-    }
-
-    /**
-     * @return the m_pluginName
-     */
-    public String getPluginName() {
-        return m_pluginName;
-    }
-
-    /**
-     * @return the m_relativePath
-     */
-    public String getRelativePath() {
-        return m_relativePath;
-    }
-
-    /**
-     * @return the m_type
-     */
-    public WebResourceType getType() {
-        return m_type;
-    }
-
-    /**
-     * @noreference This method is not intended to be referenced by clients.
-     * @return the {@link File} that is denoted through this locator.
-     * @throws IOException if resource cannot be resolved.
-     */
-    public File getResource() throws IOException {
-        URL url = new URL("platform:/plugin/" + m_pluginName);
-        File dir = new File(FileLocator.resolve(url).getFile());
-        return new File(dir, m_relativePath);
-    }
 }

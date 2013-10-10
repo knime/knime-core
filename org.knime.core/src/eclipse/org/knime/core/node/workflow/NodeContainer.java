@@ -79,11 +79,11 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
-import org.knime.core.node.interactive.WebViewTemplate;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -1134,7 +1134,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     public abstract boolean hasInteractiveView();
 
     /**
-     * @return true if node provides {@link WebViewTemplate} for an interactive web view.
+     * @return true if node provides {@link WebTemplate} for an interactive web view.
      * @since 2.8
      */
     public abstract boolean hasInteractiveWebView();
@@ -1155,9 +1155,9 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /**
      * @return interactive web view template.
-     * @since 2.8
+     * @since 2.9
      */
-    public abstract WebViewTemplate getInteractiveWebViewTemplate();
+    public abstract WebTemplate getWebTemplate();
 
     /* ------------- Misc node info -------------- */
 
@@ -1509,5 +1509,4 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         }
 
     }
-
 }

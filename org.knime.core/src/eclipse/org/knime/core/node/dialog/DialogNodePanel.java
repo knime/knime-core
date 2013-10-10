@@ -45,39 +45,73 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 27, 2013 by Berthold
+ * Created on 08.10.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-package org.knime.core.node.interactive;
+package org.knime.core.node.dialog;
 
-import org.knime.core.node.NodeModel;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.LayoutManager;
 
-/** Interface for NodeFactories of InteractiveWebNodeModels.
+import javax.swing.AbstractButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import org.knime.core.node.InvalidSettingsException;
+
+/**
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @param <T> requires {@link NodeModel} implementing {@link InteractiveWebNode}
- * @param <VC>
- * @since 2.8
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @param <REP> The configuration content of the dialog node.
+ * @param <VAL> The node value implementation of the dialog node.
+ * @param <V> The value class of the dialog node.
+ * @since 2.9
  */
-public interface InteractiveWebNodeFactoryExtension
-    <T extends NodeModel & InteractiveWebNode<VC>, VC extends WebViewContent> {
+@SuppressWarnings("serial")
+public abstract class DialogNodePanel<VAL extends DialogNodeValue>
+        extends JPanel {
 
     /**
-     * Creates and returns a new instance of the node's corresponding model.
-     *
-     * @return A new NodeModel for this node. Never <code>null</code>!
+     * Creates a new DialogNode panel.
      */
-    public T createNodeModel();
+    public DialogNodePanel() {
+        super();
+    }
 
     /**
-     * @return name of the interactive web view.
-     * @since 2.8
+     * Create a new buffered DialogNodePanel with the specified layout manager.
+     * @param layout the LayoutManager to use
      */
-    public String getInteractiveViewName();
+    public DialogNodePanel(final LayoutManager layout) {
+        super(layout);
+    }
 
     /**
-     * @return view template which can be used with the underlying models {@link WebViewContent}.
-     * @since 2.8
+     * Save DialogNode value.
+     * @param value save into
+     * @throws InvalidSettingsException if settings can't be saved
      */
-    public WebViewTemplate getInteractiveWebViewTemplate();
+    public abstract void saveNodeValue(final VAL value) throws InvalidSettingsException;
+
+    /**
+     * Load DialogNode value.
+     * @param value load from
+     */
+    public abstract void loadNodeValue(final VAL value);
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setBackground(final Color bg) {
+        int max = getComponentCount();
+        for (int i = 0; i < max; i++) {
+            Component c = getComponent(i);
+            if ((c instanceof AbstractButton) || (c instanceof JPanel) || (c instanceof JLabel)) {
+                c.setBackground(bg);
+            }
+        }
+        super.setBackground(bg);
+    }
 
 }

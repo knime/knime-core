@@ -45,31 +45,79 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
+ * Created on 06.05.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-package org.knime.core.node.interactive;
+package org.knime.core.node.web;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 
-/** Container for all of the information transported inbetween a {@link InteractiveWebNode}
- * and an interactive view running in the wizard or WebPortal.
+
+/**
+ * Default {@link WebTemplate} implementation.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold, C. Albrecht
- * @since 2.8
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @since 2.9
  */
-public abstract class WebViewContent extends ViewContent {
+public class DefaultWebTemplate implements WebTemplate {
+
+    private final WebResourceLocator[] m_webResources;
+    private final WebDependency[] m_dependencies;
+    private final String m_namespace;
 
     /**
-     * @param viewContentStream an input stream, that is used to create the instance of a view content.
-     * @throws Exception Exception that can occur while creating an instance.
+     * @param webResources An array of {@link WebResourceLocator}, which is the actual implementation of the view.
+     * These can be Javascript, CSS or other files.
+     * @param dependencies An array of {@link WebDependency}, which are the Javascript dependencies the view uses.
+     * @param namespace An optional namespace, which is prepended to all method calls of the view implementation.
+     *
      */
-    public abstract void loadFrom(InputStream viewContentStream) throws Exception;
+    public DefaultWebTemplate(final WebResourceLocator[] webResources,
+                                  final WebDependency[] dependencies, final String namespace) {
+        this.m_webResources = webResources;
+        this.m_dependencies = dependencies;
+        this.m_namespace = namespace;
+
+    }
 
     /**
-     * @return An output stream with the serialized view content.
-     * @throws Exception Exception that can occur while serializing object.
+     * {@inheritDoc}
      */
-    public abstract OutputStream saveTo() throws Exception;
+    @Override
+    public WebResourceLocator[] getWebResources() {
+        return m_webResources;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WebDependency[] getDependencies() {
+        return m_dependencies;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getNamespace() {
+        return m_namespace;
+    }
+
+    /**
+     * @noreference This method is not intended to be referenced by clients.
+     * {@inheritDoc}
+     */
+    @Override
+    public final String getInitMethodName() {
+        return "init";
+    }
+
+    /**
+     * @noreference This method is not intended to be referenced by clients.
+     * {@inheritDoc}
+     */
+    @Override
+    public final String getPullViewContentMethodName() {
+        return "pullViewContent";
+    }
 
 }

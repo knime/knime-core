@@ -45,50 +45,80 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 22, 2013 by Berthold
+ * Created on 21.08.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-package org.knime.core.node.interactive;
+package org.knime.core.node.dialog;
 
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.workflow.NativeNodeContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
- * Delegate class that can be used in an {@link InteractiveView} implementation.
  *
- * @author B. Wiswedel, M. Berthold, Th. Gabriel, C. Albrecht
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @since 2.9
  */
-public final class InteractiveViewDelegate<V extends ViewContent> {
+public abstract class DialogNodeRepresentation<VAL extends DialogNodeValue> {
 
-    private WorkflowManager m_wfm;
-    private NodeID m_nodeID;
+    private String m_label;
+    private String m_description;
 
-    public void setWorkflowManagerAndNodeID(final WorkflowManager wfm, final NodeID id) {
-        m_wfm = wfm;
-        m_nodeID = id;
-        NodeContainer nc = m_wfm.getNodeContainer(m_nodeID);
-        assert m_wfm.getNodeContainer(m_nodeID) == nc;  // !! constructor argument matches this info...
-        if (!(nc instanceof NativeNodeContainer)) {
-            throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
+    /**
+     * @return the label
+     */
+    public String getLabel() {
+        return m_label;
+    }
+
+    /**
+     * @param label the label to set
+     */
+    public void setLabel(final String label) {
+        m_label = label;
+    }
+
+    /**
+     * @return the description
+     */
+    public String getDescription() {
+        return m_description;
+    }
+
+    /**
+     * @param description the description to set
+     */
+    public void setDescription(final String description) {
+        m_description = description;
+    }
+
+    /**
+     * @param settings
+     */
+    public void saveToNodeSettings(final NodeSettingsWO settings) {
+        settings.addString("label", m_label);
+        settings.addString("description", m_description);
+    }
+
+    /**
+     * @param settings
+     */
+    public void loadFromNodeSettings(final NodeSettingsRO settings) {
+        m_label = settings.getString("label", null);
+        m_description = settings.getString("description", null);
+    }
+    
+    /**
+     * @return The panel to be shown as a dialog component.
+     */
+    public abstract DialogNodePanel<VAL> createDialogPanel();
+
+    private static String verifyFlowVariableName(final String name) throws InvalidSettingsException {
+        try {
+            FlowVariable.Scope.Flow.verifyName(name);
+            return name;
+        } catch (Exception e) {
+            throw new InvalidSettingsException("Invalid variable name \"" + name + "\": " + e.getMessage(), e);
         }
-        NodeModel nm = ((NativeNodeContainer)nc).getNodeModel();
-        if (!(nm instanceof InteractiveNode)) {
-            throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
-        }
     }
-
-    public boolean canReExecute() {
-        return m_wfm.canReExecuteNode(m_nodeID);
-    }
-
-    public void triggerReExecution(final V vc, final ReexecutionCallback rec) {
-        m_wfm.reExecuteNode(m_nodeID, vc, rec);
-    }
-
-    public void setNewDefaultConfiguration(final ConfigureCallback ccb) {
-        m_wfm.saveNodeSettingsToDefault(m_nodeID);
-     }
 }

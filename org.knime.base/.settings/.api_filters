@@ -30,6 +30,86 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.DefaultWebViewTemplate">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.DefaultWebViewTemplate"/>
+                <message_argument value="org.knime.base_2.8.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.InteractiveWebNode">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveWebNode"/>
+                <message_argument value="org.knime.base_2.8.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.InteractiveWebNodeFactoryExtension">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveWebNodeFactoryExtension"/>
+                <message_argument value="org.knime.base_2.8.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.InteractiveWebNodeView">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveWebNodeView"/>
+                <message_argument value="org.knime.base_2.8.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.JSONViewContent">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.JSONViewContent"/>
+                <message_argument value="org.knime.base_2.8.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.QuickFormNode">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.QuickFormNode"/>
+                <message_argument value="org.knime.base_2.8.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.WebDependency">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.WebDependency"/>
+                <message_argument value="org.knime.base_2.8.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.WebResourceLocator">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.WebResourceLocator"/>
+                <message_argument value="org.knime.base_2.8.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.WebViewContent">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.WebViewContent"/>
+                <message_argument value="org.knime.base_2.8.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.WebViewTemplate">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.WebViewTemplate"/>
+                <message_argument value="org.knime.base_2.8.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx">
         <filter comment="changes to non-api persistor code" id="305422471">
             <message_arguments>
@@ -59,6 +139,14 @@
             <message_arguments>
                 <message_argument value="org.knime.base.node.preproc.columnTrans.Many2OneColNodeModel.IncludeMethod"/>
                 <message_argument value="org.knime.base_2.8.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/filter/hilite/collector/InteractiveHiLiteCollectorNodeModel.java" type="org.knime.base.node.preproc.filter.hilite.collector.InteractiveHiLiteCollectorNodeModel">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.filter.hilite.collector.InteractiveHiLiteCollectorNodeModel"/>
+                <message_argument value="reExecute(InteractiveHiLiteCollectorViewContent, PortObject[], ExecutionContext)"/>
             </message_arguments>
         </filter>
     </resource>
