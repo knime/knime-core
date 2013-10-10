@@ -56,8 +56,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1216,13 +1214,6 @@ public class FileNodePersistor implements NodePersistor {
                 File portDir = portDirRef.getFile();
                 subProgress.setMessage("Cleaning directory " + portDir.getAbsolutePath());
                 FileUtil.deleteRecursively(portDir);
-
-                // ========================================
-                // This is for testing the weird testcase problems under Windows only
-                Path portDirPath = portDir.toPath();
-                Files.createDirectory(portDirPath);
-                // ========================================
-
                 if (!portDir.mkdir() && !portDir.isDirectory()) {
                     throw new IOException("Can not create port directory " + portDir.getAbsolutePath());
                 }
