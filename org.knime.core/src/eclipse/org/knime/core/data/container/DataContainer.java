@@ -88,6 +88,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
@@ -1038,13 +1039,30 @@ public class DataContainer implements RowAppender {
         DataCell value = cell instanceof BlobWrapperDataCell
         ? ((BlobWrapperDataCell)cell).getCell() : cell;
         Comparator<DataCell> comparator = m_comparators[col];
-        if (m_minCells[col].isMissing()
-                || comparator.compare(value, m_minCells[col]) < 0) {
-            m_minCells[col] = value;
+        if (m_minCells[col].isMissing() || (comparator.compare(value, m_minCells[col]) < 0)) {
+            m_minCells[col] = handleNaN(value);
         }
-        if (m_maxCells[col].isMissing()
-                || comparator.compare(value, m_maxCells[col]) > 0) {
-            m_maxCells[col] = value;
+
+        if (m_maxCells[col].isMissing() || (comparator.compare(value, m_maxCells[col]) > 0)) {
+            m_maxCells[col] = handleNaN(value);
+        }
+    }
+
+    /*
+     * Returns
+     * - the cell if it is not a DoubleValue
+     * - the cell if it is not NaN
+     * - a missing cell if it is NaN
+     */
+    private static DataCell handleNaN(final DataCell cell) {
+        if (cell.getType().isCompatible(DoubleValue.class)) {
+            if (Double.isNaN(((DoubleValue) cell).getDoubleValue())) {
+                return DataType.getMissingCell();
+            } else {
+                return cell;
+            }
+        } else {
+            return cell;
         }
     }
 
