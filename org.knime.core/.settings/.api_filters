@@ -7,6 +7,12 @@
                 <message_argument value="2.8.0"/>
             </message_arguments>
         </filter>
+        <filter id="924844039">
+            <message_arguments>
+                <message_argument value="2.8.2"/>
+                <message_argument value="2.8.2"/>
+            </message_arguments>
+        </filter>
         <filter id="927989779">
             <message_arguments>
                 <message_argument value="2.8.0"/>
@@ -186,6 +192,24 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.config.ConfigEditTreeModel"/>
                 <message_argument value="create(ConfigBase, ConfigBase)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/defaultnodesettings/DialogComponentColumnFilter.java" type="org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter">
+        <filter comment="new method that will be available 2.9 officially (bug 4588)" id="1141899266">
+            <message_arguments>
+                <message_argument value="2.9"/>
+                <message_argument value="2.8"/>
+                <message_argument value="DialogComponentColumnFilter(SettingsModelFilterString, int, boolean, ColumnFilter, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/util/ColumnFilterPanel.java" type="org.knime.core.node.util.ColumnFilterPanel">
+        <filter comment="new method that will be available 2.9 officially (bug 4588)" id="1141899266">
+            <message_arguments>
+                <message_argument value="2.9"/>
+                <message_argument value="2.8"/>
+                <message_argument value="update(DataTableSpec, Collection&lt;String&gt;, Collection&lt;String&gt;, boolean)"/>
             </message_arguments>
         </filter>
     </resource>

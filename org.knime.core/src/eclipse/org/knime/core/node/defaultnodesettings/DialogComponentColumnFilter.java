@@ -80,6 +80,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
     /** Table spec that was sent last into the filter component. */
     private DataTableSpec m_specInFilter;
 
+    private final boolean m_inclUnknown;
+
     /**
      * Creates a new filter column panel with three components which are the
      * include list, button panel to shift elements between the two lists, and
@@ -196,9 +198,32 @@ public class DialogComponentColumnFilter extends DialogComponent {
     public DialogComponentColumnFilter(final SettingsModelFilterString model,
             final int inPortIndex, final boolean showKeepAllBox,
             final ColumnFilter filter) {
+        this(model, inPortIndex, showKeepAllBox, filter, true);
+    }
+    /**
+     * Creates a new filter column panel with three component which are the
+     * include list, button panel to shift elements between the two lists, and
+     * the exclude list. The include list then will contain all values to
+     * filter. The allowed types filters out every column which is not
+     * compatible with the allowed type.
+     *
+     * @param model a string array model that stores the value
+     * @param inPortIndex the index of the port whose table is filtered
+     * @param showKeepAllBox if the keep-all check box should be visible
+     * @param filter for the columns, all column not compatible with
+     *            any of the allowed types are not displayed
+     * @param inclUnknown <code>true</code> if unknown columns should be added
+     *              to the include list of the component otherwise they are
+     *              added to the exclude list
+     * @since 2.9
+     */
+    public DialogComponentColumnFilter(final SettingsModelFilterString model,
+            final int inPortIndex, final boolean showKeepAllBox,
+            final ColumnFilter filter, final boolean inclUnknown) {
         super(model);
 
         m_inPortIndex = inPortIndex;
+        m_inclUnknown = inclUnknown;
         m_specInFilter = null;
 
         m_columnFilter = new ColumnFilterPanel(showKeepAllBox, filter);
@@ -310,7 +335,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
                 // the component doesn't take a null spec. Create an empty one
                 m_specInFilter = new DataTableSpec();
             }
-            m_columnFilter.update(m_specInFilter, filterModel.getIncludeList(), filterModel.getExcludeList());
+            m_columnFilter.update(m_specInFilter, filterModel.getIncludeList(),
+                filterModel.getExcludeList(), m_inclUnknown);
             m_columnFilter.setKeepAllSelected(modelKeepAll);
         }
 

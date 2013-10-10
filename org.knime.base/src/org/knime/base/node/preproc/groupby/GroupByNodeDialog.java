@@ -68,6 +68,7 @@ import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.dialogutil.AggregationColumnPanel;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -84,6 +85,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
  * The node dialog of the group by node.
@@ -137,6 +139,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         new AggregationColumnPanel();
 
     /**Constructor for class GroupByNodeDialog. */
+    @SuppressWarnings("unchecked")
     public GroupByNodeDialog() {
 //create the root tab
         m_tabs = new JTabbedPane();
@@ -145,7 +148,8 @@ public class GroupByNodeDialog extends NodeDialogPane {
 
 //The group column box
         m_groupCol =
-            new DialogComponentColumnFilter(m_groupByCols, 0, false);
+            new DialogComponentColumnFilter(m_groupByCols, 0, false,
+                new ColumnFilterPanel.ValueClassFilter(DataValue.class), false);
         m_groupCol.setIncludeTitle(" Group column(s) ");
         m_groupCol.setExcludeTitle(" Available column(s) ");
         //we are only interested in showing the invalid include columns

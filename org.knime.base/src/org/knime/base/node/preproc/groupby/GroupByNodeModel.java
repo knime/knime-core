@@ -481,12 +481,6 @@ public class GroupByNodeModel extends NodeModel {
         // be compatible to versions prior KNIME 2.0
         compCheckColumnAggregators(groupByCols, origSpec);
 
-        // we have to explicitly set all not group columns in the exclude list of the SettingsModelFilterString. The
-        // DialogComponentColumnFilter component always uses the exclude/ list to update the component if we don't set
-        // the exclude list all columns are added as group by columns.
-        final Collection<String> exclList = getExcludeList(origSpec, groupByCols);
-        m_groupByCols.setExcludeList(exclList);
-
         // generate group-by spec given the original spec and selected columns
         final DataTableSpec groupBySpec =
             createGroupBySpec(origSpec, groupByCols);

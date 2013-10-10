@@ -876,6 +876,25 @@ public class ColumnFilterPanel extends JPanel {
      */
     public void update(final DataTableSpec spec, final Collection<String> inclList,
                        final Collection<String> exclList) {
+        update(spec, inclList, exclList, true);
+    }
+
+    /**
+     * Updates this filter panel by removing all current selections from the
+     * include and exclude list. The include list will contains all column names
+     * from the spec afterwards.
+     *
+     * @param spec the spec to retrieve the column names from
+     * @param inclList the list of columns to include
+     * @param exclList the list of columns to exclude
+     * @param inclUnknown <code>true</code> if unknown columns should be added
+     * to the include list of the component otherwise they are added to the
+     * exclude list
+     * @since 2.9
+     */
+    public void update(final DataTableSpec spec, final Collection<String> inclList,
+                       final Collection<String> exclList,
+                       final boolean inclUnknown) {
         assert (spec != null && inclList != null && exclList != null);
         m_spec = spec;
         m_order.clear();
@@ -897,9 +916,12 @@ public class ColumnFilterPanel extends JPanel {
             } else {
                 if (exclCols.remove(c)) {
                     m_exclMdl.addElement(cSpec);
-                } else {
+                } else if (inclCols.remove(c)) {
                     m_inclMdl.addElement(cSpec);
-                    inclCols.remove(c);
+                } else if (inclUnknown) {
+                    m_inclMdl.addElement(cSpec);
+                } else {
+                    m_exclMdl.addElement(cSpec);
                 }
             }
         }
