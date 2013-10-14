@@ -70,8 +70,8 @@ public interface WizardNodeFactoryExtension<T extends NodeModel & WizardNode<VC>
 
     /**
      * @return name of the interactive web view.
-     * @since 2.8
+
      */
-    public String getWizardViewName();
+    public String getInteractiveViewName();
 
 }
