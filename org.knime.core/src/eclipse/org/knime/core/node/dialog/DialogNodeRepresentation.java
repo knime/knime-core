@@ -52,73 +52,30 @@ package org.knime.core.node.dialog;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.FlowVariable;
 
 /**
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @param <VAL> The node value type.
  * @since 2.9
  */
 public abstract class DialogNodeRepresentation<VAL extends DialogNodeValue> {
 
-    private String m_label;
-    private String m_description;
-
-    /**
-     * @return the label
-     */
-    public String getLabel() {
-        return m_label;
-    }
-
-    /**
-     * @param label the label to set
-     */
-    public void setLabel(final String label) {
-        m_label = label;
-    }
-
-    /**
-     * @return the description
-     */
-    public String getDescription() {
-        return m_description;
-    }
-
-    /**
-     * @param description the description to set
-     */
-    public void setDescription(final String description) {
-        m_description = description;
-    }
 
     /**
      * @param settings
      */
-    public void saveToNodeSettings(final NodeSettingsWO settings) {
-        settings.addString("label", m_label);
-        settings.addString("description", m_description);
-    }
+    public abstract void saveToNodeSettings(final NodeSettingsWO settings);
 
     /**
      * @param settings
+     * @throws InvalidSettingsException
      */
-    public void loadFromNodeSettings(final NodeSettingsRO settings) {
-        m_label = settings.getString("label", null);
-        m_description = settings.getString("description", null);
-    }
-    
+    public abstract void loadFromNodeSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
+
     /**
      * @return The panel to be shown as a dialog component.
      */
     public abstract DialogNodePanel<VAL> createDialogPanel();
 
-    private static String verifyFlowVariableName(final String name) throws InvalidSettingsException {
-        try {
-            FlowVariable.Scope.Flow.verifyName(name);
-            return name;
-        } catch (Exception e) {
-            throw new InvalidSettingsException("Invalid variable name \"" + name + "\": " + e.getMessage(), e);
-        }
-    }
 }

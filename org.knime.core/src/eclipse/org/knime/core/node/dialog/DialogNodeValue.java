@@ -49,13 +49,13 @@
  */
 package org.knime.core.node.dialog;
 
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
- * @param <V> The value class of the dialog node value.
  * @since 2.9
  */
 public abstract class DialogNodeValue {
@@ -67,6 +67,7 @@ public abstract class DialogNodeValue {
 
     /**
      * @param settings
+     * @throws InvalidSettingsException
      */
-    public abstract void loadFromNodeSettings(final NodeSettingsRO settings);
+    public abstract void loadFromNodeSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
 }
