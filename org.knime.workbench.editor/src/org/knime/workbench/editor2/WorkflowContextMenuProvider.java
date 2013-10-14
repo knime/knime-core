@@ -70,6 +70,7 @@ import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.AddAnnotationAction;
@@ -345,6 +346,12 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                             ((AbstractNodeAction)action).update();
                         }
                     }
+                }
+
+                // Add open editor action to sub node
+                if (container instanceof SubNodeContainer) {
+                    action = new OpenSubworkflowEditorAction((NodeContainerEditPart)p);
+                    manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
                 }
 
                 // add port views

@@ -127,6 +127,7 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowCipherPrompt;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -810,17 +811,24 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
 
     public void openSubWorkflowEditor() {
         WorkflowCipherPrompt prompt = new GUIWorkflowCipherPrompt();
-        WorkflowManager wm = (WorkflowManager)getModel();
+        Object obj = getModel();
+        WorkflowManager wm;
+        if (obj instanceof WorkflowManager) {
+            wm = (WorkflowManager)getModel();
+        } else if (obj instanceof SubNodeContainer) {
+            wm = ((SubNodeContainer)obj).getWorkflowManager();
+        } else {
+            return;
+        }
         if (!wm.unlock(prompt)) {
             return;
         }
         // open new editor for subworkflow
         LOGGER.debug("opening new editor for sub-workflow");
         try {
-            NodeContainer container = (NodeContainer)getModel();
             final WorkflowEditor parent =
                 (WorkflowEditor)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-            WorkflowManagerInput input = new WorkflowManagerInput((WorkflowManager)container, parent);
+            WorkflowManagerInput input = new WorkflowManagerInput(wm, parent);
             PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
                 .openEditor(input, "org.knime.workbench.editor.WorkflowEditor");
         } catch (PartInitException e) {
