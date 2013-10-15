@@ -61,24 +61,33 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public abstract class DialogNodeRepresentation<VAL extends DialogNodeValue> {
 
+    private static final String CFG_WEIGHT = "weight";
 
-    private int m_weight;
+    private static final int DEFAULT_WEIGHT = 1;
 
-    /**
-     * @param settings
-     */
-    public abstract void saveToNodeSettings(final NodeSettingsWO settings);
+    private int m_weight = DEFAULT_WEIGHT;
 
     /**
-     * @param settings
-     * @throws InvalidSettingsException
+     * @param settings The settings
      */
-    public abstract void loadFromNodeSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
+    public void saveToNodeSettings(final NodeSettingsWO settings) {
+        settings.addInt(CFG_WEIGHT, m_weight);
+    }
 
     /**
-     * @param settings
+     * @param settings The settings
+     * @throws InvalidSettingsException If the settings could not be loaded
      */
-    public abstract void loadFromNodeSettingsInDialog(NodeSettingsRO settings);
+    public void loadFromNodeSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_weight = settings.getInt(CFG_WEIGHT);
+    }
+
+    /**
+     * @param settings The settings
+     */
+    public void loadFromNodeSettingsInDialog(final NodeSettingsRO settings) {
+        m_weight = settings.getInt(CFG_WEIGHT, DEFAULT_WEIGHT);
+    }
 
     /**
      * @return The panel to be shown as a dialog component.
