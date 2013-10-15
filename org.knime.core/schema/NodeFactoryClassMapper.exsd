@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.knime.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.knime.core" id="NodeFactoryClassMapper" name="Changes NodeFactory class names in saved workflows"/>
+      </appInfo>
+      <documentation>
+         Used by KNIME plugins, which map old-style NodeFactory class names to new implementations. The class names are part of a persisted workflow and need to be restored also in newer versions of KNIME. This extension point allows contributions to map the class name (e.g. &quot;com.company.node.ImplementationNodeFactory&quot; to &quot;org.company.node.BetterImplementationNodeFactory&quot;).
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence minOccurs="1" maxOccurs="unbounded">
+            <choice minOccurs="1" maxOccurs="unbounded">
+               <element ref="NodeFactoryClassMapper"/>
+            </choice>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="NodeFactoryClassMapper">
+      <annotation>
+         <documentation>
+            Defines the actual contributing class.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="classMapper" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The class extending the factory class mapper base class. Note, this class needs a public no-arg constructor.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn="org.knime.core.node.NodeFactoryClassMapper:"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         2.9
+      </documentation>
+   </annotation>
+
+
+
+
+
+</schema>

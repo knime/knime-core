@@ -69,13 +69,14 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeFactoryClassMapper;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
-import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.missing.MissingNodeFactory;
@@ -312,6 +313,17 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     @SuppressWarnings("unchecked")
     final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName) throws InvalidSettingsException,
         InstantiationException, IllegalAccessException, ClassNotFoundException {
+        List<NodeFactoryClassMapper> classMapperList = NodeFactoryClassMapper.getRegisteredMappers();
+        for (NodeFactoryClassMapper mapper : classMapperList) {
+            @SuppressWarnings("rawtypes")
+            NodeFactory factory = mapper.mapFactoryClassName(factoryClassName);
+            if (factory != null) {
+                getLogger().debug(String.format("Replacing stored factory class name \"%s\" by actual factory "
+                    + "class \"%s\" (defined by class mapper \"%s\")", factoryClassName, factory.getClass().getName(),
+                    mapper.getClass().getName()));
+                return factory;
+            }
+        }
         // use global Class Creator utility for Eclipse "compatibility"
         try {
             NodeFactory<NodeModel> f =
