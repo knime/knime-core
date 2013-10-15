@@ -70,4 +70,9 @@ public abstract class DialogNodeValue {
      * @throws InvalidSettingsException
      */
     public abstract void loadFromNodeSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
+
+    /**
+     * @param settings
+     */
+    public abstract void loadFromNodeSettingsInDialog(final NodeSettingsRO settings);
 }

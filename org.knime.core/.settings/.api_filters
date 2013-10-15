@@ -282,7 +282,19 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+                <message_argument value="loadViewContent(VAL)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
                 <message_argument value="loadViewContent(VC)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403902496">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+                <message_argument value="VAL"/>
             </message_arguments>
         </filter>
         <filter id="405901410">

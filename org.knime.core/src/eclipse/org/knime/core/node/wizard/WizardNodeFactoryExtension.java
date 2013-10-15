@@ -56,10 +56,12 @@ import org.knime.core.node.web.WebViewContent;
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @param <T> requires {@link NodeModel} implementing {@link WizardNode}
- * @param <VC>
+ * @param <VC> The concrete class of the {@link WebViewContent} acting as representation of the view.
+ * @param <VAL> The concrete class of the {@link WebViewContent} acting as value of the view.
  * @since 2.9
  */
-public interface WizardNodeFactoryExtension<T extends NodeModel & WizardNode<VC>, VC extends WebViewContent> {
+public interface WizardNodeFactoryExtension<T extends NodeModel & WizardNode<VC>,
+        VC extends WebViewContent> {
 
     /**
      * Creates and returns a new instance of the node's corresponding model.

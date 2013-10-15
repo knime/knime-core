@@ -62,6 +62,8 @@ import org.knime.core.node.NodeSettingsWO;
 public abstract class DialogNodeRepresentation<VAL extends DialogNodeValue> {
 
 
+    private int m_weight;
+
     /**
      * @param settings
      */
@@ -74,8 +76,28 @@ public abstract class DialogNodeRepresentation<VAL extends DialogNodeValue> {
     public abstract void loadFromNodeSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
 
     /**
+     * @param settings
+     */
+    public abstract void loadFromNodeSettingsInDialog(NodeSettingsRO settings);
+
+    /**
      * @return The panel to be shown as a dialog component.
      */
     public abstract DialogNodePanel<VAL> createDialogPanel();
+
+    /**
+     * @return the weight
+     */
+    public int getWeight() {
+        return m_weight;
+    }
+
+    /**
+     * @param weight the weight to set
+     */
+    public void setWeight(final int weight) {
+        m_weight = weight;
+    }
+
 
 }

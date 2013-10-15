@@ -62,9 +62,7 @@ import org.knime.core.node.InvalidSettingsException;
 /**
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
- * @param <REP> The configuration content of the dialog node.
  * @param <VAL> The node value implementation of the dialog node.
- * @param <V> The value class of the dialog node.
  * @since 2.9
  */
 @SuppressWarnings("serial")

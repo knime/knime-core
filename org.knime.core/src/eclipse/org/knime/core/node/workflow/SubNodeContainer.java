@@ -62,6 +62,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeConfigureHelper;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
@@ -69,6 +70,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.PortObject;
@@ -78,7 +80,9 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.web.WebTemplate;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -248,14 +252,15 @@ public class SubNodeContainer extends SingleNodeContainer {
 
     /* -------------------- Dialog Handling ------------------ */
 
-    // TODO: enable dialog handling!
+    private NodeDialogPane m_nodeDialogPane;
 
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean hasDialog() {
-        return false;
+        int c = NodeExecutionJobManagerPool.getNumberOfJobManagersFactories();
+        return c > 1 || m_wfm.findNodes(DialogNode.class, true).size() > 0;
     }
 
     /**
@@ -264,7 +269,18 @@ public class SubNodeContainer extends SingleNodeContainer {
     @Override
     NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs, final PortObject[] inData)
         throws NotConfigurableException {
-        return null;
+        NodeDialogPane dialogPane = getDialogPane();
+        // find all dialog nodes and update subnode dialog
+        @SuppressWarnings("rawtypes")
+        Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
+        ((SubNodeDialogPane)dialogPane).setDialogNodes(nodes);
+        NodeSettings settings = new NodeSettings("subnode_settings");
+        saveSettings(settings);
+        Node.invokeDialogInternalLoad(dialogPane, settings, inSpecs, inData,
+            new FlowObjectStack(getID()),
+            new CredentialsProvider(this, m_wfm.getCredentialsStore()),
+            getParent().isWriteProtected());
+        return dialogPane;
     }
 
     /**
@@ -272,7 +288,21 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     NodeDialogPane getDialogPane() {
-        return null;
+        if (m_nodeDialogPane == null) {
+            if (hasDialog()) {
+                // create sub node dialog with dialog nodes
+                m_nodeDialogPane = new SubNodeDialogPane();
+                // workflow manager jobs can't be split
+                if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
+                    // TODO: set the splittype depending on the nodemodel
+                    SplitType splitType = SplitType.USER;
+                    m_nodeDialogPane.addJobMgrTab(splitType);
+                }
+            } else {
+                throw new IllegalStateException("Workflow has no dialog");
+            }
+        }
+        return m_nodeDialogPane;
     }
 
     /**
@@ -650,5 +680,4 @@ public class SubNodeContainer extends SingleNodeContainer {
     public boolean isInactiveBranchConsumer() {
         return false;
     }
-
 }

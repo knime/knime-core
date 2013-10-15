@@ -55,10 +55,12 @@ import org.knime.core.node.web.WebViewContent;
 /**
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
- * @param <VC> The concrete class of the {@link WebViewContent}
+ * @param <VC> The concrete class of the {@link WebViewContent} acting as representation of the view.
+ * @param <VAL> The concrete class of the {@link WebViewContent} acting as value of the view.
  * @since 2.9
  */
-public interface WizardNode<VC extends WebViewContent> extends InteractiveNode<VC> {
+public interface WizardNode<VC extends WebViewContent>
+        extends InteractiveNode<VC> {
 
     /**
      * Create content which can be used by the web view implementation.
