@@ -50,8 +50,12 @@
  */
 package org.knime.base.node.preproc.rowkey2;
 
-import org.knime.base.data.append.column.AppendedColumnTable;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
+import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -70,14 +74,6 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.MutableInteger;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Provides methods to append a new row with the row key values or
@@ -183,8 +179,7 @@ public class RowKeyUtil2 {
             }
             outSpec = AppendedColumnTable.getTableSpec(outSpec, newColSpec);
         }
-        final BufferedDataContainer newContainer =
-            exec.createDataContainer(outSpec, false);
+        final BufferedDataContainer newContainer = exec.createDataContainer(outSpec, true);
         final int noOfCols = outSpec.getNumColumns();
         final int newRowKeyColIdx;
         if (selRowKeyColName != null) {
@@ -330,16 +325,8 @@ public class RowKeyUtil2 {
             throw new IllegalArgumentException("Number of skipped columns is "
                     + "greater than total number of columns.");
         }
-        final Set<String> names2Drop =
-            new HashSet<String>(Arrays.asList(columnNames2Drop));
-        final Collection<DataColumnSpec> newColSpecs =
-            new ArrayList<DataColumnSpec>(numColumns - columnNames2Drop.length);
-        for (final DataColumnSpec columnSpec : spec) {
-            if (names2Drop.contains(columnSpec.getName())) {
-                continue;
-            }
-            newColSpecs.add(columnSpec);
-        }
-        return new DataTableSpec(newColSpecs.toArray(new DataColumnSpec[0]));
+        final ColumnRearranger rearranger = new ColumnRearranger(spec);
+        rearranger.remove(columnNames2Drop);
+        return rearranger.createSpec();
     }
 }
