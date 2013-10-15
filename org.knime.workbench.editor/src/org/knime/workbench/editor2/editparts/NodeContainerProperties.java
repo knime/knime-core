@@ -71,7 +71,7 @@ public class NodeContainerProperties implements IPropertySource {
             wfm.saveNodeSettings(node.getID(), nodeSettings);
             m_settings = nodeSettings.getConfig("model");
         } catch (InvalidSettingsException e) {
-            m_settings = null;
+            m_settings = new NodeSettings("<empty>");
         }
         m_prefix = "";
     }
