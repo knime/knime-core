@@ -2186,6 +2186,15 @@ public final class Node implements NodeModelWarningListener {
                 credentialsProvider, isWriteProtected);
     }
 
+    /**
+     * Adds the misc tab to dialogs.
+     * @param dialogPane
+     * @noreference This method is not intended to be referenced by clients. No public API.
+     */
+    public static void addMiscTab(final NodeDialogPane dialogPane) {
+        dialogPane.addMiscTab();
+    }
+
     /** Widens scope of {@link AbstractNodeView#closeView()} method so it
      * can be called from UI framework components. This method is not meant for
      * public use and may change in future versions.

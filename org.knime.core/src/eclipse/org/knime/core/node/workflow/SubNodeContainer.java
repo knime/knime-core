@@ -69,6 +69,7 @@ import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.interactive.InteractiveView;
@@ -292,12 +293,13 @@ public class SubNodeContainer extends SingleNodeContainer {
             if (hasDialog()) {
                 // create sub node dialog with dialog nodes
                 m_nodeDialogPane = new SubNodeDialogPane();
-                // workflow manager jobs can't be split
+                // job managers tab
                 if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
-                    // TODO: set the splittype depending on the nodemodel
+                    // TODO: set the SplitType depending on the nodemodel
                     SplitType splitType = SplitType.USER;
                     m_nodeDialogPane.addJobMgrTab(splitType);
                 }
+                Node.addMiscTab(m_nodeDialogPane);
             } else {
                 throw new IllegalStateException("Workflow has no dialog");
             }
@@ -570,15 +572,29 @@ public class SubNodeContainer extends SingleNodeContainer {
     @Override
     boolean performAreModelSettingsValid(final NodeSettingsRO modelSettings) {
         // TODO once dialogs are supported
-        return false;
+        return true;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    void performLoadModelSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // TODO  once dialogs are supported
+    @SuppressWarnings("rawtypes")
+    void performLoadModelSettingsFrom(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
+        Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
+        for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
+            NodeID id = entry.getKey();
+            String nodeID = Integer.toString(id.getIndex());
+            if (modelSettings.containsKey(nodeID)) {
+                NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
+                NodeSettingsWO oldSettings = new NodeSettings(nodeID);
+                DialogNode node = entry.getValue();
+                node.getNodeValue().saveToNodeSettings(oldSettings);
+                if (!conf.equals(oldSettings)) {
+                    node.getNodeValue().loadFromNodeSettings(conf);
+                }
+            }
+        }
     }
 
     /**
@@ -596,8 +612,14 @@ public class SubNodeContainer extends SingleNodeContainer {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("rawtypes")
     void performSaveModelSettingsTo(final NodeSettings modelSettings) {
-        // TODO  once dialogs are supported
+        Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
+        for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
+            String nodeID = Integer.toString(entry.getKey().getIndex());
+            NodeSettingsWO subSettings = modelSettings.addNodeSettings(nodeID);
+            entry.getValue().getNodeValue().saveToNodeSettings(subSettings);
+        }
     }
 
     /**

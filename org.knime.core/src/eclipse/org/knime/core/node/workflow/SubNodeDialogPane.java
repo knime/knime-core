@@ -118,7 +118,8 @@ public final class SubNodeDialogPane extends NodeDialogPane {
                 // no valid representation
                 continue;
             }
-            DialogNodePanel<? extends DialogNodeValue> dialogPanel = representation.createDialogPanel();
+            DialogNodePanel dialogPanel = representation.createDialogPanel();
+            dialogPanel.loadNodeValue(entry.getValue().getNodeValue());
             m_nodes.put(new Pair<NodeID, DialogNode<? extends DialogNodeRepresentation<?>,
                 ? extends DialogNodeValue>>(entry.getKey(), entry.getValue()), dialogPanel);
             Pair<Integer, DialogNodePanel<? extends DialogNodeValue>> weightedPanelPair = new Pair<Integer,
@@ -192,5 +193,4 @@ public final class SubNodeDialogPane extends NodeDialogPane {
             }
         }
     }
-
 }
