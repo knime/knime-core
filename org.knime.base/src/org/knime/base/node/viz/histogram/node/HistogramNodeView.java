@@ -105,11 +105,11 @@ public class HistogramNodeView extends NodeView<HistogramNodeModel> {
         m_plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
         m_plotter.setHistogramVizModel(tableSpec, vizModel);
         m_plotter.updatePaintModel();
-        if (getComponent() != m_plotter) {
-            setComponent(m_plotter);
-        }
         if (m_plotter != null) {
             m_plotter.fitToScreen();
+        }
+        if (getComponent() != m_plotter) {
+            setComponent(m_plotter);
         }
     }
 
