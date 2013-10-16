@@ -1215,7 +1215,11 @@ public class FileNodePersistor implements NodePersistor {
                 subProgress.setMessage("Cleaning directory " + portDir.getAbsolutePath());
                 FileUtil.deleteRecursively(portDir);
                 if (!portDir.mkdir() && !portDir.isDirectory()) {
-                    throw new IOException("Can not create port directory " + portDir.getAbsolutePath());
+                    throw new IOException("Can not create port directory " + portDir.getAbsolutePath() + " ("
+                        + "exists: " + portDir.exists() + ", isDir: " + portDir.isDirectory() + ", "
+                        + "parent permissions: " + (portDir.getParentFile().canRead() ? "r" : "-")
+                        + (portDir.getParentFile().canWrite() ? "w" : "-")
+                        + (portDir.getParentFile().canExecute() ? "x" : "-") + ")");
                 }
                 if (!portDir.canWrite()) {
                     throw new IOException("Can not write to port directory " + portDir.getAbsolutePath());
