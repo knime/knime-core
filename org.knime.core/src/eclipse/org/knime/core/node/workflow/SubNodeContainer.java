@@ -571,7 +571,20 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     boolean performAreModelSettingsValid(final NodeSettingsRO modelSettings) {
-        // TODO once dialogs are supported
+        Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
+        for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
+            NodeID id = entry.getKey();
+            String nodeID = Integer.toString(id.getIndex());
+            if (modelSettings.containsKey(nodeID)) {
+                try {
+                    NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
+                    DialogNode node = entry.getValue();
+                    node.getNodeValue().validateSettings(conf);
+                } catch (InvalidSettingsException e) {
+                    return false;
+                }
+            }
+        }
         return true;
     }
 
