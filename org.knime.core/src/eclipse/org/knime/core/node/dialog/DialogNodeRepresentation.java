@@ -108,5 +108,9 @@ public abstract class DialogNodeRepresentation<VAL extends DialogNodeValue> {
         m_weight = weight;
     }
 
-
+    /**
+     * Resets a given DialogNodeValue to a default value.
+     * @param value the value to reset.
+     */
+    public abstract void resetNodeValueToDefault(VAL value);
 }
