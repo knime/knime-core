@@ -1450,6 +1450,12 @@
             factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.GenericPortCatchNodeFactory"
             id="org.knime.base.node.flowcontrol.trycatch.genericcatch.GenericPortCatchNodeFactory">
       </node>
+      <node
+            category-path="/flowcontrol/trycatch"
+            expert-flag="false"
+            factory-class="org.knime.base.node.flowcontrol.trycatch.inverter.ActiveBranchInverterNodeFactory"
+            id="org.knime.base.node.flowcontrol.trycatch.inverter.ActiveBranchInverterNodeFactory">
+      </node>
       <!--
       <node
             expert-flag="false"

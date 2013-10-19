@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<knimeNode icon="inverter.png" type="Manipulator" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+    <name>Active Branch Inverter</name>
+    
+    <shortDescription>Inverts status of a branch: inactive becomes active and vice versa.</shortDescription>
+    
+    <fullDescription>
+        <intro>
+        This nodes forwards the input from the first port if the execution was
+        successful. If execution on the top branch failed (and a matching try
+        node was connected before the failing node!) then the input from the
+        second port will be forwarded and the second variable outport will contain
+        information about the observed error.
+        </intro>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Original input">The original input</inPort>
+        <inPort index="1" name="Default input">The input to be used when execution on the main branch failed.</inPort>
+        <outPort index="0" name="Output">Original input or default if execution failed.</outPort>
+        <outPort index="1" name="Failure">Reasons for Failure (if any).</outPort>
+    </ports>
+</knimeNode>
