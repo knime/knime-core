@@ -1451,6 +1451,7 @@
             id="org.knime.base.node.flowcontrol.trycatch.genericcatch.GenericPortCatchNodeFactory">
       </node>
       <node
+            after="org.knime.base.node.flowcontrol.trycatch.generictry.VariablePortTryNodeFactory"
             category-path="/flowcontrol/trycatch"
             expert-flag="false"
             factory-class="org.knime.base.node.flowcontrol.trycatch.inverter.ActiveBranchInverterNodeFactory"
