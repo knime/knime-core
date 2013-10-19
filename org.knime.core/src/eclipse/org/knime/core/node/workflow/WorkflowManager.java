@@ -4084,8 +4084,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     try {
                         lsid = m_workflow.getMatchingLoopStart(leid);
                     } catch (Exception e) {
-                        // this should have been caught earlier...
-                        LOGGER.coding("WorkflowManager.reset() LoopEnd could not find matching loop start: ", e);
+                        // this can happen if we run into incorrectly configured loops
                         lsid = null;
                     }
                     if ((lsid != null) && (!allnodes.containsKey(lsid))) {
