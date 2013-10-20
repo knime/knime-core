@@ -50,6 +50,7 @@
  */
 package org.knime.base.node.jsnippet.expression;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -235,6 +236,25 @@ public abstract class AbstractJSnippet {
         return m_columns.get(index);
     }
 
+
+    /**
+     * Returns true when a column with the given name exists.
+     * @param column the column to test for
+     * @return true when a column with the given name exists
+     */
+    protected boolean columnExists(final String column) {
+        return m_cellsMap.get(column) != null;
+    }
+
+    /**
+     * Returns true when a column with the given index exists.
+     * @param index the index of the column
+     * @return true when a column with the given index exists
+     */
+    protected boolean columnExists(final int index) {
+        return index >= 0 && index < getColumnCount();
+    }
+
     /**
      * Get the value of the flow variable.
      *
@@ -249,6 +269,40 @@ public abstract class AbstractJSnippet {
     protected <T> T getFlowVariable(final String var, final T t)
         throws TypeException, FlowVariableException {
         return m_flowVars.getValueAs(var, t);
+    }
+
+    /**
+     * Get all flow variables of the given type.
+     *
+     * @param <T> the expected type
+     * @param t the type to be returned
+     * @return the flow variables of the given type.
+     */
+    protected <T> Map<String, T> getFlowVariables(final T t) {
+        Map<String, T> flowVars = new HashMap<String, T>();
+        for (String s : m_flowVars.getFlowVariables(t.getClass())) {
+            flowVars.put(s, getFlowVariable(s, t));
+        }
+        return flowVars;
+    }
+
+    /**
+     * Check if a flow variable with given name exists.
+     * @param name the name to test for
+     * @return true when a flow variable with given name exists
+     */
+    protected boolean flowVariableExists(final String name) {
+        return m_flowVars.getFlowVariable(name) != null;
+    }
+
+    /**
+     * Check if a flow variable is of given type.
+     * @param name the name of the flow variable
+     * @param t the type to test for
+     * @return true when a flow variable is of given type
+     */
+    protected boolean isFlowVariableOfType(final String name, final Object t) {
+        return m_flowVars.isOfType(name, t.getClass());
     }
 
     /** Returns true when the cells of the column can provide the given type. */
@@ -376,5 +430,4 @@ public abstract class AbstractJSnippet {
     protected void logFatal(final Object o, final Throwable t) {
         m_logger.fatal(o, t);
     }
-
 }

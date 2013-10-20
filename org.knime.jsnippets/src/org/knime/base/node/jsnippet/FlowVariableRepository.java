@@ -51,8 +51,12 @@
 package org.knime.base.node.jsnippet;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.knime.base.node.jsnippet.expression.FlowVariableException;
 import org.knime.base.node.jsnippet.expression.TypeException;
@@ -68,6 +72,7 @@ import org.knime.core.node.workflow.FlowVariable;
 public class FlowVariableRepository {
     private Map<String, FlowVariable> m_input;
     private Map<String, FlowVariable> m_modified;
+    private Set<String> m_flowVarNames;
 
     /**
      * Create a new repository.
@@ -77,6 +82,8 @@ public class FlowVariableRepository {
         super();
         m_input = input;
         m_modified = new LinkedHashMap<String, FlowVariable>();
+        m_flowVarNames = new LinkedHashSet<String>();
+        m_flowVarNames.addAll(input.keySet());
     }
 
     /**
@@ -123,6 +130,26 @@ public class FlowVariableRepository {
     }
 
     /**
+     * Returns true when getValueOfType(String, Class) does not throw
+     * an TypeException when called with the given flow variable and the given
+     * class name.
+     * @param name the name of the flow variable
+     * @param className the type
+     * @return true when flow variable is of type.
+     */
+    @SuppressWarnings("rawtypes")
+    public boolean isOfType(final String name, final Class className) {
+        FlowVariable flowVar = getFlowVariable(name);
+        if (null == flowVar) {
+            throw new FlowVariableException("The flow variable with name \""
+                    + name + "\" does not exist.");
+        }
+        TypeConverter converter =
+            TypeProvider.getDefault().getTypeConverter(flowVar.getType());
+        return converter.canProvideJavaType(className);
+    }
+
+    /**
      * Get the current flow variable associated with the given name or null if
      * a flow variable with the given name does not exist.
      * @param name the name of the flow variable r null if
@@ -141,6 +168,65 @@ public class FlowVariableRepository {
      */
     public void put(final FlowVariable flowVar) {
         m_modified.put(flowVar.getName(), flowVar);
+        // re-add element since natural ordering of flow variables is a stack
+        m_flowVarNames.remove(flowVar.getName());
+        m_flowVarNames.add(flowVar.getName());
     }
 
+    /**
+     * Get an iterator over flow variables. Note, that this iterator does not support the
+     * remove() method.
+     * @return iterator over flow variables
+     */
+    public Iterator<String> iterator() {
+        final Iterator<String> iter = m_flowVarNames.iterator();
+        return new Iterator<String>() {
+
+            @Override
+            public boolean hasNext() {
+                return iter.hasNext();
+            }
+
+            @Override
+            public String next() {
+                return iter.next();
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    /**
+     * Get the number of flow variables in the repository.
+     * @return the number of flow variables in the repository
+     */
+    public int size() {
+        return m_flowVarNames.size();
+    }
+
+    /**
+     * Get the identifiers of the flow variables in the repository.
+     * @return the list of flow variable names.
+     */
+    public Collection<String> getFlowVariables() {
+        return Collections.unmodifiableCollection(m_flowVarNames);
+    }
+
+    /**
+     * Get the identifiers of the flow variables with given type.
+     * @param className the type
+     * @return the identifiers of the flow variables with given type.
+     */
+    public Collection<String> getFlowVariables(final Class className) {
+        Collection<String> flowVarNames = new LinkedHashSet<String>();
+        for (String name : m_flowVarNames) {
+            if (isOfType(name, className)) {
+                flowVarNames.add(name);
+            }
+        }
+        return flowVarNames;
+    }
 }

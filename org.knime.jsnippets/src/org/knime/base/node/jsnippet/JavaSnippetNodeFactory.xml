@@ -50,17 +50,21 @@
           <i>tDate</i> : java.util.Date<br/>
           <i>tCalendar</i> : java.util.Calendar<br/>
           <i>tXML</i> : org.w3c.document<br/>
-          (f) These Types can be used for flow variables.
+          (f) These Types can be used for flow variables.<br/>
           
           <br/>
           <b>Java Snippet Methods:</b><br/>
           <i>getCell(name, type)*</i> : Get value of a cell by column name<br/>
           <i>isType(name, type)*</i> : Test for type by column name<br/>
           <i>isMissing(name)*</i> : Check if missing by column name<br/>
-          <i>getColumnCount(index, type)</i>  : Number of columns in the input table<br/>
-          <i>getColumnName(index)</i>  : Retrieve column name at index<br/>
+          <i>columnExists(name)*</i> : Check if column with given name exists<br/>
+          <i>getColumnCount(index, type)</i> : Number of columns in the input table<br/>
+          <i>getColumnName(index)</i> : Retrieve column name at index<br/>
           <br/>
           <i>getFlowVariable(name, type)</i> : Get value of a flow variable by name<br/>
+		  <i>getFlowVariables(type)</i> : Get all flow variables by type. A name to value map is returned.<br/>
+		  <i>flowVariableExists(name)</i> : Check if a flow variable with given name exists<br/>
+		  <i>isFlowVariableOfType(name, type)</i> : Check if a flow variable is of type<br/>          
           * Methods exist in a variant that takes the column index instead of its name.
           
           <p>You can hit <i>ctrl+space</i> to get an auto completion box with all

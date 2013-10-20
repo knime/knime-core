@@ -36,6 +36,13 @@
           <i>tInt</i>  : Integer <br/>
           <i>tDouble</i> : Double <br/>
 
+          <br/>
+          <b>Java Snippet Methods:</b><br/>
+          <i>getFlowVariable(name, type)</i> : Get value of a flow variable by name<br/>
+		  <i>getFlowVariables(type)</i> : Get all flow variables by type. A name to value map is returned.<br/>
+		  <i>flowVariableExists(name)</i> : Check if a flow variable with given name exists<br/>
+		  <i>isFlowVariableOfType(name, type)</i> : Check if a flow variable is of type<br/>          
+          
           <p>You can hit <i>ctrl+space</i> to get an auto completion box with all
           available classes, methods and fields. When you select a class and hit
           <i>enter</i> a import statement will be generated if missing.</p>    
