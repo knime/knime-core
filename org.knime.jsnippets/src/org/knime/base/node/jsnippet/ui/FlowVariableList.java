@@ -55,6 +55,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.TreeSet;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
@@ -149,10 +151,17 @@ public class FlowVariableList extends JList {
      * @param flowVars the flow variables.
      */
     public void setFlowVariables(final Collection<FlowVariable> flowVars) {
+        Collection<FlowVariable> sortedFlowVars = new TreeSet<FlowVariable>(new Comparator<FlowVariable>() {
+            @Override
+            public int compare(final FlowVariable o1, final FlowVariable o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        sortedFlowVars.addAll(flowVars);
         DefaultListModel fvListModel =
             (DefaultListModel)getModel();
         fvListModel.removeAllElements();
-        for (FlowVariable v : flowVars) {
+        for (FlowVariable v : sortedFlowVars) {
             fvListModel.addElement(v);
         }
 
