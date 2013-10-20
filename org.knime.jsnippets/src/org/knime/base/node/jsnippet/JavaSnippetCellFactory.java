@@ -226,10 +226,29 @@ public class JavaSnippetCellFactory implements CellFactory {
                 builder.append(message == null ? "<no details>" : message);
                 throw new RuntimeException(builder.toString(), thr);
             } else {
-                LOGGER.warn("Evaluation of java snippet failed for row \""
-                        + row.getKey() + "\": " + thr.getMessage(), thr);
-                OutVarList outVars =
-                    m_snippet.getSystemFields().getOutVarFields();
+
+
+                Integer lineNumber = null;
+                for (StackTraceElement ste : thr.getStackTrace()) {
+                    if (ste.getClassName().equals("JSnippet")) {
+                        lineNumber = ste.getLineNumber();
+                    }
+                }
+                StringBuilder msg = new StringBuilder();
+                msg.append("Evaluation of java snippet failed for row \"");
+                msg.append(row.getKey());
+                msg.append("\". ");
+                if (lineNumber != null) {
+                    msg.append("The exception is caused by line ");
+                    msg.append(lineNumber);
+                    msg.append(" of the snippet. ");
+                }
+                if (thr.getMessage() != null) {
+                    msg.append("Exception message:");
+                    msg.append(thr.getMessage());
+                }
+                LOGGER.warn(msg.toString(), thr);
+                OutVarList outVars = m_snippet.getSystemFields().getOutVarFields();
                 if (outVars.size() > 0) {
                     // Abort if flow variables are defined
                     throw new RuntimeException("An error occured in an "
