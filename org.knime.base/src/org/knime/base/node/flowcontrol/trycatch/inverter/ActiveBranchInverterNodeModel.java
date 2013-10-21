@@ -76,22 +76,18 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObject;
  */
 public class ActiveBranchInverterNodeModel extends NodeModel implements InactiveBranchConsumer {
 
-//  private static final NodeLogger LOGGER = NodeLogger.getLogger(ActiveBranchInverterNodeModel.class);
-
     /**
      * One variable input, one variable output.
      */
     protected ActiveBranchInverterNodeModel() {
-        super(new PortType[] {FlowVariablePortObject.TYPE},
-              new PortType[] {FlowVariablePortObject.TYPE});
+        super(new PortType[] {FlowVariablePortObject.TYPE}, new PortType[] {FlowVariablePortObject.TYPE});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         return inSpecs;
     }
 
@@ -99,8 +95,7 @@ public class ActiveBranchInverterNodeModel extends NodeModel implements Inactive
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec)
-                throws Exception {
+    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         assert inData.length == 1;
         PortObject outData = InactiveBranchPortObject.INSTANCE;
         if (inData[0].equals(InactiveBranchPortObject.INSTANCE)) {
@@ -120,16 +115,14 @@ public class ActiveBranchInverterNodeModel extends NodeModel implements Inactive
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
     }
 
     /**
@@ -143,16 +136,16 @@ public class ActiveBranchInverterNodeModel extends NodeModel implements Inactive
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
     }
 
 }
