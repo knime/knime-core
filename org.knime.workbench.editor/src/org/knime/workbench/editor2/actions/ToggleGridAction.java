@@ -101,7 +101,7 @@ public class ToggleGridAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Toggles the snapt to grid behavior in this editor";
+        return "Toggles the snap to grid behavior in this editor";
     }
 
     /**
