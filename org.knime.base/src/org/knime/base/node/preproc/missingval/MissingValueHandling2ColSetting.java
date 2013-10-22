@@ -310,6 +310,14 @@ final class MissingValueHandling2ColSetting {
     }
 
     /**
+     * Set the type.
+     * @param type the new type
+     */
+    final void setType(final int type) {
+        m_type = type;
+    }
+
+    /**
      * Is this config a meta-config?
      * @return <code>true</code> if it is
      */
