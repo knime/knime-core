@@ -64,7 +64,7 @@ import org.knime.core.node.util.filter.NameFilterConfiguration;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.6
  */
-public final class DataColumnSpecFilterConfiguration
+public class DataColumnSpecFilterConfiguration
     extends NameFilterConfiguration {
 
     private final InputFilter<DataColumnSpec> m_filter;
