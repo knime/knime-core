@@ -51,6 +51,7 @@
 package org.knime.base.node.util;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Vector;
@@ -68,6 +69,7 @@ import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.def.DefaultRowIterator;
 import org.knime.core.node.CanceledExecutionException;
@@ -87,7 +89,6 @@ import org.knime.core.node.ExecutionMonitor;
  * @author Peter Ohl, University of Konstanz
  */
 public class DefaultDataArray implements DataArray {
-
     /* this is where we store the rows. */
     private ArrayList<DataRow> m_rows;
 
@@ -112,6 +113,25 @@ public class DefaultDataArray implements DataArray {
      * stored rows
      */
     private DataTableSpec m_tSpec;
+
+    /*
+     * Returns
+     * - the cell if it is not a DoubleValue
+     * - the cell if it is not NaN
+     * - a missing cell if it is NaN
+     */
+    private static DataCell handleNaN(final DataCell cell) {
+        if (cell.getType().isCompatible(DoubleValue.class)) {
+            if (Double.isNaN(((DoubleValue) cell).getDoubleValue())) {
+                return DataType.getMissingCell();
+            } else {
+                return cell;
+            }
+        } else {
+            return cell;
+        }
+    }
+
 
     /**
      * Constructs a random access container holding a certain number of rows
@@ -154,7 +174,7 @@ public class DefaultDataArray implements DataArray {
             final int numOfRows, final ExecutionMonitor execMon)
             throws CanceledExecutionException {
         if (dTable == null) {
-            throw new NullPointerException("Must provide non-null data table"
+            throw new IllegalArgumentException("Must provide non-null data table"
                     + " for DataArray");
         }
         if (firstRow < 1) {
@@ -218,22 +238,8 @@ public class DefaultDataArray implements DataArray {
                 DataValueComparator comp =
                     tSpec.getColumnSpec(c).getType().getComparator();
 
-                // test the min value
-                if (m_minVal[c] == null) {
-                    m_minVal[c] = cell;
-                } else {
-                    if (comp.compare(m_minVal[c], cell) > 0) {
-                        m_minVal[c] = cell;
-                    }
-                }
-                // test the max value
-                if (m_maxVal[c] == null) {
-                    m_maxVal[c] = cell;
-                } else {
-                    if (comp.compare(m_maxVal[c], cell) < 0) {
-                        m_maxVal[c] = cell;
-                    }
-                }
+                updateMinMax(c, cell, comp);
+
                 // add it to the possible values if we record them for this col
                 LinkedHashSet<DataCell> possVals = m_possVals.get(c);
                 if (possVals != null) {
@@ -304,6 +310,28 @@ public class DefaultDataArray implements DataArray {
             m_tSpec = new DataTableSpec(colSpecs);
         } else {
             m_tSpec = tSpec;
+        }
+    }
+
+
+    /**
+     * Updates the min and max value for an respective column. This method does nothing if the min and max values don't
+     * need to be stored, e.g. the column at hand contains string values.
+     *
+     * @param col The column of interest.
+     * @param cell The new value to check.
+     */
+    private void updateMinMax(final int col, final DataCell cell, final Comparator<DataCell> comparator) {
+        if (m_minVal[col] == null || cell.isMissing()) {
+            return;
+        }
+        DataCell value = cell instanceof BlobWrapperDataCell ? ((BlobWrapperDataCell)cell).getCell() : cell;
+        if (m_minVal[col].isMissing() || (comparator.compare(value, m_minVal[col]) < 0)) {
+            m_minVal[col] = handleNaN(value);
+        }
+
+        if (m_maxVal[col].isMissing() || (comparator.compare(value, m_maxVal[col]) > 0)) {
+            m_maxVal[col] = handleNaN(value);
         }
     }
 
