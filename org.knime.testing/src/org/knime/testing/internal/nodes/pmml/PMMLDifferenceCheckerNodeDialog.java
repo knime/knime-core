@@ -92,12 +92,17 @@ class PMMLDifferenceCheckerNodeDialog extends DefaultNodeSettingsPane {
                 PMMLDifferenceCheckerNodeModel.createCheckExtensionsSettingsModel(),
                 "Check Extensions");
 
+        DialogComponentBoolean chkSchema = new DialogComponentBoolean(
+                PMMLDifferenceCheckerNodeModel.createCheckSchemaSettingsModel(),
+                "Check Attributes of PMML Element");
+
         addDialogComponent(chkDatadict);
         addDialogComponent(chkTransdict);
         addDialogComponent(chkHeader);
         addDialogComponent(chkMiningbuildtask);
         addDialogComponent(chkModelverification);
         addDialogComponent(chkExtensions);
+        addDialogComponent(chkSchema);
     }
 }
 

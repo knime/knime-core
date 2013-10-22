@@ -93,6 +93,8 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
     private static final String CFG_CHK_MODELVERIFICATION = "cfg_checkModelVerification";
 
     private static final String CFG_CHK_EXTENSIONS = "cfg_checkExtensions";
+    
+    private static final String CFG_CHK_SCHEMA = "cfg_checkSchema";
 
     /**
      * Creates a settings model for the check data dictionary setting.
@@ -141,6 +143,14 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
     static SettingsModelBoolean createCheckExtensionsSettingsModel() {
         return new SettingsModelBoolean(CFG_CHK_EXTENSIONS, true);
     }
+    
+    /**
+     * Creates a settings model for the check schema setting.
+     * @return the settings model
+     */
+    static SettingsModelBoolean createCheckSchemaSettingsModel() {
+        return new SettingsModelBoolean(CFG_CHK_SCHEMA, true);
+    }
 
     private SettingsModelBoolean m_checkDataDictionaries = createCheckDataDictionariesSettingsModel();
 
@@ -153,6 +163,8 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
     private SettingsModelBoolean m_checkModelVerification = createCheckModelVerificationSettingsModel();
 
     private SettingsModelBoolean m_checkExtensions = createCheckExtensionsSettingsModel();
+    
+    private SettingsModelBoolean m_checkSchema = createCheckSchemaSettingsModel();
 
     /**
      * {@inheritDoc}
@@ -169,7 +181,8 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
                                 m_checkHeader.getBooleanValue(),
                                 m_checkMiningBuildTask.getBooleanValue(),
                                 m_checkModelVerification.getBooleanValue(),
-                                m_checkExtensions.getBooleanValue());
+                                m_checkExtensions.getBooleanValue(),
+                                m_checkSchema.getBooleanValue());
 
         DOMComparer.CompareResult res = comp.areEqual(doc1, doc2);
         if (!res.isSuccess()) {
@@ -229,6 +242,7 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
         m_checkMiningBuildTask.saveSettingsTo(settings);
         m_checkModelVerification.saveSettingsTo(settings);
         m_checkExtensions.saveSettingsTo(settings);
+        m_checkSchema.saveSettingsTo(settings);
     }
 
     /**
@@ -243,6 +257,7 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
         m_checkMiningBuildTask.loadSettingsFrom(settings);
         m_checkModelVerification.loadSettingsFrom(settings);
         m_checkExtensions.loadSettingsFrom(settings);
+        m_checkSchema.loadSettingsFrom(settings);
     }
 
     /**
@@ -257,6 +272,7 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
         m_checkMiningBuildTask.validateSettings(settings);
         m_checkModelVerification.validateSettings(settings);
         m_checkExtensions.validateSettings(settings);
+        m_checkSchema.validateSettings(settings);
     }
 
     /**

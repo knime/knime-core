@@ -20,6 +20,7 @@
         <option name="Check Mining Build Task">Determines whether the mining build tasks are included in the equality check</option>
         <option name="Check Model Verification">Determines whether model verifications are included in the equality check</option>
         <option name="Check Extensions">Determines whether extension elements are included in the equality check</option>
+        <option name="Check Attributes of PMML Element">Determines whether the attributes (such as namespaces) of the PMML root element should be checked. The PMML version is always checked.</option>
     </fullDescription>
     
     <ports>

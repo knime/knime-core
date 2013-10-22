@@ -50,6 +50,7 @@ package org.knime.testing.internal.nodes.pmml;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.w3c.dom.NamedNodeMap;
@@ -98,57 +99,78 @@ public final class DOMComparer {
         if (!node1.getNodeName().equals(node2.getNodeName())) {
             return new CompareResult(node1, depth, false);
         }
-
+        
         // Check attributes
         NamedNodeMap attributes1 = node1.getAttributes();
         NamedNodeMap attributes2 = node2.getAttributes();
-
-        if ((attributes1 == null) && (attributes2 == null)) {
-            // do nothing
-        } else if ((attributes1 != null) ^ (attributes2 != null)) {
-            return new CompareResult(node1, depth, false);
-        } else if (attributes1.getLength() != attributes2.getLength()) {
+        
+        if (attributes1 == null ^ attributes2 == null) {
         	return new CompareResult(node1, depth, false);
-        } else {
-        	for (int i = 0; i < attributes1.getLength(); i++) {
-        		Node attr = attributes1.item(i);
-        		String val1 = attr.getNodeValue();
-        		String val2 = attributes2.getNamedItem(attr.getNodeName()).getNodeValue();
-
-        		if (val1.equals(val2)) {
-        			continue;
-        		} else {
-        			// We have to take care of cases where an attribute can be 1.0 in one document and 1 in the other.
-        			// There could also be cases such as 1.000 and 1.0, so string comparison is not that easy.
-        			// BigDecimal is used in order to avoid floating point errors
-        			if (val1.matches(NUMBER_REGEX) && val2.matches(NUMBER_REGEX)) {
-        				java.math.BigDecimal bd1 = null;
-        				java.math.BigDecimal bd2 = null;
-        				try {
-        					// BigDecimal needs a capital E for the exponent
-        					bd1 = new BigDecimal(val1.replace('e', 'E'));
-        					bd2 = new BigDecimal(val2.replace('e', 'E'));
-        				} catch(NumberFormatException e) {
-        					// Cannot be parsed to a number, strings are not the same, so it is a mismatch
-        					// Should not happen because of the regular expression
-        					return new CompareResult(node1, depth, false);
-        				}
-
-        				// Scale is the number of digits after the decimal point. It is also compared in the
-        				// equals() method, so we set it to the  maximum on both numbers
-        				int maxScale = Math.max(bd1.scale(), bd2.scale());
-        				bd1 = bd1.setScale(maxScale);
-        				bd2 = bd2.setScale(maxScale);
-        				if (!bd1.equals(bd2)) {
-        					return new CompareResult(node1, depth, false);
-        				}
-        			} else {
-            			return new CompareResult(node1, depth, false);
-            		}
-        		}
-        	}
+        } else if (attributes1 != null && attributes2 != null) {
+	        HashMap<String, Node> attr1 = new HashMap<String, Node>();
+	        HashMap<String, Node> attr2 = new HashMap<String, Node>();
+	        
+	        for (int i = 0; i < attributes1.getLength(); i++) {
+	        	Node attr = attributes1.item(i);
+	        	if (l.isCheckedNode(attr)) {
+	        		attr1.put(attr.getNodeName(), attr);
+	        	}
+	        }
+	        for (int i = 0; i < attributes2.getLength(); i++) {
+	        	Node attr = attributes2.item(i);
+	        	if (l.isCheckedNode(attr)) {
+	        		attr2.put(attr.getNodeName(), attr);
+	        	}
+	        }
+	
+	        if (attr1.size() != attr2.size()) {
+	        	return new CompareResult(node1, depth, false);
+	        } else {
+	        	for (String k : attr1.keySet()) {
+	        		Node attr = attr1.get(k);
+	        		String val1 = attr.getNodeValue();
+	        		Node a2 = attr2.get(k);
+	        		String val2 = null;
+	        		// An attribute with this name does not exist in the other node
+	        		if (a2 == null) {
+	        			return new CompareResult(node1, depth, false);
+	        		} else {
+	        			val2 = a2.getNodeValue();
+	        		}
+	        		if (val1.equals(val2)) {
+	        			continue;
+	        		} else {
+	        			// We have to take care of cases where an attribute can be 1.0 in one document and 1 in the other.
+	        			// There could also be cases such as 1.000 and 1.0, so string comparison is not that easy.
+	        			// BigDecimal is used in order to avoid floating point errors
+	        			if (val1.matches(NUMBER_REGEX) && val2.matches(NUMBER_REGEX)) {
+	        				java.math.BigDecimal bd1 = null;
+	        				java.math.BigDecimal bd2 = null;
+	        				try {
+	        					// BigDecimal needs a capital E for the exponent
+	        					bd1 = new BigDecimal(val1.replace('e', 'E'));
+	        					bd2 = new BigDecimal(val2.replace('e', 'E'));
+	        				} catch(NumberFormatException e) {
+	        					// Cannot be parsed to a number, strings are not the same, so it is a mismatch
+	        					// Should not happen because of the regular expression
+	        					return new CompareResult(node1, depth, false);
+	        				}
+	        				
+	        				// Scale is the number of digits after the decimal point. It is also compared in the
+	        				// equals() method, so we set it to the  maximum on both numbers
+	        				int maxScale = Math.max(bd1.scale(), bd2.scale());
+	        				bd1 = bd1.setScale(maxScale);
+	        				bd2 = bd2.setScale(maxScale);
+	        				if (!bd1.equals(bd2)) {
+	        					return new CompareResult(node1, depth, false);
+	        				}
+	        			} else {
+	            			return new CompareResult(node1, depth, false);
+	            		}
+	        		}
+	        	}
+	        }
         }
-
         NodeList children1 = node1.getChildNodes();
         NodeList children2 = node2.getChildNodes();
 

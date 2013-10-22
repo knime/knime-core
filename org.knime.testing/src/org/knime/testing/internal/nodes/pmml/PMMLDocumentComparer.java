@@ -56,6 +56,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.dmg.pmml.PMMLDocument;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
@@ -135,6 +136,8 @@ public class PMMLDocumentComparer {
 
     private boolean m_checkExtensions;
 
+    private boolean m_checkSchema;
+    
     /**
      * Constructor for PMMLDocumentComparer.
      * @param checkDataDictionaries Determines whether the PMMLs' data dictionaries are compared
@@ -149,20 +152,22 @@ public class PMMLDocumentComparer {
                                 final boolean checkHeader,
                                 final boolean checkMiningBuildTask,
                                 final boolean checkModelVerification,
-                                final boolean checkExtensions) {
+                                final boolean checkExtensions,
+                                final boolean checkSchema) {
         m_checkDataDictionaries = checkDataDictionaries;
         m_checkTransformationDictionaries = checkTransformationDictionaries;
         m_checkHeader = checkHeader;
         m_checkMiningBuildTask = checkMiningBuildTask;
         m_checkModelVerification = checkModelVerification;
         m_checkExtensions = checkExtensions;
+        m_checkSchema = checkSchema;
     }
 
     /**
      * Constructor for a comparer that compares all elements of the PMML document.
      */
     public PMMLDocumentComparer() {
-        this(true, true, true, true, true, true);
+        this(true, true, true, true, true, true, true);
     }
 
     /**
@@ -181,17 +186,22 @@ public class PMMLDocumentComparer {
         DOMComparerFilter listener = new DOMComparerFilter() {
             @Override
             public boolean isCheckedNode(final Node n) {
-                boolean checked = !(n.getNodeType() == COMMENT_NODE_TYPE
-                        || (!m_checkModelVerification && n.getNodeName().equals(MODEL_VERIFICATION_XML_NODE_NAME))
-                        || (!m_checkDataDictionaries && n.getNodeName().equals(DATADICT_XML_NODE_NAME))
-                        || (!m_checkTransformationDictionaries && n.getNodeName().equals(TRANSDICT_XML_NODE_NAME))
-                        || (!m_checkHeader && n.getNodeName().equals(HEADER_XML_NODE_NAME))
-                        || (!m_checkMiningBuildTask && n.getNodeName().equals(MINING_BUILD_TASK_XML_NODE_NAME))
-                        || (!m_checkModelVerification && n.getNodeName().equals(MODEL_VERIFICATION_XML_NODE_NAME))
-                        || (!m_checkExtensions && n.getNodeName().equals(EXTENSION_XML_NODE_NAME))
-                        || (n.getNodeType() == TEXT_NODE_TYPE && n.getNodeValue().trim().length() == 0));
-
-                return checked;
+            if (n.getNodeType() == ATTRIBUTE_NODE_TYPE) {
+            	// Either we are not in the PMML Element, or even schema attributes are checked
+            	// or the node is the version attribute.
+            	Element parent = ((Attr)n).getOwnerElement();
+        		return parent.getNodeName() != "PMML" || m_checkSchema || n.getNodeName().equals("version");
+            } else {
+	            return !(n.getNodeType() == COMMENT_NODE_TYPE
+	                    || (!m_checkModelVerification && n.getNodeName().equals(MODEL_VERIFICATION_XML_NODE_NAME))
+	                    || (!m_checkDataDictionaries && n.getNodeName().equals(DATADICT_XML_NODE_NAME))
+	                    || (!m_checkTransformationDictionaries && n.getNodeName().equals(TRANSDICT_XML_NODE_NAME))
+	                    || (!m_checkHeader && n.getNodeName().equals(HEADER_XML_NODE_NAME))
+	                    || (!m_checkMiningBuildTask && n.getNodeName().equals(MINING_BUILD_TASK_XML_NODE_NAME))
+	                    || (!m_checkModelVerification && n.getNodeName().equals(MODEL_VERIFICATION_XML_NODE_NAME))
+	                    || (!m_checkExtensions && n.getNodeName().equals(EXTENSION_XML_NODE_NAME))
+	                    || (n.getNodeType() == TEXT_NODE_TYPE && n.getNodeValue().trim().length() == 0));
+            	}
             }
         };
 
