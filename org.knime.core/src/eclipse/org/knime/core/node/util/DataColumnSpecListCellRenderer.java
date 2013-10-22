@@ -101,7 +101,17 @@ public class DataColumnSpecListCellRenderer extends DefaultListCellRenderer {
      * @since 2.8
      */
     public static DataColumnSpec createInvalidSpec(final String colName) {
-        DataColumnSpecCreator creator = new DataColumnSpecCreator(colName, DataType.getType(DataCell.class));
+        return createInvalidSpec(colName, DataType.getType(DataCell.class));
+    }
+
+    /**
+     * @param colName the name of the invalid column
+     * @param type Type of the column
+     * @return the invalid {@link DataColumnSpec} for the given name and type
+     * @since 2.9
+     */
+    public static DataColumnSpec createInvalidSpec(final String colName, final DataType type) {
+        DataColumnSpecCreator creator = new DataColumnSpecCreator(colName, type);
         creator.setProperties(new DataColumnProperties(creaeteInvalidPropertiesMap()));
         return creator.createSpec();
     }
