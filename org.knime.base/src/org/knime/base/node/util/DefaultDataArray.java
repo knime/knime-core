@@ -56,6 +56,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Vector;
 
+import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -200,9 +201,13 @@ public class DefaultDataArray implements DataArray {
         m_ignoreCols = new boolean[numOfColumns];
         for (int c = 0; c < numOfColumns; c++) {
             m_ignoreCols[c] = false;
-            if (tSpec.getColumnSpec(c).getType()
-                    .isCompatible(NominalValue.class)) {
+            DataType dt = tSpec.getColumnSpec(c).getType();
+            if (dt.isCompatible(NominalValue.class)) {
                 m_possVals.set(c, new LinkedHashSet<DataCell>());
+            }
+            if (dt.isCompatible(BoundedValue.class)) {
+                m_minVal[c] = DataType.getMissingCell();
+                m_maxVal[c] = DataType.getMissingCell();
             }
         }
         // now fill our data structures
