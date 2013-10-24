@@ -1036,15 +1036,17 @@ public class DataContainer implements RowAppender {
         if (m_minCells[col] == null || cell.isMissing()) {
             return;
         }
-        DataCell value = cell instanceof BlobWrapperDataCell
-        ? ((BlobWrapperDataCell)cell).getCell() : cell;
-        Comparator<DataCell> comparator = m_comparators[col];
-        if (m_minCells[col].isMissing() || (comparator.compare(value, m_minCells[col]) < 0)) {
-            m_minCells[col] = handleNaN(value);
+        DataCell value = handleNaN(cell instanceof BlobWrapperDataCell ? ((BlobWrapperDataCell)cell).getCell() : cell);
+        if (value.isMissing()) {
+            return;
         }
 
+        Comparator<DataCell> comparator = m_comparators[col];
+        if (m_minCells[col].isMissing() || (comparator.compare(value, m_minCells[col]) < 0)) {
+            m_minCells[col] = value;
+        }
         if (m_maxCells[col].isMissing() || (comparator.compare(value, m_maxCells[col]) > 0)) {
-            m_maxCells[col] = handleNaN(value);
+            m_maxCells[col] = value;
         }
     }
 

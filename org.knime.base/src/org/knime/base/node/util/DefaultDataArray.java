@@ -330,13 +330,16 @@ public class DefaultDataArray implements DataArray {
         if (m_minVal[col] == null || cell.isMissing()) {
             return;
         }
-        DataCell value = cell instanceof BlobWrapperDataCell ? ((BlobWrapperDataCell)cell).getCell() : cell;
-        if (m_minVal[col].isMissing() || (comparator.compare(value, m_minVal[col]) < 0)) {
-            m_minVal[col] = handleNaN(value);
+        DataCell value = handleNaN(cell instanceof BlobWrapperDataCell ? ((BlobWrapperDataCell)cell).getCell() : cell);
+        if (value.isMissing()) {
+            return;
         }
 
+        if (m_minVal[col].isMissing() || (comparator.compare(value, m_minVal[col]) < 0)) {
+            m_minVal[col] = value;
+        }
         if (m_maxVal[col].isMissing() || (comparator.compare(value, m_maxVal[col]) > 0)) {
-            m_maxVal[col] = handleNaN(value);
+            m_maxVal[col] = value;
         }
     }
 
