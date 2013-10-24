@@ -221,11 +221,12 @@ public final class FileUtil {
             if (!targetDir.isDirectory() && !targetDir.mkdirs()) {
                 throw new IOException("Cannot create target directory \"" + targetDir.getAbsolutePath() + "\"");
             }
-            if (sourceDir.list() == null) {
+            final String[] sourceDirList = sourceDir.list();
+            if (sourceDirList == null) {
                 throw new IOException("Can't copy directory \"" + sourceDir
                         + "\", no read permissions.");
             }
-            for (String child : sourceDir.list()) {
+            for (String child : sourceDirList) {
                 copyDir(new File(sourceDir, child), new File(targetDir, child));
             }
         } else {
