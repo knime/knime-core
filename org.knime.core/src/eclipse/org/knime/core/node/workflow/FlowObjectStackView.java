@@ -96,6 +96,7 @@ final class FlowObjectStackView extends JPanel {
                 return false;
             }
         });
+        m_table.setAutoCreateRowSorter(true);
         m_table.setDefaultRenderer(FlowVariable.class,
                 new FlowVariableTableCellRenderer());
         add(new JScrollPane(m_table), BorderLayout.CENTER);
