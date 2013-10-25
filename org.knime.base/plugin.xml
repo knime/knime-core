@@ -647,6 +647,15 @@
             after="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"/>
        <node
              category-path="/statistics/regression"
+             factory-class="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"
+             id="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
+       <node
+             category-path="/statistics/regression"
+             factory-class="org.knime.base.node.mine.regression.linear2.predict.GeneralRegressionPredictorNodeFactory"
+             id="org.knime.base.node.mine.regression.linear2.predict.GeneralRegressionPredictorNodeFactory"
+             after="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/> 
+       <node
+             category-path="/statistics/regression"
              factory-class="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"
              id="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"
              after="org.knime.base.node.mine.regression.predict.RegressionPredictorNodeFactory"/>
