@@ -1401,6 +1401,12 @@
       <node
             category-path="/misc"
             expert-flag="false"
+            factory-class="org.knime.base.node.util.sendmail.SendMailNodeFactory"
+            id="org.knime.base.node.util.sendmail.SendMailNodeFactory">
+      </node>
+      <node
+            category-path="/misc"
+            expert-flag="false"
             factory-class="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory"
             id="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory">
       </node>      
