@@ -77,7 +77,7 @@ import org.knime.core.node.util.ColumnSelectionPanel;
  *
  * @author Heiko Hofer
  */
-public final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
+final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
     private final ColumnFilterPanel m_filterPanel;
 
     private final ColumnSelectionPanel m_selectionPanel;

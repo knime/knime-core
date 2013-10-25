@@ -88,7 +88,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  *
  * @author Heiko Hofer
  */
-public final class LinReg2Learner {
+final class LinReg2Learner {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(LinReg2Learner.class);
 

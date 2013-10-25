@@ -48,7 +48,7 @@
  * History
  *   19.05.2010 (hofer): created
  */
-package org.knime.base.node.mine.regression.linear2.predict;
+package org.knime.base.node.mine.regression.predict2;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -79,7 +79,7 @@ import Jama.Matrix;
  *
  * @author Heiko Hofer
  */
-public final class LinReg2Predictor extends RegressionPredictorCellFactory {
+final class LinReg2Predictor extends RegressionPredictorCellFactory {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(LinReg2Predictor.class);
     private PMMLGeneralRegressionContent m_content;
     private PPMatrix m_ppMatrix;

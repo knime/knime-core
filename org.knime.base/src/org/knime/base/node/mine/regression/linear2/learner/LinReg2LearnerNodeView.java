@@ -66,7 +66,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Heiko Hofer
  */
-public class LinReg2LearnerNodeView
+class LinReg2LearnerNodeView
     extends NodeView<LinReg2LearnerNodeModel> {
 
     /** The text pane that holds the information. */

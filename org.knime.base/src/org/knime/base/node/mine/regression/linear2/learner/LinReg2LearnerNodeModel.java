@@ -85,7 +85,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  *
  * @author Heiko Hofer
  */
-public final class LinReg2LearnerNodeModel extends NodeModel {
+final class LinReg2LearnerNodeModel extends NodeModel {
     private final LinReg2LearnerSettings m_settings;
 
     /** The learned regression model. */

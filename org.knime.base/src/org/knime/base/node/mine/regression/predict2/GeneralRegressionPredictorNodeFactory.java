@@ -40,77 +40,66 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  * History
- *   25.05.2010 (hofer): created
+ *   Apr 30, 2010 (hofer): created
  */
-package org.knime.base.node.mine.regression.linear2.predict;
+package org.knime.base.node.mine.regression.predict2;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * This class hold the settings for the General Regression Predictor node.
+ * Factory for general regression predictor node.
  *
  * @author Heiko Hofer
  */
-public class GeneralRegressionPredictorSettings {
-    /** Key for whether to include probabilities in the output. */
-    static final String CFG_INCLUDE_PROBABILITIES = "include_probabilites";
-
-    /** Key for the target column, used for dialog settings. */
-    static final String CFG_TARGET = "target";
-
-    private boolean m_includeProbabilities = false;
-
+public final class GeneralRegressionPredictorNodeFactory
+    extends NodeFactory<GeneralRegressionPredictorNodeModel> {
 
     /**
-     * @return the includeProbabilities
+     * {@inheritDoc}
      */
-    public boolean getIncludeProbabilities() {
-        return m_includeProbabilities;
+    @Override
+    public GeneralRegressionPredictorNodeModel createNodeModel() {
+        return new GeneralRegressionPredictorNodeModel();
     }
 
     /**
-     * @param includeProbabilities the includeProbabilities to set
+     * {@inheritDoc}
      */
-    public void setIncludeProbabilities(final boolean includeProbabilities) {
-        m_includeProbabilities = includeProbabilities;
+    @Override
+    public int getNrNodeViews() {
+        return 0;
     }
 
     /**
-     * Loads the settings from the node settings object.
-     *
-     * @param settings a node settings object
-     * @throws InvalidSettingsException if some settings are missing
+     * {@inheritDoc}
      */
-    public void loadSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_includeProbabilities = settings.getBoolean(CFG_INCLUDE_PROBABILITIES);
+    @Override
+    public NodeView<GeneralRegressionPredictorNodeModel> createNodeView(
+            final int index, final GeneralRegressionPredictorNodeModel m) {
+        throw new IndexOutOfBoundsException();
     }
 
     /**
-     * Loads the settings from the node settings object using default values if
-     * some settings are missing.
-     *
-     * @param settings a node settings object
+     * {@inheritDoc}
      */
-    public void loadSettingsForDialog(final NodeSettingsRO settings) {
-        m_includeProbabilities =
-                settings.getBoolean(CFG_INCLUDE_PROBABILITIES, true);
+    @Override
+    public boolean hasDialog() {
+        return true;
     }
 
     /**
-     * Saves the settings into the node settings object.
-     *
-     * @param settings a node settings object
+     * {@inheritDoc}
      */
-    public void saveSettings(final NodeSettingsWO settings) {
-        settings.addBoolean(CFG_INCLUDE_PROBABILITIES, m_includeProbabilities);
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new GeneralRegressionPredictorNodeDialogPane();
     }
 }

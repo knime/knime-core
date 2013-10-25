@@ -59,7 +59,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Heiko Hofer
  */
-public class LinReg2LearnerSettings {
+final class LinReg2LearnerSettings {
     /** Key for the included columns, used for dialog settings. */
     static final String CFG_VARIATES = "included_columns";
 

@@ -40,80 +40,77 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  * History
- *   21.01.2010 (hofer): created
+ *   25.05.2010 (hofer): created
  */
-package org.knime.base.node.mine.regression.linear2.predict;
-
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-
-import javax.swing.JCheckBox;
-import javax.swing.JPanel;
+package org.knime.base.node.mine.regression.predict2;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * Dialog for the linear regression learner.
+ * This class hold the settings for the General Regression Predictor node.
  *
  * @author Heiko Hofer
  */
-public final class GeneralRegressionPredictorNodeDialogPane
-        extends NodeDialogPane {
-    private final GeneralRegressionPredictorSettings m_settings;
-    private JCheckBox m_includeProbs;
+final class GeneralRegressionPredictorSettings {
+    /** Key for whether to include probabilities in the output. */
+    static final String CFG_INCLUDE_PROBABILITIES = "include_probabilites";
+
+    /** Key for the target column, used for dialog settings. */
+    static final String CFG_TARGET = "target";
+
+    private boolean m_includeProbabilities = false;
+
 
     /**
-     * Create new dialog for linear regression model.
+     * @return the includeProbabilities
      */
-    @SuppressWarnings("unchecked")
-    public GeneralRegressionPredictorNodeDialogPane() {
-        super();
-        m_settings = new GeneralRegressionPredictorSettings();
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.weightx = 1;
-        c.weighty = 1;
-        c.anchor = GridBagConstraints.FIRST_LINE_START;
-        c.insets = new Insets(5, 5, 0, 0);
-
-        m_includeProbs = new JCheckBox();
-        m_includeProbs.setText("Append columns with predicted probabilities");
-        panel.add(m_includeProbs , c);
-
-        addTab("Settings", panel);
+    public boolean getIncludeProbabilities() {
+        return m_includeProbabilities;
     }
 
     /**
-     * {@inheritDoc}
+     * @param includeProbabilities the includeProbabilities to set
      */
-    @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs) throws NotConfigurableException {
-        m_settings.loadSettingsForDialog(settings);
-
-        m_includeProbs.setSelected(m_settings.getIncludeProbabilities());
+    public void setIncludeProbabilities(final boolean includeProbabilities) {
+        m_includeProbabilities = includeProbabilities;
     }
 
     /**
-     * {@inheritDoc}
+     * Loads the settings from the node settings object.
+     *
+     * @param settings a node settings object
+     * @throws InvalidSettingsException if some settings are missing
      */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
+    public void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_settings.setIncludeProbabilities(m_includeProbs.isSelected());
+        m_includeProbabilities = settings.getBoolean(CFG_INCLUDE_PROBABILITIES);
+    }
 
-        m_settings.saveSettings(settings);
+    /**
+     * Loads the settings from the node settings object using default values if
+     * some settings are missing.
+     *
+     * @param settings a node settings object
+     */
+    public void loadSettingsForDialog(final NodeSettingsRO settings) {
+        m_includeProbabilities =
+                settings.getBoolean(CFG_INCLUDE_PROBABILITIES, true);
+    }
+
+    /**
+     * Saves the settings into the node settings object.
+     *
+     * @param settings a node settings object
+     */
+    public void saveSettings(final NodeSettingsWO settings) {
+        settings.addBoolean(CFG_INCLUDE_PROBABILITIES, m_includeProbabilities);
     }
 }

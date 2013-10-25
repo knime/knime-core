@@ -48,7 +48,7 @@
  * History
  *   11.05.2010 (hofer): created
  */
-package org.knime.base.node.mine.regression.linear2.predict;
+package org.knime.base.node.mine.regression.predict2;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -60,7 +60,7 @@ import org.knime.base.node.mine.regression.pmmlgreg.PMMLPPCell;
  *
  * @author Heiko Hofer
  */
-public class PPMatrix {
+final class PPMatrix {
     private Map<Key, String> m_ppMatrix;
     private Map<String, String> m_ppMap;
 
@@ -147,28 +147,37 @@ public class PPMatrix {
          */
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (obj == null)
+            }
+            if (obj == null) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             Key other = (Key)obj;
             if (m_paramterName == null) {
-                if (other.m_paramterName != null)
+                if (other.m_paramterName != null) {
                     return false;
-            } else if (!m_paramterName.equals(other.m_paramterName))
+                }
+            } else if (!m_paramterName.equals(other.m_paramterName)) {
                 return false;
+            }
             if (m_predictorName == null) {
-                if (other.m_predictorName != null)
+                if (other.m_predictorName != null) {
                     return false;
-            } else if (!m_predictorName.equals(other.m_predictorName))
+                }
+            } else if (!m_predictorName.equals(other.m_predictorName)) {
                 return false;
+            }
             if (m_targetCategory == null) {
-                if (other.m_targetCategory != null)
+                if (other.m_targetCategory != null) {
                     return false;
-            } else if (!m_targetCategory.equals(other.m_targetCategory))
+                }
+            } else if (!m_targetCategory.equals(other.m_targetCategory)) {
                 return false;
+            }
             return true;
         }
 

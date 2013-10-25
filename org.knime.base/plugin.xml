@@ -631,39 +631,25 @@
             category-path="/mining/subgroup"
             factory-class="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory2"
             id="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory2"/>
-	   <node
-	         category-path="/statistics/regression"
-	         factory-class="org.knime.base.node.mine.regression.linear.learn.LinRegLearnerNodeFactory"
-	         id="org.knime.base.node.mine.regression.linear.learn.LinRegLearnerNodeFactory"/>
-       <node
-            category-path="/statistics/regression"
-            factory-class="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"
-            id="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"
-            after="org.knime.base.node.mine.regression.linear.learn.LinRegLearnerNodeFactory"/>
-	   <node
-            category-path="/statistics/regression"
-            factory-class="org.knime.base.node.mine.regression.predict.RegressionPredictorNodeFactory"
-            id="org.knime.base.node.mine.regression.predict.RegressionPredictorNodeFactory"
-            after="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"/>
        <node
              category-path="/statistics/regression"
              factory-class="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"
              id="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
        <node
-             category-path="/statistics/regression"
-             factory-class="org.knime.base.node.mine.regression.linear2.predict.GeneralRegressionPredictorNodeFactory"
-             id="org.knime.base.node.mine.regression.linear2.predict.GeneralRegressionPredictorNodeFactory"
-             after="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/> 
+            category-path="/statistics/regression"
+            factory-class="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"
+            id="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"
+            after="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
        <node
              category-path="/statistics/regression"
              factory-class="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"
              id="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"
-             after="org.knime.base.node.mine.regression.predict.RegressionPredictorNodeFactory"/>
+             after="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"/>
        <node
              category-path="/statistics/regression"
-             factory-class="org.knime.base.node.mine.regression.logistic.predict.GeneralRegressionPredictorNodeFactory"
-             id="org.knime.base.node.mine.regression.logistic.predict.GeneralRegressionPredictorNodeFactory"
-             after="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"/>
+             factory-class="org.knime.base.node.mine.regression.predict2.GeneralRegressionPredictorNodeFactory"
+             id="org.knime.base.node.mine.regression.linear2.predict.GeneralRegressionPredictorNodeFactory"
+             after="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"/> 
 	    <node
 	          category-path="/mining/modeleval"
 	          factory-class="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"

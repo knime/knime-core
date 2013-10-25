@@ -47,7 +47,7 @@
  *
  * Created on 24.10.2013 by hofer
  */
-package org.knime.base.node.mine.regression.linear2.predict;
+package org.knime.base.node.mine.regression.predict2;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,7 +70,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  *
  * @author Heiko Hofer
  */
-public abstract class RegressionPredictorCellFactory extends AbstractCellFactory {
+abstract class RegressionPredictorCellFactory extends AbstractCellFactory {
 
     /**
      * Creates the spec of the output if possible.

@@ -94,7 +94,7 @@ import Jama.Matrix;
  *
  * @author Heiko Hofer
  */
-public final class LinearRegressionContent {
+final class LinearRegressionContent {
     private final PMMLPortObjectSpec m_outSpec;
 
     private final List<String> m_factorList;

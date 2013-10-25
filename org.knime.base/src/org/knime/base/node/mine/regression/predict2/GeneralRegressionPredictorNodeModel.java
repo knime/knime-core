@@ -48,7 +48,7 @@
  * History
  *   Apr 30, 2010 (hofer): created
  */
-package org.knime.base.node.mine.regression.linear2.predict;
+package org.knime.base.node.mine.regression.predict2;
 
 import java.io.File;
 import java.io.IOException;
@@ -88,7 +88,7 @@ import org.w3c.dom.Node;
  *
  * @author Heiko Hofer
  */
-public class GeneralRegressionPredictorNodeModel extends NodeModel {
+final class GeneralRegressionPredictorNodeModel extends NodeModel {
     private final GeneralRegressionPredictorSettings m_settings;
 
     /** The node logger for this class. */

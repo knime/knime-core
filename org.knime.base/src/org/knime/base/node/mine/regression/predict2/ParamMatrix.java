@@ -48,7 +48,7 @@
  * History
  *   11.05.2010 (hofer): created
  */
-package org.knime.base.node.mine.regression.linear2.predict;
+package org.knime.base.node.mine.regression.predict2;
 
 import java.util.HashMap;
 import java.util.Map;
