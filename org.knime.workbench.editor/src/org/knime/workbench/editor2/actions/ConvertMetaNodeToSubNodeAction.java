@@ -73,6 +73,9 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
      */
     public static final String ID = "knime.action.convertmetanodetosubnode";
 
+    /** Subnode disabled by default (under development). Enable with -Dknime.subnode.enable=true. */
+    public static final boolean ENABLE_SUBNODE_ACTION = Boolean.getBoolean("knime.subnode.enable");
+
     /**
      * @param editor The workflow editor
      */

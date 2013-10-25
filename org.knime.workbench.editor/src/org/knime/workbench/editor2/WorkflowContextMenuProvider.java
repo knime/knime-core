@@ -255,9 +255,11 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
         // convert meta node to subnode
-        action = m_actionRegistry.getAction(ConvertMetaNodeToSubNodeAction.ID);
-        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
-        ((AbstractNodeAction)action).update();
+        if (ConvertMetaNodeToSubNodeAction.ENABLE_SUBNODE_ACTION) {
+            action = m_actionRegistry.getAction(ConvertMetaNodeToSubNodeAction.ID);
+            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+            ((AbstractNodeAction)action).update();
+        }
         // insert "select loop" if loop nodes are selected
         boolean addSelectLoop = true;
         for (Object p : parts) {
