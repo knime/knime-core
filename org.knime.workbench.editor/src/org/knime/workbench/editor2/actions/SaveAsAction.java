@@ -43,84 +43,87 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   ${date} (${user}): created
+ * Created on Oct 22, 2013 by wiswedel
  */
-package org.knime.workbench.editor2;
+package org.knime.workbench.editor2.actions;
 
-import org.eclipse.gef.editparts.ZoomManager;
-import org.eclipse.gef.ui.actions.ActionBarContributor;
-import org.eclipse.gef.ui.actions.DeleteRetargetAction;
-import org.eclipse.gef.ui.actions.RedoRetargetAction;
-import org.eclipse.gef.ui.actions.UndoRetargetAction;
-import org.eclipse.gef.ui.actions.ZoomComboContributionItem;
-import org.eclipse.gef.ui.actions.ZoomInRetargetAction;
-import org.eclipse.gef.ui.actions.ZoomOutRetargetAction;
-import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.Separator;
-import org.eclipse.ui.IEditorPart;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.actions.ActionFactory;
-import org.eclipse.ui.actions.RetargetAction;
-import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Contributes action to the toolbar / menu bar.
- *
- * @author Florian Georg, University of Konstanz
+ * Action to save-as a workflow. Unable to find the proper eclipse class to do it so that needs to 
+ * serve as a workaround.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class WorkflowEditorActionBarContributor extends ActionBarContributor {
+public class SaveAsAction extends AbstractNodeAction {
+
     /**
-     * {@inheritDoc}
+     * @param editor
+     */
+    public SaveAsAction(final WorkflowEditor editor) {
+        super(editor);
+    }
+
+    /**
+     * Initializes this action's text.
      */
     @Override
-    protected void buildActions() {
-        addRetargetAction(new UndoRetargetAction());
-        addRetargetAction(new RedoRetargetAction());
-        addRetargetAction(new DeleteRetargetAction());
-        addRetargetAction(new ZoomInRetargetAction());
-        addRetargetAction(new ZoomOutRetargetAction());
-        addRetargetAction(new RetargetAction(ActionFactory.SAVE_AS.getId(), "Save As"));
+    protected void init() {
+        setText("Save As...");
+        setToolTipText("Save editor to new location");
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void declareGlobalActionKeys() {
-        addGlobalActionKey(ActionFactory.PRINT.getId());
-        addGlobalActionKey(ActionFactory.SELECT_ALL.getId());
-        addGlobalActionKey(ActionFactory.PASTE.getId());
-        addGlobalActionKey(ActionFactory.COPY.getId());
-        addGlobalActionKey(ActionFactory.CUT.getId());
-        addGlobalActionKey(ActionFactory.SAVE_AS.getId());
+    public String getId() {
+        return ActionFactory.SAVE_AS.getId();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void contributeToToolBar(final IToolBarManager tbm) {
-        tbm.add(getAction(ActionFactory.UNDO.getId()));
-        tbm.add(getAction(ActionFactory.REDO.getId()));
-
-        tbm.add(new Separator());
-        String[] zoomStrings = new String[] {ZoomManager.FIT_ALL,
-                ZoomManager.FIT_HEIGHT, ZoomManager.FIT_WIDTH};
-        tbm.add(new ZoomComboContributionItem(getPage(), zoomStrings));
-
+    public String getText() {
+        return "Save As..."; // not actually shown anywhere
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void setActiveEditor(final IEditorPart editor) {
-        if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() <= 1) {
-            editor.getEditorSite().getActionBars().getToolBarManager()
-                    .remove("org.knime.workbench.editor.actions.openMultiDialog");
-        }
-        super.setActiveEditor(editor);
+    public ImageDescriptor getImageDescriptor() {
+        return ImageRepository.getImageDescriptor("icons/knime.png"); // not shown anywhere
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getToolTipText() {
+        return "Save the workflow under new location";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean calculateEnabled() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        getEditor().doSaveAs();
+    }
+
 }

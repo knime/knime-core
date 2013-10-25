@@ -58,9 +58,11 @@ import javax.swing.UIManager;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
 /**
@@ -110,18 +112,22 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
     @Override
     public void run(final IProgressMonitor pm) {
         try {
-            // create progress monitor
-            ProgressHandler progressHandler = new ProgressHandler(pm, m_editor
-                    .getWorkflowManager().getNodeContainers().size(),
+            final WorkflowManager wfm = m_editor.getWorkflowManager();
+            ProgressHandler progressHandler = new ProgressHandler(pm, wfm.getNodeContainers().size(),
                     "Saving workflow... (can not be canceled)");
-            final CheckCancelNodeProgressMonitor progressMonitor =
-                new CheckCancelNodeProgressMonitor(pm);
+            final CheckCancelNodeProgressMonitor progressMonitor = new CheckCancelNodeProgressMonitor(pm);
 
             progressMonitor.addProgressListener(progressHandler);
 
             final File workflowPath = m_workflowFile.getParentFile();
-            m_editor.getWorkflowManager().save(workflowPath,
-                    new ExecutionMonitor(progressMonitor), true);
+            final ReferencedFile oldWorkflowPathRef = wfm.getWorkingDir();
+            final File oldWorkflowPath = oldWorkflowPathRef == null ? null : oldWorkflowPathRef.getFile();
+            final ExecutionMonitor exec = new ExecutionMonitor(progressMonitor);
+            if (oldWorkflowPath != null && !oldWorkflowPath.equals(workflowPath)) {
+                wfm.saveAs(workflowPath, exec);
+            } else {
+                wfm.save(workflowPath, exec, true);
+            }
             // the refresh used to take place in WorkflowEditor#saveTo but
             // was moved to this runnable as part of bug fix 3028
             IResource r =

@@ -168,6 +168,16 @@ public final class ReferencedFile {
         return m_delegate.getParent();
     }
 
+    /** Changes the file this reference to the new root. It fails if this reference has a parent ({@link #getParent()}
+     * must return <code>null</code>. Used in saveAs (node container directory is just newly assigned.)
+     * @param rootFile The new root file;
+     * @throws IllegalArgumentException If the argument is null or this object has a parent.
+     * @since 2.9
+     */
+    public void changeRoot(final File rootFile) {
+        m_delegate.changeRoot(rootFile);
+    }
+
     /** {@inheritDoc} */
     @Override
     public boolean equals(final Object obj) {
@@ -206,6 +216,8 @@ public final class ReferencedFile {
         abstract File getFile();
         /** @return parent referenced file or null if not available. */
         abstract ReferencedFile getParent();
+        /** @param newRoot sets new root, fails if this is not a rootfiledelegate. */
+        abstract void changeRoot(final File newRoot);
         /** @return true if referenced dir was locked (excl. with other VMs)*/
         abstract boolean fileLockRootForVM();
         /** Release the lock for the root of the referenced directory. */
@@ -274,7 +286,7 @@ public final class ReferencedFile {
         /** @param root root directory of the hierarchy */
         public RootFileDelegate(final File root) {
             if (root == null) {
-                throw new NullPointerException("Root file must not be null.");
+                throw new IllegalArgumentException("Root file must not be null");
             }
             m_rootFile = root;
             m_lock = new ReentrantReadWriteLock();
@@ -300,6 +312,22 @@ public final class ReferencedFile {
                 m_rootFile = new File(getFile().getParentFile(), name);
             }
             return result;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        void changeRoot(final File newRoot) {
+            if (newRoot == null) {
+                throw new IllegalArgumentException("Root file must not be null");
+            }
+            final boolean isVMLocked = VMFileLocker.isLockedForVM(m_rootFile);
+            if (isVMLocked) {
+                VMFileLocker.unlockForVM(m_rootFile);
+            }
+            m_rootFile = newRoot;
+            if (isVMLocked) {
+                VMFileLocker.lockForVM(m_rootFile);
+            }
         }
 
         /** {@inheritDoc} */
@@ -376,6 +404,12 @@ public final class ReferencedFile {
         @Override
         ReferencedFile getParent() {
             return m_referencedFileParent;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        void changeRoot(final File newRoot) {
+            throw new IllegalArgumentException("Can't change root on a child referenced file");
         }
 
         /** {@inheritDoc} */

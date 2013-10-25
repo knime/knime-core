@@ -322,15 +322,22 @@ public final class ProjectWorkflowMap {
      */
     public static void replace(final URI newPath,
             final WorkflowManager nc, final URI oldPath) {
-        if (oldPath != null) {
-            PROJECTS.remove(new MapWFKey(oldPath));
+        if (oldPath == null) {
+            throw new IllegalArgumentException("Old path must not be null (old is null, new is " + newPath + ")");
         }
+        final MapWFKey oldKey = new MapWFKey(oldPath);
+        NodeContainer removed = PROJECTS.remove(oldKey);
+        if (removed == null) {
+            throw new IllegalArgumentException("No project registered on URI " + oldPath);
+        }
+        Set<Object> clientList = WORKFLOW_CLIENTS.remove(oldKey);
+        WF_LISTENER.workflowChanged(new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED, removed.getID(), removed, null));
         putWorkflow(newPath, nc);
-        WF_LISTENER.workflowChanged(new WorkflowEvent(
-                WorkflowEvent.Type.NODE_ADDED, nc.getID(),
-                null, nc));
-        NSC_LISTENER.stateChanged(new NodeStateEvent(nc.getID(),
-                nc.getState()));
+        if (clientList != null) {
+            WORKFLOW_CLIENTS.put(new MapWFKey(newPath), clientList);
+        }
+        WF_LISTENER.workflowChanged(new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED, nc.getID(), null, nc));
+        NSC_LISTENER.stateChanged(new NodeStateEvent(nc.getID(), nc.getState()));
     }
 
     /**

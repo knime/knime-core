@@ -348,7 +348,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     WorkflowManager(final WorkflowManager parent, final NodeID id, final WorkflowPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
         ReferencedFile ncDir = super.getNodeContainerDirectory();
-        if (ncDir != null) {
+        final boolean isProject = persistor.isProject();
+        if (ncDir != null && isProject) { // only lock projects
             if (!ncDir.fileLockRootForVM()) {
                 throw new IllegalStateException("Root directory to workflow \""
                         + ncDir + "\" can't be locked although it should have "
@@ -364,7 +365,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         m_workflowVariables = new Vector<FlowVariable>(persistor.getWorkflowVariables());
         m_credentialsStore = new CredentialsStore(this, persistor.getCredentials());
         m_cipher = persistor.getWorkflowCipher();
-        boolean isProject = persistor.isProject();
         WorkflowContext workflowContext;
         if (isProject) {
             workflowContext = persistor.getWorkflowContext();
@@ -7116,9 +7116,59 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /** Saves the workflow to a new location, setting the argument directory as the new NC dir. It will
+     * first copy the "old" directory, point the NC dir to the new location and then do an incremental save.
+     * @param directory new directory, not null
+     * @param exec ...
+     * @since 2.9
+     */
+    public void saveAs(final File directory, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException, LockFailedException {
+        if (this == ROOT) {
+            throw new IOException("Can't save root workflow");
+        }
+        ReferencedFile ncDirRef = getNodeContainerDirectory();
+        if (!isProject()) {
+            throw new IOException("Cannot call save-as on a non-project workflow");
+        }
+        directory.mkdirs();
+        if (!directory.isDirectory() || !directory.canWrite()) {
+            throw new IOException("Cannot write to " + directory);
+        }
+        boolean isNCDirNullOrRootReferenceFolder = ncDirRef == null || ncDirRef.getParent() == null;
+        if (!isNCDirNullOrRootReferenceFolder) {
+            throw new IOException("Referenced directory pointer is not hierarchical: " + ncDirRef);
+        }
+        synchronized (m_workflowMutex) {
+            ExecutionMonitor saveExec;
+            File ncDir = ncDirRef != null ? ncDirRef.getFile() : null;
+            if (!ConvenienceMethods.areEqual(ncDir, directory)) { // new location
+                ncDirRef.writeLock(); // cannot be null
+                try {
+                    ExecutionMonitor copyExec = exec.createSubProgress(0.5);
+                    final String copymsg = String.format("Copying existing workflow to new location "
+                            + "(from \"%s\" to \"%s\")", ncDir, directory);
+                    exec.setMessage(copymsg);
+                    LOGGER.debug(copymsg);
+                    copyExec.setProgress(1.0);
+                    FileUtil.copyDir(ncDir, directory);
+                    exec.setMessage("Incremental save");
+                    ncDirRef.changeRoot(directory);
+                    m_isWorkflowDirectoryReadonly = false;
+                } finally {
+                    ncDirRef.writeUnlock();
+                }
+                saveExec = exec.createSubProgress(0.5);
+            } else {
+                saveExec = exec;
+            }
+            save(directory, saveExec, true);
+        }
+    }
+
     public void save(final File directory, final ExecutionMonitor exec,
-            final boolean isSaveData)
-        throws IOException, CanceledExecutionException, LockFailedException {
+        final boolean isSaveData)
+                throws IOException, CanceledExecutionException, LockFailedException {
         if (this == ROOT) {
             throw new IOException("Can't save root workflow");
         }
@@ -7136,7 +7186,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             workflowDirRef.writeLock();
             try {
                 final boolean isWorkingDirectory =
-                    workflowDirRef.equals(getNodeContainerDirectory());
+                        workflowDirRef.equals(getNodeContainerDirectory());
                 final LoadVersion saveVersion = WorkflowPersistorVersion1xx.VERSION_LATEST;
                 if (m_loadVersion != null
                         && !m_loadVersion.equals(saveVersion)) {
@@ -7156,13 +7206,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 workflowDirRef.getFile().mkdirs();
                 WorkflowPersistorVersion1xx.save(
-                        this, workflowDirRef, exec, isSaveData);
+                    this, workflowDirRef, exec, isSaveData);
             } finally {
                 workflowDirRef.writeUnlock();
             }
         }
     }
-
     /** Delete directories of removed nodes. This is part of the save routine to
      * commit the changes. Called from the saving persistor class */
     void deleteObsoleteNodeDirs() {
@@ -7607,7 +7656,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         synchronized (m_workflowMutex) {
             super.cleanup();
             ReferencedFile ncDir = getNodeContainerDirectory();
-            if (ncDir != null) {
+            if (isProject() && ncDir != null) {
                 ncDir.fileUnlockRootForVM();
             }
             // breadth first sorted list - traverse backwards (downstream before upstream nodes)
@@ -7638,10 +7687,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     protected void setNodeContainerDirectory(final ReferencedFile directory) {
         ReferencedFile ncDir = getNodeContainerDirectory();
-        if (ncDir != null) {
+        if (ConvenienceMethods.areEqual(directory, ncDir)) {
+            return;
+        }
+        final boolean isProject = isProject();
+        if (isProject && ncDir != null) {
             ncDir.fileUnlockRootForVM();
         }
-        if (!directory.fileLockRootForVM()) {
+        if (isProject && !directory.fileLockRootForVM()) { // need to lock projects (but not meta nodes)
             throw new IllegalStateException("Workflow root directory \""
                     + directory + "\" can't be locked although it should have "
                     + "been locked by the save routines");
