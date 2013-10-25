@@ -128,19 +128,10 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
         // read the content type
        PMMLGeneralRegressionContent.ModelType modelType =
             getKNIMERegModelType(reg.getModelType());
-       if (!PMMLGeneralRegressionContent.ModelType.multinomialLogistic.equals(
-               modelType)) {
-           throw new IllegalArgumentException("The ModelType \""
-                   + modelType + "\" is currently not supported.");
-       }
        m_content.setModelType(modelType);
 
        // read the function name
        FunctionName functionName = getKNIMEFunctionName(reg.getFunctionName());
-       if (!FunctionName.classification.equals(functionName)) {
-           throw new IllegalArgumentException("The FunctionName \""
-                   + functionName + "\" is currently not supported.");
-       }
        m_content.setFunctionName(functionName);
 
        m_content.setAlgorithmName(reg.getAlgorithmName());
@@ -281,7 +272,7 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
             reg.setModelName(modelName);
         }
         String targetReferenceCategory = m_content.getTargetReferenceCategory();
-        if(targetReferenceCategory != null && !targetReferenceCategory.isEmpty()) {
+        if (targetReferenceCategory != null && !targetReferenceCategory.isEmpty()) {
             reg.setTargetReferenceCategory(targetReferenceCategory);
         }
 
