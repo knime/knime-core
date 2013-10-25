@@ -533,10 +533,6 @@
          id="org.knime.base.node.preproc.pmml.columnfilter.DataColumnSpecFilterPMMLNodeFactory"/>
          
          
-      <node
-            category-path="/manipulation/column/column-convert+replace"
-            factory-class="org.knime.base.node.preproc.domain.DomainNodeFactory"
-            id="org.knime.base.node.preproc.domain.DomainNodeFactory"/>
      <node
             category-path="/manipulation/row/row-transform"
             factory-class="org.knime.base.node.preproc.append.row.AppendedRowsNodeFactory"
@@ -822,6 +818,29 @@
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.stringreplacer.StringReplacerNodeFactory"
             id="org.knime.base.node.preproc.stringreplacer.StringReplacerNodeFactory"/>
+      <node
+            category-path="/manipulation/column/column-convert+replace"
+            after="org.knime.base.node.preproc.stringreplacer.StringReplacerNodeFactory"
+            factory-class="org.knime.base.node.preproc.domain.DomainNodeFactory"
+            id="org.knime.base.node.preproc.domain.DomainNodeFactory"/>
+      <node
+            category-path="/manipulation/column/column-convert+replace"
+            after="org.knime.base.node.preproc.domain.DomainNodeFactory"
+            factory-class="org.knime.base.node.preproc.domain.editnumeric.EditNumericDomainNodeFactory"
+            id="org.knime.base.node.preproc.domain.editnumeric.EditNumericDomainNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-convert+replace"
+            after="org.knime.base.node.preproc.domain.editnumeric.EditNumericDomainNodeFactory"
+            factory-class="org.knime.base.node.preproc.domain.editnominal.dic.EditNominalDomainDicNodeFactory"
+            id="org.knime.base.node.preproc.domain.editnominal.dic.EditNominalDomainDicNodeFactory">
+      </node>
+       <node
+            category-path="/manipulation/column/column-convert+replace"
+            after="org.knime.base.node.preproc.domain.editnominal.dic.EditNominalDomainDicNodeFactory"
+            factory-class="org.knime.base.node.preproc.domain.editnominal.EditNominalDomainNodeFactory"
+            id="org.knime.base.node.preproc.domain.editnominal.EditNominalDomainNodeFactory">
+      </node>
       <node
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.caseconvert.CaseConvertNodeFactory"
