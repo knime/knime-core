@@ -531,6 +531,14 @@ public class ColumnSelectionPanel extends JPanel {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isEnabled() {
+        return m_chooser.isEnabled();
+    }
+
+    /**
      * Adds an item listener to the underlying combo box.
      * @param aListener The listener to be registered
      * @see JComboBox#addItemListener(ItemListener)
