@@ -198,6 +198,11 @@ public final class DatabaseReaderConnection {
         synchronized (m_conn.syncConnection(conn)) {
             final String[] oQueries =  m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
             final int selectIndex = oQueries.length - 1;
+            if (oQueries[selectIndex].trim().endsWith(";")) {
+                oQueries[selectIndex] = oQueries[selectIndex].trim();
+                oQueries[selectIndex] = oQueries[selectIndex].substring(0, oQueries[selectIndex].length() - 1);
+            }
+
             // replace SELECT (last) query with wrapped statement
             /* Fixed Bug 2874. For sqlite the data must always be
              * fetched as the column type string is returned
@@ -206,7 +211,9 @@ public final class DatabaseReaderConnection {
                 // Bug 2041: to limit the number of row during configure, mysql
                 // does not optimize 'WHERE 1 = 0', better use 'LIMIT 0'
                 if (m_conn.getDriver().startsWith("com.mysql")) {
-                    oQueries[selectIndex] += " LIMIT 0";
+                    final int hashAlias = System.identityHashCode(this);
+                    oQueries[selectIndex] = "SELECT * FROM (" + oQueries[selectIndex] + ") "
+                        + "table_" + hashAlias + " LIMIT 0";
                 } else {
                     final int hashAlias = System.identityHashCode(this);
                     oQueries[selectIndex] = "SELECT * FROM (" + oQueries[selectIndex] + ") "
