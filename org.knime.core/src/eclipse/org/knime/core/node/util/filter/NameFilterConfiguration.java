@@ -414,8 +414,8 @@ public class NameFilterConfiguration implements Cloneable {
         if (m_type == null || !verifyType(m_type)) {
             m_type = TYPE;
         }
-        m_includeList = subSettings.getStringArray(KEY_INCLUDED_NAMES, (String[])null);
-        m_excludeList = subSettings.getStringArray(KEY_EXCLUDED_NAMES, (String[])null);
+        m_includeList = subSettings.getStringArray(KEY_INCLUDED_NAMES, new String[0]);
+        m_excludeList = subSettings.getStringArray(KEY_EXCLUDED_NAMES, new String[0]);
         try {
             m_enforceOption = EnforceOption.parse(subSettings.getString(KEY_ENFORCE_OPTION));
         } catch (InvalidSettingsException ise) {
