@@ -92,8 +92,7 @@ public class DataColumnSpecFilterNodeDialogPane extends NodeDialogPane {
                     + "selection.");
         }
 
-        DataColumnSpecFilterConfiguration config = new DataColumnSpecFilterConfiguration(
-                    DataColumnSpecFilterNodeModel.CFG_KEY_FILTER);
+        DataColumnSpecFilterConfiguration config = DataColumnSpecFilterNodeModel.createDCSFilterConfiguration();
         config.loadConfigurationInDialog(settings, specs[0]);
         m_filterPanel.loadConfiguration(config, specs[0]);
     }
@@ -107,8 +106,7 @@ public class DataColumnSpecFilterNodeDialogPane extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        DataColumnSpecFilterConfiguration config = new DataColumnSpecFilterConfiguration(
-                    DataColumnSpecFilterNodeModel.CFG_KEY_FILTER);
+        DataColumnSpecFilterConfiguration config = DataColumnSpecFilterNodeModel.createDCSFilterConfiguration();
         m_filterPanel.saveConfiguration(config);
         config.saveConfiguration(settings);
     }

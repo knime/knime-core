@@ -74,9 +74,6 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  */
 public class DataColumnSpecFilterNodeModel extends NodeModel {
 
-    /** Config key for this column filter. */
-    static final String CFG_KEY_FILTER = "column-filter";
-
     private DataColumnSpecFilterConfiguration m_conf;
 
     /** Creates a new filter model with one and in- and output. */
@@ -150,7 +147,7 @@ public class DataColumnSpecFilterNodeModel extends NodeModel {
      */
     private ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
         if (m_conf == null) {
-            m_conf = new DataColumnSpecFilterConfiguration(CFG_KEY_FILTER);
+            m_conf = createDCSFilterConfiguration();
             // auto-configure
             m_conf.loadDefaults(spec, true);
         }
@@ -184,8 +181,7 @@ public class DataColumnSpecFilterNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        DataColumnSpecFilterConfiguration conf =
-            new DataColumnSpecFilterConfiguration(CFG_KEY_FILTER);
+        DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
         conf.loadConfigurationInModel(settings);
         m_conf = conf;
     }
@@ -194,9 +190,17 @@ public class DataColumnSpecFilterNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        DataColumnSpecFilterConfiguration conf =
-            new DataColumnSpecFilterConfiguration(CFG_KEY_FILTER);
+        DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
         conf.loadConfigurationInModel(settings);
+    }
+
+    /** A new configuration to store the settings. Also enables the type filter.
+     * @return ...
+     */
+    static final  DataColumnSpecFilterConfiguration createDCSFilterConfiguration() {
+        DataColumnSpecFilterConfiguration conf = new DataColumnSpecFilterConfiguration("column-filter");
+        conf.setTypeFilterEnabled(true);
+        return conf;
     }
 
     /** Returns the object holding the include and exclude columns.
