@@ -102,6 +102,13 @@
          </renderer>
       </dataValue>
       <dataValue
+            valueClass="org.knime.core.data.image.png.PNGImageValue">
+         <renderer
+               rendererFactoryClass="org.knime.core.data.image.png.PNGImageValueRendererFactoryUtil$StandardRendererFactory"
+               suggestAsDefault="true">
+         </renderer>
+      </dataValue>
+      <dataValue
             valueClass="org.knime.core.data.ComplexNumberValue">
          <renderer
                rendererFactoryClass="org.knime.core.data.renderer.ComplexNumberValueRenderer$Factory"

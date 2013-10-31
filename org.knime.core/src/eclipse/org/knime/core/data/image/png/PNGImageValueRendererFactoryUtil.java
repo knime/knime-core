@@ -43,80 +43,39 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * Created on Oct 31, 2013 by wiswedel
  */
 package org.knime.core.data.image.png;
 
-import javax.swing.Icon;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.image.ImageDataValueRenderer;
+import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
+import org.knime.core.data.renderer.DataValueRenderer;
 
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.ExtensibleUtilityFactory;
-import org.knime.core.data.image.ImageValue;
-
-/** DataValue Interface for plain PNG image.
- * @author Thomas Gabriel, KNIME.com AG, Zurich
+/** Hosts factories used by renderer extension point. Not meant to be used by clients
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.9
  */
-public interface PNGImageValue extends ImageValue {
+public final class PNGImageValueRendererFactoryUtil {
 
-    /** Get content of this image.
-     * @return The image content, never null.
-     */
-    @Override
-    public PNGImageContent getImageContent();
+    /** Standard renderer. */
+    public static final class StandardRendererFactory extends AbstractDataValueRendererFactory {
 
-    /** Meta information to this value type.
-     * @see DataValue#UTILITY
-     */
-    public static final UtilityFactory UTILITY = new ImageCellUtilityFactory();
+        private static final String NAME = "PNG Image";
 
-    /** Implementations of the meta information of this value class. */
-    public static class ImageCellUtilityFactory extends ExtensibleUtilityFactory {
-        /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(PNGImageValue.class, "/imagepng.png");
-
-        private static final PNGImageValueComparator IMAGE_COMPARATOR =
-            new PNGImageValueComparator();
-
-        /** Only subclasses are allowed to instantiate this class. */
-        protected ImageCellUtilityFactory() {
-            super(PNGImageValue.class);
+        /** {@inheritDoc} */
+        @Override
+        public String getDescription() {
+            return NAME;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
         @Override
-        public Icon getIcon() {
-            return ICON;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueComparator getComparator() {
-            return IMAGE_COMPARATOR;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getName() {
-            return "PNG Images";
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getGroupName() {
-            return "Other";
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new ImageDataValueRenderer(NAME);
         }
 
     }
-
 }
