@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   06.09.2005 (bernd): created
  */
@@ -71,13 +71,13 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 /**
  * NodeModel with one input, two outputs. It splits the in table (column-based)
  * into a top and a bottom table.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class SplitNodeModel2 extends NodeModel {
-    
+
     private DataColumnSpecFilterConfiguration m_conf;
-    
+
     /** Config key for the filter column settings. */
     public static final String CFG_FILTERCOLS = "Filter Column Settings";
 
@@ -120,7 +120,7 @@ public class SplitNodeModel2 extends NodeModel {
         if (m_conf == null) {
             m_conf = createColFilterConf();
         }
-        
+
         BufferedDataTable in = inData[0];
         DataTableSpec inSpec = in.getDataTableSpec();
         ColumnRearranger[] a = createColumnRearrangers(inSpec);
@@ -158,17 +158,17 @@ public class SplitNodeModel2 extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec in = inSpecs[0];
-        
+
         if (m_conf == null) {
             m_conf = createColFilterConf();
             m_conf.loadDefaults(in, false);
             setWarningMessage("No settings available, "
-                    + "passing all columns to top output port.");            
-        }        
+                    + "passing all columns to top output port.");
+        }
         final FilterResult filter = m_conf.applyTo(in);
         String[] top = filter.getExcludes();
         String[] bottom = filter.getIncludes();
-        
+
         for (int i = 0; i < top.length; i++) {
             if (!in.containsName(top[i])) {
                 throw new InvalidSettingsException("No such column: "
@@ -206,7 +206,7 @@ public class SplitNodeModel2 extends NodeModel {
                     break;
                 }
             }
-        }        
+        }
         final String[] incls = filter.getIncludes();
         final String[] excls = filter.getExcludes();
         if (incls.length == 0) {
@@ -226,25 +226,26 @@ public class SplitNodeModel2 extends NodeModel {
                 }
             }
         }
-        
+
         // set warn message, if there is one
         if (warn.length() > 0) {
             setWarningMessage(warn.toString());
         }
-        
+
         ColumnRearranger topArrange = new ColumnRearranger(s);
         topArrange.keepOnly(filter.getExcludes());
         ColumnRearranger bottomArrange = new ColumnRearranger(s);
         bottomArrange.keepOnly(filter.getIncludes());
         return new ColumnRearranger[]{topArrange, bottomArrange};
     }
-    
+
     /**
-     * @return creates and returns configuration instance for column filter 
+     * @return creates and returns configuration instance for column filter
      * panel.
      */
-    private DataColumnSpecFilterConfiguration createColFilterConf() {
-        return new DataColumnSpecFilterConfiguration(
-                SplitNodeModel2.CFG_FILTERCOLS);
-    }     
+    static DataColumnSpecFilterConfiguration createColFilterConf() {
+        DataColumnSpecFilterConfiguration r = new DataColumnSpecFilterConfiguration(SplitNodeModel2.CFG_FILTERCOLS);
+        r.setTypeFilterEnabled(true);
+        return r;
+    }
 }

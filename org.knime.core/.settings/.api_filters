@@ -304,6 +304,26 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/util/filter/NameFilterConfiguration.java" type="org.knime.core.node.util.filter.NameFilterConfiguration">
+        <filter id="421654647">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.filter.NameFilterConfiguration"/>
+                <message_argument value="loadConfigurationInDialog(NodeSettingsRO, String[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="421654647">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.filter.NameFilterConfiguration"/>
+                <message_argument value="loadConfigurationInModel(NodeSettingsRO)"/>
+            </message_arguments>
+        </filter>
+        <filter id="421654647">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.filter.NameFilterConfiguration"/>
+                <message_argument value="saveConfiguration(NodeSettingsWO)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/Annotation.java" type="org.knime.core.node.workflow.Annotation">
         <filter comment="persistor code rewrite - not meant as public api" id="338792546">
             <message_arguments>

@@ -64,6 +64,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -85,11 +86,16 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.util.ListModelFilterUtils;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
 
-/** Name filter panel with additional enforce include/exclude radio buttons.
+/**
+ * Name filter panel with additional enforce include/exclude radio buttons.
  *
- * Thomas Gabriel, KNIME.com AG, Zurich, Switzerland
+ * @author Thomas Gabriel, KNIME.com AG, Zurich, Switzerland
+ * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ *
  * @since 2.6
  *
  * @param <T> the instance T this object is parametrized on
@@ -97,16 +103,29 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
 @SuppressWarnings("serial")
 public abstract class NameFilterPanel<T> extends JPanel {
 
+    /** Name for the filter by name type. */
+    private static final String NAME = "Manual Selection";
+
+    /** Line border for include names. */
+    private static final Border INCLUDE_BORDER = BorderFactory.createLineBorder(new Color(0, 221, 0), 2);
+
+    /** Line border for exclude names. */
+    private static final Border EXCLUDE_BORDER = BorderFactory.createLineBorder(new Color(240, 0, 0), 2);
+
     /** Include list. */
+    @SuppressWarnings("rawtypes")
     private final JList m_inclList;
 
     /** Include model. */
+    @SuppressWarnings("rawtypes")
     private final DefaultListModel m_inclMdl;
 
     /** Exclude list. */
+    @SuppressWarnings("rawtypes")
     private final JList m_exclList;
 
     /** Exclude model. */
+    @SuppressWarnings("rawtypes")
     private final DefaultListModel m_exclMdl;
 
     /** Highlight all search hits in the include model. */
@@ -146,8 +165,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
     private final JButton m_searchButtonExcl;
 
     /** List of T elements to keep initial ordering of names. */
-    private final LinkedHashSet<T> m_order =
-        new LinkedHashSet<T>();
+    private final LinkedHashSet<T> m_order = new LinkedHashSet<T>();
 
     /** Border of the include panel, keep it so we can change the title. */
     private final TitledBorder m_includeBorder;
@@ -157,18 +175,26 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     private final HashSet<T> m_hideNames = new HashSet<T>();
 
-    private List<ChangeListener>m_listeners;
-
-    /** Line border for include names. */
-    private static final Border INCLUDE_BORDER =
-        BorderFactory.createLineBorder(new Color(0, 221, 0), 2);
-
-    /** Line border for exclude names. */
-    private static final Border EXCLUDE_BORDER =
-        BorderFactory.createLineBorder(new Color(240, 0, 0), 2);
+    private List<ChangeListener> m_listeners;
 
     /** The filter used to filter out/in valid elements. */
     private InputFilter<T> m_filter;
+
+    private String m_currentType = NameFilterConfiguration.TYPE;
+
+    private ButtonGroup m_typeGroup;
+
+    private JPanel m_typePanel;
+
+    private JPanel m_filterPanel;
+
+    private JPanel m_nameFilterPanel;
+
+    private PatternFilterPanelImpl m_patternPanel;
+
+    private JRadioButton m_nameButton;
+
+    private JRadioButton m_patternButton;
 
     /**
      * Creates a panel allowing the user to select elements.
@@ -178,34 +204,35 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
-     * Creates a new filter  panel with three component which are the
-     * include list, button panel to shift elements between the two lists, and
-     * the exclude list. The include list then will contain all values to
-     * filter.
-     * @param showSelectionListsOnly if set, the component shows only the basic
-     * include/exclude selection panel - no additional search boxes, force-include-options, etc.
+     * Creates a new filter panel with three component which are the include list, button panel to shift elements
+     * between the two lists, and the exclude list. The include list then will contain all values to filter.
+     *
+     * @param showSelectionListsOnly if set, the component shows only the basic include/exclude selection panel - no
+     *            additional search boxes, force-include-options, etc.
      */
     protected NameFilterPanel(final boolean showSelectionListsOnly) {
         this(showSelectionListsOnly, null);
     }
 
     /**
-     * Creates a new filter column panel with three component which are the
-     * include list, button panel to shift elements between the two lists, and
-     * the exclude list. The include list then will contain all values to
-     * filter. Additionally a {@link InputFilter} can be specified, based on
-     * which the shown items are shown or not. The filter can be <code>null
+     * Creates a new filter column panel with three component which are the include list, button panel to shift elements
+     * between the two lists, and the exclude list. The include list then will contain all values to filter.
+     * Additionally a {@link InputFilter} can be specified, based on which the shown items are shown or not. The filter
+     * can be <code>null
      * </code>, in which case it is simply not used at all.
-     * @param showSelectionListsOnly if set, the component shows only the basic
-     * include/exclude selection panel - no additional search boxes, force-include-options, etc.
-     * @param filter A filter that specifies which items are shown in the
-     * panel (and thus are possible to include or exclude) and which are not
-     * shown.
+     *
+     * @param showSelectionListsOnly if set, the component shows only the basic include/exclude selection panel - no
+     *            additional search boxes, force-include-options, etc.
+     * @param filter A filter that specifies which items are shown in the panel (and thus are possible to include or
+     *            exclude) and which are not shown.
      */
-    protected NameFilterPanel(final boolean showSelectionListsOnly,
-            final InputFilter<T> filter) {
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    protected NameFilterPanel(final boolean showSelectionListsOnly, final InputFilter<T> filter) {
         super(new GridLayout(1, 1));
         m_filter = filter;
+        m_patternPanel = new PatternFilterPanelImpl();
+        m_patternButton = createButtonToFilterPanel(
+            PatternFilterConfigurationImpl.TYPE, "Name Pattern Selection", m_patternPanel);
 
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
         final JPanel buttonPan = new JPanel();
@@ -261,8 +288,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         // include list
         m_inclMdl = new DefaultListModel();
         m_inclList = new JList(m_inclMdl);
-        m_inclList.setSelectionMode(
-                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_inclList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         m_inclList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(final MouseEvent me) {
@@ -280,17 +306,15 @@ public abstract class NameFilterPanel<T> extends JPanel {
         ActionListener actionListenerIncl = new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
-                ListModelFilterUtils.onSearch(m_inclList, m_inclMdl,
-                        m_searchFieldIncl.getText(),
-                        m_markAllHitsIncl.isSelected());
+                ListModelFilterUtils.onSearch(m_inclList, m_inclMdl, m_searchFieldIncl.getText(),
+                    m_markAllHitsIncl.isSelected());
             }
         };
         m_searchFieldIncl.addActionListener(actionListenerIncl);
         m_searchButtonIncl.addActionListener(actionListenerIncl);
         JPanel inclSearchPanel = new JPanel(new BorderLayout());
         inclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
-        inclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15,
-                15));
+        inclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         inclSearchPanel.add(m_searchFieldIncl, BorderLayout.CENTER);
         inclSearchPanel.add(m_searchButtonIncl, BorderLayout.EAST);
         m_markAllHitsIncl = new JCheckBox("Select all search hits");
@@ -298,16 +322,14 @@ public abstract class NameFilterPanel<T> extends JPanel {
             @Override
             public void actionPerformed(final ActionEvent e) {
                 m_inclList.clearSelection();
-                ListModelFilterUtils.onSearch(m_inclList, m_inclMdl,
-                        m_searchFieldIncl.getText(),
-                        m_markAllHitsIncl.isSelected());
+                ListModelFilterUtils.onSearch(m_inclList, m_inclMdl, m_searchFieldIncl.getText(),
+                    m_markAllHitsIncl.isSelected());
             }
         };
         m_markAllHitsIncl.addActionListener(actionListenerAllIncl);
         inclSearchPanel.add(m_markAllHitsIncl, BorderLayout.PAGE_END);
         JPanel includePanel = new JPanel(new BorderLayout());
-        m_includeBorder = BorderFactory.createTitledBorder(
-                INCLUDE_BORDER, " Include ");
+        m_includeBorder = BorderFactory.createTitledBorder(INCLUDE_BORDER, " Include ");
         includePanel.setBorder(m_includeBorder);
         includePanel.add(inclSearchPanel, BorderLayout.NORTH);
         includePanel.add(jspIncl, BorderLayout.CENTER);
@@ -315,8 +337,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         // exclude list
         m_exclMdl = new DefaultListModel();
         m_exclList = new JList(m_exclMdl);
-        m_exclList.setSelectionMode(
-                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_exclList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         m_exclList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(final MouseEvent me) {
@@ -339,16 +360,14 @@ public abstract class NameFilterPanel<T> extends JPanel {
         ActionListener actionListenerExcl = new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
-                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl,
-                        m_searchFieldExcl.getText(),
-                        m_markAllHitsExcl.isSelected());
+                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl, m_searchFieldExcl.getText(),
+                    m_markAllHitsExcl.isSelected());
             }
         };
         m_searchFieldExcl.addActionListener(actionListenerExcl);
         m_searchButtonExcl.addActionListener(actionListenerExcl);
         JPanel exclSearchPanel = new JPanel(new BorderLayout());
-        exclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15,
-                15));
+        exclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         exclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
         exclSearchPanel.add(m_searchFieldExcl, BorderLayout.CENTER);
         exclSearchPanel.add(m_searchButtonExcl, BorderLayout.EAST);
@@ -357,16 +376,14 @@ public abstract class NameFilterPanel<T> extends JPanel {
             @Override
             public void actionPerformed(final ActionEvent e) {
                 m_exclList.clearSelection();
-                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl,
-                        m_searchFieldExcl.getText(),
-                        m_markAllHitsExcl.isSelected());
+                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl, m_searchFieldExcl.getText(),
+                    m_markAllHitsExcl.isSelected());
             }
         };
         m_markAllHitsExcl.addActionListener(actionListenerAllExcl);
         exclSearchPanel.add(m_markAllHitsExcl, BorderLayout.PAGE_END);
         JPanel excludePanel = new JPanel(new BorderLayout());
-        m_excludeBorder = BorderFactory.createTitledBorder(
-                EXCLUDE_BORDER, " Exclude ");
+        m_excludeBorder = BorderFactory.createTitledBorder(EXCLUDE_BORDER, " Exclude ");
         excludePanel.setBorder(m_excludeBorder);
         excludePanel.add(exclSearchPanel, BorderLayout.NORTH);
         excludePanel.add(jspExcl, BorderLayout.CENTER);
@@ -381,12 +398,10 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_enforceExclusion = new JRadioButton("Enforce exclusion");
         if (!showSelectionListsOnly) {
             final ButtonGroup forceGroup = new ButtonGroup();
-            m_enforceInclusion.setToolTipText(
-                    "Force the set of included names to stay the same.");
+            m_enforceInclusion.setToolTipText("Force the set of included names to stay the same.");
             forceGroup.add(m_enforceInclusion);
             includePanel.add(m_enforceInclusion, BorderLayout.SOUTH);
-            m_enforceExclusion.setToolTipText(
-                    "Force the set of excluded names to stay the same.");
+            m_enforceExclusion.setToolTipText("Force the set of excluded names to stay the same.");
             forceGroup.add(m_enforceExclusion);
             m_enforceExclusion.doClick();
             excludePanel.add(m_enforceExclusion, BorderLayout.SOUTH);
@@ -398,14 +413,17 @@ public abstract class NameFilterPanel<T> extends JPanel {
         center.add(excludePanel);
         center.add(buttonPan2);
         center.add(includePanel);
-        super.add(center);
+        m_nameFilterPanel = center;
+        initPanel();
     }
 
     /** @return a list cell renderer from items to be rendered in the filer */
+    @SuppressWarnings("rawtypes")
     protected abstract ListCellRenderer getListCellRenderer();
 
     /**
      * Get the a T for the given name.
+     *
      * @param name a string to retrieve T for.
      * @return an instance of T
      */
@@ -413,14 +431,14 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     /**
      * Returns the name for the given T.
+     *
      * @param t to retrieve the name for
      * @return the name represented by T
      */
     protected abstract String getNameForT(final T t);
 
     /**
-     * Enables or disables all components on this panel.
-     * {@inheritDoc}
+     * Enables or disables all components on this panel. {@inheritDoc}
      */
     @Override
     public void setEnabled(final boolean enabled) {
@@ -441,8 +459,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
-     * Adds a listener which gets informed whenever the column filtering
-     * changes.
+     * Adds a listener which gets informed whenever the column filtering changes.
+     *
      * @param listener the listener
      */
     public void addChangeListener(final ChangeListener listener) {
@@ -454,6 +472,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     /**
      * Removes the given listener from this filter column panel.
+     *
      * @param listener the listener.
      */
     public void removeChangeListener(final ChangeListener listener) {
@@ -471,115 +490,14 @@ public abstract class NameFilterPanel<T> extends JPanel {
         }
     }
 
-    private void fireFilteringChangedEvent() {
-        if (m_listeners != null) {
-            for (ChangeListener listener : m_listeners) {
-                listener.stateChanged(new ChangeEvent(this));
-            }
-        }
-    }
-
     /**
-     * Called by the 'remove >>' button to exclude the selected elements from
-     * the include list.
-     */
-    private void onRemIt() {
-        // add all selected elements from the include to the exclude list
-        Object[] o = m_inclList.getSelectedValues();
-        HashSet<Object> hash = new HashSet<Object>();
-        hash.addAll(Arrays.asList(o));
-        for (Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
-            hash.add(e.nextElement());
-        }
-        boolean changed = false;
-        for (int i = 0; i < o.length; i++) {
-            changed |= m_inclMdl.removeElement(o[i]);
-        }
-        m_exclMdl.removeAllElements();
-        for (T c : m_order) {
-            if (hash.contains(c)) {
-                m_exclMdl.addElement(c);
-            }
-        }
-        if (changed) {
-            fireFilteringChangedEvent();
-        }
-    }
-
-
-
-    /**
-     * Called by the 'remove >>' button to exclude all elements from the include
-     * list.
-     */
-    private void onRemAll() {
-        boolean changed = m_inclMdl.elements().hasMoreElements();
-        m_inclMdl.removeAllElements();
-        m_exclMdl.removeAllElements();
-        for (T c : m_order) {
-            if (!m_hideNames.contains(c)) {
-                m_exclMdl.addElement(c);
-            }
-        }
-        if (changed) {
-            fireFilteringChangedEvent();
-        }
-    }
-
-    /**
-     * Called by the '<< add' button to include the selected elements from the
-     * exclude list.
-     */
-    private void onAddIt() {
-        // add all selected elements from the exclude to the include list
-        Object[] o = m_exclList.getSelectedValues();
-        HashSet<Object> hash = new HashSet<Object>();
-        hash.addAll(Arrays.asList(o));
-        for (Enumeration<?> e = m_inclMdl.elements(); e.hasMoreElements();) {
-            hash.add(e.nextElement());
-        }
-        boolean changed = false;
-        for (int i = 0; i < o.length; i++) {
-            changed |= m_exclMdl.removeElement(o[i]);
-        }
-        m_inclMdl.removeAllElements();
-        for (T c : m_order) {
-            if (hash.contains(c)) {
-                m_inclMdl.addElement(c);
-            }
-        }
-        if (changed) {
-            fireFilteringChangedEvent();
-        }
-    }
-
-    /**
-     * Called by the '<< add all' button to include all elements from the
-     * exclude list.
-     */
-    private void onAddAll() {
-        boolean changed = m_exclMdl.elements().hasMoreElements();
-        m_inclMdl.removeAllElements();
-        m_exclMdl.removeAllElements();
-        for (T c : m_order) {
-            if (!m_hideNames.contains(c)) {
-                m_inclMdl.addElement(c);
-            }
-        }
-        if (changed) {
-            fireFilteringChangedEvent();
-        }
-    }
-
-    /**
-     * Updates this filter panel by removing all current selections from the
-     * include and exclude list. The include list will contains all column names
-     * from the spec afterwards.
+     * Updates this filter panel by removing all current selections from the include and exclude list. The include list
+     * will contains all column names from the spec afterwards.
+     *
      * @param config to be loaded from
      * @param names array of names to be included or excluded (preserve order)
      */
-    public void loadConfiguration(final NameFilterConfiguration config,
-            final String[] names) {
+    public void loadConfiguration(final NameFilterConfiguration config, final String[] names) {
         final List<String> ins = Arrays.asList(config.getIncludeList());
         final List<String> exs = Arrays.asList(config.getExcludeList());
         this.update(ins, exs, names);
@@ -591,20 +509,38 @@ public abstract class NameFilterPanel<T> extends JPanel {
                 m_enforceInclusion.doClick();
                 break;
         }
+        m_patternPanel.loadConfiguration(config.getPatternConfig());
+        setPatternFilterEnabled(config.isPatternFilterEnabled());
+        m_currentType = config.getType();
+        boolean typeOk = false;
+        Enumeration<AbstractButton> buttons = m_typeGroup.getElements();
+        while (buttons.hasMoreElements()) {
+            AbstractButton button = buttons.nextElement();
+            if (button.getActionCommand().equals(m_currentType)) {
+                button.setSelected(true);
+                typeOk = true;
+                break;
+            }
+        }
+        if (!typeOk) {
+            m_currentType = NameFilterConfiguration.TYPE;
+            m_nameButton.setSelected(true);
+        }
+        updateFilterPanel();
         repaint();
-   }
+    }
 
     /**
-     * Update this panel with the given include, exclude lists and the array of
-     * all possible values.
+     * Update this panel with the given include, exclude lists and the array of all possible values.
+     *
      * @param ins include list
      * @param exs exclude list
      * @param names all available names
      * @noreference This method is not intended to be referenced by clients.
      * @nooverride This method is not intended to be re-implemented or extended by clients.
      */
-    public void update(final List<String> ins, final List<String> exs,
-            final String[] names) {
+    @SuppressWarnings("unchecked")
+    public void update(final List<String> ins, final List<String> exs, final String[] names) {
         // clear internal member
         m_order.clear();
         m_inclMdl.removeAllElements();
@@ -634,6 +570,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     /**
      * Save this configuration.
+     *
      * @param config settings to be saved into
      */
     public void saveConfiguration(final NameFilterConfiguration config) {
@@ -661,6 +598,13 @@ public abstract class NameFilterPanel<T> extends JPanel {
             exs[index++] = getNameForT(t);
         }
         config.setExcludeList(exs);
+        try {
+            config.setType(m_currentType);
+        } catch (InvalidSettingsException e) {
+            NodeLogger.getLogger(getClass()).coding("Could not save settings as the selected filter type '" 
+                    + m_currentType + "' - this was a valid type when the configuration was loaded");
+        }
+        m_patternPanel.saveConfiguration(config.getPatternConfig());
     }
 
     /** @return list of all included T's */
@@ -668,7 +612,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         final Set<T> list = new LinkedHashSet<T>();
         for (int i = 0; i < m_inclMdl.getSize(); i++) {
             @SuppressWarnings("unchecked")
-            T t = (T) m_inclMdl.getElementAt(i);
+            T t = (T)m_inclMdl.getElementAt(i);
             list.add(t);
         }
         return list;
@@ -679,17 +623,16 @@ public abstract class NameFilterPanel<T> extends JPanel {
         final Set<T> list = new LinkedHashSet<T>();
         for (int i = 0; i < m_exclMdl.getSize(); i++) {
             @SuppressWarnings("unchecked")
-            T t = (T) m_exclMdl.getElementAt(i);
+            T t = (T)m_exclMdl.getElementAt(i);
             list.add(t);
         }
         return list;
     }
 
     /**
-     * Removes the given columns form either include or exclude list and
-     * notifies all listeners. Does not throw an exception if the argument
-     * contains <code>null</code> elements or is not contained in any of the
-     * lists.
+     * Removes the given columns form either include or exclude list and notifies all listeners. Does not throw an
+     * exception if the argument contains <code>null</code> elements or is not contained in any of the lists.
+     *
      * @param names a list of names to hide from the filter
      */
     public void hideNames(final T... names) {
@@ -709,6 +652,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /** Re-adds all remove/hidden names to the exclude list. */
+    @SuppressWarnings("unchecked")
     public void resetHiding() {
         if (m_hideNames.isEmpty()) {
             return;
@@ -783,9 +727,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
-     * Sets the internal used {@link InputFilter} and calls
-     * the {@link #update(List, List, String[])} method to update the
-     * panel.
+     * Sets the internal used {@link InputFilter} and calls the {@link #update(List, List, String[])} method to update
+     * the panel.
      *
      * @param filter the new {@link InputFilter} to use
      */
@@ -802,6 +745,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     /**
      * Returns a set of the names of all included items.
+     *
      * @return a set of the names of all included items.
      */
     public Set<String> getIncludedNamesAsSet() {
@@ -815,6 +759,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     /**
      * Returns a set of the names of all excluded items.
+     *
      * @return a set of the names of all excluded items.
      */
     public Set<String> getExcludedNamesAsSet() {
@@ -828,6 +773,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     /**
      * Returns all values include and exclude in its original order they have added to this panel.
+     *
      * @return a set of string containing all values from the in- and exclude list
      */
     public Set<String> getAllValues() {
@@ -840,10 +786,257 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     /**
      * Returns all objects T in its original order.
+     *
      * @return a set of T objects retrieved from the in- and exclude list
      */
     public Set<T> getAllValuesT() {
         return Collections.unmodifiableSet(m_order);
     }
-}
 
+    /**
+     * Adds the type to the given radio button. Used by subclasses to add a different type of filtering.
+     *
+     * @param radioButton Radio button to the type that will be added.
+     * @see NameFilterConfiguration#setType(String)
+     * @since 2.9
+     */
+    protected void addType(final JRadioButton radioButton) {
+        m_typeGroup.add(radioButton);
+        m_typePanel.add(radioButton);
+        updateTypePanel();
+    }
+
+    /**
+     * Remove the type to the given radio button.
+     *
+     * @param radioButton Radio button to the type that will be removed.
+     * @since 2.9
+     */
+    protected void removeType(final JRadioButton radioButton) {
+        m_typeGroup.remove(radioButton);
+        m_typePanel.remove(radioButton);
+        // Reset to default type if current type has been removed
+        if (m_currentType.equals(radioButton.getActionCommand())) {
+            m_currentType = NameFilterConfiguration.TYPE;
+            updateFilterPanel();
+        }
+        updateTypePanel();
+    }
+
+    /**
+     * Returns the panel to the given filter type.
+     *
+     * @param type The type
+     * @return The panel to the type
+     * @since 2.9
+     */
+    protected JPanel getFilterPanel(final String type) {
+        return new JPanel();
+    }
+
+    /**
+     * Creates a JRadioButton to the given FilterTypePanel.
+     *
+     * The created button will be initialized with the correct description, and action listener.
+     *
+     * @param filterPanel The filter panel
+     * @return The JRadioButton
+     * @since 2.9
+     */
+    @SuppressWarnings("rawtypes")
+    protected JRadioButton createButtonToFilterPanel(final String actionCommand, final String label,
+        final JPanel filterPanel) {
+        JRadioButton button = new JRadioButton(label);
+        button.setActionCommand(actionCommand);
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                if (e.getActionCommand() != null) {
+                    m_currentType = e.getActionCommand();
+                    updateFilterPanel();
+                }
+            }
+        });
+        return button;
+    }
+
+    private void fireFilteringChangedEvent() {
+        if (m_listeners != null) {
+            for (ChangeListener listener : m_listeners) {
+                listener.stateChanged(new ChangeEvent(this));
+            }
+        }
+    }
+
+    /**
+     * Called by the 'remove >>' button to exclude the selected elements from the include list.
+     */
+    @SuppressWarnings("unchecked")
+    private void onRemIt() {
+        // add all selected elements from the include to the exclude list
+        @SuppressWarnings("deprecation")
+        Object[] o = m_inclList.getSelectedValues();
+        HashSet<Object> hash = new HashSet<Object>();
+        hash.addAll(Arrays.asList(o));
+        for (Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
+            hash.add(e.nextElement());
+        }
+        boolean changed = false;
+        for (int i = 0; i < o.length; i++) {
+            changed |= m_inclMdl.removeElement(o[i]);
+        }
+        m_exclMdl.removeAllElements();
+        for (T c : m_order) {
+            if (hash.contains(c)) {
+                m_exclMdl.addElement(c);
+            }
+        }
+        if (changed) {
+            fireFilteringChangedEvent();
+        }
+    }
+
+    /**
+     * Called by the 'remove >>' button to exclude all elements from the include list.
+     */
+    @SuppressWarnings("unchecked")
+    private void onRemAll() {
+        boolean changed = m_inclMdl.elements().hasMoreElements();
+        m_inclMdl.removeAllElements();
+        m_exclMdl.removeAllElements();
+        for (T c : m_order) {
+            if (!m_hideNames.contains(c)) {
+                m_exclMdl.addElement(c);
+            }
+        }
+        if (changed) {
+            fireFilteringChangedEvent();
+        }
+    }
+
+    /**
+     * Called by the '<< add' button to include the selected elements from the exclude list.
+     */
+    @SuppressWarnings("unchecked")
+    private void onAddIt() {
+        // add all selected elements from the exclude to the include list
+        @SuppressWarnings("deprecation")
+        Object[] o = m_exclList.getSelectedValues();
+        HashSet<Object> hash = new HashSet<Object>();
+        hash.addAll(Arrays.asList(o));
+        for (Enumeration<?> e = m_inclMdl.elements(); e.hasMoreElements();) {
+            hash.add(e.nextElement());
+        }
+        boolean changed = false;
+        for (int i = 0; i < o.length; i++) {
+            changed |= m_exclMdl.removeElement(o[i]);
+        }
+        m_inclMdl.removeAllElements();
+        for (T c : m_order) {
+            if (hash.contains(c)) {
+                m_inclMdl.addElement(c);
+            }
+        }
+        if (changed) {
+            fireFilteringChangedEvent();
+        }
+    }
+
+    /**
+     * Called by the '<< add all' button to include all elements from the exclude list.
+     */
+    @SuppressWarnings("unchecked")
+    private void onAddAll() {
+        boolean changed = m_exclMdl.elements().hasMoreElements();
+        m_inclMdl.removeAllElements();
+        m_exclMdl.removeAllElements();
+        for (T c : m_order) {
+            if (!m_hideNames.contains(c)) {
+                m_inclMdl.addElement(c);
+            }
+        }
+        if (changed) {
+            fireFilteringChangedEvent();
+        }
+    }
+
+    /**
+     * Initializes the panel with the mode selection panel and the panel holding the currently active filter.
+     */
+    private void initPanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        // Setup the mode panel, containing the options by column name and by column type
+        m_typeGroup = new ButtonGroup();
+        m_typePanel = new JPanel();
+        m_typePanel.setLayout(new BoxLayout(m_typePanel, BoxLayout.X_AXIS));
+        m_nameButton = new JRadioButton(NAME);
+        m_typeGroup.add(m_nameButton);
+        m_typePanel.add(m_nameButton);
+        m_nameButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                if (e.getActionCommand() != null) {
+                    m_currentType = e.getActionCommand();
+                    updateFilterPanel();
+                }
+            }
+        });
+        m_nameButton.setActionCommand(NameFilterConfiguration.TYPE);
+        // Setup the filter panel which will contain the filter for the selected mode
+        m_filterPanel = new JPanel();
+        JScrollPane scrollPane = new JScrollPane(m_filterPanel);
+        Dimension size = m_nameFilterPanel.getPreferredSize();
+        scrollPane.setPreferredSize(new Dimension(size.width + 15, size.height + 15));
+        // Activate the selected filter
+        m_filterPanel.add(m_nameFilterPanel);
+        m_nameButton.setSelected(true);
+        // Only add the modes panel if there are more than one
+        panel.add(m_typePanel);
+        panel.add(scrollPane);
+        this.add(panel);
+        updateTypePanel();
+        updateFilterPanel();
+    }
+
+    private void updateTypePanel() {
+        m_typePanel.setVisible(m_typeGroup.getButtonCount() > 1);
+        m_typePanel.revalidate();
+        m_typePanel.repaint();
+    }
+
+    /**
+     * Changes the content of the filter panel to the currently active filter.
+     */
+    private void updateFilterPanel() {
+        m_filterPanel.removeAll();
+        if (NameFilterConfiguration.TYPE.equals(m_currentType)) {
+            m_filterPanel.add(m_nameFilterPanel);
+        } else if (PatternFilterConfigurationImpl.TYPE.equals(m_currentType)) {
+            m_filterPanel.add(m_patternPanel);
+        } else {
+            m_filterPanel.add(getFilterPanel(m_currentType));
+        }
+        // Revalidate and repaint are needed to update the view
+        m_filterPanel.revalidate();
+        m_filterPanel.repaint();
+    }
+
+    /**
+     * Enables or disables the pattern filter.
+     *
+     * @param enabled If the pattern filter should be enabled
+     * @since 2.9
+     */
+    private void setPatternFilterEnabled(final boolean enabled) {
+        boolean wasEnabled = Collections.list(m_typeGroup.getElements()).contains(m_patternButton);
+        if (wasEnabled != enabled) {
+            if (enabled) {
+                addType(m_patternButton);
+            } else {
+                removeType(m_patternButton);
+            }
+        }
+    }
+
+}

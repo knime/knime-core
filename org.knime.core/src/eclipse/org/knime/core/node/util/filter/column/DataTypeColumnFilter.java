@@ -94,7 +94,7 @@ public final class DataTypeColumnFilter extends InputFilter<DataColumnSpec> {
 
     /**
      * Checks if the given column type is included in the list of allowed
-     * types. If the list is empty, all types are valid.
+     * types.
      * @param cspec {@link ColumnFilterPanel} checked
      * @return true, if given column should be visible in column filter
      */
@@ -106,6 +106,13 @@ public final class DataTypeColumnFilter extends InputFilter<DataColumnSpec> {
             }
         }
         return false;
+    }
+
+    /**
+     * @return the filterClasses
+     */
+    Class<? extends DataValue>[] getFilterClasses() {
+        return m_filterClasses;
     }
 
 }

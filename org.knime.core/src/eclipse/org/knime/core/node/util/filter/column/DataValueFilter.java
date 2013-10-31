@@ -40,71 +40,65 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
+ * History
+ *   29.06.2012 (kilian): created
  */
-package org.knime.base.node.preproc.split2;
+package org.knime.core.node.util.filter.column;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
-import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
+import java.util.Arrays;
+import java.util.List;
 
+import org.knime.core.data.DataValue;
+import org.knime.core.node.util.filter.InputFilter;
 
 /**
- * Dialog with a column filter which is used to define the split of the columns.
+ * Class that filters data values based on a given set of compatible <code>DataValue</code> classes.
  *
- * @author Bernd Wiswedel, University of Konstanz
+ * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * @since 2.9
  */
-public class SplitNodeDialog2 extends NodeDialogPane {
+public final class DataValueFilter extends InputFilter<Class<? extends DataValue>> {
 
     /**
-     * Using {@link DataColumnSpecFilterPanel} as underlying column filter.
+     * Include only data values contained in this array.
      */
-    private final DataColumnSpecFilterPanel m_filterPanel;
+    private final Class<? extends DataValue>[] m_filterClasses;
 
     /**
-     * Creates new dialog.
+     * Creates a new value class filter.
+     *
+     * @param filterValueClasses all classes that are allowed
      */
-    public SplitNodeDialog2() {
-        m_filterPanel = new DataColumnSpecFilterPanel();
-        m_filterPanel.setIncludeTitle(" Bottom ");
-        m_filterPanel.setExcludeTitle(" Top ");
-        m_filterPanel.setRemoveAllButtonText("<<");
-        m_filterPanel.setRemoveButtonText("<");
-        m_filterPanel.setAddAllButtonText(">>");
-        m_filterPanel.setAddButtonText(">");
-        addTab("Settings", m_filterPanel);
+    public DataValueFilter(final Class<? extends DataValue>... filterValueClasses) {
+        if (filterValueClasses == null || filterValueClasses.length == 0) {
+            throw new NullPointerException("Classes must not be null");
+        }
+        final List<Class<? extends DataValue>> list = Arrays.asList(filterValueClasses);
+        if (list.contains(null)) {
+            throw new NullPointerException("List of value classes must not " + "contain null elements.");
+        }
+        m_filterClasses = filterValueClasses;
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if the given column type is included in the list of allowed types.
+     *
+     * @param value checked
+     * @return true, if given data value should be visible
      */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        final DataTableSpec spec = specs[0];
-        DataColumnSpecFilterConfiguration config = SplitNodeModel2.createColFilterConf();
-        config.loadConfigurationInDialog(settings, spec);
-        m_filterPanel.loadConfiguration(config, spec);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
-        DataColumnSpecFilterConfiguration config = SplitNodeModel2.createColFilterConf();
-        m_filterPanel.saveConfiguration(config);
-        config.saveConfiguration(settings);
+    public final boolean include(final Class<? extends DataValue> value) {
+        for (final Class<? extends DataValue> val : m_filterClasses) {
+            if (value.equals(val)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

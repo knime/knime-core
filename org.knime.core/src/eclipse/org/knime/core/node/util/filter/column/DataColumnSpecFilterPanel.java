@@ -47,6 +47,8 @@
  */
 package org.knime.core.node.util.filter.column;
 
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.ListCellRenderer;
 
 import org.knime.core.data.DataColumnSpec;
@@ -54,86 +56,129 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 import org.knime.core.node.util.filter.InputFilter;
+import org.knime.core.node.util.filter.NameFilterConfiguration;
 import org.knime.core.node.util.filter.NameFilterPanel;
 
 /**
  * A panel to filter {@link DataColumnSpec}s.
  *
  * @author Thomas Gabriel, KNIME.com AG, Zurich
+ * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
  * @since 2.6
  */
 @SuppressWarnings("serial")
 public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
 
+    private final InputFilter<DataColumnSpec> m_filter;
+
     private DataTableSpec m_spec;
+
+    private TypeFilterPanelImpl m_typePanel;
+
+    private JRadioButton m_typeButton;
+
+    private Boolean m_typeFilterEnabled = null;
 
     /**
      * Create a new panel to filter {@link DataColumnSpec}s.
      */
     public DataColumnSpecFilterPanel() {
         super();
+        m_filter = null;
+        init();
     }
 
     /**
      * Create a new panel to filter {@link DataColumnSpec}s.
-     * @param showSelectionListsOnly if true, the panel shows no additional options like
-     * search box, force-include-option, etc.
+     *
+     * @param showSelectionListsOnly if true, the panel shows no additional options like search box,
+     *            force-include-option, etc.
      */
     public DataColumnSpecFilterPanel(final boolean showSelectionListsOnly) {
         super(showSelectionListsOnly);
+        m_filter = null;
+        init();
     }
 
     /**
-     * Create a new panel to filter {@link DataColumnSpec}s. The given
-     * {@link DataValue}s specify the type of the columns which are shown
-     * and can be included or excluded.
+     * Create a new panel to filter {@link DataColumnSpec}s. The given {@link DataValue}s specify the type of the
+     * columns which are shown and can be included or excluded.
+     *
      * @param filterValueClasses The {@link DataValue} of the columns to show.
      */
-    public DataColumnSpecFilterPanel(
-            final Class<? extends DataValue>... filterValueClasses) {
+    public DataColumnSpecFilterPanel(final Class<? extends DataValue>... filterValueClasses) {
         super(false, new DataTypeColumnFilter(filterValueClasses));
+        m_filter = new DataTypeColumnFilter(filterValueClasses);
+        init();
     }
 
     /**
-     * Create a new panel to filter {@link DataColumnSpec}s. The given
-     * {@link DataValue}s specify the type of the columns which are shown
-     * and can be included or excluded.
-     * @param showSelectionListsOnly if true, the panel shows no additional options like
-     * search box, force-include-option, etc.
+     * Create a new panel to filter {@link DataColumnSpec}s. The given {@link DataValue}s specify the type of the
+     * columns which are shown and can be included or excluded.
+     *
+     * @param showSelectionListsOnly if true, the panel shows no additional options like search box,
+     *            force-include-option, etc.
      * @param filterValueClasses The {@link DataValue} of the columns to show.
      */
     public DataColumnSpecFilterPanel(final boolean showSelectionListsOnly,
-            final Class<? extends DataValue>... filterValueClasses) {
+        final Class<? extends DataValue>... filterValueClasses) {
         super(showSelectionListsOnly, new DataTypeColumnFilter(filterValueClasses));
+        m_filter = new DataTypeColumnFilter(filterValueClasses);
+        init();
     }
 
     /**
-     * Create a new panel to filter {@link DataColumnSpec}s. The given
-     * filter handles which columns are shown and can be included or excluded
-     * and which not, based on the underlying type data type of the column.
-     * @param showSelectionListsOnly if true, the panel shows no additional options like
-     * search box, force-include-option, etc.
-     * @param filter The filter specifying which columns are shown and which
-     * not.
+     * Create a new panel to filter {@link DataColumnSpec}s. The given filter handles which columns are shown and can be
+     * included or excluded and which not, based on the underlying type data type of the column.
+     *
+     * @param showSelectionListsOnly if true, the panel shows no additional options like search box,
+     *            force-include-option, etc.
+     * @param filter The filter specifying which columns are shown and which not.
      */
-    public DataColumnSpecFilterPanel(final boolean showSelectionListsOnly,
-            final InputFilter<DataColumnSpec> filter) {
+    public DataColumnSpecFilterPanel(final boolean showSelectionListsOnly, final InputFilter<DataColumnSpec> filter) {
         super(showSelectionListsOnly, filter);
+        m_filter = filter;
+        init();
     }
 
     /**
-     * Create a new panel to filter {@link DataColumnSpec}s. The given
-     * filter handles which columns are shown and can be included or excluded
-     * and which not, based on the underlying type data type of the column.
-     * @param filter The filter specifying which columns are shown and which
-     * not.
+     * Create a new panel to filter {@link DataColumnSpec}s. The given filter handles which columns are shown and can be
+     * included or excluded and which not, based on the underlying type data type of the column.
+     *
+     * @param filter The filter specifying which columns are shown and which not.
      */
     public DataColumnSpecFilterPanel(final InputFilter<DataColumnSpec> filter) {
         super(false, filter);
+        m_filter = filter;
+        init();
     }
 
+    /**
+     * Load configuration.
+     *
+     * @param config the configuration to read to settings from.
+     * @param spec the {@link DataTableSpec} to validate the settings on
+     */
+    public void loadConfiguration(final DataColumnSpecFilterConfiguration config, final DataTableSpec spec) {
+        m_spec = spec;
+        m_typePanel.loadConfiguration(config.getTypeConfig(), spec);
+        super.loadConfiguration(config, spec == null ? new String[0] : spec.getColumnNames());
+        setTypeFilterEnabled(config.isTypeFilterEnabled());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveConfiguration(final NameFilterConfiguration config) {
+        if (config instanceof DataColumnSpecFilterConfiguration) {
+            m_typePanel.saveConfiguration(((DataColumnSpecFilterConfiguration)config).getTypeConfig());
+        }
+        super.saveConfiguration(config);
+    }
 
     /** {@inheritDoc} */
+    @SuppressWarnings("rawtypes")
     @Override
     protected ListCellRenderer getListCellRenderer() {
         return new DataColumnSpecListCellRenderer();
@@ -155,15 +200,40 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
     }
 
     /**
-     * Load configuration.
-     * @param config the configuration to read to settings from.
-     * @param spec the {@link DataTableSpec} to validate the settings on
+     * {@inheritDoc}
      */
-    public void loadConfiguration(
-            final DataColumnSpecFilterConfiguration config,
-            final DataTableSpec spec) {
-        m_spec = spec;
-        super.loadConfiguration(config, spec.getColumnNames());
+    @Override
+    protected JPanel getFilterPanel(final String type) {
+        if (TypeFilterConfigurationImpl.TYPE.equals(type)) {
+            return m_typePanel;
+        }
+        return super.getFilterPanel(type);
+    }
+
+    private void init() {
+        DataValueFilter filter = null;
+        if (m_filter != null && m_filter instanceof DataTypeColumnFilter) {
+            filter = new DataValueFilter(((DataTypeColumnFilter)m_filter).getFilterClasses());
+        }
+        m_typePanel = new TypeFilterPanelImpl(filter);
+        m_typeButton = createButtonToFilterPanel(TypeFilterConfigurationImpl.TYPE, "Type Selection", m_typePanel);
+    }
+
+    /**
+     * Enables or disables the type filter.
+     *
+     * @param enabled If the type filter should be enabled
+     * @since 2.9
+     */
+    private void setTypeFilterEnabled(final boolean enabled) {
+        if (m_typeFilterEnabled == null || !m_typeFilterEnabled.equals(enabled)) {
+            if (enabled) {
+                addType(m_typeButton);
+            } else {
+                removeType(m_typeButton);
+            }
+            m_typeFilterEnabled = enabled;
+        }
     }
 
 }

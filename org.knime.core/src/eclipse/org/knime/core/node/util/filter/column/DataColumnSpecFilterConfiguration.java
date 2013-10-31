@@ -51,50 +51,214 @@
 package org.knime.core.node.util.filter.column;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
 
-/** Represents a column filtering. Classes of this object are used as member in
- * the NodeModel and as underlying model to a {@link DataColumnSpecFilterPanel}.
+/**
+ * Represents a column filtering. Classes of this object are used as member in the NodeModel and as underlying model to
+ * a {@link DataColumnSpecFilterPanel}.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
  * @since 2.6
  */
-public class DataColumnSpecFilterConfiguration
-    extends NameFilterConfiguration {
+public class DataColumnSpecFilterConfiguration extends NameFilterConfiguration {
 
     private final InputFilter<DataColumnSpec> m_filter;
 
-    /** New instance with hard coded root name.
-     * @param configRootName Non null name that is used as identifier when
-     * saved to a NodeSettings object during save (and load). */
+    private TypeFilterConfigurationImpl m_typeConfig;
+
+    /**
+     * Type filter is off by default.
+     */
+    private boolean m_typeFilterEnabled = false;
+
+    /** Spec last passed into {@link #loadConfigurationInDialog(NodeSettingsRO, DataTableSpec)}. It's null
+     * when not used in dialog but in model. */
+    private DataTableSpec m_lastSpec;
+
+    /**
+     * New instance with hard coded root name. Consider to call {@link #setTypeFilterEnabled(boolean)} if
+     * desired right after construction.
+     *
+     * @param configRootName Non null name that is used as identifier when saved to a NodeSettings object during save
+     *            (and load).
+     */
     public DataColumnSpecFilterConfiguration(final String configRootName) {
         this(configRootName, null);
     }
 
-    /** New instance with hard coded root name.
-     * @param configRootName Non null name that is used as identifier when
-     * saved to a NodeSettings object during save (and load).
-     * @param filter A (type) filter applied to the input spec. */
-    public DataColumnSpecFilterConfiguration(final String configRootName,
-            final InputFilter<DataColumnSpec> filter) {
+    /**
+     * New instance with hard coded root name.
+     *
+     * @param configRootName Non null name that is used as identifier when saved to a NodeSettings object during save
+     *            (and load).
+     * @param filter A (type) filter applied to the input spec.
+     */
+    public DataColumnSpecFilterConfiguration(final String configRootName, final InputFilter<DataColumnSpec> filter) {
         super(configRootName);
         m_filter = filter;
+        DataValueFilter valFilter = null;
+        if (m_filter != null && m_filter instanceof DataTypeColumnFilter) {
+            valFilter = new DataValueFilter(((DataTypeColumnFilter)m_filter).getFilterClasses());
+        }
+        m_typeConfig = new TypeFilterConfigurationImpl(valFilter);
     }
 
-    /** Loads the configuration in the dialog (no exception thrown)
-     * and maps it to the input spec.
+    /**
+     * Enables or disables the type filter (default is false). This method should only be called right after
+     * construction.
+     *
+     * @param enabled If the type filter should be enabled
+     * @since 2.9
+     */
+    public void setTypeFilterEnabled(final boolean enabled) {
+        m_typeFilterEnabled = enabled;
+    }
+
+    /**
+     * Checks if the type filter is enabled.
+     *
+     * @return true if the type filter is enabled, false otherwise
+     * @since 2.9
+     */
+    public boolean isTypeFilterEnabled() {
+        return m_typeFilterEnabled;
+    }
+
+    /**
+     * Loads the configuration in the dialog (no exception thrown) and maps it to the input spec.
+     *
      * @param settings The settings to load from.
      * @param spec The non-null spec.
      */
-    public void loadConfigurationInDialog(final NodeSettingsRO settings,
-            final DataTableSpec spec) {
+    public void loadConfigurationInDialog(final NodeSettingsRO settings, final DataTableSpec spec) {
         String[] names = toFilteredStringArray(spec);
+        m_lastSpec = spec;
         super.loadConfigurationInDialog(settings, names);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadConfigurationInDialogChild(final NodeSettingsRO settings, final String[] names) {
+        super.loadConfigurationInDialogChild(settings, names);
+        NodeSettingsRO configSettings;
+        try {
+            configSettings = settings.getNodeSettings(TypeFilterConfigurationImpl.TYPE);
+        } catch (InvalidSettingsException e) {
+            configSettings = new NodeSettings("empty");
+        }
+        m_typeConfig.loadConfigurationInDialog(configSettings, m_lastSpec);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadConfigurationInModelChild(final NodeSettingsRO settings) throws InvalidSettingsException {
+        super.loadConfigurationInModelChild(settings);
+        try {
+            NodeSettingsRO configSettings = settings.getNodeSettings(TypeFilterConfigurationImpl.TYPE);
+            m_typeConfig.loadConfigurationInModel(configSettings);
+        } catch (InvalidSettingsException e) {
+            if (TypeFilterConfigurationImpl.TYPE.equals(getType())) {
+                throw e;
+            }
+            // Otherwise leave at default settings as pattern matcher is not active (might be prior 2.9)
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean verifyType(final String type) {
+        if (super.verifyType(type)) {
+            return true;
+        }
+        if (isTypeFilterEnabled() && TypeFilterConfigurationImpl.TYPE.equals(type)) {
+            return true;
+        }
+        return false;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void saveConfigurationChild(final NodeSettingsWO settings) {
+        super.saveConfigurationChild(settings);
+        NodeSettingsWO configSettings = settings.addNodeSettings(TypeFilterConfigurationImpl.TYPE);
+        m_typeConfig.saveConfiguration(configSettings);
+    }
+
+    /**
+     * Applies the settings to the input spec and returns an object representing the included, excluded and unknown
+     * names.
+     *
+     * @param spec The input spec.
+     * @return The filter result object.
+     */
+    public FilterResult applyTo(final DataTableSpec spec) {
+        if (getType().equals(TypeFilterConfigurationImpl.TYPE)) {
+            Set<Class<? extends DataValue>> includes = m_typeConfig.applyTo(getDataValuesFromSpec(spec));
+            List<String> incls = new ArrayList<String>();
+            List<String> excls = new ArrayList<String>();
+            for (DataColumnSpec colspec : spec) {
+                if (includes.contains(colspec.getType().getPreferredValueClass())) {
+                    incls.add(colspec.getName());
+                } else {
+                    excls.add(colspec.getName());
+                }
+            }
+            return new FilterResult(incls, excls, new ArrayList<String>(), new ArrayList<String>());
+        } else {
+            String[] names = toFilteredStringArray(spec);
+            return super.applyTo(names);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public DataColumnSpecFilterConfiguration clone() {
+        return (DataColumnSpecFilterConfiguration)super.clone();
+    }
+
+    /**
+     * Guess default settings on the argument spec. If the flag is set all appropriate columns will be put into the
+     * include list, otherwise they are put into the exclude list.
+     *
+     * @param spec To load from.
+     * @param includeByDefault See above.
+     */
+    public void loadDefaults(final DataTableSpec spec, final boolean includeByDefault) {
+        String[] names = toFilteredStringArray(spec);
+        super.loadDefaults(names, includeByDefault);
+    }
+
+    /**
+     * Returns the filter used by this configuration.
+     *
+     * @return a reference to the filter. Don't modify.
+     */
+    public InputFilter<DataColumnSpec> getFilter() {
+        return m_filter;
+    }
+
+    /**
+     * @return the typeConfig
+     */
+    TypeFilterConfigurationImpl getTypeConfig() {
+        return m_typeConfig;
     }
 
     private String[] toFilteredStringArray(final DataTableSpec spec) {
@@ -108,39 +272,12 @@ public class DataColumnSpecFilterConfiguration
         return acceptedInNames.toArray(new String[acceptedInNames.size()]);
     }
 
-    /** Applies the settings to the input spec and returns an
-     * object representing the included, excluded and unknown
-     * names.
-     * @param spec The input spec.
-     * @return The filter result object.
-     */
-    public FilterResult applyTo(final DataTableSpec spec) {
-        String[] names = toFilteredStringArray(spec);
-        return super.applyTo(names);
+    private Set<Class<? extends DataValue>> getDataValuesFromSpec(final DataTableSpec spec) {
+        Set<Class<? extends DataValue>> values = new HashSet<Class<? extends DataValue>>();
+        for (DataColumnSpec colspec : spec) {
+            values.add(colspec.getType().getPreferredValueClass());
+        }
+        return values;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public DataColumnSpecFilterConfiguration clone() {
-        return (DataColumnSpecFilterConfiguration)super.clone();
-    }
-
-    /** Guess default settings on the argument spec. If the flag is
-     * set all appropriate columns will be put into the include list,
-     * otherwise they are put into the exclude list.
-     * @param spec To load from.
-     * @param includeByDefault See above. */
-    public void loadDefaults(final DataTableSpec spec,
-            final boolean includeByDefault) {
-        String[] names = toFilteredStringArray(spec);
-        super.loadDefaults(names, includeByDefault);
-    }
-
-    /**
-     * Returns the filter used by this configuration.
-     * @return a reference to the filter. Don't modify.
-     */
-    public InputFilter<DataColumnSpec> getFilter() {
-        return m_filter;
-    }
 }

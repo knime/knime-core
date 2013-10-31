@@ -1,5 +1,5 @@
-/*
- * ------------------------------------------------------------------------
+<!--
+========================================================================
  *
  *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
@@ -43,68 +43,8 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- *
- */
-package org.knime.base.node.preproc.split2;
-
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
-import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
-
-
-/**
- * Dialog with a column filter which is used to define the split of the columns.
- *
- * @author Bernd Wiswedel, University of Konstanz
- */
-public class SplitNodeDialog2 extends NodeDialogPane {
-
-    /**
-     * Using {@link DataColumnSpecFilterPanel} as underlying column filter.
-     */
-    private final DataColumnSpecFilterPanel m_filterPanel;
-
-    /**
-     * Creates new dialog.
-     */
-    public SplitNodeDialog2() {
-        m_filterPanel = new DataColumnSpecFilterPanel();
-        m_filterPanel.setIncludeTitle(" Bottom ");
-        m_filterPanel.setExcludeTitle(" Top ");
-        m_filterPanel.setRemoveAllButtonText("<<");
-        m_filterPanel.setRemoveButtonText("<");
-        m_filterPanel.setAddAllButtonText(">>");
-        m_filterPanel.setAddButtonText(">");
-        addTab("Settings", m_filterPanel);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        final DataTableSpec spec = specs[0];
-        DataColumnSpecFilterConfiguration config = SplitNodeModel2.createColFilterConf();
-        config.loadConfigurationInDialog(settings, spec);
-        m_filterPanel.loadConfiguration(config, spec);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
-        DataColumnSpecFilterConfiguration config = SplitNodeModel2.createColFilterConf();
-        m_filterPanel.saveConfiguration(config);
-        config.saveConfiguration(settings);
-    }
-
-}
+====================================================================
+-->
+<body>
+Implementation of the column filter.
+</body>
