@@ -73,58 +73,67 @@ import org.knime.core.node.util.filter.NameFilterConfiguration;
  * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
  * @since 2.6
  */
-public class DataColumnSpecFilterConfiguration extends NameFilterConfiguration {
+public final class DataColumnSpecFilterConfiguration extends NameFilterConfiguration {
+
+    /** Mask passed in the constructor to enable a data type based filter
+     * ({@value DataColumnSpecFilterConfiguration#FILTER_BY_DATATYPE}).
+     * @since 2.9 */
+    public static final int FILTER_BY_DATATYPE = 1 << 5; // shift 5 to allow four more filters in super class
 
     private final InputFilter<DataColumnSpec> m_filter;
 
     private TypeFilterConfigurationImpl m_typeConfig;
 
-    /**
-     * Type filter is off by default.
-     */
-    private boolean m_typeFilterEnabled = false;
+    /** Whether to use data type based filter. Controlled via bit mask in constructor. */
+    private final boolean m_typeFilterEnabled;
 
     /** Spec last passed into {@link #loadConfigurationInDialog(NodeSettingsRO, DataTableSpec)}. It's null
      * when not used in dialog but in model. */
     private DataTableSpec m_lastSpec;
 
     /**
-     * New instance with hard coded root name. Consider to call {@link #setTypeFilterEnabled(boolean)} if
-     * desired right after construction.
+     * New instance with hard coded root name. This constructor enable a pattern and type filter.
      *
      * @param configRootName Non null name that is used as identifier when saved to a NodeSettings object during save
      *            (and load).
      */
     public DataColumnSpecFilterConfiguration(final String configRootName) {
-        this(configRootName, null);
+        this(configRootName, null, FILTER_BY_NAMEPATTERN | FILTER_BY_DATATYPE);
     }
 
     /**
-     * New instance with hard coded root name.
+     * New instance with hard coded root name. This constructor enables only a name pattern filter (as a
+     * data value class filter is applied).
+     * @param configRootName Non null name that is used as identifier when saved to a NodeSettings object during save
+     *            (and load).
+     * @param filter A (type) filter applied to the input spec (null allowed)
+     */
+    public DataColumnSpecFilterConfiguration(final String configRootName, final InputFilter<DataColumnSpec> filter) {
+        this(configRootName, filter, FILTER_BY_NAMEPATTERN);
+    }
+
+    /**
+     * New instance with hard coded root name. The flags argument enables or disables certain filter types. This filter
+     * supports {@link #FILTER_BY_NAMEPATTERN} and {@link #FILTER_BY_DATATYPE}. To enable both use the bit-wise or ('|')
+     * operator (e.g. <code>FILTER_BY_NAMEPATTERN | FILTER_BY_DATATYPE</code>).
      *
      * @param configRootName Non null name that is used as identifier when saved to a NodeSettings object during save
      *            (and load).
-     * @param filter A (type) filter applied to the input spec.
+     * @param filter A (type) filter applied to the input spec (null allowed)
+     * @param filterEnableMask The mask to enable filters. 0 will disable all filters but the default in/exclude;
+     *        {@link #FILTER_BY_NAMEPATTERN} will enable the name pattern filter.
+     * @since 2.9
      */
-    public DataColumnSpecFilterConfiguration(final String configRootName, final InputFilter<DataColumnSpec> filter) {
-        super(configRootName);
+    public DataColumnSpecFilterConfiguration(final String configRootName, final InputFilter<DataColumnSpec> filter,
+        final int filterEnableMask) {
+        super(configRootName, filterEnableMask);
         m_filter = filter;
         DataValueFilter valFilter = null;
         if (m_filter != null && m_filter instanceof DataTypeColumnFilter) {
             valFilter = new DataValueFilter(((DataTypeColumnFilter)m_filter).getFilterClasses());
         }
         m_typeConfig = new TypeFilterConfigurationImpl(valFilter);
-    }
-
-    /**
-     * Enables or disables the type filter (default is false). This method should only be called right after
-     * construction.
-     *
-     * @param enabled If the type filter should be enabled
-     * @since 2.9
-     */
-    public void setTypeFilterEnabled(final boolean enabled) {
-        m_typeFilterEnabled = enabled;
+        m_typeFilterEnabled = (filterEnableMask & FILTER_BY_DATATYPE) != 0;
     }
 
     /**
@@ -230,7 +239,9 @@ public class DataColumnSpecFilterConfiguration extends NameFilterConfiguration {
     /** {@inheritDoc} */
     @Override
     public DataColumnSpecFilterConfiguration clone() {
-        return (DataColumnSpecFilterConfiguration)super.clone();
+        DataColumnSpecFilterConfiguration clone = (DataColumnSpecFilterConfiguration)super.clone();
+        clone.m_typeConfig = m_typeConfig.clone();
+        return clone;
     }
 
     /**

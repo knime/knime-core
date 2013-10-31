@@ -198,9 +198,7 @@ public class DataColumnSpecFilterNodeModel extends NodeModel {
      * @return ...
      */
     static final  DataColumnSpecFilterConfiguration createDCSFilterConfiguration() {
-        DataColumnSpecFilterConfiguration conf = new DataColumnSpecFilterConfiguration("column-filter");
-        conf.setTypeFilterEnabled(true);
-        return conf;
+        return new DataColumnSpecFilterConfiguration("column-filter");
     }
 
     /** Returns the object holding the include and exclude columns.

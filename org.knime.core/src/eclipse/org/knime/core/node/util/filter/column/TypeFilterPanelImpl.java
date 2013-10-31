@@ -144,7 +144,7 @@ final class TypeFilterPanelImpl extends JPanel {
 
 
     void saveConfiguration(final TypeFilterConfigurationImpl config) {
-        Map<String, Boolean> mapping = new LinkedHashMap<String, Boolean>();
+        LinkedHashMap<String, Boolean> mapping = new LinkedHashMap<String, Boolean>();
         for (String key : m_selections.keySet()) {
             mapping.put(key, m_selections.get(key).isSelected());
         }

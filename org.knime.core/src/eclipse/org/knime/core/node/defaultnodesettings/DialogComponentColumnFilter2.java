@@ -31,7 +31,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
 /**
- *
+ * A column twin list with include & exclude list and optionally column name and type matcher.
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  * @since 2.6
  */
@@ -85,8 +85,7 @@ public class DialogComponentColumnFilter2 extends DialogComponent {
     protected void updateComponent() {
         SettingsModelColumnFilter2 model = (SettingsModelColumnFilter2)getModel();
         DataColumnSpecFilterConfiguration modelConfig = model.getFilterConfiguration();
-        DataColumnSpecFilterConfiguration panelConfig =
-                new DataColumnSpecFilterConfiguration(modelConfig.getConfigRootName(), modelConfig.getFilter());
+        DataColumnSpecFilterConfiguration panelConfig = modelConfig.clone();
         m_colFilterPanel.saveConfiguration(panelConfig);
         if (!modelConfig.equals(panelConfig)) {
             // only update if out of sync

@@ -244,8 +244,6 @@ public class SplitNodeModel2 extends NodeModel {
      * panel.
      */
     static DataColumnSpecFilterConfiguration createColFilterConf() {
-        DataColumnSpecFilterConfiguration r = new DataColumnSpecFilterConfiguration(SplitNodeModel2.CFG_FILTERCOLS);
-        r.setTypeFilterEnabled(true);
-        return r;
+        return new DataColumnSpecFilterConfiguration(SplitNodeModel2.CFG_FILTERCOLS);
     }
 }

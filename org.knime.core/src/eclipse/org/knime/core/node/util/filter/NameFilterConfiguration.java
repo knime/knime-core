@@ -72,6 +72,11 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class NameFilterConfiguration implements Cloneable {
 
+    /** Mask passed in the constructor to enable a name pattern filter
+     * ({@value NameFilterConfiguration#FILTER_BY_NAMEPATTERN}).
+     * @since 2.9 */
+    public static final int FILTER_BY_NAMEPATTERN = 1 << 0;
+
     /** Identifier for the filter by include/exclude selection type.
      * @since 2.9 */
     protected static final String TYPE = "STANDARD";
@@ -109,7 +114,7 @@ public class NameFilterConfiguration implements Cloneable {
     /**
      * Pattern filter is on by default.
      */
-    private boolean m_patternFilterEnabled = true;
+    private final boolean m_patternFilterEnabled;
 
     /** Enforce inclusion/exclusion options. */
     public enum EnforceOption {
@@ -209,17 +214,32 @@ public class NameFilterConfiguration implements Cloneable {
     }
 
     /**
-     * Creates a new name filter configuration with the given settings name.
+     * Creates a new name filter configuration with the given settings name. Also enables the name pattern filter.
      *
      * @param configRootName the config name to used to store the settings
      * @throws IllegalArgumentException If config name is null or empty
      * @since 2.9
      */
     public NameFilterConfiguration(final String configRootName) {
+        this(configRootName, FILTER_BY_NAMEPATTERN);
+    }
+
+    /**
+     * Creates a new name filter configuration with the given settings name. The flags argument enables or
+     * disables certain filter types. Currently, this filter only supports {@link #FILTER_BY_NAMEPATTERN}.
+     *
+     * @param configRootName the config name to used to store the settings
+     * @param filterEnableMask The mask to enable filters. 0 will disable all filters but the default in/exclude;
+     *        {@link #FILTER_BY_NAMEPATTERN} will enable the name pattern filter.
+     * @throws IllegalArgumentException If config name is null or empty
+     * @since 2.9
+     */
+    public NameFilterConfiguration(final String configRootName, final int filterEnableMask) {
         if (configRootName == null || configRootName.length() == 0) {
             throw new IllegalArgumentException("Config name must not be null or empty.");
         }
         m_configRootName = configRootName;
+        m_patternFilterEnabled = (filterEnableMask & FILTER_BY_NAMEPATTERN) != 0;
     }
 
     /**
@@ -354,20 +374,9 @@ public class NameFilterConfiguration implements Cloneable {
     }
 
     /**
-     * Enables or disables the pattern filter. This method should be only be called right after construction.
-     *
-     * @param enabled If the pattern filter should be enabled (Default is enabled).
-     * @since 2.9
-     */
-    public final void setPatternFilterEnabled(final boolean enabled) {
-        m_patternFilterEnabled = enabled;
-    }
-
-    /**
-     * Checks if the pattern filter is enabled.
+     * Checks if the pattern filter is enabled in constructor.
      *
      * @return true if the pattern filter is enabled, false otherwise
-     * @see #setPatternFilterEnabled(boolean)
      * @since 2.9
      */
     public final boolean isPatternFilterEnabled() {

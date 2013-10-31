@@ -68,14 +68,14 @@ import org.knime.core.node.util.filter.InputFilter;
  * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
  * @since 2.9
  */
-final class TypeFilterConfigurationImpl {
+final class TypeFilterConfigurationImpl implements Cloneable {
 
     /** The identifier for this filter type. */
     static final String TYPE = "datatype";
 
     private static final String CFG_TYPELIST = "typelist";
 
-    private Map<String, Boolean> m_selections = new LinkedHashMap<String, Boolean>();
+    private LinkedHashMap<String, Boolean> m_selections = new LinkedHashMap<String, Boolean>();
 
     private final InputFilter<Class<? extends DataValue>> m_filter;
 
@@ -159,8 +159,21 @@ final class TypeFilterConfigurationImpl {
     /**
      * @param selections the selections to set
      */
-    void setSelections(final Map<String, Boolean> selections) {
+    void setSelections(final LinkedHashMap<String, Boolean> selections) {
         m_selections = selections;
+    }
+
+    /** {@inheritDoc} */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected TypeFilterConfigurationImpl clone() {
+        try {
+            TypeFilterConfigurationImpl clone = (TypeFilterConfigurationImpl)super.clone();
+            clone.m_selections = (LinkedHashMap<String, Boolean>)m_selections.clone();
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new IllegalStateException("Object not clonable although it implements java.lang.Clonable", e);
+        }
     }
 
 }

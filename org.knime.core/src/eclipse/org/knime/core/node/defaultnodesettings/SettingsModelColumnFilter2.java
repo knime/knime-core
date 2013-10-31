@@ -50,6 +50,7 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -58,6 +59,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
@@ -76,21 +78,38 @@ public final class SettingsModelColumnFilter2 extends SettingsModel {
     private int m_inputPortIndex = -1;
 
     /**
-     * Accepts columns of all type.
-     * @param configName
+     * Accepts columns of all type. The dialog component to this settings model will also show a name pattern &
+     * type filter as no restrictions on the possible value classes is set.
+     * @param configName the root config name.
      */
     @SuppressWarnings("unchecked")
     public SettingsModelColumnFilter2(final String configName) {
-        this(configName, new Class[]{DataValue.class});
+        this(new DataColumnSpecFilterConfiguration(configName));
     }
 
     /**
-     * Accepts only columns of the specified type(s).
-     * @param configName
-     * @param allowedTypes
+     * Accepts only columns of the specified type(s). The dialog component to this settings model will
+     * show a name pattern filter but no type filter.
+     * @param configName the root config name
+     * @param allowedTypes The allowed data types
      */
     public SettingsModelColumnFilter2(final String configName, final Class<? extends DataValue>... allowedTypes) {
         this(new DataColumnSpecFilterConfiguration(configName, new DataTypeColumnFilter(allowedTypes)));
+    }
+
+    /**
+     * Accepts only columns of the specified type(s). The flags argument enables or disables certain filter types.
+     * This filter supports {@link DataColumnSpecFilterConfiguration#FILTER_BY_NAMEPATTERN} and
+     * {@link DataColumnSpecFilterConfiguration#FILTER_BY_DATATYPE}. To enable both use
+     * the bit-wise or ('|') operator (e.g. <code>FILTER_BY_NAMEPATTERN | FILTER_BY_DATATYPE</code>).
+     * @param configName the root config name
+     * @param filter A (type) filter applied to the input spec (null allowed)
+     * @param filterEnableMask The mask to enable filters. 0 will disable all filters but the default in/exclude;
+     * @since 2.9
+     */
+    public SettingsModelColumnFilter2(final String configName, final InputFilter<DataColumnSpec> filter,
+        final int filterEnableMask) {
+        this(new DataColumnSpecFilterConfiguration(configName, filter, filterEnableMask));
     }
 
     private SettingsModelColumnFilter2(final DataColumnSpecFilterConfiguration filterConf) {

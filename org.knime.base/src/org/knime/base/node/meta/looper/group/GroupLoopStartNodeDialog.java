@@ -44,13 +44,12 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   10.05.2012 (kilian): created
  */
 package org.knime.base.node.meta.looper.group;
 
-import org.knime.core.data.DataValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
@@ -59,49 +58,47 @@ import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 
 /**
  * Creates the dialog of the group loop start node and provides static methods
- * which create the necessary settings models. 
- * 
+ * which create the necessary settings models.
+ *
  * @author Kilian Thiel, KNIME.com, Berlin, Germany
  */
 class GroupLoopStartNodeDialog extends DefaultNodeSettingsPane {
 
     /**
      * Creates and returns the settings model, storing the selected columns.
-     * 
+     *
      * @return The settings model with the selected columns.
      */
     @SuppressWarnings("unchecked")
     static final SettingsModelColumnFilter2 getFilterDoubleColModel() {
-        return new SettingsModelColumnFilter2(
-                GroupLoopStartConfigKeys.COLUMN_NAMES,
-                DataValue.class);
+        return new SettingsModelColumnFilter2(GroupLoopStartConfigKeys.COLUMN_NAMES);
     }
-    
+
     /**
-     * Creates and returns the settings model, storing the "sorted input table" 
+     * Creates and returns the settings model, storing the "sorted input table"
      * flag.
-     * 
+     *
      * @return The settings model with the "sorted input table" flag.
      */
     static final SettingsModelBoolean getSortedInputTableModel() {
         return new SettingsModelBoolean(
                 GroupLoopStartConfigKeys.SORTED_INPUT_TABLE,
                 GroupLoopStartNodeModel.DEF_SORTED_INPUT_TABLE);
-    }    
-    
+    }
+
     /**
-     * Creates new instance of <code>GroupLoopStartNodeDialog</code>. 
+     * Creates new instance of <code>GroupLoopStartNodeDialog</code>.
      */
     public GroupLoopStartNodeDialog() {
-        
+
         // column selection
         addDialogComponent(new DialogComponentColumnFilter2(
                 getFilterDoubleColModel(), 0));
-        
+
         // sorted input table
         addDialogComponent(
                 new DialogComponentBoolean(getSortedInputTableModel(),
-                        "Input is already sorted by group column(s) " 
+                        "Input is already sorted by group column(s) "
                         + "[execution fails if not correctly sorted]"));
     }
 }
