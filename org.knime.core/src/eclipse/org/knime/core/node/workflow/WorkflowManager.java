@@ -5832,35 +5832,33 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Update link meta nodes with the given ID.
-     * @param id The ids of the meta node (must be existing meta node
-     *           and must be a link).
+    /**
+     * Update link meta nodes with the given ID.
+     *
+     * @param id The ids of the meta node (must be existing meta node and must be a link).
      * @param exec The execution monitor used to load a copy of the template
      * @param loadHelper A load helper.
      * @return The load result of the newly inserted link copy.
      * @throws CanceledExecutionException If canceled
-     * @throws IllegalArgumentException If the node does not exist or is not a
-     *         meta node. */
-    public MetaNodeLinkUpdateResult updateMetaNodeLink(final NodeID id,
-            final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper)
-        throws CanceledExecutionException {
-        final MetaNodeLinkUpdateResult loadRes = new MetaNodeLinkUpdateResult(
-                "Update meta node link \"" + getNameWithID() + "\"");
+     * @throws IllegalArgumentException If the node does not exist or is not a meta node.
+     */
+    public MetaNodeLinkUpdateResult updateMetaNodeLink(final NodeID id, final ExecutionMonitor exec,
+        final WorkflowLoadHelper loadHelper) throws CanceledExecutionException {
+        final MetaNodeLinkUpdateResult loadRes =
+            new MetaNodeLinkUpdateResult("Update meta node link \"" + getNameWithID() + "\"");
         NodeContainer nc = getNodeContainer(id);
         if (!(nc instanceof WorkflowManager)) {
-            throw new IllegalArgumentException("Node \""
-                    + nc.getNameWithID()
-                    + "\" is not a meta node (can't update link)");
+            throw new IllegalArgumentException("Node \"" + nc.getNameWithID()
+                + "\" is not a meta node (can't update link)");
         }
         WorkflowManager meta = (WorkflowManager)nc;
         MetaNodeTemplateInformation templInfo = meta.getTemplateInformation();
         switch (templInfo.getRole()) {
-        case Link:
-            break;
-        default:
-            loadRes.addError("Meta node \"" + getNameWithID()
-                    + "\" is not a meta node link");
-            return loadRes;
+            case Link:
+                break;
+            default:
+                loadRes.addError("Meta node \"" + getNameWithID() + "\" is not a meta node link");
+                return loadRes;
         }
         URI sourceURI = templInfo.getSourceURI();
         File localDir;
@@ -5868,8 +5866,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         try {
             localDir = ResolverUtil.resolveURItoLocalOrTempFile(sourceURI);
         } catch (IOException e) {
-            String error = "Failed to update meta node reference: "
-                + e.getMessage();
+            String error = "Failed to update meta node reference: " + e.getMessage();
             LOGGER.error(error, e);
             loadRes.addError(error);
             return loadRes;
@@ -5878,19 +5875,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         WorkflowPersistorVersion1xx loadPersistor;
         try {
-            loadPersistor = WorkflowManager.createLoadPersistor(
-                    localDir, loadHelper);
+            loadPersistor = WorkflowManager.createLoadPersistor(localDir, loadHelper);
             loadPersistor.setTemplateInformationLinkURI(sourceURI);
             loadPersistor.setNameOverwrite(localDir.getName());
         } catch (IOException e) {
-            String error = e.getClass().getSimpleName()
-            + " while loading template: " + e.getMessage();
+            String error = e.getClass().getSimpleName() + " while loading template: " + e.getMessage();
             LOGGER.error(error, e);
             loadRes.addError(error);
             return loadRes;
         } catch (UnsupportedWorkflowVersionException e) {
-            String error = "Unsupported version in meta node template "
-                + e.getMessage();
+            String error = "Unsupported version in meta node template " + e.getMessage();
             LOGGER.error(error, e);
             loadRes.addError(error);
             return loadRes;
@@ -5900,8 +5894,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             try {
                 saveNodeSettings(id, ncSettings);
             } catch (InvalidSettingsException e1) {
-                String error =
-                    "Unable to store meta node settings: " + e1.getMessage();
+                String error = "Unable to store meta node settings: " + e1.getMessage();
                 LOGGER.warn(error, e1);
                 loadRes.addError(error);
             }
@@ -5916,14 +5909,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             Set<ConnectionContainer> outConns = getOutgoingConnectionsFor(id);
 
             removeNode(id);
-            FileNodeContainerMetaPersistor metaPersistor =
-                loadPersistor.getMetaPersistor();
+            FileNodeContainerMetaPersistor metaPersistor = loadPersistor.getMetaPersistor();
             metaPersistor.setNodeIDSuffix(id.getIndex());
             metaPersistor.setUIInfo(newUI);
             WorkflowManager newLinkMN;
             try {
-                WorkflowLoadResult wmLoadResult =
-                    load(loadPersistor, exec, false);
+                WorkflowLoadResult wmLoadResult = load(loadPersistor, exec, false);
                 newLinkMN = wmLoadResult.getWorkflowManager();
                 loadRes.addChildError(wmLoadResult);
                 loadRes.setMetaNode(newLinkMN);
@@ -5932,13 +5923,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     int sourcePort = cc.getSourcePort();
                     int destPort = cc.getDestPort();
                     if (!canAddConnection(s, sourcePort, id, destPort)) {
-                        loadRes.addWarning("Could not restore connection "
-                                + "between \""
-                                + getNodeContainer(s).getNameWithID()
-                                + "\" and meta node template");
+                        loadRes.addWarning("Could not restore connection between \""
+                            + getNodeContainer(s).getNameWithID() + "\" and meta node template");
                     } else {
-                        ConnectionContainer c =
-                            addConnection(s, sourcePort, id, destPort);
+                        ConnectionContainer c = addConnection(s, sourcePort, id, destPort);
                         c.setDeletable(cc.isDeletable());
                         ConnectionUIInformation uiInfo = cc.getUIInfo();
                         c.setUIInfo(uiInfo != null ? uiInfo.clone() : null);
@@ -5949,20 +5937,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     int destPort = cc.getDestPort();
                     NodeID des = cc.getDest();
                     if (!canAddConnection(id, sourcePort, des, destPort)) {
-                        loadRes.addError("Could not restore connection "
-                                + "between meta node template and \""
-                                + getNodeContainer(des).getNameWithID() + "\"");
+                        loadRes.addError("Could not restore connection between meta node template and \""
+                            + getNodeContainer(des).getNameWithID() + "\"");
                     } else {
-                        ConnectionContainer c =
-                            addConnection(id, sourcePort, des, destPort);
+                        ConnectionContainer c = addConnection(id, sourcePort, des, destPort);
                         c.setDeletable(cc.isDeletable());
                         ConnectionUIInformation uiInfo = cc.getUIInfo();
                         c.setUIInfo(uiInfo != null ? uiInfo.clone() : null);
                     }
                 }
             } catch (Exception e) {
-                String error = e.getClass().getSimpleName()
-                + " while loading template: " + e.getMessage();
+                String error = e.getClass().getSimpleName() + " while loading template: " + e.getMessage();
                 LOGGER.error(error, e);
                 loadRes.addError(error);
                 paste(copy);
@@ -5971,8 +5956,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             try {
                 loadNodeSettings(newLinkMN.getID(), ncSettings);
             } catch (InvalidSettingsException e) {
-                String error = "Can't apply previous settigs to new meta "
-                    + "node link: " + e.getMessage();
+                String error = "Can't apply previous settigs to new meta node link: " + e.getMessage();
                 LOGGER.warn(error, e);
                 loadRes.addError(error);
             }
