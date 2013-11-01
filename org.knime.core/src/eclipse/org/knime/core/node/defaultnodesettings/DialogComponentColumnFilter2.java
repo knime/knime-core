@@ -97,8 +97,7 @@ public class DialogComponentColumnFilter2 extends DialogComponent {
 
     private void updateModel() {
         SettingsModelColumnFilter2 model = (SettingsModelColumnFilter2)getModel();
-        DataColumnSpecFilterConfiguration panelConf =
-                new DataColumnSpecFilterConfiguration(model.getConfigName(), model.getFilterConfiguration().getFilter());
+        DataColumnSpecFilterConfiguration panelConf = model.getFilterConfiguration().clone();
         m_colFilterPanel.saveConfiguration(panelConf);
         model.setFilterConfiguration(panelConf);
     }
