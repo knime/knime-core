@@ -725,4 +725,38 @@ public class BinDataModel implements Serializable {
         exec.checkCanceled();
         return new BinDataModel(caption, lowerBound, upperBound, bars);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("BinDataModel [");
+        if (m_xAxisCaption != null) {
+            builder.append("m_xAxisCaption=");
+            builder.append(m_xAxisCaption);
+            builder.append(", ");
+        }
+        if (m_lowerBound != null) {
+            builder.append("m_lowerBound=");
+            builder.append(m_lowerBound);
+            builder.append(", ");
+        }
+        if (m_upperBound != null) {
+            builder.append("m_upperBound=");
+            builder.append(m_upperBound);
+            builder.append(", ");
+        }
+        builder.append("m_rowCounter=");
+        builder.append(m_rowCounter);
+        builder.append(", m_presentable=");
+        builder.append(m_presentable);
+        builder.append(", m_isSelected=");
+        builder.append(m_isSelected);
+        builder.append("]");
+        return builder.toString();
+    }
+
+
 }

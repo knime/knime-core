@@ -476,10 +476,47 @@ public final class BinningUtil {
      * contain the value
      * @return the index of the bin where the row was added
      * @throws IllegalArgumentException if the given row doesn't fit in any bin
+     * @deprecated use {@link #addDataRow2Bin(boolean, List, BinDataModel, BinDataModel, int, DataCell,
+     * Color, RowKey, Collection, DataCell...)} instead
      */
+    @Deprecated
     public static int addDataRow2Bin(final boolean binNominal,
             final List<? extends BinDataModel> bins,
             final BinDataModel missingValueBin, final int startBin,
+            final DataCell xCell, final Color rowColor, final RowKey id,
+            final Collection<ColorColumn> aggrColumns,
+            final DataCell... aggrCells) throws IllegalArgumentException {
+        return addDataRow2Bin(binNominal, bins, missingValueBin, null, startBin, xCell, rowColor, id,
+            aggrColumns, aggrCells);
+    }
+    
+    /**
+     * Adds the given row either to the missing value bin if the x value is
+     * missing or to the corresponding bin.
+     * @param binNominal if <code>true</code> the bins should be nominal
+     * bins where the x value has to match exactly. If <code>false</code>
+     * the bins should be interval bins and the x value has fit into the lower
+     * and upper bound of the bin.
+     *
+     * @param bins the {@link BinDataModel} list
+     * @param missingValueBin the bin for the missing x value rows
+     * @param invalidValueBin the bin for the invalid x value rows. Might be <code>null</code>.
+     * @param startBin the index of the bin to start with to speed up the
+     * process if the data rows are sorted by the x value
+     * @param xCell the x cell
+     * @param rowColor the color of the row
+     * @param id the row id
+     * @param aggrColumns the aggregation columns as {@link ColorColumn}
+     * objects in the same order like the aggregation cells
+     * @param aggrCells the aggregation {@link DataCell} objects which
+     * contain the value
+     * @return the index of the bin where the row was added
+     * @throws IllegalArgumentException if the given row doesn't fit in any bin
+     * @since 2.9
+     */
+    public static int addDataRow2Bin(final boolean binNominal,
+            final List<? extends BinDataModel> bins,
+            final BinDataModel missingValueBin, final BinDataModel invalidValueBin, final int startBin,
             final DataCell xCell, final Color rowColor, final RowKey id,
             final Collection<ColorColumn> aggrColumns,
             final DataCell... aggrCells) throws IllegalArgumentException {
@@ -511,9 +548,8 @@ public final class BinningUtil {
                 throw new IllegalStateException(
                         "X value is not a valid number");
             }
-            return BinningUtil.addDataRow2IntervalBin(bins, startBin,
-                    (DoubleValue) xCell, rowColor, id, aggrColumns,
-                    aggrCells);
+            return BinningUtil.addDataRow2IntervalBin(bins, startBin, invalidValueBin,
+                    (DoubleValue) xCell, rowColor, id, aggrColumns, aggrCells);
         }
     }
 
@@ -561,11 +597,18 @@ public final class BinningUtil {
      * @return the index of the bin this row was added
      */
     private static int addDataRow2IntervalBin(
-            final List<? extends BinDataModel> bins, final int startBin,
+            final List<? extends BinDataModel> bins, final int startBin, final BinDataModel invalidValueBin,
             final DoubleValue xVal, final Color color, final RowKey id,
             final Collection<ColorColumn> aggrColumns,
             final DataCell... aggrVals) {
         final double value = xVal.getDoubleValue();
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            if (invalidValueBin == null) {
+                throw new RuntimeException("Unexpected value found. Please reset and execute the node again.");
+            }
+            invalidValueBin.addDataRow(id, color, aggrColumns, aggrVals);
+            return startBin;
+        }
          for (int binIdx = startBin, length = bins.size(); binIdx < length;
              binIdx++) {
             final BinDataModel bin = bins.get(binIdx);

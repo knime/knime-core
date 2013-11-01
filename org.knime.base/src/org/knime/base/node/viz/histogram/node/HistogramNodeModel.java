@@ -50,17 +50,12 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.CloseableRowIterator;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.PortObjectSpec;
+import java.awt.Color;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
@@ -73,13 +68,17 @@ import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramVizModel;
 import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.util.BinningUtil;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
-
-import java.awt.Color;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.PortObjectSpec;
 
 
 /**

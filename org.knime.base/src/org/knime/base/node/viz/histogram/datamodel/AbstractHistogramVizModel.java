@@ -94,6 +94,10 @@ public abstract class AbstractHistogramVizModel {
      /** The caption of the bar which holds all missing values. */
     public static final String MISSING_VAL_BAR_CAPTION = "Missing_values";
 
+    /** The caption of the bar which holds all missing values.
+     * @since 2.9*/
+    public static final String INVALID_VAL_BAR_CAPTION = "Invalid_values";
+
     /** Defines the minimum width of a bin. Should be more than the base line
      * stroke.*/
     public static final int MIN_BIN_WIDTH = 6;
@@ -270,6 +274,8 @@ public abstract class AbstractHistogramVizModel {
 
     private boolean m_showMissingValBin = true;
 
+    private boolean m_showInvalidValBin = true;
+
     /**If set to true the plotter paints the grid lines for the y axis values.*/
     private boolean m_showGridLines = true;
 
@@ -303,6 +309,8 @@ public abstract class AbstractHistogramVizModel {
     private boolean m_showEmptyBins = false;
 
     private BinDataModel m_missingValueBin;
+
+    private BinDataModel m_invalidValueBin;
 
     private final List<BinDataModel> m_bins = new ArrayList<BinDataModel>(50);
 
@@ -372,25 +380,35 @@ public abstract class AbstractHistogramVizModel {
      */
     public List<BinDataModel> getBins() {
         if (containsMissingValueBin()) {
-            final BinDataModel missingValueBin = getMissingValueBin();
-            if (isShowMissingValBin()) {
-                final int missingValBinIdx = m_bins.size() - 1;
-                if (missingValBinIdx < 0
-                        || m_bins.get(missingValBinIdx) != missingValueBin) {
-                    m_bins.add(missingValueBin);
+            checkSpecialBin(isShowMissingValBin(), getMissingValueBin(), m_bins);
+        }
+        if (containsInvalidValueBin()) {
+            checkSpecialBin(isShowInvalidValBin(), getInvalidValueBin(), m_bins);
+        }
+        return m_bins;
+    }
+
+    private static void checkSpecialBin(final boolean showSpecialBin, final BinDataModel specialBin,
+        final List<BinDataModel> bins) {
+        if (specialBin == null) {
+            return;
+        }
+        if (showSpecialBin) {
+            for (BinDataModel bin : bins) {
+                if (bin.getXAxisCaption().equals(specialBin.getXAxisCaption())) {
+                    return;
                 }
-            } else {
-                //check the last bin if it's the missing value bin if thats the
-                //case remove it from the list
-                final int missingValBinIdx = m_bins.size() - 1;
-                if (missingValBinIdx >= 0
-                        && m_bins.get(missingValBinIdx) == missingValueBin) {
-                    //if the list contains the missing value bin remove it
-                    m_bins.remove(missingValBinIdx);
+            }
+            bins.add(specialBin);
+        } else {
+            for (BinDataModel bin : bins) {
+                if (bin.getXAxisCaption().equals(specialBin.getXAxisCaption())) {
+                    //if the list contains the special value bin remove it
+                    bins.remove(specialBin);
+                    return;
                 }
             }
         }
-        return m_bins;
     }
 
     /**
@@ -635,6 +653,9 @@ public abstract class AbstractHistogramVizModel {
         if (m_showMissingValBin && m_missingValueBin.getMaxBarRowCount() > 0) {
             captions.add(new StringCell(m_missingValueBin.getXAxisCaption()));
         }
+        if (m_showInvalidValBin && m_invalidValueBin != null && m_invalidValueBin.getMaxBarRowCount() > 0) {
+            captions.add(new StringCell(m_invalidValueBin.getXAxisCaption()));
+        }
         return captions;
     }
 
@@ -687,6 +708,23 @@ public abstract class AbstractHistogramVizModel {
      */
     protected BinDataModel getMissingValueBin() {
         return m_missingValueBin;
+    }
+
+    /**
+     * @return the invalidValueBin might be <code>null</code>
+     * @since 2.9
+     */
+    protected BinDataModel getInvalidValueBin() {
+        return m_invalidValueBin;
+    }
+
+    /**
+     * @return <code>true</code> if this model contains an invalid value bin
+     * @since 2.9
+     */
+    public boolean containsInvalidValueBin() {
+        return (m_invalidValueBin != null
+                && m_invalidValueBin.getMaxBarRowCount() > 0);
     }
 
     /**
@@ -788,6 +826,15 @@ public abstract class AbstractHistogramVizModel {
         return m_showMissingValBin;
     }
 
+
+    /**
+     * @return the show invalid value flag
+     * @since 2.9
+     */
+    public boolean isShowInvalidValBin() {
+        return m_showInvalidValBin;
+    }
+
     /**
      * @param inclMissingValBin the inclMissingValBin to set
      * @return <code>true</code> if the parameter has changed
@@ -797,6 +844,19 @@ public abstract class AbstractHistogramVizModel {
             return false;
         }
         m_showMissingValBin = inclMissingValBin;
+        return true;
+    }
+
+    /**
+     * @param inclInvalidValBin the inclInvalidValBin to set
+     * @return <code>true</code> if the parameter has changed
+     * @since 2.9
+     */
+    public boolean setShowInvalidValBin(final boolean inclInvalidValBin) {
+        if (m_showInvalidValBin == inclInvalidValBin) {
+            return false;
+        }
+        m_showInvalidValBin = inclInvalidValBin;
         return true;
     }
 
@@ -1060,6 +1120,17 @@ public abstract class AbstractHistogramVizModel {
      */
     protected void setBins(final List<? extends BinDataModel> bins,
             final BinDataModel missingValueBin) {
+        setBins(bins, missingValueBin, null);
+    }
+
+    /**
+     * @param bins the bins to display
+     * @param missingValueBin the missing value bin
+     * @param invalidValueBin the invalid value bin if available
+     * @since 2.9
+     */
+    protected void setBins(final List<? extends BinDataModel> bins,
+            final BinDataModel missingValueBin, final BinDataModel invalidValueBin) {
         if (bins == null) {
             throw new NullPointerException("Bins must not be null");
         }
@@ -1067,6 +1138,7 @@ public abstract class AbstractHistogramVizModel {
             throw new NullPointerException("MissingValueBin must not be null");
         }
         m_missingValueBin = missingValueBin;
+        m_invalidValueBin = invalidValueBin;
         m_bins.clear();
         m_bins.addAll(bins);
         updateNoOfBins(m_bins.size());

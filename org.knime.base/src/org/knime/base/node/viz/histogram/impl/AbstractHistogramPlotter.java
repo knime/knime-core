@@ -291,6 +291,14 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 }
             }
         });
+        m_histoProps.addShowInvalidValBinListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                if (setShowInvalidValBin(e.getStateChange() == ItemEvent.SELECTED)) {
+                    updatePaintModel();
+                }
+            }
+        });
     }
 
     /**
@@ -940,6 +948,35 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                     + "Viz model must not be null");
         }
         if (vizModel.setShowMissingValBin(showMissingValBin)) {
+            // set the coordinates to the new boundaries
+            setXCoordinates();
+            setYCoordinates();
+            if (HistogramLayout.SIDE_BY_SIDE.equals(
+                    vizModel.getHistogramLayout())
+                    && vizModel.containsNotPresentableBin()
+                    && (vizModel.getAggrColumns() != null
+                            && vizModel.getAggrColumns().size() > 1)) {
+                vizModel.setBinWidth(vizModel.getMaxBinWidth());
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param showInvalidValBin the showMissingvalBar to set
+     * @return <code>true</code> if the value has changed
+     * @since 2.9
+     */
+    public boolean setShowInvalidValBin(final boolean showInvalidValBin) {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            LOGGER.debug("VizModel was null");
+            throw new IllegalStateException(
+                    "Exception in setShowInvalidValBin: "
+                    + "Viz model must not be null");
+        }
+        if (vizModel.setShowInvalidValBin(showInvalidValBin)) {
             // set the coordinates to the new boundaries
             setXCoordinates();
             setYCoordinates();

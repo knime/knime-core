@@ -89,8 +89,7 @@ public class HistogramNodeView extends NodeView<HistogramNodeModel> {
             m_plotter.reset();
         }
         final DataTableSpec tableSpec = model.getTableSpec();
-        final AbstractHistogramVizModel vizModel =
-            model.getHistogramVizModel();
+        AbstractHistogramVizModel vizModel = model.getHistogramVizModel();
         if (vizModel == null) {
             return;
         }

@@ -51,19 +51,6 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.config.Config;
-import org.knime.core.node.config.ConfigRO;
-import org.knime.core.node.config.ConfigWO;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.aggregation.AggregationValModel;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
-
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
@@ -73,6 +60,18 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.aggregation.AggregationValModel;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * This class represents one bar in the histogram. A bar corresponds to one
@@ -688,4 +687,33 @@ implements Serializable {
         exec.checkCanceled();
         return elements;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("BarDataModel [");
+        if (m_surroundingRectangle != null) {
+            builder.append("m_surroundingRectangle=");
+            builder.append(m_surroundingRectangle);
+            builder.append(", ");
+        }
+        if (getName() != null) {
+            builder.append("getName()=");
+            builder.append(getName());
+            builder.append(", ");
+        }
+        builder.append("getNoOfElements()=");
+        builder.append(getNoOfElements());
+        builder.append(", getRowCount()=");
+        builder.append(getRowCount());
+        builder.append(", isPresentable()=");
+        builder.append(isPresentable());
+        builder.append("]");
+        return builder.toString();
+    }
+
+
 }

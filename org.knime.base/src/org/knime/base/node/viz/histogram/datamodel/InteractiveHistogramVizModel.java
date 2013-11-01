@@ -122,6 +122,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int compare(final DataRow o1, final DataRow o2) {
             return m_colComparator.compare(o1.getCell(m_colIdx),
                     o2.getCell(m_colIdx));
@@ -289,15 +290,19 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
 //        createBins();
         //reset all bins and add the rows to the cleaned bins
         final boolean showMissingWas = isShowMissingValBin();
+        final boolean showInvalidWas = isShowInvalidValBin();
         setShowMissingValBin(false);
+        setShowInvalidValBin(false);
         final List<BinDataModel> bins = getBins();
         final BinDataModel missingValueBin = getMissingValueBin();
+        final BinDataModel invalidValueBin = getInvalidValueBin();
         for (final BinDataModel bin : bins) {
             bin.clear();
         }
         missingValueBin.clear();
-        addRows2Bins(bins, missingValueBin);
+        addRows2Bins(bins, missingValueBin, invalidValueBin);
         setShowMissingValBin(showMissingWas);
+        setShowInvalidValBin(showInvalidWas);
         return true;
     }
 
@@ -353,11 +358,13 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         }
         final BinDataModel missingValBin = new InteractiveBinDataModel(
                 AbstractHistogramVizModel.MISSING_VAL_BAR_CAPTION, 0, 0);
+        final BinDataModel invalidValBin = new InteractiveBinDataModel(
+            AbstractHistogramVizModel.INVALID_VAL_BAR_CAPTION, 0, 0);
         final long startAddRowTimer = System.currentTimeMillis();
-        addRows2Bins(bins, missingValBin);
+        addRows2Bins(bins, missingValBin, invalidValBin);
         final long end = System.currentTimeMillis();
         //add the created bins to the super implementation
-        setBins(bins, missingValBin);
+        setBins(bins, missingValBin, invalidValBin);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Total time to create " + bins.size() + " bins: "
                     + (end - startBinTimer) + " in ms.");
@@ -376,9 +383,10 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      *Collection, DataCell[])} method.
      * @param missingValBin the bin for missing values
      * @param bins the different bins
+     * @param invalidValBin the bin for invalid values such as NaN and infinite. Might be <code>null</code>
      */
     private void addRows2Bins(final List<? extends BinDataModel> bins,
-            final BinDataModel missingValBin) {
+            final BinDataModel missingValBin, final BinDataModel invalidValBin) {
 //      add the data rows to the new bins
         int startBin = 0;
         if (m_aggrColumns == null || m_aggrColumns.size() < 1) {
@@ -390,7 +398,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
                 final RowKey id = row.getKey();
                 try {
                     startBin = BinningUtil.addDataRow2Bin(
-                            isBinNominal(), bins, missingValBin, startBin,
+                            isBinNominal(), bins, missingValBin, invalidValBin, startBin,
                             xCell, color, id, m_aggrColumns,
                             DataType.getMissingCell());
                 } catch (final IllegalArgumentException e) {
@@ -424,7 +432,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
                 }
                 try {
                     startBin = BinningUtil.addDataRow2Bin(
-                            isBinNominal(), bins, missingValBin, startBin,
+                            isBinNominal(), bins, missingValBin, invalidValBin, startBin,
                             xCell, color, id, m_aggrColumns, aggrVals);
                 } catch (final IllegalArgumentException e) {
                         if (!BinningUtil.checkDomainRange(xCell,

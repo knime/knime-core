@@ -51,17 +51,16 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.RowKey;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-
 import java.awt.Color;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.RowKey;
 
 
 /**
@@ -91,6 +90,28 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
             final Collection<ColorColumn> aggrColumns,
             final AggregationMethod aggrMethod,
             final HistogramLayout layout) {
+        this(rowColors, bins, missingValueBin, null, xColSpec, aggrColumns, aggrMethod, layout);
+    }
+
+    /**
+     * Constructor for class HistogramVizModel.
+     * @param rowColors the different row colors
+     * @param bins the bins
+     * @param missingValueBin the bin with the rows with missing x values
+     * @param invalidValueBin the bin wit the rows with invalid x values or <code>null</code> if it does not exist
+     * @param xColSpec the column specification of the selected x column
+     * @param aggrColumns the selected aggregation columns. Could be
+     * <code>null</code>
+     * @param aggrMethod the {@link AggregationMethod} to use
+     * @param layout {@link HistogramLayout} to use
+     * @since 2.9
+     */
+    public FixedHistogramVizModel(final List<Color> rowColors,
+            final List<BinDataModel> bins, final BinDataModel missingValueBin, final BinDataModel invalidValueBin,
+            final DataColumnSpec xColSpec,
+            final Collection<ColorColumn> aggrColumns,
+            final AggregationMethod aggrMethod,
+            final HistogramLayout layout) {
         super(rowColors, aggrMethod, layout, bins.size());
         if (aggrMethod == null) {
             throw new NullPointerException(
@@ -108,7 +129,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
             setShowBinOutline(false);
         }
         m_xColSpec = xColSpec;
-        setBins(bins, missingValueBin);
+        setBins(bins, missingValueBin, invalidValueBin);
     }
 
 

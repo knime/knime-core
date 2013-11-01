@@ -110,6 +110,7 @@ public class FixedHistogramDataModel {
     private static final String CFG_BIN_COUNTER = "binCounter";
     private static final String CFG_BIN = "bin_";
     private static final String CFG_MISSING_BIN = "missingBin";
+    private static final String CFG_INVALID_BIN = "invalidBin";
     private static final String CFG_COLOR_COLS = "rowColors";
     private static final String CFG_ROW_COLOR_COUNTER = "rowColorCounter";
     private static final String CFG_ROW_COLOR = "rowColor_";
@@ -123,6 +124,8 @@ public class FixedHistogramDataModel {
     private final BinDataModel m_missingValueBin;
 
     private final AggregationMethod m_aggrMethod;
+
+    private BinDataModel m_invalidValueBin;
 
     /**Constructor for class HistogramDataModel.
      * @param xColSpec the column specification of the bin column
@@ -157,6 +160,8 @@ public class FixedHistogramDataModel {
         }
         m_missingValueBin  = new BinDataModel(
                 AbstractHistogramVizModel.MISSING_VAL_BAR_CAPTION, 0, 0);
+        m_invalidValueBin  = new BinDataModel(
+            AbstractHistogramVizModel.INVALID_VAL_BAR_CAPTION, 0, 0);
         m_rowColors  =
             new TreeSet<Color>(HSBColorComparator.getInstance());
         LOGGER.debug("Exiting HistogramDataModel(xColSpec, aggrColumns) "
@@ -175,13 +180,14 @@ public class FixedHistogramDataModel {
             final AggregationMethod aggrMethod,
             final Collection<ColorColumn> aggrColumns,
             final boolean binNominal, final List<BinDataModel> bins,
-            final BinDataModel missingBin, final SortedSet<Color> rowColors) {
+            final BinDataModel missingBin, final BinDataModel invalidBin, final SortedSet<Color> rowColors) {
         m_xColSpec = xColSpec;
         m_aggrMethod = aggrMethod;
         m_aggrColumns = aggrColumns;
         m_binNominal = binNominal;
         m_bins = bins;
         m_missingValueBin = missingBin;
+        m_invalidValueBin = invalidBin;
         m_rowColors = rowColors;
     }
 
@@ -202,9 +208,9 @@ public class FixedHistogramDataModel {
         }
         final int startBin = 0;
         try {
-            BinningUtil.addDataRow2Bin(m_binNominal, m_bins, m_missingValueBin,
+            BinningUtil.addDataRow2Bin(m_binNominal, m_bins, m_missingValueBin, m_invalidValueBin,
                     startBin, xCell, rowColor, id, m_aggrColumns, aggrCells);
-        } catch (final IllegalArgumentException e) {
+        } catch (final RuntimeException e) {
             if (!BinningUtil.checkDomainRange(xCell, getXColumnSpec())) {
                 throw new IllegalStateException(
                     "Invalid column domain for column "
@@ -266,7 +272,6 @@ public class FixedHistogramDataModel {
     /**
      * @return a copy of all bins
      */
-    @SuppressWarnings("unchecked")
     public List<BinDataModel> getClonedBins() {
         LOGGER.debug("Entering getClonedBins() of class "
                 + "FixedHistogramDataModel.");
@@ -295,6 +300,17 @@ public class FixedHistogramDataModel {
         return binClones;
     }
 
+    /**
+     * @return a copy of the bin with all rows where the x value is invalid or <code>null</code> if it
+     * does not exist
+     * @since 2.9
+     */
+    public BinDataModel getClonedInvalidValueBin() {
+        if (m_invalidValueBin == null) {
+            return null;
+        }
+        return m_invalidValueBin.clone();
+    }
 
     /**
      * @return a copy of the bin with all rows where the x value was missing
@@ -348,6 +364,10 @@ public class FixedHistogramDataModel {
         }
         final ConfigWO missingBin = binsConf.addConfig(CFG_MISSING_BIN);
         m_missingValueBin.save2File(missingBin, exec);
+        if (m_invalidValueBin != null) {
+            final ConfigWO invalidBin = binsConf.addConfig(CFG_INVALID_BIN);
+            m_invalidValueBin.save2File(invalidBin, exec);
+        }
         if (exec != null) {
             exec.setProgress(0.8, "Start saving element colors...");
         }
@@ -427,6 +447,11 @@ public class FixedHistogramDataModel {
         final Config missingConfig = binsConf.getConfig(CFG_MISSING_BIN);
         final BinDataModel missingBin =
             BinDataModel.loadFromFile(missingConfig, exec);
+        BinDataModel invalidBin = null;
+        if (binsConf.containsKey(CFG_INVALID_BIN)) {
+            final Config invalidConfig = binsConf.getConfig(CFG_INVALID_BIN);
+            invalidBin = BinDataModel.loadFromFile(invalidConfig, exec);
+        }
         exec.setProgress(0.9, "Loading element colors...");
         final ConfigRO colorColsConf = config.getConfig(CFG_COLOR_COLS);
         final int counter = colorColsConf.getInt(CFG_ROW_COLOR_COUNTER);
@@ -440,6 +465,6 @@ public class FixedHistogramDataModel {
         inData.close();
         is.close();
         return new FixedHistogramDataModel(xColSpec, aggrMethod, aggrCols,
-                binNominal, bins, missingBin, rowColors);
+                binNominal, bins, missingBin, invalidBin, rowColors);
     }
 }

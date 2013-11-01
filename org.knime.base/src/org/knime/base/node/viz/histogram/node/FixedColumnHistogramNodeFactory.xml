@@ -21,6 +21,11 @@
 			The bars are colored in proportion to the aggregation value.
 			Hiliting is not supported.
 		</p>
+        <p>
+        The <b>Invalid_values bin</b> contains values that can not be assigned to a regular bin e.g. NaN for a double value.
+        The bin is displayed by default if the selected binning column contains an invalid value in the input table.
+        To hide it go to the "Bin settings tab" of the node view and deselect the "Show invalid value bin" option.        
+        </p>
 		<p>All automatically created bins, except the first one, are
 		left open intervals (a,b] where a is excluded and b is included in 
 		the interval. To cover all values the first interval is a closed 

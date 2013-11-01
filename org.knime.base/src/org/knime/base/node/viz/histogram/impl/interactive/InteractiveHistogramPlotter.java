@@ -105,6 +105,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
         super(histogramProps, handler);
         histogramProps.addXColumnChangeListener(
                 new ActionListener() {
+                    @Override
                     public void actionPerformed(final ActionEvent e) {
                         final ColumnSelectionComboxBox cb =
                             (ColumnSelectionComboxBox)e.getSource();
@@ -114,6 +115,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                 });
         histogramProps.addAggrColumnChangeListener(
                 new ChangeListener() {
+                    @Override
                     public void stateChanged(final ChangeEvent e) {
                         onAggrColChanged();
                     }

@@ -126,6 +126,12 @@ public abstract class AbstractHistogramProperties extends
     private static final String SHOW_MISSING_VAL_BIN_TOOLTIP = "Shows a bin "
     + "with rows which have a missing value for the selected binning column.";
 
+    private static final String SHOW_INVALID_VALUE_BIN_LABEL =
+        "Show invalid value bin";
+
+    private static final String SHOW_INVALID_VAL_BIN_TOOLTIP = "Shows a bin "
+    + "with rows which have an invalid value for the selected binning column e.g. NaN or infinite.";
+
     private static final String SHOW_EMPTY_BINS_LABEL = "Show empty bins";
 
     private static final String SHOW_GRID_LABEL = "Show grid lines";
@@ -153,6 +159,8 @@ public abstract class AbstractHistogramProperties extends
     private final JCheckBox m_showEmptyBins;
 
     private final JCheckBox m_showMissingValBin;
+
+    private final JCheckBox m_showInvalidValBin;
 
     private final JPanel m_detailsPane;
 
@@ -236,6 +244,10 @@ public abstract class AbstractHistogramProperties extends
         m_showMissingValBin = new JCheckBox(SHOW_MISSING_VALUE_BIN_LABEL,
                 vizModel.isShowEmptyBins());
         m_showMissingValBin.setToolTipText(SHOW_MISSING_VAL_BIN_TOOLTIP);
+
+        m_showInvalidValBin = new JCheckBox(SHOW_INVALID_VALUE_BIN_LABEL,
+            vizModel.isShowEmptyBins());
+        m_showInvalidValBin.setToolTipText(SHOW_INVALID_VAL_BIN_TOOLTIP);
 
         // create the visualization option elements
         m_showGrid = new JCheckBox(SHOW_GRID_LABEL, vizModel.isShowGridLines());
@@ -479,6 +491,7 @@ public abstract class AbstractHistogramProperties extends
         binSelectBox.add(m_showEmptyBins);
         binSelectBox.add(Box.createVerticalGlue());
         binSelectBox.add(m_showMissingValBin);
+        binSelectBox.add(m_showInvalidValBin);
         binSelectBox.add(Box.createVerticalGlue());
         binSelButtonBox.add(binSelectBox);
         binSelButtonBox.add(Box.createVerticalGlue());
@@ -548,6 +561,7 @@ public abstract class AbstractHistogramProperties extends
         updateCheckBox(m_showEmptyBins, vizModel.isShowEmptyBins(), vizModel.containsEmptyBins());
         //show missing value bin box
         updateCheckBox(m_showMissingValBin, vizModel.isShowMissingValBin(), vizModel.containsMissingValueBin());
+        updateCheckBox(m_showInvalidValBin, vizModel.isShowInvalidValBin(), vizModel.containsInvalidValueBin());
 //update the aggregation settings tab
 //      set the right aggregation method settings
         //since the set selected method doesn't trigger an event
@@ -772,6 +786,17 @@ public abstract class AbstractHistogramProperties extends
     }
 
     /**
+     * @return if the invalid value bin should be shown
+     * @since 2.9
+     */
+    public boolean isShowInvalidValBin() {
+        if (m_showInvalidValBin == null) {
+            return false;
+        }
+        return m_showInvalidValBin.isSelected();
+    }
+
+    /**
      * @return <code>true</code> if the bar labels should be displayed
      *         vertical or <code>false</code> if the labels should be
      *         displayed horizontal
@@ -907,5 +932,15 @@ public abstract class AbstractHistogramProperties extends
      */
     protected void addShowMissingValBinListener(final ItemListener listener) {
         m_showMissingValBin.addItemListener(listener);
+    }
+
+
+    /**
+     * @param listener adds the listener to the show invalid value bin
+     * select box
+     * @since 2.9
+     */
+    protected void addShowInvalidValBinListener(final ItemListener listener) {
+        m_showInvalidValBin.addItemListener(listener);
     }
 }
