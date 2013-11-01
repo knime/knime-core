@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode icon="./scorer.png" type="Other" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
+    <name>Numeric Scorer</name>
+    
+    <shortDescription>
+        Computes certain statistics between the a numeric column's values and predicted values.
+    </shortDescription>
+
+	<fullDescription>
+		<intro>This node computes certain statistics between the a numeric column's values and predicted values. It
+        computes R&#xb2;, mean absolute error, mean squared error, root mean squared deviation, and mean signed difference.
+        The computed values can be inspected in the node's view and/or further processed using the output table.
+		</intro>
+		<option name="Reference column">Column with the correct, observed, training data values.</option>
+		<option name="Predicted column">Column with the modeled, predicted data values.</option>
+		<option name="Change column name">Change the default output column name.</option>
+		<option name="Output column name">The name of the column in the output.</option>
+    </fullDescription>
+
+	<ports>
+		<inPort index="0" name="Table">Table with predicted and reference numerical data</inPort>
+		<outPort index="0" name="Statistics">The computed statistical measures</outPort>
+	</ports>
+    <views>
+        <view index="0" name="Statistics">A table with the statistical measures</view>
+    </views>
+</knimeNode>

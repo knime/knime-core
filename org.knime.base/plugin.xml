@@ -889,6 +889,10 @@
             factory-class="org.knime.base.node.viz.roc.ROCNodeFactory"
             id="org.knime.base.node.viz.roc.ROCNodeFactory">
       </node>
+      <node
+            category-path="/mining/modeleval"
+            factory-class="org.knime.base.node.mine.scorer.numeric.NumericScorerNodeFactory"
+            id="org.knime.base.node.mine.scorer.numeric.NumericScorerNodeFactory"/>      
        <node
             category-path="/database"
             factory-class="org.knime.base.node.io.database.DBReaderNodeFactory"
@@ -1477,6 +1481,12 @@
             factory-class="org.knime.base.node.flowcontrol.trycatch.inverter.ActiveBranchInverterNodeFactory"
             id="org.knime.base.node.flowcontrol.trycatch.inverter.ActiveBranchInverterNodeFactory">
       </node>
+      <node
+            after="org.knime.base.node.flowvariable.variabletotable.AppendVariableToTableNodeFactory"
+            category-path="/flowcontrol/variables"
+            factory-class="org.knime.base.node.flowvariable.tablecoltovariable.TableColumnToVariableNodeFactory"
+            id="org.knime.base.node.flowvariable.tablecoltovariable.TableColumnToVariableNodeFactory">
+      </node>      
       <!--
       <node
             expert-flag="false"
