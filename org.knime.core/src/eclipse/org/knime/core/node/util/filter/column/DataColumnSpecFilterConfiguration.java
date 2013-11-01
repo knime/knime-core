@@ -256,6 +256,36 @@ public final class DataColumnSpecFilterConfiguration extends NameFilterConfigura
         super.loadDefaults(names, includeByDefault);
     }
 
+    /** Applies default values and resets the current configuration (if any).
+     * @param spec The actual input spec (must not be null).
+     * @param filter A filter that defines which of the columns in <code>spec</code> go into the include list
+     * (or exclude list if <code>filterDefinesIncludeList</code> is <code>false</code>). This argument may be null,
+     * which is equivalent to a match-all filter object. Note, the filter as per the constructor is still used as
+     * any column that's not suitable by this configuration is ignored.
+     * @param filterDefinesIncludeList If <code>true</code> the columns for which {@link InputFilter#include(Object)}
+     * returns true will be put in the include list (otherwise into the exclude list). Also, if <code>true</code> the
+     * "enforce inclusion" option is set in the dialog
+     * @since 2.9
+     */
+    public void loadDefault(final DataTableSpec spec,
+        final InputFilter<DataColumnSpec> filter, final boolean filterDefinesIncludeList) {
+        List<String> ins = new ArrayList<String>();
+        List<String> excs = new ArrayList<String>();
+        for (DataColumnSpec col : spec) {
+            if (m_filter == null || m_filter.include(col)) {
+                String name = col.getName();
+                if ((filter == null || filter.include(col)) && filterDefinesIncludeList) {
+                    ins.add(name);
+                } else {
+                    excs.add(name);
+                }
+            }
+        }
+        setIncludeList(ins.toArray(new String[ins.size()]));
+        setExcludeList(excs.toArray(new String[excs.size()]));
+        setEnforceOption(filterDefinesIncludeList ? EnforceOption.EnforceInclusion : EnforceOption.EnforceExclusion);
+    }
+
     /**
      * Returns the filter used by this configuration.
      *
