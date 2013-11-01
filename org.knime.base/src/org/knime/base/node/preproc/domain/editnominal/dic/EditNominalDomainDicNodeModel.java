@@ -176,34 +176,34 @@ final class EditNominalDomainDicNodeModel extends NodeModel {
             .createSpec())};
     }
 
-    private <E extends Exception> Map<Integer, Set<DataCell>> createNewSpec(final DataTableSpec orgSpec,
+    private <E extends Exception> Map<Integer, Set<DataCell>> createNewSpec(final DataTableSpec origSpec,
         final DataTableSpec valueSpec, final NewDomainValuesAdder<E> adder) throws InvalidSettingsException, E {
 
         // create a default configuration if it does not exist.
-        EditNominalDomainDicConfiguration configuration = createDefaultConfigIfNotExist(orgSpec, valueSpec);
+        EditNominalDomainDicConfiguration configuration = createDefaultConfigIfNotExist(origSpec, valueSpec);
 
         // receive the matching columns and check for existence of these in the input data table.
         Map<Integer, String> findMatchingColumns =
-            checkAndFindMatchingColumns(configuration.applyTo(valueSpec), orgSpec, valueSpec,
+            checkAndFindMatchingColumns(configuration.getFilterConfiguration().applyTo(valueSpec), origSpec, valueSpec,
                 m_configuration.isIgnoreDomainColumns());
 
         // creates the new data spec.
         Map<Integer, Set<DataCell>> newDataSpec = createColNewDomainValsMap(findMatchingColumns);
 
         if (!configuration.isAddNewValuesFirst()) {
-            addExistingDomainValues(newDataSpec, findMatchingColumns, orgSpec, valueSpec);
+            addExistingDomainValues(newDataSpec, findMatchingColumns, origSpec, valueSpec);
         }
 
-        checkTypesAndAddValueTableDomainValuesContainedInSpec(orgSpec, valueSpec, findMatchingColumns, newDataSpec);
+        checkTypesAndAddValueTableDomainValuesContainedInSpec(origSpec, valueSpec, findMatchingColumns, newDataSpec);
 
         // now add the actual values of the domain value table [2]
         adder.addNewDomainValues(findMatchingColumns, newDataSpec);
 
         if (configuration.isAddNewValuesFirst()) {
-            addExistingDomainValues(newDataSpec, findMatchingColumns, orgSpec, valueSpec);
+            addExistingDomainValues(newDataSpec, findMatchingColumns, origSpec, valueSpec);
         }
 
-        checkSize(newDataSpec, orgSpec);
+        checkSize(newDataSpec, origSpec);
 
         return newDataSpec;
     }
@@ -229,22 +229,22 @@ final class EditNominalDomainDicNodeModel extends NodeModel {
     /**
      * @param inSpecs
      * @param config
-     * @param orgSpec
+     * @param origSpec
      * @param valueSpec
      * @param orgIndexToNewValMap
      * @throws InvalidSettingsException
      */
-    private void checkTypesAndAddValueTableDomainValuesContainedInSpec(final DataTableSpec orgSpec,
+    private void checkTypesAndAddValueTableDomainValuesContainedInSpec(final DataTableSpec origSpec,
         final DataTableSpec valueSpec, final Map<Integer, String> orgColIndexToColName,
         final Map<Integer, Set<DataCell>> orgColIndexToDomainVals) throws InvalidSettingsException {
 
-        EditNominalDomainDicConfiguration config = createDefaultConfigIfNotExist(orgSpec, valueSpec);
-        FilterResult filterResult = config.applyTo(valueSpec);
+        EditNominalDomainDicConfiguration config = createDefaultConfigIfNotExist(origSpec, valueSpec);
+        FilterResult filterResult = config.getFilterConfiguration().applyTo(valueSpec);
 
         List<Integer> toRemoveBecauseTypeIncompatible = new ArrayList<Integer>();
         // check the correct data type and add the additional domain values if there already some.
         for (Map.Entry<Integer, String> entry : orgColIndexToColName.entrySet()) {
-            DataType orgType = orgSpec.getColumnSpec(entry.getKey()).getType();
+            DataType orgType = origSpec.getColumnSpec(entry.getKey()).getType();
             DataType valueType = valueSpec.getColumnSpec(entry.getValue()).getType();
 
             if (!orgType.equals(valueType)) {
@@ -253,7 +253,7 @@ final class EditNominalDomainDicNodeModel extends NodeModel {
                     throw new InvalidSettingsException(String.format(Locale.US,
                         "matching column '%s' has incompatible types: "
                             + "input table [1] type: %s, domain value table type [2]: %s",
-                        orgSpec.getColumnNames()[entry.getKey()], orgType, valueType));
+                        origSpec.getColumnNames()[entry.getKey()], orgType, valueType));
                 } else {
                     //  ignore this column on continue
                     toRemoveBecauseTypeIncompatible.add(entry.getKey());
@@ -391,18 +391,16 @@ final class EditNominalDomainDicNodeModel extends NodeModel {
      * @param addValSpec
      * @return
      */
-    private EditNominalDomainDicConfiguration createDefaultConfigIfNotExist(final DataTableSpec orgSpec,
+    private EditNominalDomainDicConfiguration createDefaultConfigIfNotExist(final DataTableSpec origSpec,
         final DataTableSpec addValSpec) {
         if (m_configuration == null) {
-            m_configuration = new EditNominalDomainDicConfiguration(orgSpec, addValSpec);
+            m_configuration = new EditNominalDomainDicConfiguration();
+            m_configuration.guessDefaultColumnFilter(origSpec, addValSpec);
             StringBuilder builder = new StringBuilder("Guessing default settings.");
-            String[] includes = m_configuration.applyTo(orgSpec).getIncludes();
+            String[] includes = m_configuration.getFilterConfiguration().applyTo(addValSpec).getIncludes();
             if (includes != null && includes.length > 0) {
-
                 builder.append("\nThe included columns are:\n");
-                builder.append(ConvenienceMethods.getShortStringFrom(
-                    Arrays.asList(m_configuration.applyTo(orgSpec).getIncludes()), 10));
-
+                builder.append(ConvenienceMethods.getShortStringFrom(Arrays.asList(includes), 10));
             }
             setWarningMessage(builder.toString());
         }
@@ -419,7 +417,7 @@ final class EditNominalDomainDicNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         if (m_configuration != null) {
-            m_configuration.saveSettings(settings);
+            m_configuration.saveConfiguration(settings);
         }
     }
 

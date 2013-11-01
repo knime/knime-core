@@ -142,8 +142,8 @@ final class EditNominalDomainDicNodeDialogPane extends NodeDialogPane {
             throw new NotConfigurableException("No data at input.");
         }
         EditNominalDomainDicConfiguration forConfig = new EditNominalDomainDicConfiguration();
-        forConfig.loadConfigurationInDialog(settings, specs[1]);
-        m_filterPanel.loadConfiguration(forConfig, specs[1]);
+        forConfig.loadConfigurationInDialog(settings, specs[0], specs[1]);
+        m_filterPanel.loadConfiguration(forConfig.getFilterConfiguration(), specs[1]);
 
         if (forConfig.isIgnoreDomainColumns()) {
             m_buttonMap.get(IGNORE_COLUMNS_NOT_PRESENT_IN_DATA).doClick();
@@ -165,14 +165,14 @@ final class EditNominalDomainDicNodeDialogPane extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         EditNominalDomainDicConfiguration configuration = new EditNominalDomainDicConfiguration();
-        m_filterPanel.saveConfiguration(configuration);
+        m_filterPanel.saveConfiguration(configuration.getFilterConfiguration());
         //        configuration.setColumnspecFilterCofig(m_filterPanel);
         configuration.setIgnoreDomainColumns(m_buttonMap.get(IGNORE_COLUMNS_NOT_PRESENT_IN_DATA).isSelected());
         configuration.setIgnoreWrongTypes(m_buttonMap.get(IGNORE_TYPES_NOT_MATCH).isSelected());
         configuration.setNewValuesFirst(!m_buttonMap.get(NEW_VALUES_LAST).isSelected());
         configuration.setMaxDomainValues(checkPositive(getInt(m_maxAmountDomainValues,
             "Maximum amount of possbile domain values is not a valid integer")));
-        configuration.saveSettings(settings);
+        configuration.saveConfiguration(settings);
     }
 
     /**

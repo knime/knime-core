@@ -64,7 +64,7 @@ import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
  *
  * @author Marcel Hanser
  */
-final class EditNominalDomainDicConfiguration extends DataColumnSpecFilterConfiguration {
+final class EditNominalDomainDicConfiguration {
 
     /**
      *
@@ -89,44 +89,42 @@ final class EditNominalDomainDicConfiguration extends DataColumnSpecFilterConfig
 
     private int m_maxDomainValues = 1000;
 
-    /**
-     * Constructor.
-     */
     @SuppressWarnings("unchecked")
-    EditNominalDomainDicConfiguration() {
-        super(DATA_COLUMN_FILTER_SPEC_KEY, new DataTypeColumnFilter(NominalValue.class));
-    }
+    private final DataColumnSpecFilterConfiguration m_filterConfiguration = new DataColumnSpecFilterConfiguration(
+        DATA_COLUMN_FILTER_SPEC_KEY, new DataTypeColumnFilter(NominalValue.class));
 
-    /**
-     * Constructor. Creating default values.
-     *
-     * @param orgSpec the table spec of the original table
-     * @param valueSpec the table spec of the additional values
+    /** Sets default in the filter configuration: Columns in common (name & type) go to the include list, others to
+     * the exclude list.
+     * @param origSpec ...
+     * @param valueSpec ...
      */
-    EditNominalDomainDicConfiguration(final DataTableSpec orgSpec, final DataTableSpec valueSpec) {
-        super(DATA_COLUMN_FILTER_SPEC_KEY, createDefaultSpecFilterConfig(orgSpec));
-        loadDefaults(valueSpec, true);
-        setEnforceOption(EnforceOption.EnforceInclusion);
+    void guessDefaultColumnFilter(final DataTableSpec origSpec, final DataTableSpec valueSpec) {
+        // includes all column which are present in both DTS; also have to have the same type.
+        InputFilter<DataColumnSpec> defaultGuessFilter = new InputFilter<DataColumnSpec>() {
+            @Override
+            public boolean include(final DataColumnSpec valueColumnSpec) {
+                DataColumnSpec columnSpec = origSpec.getColumnSpec(valueColumnSpec.getName());
+                return columnSpec == null ? false : columnSpec.getType().equals(valueColumnSpec.getType());
+            }
+        };
+        m_filterConfiguration.loadDefault(valueSpec, defaultGuessFilter, true);
     }
 
     /**
      * Loads the configuration for the dialog with corresponding default values.
      *
      * @param settings the settings to load
+     * @param origSpec ...
      * @param valueSpec the table specification
      */
-    @Override
-    public void loadConfigurationInDialog(final NodeSettingsRO settings, final DataTableSpec valueSpec) {
-
+    void loadConfigurationInDialog(final NodeSettingsRO settings, final DataTableSpec origSpec,
+        final DataTableSpec valueSpec) {
         m_ignoreDomainColumns = settings.getBoolean(IGNORE_NOT_PRESENT_COLS, false);
         m_ignoreWrongTypes = settings.getBoolean(IGNORE_NOT_MATHING_TYPES, false);
         m_addNewValuesFirst = settings.getBoolean(NEW_DOMAIN_VALUES_FIRST, true);
         m_maxDomainValues = settings.getInt(MAX_DOMAIN_VALUES, DEFAULT_MAX_DOMAIN_VALUES);
-
-        loadDefaults(valueSpec, true);
-        super.loadConfigurationInDialog(settings, valueSpec);
-
-        setEnforceOption(EnforceOption.EnforceInclusion);
+        guessDefaultColumnFilter(origSpec, valueSpec);
+        m_filterConfiguration.loadConfigurationInDialog(settings, valueSpec);
     }
 
     /**
@@ -135,15 +133,13 @@ final class EditNominalDomainDicConfiguration extends DataColumnSpecFilterConfig
      * @param settings the settings to load
      * @throws InvalidSettingsException if the settings are invalid
      */
-    @Override
-    public void loadConfigurationInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-
+    void loadConfigurationInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_ignoreDomainColumns = settings.getBoolean(IGNORE_NOT_PRESENT_COLS);
         m_ignoreWrongTypes = settings.getBoolean(IGNORE_NOT_MATHING_TYPES);
         m_addNewValuesFirst = settings.getBoolean(NEW_DOMAIN_VALUES_FIRST);
         m_maxDomainValues = settings.getInt(MAX_DOMAIN_VALUES);
 
-        super.loadConfigurationInModel(settings);
+        m_filterConfiguration.loadConfigurationInModel(settings);
     }
 
     /**
@@ -151,28 +147,12 @@ final class EditNominalDomainDicConfiguration extends DataColumnSpecFilterConfig
      *
      * @param settings Arg settings.
      */
-    void saveSettings(final NodeSettingsWO settings) {
+    void saveConfiguration(final NodeSettingsWO settings) {
         settings.addBoolean(IGNORE_NOT_PRESENT_COLS, m_ignoreDomainColumns);
         settings.addBoolean(IGNORE_NOT_MATHING_TYPES, m_ignoreWrongTypes);
         settings.addBoolean(NEW_DOMAIN_VALUES_FIRST, m_addNewValuesFirst);
         settings.addInt(MAX_DOMAIN_VALUES, m_maxDomainValues);
-        saveConfiguration(settings);
-
-    }
-
-    /**
-     * @param orgSpec
-     * @return
-     */
-    private static InputFilter<DataColumnSpec> createDefaultSpecFilterConfig(final DataTableSpec orgSpec) {
-        return new InputFilter<DataColumnSpec>() {
-            @Override
-            public boolean include(final DataColumnSpec valueColumnSpec) {
-                DataColumnSpec columnSpec = orgSpec.getColumnSpec(valueColumnSpec.getName());
-                return columnSpec == null ? false : columnSpec.getType().equals(valueColumnSpec.getType())
-                    && valueColumnSpec.getType().isCompatible(NominalValue.class);
-            }
-        };
+        m_filterConfiguration.saveConfiguration(settings);
     }
 
     /**
@@ -199,7 +179,7 @@ final class EditNominalDomainDicConfiguration extends DataColumnSpecFilterConfig
     /**
      * @return the maxDomainValues
      */
-    public int getMaxDomainValues() {
+    int getMaxDomainValues() {
         return m_maxDomainValues;
     }
 
@@ -227,8 +207,15 @@ final class EditNominalDomainDicConfiguration extends DataColumnSpecFilterConfig
     /**
      * @param maxDomainValues the maxDomainValues to set
      */
-    public void setMaxDomainValues(final int maxDomainValues) {
+    void setMaxDomainValues(final int maxDomainValues) {
         m_maxDomainValues = maxDomainValues;
+    }
+
+    /**
+     * @return the filterConfiguration (not null)
+     */
+    DataColumnSpecFilterConfiguration getFilterConfiguration() {
+        return m_filterConfiguration;
     }
 
 }
