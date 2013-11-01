@@ -67,7 +67,7 @@ public class Statistics3NodeDialogPane extends DefaultNodeSettingsPane {
 	private final SettingsModelFilterString m_filterModel;
 
     /** Default constructor. */
-    Statistics3NodeDialogPane() {
+    protected Statistics3NodeDialogPane() {
         addDialogComponent(new DialogComponentBoolean(
                 createMedianModel(),
                 "Calculate median values (computationally expensive)"));

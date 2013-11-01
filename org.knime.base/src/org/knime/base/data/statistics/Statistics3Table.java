@@ -62,7 +62,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.math.stat.descriptive.moment.Kurtosis;
 import org.apache.commons.math.stat.descriptive.moment.Mean;
+import org.apache.commons.math.stat.descriptive.moment.Skewness;
 import org.apache.commons.math.stat.descriptive.moment.Variance;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -79,6 +81,8 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -96,6 +100,31 @@ import org.knime.core.util.MutableInteger;
  * @since 2.8
  */
 public class Statistics3Table {
+    /** Specification for the stats in the columns. */
+    private static final DataTableSpec STATISTICS_SPECIFICATION;
+    static {
+        DataColumnSpecCreator columnCreator = new DataColumnSpecCreator("Column", StringCell.TYPE);
+        DataColumnSpecCreator minCreator = new DataColumnSpecCreator("Min", DoubleCell.TYPE);
+        DataColumnSpecCreator maxCreator = new DataColumnSpecCreator("Max", DoubleCell.TYPE);
+        DataColumnSpecCreator meanCreator = new DataColumnSpecCreator("Mean", DoubleCell.TYPE);
+        DataColumnSpecCreator stdDevCreator = new DataColumnSpecCreator("Std. deviation", DoubleCell.TYPE);
+        DataColumnSpecCreator varianceCreator = new DataColumnSpecCreator("Variance", DoubleCell.TYPE);
+        DataColumnSpecCreator skewnessCreator = new DataColumnSpecCreator("Skewness", DoubleCell.TYPE);
+        DataColumnSpecCreator kurtosisCreator = new DataColumnSpecCreator("Kurtosis", DoubleCell.TYPE);
+        DataColumnSpecCreator sumCreator = new DataColumnSpecCreator("Overall sum", DoubleCell.TYPE);
+        DataColumnSpecCreator missingCreator = new DataColumnSpecCreator("No. missings", IntCell.TYPE);
+        DataColumnSpecCreator nanCreator = new DataColumnSpecCreator("No. NaNs", IntCell.TYPE);
+        DataColumnSpecCreator posInfCreator = new DataColumnSpecCreator("No. +\u221Es", IntCell.TYPE);
+        DataColumnSpecCreator negInfCreator = new DataColumnSpecCreator("No. -\u221Es", IntCell.TYPE);
+        DataColumnSpecCreator medianCreator = new DataColumnSpecCreator("Median", DoubleCell.TYPE);
+        DataColumnSpecCreator rowCountCreator = new DataColumnSpecCreator("Row count", IntCell.TYPE);
+        STATISTICS_SPECIFICATION =
+            new DataTableSpec(columnCreator.createSpec(), minCreator.createSpec(), maxCreator.createSpec(),
+                meanCreator.createSpec(), stdDevCreator.createSpec(), varianceCreator.createSpec(),
+                skewnessCreator.createSpec(), kurtosisCreator.createSpec(), sumCreator.createSpec(),
+                missingCreator.createSpec(), nanCreator.createSpec(), posInfCreator.createSpec(),
+                negInfCreator.createSpec(), medianCreator.createSpec(), rowCountCreator.createSpec());
+    }
 
     /** Used to cache the media for each column. */
     private final double[] m_median;
@@ -115,6 +144,21 @@ public class Statistics3Table {
     /** Used to 'cache' the number of missing values per columns. In the order of nominalValueColumns. */
     private final int[] m_missingValueCnt;
 
+    /** Used to 'cache' the number of {@link Double#NaN} values per columns. In the order of nominalValueColumns. */
+    private final int[] m_nanValueCnt;
+
+    /**
+     * Used to 'cache' the number of {@link Double#POSITIVE_INFINITY} values per columns. In the order of
+     * nominalValueColumns.
+     */
+    private final int[] m_posInfinityValueCnt;
+
+    /**
+     * Used to 'cache' the number of {@link Double#NEGATIVE_INFINITY} values per columns. In the order of
+     * nominalValueColumns.
+     */
+    private final int[] m_negInfinityValueCnt;
+
     /** Used to 'cache' the minimum values. */
     private final double[] m_minValues;
 
@@ -123,6 +167,12 @@ public class Statistics3Table {
 
     /** Used to 'cache' the row count. */
     private final int m_rowCount;
+
+    /** Used to 'cache' the skewness. */
+    private final double[] m_skewness;
+
+    /** Used to 'cache' the kurtosis. */
+    private final double[] m_kurtosis;
 
     /** Column name from the original data table spec. */
     private final DataTableSpec m_spec;
@@ -153,8 +203,9 @@ public class Statistics3Table {
      * @param spec A {@link DataTableSpec}.
      * @param nominalValueColumns The list of names of nominal values to check.
      * @return The indices (in ascending order) which are {@link DoubleValue}d, or one of the nominal values.
+     * @since 2.9
      */
-    private static int[] allApplicableColumns(final DataTableSpec spec, final List<String> nominalValueColumns) {
+    protected static int[] allApplicableColumns(final DataTableSpec spec, final List<String> nominalValueColumns) {
         final int[] allColumns = allColumns(spec.getNumColumns());
         int toRemove = 0;
         for (int i = allColumns.length; i-- > 0;) {
@@ -223,12 +274,24 @@ public class Statistics3Table {
         m_minValues = new double[nrCols];
         m_maxValues = new double[nrCols];
         m_missingValueCnt = new int[nrCols];
+        m_nanValueCnt = new int[nrCols];
+        m_posInfinityValueCnt = new int[nrCols];
+        m_negInfinityValueCnt = new int[nrCols];
         m_median = new double[nrCols];
         m_nominalValues = new ArrayList<Map<DataCell, Integer>>(nominalValueColumns.size());
-        for (int _ = nominalValueColumns.size(); _-- > 0;) {
+        for (int _ = nrCols; _-- > 0;) {
             m_nominalValues.add(null);
         }
         m_rowCount = table.getRowCount();
+        //Using Skewness and Kurtosis from commons math.
+        m_skewness = new double[nrCols];
+        m_kurtosis = new double[nrCols];
+        final Skewness[] skewness = new Skewness[nrCols];
+        final Kurtosis[] kurtosis = new Kurtosis[nrCols];
+        for (int i = nrCols; i-- > 0;) {
+            skewness[i] = new Skewness();
+            kurtosis[i] = new Kurtosis();
+        }
 
         Set<String> nominalValueColumnsSet = new HashSet<String>(nominalValueColumns);
 
@@ -242,6 +305,8 @@ public class Statistics3Table {
             m_varianceValues[i] = Double.NaN;
             m_minValues[i] = Double.NaN;
             m_maxValues[i] = Double.NaN;
+            m_skewness[i] = Double.NaN;
+            m_kurtosis[i] = Double.NaN;
             m_median[i] = Double.NaN;
             sumsquare[i] = 0.0;
             validCount[i] = 0;
@@ -271,7 +336,6 @@ public class Statistics3Table {
             DataRow row = rowIt.next();
             exec.setProgress(rowIdx / diffProgress, "Calculating statistics, processing row " + (rowIdx + 1) + " (\""
                 + row.getKey() + "\")");
-            int colIdx = 0;
             for (int c : colIndices) {
                 exec.checkCanceled();
                 DataColumnSpec cspec = m_spec.getColumnSpec(c);
@@ -283,12 +347,25 @@ public class Statistics3Table {
                         means[c].increment(d);
                         variances[c].increment(d);
                         // keep the min and max for each column
-                        if ((Double.isNaN(m_minValues[c])) || (Double.compare(d, m_minValues[c]) < 0)) {
+                        if ((Double.isNaN(m_minValues[c]))
+                            || (Double.compare(d, m_minValues[c]) < 0 && !Double.isNaN(d))) {
                             m_minValues[c] = d;
                         }
-                        if ((Double.isNaN(m_maxValues[c])) || (Double.compare(m_maxValues[c], d) < 0)) {
+                        if ((Double.isNaN(m_maxValues[c]))
+                            || (Double.compare(m_maxValues[c], d) < 0 && !Double.isNaN(d))) {
                             m_maxValues[c] = d;
                         }
+                        if (d == Double.POSITIVE_INFINITY) {
+                            m_posInfinityValueCnt[c]++;
+                        }
+                        if (d == Double.NEGATIVE_INFINITY) {
+                            m_negInfinityValueCnt[c]++;
+                        }
+                        if (Double.isNaN(d)) {
+                            m_nanValueCnt[c]++;
+                        }
+                        skewness[c].increment(d);
+                        kurtosis[c].increment(d);
                         sumsquare[c] += d * d;
                         validCount[c]++;
                     }
@@ -296,20 +373,20 @@ public class Statistics3Table {
                     m_missingValueCnt[c]++;
                 }
                 if (nominalValueColumnsSet.contains(cspec.getName())) {
-                    if (nominalValues.get(colIdx) == null || (nominalValues.get(colIdx) != null
+                    if (nominalValues.get(c) == null || (nominalValues.get(c) != null
                     // list is only empty, when the number of poss.
                     // values exceeded the maximum
-                        && nominalValues.get(colIdx).size() > 0)) {
-                        if (nominalValues.get(colIdx) == null) {
-                            nominalValues.set(colIdx, new LinkedHashMap<DataCell, MutableInteger>());
+                        && nominalValues.get(c).size() > 0)) {
+                        if (nominalValues.get(c) == null) {
+                            nominalValues.set(c, new LinkedHashMap<DataCell, MutableInteger>());
                         }
-                        MutableInteger cnt = nominalValues.get(colIdx).get(cell);
+                        MutableInteger cnt = nominalValues.get(c).get(cell);
                         if (cnt == null) {
-                            nominalValues.get(colIdx).put(cell, new MutableInteger(1));
+                            nominalValues.get(c).put(cell, new MutableInteger(1));
                         } else {
                             cnt.inc();
                         }
-                        if (nominalValues.get(colIdx).size() == numNomValuesOutput + 1) {
+                        if (nominalValues.get(c).size() == numNomValuesOutput + 1) {
                             if (warn.length() == 0) {
                                 warn.append("Maximum number of unique possible " + "values (" + numNomValuesOutput
                                     + ") exceeds for column(s): ");
@@ -317,10 +394,9 @@ public class Statistics3Table {
                                 warn.append(",");
                             }
                             warn.append("\"" + m_spec.getColumnSpec(c).getName() + "\"");
-                            nominalValues.get(colIdx).clear();
+                            nominalValues.get(c).clear();
                         }
                     }
-                    colIdx++;
                 }
             }
         }
@@ -340,10 +416,14 @@ public class Statistics3Table {
                 m_maxValues[j] = Double.NaN;
                 m_meanValues[j] = Double.NaN;
                 m_varianceValues[j] = Double.NaN;
+                m_skewness[j] = Double.NaN;
+                m_kurtosis[j] = Double.NaN;
             } else {
                 m_meanValues[j] = means[j].getResult();
                 m_varianceValues[j] = variances[j].getResult();
                 m_sum[j] = means[j].getResult() * means[j].getN();
+                m_skewness[j] = skewness[j].getResult();
+                m_kurtosis[j] = kurtosis[j].getResult();
                 // unreported bug fix: in cases in which a column contains
                 // almost only one value (for instance 1.0) but one single
                 // 'outlier' whose value is, for instance 0.9999998, we get
@@ -380,13 +460,36 @@ public class Statistics3Table {
 
         // compute median values if desired
         if (computeMedian) {
-            final MedianTable medianTable = new MedianTable(table, colIndices);
+            final int[] filteredIndices = filter(table.getSpec(), colIndices);
+            final MedianTable medianTable = new MedianTable(table, filteredIndices);
             medianTable.setInMemory(table.getRowCount() < Runtime.getRuntime().freeMemory() / Double.SIZE / 2);
             double[] medianValues = medianTable.medianValues(exec);
-            for (int i = 0; i < colIndices.length; ++i) {
-                m_median[colIndices[i]] = medianValues[i];
+            for (int i = 0; i < filteredIndices.length; ++i) {
+                m_median[filteredIndices[i]] = medianValues[i];
             }
         }
+    }
+
+    /**
+     * Filters out those indices that are not compatible with {@link DoubleValue}s.
+     *
+     * @param spec The {@link DataTableSpec}.
+     * @param colIndices The column indices to check.
+     * @return The subset of column indices that belong to columns compatible with {@link DoubleValue}s.
+     */
+    private int[] filter(final DataTableSpec spec, final int[] colIndices) {
+        List<Integer> indices = new ArrayList<Integer>();
+        for (int colIdx : colIndices) {
+            if (spec.getColumnSpec(colIdx).getType().isCompatible(DoubleValue.class)) {
+                indices.add(colIdx);
+            }
+        }
+        int[] ret = new int[indices.size()];
+        int i = 0;
+        for (Integer colIdx : indices) {
+            ret[i++] = colIdx.intValue();
+        }
+        return ret;
     }
 
     /**
@@ -424,7 +527,7 @@ public class Statistics3Table {
     }
 
     private static final String[] ROW_HEADER = new String[]{"Minimum", "Maximum", "Mean", "Std. deviation", "Variance",
-        "Overall sum", "No. missings", "Median", "Row count"};
+        "Overall sum", "No. missings", "Median", "Row count", "No. NaNs", "No. +infinities", "No. -infinities"};
 
     /**
      * Creates a table of statistic moments such as minimum, maximum, mean, standard deviation, variance, overall sum,
@@ -433,7 +536,7 @@ public class Statistics3Table {
      * @return a table with one moment in each row across all input columns
      */
     public DataTable createStatisticMomentsTable() {
-        DataRow[] data = new DataRow[9];
+        DataRow[] data = new DataRow[12];
         data[0] = createRow(ROW_HEADER[0], getMin());
         data[1] = createRow(ROW_HEADER[1], getMax());
         data[2] = createRow(ROW_HEADER[2], getMean());
@@ -445,7 +548,58 @@ public class Statistics3Table {
         final double[] rowCounts = new double[m_spec.getNumColumns()];
         Arrays.fill(rowCounts, m_rowCount);
         data[8] = createRow(ROW_HEADER[8], rowCounts);
+        data[9] = createRow(ROW_HEADER[9], getNumberNaNValues());
+        data[10] = createRow(ROW_HEADER[10], getNumberPositiveInfiniteValues());
+        data[11] = createRow(ROW_HEADER[11], getNumberNegativeInfiniteValues());
         return new DefaultTable(data, createOutSpecNumeric(m_spec));
+    }
+
+    /**
+     * Creates the statistics in transposed compared to the original.
+     *
+     * @param exec An {@link ExecutionContext}.
+     * @return Statistics {@link BufferedDataTable} with skewness and kurtosis in a transposed form.
+     * @since 2.9
+     */
+    public BufferedDataTable createStatisticsInColumnsTable(final ExecutionContext exec) {
+        BufferedDataContainer container = exec.createDataContainer(getStatisticsSpecification());
+        int colIdx = 0;
+        for (DataColumnSpec spec : m_spec) {
+            if (spec.getType().isCompatible(DoubleValue.class)) {
+                container.addRowToTable(new DefaultRow(spec.getName(), createRow(spec.getName(), colIdx)));
+            }
+            colIdx++;
+        }
+        container.close();
+        return container.getTable();
+    }
+
+    /**
+     * Creates a row for the transposed table.
+     *
+     * @param name The name of the column.
+     * @param colIdx The index of column in the computed values.
+     * @return The cells according to {@link #STATISTICS_SPECIFICATION}.
+     */
+    private DataCell[] createRow(final String name, final int colIdx) {
+        final DataCell[] ret = new DataCell[getStatisticsSpecification().getNumColumns()];
+        int i = 0;
+        ret[i++] = new StringCell(name);
+        ret[i++] = new DoubleCell(m_minValues[colIdx]);
+        ret[i++] = new DoubleCell(m_maxValues[colIdx]);
+        ret[i++] = new DoubleCell(m_meanValues[colIdx]);
+        ret[i++] = new DoubleCell(Math.sqrt(m_varianceValues[colIdx]));
+        ret[i++] = new DoubleCell(m_varianceValues[colIdx]);
+        ret[i++] = new DoubleCell(m_skewness[colIdx]);
+        ret[i++] = new DoubleCell(m_kurtosis[colIdx]);
+        ret[i++] = new DoubleCell(m_sum[colIdx]);
+        ret[i++] = new IntCell(m_missingValueCnt[colIdx]);
+        ret[i++] = new IntCell(m_nanValueCnt[colIdx]);
+        ret[i++] = new IntCell(m_posInfinityValueCnt[colIdx]);
+        ret[i++] = new IntCell(m_negInfinityValueCnt[colIdx]);
+        ret[i++] = new DoubleCell(m_median[colIdx]);
+        ret[i++] = new IntCell(m_rowCount);
+        return ret;
     }
 
     /**
@@ -511,7 +665,7 @@ public class Statistics3Table {
         DataCell[] data = new DataCell[outSpec.getNumColumns()];
         for (int i = 0; idx < data.length; i++) {
             if (outSpec.getColumnSpec(idx).getName().equals(m_spec.getColumnSpec(i).getName())) {
-                data[idx] = new DoubleCell(array[i]);
+                data[idx] = array[i] < 0 ? DataType.getMissingCell() : new DoubleCell(array[i]);
                 idx++;
             }
         }
@@ -655,6 +809,69 @@ public class Statistics3Table {
     }
 
     /**
+     * Returns an array of the number of {@link Double#NaN} values for each dimension.
+     *
+     * @return number of {@link Double#NaN} values for each dimensions
+     * @since 2.9
+     */
+    public int[] getNumberNaNValues() {
+        return m_nanValueCnt.clone();
+    }
+
+    /**
+     * Returns the number of {@link Double#NaN} values for the given column index.
+     *
+     * @param colIdx column index to consider
+     * @return number of {@link Double#NaN} values in this column
+     * @since 2.9
+     */
+    public int getNumberNaNValues(final int colIdx) {
+        return m_nanValueCnt[colIdx];
+    }
+
+    /**
+     * Returns an array of the number of {@link Double#POSITIVE_INFINITY} values for each dimension.
+     *
+     * @return number of {@link Double#POSITIVE_INFINITY} values for each dimensions
+     * @since 2.9
+     */
+    public int[] getNumberPositiveInfiniteValues() {
+        return m_posInfinityValueCnt.clone();
+    }
+
+    /**
+     * Returns the number of {@link Double#POSITIVE_INFINITY} values for the given column index.
+     *
+     * @param colIdx column index to consider
+     * @return number of {@link Double#POSITIVE_INFINITY} values in this column
+     * @since 2.9
+     */
+    public int getNumberPositiveInfiniteValues(final int colIdx) {
+        return m_posInfinityValueCnt[colIdx];
+    }
+
+    /**
+     * Returns an array of the number of {@link Double#NEGATIVE_INFINITY} values for each dimension.
+     *
+     * @return number of {@link Double#NEGATIVE_INFINITY} values for each dimensions
+     * @since 2.9
+     */
+    public int[] getNumberNegativeInfiniteValues() {
+        return m_negInfinityValueCnt.clone();
+    }
+
+    /**
+     * Returns the number of {@link Double#NEGATIVE_INFINITY} values for the given column index.
+     *
+     * @param colIdx column index to consider
+     * @return number of {@link Double#NEGATIVE_INFINITY} values in this column
+     * @since 2.9
+     */
+    public int getNumberNegativeInfiniteValues(final int colIdx) {
+        return m_negInfinityValueCnt[colIdx];
+    }
+
+    /**
      * Returns the variance for the desired column. Throws an exception if the specified column is not compatible to
      * {@link DoubleValue}. Returns {@link Double#NaN} if the specified column contains only missing cells or if the
      * table is empty.
@@ -733,10 +950,7 @@ public class Statistics3Table {
      * @return median value
      */
     public double getMedian(final int colIdx) {
-        if (m_median == null) {
-            return Double.NaN;
-        }
-        return m_median[colIdx];
+        return getValueOrNaN(m_median, colIdx);
     }
 
     /**
@@ -748,6 +962,61 @@ public class Statistics3Table {
         double[] result = new double[m_median.length];
         System.arraycopy(m_median, 0, result, 0, result.length);
         return result;
+    }
+
+    /**
+     * Returns the skewness for the desired column.
+     *
+     * @param colIdx the column index for which the skewness is calculated
+     * @return skewness value or {@link Double#NaN} if not yet computed.
+     * @since 2.9
+     */
+    public double getSkewness(final int colIdx) {
+        return getValueOrNaN(m_skewness, colIdx);
+    }
+
+    /**
+     * @param array A double array.
+     * @param colIdx index within the array.
+     * @return the value in the {@code array} at {@code colIdx} position or {@link Double#NaN} if {@code array} is
+     *         {@code null}.
+     */
+    private static double getValueOrNaN(final double[] array, final int colIdx) {
+        if (array == null) {
+            return Double.NaN;
+        }
+        return array[colIdx];
+    }
+
+    /**
+     * Returns the skewness for all columns.
+     *
+     * @return an array of skewness values with an item for each column
+     * @since 2.9
+     */
+    public double[] getSkewness() {
+        return m_skewness.clone();
+    }
+
+    /**
+     * Returns the kurtosis for the desired column.
+     *
+     * @param colIdx the column index for which the kurtosis is calculated
+     * @return kurtosis value or {@link Double#NaN} if not yet computed.
+     * @since 2.9
+     */
+    public double getKurtosis(final int colIdx) {
+        return getValueOrNaN(m_kurtosis, colIdx);
+    }
+
+    /**
+     * Returns the kurtosis for all columns.
+     *
+     * @return an array of kurtosis values with an item for each column
+     * @since 2.9
+     */
+    public double[] getKurtosis() {
+        return m_kurtosis.clone();
     }
 
     /**
@@ -784,9 +1053,20 @@ public class Statistics3Table {
         return result;
     }
 
+    @Deprecated
     private Statistics3Table(final DataTableSpec spec, final double[] minValues, final double[] maxValues,
         final double[] meanValues, final double[] median, final double[] varianceValues, final double[] sum,
-        final int[] missings, final List<Map<DataCell, Integer>> nomValues, final int rowCount) {
+        final int[] missings, final List<Map<DataCell, Integer>> nomValues, final double[] skewness,
+        final double[] kurtosis, final int rowCount) {
+        this(spec, minValues, maxValues, meanValues, median, varianceValues, sum, missings, null, null, null,
+            nomValues, skewness, kurtosis, rowCount);
+    }
+
+    private Statistics3Table(final DataTableSpec spec, final double[] minValues, final double[] maxValues,
+        final double[] meanValues, final double[] median, final double[] varianceValues, final double[] sum,
+        final int[] missings, final int[] nans, final int[] posInfs, final int[] negInfs,
+        final List<Map<DataCell, Integer>> nomValues, final double[] skewness, final double[] kurtosis,
+        final int rowCount) {
         m_spec = spec;
         m_minValues = minValues;
         m_maxValues = maxValues;
@@ -795,8 +1075,13 @@ public class Statistics3Table {
         m_varianceValues = varianceValues;
         m_sum = sum;
         m_missingValueCnt = missings;
+        m_nanValueCnt = nans;
+        m_posInfinityValueCnt = posInfs;
+        m_negInfinityValueCnt = negInfs;
         m_nominalValues = nomValues;
         m_warning = null;
+        m_skewness = skewness;
+        m_kurtosis = kurtosis;
         m_rowCount = rowCount;
     }
 
@@ -838,10 +1123,20 @@ public class Statistics3Table {
         double[] var = sett.getDoubleArray("variance");
         double[] median = sett.getDoubleArray("median");
         int[] missings = sett.getIntArray("missings");
+        int[] unknownNumber = new int[min.length];
+        Arrays.fill(unknownNumber, -1);
+        int[] nans = sett.getIntArray("nans", unknownNumber);
+        int[] posInfs = sett.getIntArray("posInfs", unknownNumber);
+        int[] negInfs = sett.getIntArray("negInfs", unknownNumber);
         double[] sums = sett.getDoubleArray("sums");
+        double[] unknownDouble = new double[min.length];
+        Arrays.fill(unknownDouble, Double.NaN);
+        double[] skewness = sett.getDoubleArray("skewness", unknownDouble);
+        double[] kurtosis = sett.getDoubleArray("kurtosis", unknownDouble);
         // added with 2.7, fallback -1
         int rowCount = sett.getInt("row_count", -1);
-        return new Statistics3Table(spec, min, max, mean, median, var, sums, missings, nominalValues, rowCount);
+        return new Statistics3Table(spec, min, max, mean, median, var, sums, missings, nans, posInfs, negInfs,
+            nominalValues, skewness, kurtosis, rowCount);
     }
 
     /**
@@ -857,7 +1152,12 @@ public class Statistics3Table {
         sett.addDoubleArray("variance", m_varianceValues);
         sett.addDoubleArray("median", m_median);
         sett.addIntArray("missings", m_missingValueCnt);
+        sett.addIntArray("nans", m_nanValueCnt);
+        sett.addIntArray("posInfs", m_posInfinityValueCnt);
+        sett.addIntArray("negInfs", m_negInfinityValueCnt);
         sett.addDoubleArray("sums", m_sum);
+        sett.addDoubleArray("skewness", m_skewness);
+        sett.addDoubleArray("kurtosis", m_kurtosis);
         sett.addInt("row_count", m_rowCount);
         for (int c = 0; c < m_nominalValues.size(); c++) {
             if (m_nominalValues.get(c) != null) {
@@ -871,4 +1171,11 @@ public class Statistics3Table {
         }
     }
 
+    /**
+     * @return the statisticsSpecification
+     * @since 2.9
+     */
+    public static DataTableSpec getStatisticsSpecification() {
+        return STATISTICS_SPECIFICATION;
+    }
 }

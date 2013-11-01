@@ -103,7 +103,7 @@ public class Statistics3NodeModel extends NodeModel {
         Statistics3NodeDialogPane.createNominalFilterModel();
 
     /** One input and one output. */
-    Statistics3NodeModel() {
+    protected Statistics3NodeModel() {
         super(1, 2);
     }
 
@@ -146,14 +146,14 @@ public class Statistics3NodeModel extends NodeModel {
                 inData[0], m_computeMedian.getBooleanValue(),
                 numOfNominalValuesOutput(), m_nominalFilter.getIncludeList(),
                 exec);
-        if (m_statTable.getWarning() != null) {
-            super.setWarningMessage(m_statTable.getWarning());
+        if (getStatTable().getWarning() != null) {
+            super.setWarningMessage(getStatTable().getWarning());
         }
         BufferedDataTable outTable1 = exec.createBufferedDataTable(
-                m_statTable.createStatisticMomentsTable(),
+                getStatTable().createStatisticMomentsTable(),
                 exec.createSubProgress(0.5));
         BufferedDataTable outTable2 = exec.createBufferedDataTable(
-                m_statTable.createNominalValueTable(
+                getStatTable().createNominalValueTable(
                         m_nominalFilter.getIncludeList()),
                         exec.createSubProgress(0.5));
         return new BufferedDataTable[]{outTable1, outTable2};
@@ -183,38 +183,38 @@ public class Statistics3NodeModel extends NodeModel {
      * @return statistics table containing all statistic moments
      */
     final DataTable getStatsTable() {
-        return m_statTable.createStatisticMomentsTable();
+        return getStatTable().createStatisticMomentsTable();
     }
 
     /**
      * @return columns used to count co-occurrences
      */
     String[] getNominalColumnNames() {
-        if (m_statTable == null) {
+        if (getStatTable() == null) {
             return null;
         }
-        return m_statTable.extractNominalColumns(
+        return getStatTable().extractNominalColumns(
                 m_nominalFilter.getIncludeList());
     }
 
     /**
      * @return all column names
      */
-    String[] getColumnNames() {
-        if (m_statTable == null) {
+    protected String[] getColumnNames() {
+        if (getStatTable() == null) {
             return null;
         }
-        return m_statTable.getColumnNames();
+        return getStatTable().getColumnNames();
     }
 
     /**
      * @return number of missing values
      */
     int[] getNumMissingValues() {
-        if (m_statTable == null) {
+        if (getStatTable() == null) {
             return null;
         }
-        return m_statTable.getNumberMissingValues();
+        return getStatTable().getNumberMissingValues();
     }
 
     /** @return number of nominal values computed */
@@ -229,7 +229,7 @@ public class Statistics3NodeModel extends NodeModel {
 
     /** @return nominal value and frequency for each column */
     List<Map<DataCell, Integer>> getNominals() {
-        return m_statTable.getNominalValues();
+        return getStatTable().getNominalValues();
     }
 
     /**
@@ -286,8 +286,15 @@ public class Statistics3NodeModel extends NodeModel {
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         NodeSettings sett = new NodeSettings("statistic.xml.gz");
-        m_statTable.save(sett);
+        getStatTable().save(sett);
         sett.saveToXML(new FileOutputStream(
                 new File(internDir, sett.getKey())));
+    }
+
+    /**
+     * @return the statTable
+     */
+    protected Statistics3Table getStatTable() {
+        return m_statTable;
     }
 }
