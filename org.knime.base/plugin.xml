@@ -422,16 +422,24 @@
             id="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionLearnerNodeFactory"/>
       <node
             category-path="/mining/rules/basisfunction"
+            factory-class="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictor2NodeFactory"
+            id="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictor2NodeFactory"/>
+      <!--node deprecated
+            category-path="/mining/rules/basisfunction"
             factory-class="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictorNodeFactory"
-            id="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictorNodeFactory"/>
+            id="org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionPredictorNodeFactory"/-->
       <node
             category-path="/mining/nn/pnn"
             factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionLearnerNodeFactory"
             id="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionLearnerNodeFactory"/>
       <node
             category-path="/mining/nn/pnn"
+            factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictor2NodeFactory"
+            id="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictor2NodeFactory"/>
+      <!--node
+            category-path="/mining/nn/pnn"
             factory-class="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictorNodeFactory"
-            id="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictorNodeFactory"/>
+            id="org.knime.base.node.mine.bfn.radial.RadialBasisFunctionPredictorNodeFactory"/-->
       <node
             factory-class="org.knime.base.node.util.sampledata.SampleDataNodeFactory"
             category-path="/io/io-other"
@@ -586,8 +594,12 @@
             id="org.knime.base.node.mine.neural.rprop.RPropNodeFactory"/>
       <node
             category-path="/mining/nn/mlp"
+            factory-class="org.knime.base.node.mine.neural.mlp2.MLPPredictorNodeFactory"
+            id="org.knime.base.node.mine.neural.mlp2.MLPPredictorNodeFactory"/>
+      <!--node deprecated
+            category-path="/mining/nn/mlp"
             factory-class="org.knime.base.node.mine.neural.mlp.MLPPredictorNodeFactory"
-            id="org.knime.base.node.mine.neural.mlp.MLPPredictorNodeFactory"/>
+            id="org.knime.base.node.mine.neural.mlp.MLPPredictorNodeFactory"/-->
       <node
             after="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory"
             category-path="/io/write"
@@ -604,8 +616,12 @@
             id="org.knime.base.node.preproc.transpose.TransposeTableNodeFactory"/>
       <node
             category-path="/mining/dtree"
+            factory-class="org.knime.base.node.mine.decisiontree2.predictor2.DecTreePredictorNodeFactory"
+            id="org.knime.base.node.mine.decisiontree2.predictor2.DecTreePredictorNodeFactory"/>
+      <!--node deprecated
+            category-path="/mining/dtree"
             factory-class="org.knime.base.node.mine.decisiontree2.predictor.DecTreePredictorNodeFactory"
-            id="org.knime.base.node.mine.decisiontreenew.predictor.DecTreePredictorNodeFactory"/>
+            id="org.knime.base.node.mine.decisiontreenew.predictor.DecTreePredictorNodeFactory"/-->
       <node
             category-path="/mining/dtree"
             factory-class="org.knime.base.node.mine.decisiontree2.image.DecTreeToImageNodeFactory"
@@ -760,8 +776,12 @@
             id="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"/>
       <node
             category-path="/mining/bayes"
+            factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor2.NaiveBayesPredictorNodeFactory"
+            id="org.knime.base.node.mine.bayes.naivebayes.predictor2.NaiveBayesPredictorNodeFactory"/>
+      <!--node deprecated
+            category-path="/mining/bayes"
             factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory"
-            id="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory"/>
+            id="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory"/-->
       <node
             category-path="/mining/bayes"
             factory-class="org.knime.base.node.mine.bayes.naivebayes.learner.NaiveBayesLearnerNodeFactory"
@@ -798,9 +818,14 @@
       </node>
       <node
             category-path="/mining/svm"
+            factory-class="org.knime.base.node.mine.svm.predictor2.SVMPredictorNodeFactory"
+            id="org.knime.base.node.mine.svm.predictor2.SVMPredictorNodeFactory">
+      </node>
+      <!--node
+            category-path="/mining/svm"
             factory-class="org.knime.base.node.mine.svm.predictor.SVMPredictorNodeFactory"
             id="org.knime.base.node.mine.svm.predictor.SVMPredictorNodeFactory">
-      </node>
+      </node-->
       <node
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.colcompare.ColumnComparatorNodeFactory"

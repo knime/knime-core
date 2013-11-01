@@ -66,7 +66,7 @@ import java.util.Set;
 import org.knime.base.data.neural.Architecture;
 import org.knime.base.data.neural.MultiLayerPerceptron;
 import org.knime.base.data.neural.methods.RProp;
-import org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkTranslator;
+import org.knime.base.node.mine.neural.mlp2.PMMLNeuralNetworkTranslator;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
