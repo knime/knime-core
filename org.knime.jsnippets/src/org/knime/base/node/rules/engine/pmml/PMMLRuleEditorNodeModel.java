@@ -195,9 +195,11 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
         }
         DataType outcomeType = RuleEngineNodeModel.computeOutputType(outcomeTypes, true);
         ColumnRearranger rearranger = new ColumnRearranger(tableSpec);
-        DataColumnSpecCreator specProto = new DataColumnSpecCreator(m_settings.getNewColName(), outcomeType);
+        DataColumnSpecCreator specProto =
+            new DataColumnSpecCreator(m_settings.isAppendColumn() ? DataTableSpec.getUniqueColumnName(tableSpec, m_settings.getNewColName())
+                : m_settings.getReplaceColumn(), outcomeType);
         specProto.setDomain(new DataColumnDomainCreator(toCells(outcomes, outcomeType)).createDomain());
-        rearranger.append(new SingleCellFactory(true, specProto.createSpec()) {
+        SingleCellFactory cellFactory = new SingleCellFactory(true, specProto.createSpec()) {
             @Override
             public DataCell getCell(final DataRow row) {
                 for (Pair<PMMLPredicate, Expression> pair : rules) {
@@ -208,7 +210,12 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
                 return DataType.getMissingCell();
             }
 
-        });
+        };
+        if (m_settings.isAppendColumn()) {
+            rearranger.append(cellFactory);
+        } else {
+            rearranger.replace(cellFactory, m_settings.getReplaceColumn());
+        }
         return rearranger;
     }
 
@@ -264,7 +271,9 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
      * @return The {@link PMMLPortObjectSpec} filled with proper data for configuration.
      */
     private PMMLPortObjectSpec createPMMLPortObjectSpec(final DataTableSpec spec, final List<String> usedColumns) {
-        String targetCol = m_settings.getNewColName();
+        String targetCol =
+            m_settings.isAppendColumn() ? DataTableSpec.getUniqueColumnName(spec, m_settings.getNewColName())
+                : m_settings.getReplaceColumn();
         Set<String> set = new LinkedHashSet<String>(usedColumns);
         List<String> learnCols = new LinkedList<String>();
         for (int i = 0; i < spec.getNumColumns(); i++) {

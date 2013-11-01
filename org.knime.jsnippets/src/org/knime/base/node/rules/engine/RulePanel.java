@@ -52,8 +52,11 @@ package org.knime.base.node.rules.engine;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,10 +70,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.Box;
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
@@ -83,15 +89,20 @@ import org.knime.base.node.rules.engine.rsyntax.PMMLRuleParser;
 import org.knime.base.node.rules.engine.rsyntax.RuleParser;
 import org.knime.base.node.rules.engine.rsyntax.VariableRuleParser;
 import org.knime.base.node.util.KnimeSyntaxTextArea;
+import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.ThreadUtils;
@@ -115,6 +126,14 @@ public class RulePanel extends JPanel {
     private JLabel m_outputType;
 
     private JTextField m_newColumnName;
+
+    //private JCheckBox m_appendColumn;
+
+    private ColumnSelectionPanel m_replaceColumn;
+
+    private ButtonGroup m_outputGroup;
+
+    private JRadioButton m_replaceColRadio;
 
     private volatile long m_outputTypeLastSet, m_outputMarkersLastSet;
 
@@ -232,9 +251,13 @@ public class RulePanel extends JPanel {
         GridBagConstraints constraints = new GridBagConstraints();
         if (m_nodeType.hasOutput()) {
             constraints.weighty = .25;
+            String watermark = "prediction";
+            int colWidth = 35;
             ret.add(
-                createNewColumnTextFieldWithLabel("prediction", 35, m_nodeType.allowColumns() ? "Appended column name"
-                    : "New flow variable name"), constraints);
+                m_nodeType.allowColumns() ? createNewColumnTextFieldWithReplace(watermark, colWidth,
+                "Append Column: ") : createNewColumnTextFieldWithLabel(watermark, colWidth,
+                    "New flow variable name"), constraints);
+
         } else {
             m_inclusionBox = new JCheckBox(m_nodeType.inclusionText());
             ret.add(m_inclusionBox, constraints);
@@ -258,6 +281,51 @@ public class RulePanel extends JPanel {
         ret.add(comp);
         m_outputType = new JLabel(DataValue.UTILITY.getIcon());
         ret.add(m_outputType);
+        return ret;
+    }
+    private Component createNewColumnTextFieldWithReplace(final String watermark, final int colWidth, final String label) {
+        Box ret = Box.createVerticalBox();//Box.createHorizontalBox();
+//        if (label != null) {
+//            ret.add(new JLabel(label));
+//        }
+        JPanel addColumnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel replaceColumnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        m_outputGroup = new ButtonGroup();
+        final JRadioButton newColumn = new JRadioButton(label);
+        m_replaceColRadio = new JRadioButton("Replace Column:");
+        addColumnPanel.add(newColumn);
+        JTextField comp = Util.createTextFieldWithWatermark(watermark, colWidth, /*label*/null);
+        m_newColumnName = comp;
+        addColumnPanel.add(comp);
+//        m_appendColumn = new JCheckBox("Add new column", true);
+//        m_appendColumn.addActionListener(new ActionListener() {
+//            @Override
+//            public void actionPerformed(final ActionEvent e) {
+//                m_newColumnName.setEnabled(m_appendColumn.isSelected());
+//                m_replaceColumn.setEnabled(!m_appendColumn.isSelected());
+//            }
+//        });
+        ActionListener actionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                m_newColumnName.setEnabled(newColumn.isSelected());
+                m_replaceColumn.setEnabled(m_replaceColRadio.isSelected());
+            }};
+        newColumn.addActionListener(actionListener);
+        m_replaceColRadio.addActionListener(actionListener);
+        m_outputGroup.add(newColumn);
+        m_outputGroup.add(m_replaceColRadio);
+        @SuppressWarnings("unchecked")
+        ColumnSelectionPanel colSelectionPanel = new ColumnSelectionPanel((Border)null, DoubleValue.class, IntValue.class, StringValue.class, BooleanValue.class);
+        m_replaceColumn = colSelectionPanel;
+        m_outputType = new JLabel(DataValue.UTILITY.getIcon());
+        addColumnPanel.add(m_outputType);
+        //ret.add(m_appendColumn);
+        replaceColumnPanel.add(m_replaceColRadio);
+        //ret.add(new JLabel("Replace column: "));
+        replaceColumnPanel.add(m_replaceColumn);
+        ret.add(addColumnPanel);
+        ret.add(replaceColumnPanel);
         return ret;
     }
 
@@ -469,6 +537,11 @@ public class RulePanel extends JPanel {
     public void update(final DataTableSpec spec, final Map<String, FlowVariable> flowVariables) {
         m_spec = spec;
         this.m_flowVariables = flowVariables;
+        try {
+            m_replaceColumn.update(spec, m_replaceColumn.getSelectedColumn());
+        } catch (NotConfigurableException e) {
+            // TODO Auto-generated catch block
+        }
         m_mainPanel.update(m_mainPanel.getExpression(), spec, m_nodeType.allowFlowVariables() ? flowVariables
             : Collections.<String, FlowVariable> emptyMap(), m_nodeType.expressions());
     }
@@ -484,6 +557,15 @@ public class RulePanel extends JPanel {
         RuleEngineSettings ruleSettings = new RuleEngineSettings();
         if (m_nodeType.hasOutput()) {
             ruleSettings.setNewcolName(m_newColumnName.getText());
+            if (m_replaceColumn != null) {
+                ruleSettings.setAppendColumn(m_newColumnName.isEnabled());
+                ruleSettings.setReplaceColumn(m_replaceColumn.getSelectedColumn());
+                if (m_outputGroup.isSelected(m_replaceColRadio.getModel())
+                    && m_replaceColumn.getSelectedColumn() == null) {
+                    //            if (!m_appendColumn.isSelected() && m_replaceColumn.getSelectedColumn() == null) {
+                    throw new InvalidSettingsException("No column was selected for replacement!");
+                }
+            }
         } else {
             ruleSettings.setNewcolName("");
         }
@@ -530,6 +612,18 @@ public class RulePanel extends JPanel {
         if (m_nodeType.hasOutput()) {
             String newColName = ruleSettings.getNewColName();
             m_newColumnName.setText(newColName);
+//            m_appendColumn.setSelected(ruleSettings.isAppendColumn());
+//            for (ActionListener l: m_appendColumn.getActionListeners()) {
+//                l.actionPerformed(null);
+//            }
+            if (m_replaceColumn != null) {
+                m_outputGroup.setSelected(m_outputGroup.getElements().nextElement().getModel(), ruleSettings.isAppendColumn());
+                m_outputGroup.setSelected(m_replaceColRadio.getModel(), !ruleSettings.isAppendColumn());
+                for (ActionListener listener : m_replaceColRadio.getActionListeners()) {
+                    listener.actionPerformed(null);
+                }
+                m_replaceColumn.setSelectedColumn(ruleSettings.getReplaceColumn());
+            }
         }
         final KnimeSyntaxTextArea textEditor = m_mainPanel.getTextEditor();
         textEditor.setText("");

@@ -141,14 +141,17 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
             throws InvalidSettingsException {
         ColumnRearranger crea = new ColumnRearranger(inSpec);
 
-        String newColName = DataTableSpec.getUniqueColumnName(inSpec, m_settings.getNewColName());
+        String newColName =
+            m_settings.isAppendColumn() ? DataTableSpec.getUniqueColumnName(inSpec, m_settings.getNewColName())
+                : m_settings.getReplaceColumn();
 
         final DataType outType =
                 computeOutputType(rules, RuleNodeSettings.RuleEngine);
 
         DataColumnSpec cs = new DataColumnSpecCreator(newColName, outType).createSpec();
 
-        crea.append(new VariableProvider.SingleCellFactoryProto(cs) {
+
+        VariableProvider.SingleCellFactoryProto cellFactory = new VariableProvider.SingleCellFactoryProto(cs) {
             @Override
             public DataCell getCell(final DataRow row) {
                 for (Rule r : rules) {
@@ -177,7 +180,12 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
             public int getRowCount() {
                 return RuleEngineNodeModel.this.getRowCount();
             }
-        });
+        };
+        if (m_settings.isAppendColumn()) {
+            crea.append(cellFactory);
+        } else {
+            crea.replace(cellFactory, m_settings.getReplaceColumn());
+        }
 
         return crea;
     }

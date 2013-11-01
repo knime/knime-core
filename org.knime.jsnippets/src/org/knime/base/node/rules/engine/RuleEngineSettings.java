@@ -64,9 +64,15 @@ import org.knime.core.node.NodeSettingsWO;
  * @since 2.8
  */
 public class RuleEngineSettings {
+    private static final String APPEND_COLUMN = "append-column";
+
+    private static final String REPLACE_COLUMN_NAME = "replace-column-name";
+
     private final List<String> m_rules = new ArrayList<String>();
 
     private String m_newColName = RuleEngineNodeDialog.NEW_COL_NAME;
+    private String m_replaceColumn = "";
+    private boolean m_appendColumn = true;
 
     /**
      * Sets the name of the new column containing the matching rule's outcome.
@@ -111,6 +117,36 @@ public class RuleEngineSettings {
         return m_rules;
     }
 
+
+
+    /**
+     * @return the replaceColumn
+     */
+    public String getReplaceColumn() {
+        return m_replaceColumn;
+    }
+
+    /**
+     * @param replaceColumn the replaceColumn to set
+     */
+    public void setReplaceColumn(final String replaceColumn) {
+        this.m_replaceColumn = replaceColumn;
+    }
+
+    /**
+     * @return the appendColumn
+     */
+    public boolean isAppendColumn() {
+        return m_appendColumn;
+    }
+
+    /**
+     * @param appendColumn the appendColumn to set
+     */
+    public void setAppendColumn(final boolean appendColumn) {
+        this.m_appendColumn = appendColumn;
+    }
+
     /**
      * Loads the settings from the settings object.
      *
@@ -126,6 +162,8 @@ public class RuleEngineSettings {
         }
 
         m_newColName = settings.getString("new-column-name");
+        m_replaceColumn = settings.getString(REPLACE_COLUMN_NAME, "");
+        m_appendColumn = settings.getBoolean(APPEND_COLUMN, true);
     }
 
     /**
@@ -142,6 +180,8 @@ public class RuleEngineSettings {
             m_rules.add(r);
         }
         m_newColName = settings.getString("new-column-name", RuleEngineNodeDialog.NEW_COL_NAME);
+        m_replaceColumn = settings.getString(REPLACE_COLUMN_NAME, "");
+        m_appendColumn = settings.getBoolean(APPEND_COLUMN, true);
     }
 
     /**
@@ -152,5 +192,7 @@ public class RuleEngineSettings {
     public void saveSettings(final NodeSettingsWO settings) {
         settings.addStringArray("rules", m_rules.toArray(new String[m_rules.size()]));
         settings.addString("new-column-name", m_newColName);
+        settings.addString(REPLACE_COLUMN_NAME, m_replaceColumn);
+        settings.addBoolean(APPEND_COLUMN, m_appendColumn);
     }
 }

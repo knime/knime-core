@@ -49,14 +49,34 @@
  */
 package org.knime.base.node.rules.engine.pmml;
 
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.Box;
+import javax.swing.ButtonGroup;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.core.data.BooleanValue;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.StringValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * <code>NodeDialog</code> for the "PMMLRuleSetPredictor" Node. Applies the rules to the input table.
@@ -66,18 +86,54 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Gabor Bakos
  */
-public class PMMLRuleSetPredictorNodeDialog extends DefaultNodeSettingsPane {
-
+public class PMMLRuleSetPredictorNodeDialog extends NodeDialogPane {
+    private final SettingsModelBoolean m_replace = PMMLRuleSetPredictorNodeModel.createDoReplace();
+    private final JRadioButton m_newColumn = new JRadioButton("Append Column: ");
+    private final JRadioButton m_replaceColumn = new JRadioButton("Replace Column: ");
+    private final ButtonGroup m_group = new ButtonGroup();
+    private DialogComponentString m_outputColumn;
+    private DialogComponentColumnNameSelection m_replacedColumn;
+    private DialogComponentBoolean m_computeConfidence;
+    private DialogComponentString m_confidenceColumn;
     /**
      * New pane for configuring the PMMLRuleSetPredictor node.
      */
     protected PMMLRuleSetPredictorNodeDialog() {
-        addDialogComponent(new DialogComponentString(new SettingsModelString(
+        super();
+        JPanel mainPanel = new JPanel(new BorderLayout(0, 1));
+        addTab("Options", mainPanel);
+        Box outputBox = Box.createVerticalBox();
+        TitledBorder outputBorder = new TitledBorder("Output");
+        outputBox.setBorder(outputBorder);
+        m_outputColumn = new DialogComponentString(new SettingsModelString(
             PMMLRuleSetPredictorNodeModel.CFGKEY_OUTPUT_COLUMN, PMMLRuleSetPredictorNodeModel.DEFAULT_OUTPUT_COLUMN),
-            "Output column"));
-        createNewGroup("Confidence");
+                "Output column");
+        @SuppressWarnings("unchecked")
+        DialogComponentColumnNameSelection colSelection = new DialogComponentColumnNameSelection(PMMLRuleSetPredictorNodeModel.createReplaceColumn(), "Replaced column", 0, DoubleValue.class, StringValue.class, BooleanValue.class);
+        m_replacedColumn = colSelection;
+        JPanel newColumnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        newColumnPanel.add(m_newColumn);
+        newColumnPanel.add(m_outputColumn.getComponentPanel());
+        outputBox.add(newColumnPanel);
+        JPanel replacedColumnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        replacedColumnPanel.add(m_replaceColumn);
+        replacedColumnPanel.add(m_replacedColumn.getComponentPanel());
+        outputBox.add(replacedColumnPanel);
+//        createNewGroup("Output");
+//        setHorizontalPlacement(true);
+//        addDialogComponent(m_outputColumn);
+//        setHorizontalPlacement(false);
+//        setHorizontalPlacement(true);
+//        addDialogComponent(m_replacedColumn);
+        mainPanel.add(outputBox, BorderLayout.CENTER);
+        Box confidenceBox = Box.createHorizontalBox();
+        confidenceBox.setBorder(new TitledBorder("Confidence"));
+        mainPanel.add(confidenceBox, BorderLayout.SOUTH);
+        //createNewGroup("Confidence");
         final SettingsModelBoolean computeConfidenceModel = new SettingsModelBoolean(PMMLRuleSetPredictorNodeModel.CFGKEY_ADD_CONFIDENCE, PMMLRuleSetPredictorNodeModel.DEFAULT_ADD_CONFIDENCE);
-        addDialogComponent(new DialogComponentBoolean(computeConfidenceModel, "Compute confidence."));
+        m_computeConfidence = new DialogComponentBoolean(computeConfidenceModel, "Compute confidence?");
+        //addDialogComponent(m_computeConfidence);
+        confidenceBox.add(m_computeConfidence.getComponentPanel());
         final SettingsModelString confidenceColumnModel = new SettingsModelString(PMMLRuleSetPredictorNodeModel.CFGKEY_CONFIDENCE_COLUMN, PMMLRuleSetPredictorNodeModel.DEFAULT_CONFIDENCE_COLUN);
         ChangeListener listener = new ChangeListener() {
             @Override
@@ -86,9 +142,55 @@ public class PMMLRuleSetPredictorNodeDialog extends DefaultNodeSettingsPane {
             }
         };
         computeConfidenceModel.addChangeListener(listener);
-        addDialogComponent(new DialogComponentString(confidenceColumnModel, "Confidence column"));
+        m_confidenceColumn = new DialogComponentString(confidenceColumnModel, "Confidence column");
+        confidenceBox.add(m_confidenceColumn.getComponentPanel());
+        //addDialogComponent(m_confidenceColumn);
         listener.stateChanged(null);
+        m_group.add(m_newColumn);
+        m_group.add(m_replaceColumn);
+        ActionListener selectionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                m_outputColumn.getModel().setEnabled(m_newColumn.isSelected());
+                m_replacedColumn.getModel().setEnabled(!m_newColumn.isSelected());
+            }
+        };
+        m_newColumn.addActionListener(selectionListener);
+        m_replaceColumn.addActionListener(selectionListener);
         //TODO add option to select the rule selection method from the possible options.
         //TODO disable output column when not isScorable.
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        m_replace.setBooleanValue(m_replaceColumn.isSelected());
+        m_replace.saveSettingsTo(settings);
+        m_outputColumn.saveSettingsTo(settings);
+        m_replacedColumn.saveSettingsTo(settings);
+        m_computeConfidence.saveSettingsTo(settings);
+        m_confidenceColumn.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
+        try {
+            m_replace.loadSettingsFrom(settings);
+            m_newColumn.setSelected(!m_replace.getBooleanValue());
+            m_replaceColumn.setSelected(m_replace.getBooleanValue());
+        } catch (InvalidSettingsException e) {
+            throw new NotConfigurableException(e.getMessage(), e);
+        }
+        m_outputColumn.loadSettingsFrom(settings, specs);
+        m_replacedColumn.loadSettingsFrom(settings, specs);
+        m_computeConfidence.loadSettingsFrom(settings, specs);
+        m_confidenceColumn.loadSettingsFrom(settings, specs);
+        for (ActionListener listener : m_newColumn.getActionListeners()) {
+            listener.actionPerformed(null);
+        }
     }
 }

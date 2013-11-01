@@ -110,6 +110,13 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
 
     static final boolean DEFAULT_ADD_CONFIDENCE = false;
 
+    static final String CFGKEY_REPLACE_COLUMN = "column to replace";
+
+    static final String DEFAULT_REPLACE_COLUMN = "";
+
+    static final String CFGKEY_DO_REPLACE_COLUMN = "replace?";
+    static final boolean DEFAULT_DO_REPLACE_COLUMN = false;
+
     private SettingsModelString m_outputColumn = new SettingsModelString(CFGKEY_OUTPUT_COLUMN, DEFAULT_OUTPUT_COLUMN);
 
     private SettingsModelBoolean m_addConfidence = new SettingsModelBoolean(CFGKEY_ADD_CONFIDENCE,
@@ -117,6 +124,23 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
 
     private SettingsModelString m_confidenceColumn = new SettingsModelString(CFGKEY_CONFIDENCE_COLUMN,
         DEFAULT_CONFIDENCE_COLUN);
+
+    private final SettingsModelString m_replaceColumn = createReplaceColumn();
+
+    /**
+     * @return A new {@link SettingsModelString} for the replaced column name.
+     */
+    static SettingsModelString createReplaceColumn() {
+        return new SettingsModelString(CFGKEY_REPLACE_COLUMN, DEFAULT_REPLACE_COLUMN);
+    }
+    private final SettingsModelBoolean m_doReplaceColumn = createDoReplace();
+
+    /**
+     * @return A new {@link SettingsModelBoolean} whether replace a column, or add a new one.
+     */
+    static SettingsModelBoolean createDoReplace() {
+        return new SettingsModelBoolean(CFGKEY_DO_REPLACE_COLUMN, DEFAULT_DO_REPLACE_COLUMN);
+    }
 
     /**
      * Constructor for the node model.
@@ -132,7 +156,21 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         PMMLPortObject obj = (PMMLPortObject)inData[1];
         ColumnRearranger rearranger = createColumnRearranger(obj, (DataTableSpec)inData[0].getSpec(), exec);
-        return new BufferedDataTable[]{exec.createColumnRearrangeTable((BufferedDataTable)inData[0], rearranger, exec)};
+        BufferedDataTable table = exec.createColumnRearrangeTable((BufferedDataTable)inData[0], rearranger, exec);
+        if (m_doReplaceColumn.getBooleanValue()) {
+            DataTableSpec preSpec = table.getSpec();
+            DataColumnSpec[] columns = new DataColumnSpec[preSpec.getNumColumns()];
+            for (int i = columns.length; i-->0;) {
+                columns[i] = preSpec.getColumnSpec(i);
+            }
+            int columnIndex = ((BufferedDataTable)inData[0]).getSpec().findColumnIndex(m_replaceColumn.getStringValue());
+            DataColumnSpecCreator creator = new DataColumnSpecCreator(columns[columnIndex]);
+            creator.setName(m_replaceColumn.getStringValue());
+            columns[columnIndex] = creator.createSpec();
+            DataTableSpec newSpec = new DataTableSpec(columns);
+            table = exec.createSpecReplacerTable(table, newSpec);
+        }
+        return new BufferedDataTable[]{table};
     }
 
     /**
@@ -160,12 +198,16 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         final List<PMMLRuleTranslator.Rule> rules = translator.getRules();
         ColumnRearranger ret = new ColumnRearranger(spec);
         final List<DataColumnSpec> targetCols = obj.getSpec().getTargetCols();
+        //TODO Maybe this check is not necessary, we do not use this info besides the type.
         if (targetCols.size() != 1) {
             throw new InvalidSettingsException("Exactly on output column is required, but got: " + targetCols);
-
         }
         DataColumnSpecCreator specCreator = new DataColumnSpecCreator(targetCols.get(0));
-        specCreator.setName(m_outputColumn.getStringValue());
+        if (m_doReplaceColumn.getBooleanValue()) {
+            specCreator.setName(DataTableSpec.getUniqueColumnName(spec, m_replaceColumn.getStringValue()));
+        } else {
+            specCreator.setName(m_outputColumn.getStringValue());
+        }
         DataColumnSpec colSpec = specCreator.createSpec();
         final DataType dataType = colSpec.getType();
         final RuleSelectionMethod ruleSelectionMethod = translator.getSelectionMethodList().get(0);
@@ -174,11 +216,14 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         final DataColumnSpec[] specs;
         if (m_addConfidence.getBooleanValue()) {
             specs =
-                new DataColumnSpec[]{colSpec,
-                    new DataColumnSpecCreator(m_confidenceColumn.getStringValue(), DoubleCell.TYPE).createSpec()};
+                new DataColumnSpec[]{
+                    new DataColumnSpecCreator(m_confidenceColumn.getStringValue(), DoubleCell.TYPE).createSpec(),
+                    colSpec};
         } else {
             specs = new DataColumnSpec[]{colSpec};
         }
+        final int oldColumnIndex =
+            m_doReplaceColumn.getBooleanValue() ? ret.indexOf(m_replaceColumn.getStringValue()) : -1;
         ret.append(new AbstractCellFactory(true, specs) {
             List<String> values;
             {
@@ -221,9 +266,9 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
                     return new DataCell[]{resultAndConfidence.getFirst()};
                 }
                 if (resultAndConfidence.getSecond() == null) {
-                    return new DataCell[]{resultAndConfidence.getFirst(), DataType.getMissingCell()};
+                    return new DataCell[]{DataType.getMissingCell(), resultAndConfidence.getFirst()};
                 }
-                return new DataCell[]{resultAndConfidence.getFirst(), new DoubleCell(resultAndConfidence.getSecond())};
+                return new DataCell[]{new DoubleCell(resultAndConfidence.getSecond()), resultAndConfidence.getFirst()};
             }
 
             /**
@@ -356,6 +401,10 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
                 return pair(result(defaultScore), defaultConfidence);
             }
         });
+        if (m_doReplaceColumn.getBooleanValue()) {
+            ret.move(ret.getColumnCount() - 1 - (m_addConfidence.getBooleanValue() ? 1 : 0), oldColumnIndex);
+            ret.remove(m_replaceColumn.getStringValue());
+        }
         return ret;
     }
 
@@ -398,8 +447,12 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         }
         List<DataColumnSpec> targetCols = portObjectSpec.getTargetCols();
         DataColumnSpecCreator specCreator = new DataColumnSpecCreator(targetCols.get(0));
-        specCreator.setName(m_outputColumn.getStringValue());
-        rearranger.append(new SingleCellFactory(specCreator.createSpec()) {
+        if (m_doReplaceColumn.getBooleanValue()) {
+            specCreator.setName(m_replaceColumn.getStringValue());
+        } else {
+            specCreator.setName(m_outputColumn.getStringValue());
+        }
+        SingleCellFactory dummy = new SingleCellFactory(specCreator.createSpec()) {
             /**
              * {@inheritDoc}
              */
@@ -407,7 +460,7 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
             public DataCell getCell(final DataRow row) {
                 throw new IllegalStateException();
             }
-        });
+        };
         if (m_addConfidence.getBooleanValue()) {
             rearranger.append(new SingleCellFactory(new DataColumnSpecCreator(m_confidenceColumn.getStringValue(),
                 DoubleCell.TYPE).createSpec()) {
@@ -416,6 +469,11 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
                     throw new IllegalStateException();
                 }
             });
+        }
+        if (m_doReplaceColumn.getBooleanValue()) {
+            rearranger.replace(dummy, m_replaceColumn.getStringValue());
+        } else {
+            rearranger.append(dummy);
         }
         return new DataTableSpec[]{rearranger.createSpec()};
     }
@@ -428,6 +486,8 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         m_outputColumn.saveSettingsTo(settings);
         m_addConfidence.saveSettingsTo(settings);
         m_confidenceColumn.saveSettingsTo(settings);
+        m_replaceColumn.saveSettingsTo(settings);
+        m_doReplaceColumn.saveSettingsTo(settings);
     }
 
     /**
@@ -438,6 +498,16 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         m_outputColumn.loadSettingsFrom(settings);
         m_addConfidence.loadSettingsFrom(settings);
         m_confidenceColumn.loadSettingsFrom(settings);
+        try {
+            m_replaceColumn.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            m_replaceColumn.setStringValue(DEFAULT_REPLACE_COLUMN);
+        }
+        try {
+            m_doReplaceColumn.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            m_doReplaceColumn.setBooleanValue(DEFAULT_DO_REPLACE_COLUMN);
+        }
     }
 
     /**
@@ -455,6 +525,12 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         u.loadSettingsFrom(settings);
         if (u.isEnabled() && u.getStringValue().isEmpty()) {
             throw new InvalidSettingsException("Specify a non-empty column name as a confidence.");
+        }
+        SettingsModelString r = createReplaceColumn();
+        try {
+            r.validateSettings(settings);
+        } catch (InvalidSettingsException e) {
+            m_replaceColumn.setStringValue(DEFAULT_REPLACE_COLUMN);
         }
     }
 

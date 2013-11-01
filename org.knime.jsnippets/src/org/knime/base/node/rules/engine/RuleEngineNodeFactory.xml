@@ -112,10 +112,9 @@ $Col0$ > 5 => $${SCol1}$$
 			with Ctrl+Space. Each row represents a rule. A red background of the
 			line signals an error and the left side of the editor then shows an error icon.
 		</option>
-		<option name="Appended column name">Name of the newly appended column,
-			which contains
-			the outcome of the rules.
-		</option>
+		<option name="Append Column">When checked, new column with the specified name
+			will be added</option>
+		<option name="Replace Column">The column to replace</option>
 	</fullDescription>
 
 	<ports>

@@ -16,8 +16,9 @@
 		</intro>
 
 
-		<option name="Output column">Name of the prediction column</option>
-		<option name="Compute confidence">Should the confidence of the result be computed?</option>
+		<option name="Append Column">Name of the prediction column</option>
+		<option name="Replace Column">Name of the column to replace</option>
+		<option name="Compute confidence?">Should the confidence of the result be computed?</option>
 		<option name="Confidence column">Name of the confidence column</option>
 	</fullDescription>
 

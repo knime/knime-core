@@ -88,6 +88,9 @@ $Col0$ = "Active" AND $Col1$ &lt;= 5 => "Outlier"
 			which contains
 			the outcome of the rules.
 		</option>
+		<option name="Append column">When checked, new column with the specified name
+			will be added</option>
+		<option name="Replace column">The column to replace</option>
 	</fullDescription>
 
 	<ports>
