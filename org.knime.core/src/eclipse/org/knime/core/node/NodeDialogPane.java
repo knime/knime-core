@@ -602,6 +602,8 @@ public abstract class NodeDialogPane {
         } finally {
             NodeContext.removeLastContext();
         }
+        m_credentialsProvider = null;
+        m_flowObjectStack = null;
     }
 
     /**
