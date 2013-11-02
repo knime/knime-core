@@ -59,8 +59,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ui.IMemento;
+import org.knime.core.util.KNIMEJob;
 import org.knime.workbench.repository.model.NodeTemplate;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  *
@@ -163,7 +169,15 @@ public final class NodeUsageRegistry {
         cachedFrequent = null;
         existing.increment();
         addToLastUsedNodes(node);
-        notifyListener();
+        Job favNodeAdder = new KNIMEJob("Favorite Node Adder", FrameworkUtil.getBundle(NodeUsageRegistry.class)) {
+            @Override
+            protected IStatus run(final IProgressMonitor monitor) {
+                notifyListener();
+                return Status.OK_STATUS;
+            }
+        };
+        favNodeAdder.setSystem(true);
+        favNodeAdder.schedule();
     }
 
     private static void addToLastUsedNodes(final NodeTemplate node) {
