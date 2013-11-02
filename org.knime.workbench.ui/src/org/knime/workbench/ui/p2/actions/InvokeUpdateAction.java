@@ -50,6 +50,16 @@
  */
 package org.knime.workbench.ui.p2.actions;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.equinox.internal.p2.ui.dialogs.UpdateSingleIUWizard;
 import org.eclipse.equinox.p2.operations.UpdateOperation;
 import org.eclipse.equinox.p2.ui.LoadMetadataRepositoryJob;
@@ -58,6 +68,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Custom action to open the install wizard.
@@ -66,6 +77,8 @@ import org.eclipse.ui.PlatformUI;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class InvokeUpdateAction extends AbstractP2Action {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(InvokeUpdateAction.class);
+
     private static final String ID = "INVOKE_UPDATE_ACTION";
 
     /**
@@ -75,9 +88,60 @@ public class InvokeUpdateAction extends AbstractP2Action {
         super("Update KNIME...", "Checks for KNIME updates", ID);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected void openWizard(final LoadMetadataRepositoryJob job,
-            final ProvisioningUI provUI) {
+    public void run() {
+        if (!checkSDKAndReadOnly()) {
+            return;
+        }
+        final ProvisioningUI provUI = ProvisioningUI.getDefaultUI();
+        URI[] repositories = provUI.getRepositoryTracker().getKnownRepositories(provUI.getSession());
+        List<URI> nextVersionRepositories = new ArrayList<URI>();
+        String newVersion = null;
+        for (URI uri : repositories) {
+            if (uri.getHost().endsWith(".knime.org")) {
+                try {
+                    URL nextVersionURL = new URL(uri.toString() + "/nextRelease.txt");
+                    HttpURLConnection conn = (HttpURLConnection)nextVersionURL.openConnection();
+                    conn.setConnectTimeout(5000);
+                    conn.connect();
+                    if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+                        String reposURL = in.readLine();
+                        String version = in.readLine();
+                        if (version != null) {
+                            newVersion = version;
+                        }
+                        in.close();
+                        nextVersionRepositories.add(new URI(reposURL));
+                    }
+                    conn.disconnect();
+                } catch (URISyntaxException ex) {
+                    // should not happen
+                    LOGGER.error("Error while checking for new update sites: " + ex.getMessage(), ex);
+                } catch (IOException ex) {
+                    LOGGER.error("I/O error while checking for new update sites: " + ex.getMessage(), ex);
+                }
+            }
+        }
+
+        if (!nextVersionRepositories.isEmpty()) {
+            Shell shell = PlatformUI.getWorkbench().getModalDialogShellProvider().getShell();
+            boolean yes = MessageDialog.openQuestion(shell, "New KNIME release available",
+                "KNIME " + newVersion + " is available. Do you want to upgrade to the new version?");
+            if (yes) {
+                for (URI uri : nextVersionRepositories) {
+                    provUI.getRepositoryTracker().addRepository(uri, null, provUI.getSession());
+                }
+            }
+        }
+        startLoadJob();
+    }
+
+    @Override
+    protected void openWizard(final LoadMetadataRepositoryJob job, final ProvisioningUI provUI) {
         final UpdateOperation operation = provUI.getUpdateOperation(null, null);
         // check for updates
         operation.resolveModal(null);
@@ -85,18 +149,13 @@ public class InvokeUpdateAction extends AbstractP2Action {
         PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
             @Override
             public void run() {
-                Shell shell =
-                        PlatformUI.getWorkbench().getModalDialogShellProvider()
-                                .getShell();
+                Shell shell = PlatformUI.getWorkbench().getModalDialogShellProvider().getShell();
                 if (!operation.hasResolved()) {
-                    MessageDialog.openInformation(shell, "Update KNIME...",
-                            "No updates were found");
-                } else if (provUI.getPolicy().continueWorkingWithOperation(
-                        operation, shell)) {
+                    MessageDialog.openInformation(shell, "Update KNIME...", "No updates were found");
+                } else if (provUI.getPolicy().continueWorkingWithOperation(operation, shell)) {
                     if (UpdateSingleIUWizard.validFor(operation)) {
                         // Special case for only updating a single root
-                        UpdateSingleIUWizard wizard =
-                                new UpdateSingleIUWizard(provUI, operation);
+                        UpdateSingleIUWizard wizard = new UpdateSingleIUWizard(provUI, operation);
                         WizardDialog dialog = new WizardDialog(shell, wizard);
                         dialog.create();
                         dialog.open();

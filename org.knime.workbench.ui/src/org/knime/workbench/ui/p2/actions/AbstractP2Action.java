@@ -67,51 +67,21 @@ import org.eclipse.ui.PlatformUI;
  * @author Thorsten Meinl, University of Konstanz
  */
 public abstract class AbstractP2Action extends Action {
-    protected AbstractP2Action(final String text, final String description,
-            final String id) {
+    protected AbstractP2Action(final String text, final String description, final String id) {
         super(text);
         setDescription(description);
         setId(id);
     }
 
     /**
-     * {@inheritDoc}
+     * Starts the repository load job. After the repositories have been loaded,
+     * {@link #openWizard(LoadMetadataRepositoryJob, ProvisioningUI)} is called.
      */
-    @Override
-    public void run() {
+    protected final void startLoadJob() {
         final ProvisioningUI provUI = ProvisioningUI.getDefaultUI();
-        if (provUI.getRepositoryTracker() == null) {
-            MessageBox mbox =
-                    new MessageBox(ProvUI.getDefaultParentShell(),
-                            SWT.ICON_WARNING | SWT.OK);
-            mbox.setText("Action impossible");
-            mbox.setMessage("It seems you are running KNIME from an SDK. "
-                    + "Installing extension is not possible in this case.");
-            mbox.open();
-            return;
-        }
-        String installLocation = Platform.getInstallLocation().getURL().toString();
-        String configurationLocation = Platform.getConfigurationLocation().getURL().toString();
-
-        if (!configurationLocation.contains(installLocation)) {
-            MessageBox mbox =
-                    new MessageBox(ProvUI.getDefaultParentShell(),
-                            SWT.ICON_WARNING | SWT.YES  | SWT.NO);
-            mbox.setText("Permission problem");
-            mbox.setMessage("Your KNIME installation directory seems to be "
-                    + "read-only, maybe because KNIME was installed by a "
-                    + "different user. Installing extensions or updating KNIME "
-                    + "may cause problems. Do you really want to continue?");
-            if (mbox.open() == SWT.NO) {
-                return;
-            }
-        }
-
         Job.getJobManager().cancel(LoadMetadataRepositoryJob.LOAD_FAMILY);
-        final LoadMetadataRepositoryJob loadJob =
-                new LoadMetadataRepositoryJob(provUI);
-        loadJob.setProperty(LoadMetadataRepositoryJob.ACCUMULATE_LOAD_ERRORS,
-                Boolean.toString(true));
+        final LoadMetadataRepositoryJob loadJob = new LoadMetadataRepositoryJob(provUI);
+        loadJob.setProperty(LoadMetadataRepositoryJob.ACCUMULATE_LOAD_ERRORS, Boolean.toString(true));
 
         loadJob.addJobChangeListener(new JobChangeAdapter() {
             @Override
@@ -126,12 +96,42 @@ public abstract class AbstractP2Action extends Action {
     }
 
     /**
-     * This is called when a wizard (install, update, ...) should be opened.
-     * Subclasses must override this method and open the desired wizard.
+     * Checks whether the current instance is run from an SDK and if the configuration area is writable.
+     *
+     * @return <code>true</code> if the action should continue, <code>false</code> if it should be aborted
+     */
+    protected final boolean checkSDKAndReadOnly() {
+        final ProvisioningUI provUI = ProvisioningUI.getDefaultUI();
+        if (provUI.getRepositoryTracker() == null) {
+            MessageBox mbox = new MessageBox(ProvUI.getDefaultParentShell(), SWT.ICON_WARNING | SWT.OK);
+            mbox.setText("Action impossible");
+            mbox.setMessage("It seems you are running KNIME from an SDK. "
+                + "Installing extension is not possible in this case.");
+            mbox.open();
+            return false;
+        }
+
+        String installLocation = Platform.getInstallLocation().getURL().toString();
+        String configurationLocation = Platform.getConfigurationLocation().getURL().toString();
+
+        if (!configurationLocation.contains(installLocation)) {
+            MessageBox mbox = new MessageBox(ProvUI.getDefaultParentShell(), SWT.ICON_WARNING | SWT.YES | SWT.NO);
+            mbox.setText("Permission problem");
+            mbox.setMessage("Your KNIME installation directory seems to be "
+                + "read-only, maybe because KNIME was installed by a "
+                + "different user. Installing extensions or updating KNIME "
+                + "may cause problems. Do you really want to continue?");
+            return (mbox.open() == SWT.YES);
+        }
+        return true;
+    }
+
+    /**
+     * This is called when a wizard (install, update, ...) should be opened. Subclasses must override this method and
+     * open the desired wizard.
      *
      * @param job the repository job
      * @param provUI the provisioning UI instance
      */
-    protected abstract void openWizard(final LoadMetadataRepositoryJob job,
-            ProvisioningUI provUI);
+    protected abstract void openWizard(final LoadMetadataRepositoryJob job, ProvisioningUI provUI);
 }

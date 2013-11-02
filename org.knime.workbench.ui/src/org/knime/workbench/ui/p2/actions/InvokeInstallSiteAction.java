@@ -71,6 +71,17 @@ public class InvokeInstallSiteAction extends AbstractP2Action {
                 + "install additional KNIME features.", ID);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void run() {
+        if (!checkSDKAndReadOnly()) {
+            return;
+        }
+        startLoadJob();
+    }
+
     @Override
     protected void openWizard(final LoadMetadataRepositoryJob job,
             final ProvisioningUI provUI) {
