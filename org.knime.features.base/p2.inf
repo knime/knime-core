@@ -1,15 +1,40 @@
-#
-#Mon Jan 28 12:11:18 CET 2013
 provides.1.name=org.knime.features.explorer.feature.group
 provides.1.version=2.5.2.99999
+provides.1.namespace=org.eclipse.equinox.p2.iu
+
+# This is the new content for 2.9, but it doesn't exist yet
+#instructions.configure=org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.9/);\
+#  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.9/);\
+#  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.9/,enabled\:true,name\:KNIME Update Site);\
+#  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.9/,enabled\:true,name\:KNIME Update Site);\
+#  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//tech.knime.org/update/community-contributions/2.9/,enabled\:false,name\:Stable Community Contributions);\
+#  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//tech.knime.org/update/community-contributions/2.9/,enabled\:false,name\:Stable Community Contributions);\
+#  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//tech.knime.org/update/community-contributions/trusted/2.9/,enabled\:true,name\:Trusted Community Contributions);\
+#  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//tech.knime.org/update/community-contributions/trusted/2.9/,enabled\:true,name\:Trusted Community Contributions);\
+#  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/commercial/server/3.8/,enabled\:false,name\:KNIME Server Update Site);\
+#  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/commercial/server/3.8/,enabled\:false,name\:KNIME Server Update Site);\
+#  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/commercial/teamspace/3.2/,enabled\:false,name\:KNIME Teamspace Update Site);\
+#  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/commercial/teamspace/3.2/,enabled\:false,name\:KNIME Teamspace Update Site);
+
 instructions.configure=org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.8/);\
   org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.8/);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.8/,enabled\:true);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.8/,enabled\:true);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.8/fixed);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.8/fixed);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.8/fixed,enabled\:true);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.8/fixed,enabled\:true);\  
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//tech.knime.org/update/community-contributions/2.8/,enabled\:false);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//tech.knime.org/update/community-contributions/2.8/,enabled\:false);
-provides.1.namespace=org.eclipse.equinox.p2.iu
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.8/,enabled\:true,name\:KNIME Update Site);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.8/,enabled\:true,name\:KNIME Update Site);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//tech.knime.org/update/community-contributions/2.8/,enabled\:false,name\:Stable Community Contributions);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//tech.knime.org/update/community-contributions/2.8/,enabled\:false,name\:Stable Community Contributions);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/commercial/server/3.7/,enabled\:false,name\:KNIME Server Update Site);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/commercial/server/3.7/,enabled\:false,name\:KNIME Server Update Site);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/commercial/teamspace/3.2/,enabled\:false,name\:KNIME Teamspace Update Site);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/commercial/teamspace/3.2/,enabled\:false,name\:KNIME Teamspace Update Site);
+
+
+instructions.unconfigure=org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.9/);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.9/);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:0,location\:http${\#58}//tech.knime.org/update/community-contributions/2.9/);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:1,location\:http${\#58}//tech.knime.org/update/community-contributions/2.9/);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:0,location\:http${\#58}//tech.knime.org/update/community-contributions/trusted/2.9/);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:1,location\:http${\#58}//tech.knime.org/update/community-contributions/trusted/2.9/);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:0,location\:http${\#58}//www.knime.org/commercial/server/3.8/);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:1,location\:http${\#58}//www.knime.org/commercial/server/3.8/);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:0,location\:http${\#58}//www.knime.org/commercial/teamspace/3.2/);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:1,location\:http${\#58}//www.knime.org/commercial/teamspace/3.2/);
