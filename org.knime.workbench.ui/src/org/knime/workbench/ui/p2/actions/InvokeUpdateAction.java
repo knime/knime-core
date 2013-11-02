@@ -129,8 +129,10 @@ public class InvokeUpdateAction extends AbstractP2Action {
 
         if (!nextVersionRepositories.isEmpty()) {
             Shell shell = PlatformUI.getWorkbench().getModalDialogShellProvider().getShell();
-            boolean yes = MessageDialog.openQuestion(shell, "New KNIME release available",
-                "KNIME " + newVersion + " is available. Do you want to upgrade to the new version?");
+            boolean yes =
+                MessageDialog.openQuestion(shell, "New KNIME release available", ((newVersion != null) ? "KNIME "
+                    + newVersion + " is available." : "A new KNIME version is available.")
+                    + " Do you want to upgrade to the new version?");
             if (yes) {
                 for (URI uri : nextVersionRepositories) {
                     provUI.getRepositoryTracker().addRepository(uri, null, provUI.getSession());
