@@ -63,10 +63,18 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.PlatformUI;
 
 /**
+ * Abstract action for p2 related tasks (installing new extensions or updating, e.g.).
  *
  * @author Thorsten Meinl, University of Konstanz
  */
 public abstract class AbstractP2Action extends Action {
+    /**
+     * Creates a new action.
+     *
+     * @param text the actions name as shown in the menu
+     * @param description a description for the action
+     * @param id a unique id
+     */
     protected AbstractP2Action(final String text, final String description, final String id) {
         super(text);
         setDescription(description);
