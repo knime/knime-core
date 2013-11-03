@@ -48,6 +48,9 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Collections;
+import java.util.Map;
+
 
 
 /**
@@ -62,6 +65,10 @@ public final class WorkflowCopyContent {
     private WorkflowAnnotation[] m_annotations;
     /** see {@link #setIncludeInOutConnections(boolean)}. */
     private boolean m_isIncludeInOutConnections;
+    /** A map which maps old NodeID to preferred ID suffix in the target wfm. Used for template loading. */
+    private Map<NodeID, Integer> m_suggestedNodeIDSuffixMap;
+    /** A map which maps old NodeID to UI infos in the target wfm. Used for template loading. */
+    private Map<NodeID, NodeUIInformation> m_uiInfoMap;
 
     /** @return the ids */
     public NodeID[] getNodeIDs() {
@@ -71,6 +78,34 @@ public final class WorkflowCopyContent {
     /** @param ids the ids to set */
     public void setNodeIDs(final NodeID... ids) {
         m_nodeIDs = ids;
+    }
+
+    /** Used when copying from meta node template space.
+     * @param id The ID of the meta node in the template root workflow
+     * @param suggestedNodeIDSuffix The suffix to be used in the target workflow (overwrite it)
+     * @param uiInfo The UIInfo the in the target workflow (also overwritten)
+     * @return this
+     */
+    WorkflowCopyContent setNodeID(final NodeID id, final int suggestedNodeIDSuffix, final NodeUIInformation uiInfo) {
+        m_nodeIDs = new NodeID[] {id};
+        m_suggestedNodeIDSuffixMap = Collections.singletonMap(id, suggestedNodeIDSuffix);
+        m_uiInfoMap = Collections.singletonMap(id, uiInfo);
+        return this;
+    }
+
+    /** The overwritten NodeID suffix to the given node or null if not overwritten.
+     * @param id The ID in question.
+     * @return Null or the suffix. */
+    Integer getSuggestedNodIDSuffix(final NodeID id) {
+        return m_suggestedNodeIDSuffixMap == null ? null : m_suggestedNodeIDSuffixMap.get(id);
+    }
+
+    /** Get overwritten UIInfo to node with given ID or null.
+     * @param id ...
+     * @return ...
+     */
+    NodeUIInformation getOverwrittenUIInfo(final NodeID id) {
+        return m_uiInfoMap == null ? null : m_uiInfoMap.get(id);
     }
 
     /** see {@link #setIncludeInOutConnections(boolean)}.

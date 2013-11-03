@@ -58,8 +58,6 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.MetaNodeTemplateInformation;
-import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -109,12 +107,12 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
             NodeContainer nc = hostWFM.findNodeContainer(id);
             if (nc instanceof WorkflowManager) {
                 WorkflowManager wm = (WorkflowManager)nc;
-                MetaNodeTemplateInformation lI = wm.getTemplateInformation();
-                if (UpdateStatus.HasUpdate.equals(lI.getUpdateStatus())) {
+                final WorkflowManager parent = wm.getParent();
+                if (parent.hasUpdateableMetaNodeLink(id)) {
                     containsUpdateableMN = true;
-                    if (!wm.getParent().canUpdateMetaNodeLink(wm.getID())) {
-                        return false;
-                    }
+                }
+                if (!parent.canUpdateMetaNodeLink(id)) {
+                    return false;
                 }
             }
         }

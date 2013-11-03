@@ -74,7 +74,7 @@ implements NodeContainerMetaPersistor {
     private final NodeSettingsRO m_jobManagerSettings;
     private final InternalNodeContainerState m_state;
     private final NodeMessage m_nodeMessage;
-    private final NodeUIInformation m_uiInformation;
+    private NodeUIInformation m_uiInformation;
     private final boolean m_isDeletable;
     private final ReferencedFile m_ncDirRef;
 
@@ -216,11 +216,13 @@ implements NodeContainerMetaPersistor {
     /** {@inheritDoc} */
     @Override
     public void setNodeIDSuffix(final int nodeIDSuffix) {
+        m_nodeIDSuffix = nodeIDSuffix;
     }
 
     /** {@inheritDoc} */
     @Override
     public void setUIInfo(final NodeUIInformation uiInfo) {
+        m_uiInformation = uiInfo;
     }
 
 }

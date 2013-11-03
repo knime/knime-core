@@ -56,7 +56,6 @@ import java.util.Date;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 
 
 /**
@@ -282,7 +281,22 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         default:
         }
         return b.toString();
-    };
+    }
+
+    /** Checks if this template or link has a newer timestamp than the argument.
+     * @param other Other to check.
+     * @return True if newer than argument
+     * @throws IllegalStateException If this and/or other is not a link or template.
+     */
+    boolean isNewerThan(final MetaNodeTemplateInformation other) {
+        if (m_timestamp == null) {
+            throw new IllegalStateException("Not a template or link: " + this);
+        }
+        if (other.m_timestamp == null) {
+            throw new IllegalStateException("Argument not a template or link: " + this);
+        }
+        return m_timestamp.after(other.m_timestamp);
+    }
 
     /** @return A new template info representing the template itself. The time
      * stamp is set to the current time. */
