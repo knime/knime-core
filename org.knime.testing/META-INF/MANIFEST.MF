@@ -35,6 +35,6 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)",
  org.knime.core.data.uritype;bundle-version="[2.8.0,3.0.0)",
  org.knime.ext.svg;bundle-version="[2.8.0,3.0.0)",
  com.knime.enterprise.client.filesystem;bundle-version="[3.8.0,4.0.0)";resolution:=optional
+Eclipse-RegisterBuddy: org.knime.base
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Eclipse-RegisterBuddy: org.knime.base
