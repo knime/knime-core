@@ -125,6 +125,9 @@ public final class ImageRepository {
         ExpandAll("icons/expandall.png"),
         /** Icon for synching a tree with another selection. */
         Synch("icons/sync.png"),
+        /** Icon for refreshing a component. */
+        Refresh("icons/refresh.gif"),
+
 
         /** Icon for a folder. */
         Folder("icons/folder.png"),
