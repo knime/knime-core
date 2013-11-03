@@ -127,6 +127,8 @@ public final class ImageRepository {
         Synch("icons/sync.png"),
         /** Icon for refreshing a component. */
         Refresh("icons/refresh.gif"),
+        /** Icon for a history view. */
+        History("icons/history.png"),
 
 
         /** Icon for a folder. */
