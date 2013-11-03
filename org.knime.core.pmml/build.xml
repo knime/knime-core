@@ -42,6 +42,7 @@
 	</target>
 	
 	<target name="clean-jar" unless="isWindows">
-		<delete file="lib/schemas.jar" />	
+		<truncate file="lib/schemas.jar" />
+		<touch file="lib/schemas.jar" millis="0"/>
 	</target>
 </project>

@@ -24,7 +24,8 @@
 	</target>
 
 	<target name="clean">
-		<delete file="lib/schemas.jar" />
+		<truncate file="lib/schemas.jar" />
+		<touch file="lib/schemas.jar" millis="0"/>
 		<delete dir="src/xmlbeans">
 			<include name="**/*" />
 		</delete>
