@@ -212,7 +212,9 @@ public final class ImageRepository {
         ServerUploadWorkflow("icons/server_space/upload_wf.png"),
         /** ServerSpace Explorer Menu Icon: edit meta info. */
         ServerPermissions("icons/server_space/key.png"),
-        /** ServerSpace Explorer Icon: server root. */
+        /** ServerSpace Explorer Menu Icon: create a snapshot. */
+        ServerSnapshot("icons/server_space/snapshot.png"),
+        /** ServerSpace Explorer Icon: idle job. */
         TeamSpaceIcon("icons/team_space/explorer_teamspace.png"),
         /** LocalSpace Explorer Icon: server root. */
         LocalSpaceIcon("icons/workflow_projects.png");
