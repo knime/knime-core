@@ -60,12 +60,17 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.equinox.internal.p2.ui.dialogs.UpdateSingleIUWizard;
 import org.eclipse.equinox.p2.operations.UpdateOperation;
 import org.eclipse.equinox.p2.ui.LoadMetadataRepositoryJob;
 import org.eclipse.equinox.p2.ui.ProvisioningUI;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.WizardDialog;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
@@ -77,6 +82,81 @@ import org.knime.core.node.NodeLogger;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class InvokeUpdateAction extends AbstractP2Action {
+    private class NewReleaseCheckerJob extends Job {
+        NewReleaseCheckerJob() {
+            super("KNIME release checker");
+            setUser(true);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected IStatus run(final IProgressMonitor monitor) {
+            final ProvisioningUI provUI = ProvisioningUI.getDefaultUI();
+            URI[] repositories = provUI.getRepositoryTracker().getKnownRepositories(provUI.getSession());
+
+            monitor.beginTask("Checking for new KNIME release", repositories.length);
+
+            final List<URI> nextVersionRepositories = new ArrayList<URI>();
+            String newVersion = null;
+            for (URI uri : repositories) {
+                if (monitor.isCanceled()) {
+                    break;
+                }
+                if (uri.getHost().endsWith(".knime.org")) {
+                    try {
+                        URL nextVersionURL = new URL(uri.toString() + "/nextRelease.txt");
+                        monitor.subTask("Checking " + nextVersionURL);
+
+                        HttpURLConnection conn = (HttpURLConnection)nextVersionURL.openConnection();
+                        conn.setConnectTimeout(5000);
+                        conn.connect();
+                        if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                            BufferedReader in =
+                                new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+                            String reposURL = in.readLine();
+                            String version = in.readLine();
+                            if (version != null) {
+                                newVersion = version;
+                            }
+                            in.close();
+                            nextVersionRepositories.add(new URI(reposURL));
+                        }
+                        conn.disconnect();
+                    } catch (URISyntaxException ex) {
+                        // should not happen
+                        LOGGER.error("Error while checking for new update sites: " + ex.getMessage(), ex);
+                    } catch (IOException ex) {
+                        LOGGER.error("I/O error while checking for new update sites: " + ex.getMessage(), ex);
+                    }
+                }
+                monitor.worked(1);
+            }
+
+            if (!nextVersionRepositories.isEmpty()) {
+                final String v = newVersion;
+                Display.getDefault().syncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        Shell shell = PlatformUI.getWorkbench().getModalDialogShellProvider().getShell();
+                        boolean yes =
+                            MessageDialog.openQuestion(shell, "New KNIME release available", ((v != null) ? "KNIME "
+                                + v + " is available." : "A new KNIME version is available.")
+                                + " Do you want to upgrade to the new version?");
+                        if (yes) {
+                            for (URI uri : nextVersionRepositories) {
+                                provUI.getRepositoryTracker().addRepository(uri, null, provUI.getSession());
+                            }
+                        }
+                    }
+                });
+            }
+            startLoadJob();
+            return Status.OK_STATUS;
+        }
+    }
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(InvokeUpdateAction.class);
 
     private static final String ID = "INVOKE_UPDATE_ACTION";
@@ -96,50 +176,8 @@ public class InvokeUpdateAction extends AbstractP2Action {
         if (!checkSDKAndReadOnly()) {
             return;
         }
-        final ProvisioningUI provUI = ProvisioningUI.getDefaultUI();
-        URI[] repositories = provUI.getRepositoryTracker().getKnownRepositories(provUI.getSession());
-        List<URI> nextVersionRepositories = new ArrayList<URI>();
-        String newVersion = null;
-        for (URI uri : repositories) {
-            if (uri.getHost().endsWith(".knime.org")) {
-                try {
-                    URL nextVersionURL = new URL(uri.toString() + "/nextRelease.txt");
-                    HttpURLConnection conn = (HttpURLConnection)nextVersionURL.openConnection();
-                    conn.setConnectTimeout(5000);
-                    conn.connect();
-                    if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
-                        String reposURL = in.readLine();
-                        String version = in.readLine();
-                        if (version != null) {
-                            newVersion = version;
-                        }
-                        in.close();
-                        nextVersionRepositories.add(new URI(reposURL));
-                    }
-                    conn.disconnect();
-                } catch (URISyntaxException ex) {
-                    // should not happen
-                    LOGGER.error("Error while checking for new update sites: " + ex.getMessage(), ex);
-                } catch (IOException ex) {
-                    LOGGER.error("I/O error while checking for new update sites: " + ex.getMessage(), ex);
-                }
-            }
-        }
 
-        if (!nextVersionRepositories.isEmpty()) {
-            Shell shell = PlatformUI.getWorkbench().getModalDialogShellProvider().getShell();
-            boolean yes =
-                MessageDialog.openQuestion(shell, "New KNIME release available", ((newVersion != null) ? "KNIME "
-                    + newVersion + " is available." : "A new KNIME version is available.")
-                    + " Do you want to upgrade to the new version?");
-            if (yes) {
-                for (URI uri : nextVersionRepositories) {
-                    provUI.getRepositoryTracker().addRepository(uri, null, provUI.getSession());
-                }
-            }
-        }
-        startLoadJob();
+        new NewReleaseCheckerJob().schedule();
     }
 
     @Override
