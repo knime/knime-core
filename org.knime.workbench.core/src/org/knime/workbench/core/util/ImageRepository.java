@@ -221,6 +221,8 @@ public final class ImageRepository {
         ServerPermissions("icons/server_space/key.png"),
         /** ServerSpace Explorer Menu Icon: create a snapshot. */
         ServerSnapshot("icons/server_space/snapshot.png"),
+        /** ServerSpace Explorer Menu Icon: replace head with snapshot. */
+        ServerReplaceHead("icons/server_space/replace_head.png"),
         /** ServerSpace Explorer Icon: idle job. */
         TeamSpaceIcon("icons/team_space/explorer_teamspace.png"),
         /** LocalSpace Explorer Icon: server root. */
