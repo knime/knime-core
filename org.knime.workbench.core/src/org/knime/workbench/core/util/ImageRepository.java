@@ -223,6 +223,8 @@ public final class ImageRepository {
         ServerSnapshot("icons/server_space/snapshot.png"),
         /** ServerSpace Explorer Menu Icon: replace head with snapshot. */
         ServerReplaceHead("icons/server_space/replace_head.png"),
+        /** ServerSpace Explorer Menu Icon: download something from the server. */
+        ServerDownload("icons/server_space/download.png"),
         /** ServerSpace Explorer Icon: idle job. */
         TeamSpaceIcon("icons/team_space/explorer_teamspace.png"),
         /** LocalSpace Explorer Icon: server root. */
