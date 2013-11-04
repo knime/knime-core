@@ -129,6 +129,8 @@ public final class ImageRepository {
         Refresh("icons/refresh.gif"),
         /** Icon for a history view. */
         History("icons/history.png"),
+        /** Icon for delete. */
+        Delete("icons/delete.png"),
 
 
         /** Icon for a folder. */
