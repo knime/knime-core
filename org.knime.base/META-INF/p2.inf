@@ -1,0 +1,5 @@
+# This helps resolving javax.mail.glassfish correctly because it does not have an explicit
+# dependency on javax.activation.
+requires.0.name=javax.activation
+requires.0.range=[1.1.0, 2.0.0)
+requires.0.namespace=osgi.bundle
