@@ -389,14 +389,7 @@ public final class NodeLogger {
      * @return A new logger for this Class.
      */
     public static NodeLogger getLogger(final Class<?> c) {
-        String s = c.getName();
-        if (LOGGERS.containsKey(s)) {
-            return LOGGERS.get(s);
-        } else {
-            NodeLogger logger = new NodeLogger(c);
-            LOGGERS.put(s, logger);
-            return logger;
-        }
+        return getLogger(c.getName());
     }
 
     /**
@@ -406,12 +399,14 @@ public final class NodeLogger {
      * @return A new logger for the given name.
      */
     public static NodeLogger getLogger(final String s) {
-        if (LOGGERS.containsKey(s)) {
-            return LOGGERS.get(s);
-        } else {
-            NodeLogger logger = new NodeLogger(s);
-            LOGGERS.put(s, logger);
-            return logger;
+        synchronized (LOGGERS) {
+            if (LOGGERS.containsKey(s)) {
+                return LOGGERS.get(s);
+            } else {
+                NodeLogger logger = new NodeLogger(s);
+                LOGGERS.put(s, logger);
+                return logger;
+            }
         }
     }
 
@@ -589,21 +584,24 @@ public final class NodeLogger {
      */
     public static void addWriter(final Writer writer,
             final LEVEL minLevel, final LEVEL maxLevel) {
-        // remove the writer first if existent
-        if (WRITER.containsKey(writer)) {
-            Appender a = WRITER.get(writer);
-            Logger.getRootLogger().removeAppender(a);
-            WRITER.remove(writer);
-        }
-        // register new appender
         WriterAppender app = new WriterAppender(new PatternLayout("%-5p\t %-30c{1}\t %." + MAX_CHARS + "m\n"), writer);
         app.setImmediateFlush(true);
         LevelRangeFilter filter = new LevelRangeFilter();
         filter.setLevelMin(transLEVEL(minLevel));
         filter.setLevelMax(transLEVEL(maxLevel));
         app.addFilter(filter);
+
+        // remove the writer first if existent
+        synchronized(WRITER) {
+            if (WRITER.containsKey(writer)) {
+                Appender a = WRITER.get(writer);
+                Logger.getRootLogger().removeAppender(a);
+                WRITER.remove(writer);
+            }
+            // register new appender
+            WRITER.put(writer, app);
+        }
         Logger.getRootLogger().addAppender(app);
-        WRITER.put(writer, app);
     }
 
     /**
@@ -612,15 +610,17 @@ public final class NodeLogger {
      * @param writer The Writer to remove.
      */
     public static void removeWriter(final Writer writer) {
-        Appender o = WRITER.get(writer);
-        if (o != null) {
-            if (o != FILE_APPENDER) {
-                Logger.getRootLogger().removeAppender(o);
-                WRITER.remove(writer);
+        synchronized(WRITER) {
+            Appender o = WRITER.get(writer);
+            if (o != null) {
+                if (o != FILE_APPENDER) {
+                    Logger.getRootLogger().removeAppender(o);
+                    WRITER.remove(writer);
+                }
+            } else {
+                getLogger(NodeLogger.class).warn(
+                        "Could not delete writer: " + writer);
             }
-        } else {
-            getLogger(NodeLogger.class).warn(
-                    "Could not delete writer: " + writer);
         }
     }
 
