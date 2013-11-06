@@ -5,8 +5,8 @@ provides.1.namespace=org.eclipse.equinox.p2.iu
 # This is the new content for 2.9, but it doesn't exist yet
 instructions.configure=org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.9/);\
   org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.9/);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.9/,enabled\:true,name\:KNIME Update Site);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.9/,enabled\:true,name\:KNIME Update Site);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.9/,enabled\:true,name\:KNIME Desktop Update Site);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.9/,enabled\:true,name\:KNIME Desktop Update Site);\
   org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//tech.knime.org/update/community-contributions/2.9/,enabled\:false,name\:Stable Community Contributions);\
   org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//tech.knime.org/update/community-contributions/2.9/,enabled\:false,name\:Stable Community Contributions);\
   org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//tech.knime.org/update/community-contributions/trusted/2.9/,enabled\:true,name\:Trusted Community Contributions);\
