@@ -60,9 +60,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -196,6 +200,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     private JRadioButton m_patternButton;
 
+    private TreeMap<Integer, String> m_typePriorities = new TreeMap<Integer, String>();
+
     /**
      * Creates a panel allowing the user to select elements.
      */
@@ -231,8 +237,13 @@ public abstract class NameFilterPanel<T> extends JPanel {
         super(new GridLayout(1, 1));
         m_filter = filter;
         m_patternPanel = new PatternFilterPanelImpl();
-        m_patternButton = createButtonToFilterPanel(
-            PatternFilterConfigurationImpl.TYPE, "Name Pattern Selection", m_patternPanel);
+        m_patternPanel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                fireFilteringChangedEvent();
+            }
+        });
+        m_patternButton = createButtonToFilterPanel(PatternFilterConfigurationImpl.TYPE, "Wildcard/Regex Selection");
 
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
         final JPanel buttonPan = new JPanel();
@@ -456,6 +467,11 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_addButton.setEnabled(enabled);
         m_enforceInclusion.setEnabled(enabled);
         m_enforceExclusion.setEnabled(enabled);
+        Enumeration<AbstractButton> buttons = m_typeGroup.getElements();
+        while (buttons.hasMoreElements()) {
+            buttons.nextElement().setEnabled(enabled);
+        }
+        m_patternPanel.setEnabled(enabled);
     }
 
     /**
@@ -601,7 +617,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         try {
             config.setType(m_currentType);
         } catch (InvalidSettingsException e) {
-            NodeLogger.getLogger(getClass()).coding("Could not save settings as the selected filter type '" 
+            NodeLogger.getLogger(getClass()).coding("Could not save settings as the selected filter type '"
                     + m_currentType + "' - this was a valid type when the configuration was loaded");
         }
         m_patternPanel.saveConfiguration(config.getPatternConfig());
@@ -797,12 +813,29 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * Adds the type to the given radio button. Used by subclasses to add a different type of filtering.
      *
      * @param radioButton Radio button to the type that will be added.
+     * @param priority the priority of this type (the bigger, the further to the right). The priority of the default
+     * type is 0 while the others are usually their FILTER_BY_X flags. If the given priority is already present than a
+     * priority bigger then the currently biggest will be used.
      * @see NameFilterConfiguration#setType(String)
      * @since 2.9
      */
-    protected void addType(final JRadioButton radioButton) {
+    protected void addType(final JRadioButton radioButton, final int priority) {
+        int correctPriority = priority;
+        if (m_typePriorities.containsKey(priority)) {
+            correctPriority = m_typePriorities.lastKey() + 1;
+        }
+        m_typePriorities.put(correctPriority, radioButton.getActionCommand());
         m_typeGroup.add(radioButton);
-        m_typePanel.add(radioButton);
+        m_typePanel.removeAll();
+        Map<String, AbstractButton> buttonMap = new LinkedHashMap<String, AbstractButton>();
+        Enumeration<AbstractButton> buttons = m_typeGroup.getElements();
+        while (buttons.hasMoreElements()) {
+            AbstractButton button = buttons.nextElement();
+            buttonMap.put(button.getActionCommand(), button);
+        }
+        for (String type : m_typePriorities.values()) {
+            m_typePanel.add(buttonMap.get(type));
+        }
         updateTypePanel();
     }
 
@@ -815,6 +848,13 @@ public abstract class NameFilterPanel<T> extends JPanel {
     protected void removeType(final JRadioButton radioButton) {
         m_typeGroup.remove(radioButton);
         m_typePanel.remove(radioButton);
+        String type = radioButton.getActionCommand();
+        for (Entry<Integer, String> entry : m_typePriorities.entrySet()) {
+            if (type.equals(entry.getValue())) {
+                m_typePriorities.remove(entry.getKey());
+                break;
+            }
+        }
         // Reset to default type if current type has been removed
         if (m_currentType.equals(radioButton.getActionCommand())) {
             m_currentType = NameFilterConfiguration.TYPE;
@@ -839,20 +879,23 @@ public abstract class NameFilterPanel<T> extends JPanel {
      *
      * The created button will be initialized with the correct description, and action listener.
      *
-     * @param filterPanel The filter panel
+     * @param actionCommand The action command that identifies the type that this button belongs to
+     * @param label The label of this button that is shown to the user
      * @return The JRadioButton
      * @since 2.9
      */
-    @SuppressWarnings("rawtypes")
-    protected JRadioButton createButtonToFilterPanel(final String actionCommand, final String label,
-        final JPanel filterPanel) {
+    protected JRadioButton createButtonToFilterPanel(final String actionCommand, final String label) {
         JRadioButton button = new JRadioButton(label);
         button.setActionCommand(actionCommand);
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
                 if (e.getActionCommand() != null) {
+                    String oldType = m_currentType;
                     m_currentType = e.getActionCommand();
+                    if (!m_currentType.equals(oldType)) {
+                        fireFilteringChangedEvent();
+                    }
                     updateFilterPanel();
                 }
             }
@@ -860,7 +903,12 @@ public abstract class NameFilterPanel<T> extends JPanel {
         return button;
     }
 
-    private void fireFilteringChangedEvent() {
+    /**
+     * Informs the registered listeners of changes to the configuration.
+     *
+     * @since 2.9
+     */
+    protected void fireFilteringChangedEvent() {
         if (m_listeners != null) {
             for (ChangeListener listener : m_listeners) {
                 listener.stateChanged(new ChangeEvent(this));
@@ -970,19 +1018,9 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_typeGroup = new ButtonGroup();
         m_typePanel = new JPanel();
         m_typePanel.setLayout(new BoxLayout(m_typePanel, BoxLayout.X_AXIS));
-        m_nameButton = new JRadioButton(NAME);
-        m_typeGroup.add(m_nameButton);
-        m_typePanel.add(m_nameButton);
-        m_nameButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                if (e.getActionCommand() != null) {
-                    m_currentType = e.getActionCommand();
-                    updateFilterPanel();
-                }
-            }
-        });
-        m_nameButton.setActionCommand(NameFilterConfiguration.TYPE);
+        m_nameButton = createButtonToFilterPanel(NameFilterConfiguration.TYPE, NAME);
+        // Default has priority 0 which is smaller than FILTER_BY_NAMEPATTERN
+        addType(m_nameButton, 0);
         // Setup the filter panel which will contain the filter for the selected mode
         m_filterPanel = new JPanel();
         JScrollPane scrollPane = new JScrollPane(m_filterPanel);
@@ -1032,7 +1070,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         boolean wasEnabled = Collections.list(m_typeGroup.getElements()).contains(m_patternButton);
         if (wasEnabled != enabled) {
             if (enabled) {
-                addType(m_patternButton);
+                addType(m_patternButton, NameFilterConfiguration.FILTER_BY_NAMEPATTERN);
             } else {
                 removeType(m_patternButton);
             }

@@ -50,6 +50,8 @@ package org.knime.core.node.util.filter.column;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.ListCellRenderer;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -162,8 +164,8 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
     public void loadConfiguration(final DataColumnSpecFilterConfiguration config, final DataTableSpec spec) {
         m_spec = spec;
         m_typePanel.loadConfiguration(config.getTypeConfig(), spec);
-        super.loadConfiguration(config, spec == null ? new String[0] : spec.getColumnNames());
         setTypeFilterEnabled(config.isTypeFilterEnabled());
+        super.loadConfiguration(config, spec == null ? new String[0] : spec.getColumnNames());
     }
 
     /**
@@ -175,6 +177,15 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
             m_typePanel.saveConfiguration(((DataColumnSpecFilterConfiguration)config).getTypeConfig());
         }
         super.saveConfiguration(config);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setEnabled(final boolean enabled) {
+        super.setEnabled(enabled);
+        m_typePanel.setEnabled(enabled);
     }
 
     /** {@inheritDoc} */
@@ -216,7 +227,13 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
             filter = new DataValueFilter(((DataTypeColumnFilter)m_filter).getFilterClasses());
         }
         m_typePanel = new TypeFilterPanelImpl(filter);
-        m_typeButton = createButtonToFilterPanel(TypeFilterConfigurationImpl.TYPE, "Type Selection", m_typePanel);
+        m_typePanel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                fireFilteringChangedEvent();
+            }
+        });
+        m_typeButton = createButtonToFilterPanel(TypeFilterConfigurationImpl.TYPE, "Type Selection");
     }
 
     /**
@@ -228,7 +245,7 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
     private void setTypeFilterEnabled(final boolean enabled) {
         if (m_typeFilterEnabled == null || !m_typeFilterEnabled.equals(enabled)) {
             if (enabled) {
-                addType(m_typeButton);
+                addType(m_typeButton, DataColumnSpecFilterConfiguration.FILTER_BY_DATATYPE);
             } else {
                 removeType(m_typeButton);
             }

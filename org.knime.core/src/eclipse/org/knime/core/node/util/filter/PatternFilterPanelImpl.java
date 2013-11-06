@@ -49,12 +49,19 @@
  */
 package org.knime.core.node.util.filter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.util.filter.PatternFilterConfigurationImpl.PatternFilterType;
 
@@ -77,6 +84,14 @@ final class PatternFilterPanelImpl extends JPanel {
 
     private JCheckBox m_caseSensitive;
 
+    private List<ChangeListener> m_listeners;
+
+    private String m_patternValue;
+
+    private PatternFilterType m_typeValue;
+
+    private boolean m_caseSensitiveValue;
+
     /**
      * Create the pattern filter panel.
      */
@@ -85,6 +100,7 @@ final class PatternFilterPanelImpl extends JPanel {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         m_pattern = new JTextField();
         m_pattern.setText("");
+        m_patternValue = m_pattern.getText();
         panel.add(m_pattern);
         m_type = new ButtonGroup();
         m_wildcard = new JRadioButton("Wildcard ('?' matches any character, '*' matches a sequence of any characters)");
@@ -94,10 +110,62 @@ final class PatternFilterPanelImpl extends JPanel {
         m_type.add(m_regex);
         panel.add(m_regex);
         m_wildcard.setSelected(true);
+        m_typeValue = getSelectedFilterType();
         m_caseSensitive = new JCheckBox("Case Sensitive");
         panel.add(m_caseSensitive);
         m_caseSensitive.setSelected(true);
+        m_caseSensitiveValue = m_caseSensitive.isSelected();
+        m_pattern.addCaretListener(new CaretListener() {
+            @Override
+            public void caretUpdate(final CaretEvent e) {
+                if (!m_patternValue.equals(m_pattern.getText())) {
+                    m_patternValue = m_pattern.getText();
+                    fireFilteringChangedEvent();
+                }
+            }
+        });
+        m_wildcard.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                PatternFilterType newType = getSelectedFilterType();
+                if (newType != null && m_typeValue != newType) {
+                    m_typeValue = newType;
+                    fireFilteringChangedEvent();
+                }
+            }
+        });
+        m_regex.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                PatternFilterType newType = getSelectedFilterType();
+                if (newType != null && m_typeValue != newType) {
+                    m_typeValue = newType;
+                    fireFilteringChangedEvent();
+                }
+            }
+        });
+        m_caseSensitive.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                if (m_caseSensitiveValue != m_caseSensitive.isSelected()) {
+                    m_caseSensitiveValue = m_caseSensitive.isSelected();
+                    fireFilteringChangedEvent();
+                }
+            }
+        });
         super.add(panel);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setEnabled(final boolean enabled) {
+        super.setEnabled(enabled);
+        m_pattern.setEnabled(enabled);
+        m_regex.setEnabled(enabled);
+        m_wildcard.setEnabled(enabled);
+        m_caseSensitive.setEnabled(enabled);
     }
 
     /** @param config to load from */
@@ -120,6 +188,47 @@ final class PatternFilterPanelImpl extends JPanel {
             config.setType(PatternFilterType.Wildcard);
         }
         config.setCaseSensitive(m_caseSensitive.isSelected());
+    }
+
+    /**
+     * Adds a listener which gets informed whenever the filtering changes.
+     *
+     * @param listener the listener
+     */
+    public void addChangeListener(final ChangeListener listener) {
+        if (m_listeners == null) {
+            m_listeners = new ArrayList<ChangeListener>();
+        }
+        m_listeners.add(listener);
+    }
+
+    /**
+     * Removes the given listener from this filter panel.
+     *
+     * @param listener the listener.
+     */
+    public void removeChangeListener(final ChangeListener listener) {
+        if (m_listeners != null) {
+            m_listeners.remove(listener);
+        }
+    }
+
+    private void fireFilteringChangedEvent() {
+        if (m_listeners != null) {
+            for (ChangeListener listener : m_listeners) {
+                listener.stateChanged(new ChangeEvent(this));
+            }
+        }
+    }
+
+    private PatternFilterType getSelectedFilterType() {
+        if (m_regex.isSelected()) {
+            return PatternFilterType.Regex;
+        }
+        if (m_wildcard.isSelected()) {
+            return PatternFilterType.Wildcard;
+        }
+        return null;
     }
 
 }

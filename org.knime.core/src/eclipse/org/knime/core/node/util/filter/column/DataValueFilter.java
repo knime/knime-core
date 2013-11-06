@@ -94,7 +94,7 @@ public final class DataValueFilter extends InputFilter<Class<? extends DataValue
     @Override
     public final boolean include(final Class<? extends DataValue> value) {
         for (final Class<? extends DataValue> val : m_filterClasses) {
-            if (value.equals(val)) {
+            if (val.equals(value)) {
                 return true;
             }
         }

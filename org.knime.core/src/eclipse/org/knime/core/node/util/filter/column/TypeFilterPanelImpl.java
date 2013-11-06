@@ -52,6 +52,7 @@ package org.knime.core.node.util.filter.column;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -65,6 +66,8 @@ import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataColumnSpec;
@@ -100,7 +103,13 @@ final class TypeFilterPanelImpl extends JPanel {
 
     private final InputFilter<Class<? extends DataValue>> m_filter;
 
-    /** Creates a DataValue filter panel.
+    private List<ChangeListener> m_listeners;
+
+    private Map<String, Boolean> m_selectionValues = new LinkedHashMap<String, Boolean>();
+
+    /**
+     * Creates a DataValue filter panel.
+     *
      * @param filter The filter to use, if null no filter will be applied.
      */
     TypeFilterPanelImpl(final InputFilter<Class<? extends DataValue>> filter) {
@@ -108,6 +117,17 @@ final class TypeFilterPanelImpl extends JPanel {
         m_selectionPanel = new JPanel(new GridLayout(0, 2));
         m_selections = new LinkedHashMap<String, JCheckBox>();
         add(m_selectionPanel);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setEnabled(final boolean enabled) {
+        super.setEnabled(enabled);
+        for (JCheckBox checkBox : m_selections.values()) {
+            checkBox.setEnabled(enabled);
+        }
     }
 
     void loadConfiguration(final TypeFilterConfigurationImpl config, final DataTableSpec spec) {
@@ -137,7 +157,10 @@ final class TypeFilterPanelImpl extends JPanel {
         }
         Set<Class<? extends DataValue>> values = new LinkedHashSet<Class<? extends DataValue>>();
         for (DataColumnSpec colspec : spec) {
-            values.add(colspec.getType().getPreferredValueClass());
+            final Class<? extends DataValue> preferredValueClass = colspec.getType().getPreferredValueClass();
+            if (preferredValueClass != null) {
+                values.add(preferredValueClass);
+            }
         }
         return values;
     }
@@ -178,14 +201,55 @@ final class TypeFilterPanelImpl extends JPanel {
     }
 
     private JCheckBox addCheckBox(final String label, final boolean addRedBorderAsInvalid) {
-        JCheckBox checkbox = new JCheckBox(label);
+        final JCheckBox checkbox = new JCheckBox(label);
         JComponent c = ViewUtils.getInFlowLayout(FlowLayout.LEFT, 0, 0, checkbox);
         if (addRedBorderAsInvalid) {
             checkbox.setToolTipText("Type no longer exists in input");
             c.setBorder(BorderFactory.createLineBorder(Color.RED));
         }
         m_selectionPanel.add(c);
+        m_selectionValues.put(label, checkbox.isSelected());
+        checkbox.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                if (m_selectionValues.get(label).booleanValue() != checkbox.isSelected()) {
+                    m_selectionValues.put(label, checkbox.isSelected());
+                    fireFilteringChangedEvent();
+                }
+            }
+        });
         return checkbox;
+    }
+
+    /**
+     * Adds a listener which gets informed whenever the filtering changes.
+     *
+     * @param listener the listener
+     */
+    public void addChangeListener(final ChangeListener listener) {
+        if (m_listeners == null) {
+            m_listeners = new ArrayList<ChangeListener>();
+        }
+        m_listeners.add(listener);
+    }
+
+    /**
+     * Removes the given listener from this filter panel.
+     *
+     * @param listener the listener.
+     */
+    public void removeChangeListener(final ChangeListener listener) {
+        if (m_listeners != null) {
+            m_listeners.remove(listener);
+        }
+    }
+
+    private void fireFilteringChangedEvent() {
+        if (m_listeners != null) {
+            for (ChangeListener listener : m_listeners) {
+                listener.stateChanged(new ChangeEvent(this));
+            }
+        }
     }
 
 }
