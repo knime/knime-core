@@ -56,7 +56,8 @@ import java.util.Map;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 
-/** This is a decorator for a iterator over DataRows.*/
+/** This is a decorator for a iterator over DataRows.
+ * @since 2.9*/
 public  class RegressionTrainingDataIterator implements Iterator<RegressionTrainingRow> {
     private Iterator<DataRow> m_iter;
 

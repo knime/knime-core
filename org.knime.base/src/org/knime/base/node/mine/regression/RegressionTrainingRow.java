@@ -59,7 +59,8 @@ import org.knime.core.data.DoubleValue;
 import Jama.Matrix;
 
 
-/** A decorator for a data row. */
+/** A decorator for a data row.
+ * @since 2.9 */
 public class RegressionTrainingRow {
     private double m_target;
     private Matrix m_parameter;

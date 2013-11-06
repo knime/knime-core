@@ -63,7 +63,8 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
-/** This class is a decorator for a DataTable.*/
+/** This class is a decorator for a DataTable.
+ * @since 2.9*/
 public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
     private DataTable m_data;
     private List<Integer> m_learningCols;
