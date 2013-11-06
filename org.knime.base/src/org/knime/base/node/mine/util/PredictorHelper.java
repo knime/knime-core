@@ -85,6 +85,10 @@ public class PredictorHelper {
      * The overrides the prediction column name checkbox text.
      */
     public static final String CHANGE_PREDICTION_COLUMN_NAME = "Change prediction column name";
+    /** The dialog text for adding probabilities columns. */
+    public static final String APPEND_COLUMNS_WITH_NORMALIZED_CLASS_DISTRIBUTION = "Append columns with normalized class distribution";
+    /** Dialog text for the suffix of probability columns. */
+    public static final String SUFFIX_FOR_PROBABILITY_COLUMNS = "Suffix for probability columns";
 
     private static final PredictorHelper INSTANCE = new PredictorHelper();
 

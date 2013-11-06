@@ -47,7 +47,6 @@
  */
 package org.knime.base.node.mine.bfn;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -56,24 +55,21 @@ import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
-import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SpringLayout;
 
 import org.knime.base.node.mine.util.PredictorHelper;
-import org.knime.core.data.DataColumnSpec;
+import org.knime.base.node.mine.util.PredictorNodeDialog;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObjectSpec;
 
 
 /**
@@ -83,26 +79,15 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author Thomas Gabriel, University of Konstanz
  * @since 2.9
  */
-public class BasisFunctionPredictor2NodeDialog extends NodeDialogPane {
+public class BasisFunctionPredictor2NodeDialog extends PredictorNodeDialog {
 
-    /** Prediction column. */
-    private final JTextField m_apply = new JTextField();
+    private JRadioButton m_defaultButton;
 
-    /** Prediction column override checkbox. */
-    private final JCheckBox m_override = new JCheckBox(PredictorHelper.CHANGE_PREDICTION_COLUMN_NAME);
+    private JRadioButton m_setButton;
 
-    /** Probability columns' suffices. */
-    private final JTextField m_suffix = new JTextField();
+    private JRadioButton m_ignoreButton;
 
-    private final JRadioButton m_dftButton;
-
-    private final JRadioButton m_setButton;
-
-    private final JCheckBox m_ignButton;
-
-    private final JSpinner m_dontKnow;
-
-    private final JCheckBox m_appendProp;
+    private JSpinner m_dontKnow;
 
     /** Key for the applied column: <i>apply_column</i>. */
     public static final String APPLY_COLUMN = PredictorHelper.CFGKEY_PREDICTION_COLUMN;
@@ -114,67 +99,54 @@ public class BasisFunctionPredictor2NodeDialog extends NodeDialogPane {
     public static final String CFG_DONT_KNOW_IGNORE = "ignore_dont_know";
 
     /** Config key if class probabilities should be appended to the table. */
-    public static final String CFG_CLASS_PROPS = "append_class_probabilities";
-
-    private DataColumnSpec m_lastTrainingColumn;
+    public static final String CFG_CLASS_PROBS = "append_class_probabilities";
 
     /**
      * Creates a new predictor dialog to set a name for the applied column.
      */
     public BasisFunctionPredictor2NodeDialog() {
-        super();
-        // panel with advance settings
-        JPanel p = new JPanel(new GridLayout(3, 1));
+        super(new SettingsModelBoolean(CFG_CLASS_PROBS, true));
+    }
 
-        // add apply column
-        m_apply.setPreferredSize(new Dimension(175, 25));
-        JPanel normPanel = new JPanel();
-        normPanel.setBorder(BorderFactory.createTitledBorder(" Choose Name "));
-        normPanel.add(m_override);
-        normPanel.add(m_apply);
-
-        // append class probabilities
-        m_appendProp = new JCheckBox("Append Class Columns", true);
-        m_appendProp.setPreferredSize(new Dimension(175, 25));
-        JPanel propPanel = new JPanel();
-        propPanel.setBorder(
-                BorderFactory.createTitledBorder(" Class Probabilities "));
-        propPanel.add(m_appendProp);
-        propPanel.add(new JLabel("Suffix for probability columns"));
-        m_suffix.setPreferredSize(new Dimension(175, 25));
-        propPanel.add(m_suffix);
-
-        // add don't know probability
-        m_dftButton = new JRadioButton("Default ", true);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void addOtherControls(final JPanel panel) {
+        m_dontKnow = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 1.0, 0.1));
+        m_defaultButton = new JRadioButton("Default ", true);
         m_setButton = new JRadioButton("Use ");
-        m_ignButton = new JCheckBox("Ignore ", true);
-        m_ignButton.addActionListener(new ActionListener() {
+        m_ignoreButton = new JRadioButton("Ignore ", true);
+        // add don't know probability
+        m_ignoreButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
                 selectionChanged();
             }
         });
         ButtonGroup bg = new ButtonGroup();
-        bg.add(m_dftButton);
+        bg.add(m_ignoreButton);
+        bg.add(m_defaultButton);
         bg.add(m_setButton);
-        m_dontKnow = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 1.0, 0.1));
         m_dontKnow.setEditor(new JSpinner.NumberEditor(
                 m_dontKnow, "#.##########"));
         m_dontKnow.setPreferredSize(new Dimension(75, 25));
-        JPanel dontKnowPanel = new JPanel(new BorderLayout());
+        JPanel dontKnowPanel = new JPanel(new GridLayout(3, 1));
         dontKnowPanel.setBorder(BorderFactory
                 .createTitledBorder(" Don't Know Class "));
-        dontKnowPanel.add(m_ignButton, BorderLayout.NORTH);
-        JPanel dftPanel = new JPanel(new FlowLayout());
-        dftPanel.setBorder(BorderFactory
-                .createTitledBorder(""));
-        dftPanel.add(m_dftButton);
-        dftPanel.add(m_setButton);
-        dftPanel.add(m_dontKnow);
-        dontKnowPanel.add(dftPanel, BorderLayout.CENTER);
-        p.add(dontKnowPanel);
+        FlowLayout left = new FlowLayout(FlowLayout.LEFT);
+        final JPanel ignorePanel = new JPanel(left), defaultPanel = new JPanel(left);
+        ignorePanel.add(m_ignoreButton);
+        defaultPanel.add(m_defaultButton);
+        dontKnowPanel.add(ignorePanel);
+        dontKnowPanel.add(defaultPanel);
+        JPanel usePanel = new JPanel(left);
+        dontKnowPanel.add(usePanel);
+        usePanel.add(m_setButton);
+        usePanel.add(m_dontKnow);
+        panel.add(dontKnowPanel);
 
-        m_dftButton.addActionListener(new ActionListener() {
+        m_defaultButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
                 m_dontKnow.setEnabled(false);
@@ -187,36 +159,18 @@ public class BasisFunctionPredictor2NodeDialog extends NodeDialogPane {
                 m_dontKnow.setEnabled(true);
             }
         });
-        m_override.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                boolean selected = m_override.isSelected();
-                m_apply.setEnabled(selected);
-                if (!selected) {
-                    final String predictionDefault =
-                        PredictorHelper.getInstance().computePredictionDefault(m_lastTrainingColumn.getName());
-                    m_apply.setText(predictionDefault);
-                }
-            }});
-        p.add(normPanel);
-        p.add(propPanel);
-        super.addTab("Prediction Column", p);
+        getLayout().putConstraint(SpringLayout.EAST, dontKnowPanel, 0, SpringLayout.EAST, panel);
+        getLayout().putConstraint(SpringLayout.WEST, dontKnowPanel, 0, SpringLayout.WEST, panel);
+        super.setLastAdded(dontKnowPanel);
+        getPanel().setPreferredSize(new Dimension(400, 240));
     }
 
     private void selectionChanged() {
-        if (m_ignButton.isSelected()) {
-            m_dftButton.setEnabled(false);
-            m_setButton.setEnabled(false);
-            m_dontKnow.setEnabled(false);
-        } else {
-            m_dftButton.setEnabled(true);
-            m_setButton.setEnabled(true);
-            if (m_dftButton.isSelected()) {
+            if (m_defaultButton.isSelected() || m_ignoreButton.isSelected()) {
                 m_dontKnow.setEnabled(false);
             } else {
                 m_dontKnow.setEnabled(true);
             }
-        }
     }
 
     /**
@@ -224,43 +178,23 @@ public class BasisFunctionPredictor2NodeDialog extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        PredictorHelper ph = PredictorHelper.getInstance();
-        // prediction column name
-        String apply;
-        try {
-            final SettingsModelString prediction = ph.createPredictionColumn();
-            final SettingsModelBoolean overridePred = ph.createChangePrediction();
-            apply = prediction.getStringValue();
-            overridePred.loadSettingsFrom(settings);
-            prediction.loadSettingsFrom(settings);
-            boolean enabled = overridePred.getBooleanValue();
-            //m_override.setSelected(!enabled);
-            m_override.setSelected(enabled);
-        } catch (InvalidSettingsException e) {
-            throw new NotConfigurableException(e.getMessage(), e);
-        }
-        m_apply.setText(apply);
+            final PortObjectSpec[] specs) throws NotConfigurableException {
+        super.loadSettingsFrom(settings, specs);
         if (settings.getBoolean(CFG_DONT_KNOW_IGNORE, false)) {
-            m_ignButton.setSelected(true);
+            m_ignoreButton.setSelected(true);
             m_dontKnow.setValue(new Double(0.0));
         } else {
-            m_ignButton.setSelected(false);
+            m_ignoreButton.setSelected(false);
             double value = settings.getDouble(DONT_KNOW_PROP, -1.0);
             if (value < 0.0) {
-                m_dftButton.setSelected(true);
+                m_defaultButton.setSelected(true);
                 m_dontKnow.setValue(new Double(0.0));
             } else {
                 m_setButton.setSelected(true);
                 m_dontKnow.setValue(new Double(value));
             }
         }
-        m_appendProp.setSelected(settings.getBoolean(CFG_CLASS_PROPS, true));
-        m_lastTrainingColumn = specs[0].getColumnSpec(specs[0].getNumColumns() - 5);
         selectionChanged();
-        for (final ActionListener listener: m_override.getActionListeners()) {
-            listener.actionPerformed(null);
-        }
     }
 
     /**
@@ -269,34 +203,27 @@ public class BasisFunctionPredictor2NodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        // prediction column name
-        String s = m_apply.getText().trim();
-        if (s.length() == 0) {
-            throw new InvalidSettingsException("Empty name not allowed.");
-        }
-        //settings.addString(APPLY_COLUMN, s);
-        if (m_ignButton.isSelected()) {
+        super.saveSettingsTo(settings);
+        if (m_ignoreButton.isSelected()) {
             settings.addBoolean(CFG_DONT_KNOW_IGNORE, true);
             settings.addDouble(DONT_KNOW_PROP, 0.0);
         } else {
             settings.addBoolean(CFG_DONT_KNOW_IGNORE, false);
-            if (m_dftButton.isSelected()) {
+            if (m_defaultButton.isSelected()) {
                 settings.addDouble(DONT_KNOW_PROP, -1.0);
             } else {
                 Double value = (Double)m_dontKnow.getValue();
                 settings.addDouble(DONT_KNOW_PROP, value.doubleValue());
             }
         }
-        settings.addBoolean(CFG_CLASS_PROPS, m_appendProp.isSelected());
-        PredictorHelper predictorHelper = PredictorHelper.getInstance();
-        final SettingsModelString predictionColumn = predictorHelper.createPredictionColumn();
-        final SettingsModelBoolean overridePred = predictorHelper.createChangePrediction();
-        overridePred.setBooleanValue(!m_override.isSelected());
-        predictionColumn.setStringValue(s);
-        predictionColumn.saveSettingsTo(settings);
-        overridePred.saveSettingsTo(settings);
-        final SettingsModelString suffix = predictorHelper.createSuffix();
-        suffix.setStringValue(m_suffix.getText());
-        suffix.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void extractTargetColumn(final PortObjectSpec[] specs) {
+        DataTableSpec spec = (DataTableSpec)specs[0];
+        setLastTargetColumn(spec.getColumnSpec(spec.getNumColumns() - 5));
     }
 }

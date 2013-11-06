@@ -285,7 +285,7 @@ public abstract class BasisFunctionPredictor2NodeModel extends NodeModel {
                 BasisFunctionPredictor2NodeDialog.CFG_DONT_KNOW_IGNORE, false);
         // append class probability columns
         m_appendClassProps = settings.getBoolean(
-                BasisFunctionPredictor2NodeDialog.CFG_CLASS_PROPS, true);
+                BasisFunctionPredictor2NodeDialog.CFG_CLASS_PROBS, true);
         m_suffix.loadSettingsFrom(settings);
     }
 
@@ -304,7 +304,7 @@ public abstract class BasisFunctionPredictor2NodeModel extends NodeModel {
                 BasisFunctionPredictor2NodeDialog.CFG_DONT_KNOW_IGNORE,
                 m_ignoreDontKnow);
         // append class probability columns
-        settings.addBoolean(BasisFunctionPredictor2NodeDialog.CFG_CLASS_PROPS,
+        settings.addBoolean(BasisFunctionPredictor2NodeDialog.CFG_CLASS_PROBS,
                 m_appendClassProps);
         m_suffix.saveSettingsTo(settings);
     }

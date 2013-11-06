@@ -33,6 +33,9 @@
 			default is:
 			<tt>Prediction (</tt>trainingColumn<tt>)</tt>.)
 		</option>
+		<option name="Append columns with normalized class distribution">
+			Compute the probabilities for the different classes.
+		</option>
 		<option name="Suffix for probability columns">
 			Suffix for the normalized distribution columns. Their names are like:
 			<tt>P (</tt>trainingColumn<tt>=</tt>value<tt>)</tt>.

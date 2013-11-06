@@ -50,22 +50,14 @@
  */
 package org.knime.base.node.mine.bayes.naivebayes.predictor2;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import javax.swing.JPanel;
 
 import org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObjectSpec;
-import org.knime.base.node.mine.util.PredictorHelper;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.base.node.mine.util.PredictorNodeDialog;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
@@ -73,22 +65,33 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author Tobias Koetter
  */
-public class NaiveBayesPredictorNodeDialog extends DefaultNodeSettingsPane {
-
-    private static final String INCL_PROB_VALS_LABEL =
-        "Append probability value column per class instance";
-    private DataColumnSpec m_lastTargetColumn;
-    private SettingsModelBoolean m_overridePrediction;
-
+public class NaiveBayesPredictorNodeDialog extends PredictorNodeDialog {
     /**
      * New pane for configuring BayesianClassifier node dialog.
      */
     public NaiveBayesPredictorNodeDialog() {
-        super();
-        final SettingsModelBoolean inclProbValsModel =
-            new SettingsModelBoolean(NaiveBayesPredictorNodeModel.CFG_INCL_PROBABILITYVALS_KEY, false);
-        final DialogComponentBoolean inclprobValsComponent =
-            new DialogComponentBoolean(inclProbValsModel, INCL_PROB_VALS_LABEL);
+        super(new SettingsModelBoolean(NaiveBayesPredictorNodeModel.CFG_INCL_PROBABILITYVALS_KEY, false));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void extractTargetColumn(final PortObjectSpec[] specs) {
+        if (specs[0] instanceof NaiveBayesPortObjectSpec) {
+            NaiveBayesPortObjectSpec spec = (NaiveBayesPortObjectSpec)specs[0];
+            setLastTargetColumn(spec.getClassColumn());
+        } else {
+            throw new IllegalStateException(specs[0].getClass().toString());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void addOtherControls(final JPanel panel) {
+        super.addOtherControls(panel);
         final SettingsModelDouble laplaceCorrectorModel =
             new SettingsModelDoubleBounded(NaiveBayesPredictorNodeModel.CFG_LAPLACE_CORRECTOR_KEY, 0.0, 0.0,
                 Double.MAX_VALUE);
@@ -96,35 +99,6 @@ public class NaiveBayesPredictorNodeDialog extends DefaultNodeSettingsPane {
             new DialogComponentNumber(laplaceCorrectorModel, "Laplace corrector: ", new Double(0.1), 5);
         laplaceCorrectorComponent.setToolTipText("Set to zero for no correction");
 
-        addDialogComponent(laplaceCorrectorComponent);
-        PredictorHelper predictorHelper = PredictorHelper.getInstance();
-        final SettingsModelString predColSettings = predictorHelper.createPredictionColumn();
-        m_overridePrediction = predictorHelper.createChangePrediction();
-        final DialogComponentString predictionColumn = predictorHelper.addPredictionColumn(this, predColSettings, m_overridePrediction);
-        setHorizontalPlacement(true);
-        addDialogComponent(inclprobValsComponent);
-        predictorHelper.addProbabilitySuffix(this);
-        predictionColumn.getModel().addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                if (!predictionColumn.getModel().isEnabled()) {
-                    PredictorHelper ph = PredictorHelper.getInstance();
-                    ((SettingsModelString)predictionColumn.getModel()).setStringValue(ph.computePredictionDefault(m_lastTargetColumn.getName()));
-                }
-            }});
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-        throws NotConfigurableException {
-        super.loadAdditionalSettingsFrom(settings, specs);
-        m_lastTargetColumn = ((NaiveBayesPortObjectSpec)specs[0]).getClassColumn();
-        //Init changes
-        boolean or = m_overridePrediction.getBooleanValue();
-        m_overridePrediction.setBooleanValue(!or);
-        m_overridePrediction.setBooleanValue(or);
+        addDialogComponent(panel, laplaceCorrectorComponent);
     }
 }

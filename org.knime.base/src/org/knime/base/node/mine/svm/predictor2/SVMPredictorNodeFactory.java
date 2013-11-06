@@ -50,23 +50,10 @@
  */
 package org.knime.base.node.mine.svm.predictor2;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.knime.base.node.mine.util.PredictorHelper;
-import org.knime.core.data.DataColumnSpec;
+import org.knime.base.node.mine.util.PredictorNodeDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  * SVMPredictor NodeFactory.
@@ -81,42 +68,43 @@ public class SVMPredictorNodeFactory extends
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new DefaultNodeSettingsPane() {
-            private SettingsModelBoolean m_override;
-            {
-                final PredictorHelper ph = PredictorHelper.getInstance();
-                final SettingsModelString predSettings = ph.createPredictionColumn();
-                m_override = ph.createChangePrediction();
-                final DialogComponentString predictionColumn = ph.addPredictionColumn(this, predSettings, m_override);
-                createNewGroup("Class Probabilities");
-                addDialogComponent(new DialogComponentBoolean(SVMPredictorNodeModel.createAddProbabilities(), "Append Class Columns"));
-                ph.addProbabilitySuffix(this);
-                closeCurrentGroup();
-                m_override.addChangeListener(new ChangeListener() {
-                    @Override
-                    public void stateChanged(final ChangeEvent e) {
-                        if (!m_override.getBooleanValue()) {
-                            String defaultPrediction = ph.computePredictionDefault(m_lastTrainingSpec.getName());
-                            predSettings.setStringValue(defaultPrediction);
-                        }
-                   }
-                });
-            }
-            private DataColumnSpec m_lastTrainingSpec;
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-                throws NotConfigurableException {
-                super.loadAdditionalSettingsFrom(settings, specs);
-                m_lastTrainingSpec = ((PMMLPortObjectSpec)specs[0]).getTargetCols().iterator().next();
-                boolean b = m_override.getBooleanValue();
-                m_override.setBooleanValue(!b);
-                m_override.setBooleanValue(b);
-            }
-        };
+        return new PredictorNodeDialog(SVMPredictorNodeModel.createAddProbabilities()) {};
+//        return new DefaultNodeSettingsPane() {
+//            private SettingsModelBoolean m_override;
+//            {
+//                final PredictorHelper ph = PredictorHelper.getInstance();
+//                final SettingsModelString predSettings = ph.createPredictionColumn();
+//                m_override = ph.createChangePrediction();
+//                final DialogComponentString predictionColumn = ph.addPredictionColumn(this, predSettings, m_override);
+//                createNewGroup("Class Probabilities");
+//                addDialogComponent(new DialogComponentBoolean(SVMPredictorNodeModel.createAddProbabilities(), "Append Class Columns"));
+//                ph.addProbabilitySuffix(this);
+//                closeCurrentGroup();
+//                m_override.addChangeListener(new ChangeListener() {
+//                    @Override
+//                    public void stateChanged(final ChangeEvent e) {
+//                        if (!m_override.getBooleanValue()) {
+//                            String defaultPrediction = ph.computePredictionDefault(m_lastTrainingSpec.getName());
+//                            predSettings.setStringValue(defaultPrediction);
+//                        }
+//                   }
+//                });
+//            }
+//            private DataColumnSpec m_lastTrainingSpec;
+//
+//            /**
+//             * {@inheritDoc}
+//             */
+//            @Override
+//            public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+//                throws NotConfigurableException {
+//                super.loadAdditionalSettingsFrom(settings, specs);
+//                m_lastTrainingSpec = ((PMMLPortObjectSpec)specs[0]).getTargetCols().iterator().next();
+//                boolean b = m_override.getBooleanValue();
+//                m_override.setBooleanValue(!b);
+//                m_override.setBooleanValue(b);
+//            }
+//        };
     }
 
     /**

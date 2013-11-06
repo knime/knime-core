@@ -50,71 +50,23 @@
  */
 package org.knime.base.node.mine.neural.mlp2;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.knime.base.node.mine.util.PredictorHelper;
-import org.knime.core.data.DataColumnSpec;
+import org.knime.base.node.mine.util.PredictorNodeDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentString;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
- * The Factory for the NeuralNet PredictorNode. This node reads a neural network
- * and computes the outputs.
+ * The Factory for the NeuralNet PredictorNode. This node reads a neural network and computes the outputs.
  *
  * @author Nicolas Cebron, University of Konstanz
  */
-public class MLPPredictorNodeFactory extends
-        NodeFactory<MLPPredictorNodeModel> {
+public class MLPPredictorNodeFactory extends NodeFactory<MLPPredictorNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new DefaultNodeSettingsPane() {
-            private final SettingsModelBoolean m_override;
-            {
-                final PredictorHelper ph = PredictorHelper.getInstance();
-                final SettingsModelString predSettings = ph.createPredictionColumn();
-                m_override = ph.createChangePrediction();
-                final DialogComponentString predictionColumn = ph.addPredictionColumn(this, predSettings, m_override);
-                addDialogComponent(new DialogComponentBoolean(MLPPredictorNodeModel.createAppendProbs(),
-                    "Append probability value column per class instance"));
-                ph.addProbabilitySuffix(this);
-                predictionColumn.getModel().addChangeListener(new ChangeListener() {
-                    @Override
-                    public void stateChanged(final ChangeEvent e) {
-                        if (!m_override.getBooleanValue()) {
-                            predSettings.setStringValue(ph.computePredictionDefault(m_lastTrainingColumn.getName()));
-                        }
-                    }
-                });
-            }
-
-            private DataColumnSpec m_lastTrainingColumn;
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-                throws NotConfigurableException {
-                super.loadAdditionalSettingsFrom(settings, specs);
-                m_lastTrainingColumn = ((PMMLPortObjectSpec)specs[0]).getTargetCols().iterator().next();
-                boolean b = m_override.getBooleanValue();
-                m_override.setBooleanValue(!b);
-                m_override.setBooleanValue(b);
-            }
+        return new PredictorNodeDialog(MLPPredictorNodeModel.createAppendProbs()) {
         };
     }
 
@@ -130,8 +82,7 @@ public class MLPPredictorNodeFactory extends
      * {@inheritDoc}
      */
     @Override
-    public NodeView<MLPPredictorNodeModel> createNodeView(
-            final int viewIndex, final MLPPredictorNodeModel nodeModel) {
+    public NodeView<MLPPredictorNodeModel> createNodeView(final int viewIndex, final MLPPredictorNodeModel nodeModel) {
         return null;
     }
 

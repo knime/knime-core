@@ -50,31 +50,21 @@
  */
 package org.knime.base.node.mine.decisiontree2.predictor2;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import javax.swing.JPanel;
 
-import org.knime.base.node.mine.util.PredictorHelper;
-import org.knime.core.data.DataColumnSpec;
+import org.knime.base.node.mine.util.PredictorNodeDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  *
  * @author Michael Berthold, University of Konstanz
  * @since 2.9
  */
-public class DecTreePredictorNodeFactory
-        extends NodeFactory<DecTreePredictorNodeModel> {
+public class DecTreePredictorNodeFactory extends NodeFactory<DecTreePredictorNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -96,8 +86,8 @@ public class DecTreePredictorNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public NodeView<DecTreePredictorNodeModel> createNodeView(
-            final int viewIndex, final DecTreePredictorNodeModel nodeModel) {
+    public NodeView<DecTreePredictorNodeModel> createNodeView(final int viewIndex,
+        final DecTreePredictorNodeModel nodeModel) {
         if (viewIndex == 0) {
             return new DecTreePredictorGraphView(nodeModel);
         } else {
@@ -118,59 +108,15 @@ public class DecTreePredictorNodeFactory
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new DefaultNodeSettingsPane() {
-            {
-                addDialogComponent(new DialogComponentNumber(
-                   DecTreePredictorNodeModel.createMaxNumPatternSettings(),
-                   /* label: */"Maximum number of stored patterns "
-                                + "for HiLite-ing: ", 100));
-            }
-            private final SettingsModelString m_predSettings = PredictorHelper.getInstance().createPredictionColumn();
-            private final SettingsModelBoolean m_override = PredictorHelper.getInstance().createChangePrediction();
-            private DataColumnSpec m_lastTrainingColumn;
-            {
-                PredictorHelper.getInstance().addPredictionColumn(this, m_predSettings, m_override);
-                addDialogComponent(new DialogComponentBoolean(
-                        new SettingsModelBoolean(
-                             DecTreePredictorNodeModel.SHOW_DISTRIBUTION,
-                             false),
-                     "Append columns with normalized class distribution"));
-                PredictorHelper.getInstance().addProbabilitySuffix(this);
-                m_override.addChangeListener(new ChangeListener() {
-                    @Override
-                    public void stateChanged(final ChangeEvent e) {
-                        if (!m_override.getBooleanValue()) {
-                            final String predictionDefault =
-                                PredictorHelper.getInstance().computePredictionDefault(m_lastTrainingColumn.getName());
-                            m_predSettings.setStringValue(predictionDefault);
-                        }
-                    }
-
-                });
-            }
-
+        return new PredictorNodeDialog(new SettingsModelBoolean(DecTreePredictorNodeModel.SHOW_DISTRIBUTION, false)) {
             /**
              * {@inheritDoc}
              */
             @Override
-            public void onOpen() {
-                super.onOpen();
-                boolean origEnabled = m_override.getBooleanValue();
-                m_predSettings.setEnabled(!origEnabled);
-                m_predSettings.setEnabled(origEnabled);
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-                throws NotConfigurableException {
-                super.loadAdditionalSettingsFrom(settings, specs);
-                m_lastTrainingColumn = ((PMMLPortObjectSpec)specs[0]).getTargetCols().iterator().next();
-                boolean b = m_override.getBooleanValue();
-                m_override.setBooleanValue(!b);
-                m_override.setBooleanValue(b);
+            protected void addOtherControls(final JPanel panel) {
+                addDialogComponent(panel,
+                    new DialogComponentNumber(DecTreePredictorNodeModel.createMaxNumPatternSettings(), /* label: */
+                        "Maximum number of stored patterns " + "for HiLite-ing: ", 100));
             }
         };
     }
