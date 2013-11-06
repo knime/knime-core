@@ -50,13 +50,20 @@
  */
 package org.knime.base.node.mine.regression.linear2.learner;
 
-import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
 
 import org.knime.core.data.DataColumnSpec;
@@ -69,8 +76,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.ColumnFilterPanel;
 import org.knime.core.node.util.ColumnSelectionPanel;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
 /**
  * Dialog for the linear regression learner.
@@ -78,11 +85,14 @@ import org.knime.core.node.util.ColumnSelectionPanel;
  * @author Heiko Hofer
  */
 final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
-    private final ColumnFilterPanel m_filterPanel;
+    private final DataColumnSpecFilterPanel m_filterPanel;
 
     private final ColumnSelectionPanel m_selectionPanel;
 
-    private final LinReg2LearnerSettings m_settings;
+    private JCheckBox m_predefinedOffsetValue;
+
+    private JSpinner m_offsetValue;
+
 
     /**
      * Create new dialog for linear regression model.
@@ -90,84 +100,119 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
     @SuppressWarnings("unchecked")
     public LinReg2LearnerNodeDialogPane() {
         super();
-        m_settings = new LinReg2LearnerSettings();
-        m_filterPanel = new ColumnFilterPanel(true);
+        m_filterPanel = new DataColumnSpecFilterPanel(DoubleValue.class, NominalValue.class);
         m_selectionPanel = new ColumnSelectionPanel(new EmptyBorder(0, 0, 0, 0),
                 DoubleValue.class);
-        JPanel panel = new JPanel(new BorderLayout());
-        JPanel northPanel = new JPanel(new FlowLayout());
-        northPanel.setBorder(BorderFactory.createTitledBorder("Target"));
-        northPanel.add(m_selectionPanel);
-        panel.add(northPanel, BorderLayout.NORTH);
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.FIRST_LINE_START;
+        c.insets = new Insets(5, 5, 0, 0);
 
+        JPanel columnSelectionPanel = new JPanel(new FlowLayout());
+        columnSelectionPanel.setBorder(BorderFactory.createTitledBorder("Target"));
+        columnSelectionPanel.add(m_selectionPanel);
+        panel.add(columnSelectionPanel, c);
+
+        c.gridy++;
+        c.weighty = 1;
         m_filterPanel.setBorder(BorderFactory.createTitledBorder("Values"));
-        panel.add(m_filterPanel, BorderLayout.CENTER);
+        panel.add(m_filterPanel, c);
+
+        c.gridy++;
+        c.weighty = 0;
+        JPanel regrPropertiesPanel = new JPanel(new FlowLayout());
+        regrPropertiesPanel.setBorder(BorderFactory.createTitledBorder("Regression Properties"));
+
+        regrPropertiesPanel.add(createRegressionPropertiesPanel());
+        panel.add(regrPropertiesPanel, c);
+
+        addTab("Settings", panel);
 
         m_selectionPanel.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
                 Object selected = e.getItem();
                 if (selected instanceof DataColumnSpec) {
-                    m_filterPanel.resetHiding();
-                    m_filterPanel.hideColumns((DataColumnSpec)selected);
+                    updateHiddenColumns((DataColumnSpec)selected);
                 }
             }
         });
-
-        addTab("Settings", panel);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs) throws NotConfigurableException {
-        m_settings.loadSettingsForDialog(settings);
+    private JPanel createRegressionPropertiesPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.FIRST_LINE_START;
+        c.insets = new Insets(5, 5, 0, 0);
 
-        boolean includeAll = m_settings.getIncludeAll();
-        String[] includes = m_settings.getIncludedColumns();
-        String target = m_settings.getTargetColumn();
+        m_predefinedOffsetValue = new JCheckBox("Predefined Offset Value:");
+        panel.add(m_predefinedOffsetValue, c);
 
-        DataTableSpec dts = (DataTableSpec)specs[0];
-        m_selectionPanel.update(dts, target);
-        m_filterPanel.setKeepAllSelected(includeAll);
-        // if includes is not set, put everything into the include list
-        if (null != includes) {
-            m_filterPanel.update(dts, false, includes);
-        } else {
-            m_filterPanel.update(dts, true, new String[0]);
-        }
-        // must hide the target from filter panel
-        // updating m_filterPanel first does not work as the first
-        // element in the spec will always be in the exclude list.
-        String selected = m_selectionPanel.getSelectedColumn();
-        if (null == selected) {
-            for (DataColumnSpec colSpec : dts) {
-                if (colSpec.getType().isCompatible(NominalValue.class)) {
-                    selected = colSpec.getName();
-                    break;
-                }
+        c.gridx++;
+        m_offsetValue = new JSpinner(new SpinnerNumberModel(0.0,
+            Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 1.0));
+        panel.add(m_offsetValue);
+
+        m_predefinedOffsetValue.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                m_offsetValue.setEnabled(m_predefinedOffsetValue.isSelected());
             }
-        }
-        if (selected != null) {
-            DataColumnSpec colSpec = dts.getColumnSpec(selected);
-            m_filterPanel.hideColumns(colSpec);
-        }
+        });
+
+        return panel;
+    }
+
+    private void updateHiddenColumns(final DataColumnSpec toHide) {
+        m_filterPanel.resetHiding();
+        m_filterPanel.hideNames(toHide);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
-        m_settings.setIncludeAll(m_filterPanel.isKeepAllSelected());
-        String[] includes = m_filterPanel.getIncludedColumnSet().toArray(
-                new String[0]);
-        m_settings.setIncludedColumns(includes);
-        m_settings.setTargetColumn(m_selectionPanel.getSelectedColumn());
+    protected void loadSettingsFrom(final NodeSettingsRO s, final PortObjectSpec[] specs)
+            throws NotConfigurableException {
+        DataTableSpec spec = (DataTableSpec)specs[0];
+        LinReg2LearnerSettings settings = new LinReg2LearnerSettings();
+        settings.loadSettingsInDialog(s, spec);
 
-        m_settings.saveSettings(settings);
+        String target = settings.getTargetColumn();
+        m_selectionPanel.update(spec, target);
+
+        m_filterPanel.loadConfiguration(settings.getFilterConfiguration(), spec);
+        updateHiddenColumns(spec.getColumnSpec(target));
+        m_predefinedOffsetValue.setSelected(!settings.getIncludeConstant());
+        m_offsetValue.setValue(settings.getOffsetValue());
+        m_offsetValue.setEnabled(m_predefinedOffsetValue.isSelected());
+
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO s)
+            throws InvalidSettingsException {
+        LinReg2LearnerSettings settings = new LinReg2LearnerSettings();
+
+        m_filterPanel.saveConfiguration(settings.getFilterConfiguration());
+        settings.setTargetColumn(m_selectionPanel.getSelectedColumn());
+        settings.setIncludeConstant(!m_predefinedOffsetValue.isSelected());
+        settings.setOffsetValue((Double)m_offsetValue.getValue());
+        settings.saveSettings(s);
+    }
+
 }

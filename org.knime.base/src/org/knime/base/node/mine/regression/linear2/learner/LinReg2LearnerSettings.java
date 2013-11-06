@@ -50,9 +50,11 @@
  */
 package org.knime.base.node.mine.regression.linear2.learner;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
  * This class hold the settings for the Linear Learner Node.
@@ -60,21 +62,25 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Heiko Hofer
  */
 final class LinReg2LearnerSettings {
-    /** Key for the included columns, used for dialog settings. */
-    static final String CFG_VARIATES = "included_columns";
-
-    /** Key for whether to include all appropriate columns by default. */
-    static final String CFG_VARIATES_USE_ALL = "included_columns_use_all";
-
-    /** Key for the target column, used for dialog settings. */
-    static final String CFG_TARGET = "target";
-
     private String m_targetColumn = null;
 
-    private String[] m_includedColumns = null;
+    private DataColumnSpecFilterConfiguration m_columnFilter;
 
-    private boolean m_includeAll = true;
+    /** False when regression should go through the origin. */
+    private boolean m_includeConstant;
 
+    /** offset value (a user defined intercept). */
+    private double m_offsetValue;
+
+
+    /**
+     * Create a new instance.
+     */
+    public LinReg2LearnerSettings() {
+        m_columnFilter = new DataColumnSpecFilterConfiguration(CFG_COLUMN_FILTER);
+        m_includeConstant = true;
+        m_offsetValue = 0;
+    }
     /**
      * The target column which is the dependent variable.
      *
@@ -93,43 +99,10 @@ final class LinReg2LearnerSettings {
         m_targetColumn = targetColumn;
     }
 
-    /**
-     * The included columns which are the independent variables.
-     *
-     * @return the includedColumns
-     */
-    public String[] getIncludedColumns() {
-        return m_includedColumns;
-    }
-
-    /**
-     * Set the included columns which are the independent variables.
-     *
-     * @param includedColumns the includedColumns to set
-     */
-    public void setIncludedColumns(final String[] includedColumns) {
-        m_includedColumns = includedColumns;
-    }
-
-    /**
-     * Returns true, if all input columns except of the target should be used as
-     * independent variables.
-     *
-     * @return the includeAll
-     */
-    public boolean getIncludeAll() {
-        return m_includeAll;
-    }
-
-    /**
-     * Pass true, when all input columns except of the target should be used as
-     * independent variables.
-     *
-     * @param includeAll the includeAll to set
-     */
-    public void setIncludeAll(final boolean includeAll) {
-        m_includeAll = includeAll;
-    }
+    private static final String CFG_TARGET = "target";
+    private static final String CFG_COLUMN_FILTER = "column_filter";
+    private static final String CFG_INCLUDE_CONSTANT = "include_constant";
+    private static final String CFG_OFFSET_VALUE = "offset_value";
 
     /**
      * Loads the settings from the node settings object.
@@ -140,8 +113,9 @@ final class LinReg2LearnerSettings {
     public void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_targetColumn = settings.getString(CFG_TARGET);
-        m_includedColumns = settings.getStringArray(CFG_VARIATES);
-        m_includeAll = settings.getBoolean(CFG_VARIATES_USE_ALL);
+        m_columnFilter.loadConfigurationInModel(settings);
+        m_includeConstant = settings.getBoolean(CFG_INCLUDE_CONSTANT);
+        m_offsetValue = settings.getDouble(CFG_OFFSET_VALUE);
     }
 
     /**
@@ -149,11 +123,13 @@ final class LinReg2LearnerSettings {
      * some settings are missing.
      *
      * @param settings a node settings object
+     * @param spec the spec of the input table
      */
-    public void loadSettingsForDialog(final NodeSettingsRO settings) {
+    public void loadSettingsInDialog(final NodeSettingsRO settings, final DataTableSpec spec) {
         m_targetColumn = settings.getString(CFG_TARGET, null);
-        m_includedColumns = settings.getStringArray(CFG_VARIATES, new String[0]);
-        m_includeAll = settings.getBoolean(CFG_VARIATES_USE_ALL, true);
+        m_columnFilter.loadConfigurationInDialog(settings, spec);
+        m_includeConstant = settings.getBoolean(CFG_INCLUDE_CONSTANT, true);
+        m_offsetValue = settings.getDouble(CFG_OFFSET_VALUE, 0.0);
     }
 
     /**
@@ -163,7 +139,49 @@ final class LinReg2LearnerSettings {
      */
     public void saveSettings(final NodeSettingsWO settings) {
         settings.addString(CFG_TARGET, m_targetColumn);
-        settings.addStringArray(CFG_VARIATES, m_includedColumns);
-        settings.addBoolean(CFG_VARIATES_USE_ALL, m_includeAll);
+        m_columnFilter.saveConfiguration(settings);
+        settings.addBoolean(CFG_INCLUDE_CONSTANT, m_includeConstant);
+        settings.addDouble(CFG_OFFSET_VALUE, m_offsetValue);
     }
+
+    /**
+     * Get filter for included columns (independent variables).
+     * @return the included columns
+     */
+    public DataColumnSpecFilterConfiguration getFilterConfiguration() {
+        return m_columnFilter;
+    }
+
+    /**
+     * Returns true when the constant term (intercept) should be estimated.
+     * @return the include constant property
+     */
+    public boolean getIncludeConstant() {
+        return m_includeConstant;
+    }
+
+    /**
+     * Defines if the constant term (intercept) should be estimated.
+     * @param includeConstant the include constant property
+     */
+    public void setIncludeConstant(final boolean includeConstant) {
+        m_includeConstant = includeConstant;
+    }
+
+    /**
+     * Get offset value (a user defined intercept).
+     * @return offset value (a user defined intercept)
+     */
+    public double getOffsetValue()  {
+        return m_offsetValue;
+    }
+
+    /**
+     * Set offset value (a user defined intercept).
+     * @param offsetValue offset value (a user defined intercept)
+     */
+    public void setOffsetValue(final double offsetValue) {
+        m_offsetValue = offsetValue;
+    }
+
 }

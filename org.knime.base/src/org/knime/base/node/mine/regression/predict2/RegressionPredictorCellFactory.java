@@ -70,7 +70,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  *
  * @author Heiko Hofer
  */
-abstract class RegressionPredictorCellFactory extends AbstractCellFactory {
+public abstract class RegressionPredictorCellFactory extends AbstractCellFactory {
 
     /**
      * Creates the spec of the output if possible.
@@ -118,25 +118,9 @@ abstract class RegressionPredictorCellFactory extends AbstractCellFactory {
         // The list of added columns
         List<DataColumnSpec> newColsSpec = new ArrayList<DataColumnSpec>();
         String targetCol = portSpec.getTargetFields().get(0);
+        DataColumnSpec targetColSpec = portSpec.getDataTableSpec().getColumnSpec(targetCol);
 
-        String oldTargetName = targetCol;
-        if (tableSpec.containsName(oldTargetName)
-                && !oldTargetName.toLowerCase().endsWith("(prediction)")) {
-            oldTargetName = oldTargetName + " (prediction)";
-        }
-        String newTargetColName =
-            DataTableSpec.getUniqueColumnName(tableSpec, oldTargetName);
-        DataColumnSpec targetColSpec =
-            portSpec.getDataTableSpec().getColumnSpec(targetCol);
-        DataColumnSpecCreator targetColSpecCreator =
-                new DataColumnSpecCreator(newTargetColName,
-                        targetColSpec.getType());
-        DataColumnDomainCreator targetDomainCreator =
-                new DataColumnDomainCreator(targetColSpec.getDomain());
-        targetColSpecCreator.setDomain(targetDomainCreator.createDomain());
-        newColsSpec.add(targetColSpecCreator.createSpec());
-
-        if (includeProbabilites) {
+        if (includeProbabilites && targetColSpec.getType().isCompatible(NominalValue.class)) {
             if (!targetColSpec.getDomain().hasValues()) {
                 return null;
             }
@@ -159,6 +143,20 @@ abstract class RegressionPredictorCellFactory extends AbstractCellFactory {
             }
         }
 
+
+
+        String oldTargetName = targetCol;
+        if (tableSpec.containsName(oldTargetName)
+                && !oldTargetName.toLowerCase().endsWith("(prediction)")) {
+            oldTargetName = oldTargetName + " (prediction)";
+        }
+        String newTargetColName = DataTableSpec.getUniqueColumnName(tableSpec, oldTargetName);
+
+        DataColumnSpecCreator targetColSpecCreator =
+                new DataColumnSpecCreator(newTargetColName, targetColSpec.getType());
+        DataColumnDomainCreator targetDomainCreator = new DataColumnDomainCreator(targetColSpec.getDomain());
+        targetColSpecCreator.setDomain(targetDomainCreator.createDomain());
+        newColsSpec.add(targetColSpecCreator.createSpec());
 
         return newColsSpec.toArray(new DataColumnSpec[0]);
     }

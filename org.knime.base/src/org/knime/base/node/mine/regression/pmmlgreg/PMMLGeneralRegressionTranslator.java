@@ -141,6 +141,9 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
                    + " is currently not supported.");
        }
        m_content.setTargetReferenceCategory(reg.getTargetReferenceCategory());
+       if (reg.isSetOffsetValue()) {
+           m_content.setOffsetValue(reg.getOffsetValue());
+       }
 
        // read the parameter list
        ParameterList pmmlParamList = reg.getParameterList();
@@ -274,6 +277,9 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
         String targetReferenceCategory = m_content.getTargetReferenceCategory();
         if (targetReferenceCategory != null && !targetReferenceCategory.isEmpty()) {
             reg.setTargetReferenceCategory(targetReferenceCategory);
+        }
+        if (m_content.getOffsetValue() != null) {
+            reg.setOffsetValue(m_content.getOffsetValue());
         }
 
         // add parameter list

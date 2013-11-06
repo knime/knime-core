@@ -59,7 +59,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Heiko Hofer
  */
-final class GeneralRegressionPredictorSettings {
+final class RegressionPredictorSettings {
     /** Key for whether to include probabilities in the output. */
     static final String CFG_INCLUDE_PROBABILITIES = "include_probabilites";
 

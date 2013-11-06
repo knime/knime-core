@@ -111,6 +111,8 @@ public final class PMMLGeneralRegressionContent {
 
     private String m_targetReferenceCategory;
 
+    private Double m_offsetValue;
+
     /** Empty Contstuctor used when reading xml file. */
     PMMLGeneralRegressionContent() {
         // Fields are defined by setters.
@@ -145,6 +147,7 @@ public final class PMMLGeneralRegressionContent {
         m_ppMatrix = ppMatrix;
         m_pCovMatrix = pCovMatrix;
         m_paramMatrix = paramMatrix;
+        m_offsetValue = null;
     }
 
 
@@ -303,5 +306,21 @@ public final class PMMLGeneralRegressionContent {
      */
     public void setTargetReferenceCategory(final String targetReferenceCategory) {
         m_targetReferenceCategory = targetReferenceCategory;
+    }
+
+    /**
+     * @return the offset value or null if offset value is not set
+     * @since 2.9
+     */
+    public Double getOffsetValue() {
+        return m_offsetValue;
+    }
+
+    /**
+     * @param offsetValue the offset value
+     * @since 2.9
+     */
+    public void setOffsetValue(final Double offsetValue) {
+        m_offsetValue = offsetValue;
     }
 }

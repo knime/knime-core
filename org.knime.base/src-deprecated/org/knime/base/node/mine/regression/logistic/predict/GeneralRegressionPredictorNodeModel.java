@@ -59,7 +59,11 @@ import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionTranslator;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
+import org.knime.base.node.mine.regression.predict2.LogRegPredictor;
+import org.knime.base.node.mine.regression.predict2.RegressionPredictorCellFactory;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
@@ -173,11 +177,18 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "No input specification available");
         }
-        if (null != LogRegPredictor.createColumnSpec(regModelSpec, dataSpec,
+        if (null != RegressionPredictorCellFactory.createColumnSpec(regModelSpec, dataSpec,
                 m_settings.getIncludeProbabilities())) {
             ColumnRearranger c = new ColumnRearranger(dataSpec);
-            c.append(new LogRegPredictor(regModelSpec, dataSpec,
-                    m_settings.getIncludeProbabilities()));
+            c.append(new RegressionPredictorCellFactory(regModelSpec, dataSpec,
+                m_settings.getIncludeProbabilities()) {
+
+                @Override
+                public DataCell[] getCells(final DataRow row) {
+                    // not called during configure.
+                    return null;
+                }
+            });
             DataTableSpec outSpec = c.createSpec();
             return new DataTableSpec[]{outSpec};
         } else {

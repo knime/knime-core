@@ -48,7 +48,7 @@
  * History
  *   19.05.2010 (hofer): created
  */
-package org.knime.base.node.mine.regression.logistic.predict;
+package org.knime.base.node.mine.regression.predict2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,15 +65,11 @@ import org.knime.base.node.mine.regression.pmmlgreg.PMMLPCell;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLParameter;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.NominalValue;
-import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.InvalidSettingsException;
@@ -87,7 +83,7 @@ import Jama.Matrix;
  *
  * @author Heiko Hofer
  */
-public final class LogRegPredictor extends AbstractCellFactory {
+public final class LogRegPredictor extends RegressionPredictorCellFactory {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(LogRegPredictor.class);
     private PMMLGeneralRegressionContent m_content;
     private PPMatrix m_ppMatrix;
@@ -112,117 +108,6 @@ public final class LogRegPredictor extends AbstractCellFactory {
     /** the number of domain values of the target column. */
     private int m_targetDomainValuesCount;
 
-
-    /**
-     * Creates the spec of the output if possible.
-     *
-     * @param portSpec the spec of the pmml input port
-     * @param tableSpec the spec of the data input port
-     * @param includeProbabilites add probabilities to the output
-     * @return The spec of the output or null
-     * @throws InvalidSettingsException when tableSpec and portSpec do not match
-     */
-    public static DataColumnSpec[] createColumnSpec(
-            final PMMLPortObjectSpec portSpec,
-            final DataTableSpec tableSpec,
-            final boolean includeProbabilites) throws InvalidSettingsException {
-        // Assertions
-        if (portSpec.getTargetCols().isEmpty()) {
-            throw new InvalidSettingsException("The general regression model"
-                    + " does not specify a target column.");
-        }
-
-        for (DataColumnSpec learningColSpec : portSpec.getLearningCols()) {
-            String learningCol = learningColSpec.getName();
-            if (tableSpec.containsName(learningCol)) {
-                DataColumnSpec colSpec = tableSpec.getColumnSpec(learningCol);
-                if (learningColSpec.getType().isCompatible(NominalValue.class)
-                    && !colSpec.getType().isCompatible(NominalValue.class)) {
-                    throw new InvalidSettingsException("The column \""
-                            + learningCol + "\" in the table of prediction "
-                            + "is expected to be  compatible with "
-                            + "\"NominalValue\".");
-                } else if (learningColSpec.getType().isCompatible(
-                        DoubleValue.class)
-                        && !colSpec.getType().isCompatible(DoubleValue.class)) {
-                    throw new InvalidSettingsException("The column \""
-                            + learningCol + "\" in the table of prediction "
-                            + "is expected to be numeric.");
-                }
-            } else {
-                throw new InvalidSettingsException("The table for prediction "
-                        + "does not contain the column \""
-                        + learningCol + "\".");
-            }
-        }
-
-        // The list of added columns
-        List<DataColumnSpec> newColsSpec = new ArrayList<DataColumnSpec>();
-        String targetCol = portSpec.getTargetFields().get(0);
-
-        String oldTargetName = targetCol;
-        if (tableSpec.containsName(oldTargetName)
-                && !oldTargetName.toLowerCase().endsWith("(prediction)")) {
-            oldTargetName = oldTargetName + " (prediction)";
-        }
-        String newTargetColName =
-            DataTableSpec.getUniqueColumnName(tableSpec, oldTargetName);
-        DataColumnSpec targetColSpec =
-            portSpec.getDataTableSpec().getColumnSpec(targetCol);
-        DataColumnSpecCreator targetColSpecCreator =
-                new DataColumnSpecCreator(newTargetColName,
-                        targetColSpec.getType());
-        DataColumnDomainCreator targetDomainCreator =
-                new DataColumnDomainCreator(targetColSpec.getDomain());
-        targetColSpecCreator.setDomain(targetDomainCreator.createDomain());
-        newColsSpec.add(targetColSpecCreator.createSpec());
-
-        if (includeProbabilites) {
-            if (!targetColSpec.getDomain().hasValues()) {
-                return null;
-            }
-            List<DataCell> targetCategories = new ArrayList<DataCell>();
-            targetCategories.addAll(targetColSpec.getDomain().getValues());
-            Collections.sort(targetCategories,
-                targetColSpec.getType().getComparator());
-
-            for (DataCell value : targetCategories) {
-                String name = "P(" + targetCol + "=" + value.toString() + ")";
-                String newColName =
-                        DataTableSpec.getUniqueColumnName(tableSpec, name);
-                DataColumnSpecCreator colSpecCreator =
-                        new DataColumnSpecCreator(newColName, DoubleCell.TYPE);
-                DataColumnDomainCreator domainCreator =
-                        new DataColumnDomainCreator(new DoubleCell(0.0),
-                                new DoubleCell(1.0));
-                colSpecCreator.setDomain(domainCreator.createDomain());
-                newColsSpec.add(colSpecCreator.createSpec());
-            }
-        }
-
-
-        return newColsSpec.toArray(new DataColumnSpec[0]);
-    }
-
-
-    /**
-     * This constructor should be used during the configure phase of a node.
-     * The created instance will give a valid spec of the output but cannot
-     * be used to compute the cells.
-     *
-     * @param portSpec the spec of the pmml input port
-     * @param tableSpec the spec of the data input port
-     * @param includeProbabilites add probabilities to the output
-     * @throws InvalidSettingsException when tableSpec and portSpec do not match
-     */
-    public LogRegPredictor(final PMMLPortObjectSpec portSpec,
-            final DataTableSpec tableSpec,
-            final boolean includeProbabilites
-            ) throws InvalidSettingsException {
-        super(LogRegPredictor.createColumnSpec(portSpec, tableSpec,
-                includeProbabilites));
-    }
-
     /**
      * This constructor should be used when executing the node. Use it when
      * you want to compute output cells.
@@ -240,8 +125,7 @@ public final class LogRegPredictor extends AbstractCellFactory {
             final String targetVariableName,
             final boolean includeProbabilites)
             throws InvalidSettingsException {
-        super(LogRegPredictor.createColumnSpec(portSpec, inSpec,
-                includeProbabilites));
+        super(portSpec, inSpec, includeProbabilites);
 
         m_includeProbs = includeProbabilites;
         m_content = content;
@@ -419,7 +303,7 @@ public final class LogRegPredictor extends AbstractCellFactory {
                 maxIndex = i;
             }
         }
-        cells[0] = m_targetCategories.get(maxIndex);
+
 
         if (m_includeProbs) {
             // compute probabilities of the target categories
@@ -436,12 +320,14 @@ public final class LogRegPredictor extends AbstractCellFactory {
                     for (int k = 0; k < r.getColumnDimension(); k++) {
                         sum += Math.exp(r.get(0, k) - r.get(0, i));
                     }
-                    cells[m_targetCategoryIndex.get(i) + 1] = new DoubleCell(1.0 / sum);
+                    cells[m_targetCategoryIndex.get(i)] = new DoubleCell(1.0 / sum);
                 } else {
-                    cells[m_targetCategoryIndex.get(i) + 1] = new DoubleCell(0);
+                    cells[m_targetCategoryIndex.get(i)] = new DoubleCell(0);
                 }
             }
         }
+        // the last cell is the prediction
+        cells[cells.length - 1] = m_targetCategories.get(maxIndex);
         return cells;
     }
 

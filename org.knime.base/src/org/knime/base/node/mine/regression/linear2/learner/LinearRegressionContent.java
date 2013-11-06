@@ -116,13 +116,21 @@ final class LinearRegressionContent {
     /** the adjusted R-squared statistic. */
     private double m_adjustedRSquared;
 
+    /** false when the estimate should go through the origin. */
+    private boolean m_includeConstant;
+
+    /** offset value (a user defined intercept) */
+    private double m_offsetValue;
+
     /**
      * Create new instance.
      * @param outSpec the spec of the output
      * @param valueCount the number of data values in the training data set
-     * @param factorList the factors (nominla parameters)
+     * @param factorList the factors (nominal parameters)
      * @param covariateList the covariates (numeric parameters)
      * @param beta the estimated regression factors
+     * @param includeConstant false when the estimate should go through the origin
+     * @param offsetValue offset value (a user defined intercept)
      * @param covMat the covariance matrix
      * @param rSquared the r-square value
      * @param adjustedRSquared the adjusted r-quare value
@@ -133,6 +141,8 @@ final class LinearRegressionContent {
             final List<String> factorList,
             final List<String> covariateList,
             final Matrix beta,
+            final boolean includeConstant,
+            final double offsetValue,
             final Matrix covMat,
             final double rSquared, final double adjustedRSquared) {
         m_outSpec = outSpec;
@@ -151,6 +161,8 @@ final class LinearRegressionContent {
         }
         m_covariateList = covariateList;
         m_beta = beta;
+        m_includeConstant = includeConstant;
+        m_offsetValue = offsetValue;
         m_covMat = covMat;
     }
 
@@ -275,7 +287,7 @@ final class LinearRegressionContent {
      */
     private Map<String, Double> getValues(final Matrix matrix) {
         Map<String, Double> coefficients = new HashMap<String, Double>();
-        int p = 1;
+        int p = m_includeConstant ? 1 : 0;
         for (String colName : m_outSpec.getLearningFields()) {
             if (m_factorList.contains(colName)) {
                 Iterator<DataCell> designIter =
@@ -298,6 +310,11 @@ final class LinearRegressionContent {
         }
         return coefficients;
     }
+
+    /**
+     * Returns true when the constant term is estimated.
+     * @return when the constant term is estimated
+     */
 
     /**
      * Returns the value of the intercept.
@@ -339,6 +356,23 @@ final class LinearRegressionContent {
     }
 
     /**
+     * Returns true when the constant term (intercept) was estimated.
+     * @return the include constant property
+     */
+    public boolean getIncludeConstant() {
+        return m_includeConstant;
+    }
+
+    /**
+     * Get offset value (a user defined intercept).
+     * @return offset value (a user defined intercept)
+     */
+    public double getOffsetValue()  {
+        return m_offsetValue;
+    }
+
+
+    /**
      * Creates a BufferedDataTable with the estimated parameters and statistics.
      * @param exec The execution context
      * @return a port object
@@ -370,14 +404,17 @@ final class LinearRegressionContent {
             c++;
             dc.addRowToTable(new DefaultRow("Row" + c, cells));
         }
-        List<DataCell> cells = new ArrayList<DataCell>();
-        cells.add(new StringCell("Intercept"));
-        cells.add(new DoubleCell(this.getIntercept()));
-        cells.add(new DoubleCell(this.getInterceptStdErr()));
-        cells.add(new DoubleCell(this.getInterceptTValue()));
-        cells.add(new DoubleCell(this.getInterceptPValue()));
-        c++;
-        dc.addRowToTable(new DefaultRow("Row" + c, cells));
+
+        if (m_includeConstant) {
+            List<DataCell> cells = new ArrayList<DataCell>();
+            cells.add(new StringCell("Intercept"));
+            cells.add(new DoubleCell(this.getIntercept()));
+            cells.add(new DoubleCell(this.getInterceptStdErr()));
+            cells.add(new DoubleCell(this.getInterceptTValue()));
+            cells.add(new DoubleCell(this.getInterceptPValue()));
+            c++;
+            dc.addRowToTable(new DefaultRow("Row" + c, cells));
+        }
 
         dc.close();
         return dc.getTable();
@@ -405,11 +442,12 @@ final class LinearRegressionContent {
         List<PMMLPCell> paramMatrix = new ArrayList<PMMLPCell>();
 
         int p = 0;
-        // Define the intercept
-        parameterList.add(new PMMLParameter("p" + p, "Intercept"));
-        // TODO: define offsetValue of 0 when offset is not estimated
-        paramMatrix.add(new PMMLPCell("p" + p, m_beta.get(0, 0), 1));
-        p++;
+        if (m_includeConstant) {
+            // Define the intercept
+            parameterList.add(new PMMLParameter("p" + p, "Intercept"));
+            paramMatrix.add(new PMMLPCell("p" + p, m_beta.get(0, 0), 1));
+            p++;
+        }
         for (String colName : m_outSpec.getLearningFields()) {
             if (m_factorList.contains(colName)) {
                 Iterator<DataCell> designIter =
@@ -450,6 +488,9 @@ final class LinearRegressionContent {
                     ppMatrix.toArray(new PMMLPPCell[0]),
                     pCovMatrix.toArray(new PMMLPCovCell[0]),
                     paramMatrix.toArray(new PMMLPCell[0]));
+        if (!m_includeConstant) {
+            content.setOffsetValue(m_offsetValue);
+        }
         return content;
     }
 
@@ -459,6 +500,8 @@ final class LinearRegressionContent {
     private static final String CFG_FACTORS = "factors";
     private static final String CFG_COVARIATES = "covariates";
     private static final String CFG_COEFFICIENTS = "coefficients";
+    private static final String CFG_INCLUDE_CONSTANT = "include_constant";
+    private static final String CFG_OFFSET_VALUE = "offset_value";
     private static final String CFG_COVARIANCE_MATRIX = "covariance_matrix";
     private static final String CFG_R_SQUARED = "r_squared";
     private static final String CFG_ADJUSTED_R_SQUARED = "adjusted_r_squared";
@@ -481,12 +524,16 @@ final class LinearRegressionContent {
         String[] factors = parContent.getStringArray(CFG_FACTORS);
         String[] covariates = parContent.getStringArray(CFG_COVARIATES);
         double[] coeff = parContent.getDoubleArray(CFG_COEFFICIENTS);
+        boolean includeConstant = parContent.getBoolean(CFG_INCLUDE_CONSTANT);
+        double offsetValue = parContent.getDouble(CFG_OFFSET_VALUE);
         double[] covMat = parContent.getDoubleArray(CFG_COVARIANCE_MATRIX);
         double rSquared = parContent.getDouble(CFG_R_SQUARED);
         double adjustedRSquared = parContent.getDouble(CFG_ADJUSTED_R_SQUARED);
         return new LinearRegressionContent(pmmlSpec, valueCount,
                 Arrays.asList(factors), Arrays.asList(covariates),
                 toMatrix(coeff, coeff.length),
+                includeConstant,
+                offsetValue,
                 toMatrix(covMat, coeff.length),
                 rSquared, adjustedRSquared);
 
@@ -514,6 +561,8 @@ final class LinearRegressionContent {
         parContent.addStringArray(CFG_COVARIATES, m_covariateList.toArray(new String[0]));
         parContent.addDoubleArray(CFG_COVARIANCE_MATRIX, toArray(m_covMat));
         parContent.addDoubleArray(CFG_COEFFICIENTS, toArray(m_beta));
+        parContent.addDouble(CFG_OFFSET_VALUE, m_offsetValue);
+        parContent.addBoolean(CFG_INCLUDE_CONSTANT, m_includeConstant);
         parContent.addDouble(CFG_R_SQUARED, m_rSquared);
         parContent.addDouble(CFG_ADJUSTED_R_SQUARED, m_adjustedRSquared);
     }

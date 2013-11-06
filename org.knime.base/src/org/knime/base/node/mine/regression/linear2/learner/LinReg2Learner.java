@@ -82,6 +82,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
 /**
  * Linear Regression Learner implementation.
@@ -239,33 +240,8 @@ final class LinReg2Learner {
     private void init(final DataTableSpec inSpec,
             final PMMLPortObjectSpec pmmlSpec)
             throws InvalidSettingsException {
-
-        List<String> inputCols = new ArrayList<String>();
-        for (DataColumnSpec column : inSpec) {
-            inputCols.add(column.getName());
-        }
-        if (!m_settings.getIncludeAll()) {
-            List<String> included =
-                Arrays.asList(m_settings.getIncludedColumns());
-            if (!inputCols.containsAll(included)) {
-                LOGGER.warn("Input does not contain all learning columns. "
-                        + "Proceed with the remaining learning columns.");
-            }
-            inputCols.retainAll(included);
-        }
-        inputCols.remove(m_settings.getTargetColumn());
-        if (inputCols.isEmpty()) {
-            throw new InvalidSettingsException("At least one column must "
-                    + "be included.");
-        }
-
-        DataColumnSpec targetColSpec = null;
-        List<DataColumnSpec> regressorColSpecs =
-            new ArrayList<DataColumnSpec>();
-
         // Auto configuration when target is not set
-        if (null == m_settings.getTargetColumn()
-                && m_settings.getIncludeAll()) {
+        if (m_settings.getTargetColumn() == null) {
             List<DataColumnSpec> possibleTargets = new ArrayList<DataColumnSpec>();
             for (DataColumnSpec colSpec : inSpec) {
                 if (colSpec.getType().isCompatible(DoubleValue.class)) {
@@ -274,17 +250,32 @@ final class LinReg2Learner {
             }
             if (possibleTargets.size() > 1) {
                 m_settings.setTargetColumn(possibleTargets.get(0).getName());
-                // TODO: set warning (auto-guessing case)
+                // TODO: set warning for node (auto-guessing case)
             } else if (possibleTargets.size() == 1) {
                 m_settings.setTargetColumn(possibleTargets.get(0).getName());
             } else {
                 throw new InvalidSettingsException("No column in "
                         + "spec with numeric data.");
             }
-            // remove target from input columns
-            inputCols.remove(m_settings.getTargetColumn());
         }
 
+        FilterResult colFilter = m_settings.getFilterConfiguration().applyTo(inSpec);
+        if (colFilter.getRemovedFromIncludes().length > 0) {
+            // TODO: set warning for node
+            LOGGER.warn("Input does not contain all learning columns. "
+                    + "Proceed with the remaining learning columns.");
+        }
+
+        List<String> inputCols = new ArrayList<String>();
+        inputCols.addAll(Arrays.asList(colFilter.getIncludes()));
+        inputCols.remove(m_settings.getTargetColumn());
+
+        if (inputCols.isEmpty()) {
+            throw new InvalidSettingsException("At least one column must be included.");
+        }
+
+        DataColumnSpec targetColSpec = null;
+        List<DataColumnSpec> regressorColSpecs = new ArrayList<DataColumnSpec>();
 
         // Check type of target and input columns
         for (int i = 0; i < inSpec.getNumColumns(); i++) {
@@ -309,7 +300,7 @@ final class LinReg2Learner {
             }
         }
 
-        if (null != targetColSpec) {
+        if (targetColSpec != null) {
             String[] learnerCols = new String[regressorColSpecs.size() + 1];
             for (int i = 0; i < regressorColSpecs.size(); i++) {
                 learnerCols[i] = regressorColSpecs.get(i).getName();
@@ -320,7 +311,7 @@ final class LinReg2Learner {
             creator.setTargetCols(Arrays.asList(targetColSpec));
             creator.setLearningCols(regressorColSpecs);
             m_pmmlOutSpec = creator.createSpec();
-            m_learner = new Learner(m_pmmlOutSpec);
+            m_learner = new Learner(m_pmmlOutSpec, m_settings.getIncludeConstant(), m_settings.getOffsetValue());
         } else {
             throw new InvalidSettingsException("The target is "
                     + "not in the input.");
@@ -344,19 +335,6 @@ final class LinReg2Learner {
         String target = s.getTargetColumn();
         if (target == null) {
             throw new InvalidSettingsException("No target set.");
-        }
-
-        if (!s.getIncludeAll()) {
-            // check for null in the includes
-            List<String> includes = Arrays.asList(s.getIncludedColumns());
-            if (includes.contains(null)) {
-                throw new InvalidSettingsException("Included columns "
-                        + "must not contain null values");
-            }
-            if (includes.contains(target)) {
-                throw new InvalidSettingsException("Included columns "
-                        + "must not contain target value: " + target);
-            }
         }
     }
 

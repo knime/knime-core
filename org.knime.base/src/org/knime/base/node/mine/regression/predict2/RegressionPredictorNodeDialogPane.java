@@ -46,60 +46,87 @@
  * -------------------------------------------------------------------
  *
  * History
- *   Apr 30, 2010 (hofer): created
+ *   21.01.2010 (hofer): created
  */
 package org.knime.base.node.mine.regression.predict2;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * Factory for general regression predictor node.
+ * Dialog for the linear regression learner.
  *
  * @author Heiko Hofer
  */
-public final class GeneralRegressionPredictorNodeFactory
-    extends NodeFactory<GeneralRegressionPredictorNodeModel> {
+final class RegressionPredictorNodeDialogPane
+        extends NodeDialogPane {
+    private final RegressionPredictorSettings m_settings;
+    private JCheckBox m_includeProbs;
 
     /**
-     * {@inheritDoc}
+     * Create new dialog for linear regression model.
      */
-    @Override
-    public GeneralRegressionPredictorNodeModel createNodeModel() {
-        return new GeneralRegressionPredictorNodeModel();
+    @SuppressWarnings("unchecked")
+    public RegressionPredictorNodeDialogPane() {
+        super();
+        m_settings = new RegressionPredictorSettings();
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.FIRST_LINE_START;
+        c.insets = new Insets(5, 5, 0, 0);
+
+        m_includeProbs = new JCheckBox();
+        m_includeProbs.setText("Append columns with predicted probabilities");
+        panel.add(m_includeProbs , c);
+
+        c.gridy++;
+        c.insets = new Insets(2, 15, 0, 0);
+        panel.add(new JLabel("(only for nominal prediction, for instance Logistic Regression)"), c);
+
+        c.gridy++;
+        c.insets = new Insets(0, 0, 0, 0);
+        c.weighty = 1;
+        panel.add(new JPanel(), c);
+
+        addTab("Settings", panel);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getNrNodeViews() {
-        return 0;
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
+            final PortObjectSpec[] specs) throws NotConfigurableException {
+        m_settings.loadSettingsForDialog(settings);
+
+        m_includeProbs.setSelected(m_settings.getIncludeProbabilities());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<GeneralRegressionPredictorNodeModel> createNodeView(
-            final int index, final GeneralRegressionPredictorNodeModel m) {
-        throw new IndexOutOfBoundsException();
-    }
+    protected void saveSettingsTo(final NodeSettingsWO settings)
+            throws InvalidSettingsException {
+        m_settings.setIncludeProbabilities(m_includeProbs.isSelected());
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new GeneralRegressionPredictorNodeDialogPane();
+        m_settings.saveSettings(settings);
     }
 }

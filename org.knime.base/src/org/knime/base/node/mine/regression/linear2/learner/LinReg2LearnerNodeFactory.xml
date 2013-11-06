@@ -27,6 +27,11 @@
             To specify the independent columns the should be included in the regression model. 
             Numeric and nominal data can be included.
         </option>  		
+        <option name="Predefined Offset Value">
+            By default, the regression model includes a constant term. 
+            Selecting this option the given constant term is used. The value works like
+            a user defined intercept.
+        </option>         
 	</fullDescription>
     <ports>
         <inPort index="0" name="Input data">Table on which to perform regression.</inPort>

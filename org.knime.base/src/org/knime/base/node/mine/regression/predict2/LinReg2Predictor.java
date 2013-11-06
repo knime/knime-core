@@ -99,26 +99,6 @@ final class LinReg2Predictor extends RegressionPredictorCellFactory {
     // one column
     private Matrix m_beta = null;
 
-
-
-
-    /**
-     * This constructor should be used during the configure phase of a node.
-     * The created instance will give a valid spec of the output but cannot
-     * be used to compute the cells.
-     *
-     * @param portSpec the spec of the pmml input port
-     * @param tableSpec the spec of the data input port
-     * @param includeProbabilites add probabilities to the output
-     * @throws InvalidSettingsException when tableSpec and portSpec do not match
-     */
-    public LinReg2Predictor(final PMMLPortObjectSpec portSpec,
-            final DataTableSpec tableSpec,
-            final boolean includeProbabilites
-            ) throws InvalidSettingsException {
-        super(portSpec, tableSpec, includeProbabilites);
-    }
-
     /**
      * This constructor should be used when executing the node. Use it when
      * you want to compute output cells.
@@ -206,7 +186,7 @@ final class LinReg2Predictor extends RegressionPredictorCellFactory {
                         row.getCell(m_parameterI.get(parameter));
                     int index = values.indexOf(cell);
                     // these are design variables
-                    /* When building ageneral regression model, for each
+                    /* When building a general regression model, for each
                     categorical fields, there is one category used as the
                     default baseline and therefore it didn't show in the
                     ParameterList in PMML. This design for the training is fine,
@@ -232,7 +212,11 @@ final class LinReg2Predictor extends RegressionPredictorCellFactory {
         // column vector
         Matrix r = x.times(m_beta);
 
-        cells[0] = new DoubleCell(r.get(0, 0));
+        double estimate = r.get(0, 0);
+        if (m_content.getOffsetValue() != null) {
+            estimate = estimate + m_content.getOffsetValue();
+        }
+        cells[0] = new DoubleCell(estimate);
 
         return cells;
     }

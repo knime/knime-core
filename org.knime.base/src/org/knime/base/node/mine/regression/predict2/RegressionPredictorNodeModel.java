@@ -54,14 +54,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import org.knime.base.node.mine.regression.logistic.predict.LogRegPredictor;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionTranslator;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
-import org.knime.base.node.mine.regression.predict.RegressionPredictorNodeModel;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
@@ -88,20 +88,20 @@ import org.w3c.dom.Node;
  *
  * @author Heiko Hofer
  */
-final class GeneralRegressionPredictorNodeModel extends NodeModel {
-    private final GeneralRegressionPredictorSettings m_settings;
+final class RegressionPredictorNodeModel extends NodeModel {
+    private final RegressionPredictorSettings m_settings;
 
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(GeneralRegressionPredictorNodeModel.class);
+            NodeLogger.getLogger(RegressionPredictorNodeModel.class);
 
 
     /** Initialization with 1 data input, 1 model input and 1 data output. */
-    public GeneralRegressionPredictorNodeModel() {
+    public RegressionPredictorNodeModel() {
         super(new PortType[]{PMMLPortObject.TYPE,
                 BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE});
-        m_settings = new GeneralRegressionPredictorSettings();
+        m_settings = new RegressionPredictorSettings();
     }
 
     /**
@@ -136,21 +136,19 @@ final class GeneralRegressionPredictorNodeModel extends NodeModel {
     @Override
     public PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        PMMLPortObject port =
-                (PMMLPortObject)inData[0];
+        PMMLPortObject port = (PMMLPortObject)inData[0];
         List<Node> models = port.getPMMLValue().getModels(PMMLModelType.GeneralRegressionModel);
         if (models.isEmpty()) {
-            RegressionPredictorNodeModel regrPredictor = new RegressionPredictorNodeModel();
+            org.knime.base.node.mine.regression.predict.RegressionPredictorNodeModel regrPredictor =
+                    new org.knime.base.node.mine.regression.predict.RegressionPredictorNodeModel();
             return regrPredictor.execute(inData, exec);
         }
-        PMMLGeneralRegressionTranslator trans
-                = new PMMLGeneralRegressionTranslator();
+        PMMLGeneralRegressionTranslator trans = new PMMLGeneralRegressionTranslator();
         port.initializeModelTranslator(trans);
 
         BufferedDataTable data = (BufferedDataTable)inData[1];
         DataTableSpec spec = data.getDataTableSpec();
-        ColumnRearranger c = createRearranger(trans.getContent(),
-                port.getSpec(), spec);
+        ColumnRearranger c = createRearranger(trans.getContent(), port.getSpec(), spec);
         BufferedDataTable out = exec.createColumnRearrangeTable(data, c, exec);
         return new BufferedDataTable[]{out};
     }
@@ -173,16 +171,28 @@ final class GeneralRegressionPredictorNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "No input specification available");
         }
+        if (regModelSpec.getTargetCols().get(0).getType().isCompatible(DoubleValue.class)
+                && m_settings.getIncludeProbabilities()) {
+            setWarningMessage("The option \"Append columns with predicted probabilities\""
+                + " has only an effect for nominal targets");
+        }
+
         if (null != RegressionPredictorCellFactory.createColumnSpec(regModelSpec, dataSpec,
                 m_settings.getIncludeProbabilities())) {
             ColumnRearranger c = new ColumnRearranger(dataSpec);
-            c.append(new LinReg2Predictor(regModelSpec, dataSpec,
-                    m_settings.getIncludeProbabilities()));
+            c.append(new RegressionPredictorCellFactory(regModelSpec, dataSpec, m_settings.getIncludeProbabilities()) {
+                @Override
+                public DataCell[] getCells(final DataRow row) {
+                    // not called during configure
+                    return null;
+                }
+            });
             DataTableSpec outSpec = c.createSpec();
             return new DataTableSpec[]{outSpec};
         } else {
             return null;
         }
+
     }
 
 

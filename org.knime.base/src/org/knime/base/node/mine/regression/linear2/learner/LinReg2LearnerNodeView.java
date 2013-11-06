@@ -150,32 +150,39 @@ class LinReg2LearnerNodeView
                 buffer.append("</td>\n");
                 buffer.append("</tr>\n");
             }
-            if (odd) {
-                buffer.append("<tr class=\"odd\">\n");
-            } else {
-                buffer.append("<tr class=\"even\">\n");
-            }
-            buffer.append("<td>");
-            buffer.append("Intercept");
-            buffer.append("</td>\n<td class=\"numeric\">");
-            String intercept = DoubleFormat.formatDouble(content.getIntercept());
-            buffer.append(intercept);
-            buffer.append("</td>\n<td class=\"numeric\">");
-            String stdErr = DoubleFormat.formatDouble(content.getInterceptStdErr());
-            buffer.append(stdErr);
-            buffer.append("</td>\n<td class=\"numeric\">");
-            String tValue = DoubleFormat.formatDouble(content.getInterceptTValue());
-            buffer.append(tValue);
-            buffer.append("</td>\n<td class=\"numeric\">");
-            String pValue = DoubleFormat.formatDouble(content.getInterceptPValue());
-            buffer.append(pValue);
-            buffer.append("</td>\n");
-            buffer.append("</tr>\n");
-            buffer.append("</tr>\n");
+            if (content.getIncludeConstant()) {
+                if (odd) {
+                    buffer.append("<tr class=\"odd\">\n");
+                } else {
+                    buffer.append("<tr class=\"even\">\n");
+                }
 
+                buffer.append("<td>");
+                buffer.append("Intercept");
+                buffer.append("</td>\n<td class=\"numeric\">");
+                String intercept = DoubleFormat.formatDouble(content.getIntercept());
+                buffer.append(intercept);
+                buffer.append("</td>\n<td class=\"numeric\">");
+                String stdErr = DoubleFormat.formatDouble(content.getInterceptStdErr());
+                buffer.append(stdErr);
+                buffer.append("</td>\n<td class=\"numeric\">");
+                String tValue = DoubleFormat.formatDouble(content.getInterceptTValue());
+                buffer.append(tValue);
+                buffer.append("</td>\n<td class=\"numeric\">");
+                String pValue = DoubleFormat.formatDouble(content.getInterceptPValue());
+                buffer.append(pValue);
+                buffer.append("</td>\n");
+                buffer.append("</tr>\n");
+                buffer.append("</tr>\n");
+            }
             buffer.append("</table>\n");
 
-
+            if (!content.getIncludeConstant()) {
+                buffer.append("Offset Value: ");
+                String offsetValue = DoubleFormat.formatDouble(content.getOffsetValue());
+                buffer.append(offsetValue);
+                buffer.append("<br/>");
+            }
             buffer.append("Multiple R-Squared: ");
             String rSquared = DoubleFormat.formatDouble(content.getRSquared());
             buffer.append(rSquared);
