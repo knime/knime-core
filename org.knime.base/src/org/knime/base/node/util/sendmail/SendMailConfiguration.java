@@ -67,6 +67,7 @@ import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Session;
 import javax.mail.Transport;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -91,6 +92,14 @@ import org.knime.core.util.FileUtil;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class SendMailConfiguration {
+
+    /** A system property that, if set, will disallow emails sent to recipients other than specified in a
+     * comma separate list. For instance-D{@value #PROPERTY_ALLOWED_RECIPIENT_DOMAINS}=foo.com,bar.org would allow only
+     * emails to be sent to foo.com and bar.org. If other recipients are specified the node will fail during execution.
+     * If this property is not specified or empty all domains are allowed.
+     */
+    public static final String PROPERTY_ALLOWED_RECIPIENT_DOMAINS = "knime.sendmail.allowed_domains";
+
 
     /** EMail format. */
     enum EMailFormat {
@@ -438,6 +447,42 @@ final class SendMailConfiguration {
         m_attachedURLs = attachedURLs;
     }
 
+    /**  Checks if settings are complete and recipient addresses are OK (according
+     * to {@link #PROPERTY_ALLOWED_RECIPIENT_DOMAINS}.
+     * @throws InvalidSettingsException Fails if not OK. */
+    void validateSettings() throws InvalidSettingsException {
+        if (getSmtpHost() == null) {
+            throw new InvalidSettingsException("No SMTP host specified");
+        }
+    }
+
+    /** Throws exception if the address list contains forbidden entries
+     * according to {@link #PROPERTY_ALLOWED_RECIPIENT_DOMAINS}.
+     * @param addressString The non null string as entered in dialog (addresses separated by comma)
+     * @return The list of addresses, passed through the validator.
+     * @throws AddressException If parsing fails.
+     * @thorws InvalidSettingsException If domain not allowed. */
+    private InternetAddress[] parseAndValidateRecipients(final String addressString)
+            throws InvalidSettingsException, AddressException {
+        String validDomainListString = System.getProperty(PROPERTY_ALLOWED_RECIPIENT_DOMAINS);
+        InternetAddress[] addressArray = InternetAddress.parse(addressString, false);
+        String[] validDomains = StringUtils.isEmpty(validDomainListString)
+                ? new String[0] : validDomainListString.toLowerCase().split(",");
+        for (InternetAddress a : addressArray) {
+            boolean isOK = validDomains.length == 0; // ok if domain list not specified
+            final String address = a.getAddress().toLowerCase();
+            for (String validDomain : validDomains) {
+                isOK = isOK || address.endsWith(validDomain);
+            }
+            if (!isOK) {
+                throw new InvalidSettingsException(String.format("Recipient '%s' is not valid as the "
+                        +  "domain is not in the allowed list (system property %s=%s)", address,
+                        PROPERTY_ALLOWED_RECIPIENT_DOMAINS, validDomainListString));
+            }
+        }
+        return addressArray;
+    }
+
     /** Send the mail.
      * @throws MessagingException ... when sending fails, also authorization exceptions etc.
      * @throws IOException SSL problems or when copying remote URLs to temp local file.
@@ -497,13 +542,13 @@ final class SendMailConfiguration {
             message.setFrom();
         }
         if (!StringUtils.isBlank(getTo())) {
-            message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(getTo(), false));
+            message.addRecipients(Message.RecipientType.TO, parseAndValidateRecipients(getTo()));
         }
         if (!StringUtils.isBlank(getCc())) {
-            message.addRecipients(Message.RecipientType.CC, InternetAddress.parse(getCc(), false));
+            message.addRecipients(Message.RecipientType.CC, parseAndValidateRecipients(getCc()));
         }
         if (!StringUtils.isBlank(getBcc())) {
-            message.addRecipients(Message.RecipientType.BCC, InternetAddress.parse(getBcc(), false));
+            message.addRecipients(Message.RecipientType.BCC, parseAndValidateRecipients(getBcc()));
         }
         message.setHeader("X-Mailer", "KNIME/" + KNIMEConstants.VERSION);
         message.setSentDate(new Date());

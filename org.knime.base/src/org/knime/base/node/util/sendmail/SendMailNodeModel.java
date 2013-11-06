@@ -81,9 +81,10 @@ final class SendMailNodeModel extends NodeModel implements FlowVariableResolvabl
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_configuration == null || m_configuration.getSmtpHost() == null) {
+        if (m_configuration == null) {
             throw new InvalidSettingsException("No configuration available, configure in dialog.");
         }
+        m_configuration.validateSettings();
         return new PortObjectSpec[0];
     }
 
