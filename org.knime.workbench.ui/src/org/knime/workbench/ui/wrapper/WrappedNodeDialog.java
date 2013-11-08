@@ -356,12 +356,12 @@ public class WrappedNodeDialog extends Dialog {
                     // change OK button label, when CTRL is pressed
                     btnOK.setText("OK - Execute");
                 }
-                if ((ke.keyCode == SWT.CR) && ((ke.stateMask == SWT.CTRL) || (ke.stateMask == SWT.SHIFT + SWT.CTRL))) {
+                if ((ke.keyCode == SWT.CR) && ((ke.stateMask & SWT.CTRL) != 0)) {
                     // Bug 3942: transfer focus to OK button to have all component to auto-commit their changes
                     btnOK.forceFocus();
                     // force OK - Execute when CTRL and ENTER is pressed
                     // open first out-port view if SHIFT is pressed
-                    doOK(ke, true, ke.stateMask == SWT.SHIFT + SWT.CTRL);
+                    doOK(ke, true, (ke.stateMask & SWT.SHIFT) != 0);
                     // reset ok button state/label
                     if (!ke.doit) {
                         btnOK.setText("OK");
@@ -380,10 +380,10 @@ public class WrappedNodeDialog extends Dialog {
         btnOK.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent se) {
-                if (se.stateMask == SWT.SHIFT + SWT.CTRL) {
+                if ((se.stateMask & SWT.SHIFT) != 0 && (se.stateMask & SWT.CTRL) != 0) {
                     // OK plus execute and open first out-port view
                     doOK(se, true, true);
-                } else if (se.stateMask == SWT.CTRL) {
+                } else if ((se.stateMask & SWT.CTRL) != 0) {
                     // OK plus execute only
                     doOK(se, true, false);
                 } else {
