@@ -54,7 +54,9 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlObject;
+import org.apache.xmlbeans.XmlOptionCharEscapeMap;
 import org.apache.xmlbeans.XmlOptions;
 import org.apache.xmlbeans.XmlTokenSource;
 import org.dmg.pmml.PMMLDocument;
@@ -65,6 +67,9 @@ import org.dmg.pmml.PMMLDocument;
  *
  */
 public final class PMMLFormatter {
+
+    private static final Logger LOGGER = Logger.getLogger(PMMLFormatter.class);
+
     private static final XmlOptions TEXT_SAVE_XML_OPTIONS;
 
     static {
@@ -78,7 +83,43 @@ public final class PMMLFormatter {
         TEXT_SAVE_XML_OPTIONS.setSaveAggressiveNamespaces();
         TEXT_SAVE_XML_OPTIONS.setSavePrettyPrint();
         TEXT_SAVE_XML_OPTIONS.setCharacterEncoding("UTF-8");
+        TEXT_SAVE_XML_OPTIONS.setSaveSubstituteCharacters(new PMMLXMLCharEscapeMap());
         TEXT_SAVE_XML_OPTIONS.setSaveSuggestedPrefixes(suggestedNamespaces);
+    }
+
+    public static class PMMLXMLCharEscapeMap extends XmlOptionCharEscapeMap{
+
+        @Override
+        public boolean containsChar(final char ch) {
+            if (isBadChar(ch)) {
+                return true;
+            }
+            return super.containsChar(ch);
+        }
+
+        @Override
+        public String getEscapedString(final char ch) {
+            if (isBadChar(ch)) {
+                LOGGER.warn("Illegal control character: " + "#x" + Integer.toHexString(ch) + " was escaped with '?'");
+                return "?";
+            }
+            return super.getEscapedString(ch);
+        }
+
+        /**
+         * Test if a character is valid in xml character content. See
+         * http://www.w3.org/TR/REC-xml#NT-Char
+         */
+
+        private boolean isBadChar (final char ch)
+        {
+            return ! (
+                (ch >= 0x20 && ch <= 0xD7FF ) ||
+                (ch >= 0xE000 && ch <= 0xFFFD) ||
+                (ch >= 0x10000 && ch <= 0x10FFFF) ||
+                (ch == 0x9) || (ch == 0xA) || (ch == 0xD)
+                );
+        }
     }
 
     private PMMLFormatter() {

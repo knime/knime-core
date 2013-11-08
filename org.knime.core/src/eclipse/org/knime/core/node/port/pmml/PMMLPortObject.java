@@ -867,7 +867,7 @@ public final class PMMLPortObject implements PortObject {
      */
     public PMMLValue getPMMLValue() {
         try {
-            return (PMMLValue)PMMLCellFactory.create(m_pmmlDoc.toString());
+            return (PMMLValue)PMMLCellFactory.create(PMMLFormatter.xmlText(m_pmmlDoc));
         } catch (Exception e) {
             throw new RuntimeException("Could not create PMML value.", e);
         }
