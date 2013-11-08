@@ -50,6 +50,8 @@
  */
 package org.knime.base.node.mine.decisiontree2.predictor2;
 
+import java.awt.Dimension;
+
 import javax.swing.JPanel;
 
 import org.knime.base.node.mine.util.PredictorNodeDialog;
@@ -109,6 +111,9 @@ public class DecTreePredictorNodeFactory extends NodeFactory<DecTreePredictorNod
     @Override
     public NodeDialogPane createNodeDialogPane() {
         return new PredictorNodeDialog(new SettingsModelBoolean(DecTreePredictorNodeModel.SHOW_DISTRIBUTION, false)) {
+            {
+                getPanel().setPreferredSize(new Dimension(510, 200));
+            }
             /**
              * {@inheritDoc}
              */
