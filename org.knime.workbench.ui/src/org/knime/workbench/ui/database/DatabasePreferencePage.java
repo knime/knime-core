@@ -115,6 +115,9 @@ public class DatabasePreferencePage extends FieldEditorPreferencePage
 			    FileDialog dialog = new FileDialog(shell);
 			    dialog.setFilterExtensions(new String[]{"*.jar", "*.zip"});
 				String fileName = dialog.open();
+				if (fileName == null) {
+				    return null;
+				}
 				try {
 					DatabaseDriverLoader.loadDriver(new File(fileName));
 					return fileName;
