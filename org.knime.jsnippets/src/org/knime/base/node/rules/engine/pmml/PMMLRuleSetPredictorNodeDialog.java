@@ -180,11 +180,11 @@ public class PMMLRuleSetPredictorNodeDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
         try {
             m_replace.loadSettingsFrom(settings);
-            m_newColumn.setSelected(!m_replace.getBooleanValue());
-            m_replaceColumn.setSelected(m_replace.getBooleanValue());
         } catch (InvalidSettingsException e) {
-            throw new NotConfigurableException(e.getMessage(), e);
+            m_replace.setBooleanValue(PMMLRuleSetPredictorNodeModel.DEFAULT_DO_REPLACE_COLUMN);
         }
+        m_newColumn.setSelected(!m_replace.getBooleanValue());
+        m_replaceColumn.setSelected(m_replace.getBooleanValue());
         m_outputColumn.loadSettingsFrom(settings, specs);
         m_replacedColumn.loadSettingsFrom(settings, specs);
         m_computeConfidence.loadSettingsFrom(settings, specs);
