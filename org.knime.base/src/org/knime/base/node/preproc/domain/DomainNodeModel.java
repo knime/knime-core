@@ -54,6 +54,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -68,8 +69,10 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -166,19 +169,7 @@ public class DomainNodeModel extends NodeModel {
                         possVals[i] = null;
                     }
                 }
-                if (!c.isMissing() && mins[i] != null) {
-                    if (mins[i].isMissing()) {
-                        mins[i] = c;
-                        maxs[i] = c;
-                        continue; // it was the first row with a valid value
-                    }
-                    if (comparators[i].compare(c, mins[i]) < 0) {
-                        mins[i] = c;
-                    }
-                    if (comparators[i].compare(c, maxs[i]) > 0) {
-                        maxs[i] = c;
-                    }
-                }
+                updateMinMax(i, c, mins, maxs, comparators);
             }
             exec.checkCanceled();
             exec.setProgress(row / rowCount, "Processed row #"
@@ -220,6 +211,50 @@ public class DomainNodeModel extends NodeModel {
         BufferedDataTable o = exec.createSpecReplacerTable(inData[0], newSpec);
         return new BufferedDataTable[]{o};
     }
+
+    /** Updates the min and max value for an respective column. This method
+     * does nothing if the min and max values don't need to be stored, e.g.
+     * the column at hand contains string values.
+     * @param col The column of interest.
+     * @param cell The new value to check.
+     */
+    private void updateMinMax(final int col, final DataCell cell,
+        final DataCell[] mins, final DataCell[] maxs, final DataValueComparator[] comparators) {
+        if (mins[col] == null || cell.isMissing()) {
+            return;
+        }
+        DataCell value = handleNaN(cell instanceof BlobWrapperDataCell ? ((BlobWrapperDataCell)cell).getCell() : cell);
+        if (value.isMissing()) {
+            return;
+        }
+
+        Comparator<DataCell> comparator = comparators[col];
+        if (mins[col].isMissing() || (comparator.compare(value, mins[col]) < 0)) {
+            mins[col] = value;
+        }
+        if (maxs[col].isMissing() || (comparator.compare(value, maxs[col]) > 0)) {
+            maxs[col] = value;
+        }
+    }
+
+    /*
+     * Returns
+     * - the cell if it is not a DoubleValue
+     * - the cell if it is not NaN
+     * - a missing cell if it is NaN
+     */
+    private static DataCell handleNaN(final DataCell cell) {
+        if (cell.getType().isCompatible(DoubleValue.class)) {
+            if (Double.isNaN(((DoubleValue) cell).getDoubleValue())) {
+                return DataType.getMissingCell();
+            } else {
+                return cell;
+            }
+        } else {
+            return cell;
+        }
+    }
+
 
     /**
      * {@inheritDoc}
