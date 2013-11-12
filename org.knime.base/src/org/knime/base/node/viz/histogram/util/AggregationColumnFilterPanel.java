@@ -301,6 +301,10 @@ public class AggregationColumnFilterPanel extends JPanel {
     protected void onRemIt() {
         // add all selected elements from the include to the exclude list
         final Object[] includes = m_inclList.getSelectedValues();
+        if (includes == null || includes.length < 1) {
+            //nothing to exclude
+            return;
+        }
         final HashSet<DataColumnSpec> hash = new HashSet<DataColumnSpec>();
         for (final Object include : includes) {
             hash.add(((AggregationColumnIcon)include).getColumnSpec());
@@ -328,6 +332,10 @@ public class AggregationColumnFilterPanel extends JPanel {
     protected void onAddIt() {
         // add all selected elements from the exclude to the include list
         final Object[] excludes = m_exclList.getSelectedValues();
+        if (excludes == null || excludes.length < 1) {
+            //nothing to include
+            return;
+        }
         final HashSet<DataColumnSpec> hash = new HashSet<DataColumnSpec>();
         for (final Object exlude : excludes) {
             hash.add((DataColumnSpec)exlude);

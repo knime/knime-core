@@ -294,12 +294,14 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         setShowMissingValBin(false);
         setShowInvalidValBin(false);
         final List<BinDataModel> bins = getBins();
-        final BinDataModel missingValueBin = getMissingValueBin();
-        final BinDataModel invalidValueBin = getInvalidValueBin();
         for (final BinDataModel bin : bins) {
             bin.clear();
         }
+        //get and clear also all special bins
+        final BinDataModel missingValueBin = getMissingValueBin();
+        final BinDataModel invalidValueBin = getInvalidValueBin();
         missingValueBin.clear();
+        invalidValueBin.clear();
         addRows2Bins(bins, missingValueBin, invalidValueBin);
         setShowMissingValBin(showMissingWas);
         setShowInvalidValBin(showInvalidWas);
