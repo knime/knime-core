@@ -33,8 +33,7 @@
 				the new column if the rule matches.
 			</p>
 			<p>The outcome of a rule can either be a constant string, a constant
-				number or boolean constant, or a reference to another column or flow
-				variable value.
+				number or boolean constant.
 				The type of the outcome column is the common super
 				type of all possible
 				outcomes (including the rules that can never
@@ -81,16 +80,13 @@ $Col0$ = "Active" AND $Col1$ &lt;= 5 => "Outlier"
 		<option name="Description">Short help about the operator.</option>
 		<option name="Expression">The rule editor. You can complete the expressions
 			with Ctrl+Space. Each row represents a rule. The background of the
-			line signals errors (pink), or comments (yellow). The right side of
+			line signals errors (pink), or comments (yellow). The left side of
 			the editor can show an error icon.
 		</option>
-		<option name="Appended column name">Name of the newly appended column,
-			which contains
-			the outcome of the rules.
+		<option name="Appended Column">Name of the newly appended column,
+			which contains the outcome of the rules.
 		</option>
-		<option name="Append column">When checked, new column with the specified name
-			will be added</option>
-		<option name="Replace column">The column to replace</option>
+		<option name="Replace Column">The column to replace</option>
 	</fullDescription>
 
 	<ports>

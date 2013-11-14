@@ -272,8 +272,7 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
      */
     private PMMLPortObjectSpec createPMMLPortObjectSpec(final DataTableSpec spec, final List<String> usedColumns) {
         String targetCol =
-            m_settings.isAppendColumn() ? DataTableSpec.getUniqueColumnName(spec, m_settings.getNewColName())
-                : m_settings.getReplaceColumn();
+            m_settings.isAppendColumn() ? m_settings.getNewColName() : m_settings.getReplaceColumn();
         Set<String> set = new LinkedHashSet<String>(usedColumns);
         List<String> learnCols = new LinkedList<String>();
         for (int i = 0; i < spec.getNumColumns(); i++) {

@@ -107,9 +107,11 @@ public class PMMLRuleSetPredictorNodeDialog extends NodeDialogPane {
         outputBox.setBorder(outputBorder);
         m_outputColumn = new DialogComponentString(new SettingsModelString(
             PMMLRuleSetPredictorNodeModel.CFGKEY_OUTPUT_COLUMN, PMMLRuleSetPredictorNodeModel.DEFAULT_OUTPUT_COLUMN),
-                "Output column");
+                "");
         @SuppressWarnings("unchecked")
-        DialogComponentColumnNameSelection colSelection = new DialogComponentColumnNameSelection(PMMLRuleSetPredictorNodeModel.createReplaceColumn(), "Replaced column", 0, DoubleValue.class, StringValue.class, BooleanValue.class);
+        DialogComponentColumnNameSelection colSelection =
+            new DialogComponentColumnNameSelection(PMMLRuleSetPredictorNodeModel.createReplaceColumn(),
+                "", 0, DoubleValue.class, StringValue.class, BooleanValue.class);
         m_replacedColumn = colSelection;
         JPanel newColumnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         newColumnPanel.add(m_newColumn);
@@ -119,22 +121,19 @@ public class PMMLRuleSetPredictorNodeDialog extends NodeDialogPane {
         replacedColumnPanel.add(m_replaceColumn);
         replacedColumnPanel.add(m_replacedColumn.getComponentPanel());
         outputBox.add(replacedColumnPanel);
-//        createNewGroup("Output");
-//        setHorizontalPlacement(true);
-//        addDialogComponent(m_outputColumn);
-//        setHorizontalPlacement(false);
-//        setHorizontalPlacement(true);
-//        addDialogComponent(m_replacedColumn);
+
         mainPanel.add(outputBox, BorderLayout.CENTER);
         Box confidenceBox = Box.createHorizontalBox();
         confidenceBox.setBorder(new TitledBorder("Confidence"));
         mainPanel.add(confidenceBox, BorderLayout.SOUTH);
-        //createNewGroup("Confidence");
-        final SettingsModelBoolean computeConfidenceModel = new SettingsModelBoolean(PMMLRuleSetPredictorNodeModel.CFGKEY_ADD_CONFIDENCE, PMMLRuleSetPredictorNodeModel.DEFAULT_ADD_CONFIDENCE);
+        final SettingsModelBoolean computeConfidenceModel =
+            new SettingsModelBoolean(PMMLRuleSetPredictorNodeModel.CFGKEY_ADD_CONFIDENCE,
+                PMMLRuleSetPredictorNodeModel.DEFAULT_ADD_CONFIDENCE);
         m_computeConfidence = new DialogComponentBoolean(computeConfidenceModel, "Compute confidence?");
-        //addDialogComponent(m_computeConfidence);
         confidenceBox.add(m_computeConfidence.getComponentPanel());
-        final SettingsModelString confidenceColumnModel = new SettingsModelString(PMMLRuleSetPredictorNodeModel.CFGKEY_CONFIDENCE_COLUMN, PMMLRuleSetPredictorNodeModel.DEFAULT_CONFIDENCE_COLUN);
+        final SettingsModelString confidenceColumnModel =
+            new SettingsModelString(PMMLRuleSetPredictorNodeModel.CFGKEY_CONFIDENCE_COLUMN,
+                PMMLRuleSetPredictorNodeModel.DEFAULT_CONFIDENCE_COLUN);
         ChangeListener listener = new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -144,7 +143,6 @@ public class PMMLRuleSetPredictorNodeDialog extends NodeDialogPane {
         computeConfidenceModel.addChangeListener(listener);
         m_confidenceColumn = new DialogComponentString(confidenceColumnModel, "Confidence column");
         confidenceBox.add(m_confidenceColumn.getComponentPanel());
-        //addDialogComponent(m_confidenceColumn);
         listener.stateChanged(null);
         m_group.add(m_newColumn);
         m_group.add(m_replaceColumn);
@@ -189,6 +187,8 @@ public class PMMLRuleSetPredictorNodeDialog extends NodeDialogPane {
         m_replacedColumn.loadSettingsFrom(settings, specs);
         m_computeConfidence.loadSettingsFrom(settings, specs);
         m_confidenceColumn.loadSettingsFrom(settings, specs);
+        m_confidenceColumn.getModel().setEnabled(
+            ((SettingsModelBoolean)m_computeConfidence.getModel()).getBooleanValue());
         for (ActionListener listener : m_newColumn.getActionListeners()) {
             listener.actionPerformed(null);
         }

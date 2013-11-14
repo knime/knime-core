@@ -53,13 +53,17 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.dmg.pmml.RuleSelectionMethodDocument.RuleSelectionMethod;
+import org.knime.base.node.rules.engine.pmml.PMMLRuleTranslator.Rule;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -72,6 +76,7 @@ import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -115,6 +120,7 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
     static final String DEFAULT_REPLACE_COLUMN = "";
 
     static final String CFGKEY_DO_REPLACE_COLUMN = "replace?";
+
     static final boolean DEFAULT_DO_REPLACE_COLUMN = false;
 
     private SettingsModelString m_outputColumn = new SettingsModelString(CFGKEY_OUTPUT_COLUMN, DEFAULT_OUTPUT_COLUMN);
@@ -133,6 +139,7 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
     static SettingsModelString createReplaceColumn() {
         return new SettingsModelString(CFGKEY_REPLACE_COLUMN, DEFAULT_REPLACE_COLUMN);
     }
+
     private final SettingsModelBoolean m_doReplaceColumn = createDoReplace();
 
     /**
@@ -160,10 +167,11 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         if (m_doReplaceColumn.getBooleanValue()) {
             DataTableSpec preSpec = table.getSpec();
             DataColumnSpec[] columns = new DataColumnSpec[preSpec.getNumColumns()];
-            for (int i = columns.length; i-->0;) {
+            for (int i = columns.length; i-- > 0;) {
                 columns[i] = preSpec.getColumnSpec(i);
             }
-            int columnIndex = ((BufferedDataTable)inData[0]).getSpec().findColumnIndex(m_replaceColumn.getStringValue());
+            int columnIndex =
+                ((BufferedDataTable)inData[0]).getSpec().findColumnIndex(m_replaceColumn.getStringValue());
             DataColumnSpecCreator creator = new DataColumnSpecCreator(columns[columnIndex]);
             creator.setName(m_replaceColumn.getStringValue());
             columns[columnIndex] = creator.createSpec();
@@ -198,18 +206,45 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         final List<PMMLRuleTranslator.Rule> rules = translator.getRules();
         ColumnRearranger ret = new ColumnRearranger(spec);
         final List<DataColumnSpec> targetCols = obj.getSpec().getTargetCols();
-        //TODO Maybe this check is not necessary, we do not use this info besides the type.
-        if (targetCols.size() != 1) {
-            throw new InvalidSettingsException("Exactly on output column is required, but got: " + targetCols);
+        final DataType dataType = targetCols.isEmpty() ? StringCell.TYPE : targetCols.get(0).getType();//createType(m_outputColumnType.getStringValue());
+        DataColumnSpecCreator specCreator =
+            new DataColumnSpecCreator(m_doReplaceColumn.getBooleanValue() ? m_replaceColumn.getStringValue()
+                : m_outputColumn.getStringValue(), dataType);
+        Set<DataCell> outcomes = new LinkedHashSet<DataCell>();
+        for (Rule rule : rules) {
+            DataCell outcome;
+            if (dataType.equals(BooleanCell.TYPE)) {
+                outcome = BooleanCell.get(Boolean.parseBoolean(rule.getOutcome()));
+            } else if (dataType.equals(StringCell.TYPE)) {
+                outcome = new StringCell(rule.getOutcome());
+            } else if (dataType.equals(DoubleCell.TYPE)) {
+                try {
+                    outcome = new DoubleCell(Double.parseDouble(rule.getOutcome()));
+                } catch (NumberFormatException e) {
+                    //ignore
+                    continue;
+                }
+            } else if (dataType.equals(IntCell.TYPE)) {
+                try {
+                    outcome = new IntCell(Integer.parseInt(rule.getOutcome()));
+                } catch (NumberFormatException e) {
+                    //ignore
+                    continue;
+                }
+            } else if (dataType.equals(LongCell.TYPE)) {
+                try {
+                    outcome = new LongCell(Long.parseLong(rule.getOutcome()));
+                } catch (NumberFormatException e) {
+                    //ignore
+                    continue;
+                }
+            } else {
+                throw new UnsupportedOperationException("Unknown outcome type: " + dataType);
+            }
+            outcomes.add(outcome);
         }
-        DataColumnSpecCreator specCreator = new DataColumnSpecCreator(targetCols.get(0));
-        if (m_doReplaceColumn.getBooleanValue()) {
-            specCreator.setName(DataTableSpec.getUniqueColumnName(spec, m_replaceColumn.getStringValue()));
-        } else {
-            specCreator.setName(m_outputColumn.getStringValue());
-        }
+        specCreator.setDomain(new DataColumnDomainCreator(outcomes).createDomain());
         DataColumnSpec colSpec = specCreator.createSpec();
-        final DataType dataType = colSpec.getType();
         final RuleSelectionMethod ruleSelectionMethod = translator.getSelectionMethodList().get(0);
         final String defaultScore = translator.getDefaultScore();
         final Double defaultConfidence = translator.getDefaultConfidence();
@@ -375,6 +410,9 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
                     if (IntCell.TYPE.isASuperTypeOf(dataType)) {
                         return new IntCell(Integer.parseInt(outcome));
                     }
+                    if (LongCell.TYPE.isASuperTypeOf(dataType)) {
+                        return new LongCell(Long.parseLong(outcome));
+                    }
                     if (DoubleCell.TYPE.isASuperTypeOf(dataType)) {
                         return new DoubleCell(Double.parseDouble(outcome));
                     }
@@ -402,8 +440,8 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
             }
         });
         if (m_doReplaceColumn.getBooleanValue()) {
-            ret.move(ret.getColumnCount() - 1 - (m_addConfidence.getBooleanValue() ? 1 : 0), oldColumnIndex);
             ret.remove(m_replaceColumn.getStringValue());
+            ret.move(ret.getColumnCount() - 1 - (m_addConfidence.getBooleanValue() ? 1 : 0), oldColumnIndex);
         }
         return ret;
     }
@@ -446,11 +484,13 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
             throw new InvalidSettingsException(sb.toString());
         }
         List<DataColumnSpec> targetCols = portObjectSpec.getTargetCols();
-        DataColumnSpecCreator specCreator = new DataColumnSpecCreator(targetCols.get(0));
+        final DataType dataType = targetCols.isEmpty() ? StringCell.TYPE : targetCols.get(0).getType();
+        DataColumnSpecCreator specCreator;
         if (m_doReplaceColumn.getBooleanValue()) {
-            specCreator.setName(m_replaceColumn.getStringValue());
+            String col = m_replaceColumn.getStringValue();
+            specCreator = new DataColumnSpecCreator(col, dataType);
         } else {
-            specCreator.setName(m_outputColumn.getStringValue());
+            specCreator = new DataColumnSpecCreator(m_outputColumn.getStringValue(), dataType);
         }
         SingleCellFactory dummy = new SingleCellFactory(specCreator.createSpec()) {
             /**
