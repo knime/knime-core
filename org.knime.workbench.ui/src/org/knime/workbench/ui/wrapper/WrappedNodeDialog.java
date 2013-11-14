@@ -50,9 +50,11 @@
  */
 package org.knime.workbench.ui.wrapper;
 
+import java.awt.Dimension;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -662,9 +664,14 @@ public class WrappedNodeDialog extends Dialog {
     protected Point getInitialSize() {
         final JPanel panel = m_dialogPane.getPanel();
 
-        // underlying pane sizes
-        int width = panel.getPreferredSize().width;
-        int height = panel.getPreferredSize().height;
+        final AtomicReference<Dimension> preferredSize = new AtomicReference<Dimension>(new Dimension(0, 0));
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            @Override
+            public void run() {
+                preferredSize.set(panel.getPreferredSize());
+            }
+        });
+
 
         // button bar sizes
         int widthButtonBar = buttonBar.computeSize(SWT.DEFAULT, SWT.DEFAULT).x;
@@ -676,11 +683,11 @@ public class WrappedNodeDialog extends Dialog {
 
         // we need to make sure that we have at least enough space for
         // the button bar (+ some extra space)
-        width =
-                Math.max(Math.max(widthButtonBar, widthDialog), width
+        int width =
+                Math.max(Math.max(widthButtonBar, widthDialog), preferredSize.get().width
                         + widthDialog - widthButtonBar + EXTRA_WIDTH);
-        height =
-                Math.max(Math.max(heightButtonBar, heightDialog), height
+        int height =
+                Math.max(Math.max(heightButtonBar, heightDialog), preferredSize.get().height
                         + heightDialog + EXTRA_HEIGHT);
 
         // set the size of the container composite
