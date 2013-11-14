@@ -104,7 +104,8 @@ public class InvokeUpdateAction extends AbstractP2Action {
                 if (monitor.isCanceled()) {
                     break;
                 }
-                if (uri.getHost().endsWith(".knime.org")) {
+                if (("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
+                    && (uri.getHost() != null) && uri.getHost().endsWith(".knime.org")) {
                     try {
                         URL nextVersionURL = new URL(uri.toString() + "/nextRelease.txt");
                         monitor.subTask("Checking " + nextVersionURL);
