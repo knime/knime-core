@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./extract_context_props.png" type="Source">
+	<name>Extract Context Properties</name>
+	<shortDescription>Reads workflow context related properties, 
+	   including logged in user.</shortDescription>
+	<fullDescription>
+		<intro>Reads workflow context related properties, 
+            including logged in user. The fields are 
+            extracted using the KNIME workflow context.<br />
+            The properties are: 
+            <ul>
+                <li><code>context.workflow.user</code> The authenticated user if executed on KNIME server, the system user otherwise.</li>
+                <li><code>context.workflow.temp.location</code> The location for temporary files of the workflow job.</li>
+            </ul>
+            More properties may be added in the future.
+        </intro>
+        <option name="Extract all available properties">
+            If selected all available context properties are extracted.
+        </option>
+	</fullDescription>
+	<ports>
+		<outPort index="0" name="Context Properties">
+			Context properties as flow variables.</outPort>
+	</ports>
+</knimeNode>

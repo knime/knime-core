@@ -1520,7 +1520,13 @@
       </node>
       -->
       <!-- new ones -->
-      
+      <node
+            after="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory"
+            category-path="/io/io-other"
+            expert-flag="false"
+            factory-class="org.knime.base.node.io.extractcontextprop.ReadContextPropertyNodeFactory"
+            id="org.knime.base.node.io.extractcontextprop.ReadContextPropertyNodeFactory">
+      </node>
 
    </extension>
    
