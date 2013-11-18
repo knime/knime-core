@@ -278,6 +278,9 @@ public class DataContainer implements RowAppender {
     /** Put into write queue to signal end of writing process. */
     private static final Object CONTAINER_CLOSE = new Object();
 
+    /** Put into read queue to signal failure while writing a row. */
+    private static final Object CONTAINER_WRITE_FAILED = new Object();
+
     /** The object that instantiates the buffer, may be set right after
      * constructor call before any rows are added. */
     private BufferCreator m_bufferCreator;
@@ -765,7 +768,12 @@ public class DataContainer implements RowAppender {
                 try {
                     m_fillingRowBuffer = m_rowBufferExchanger.exchange(
                             m_fillingRowBuffer, 30, TimeUnit.SECONDS);
-                    assert m_fillingRowBuffer.isEmpty();
+                    if (!m_fillingRowBuffer.isEmpty()) {
+                        Object ob = m_fillingRowBuffer.get(0);
+                        assert ob == CONTAINER_WRITE_FAILED : "Not expected element in write queue: " + ob;
+                        m_fillingRowBuffer.clear();
+                        checkAsyncWriteThrowable();
+                    }
                     return;
                 } catch (TimeoutException e) {
                     if (m_asyncAddFuture.isDone()) {
@@ -1425,6 +1433,16 @@ public class DataContainer implements RowAppender {
                 return null;
             } catch (Throwable t) {
                 throwable.compareAndSet(null, t);
+                boolean callExchange = !queue.contains(CONTAINER_CLOSE);
+                queue.clear();
+                queue.add(CONTAINER_WRITE_FAILED);
+                if (callExchange)  {
+                    try {
+                        exchanger.exchange(queue, 30, TimeUnit.SECONDS);
+                    } catch (Exception e) {
+                        // ignore
+                    }
+                }
                 return null;
             }
         }
