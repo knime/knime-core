@@ -68,22 +68,44 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
 
     private boolean m_isExpertNode;
 
+    private String m_contributingPlugin;
 
-    protected AbstractRepositoryObject(final String id, final String name) {
+
+    /**
+     * Creates a new abstract repository object.
+     *
+     * @param id the (unique) ID, must not be <code>null</code>
+     * @param name the name, must not be <code>null</code>
+     * @param contributingPlugin the contributing plug-in's ID, must not be <code>null</code>
+     */
+    protected AbstractRepositoryObject(final String id, final String name, final String contributingPlugin) {
         if (name == null) {
             throw new IllegalArgumentException("Name must not be null");
+        }
+        if (id == null) {
+            throw new IllegalArgumentException("ID must not be null");
+        }
+        if (contributingPlugin == null) {
+            throw new IllegalArgumentException("Contributing plug-in must not be null");
         }
 
         m_id = id;
         m_name = name;
+        m_contributingPlugin = contributingPlugin;
     }
 
+    /**
+     * Creates a copy of the given repository object.
+     *
+     * @param copy the object to copy
+     */
     protected AbstractRepositoryObject(final AbstractRepositoryObject copy) {
         this.m_parent = copy.m_parent;
         this.m_name = copy.m_name;
         this.m_id = copy.m_id;
         this.m_afterID = copy.m_afterID;
         this.m_isExpertNode = copy.m_isExpertNode;
+        this.m_contributingPlugin = copy.m_contributingPlugin;
     }
 
     /**
@@ -91,7 +113,7 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
      * {@inheritDoc}
      */
     @Override
-    public Object getAdapter(final Class adapter) {
+    public Object getAdapter(@SuppressWarnings("rawtypes") final Class adapter) {
         return null;
     }
 
@@ -122,7 +144,6 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     }
 
     /**
-     * Moves this object to another parent.
      * {@inheritDoc}
      */
     @Override
@@ -132,15 +153,14 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     }
 
     /**
-     * internal, sets parent to null.
-     *
+     * Internal, sets parent to <code>null</code>.
      */
     protected void detach() {
         m_parent = null;
     }
 
     /**
-     * @return Returns the id.
+     * {@inheritDoc}
      */
     @Override
     public String getID() {
@@ -148,12 +168,19 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     }
 
     /**
-     * @return Returns the name.
+     * Returns the human-readable name for this object.
+     *
+     * @return the name
      */
     public String getName() {
         return m_name;
     }
 
+    /**
+     * Sets a new name for this object.
+     *
+     * @param newName the new name, must not be <code>null</code>
+     */
     public void setName(final String newName) {
         if (newName == null) {
             throw new IllegalArgumentException("Name must not be null");
@@ -161,8 +188,8 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
 
         if (m_parent != null) {
             for (IRepositoryObject o : m_parent.getChildren()) {
-                if (!(o == this) && (o instanceof AbstractRepositoryObject) &&
-                    newName.equals(((AbstractRepositoryObject)o).getName())) {
+                if (!(o == this) && (o instanceof AbstractRepositoryObject)
+                        && newName.equals(((AbstractRepositoryObject)o).getName())) {
                     throw new IllegalArgumentException("A sibling with name '" + newName + "' already exists");
                 }
             }
@@ -171,14 +198,18 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     }
 
     /**
-     * @return Returns the afterID.
+     * Returns the ID of the object after which this object should occur.
+     *
+     * @return the after-ID
      */
     public String getAfterID() {
         return m_afterID;
     }
 
     /**
-     * @param id the id to set
+     * Sets the ID of the object after which this object should occur.
+     *
+     * @param id the id, should not be <code>null</code>
      */
     public void setAfterID(final String id) {
         m_afterID = id;
@@ -242,5 +273,13 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
             return false;
         }
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getContributingPlugin() {
+        return m_contributingPlugin;
     }
 }

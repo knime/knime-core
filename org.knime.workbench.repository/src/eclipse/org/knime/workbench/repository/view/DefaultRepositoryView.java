@@ -51,20 +51,12 @@
 package org.knime.workbench.repository.view;
 
 import java.io.File;
-import java.util.List;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.service.datalocation.Location;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.knime.core.node.NodeLogger;
-import org.knime.workbench.repository.RepositoryManager;
-import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.CustomRepositoryManager;
 import org.knime.workbench.repository.model.Root;
 
@@ -116,49 +108,6 @@ public class DefaultRepositoryView extends AbstractRepositoryView {
                 throw new PartInitException(
                         "Could not load custom repository content", ex);
             }
-        }
-    }
-
-    @Override
-    protected void readRepository(final Composite parent, final IProgressMonitor monitor) {
-        super.readRepository(parent, monitor);
-
-        Root repository = RepositoryManager.INSTANCE.getRoot(monitor);
-        // check if there were categories that could not be
-        // processed properly
-        // i.e. the after-relationship information was wrong
-        List<Category> problemCategories = repository.getProblemCategories();
-        if (problemCategories.size() > 0) {
-            final StringBuilder message = new StringBuilder();
-            message.append("The following categories could not be inserted at a "
-                    + "proper position in the node repository due to wrong "
-                    + "positioning information.\n"
-                    + "See the corresponding plugin.xml file.\n "
-                    + "The categories were instead appended at the end "
-                    + "in each level.\n\n");
-            for (Category category : problemCategories) {
-                message.append("ID: ").append(category.getID());
-                message.append(" Name: ").append(category.getName());
-                message.append(" After-ID: ").append(category.getAfterID());
-                message.append("\n");
-            }
-
-            // send the message also to the log file.
-            LOGGER.warn(message.toString());
-            Display.getDefault().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    if (Display.getDefault().getActiveShell() != null) {
-                        MessageBox mb =
-                                new MessageBox(Display.getDefault()
-                                        .getActiveShell(), SWT.ICON_INFORMATION
-                                        | SWT.OK);
-                        mb.setText("Problem categories...");
-                        mb.setMessage(message.toString());
-                        mb.open();
-                    }
-                }
-            });
         }
     }
 

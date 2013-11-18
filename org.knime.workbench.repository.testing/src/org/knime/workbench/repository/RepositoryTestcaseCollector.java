@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -43,18 +43,20 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- * 
+ * ---------------------------------------------------------------------
+ *
  * History
- *   16.03.2005 (georg): created
+ *   18.11.2013 (thor): created
  */
-package org.knime.workbench.repository.model;
+package org.knime.workbench.repository;
+
+import org.knime.testing.core.AbstractTestcaseCollector;
 
 /**
- * Interface for "leaf" objects.
- * 
- * @author Florian Georg, University of Konstanz
+ * Collector for testcase classes in this plug-in.
+ *
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-public interface ISimpleObject extends IRepositoryObject {
-
+public class RepositoryTestcaseCollector extends AbstractTestcaseCollector {
+    // yes, it is empty
 }

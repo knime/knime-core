@@ -55,6 +55,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSetFactory;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * A node template for dynamic nodes. Additional to the node factory class, a
@@ -72,19 +73,24 @@ public class DynamicNodeTemplate extends NodeTemplate {
     /**
      * Constructs a new DynamicNodeTemplate.
      *
-     * @param nodeSetId The id of the NodeSetFactory.
-     * @param factoryId The id of the NodeFactory
+     * @param nodeSetId The id of the NodeSetFactory, must not be <code>null</code>
+     * @param factoryId The id of the NodeFactory, must not be <code>null</code>
      * @param nodeSetFactory the NodeSetFactory that created this
-     *            DynamicNodeTemplate
-     * @param name the name of this repository entry
+     *            DynamicNodeTemplate, must not be <code>null</code>
+     * @param name the name of this repository entry, must not be <code>null</code>
      */
     public DynamicNodeTemplate(final String nodeSetId, final String factoryId,
             final NodeSetFactory nodeSetFactory, final String name) {
-        super(nodeSetId + "_" + factoryId, name);
+        super(nodeSetId + "_" + factoryId, name, FrameworkUtil.getBundle(nodeSetFactory.getClass()).getSymbolicName());
         m_factoryId = factoryId;
         m_nodeSetFactory = nodeSetFactory;
     }
 
+    /**
+     * Creates a copy of the given object.
+     *
+     * @param copy the object to copy
+     */
     protected DynamicNodeTemplate(final DynamicNodeTemplate copy) {
         super(copy);
         this.m_nodeSetFactory = copy.m_nodeSetFactory;

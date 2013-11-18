@@ -145,11 +145,4 @@ public interface IContainerObject extends IRepositoryObject {
      * @return <code>true</code> if this container is locked, <code>false</code> otherwise
      */
     public boolean isLocked();
-
-    /**
-     * Returns the id of the plug-in which contributed this container.
-     *
-     * @return a plug-in id or <code>null</code> if the plug-in is unknown
-     */
-    public String getContributingPlugin();
 }

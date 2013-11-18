@@ -70,8 +70,6 @@ public class Category extends AbstractContainerObject {
 
     private Image m_icon;
 
-    private String m_pluginID;
-
     /**
      * Creates a new category that is a copy of the given category.
      *
@@ -82,26 +80,27 @@ public class Category extends AbstractContainerObject {
         this.m_description = copy.m_description;
         this.m_path = copy.m_path;
         this.m_icon = copy.m_icon;
-        this.m_pluginID = copy.m_pluginID;
     }
 
     /**
      * Creates a new locked repository category with the given level-id and name.
      *
-     * @param id the category's unique id
-     * @param name the category's display name
+     * @param id the category's unique id, must not be <code>null</code>
+     * @param name the category's display name, must not be <code>null</code>
+     * @param contributingPlugin the id of the plug-in which contributed this object, must not be <code>null</code>
      */
-    public Category(final String id, final String name) {
-        super(id, name);
+    public Category(final String id, final String name, final String contributingPlugin) {
+        super(id, name, contributingPlugin);
     }
 
 
     /**
      * Creates a new repository category with the given level-id and name.
      *
-     * @param id the category's unique id
-     * @param name the category's display name
-     * @param contributingPlugin the id of the plug-in which contributed this container object
+     * @param id the category's unique id, must not be <code>null</code>
+     * @param name the category's display name, must not be <code>null</code>
+     * @param contributingPlugin the id of the plug-in which contributed this container object, must not be
+     *            <code>null</code>
      * @param locked <code>true</code> if this category is locked, <code>false</code> otherwise
      */
     public Category(final String id, final String name, final String contributingPlugin, final boolean locked) {
@@ -109,58 +108,54 @@ public class Category extends AbstractContainerObject {
     }
 
     /**
-     * @return Returns the description.
+     * Returns a description for this category.
+     *
+     * @return a description or <code>null</code> if non is available
      */
     public String getDescription() {
         return m_description;
     }
 
     /**
-     * @param description The description to set.
+     * Sets a description for this category.
+     *
+     * @param description a description
      */
     public void setDescription(final String description) {
         m_description = description;
     }
 
     /**
+     * Returns the path from the root to this category.
      *
-     * @param pluginID the id of the declaring plug-in.
-     */
-    public void setPluginID(final String pluginID) {
-        m_pluginID = pluginID;
-    }
-
-    /**
-     *
-     * @return the id of the declaring plugin
-     */
-    public String getPluginID() {
-        return m_pluginID;
-    }
-
-    /**
-     * @return Returns the path.
+     * @return the absolute path
      */
     public String getPath() {
         return m_path;
     }
 
     /**
-     * @param path The path to set.
+     * Sets the path from the root to this category.
+     *
+     * @param path the absolute path
      */
     public void setPath(final String path) {
         m_path = path;
     }
 
     /**
-     * @return Returns the icon.
+     * Returns the category's icon.
+     *
+     * @return an icon
      */
     public Image getIcon() {
         return m_icon;
     }
 
     /**
-     * @param icon The icon to set.
+     * Sets the category's icon.
+     *
+     * @param icon an icon
      */
     public void setIcon(final Image icon) {
         m_icon = icon;
@@ -170,7 +165,7 @@ public class Category extends AbstractContainerObject {
      * {@inheritDoc}
      */
     @Override
-    public Object getAdapter(final Class adapter) {
+    public Object getAdapter(@SuppressWarnings("rawtypes") final Class adapter) {
         /*
          * Disabled since it is of no use for the user. Maybe it is useful for
          * debugging purposes? if (adapter == IPropertySource.class) { return
@@ -244,7 +239,7 @@ public class Category extends AbstractContainerObject {
 //        return true;
 //    }
 
-    private static final Pattern numericalEndPattern = Pattern.compile("(.*?)(\\d+)$");
+    private static final Pattern NUMERICAL_END_PATTERN = Pattern.compile("(.*?)(\\d+)$");
 
     /**
      * Creates a unique name for a new category inside the given parent. The new name consists of the given name
@@ -265,7 +260,7 @@ public class Category extends AbstractContainerObject {
         String newName = name;
         String oldName = name;
         int index = 1;
-        Matcher m = numericalEndPattern.matcher(name);
+        Matcher m = NUMERICAL_END_PATTERN.matcher(name);
         if (m.matches()) {
             index = Integer.parseInt(m.group(2)) + 1;
             oldName = m.group(1);

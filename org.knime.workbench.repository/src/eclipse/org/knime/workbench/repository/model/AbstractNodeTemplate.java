@@ -57,40 +57,34 @@ import org.eclipse.swt.graphics.Image;
  *
  * @author Florian Georg, University of Konstanz
  */
-public abstract class AbstractNodeTemplate extends AbstractRepositoryObject
-        implements ISimpleObject {
+public abstract class AbstractNodeTemplate extends AbstractRepositoryObject {
 
     private Image m_icon;
 
     private String m_categoryPath;
 
-    private String m_pluginID;
-
-    protected AbstractNodeTemplate(final String id, final String name) {
-        super(id, name);
+    /**
+     * Creates a new abstract node template.
+     *
+     * @param id the (unique) id of the node template
+     * @param name the name
+     * @param contributingPlugin the contributing plug-in's ID
+     */
+    protected AbstractNodeTemplate(final String id, final String name, final String contributingPlugin) {
+        super(id, name, contributingPlugin);
     }
 
+    /**
+     * Creates a copy of the given object.
+     *
+     * @param copy the object to copy
+     */
     protected AbstractNodeTemplate(final AbstractNodeTemplate copy) {
         super(copy);
         this.m_icon = copy.m_icon;
         this.m_categoryPath = copy.m_categoryPath;
-        this.m_pluginID = copy.m_pluginID;
     }
 
-
-    /**
-     * @return Returns the pluginID.
-     */
-    public String getPluginID() {
-        return m_pluginID;
-    }
-
-    /**
-     * @param pluginID The pluginID to set.
-     */
-    public void setPluginID(final String pluginID) {
-        m_pluginID = pluginID;
-    }
 
     /**
      * @return Returns the icon.

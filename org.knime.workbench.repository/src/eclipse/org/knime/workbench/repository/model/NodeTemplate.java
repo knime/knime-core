@@ -111,7 +111,11 @@ public class NodeTemplate extends AbstractNodeTemplate {
 
     private String m_type;
 
-
+    /**
+     * Creates a copy of the given node template.
+     *
+     * @param copy the object to copy
+     */
     protected NodeTemplate(final NodeTemplate copy) {
         super(copy);
         this.m_factory = copy.m_factory;
@@ -119,12 +123,14 @@ public class NodeTemplate extends AbstractNodeTemplate {
     }
 
     /**
-     * Constructs a new NodeTemplate.
+     * Constructs a new node template.
      *
-     * @param id The id, usually parsed from the extension
+     * @param id the (unique) ID, must not be <code>null</code>
+     * @param name a human-readable name for this node
+     * @param contributingPlugin the contributing plug-in's ID
      */
-    public NodeTemplate(final String id, final String name) {
-        super(id, name);
+    public NodeTemplate(final String id, final String name, final String contributingPlugin) {
+        super(id, name, contributingPlugin);
     }
 
     /**
@@ -155,8 +161,7 @@ public class NodeTemplate extends AbstractNodeTemplate {
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings("unchecked")
-    public Object getAdapter(final Class adapter) {
+    public Object getAdapter(@SuppressWarnings("rawtypes") final Class adapter) {
         /*
          * Disabled since it is of no use for the user. Maybe it is useful for
          * debugging purposes?

@@ -143,7 +143,9 @@ public final class RepositoryFactory {
                     + " registered as normal node factory.");
         }
 
-        NodeTemplate node = new NodeTemplate(id, factory.getNodeName());
+        String pluginID =
+                element.getDeclaringExtension().getNamespaceIdentifier();
+        NodeTemplate node = new NodeTemplate(id, factory.getNodeName(), pluginID);
         node.setAfterID(str(element.getAttribute("after"), ""));
         boolean b = Boolean.parseBoolean(element.getAttribute("expert-flag"));
         node.setExpertNode(b);
@@ -151,10 +153,6 @@ public final class RepositoryFactory {
                 .getClass());
 
         node.setType(str(element.getAttribute("type"), NodeTemplate.TYPE_OTHER));
-
-        String pluginID =
-                element.getDeclaringExtension().getNamespaceIdentifier();
-        node.setPluginID(pluginID);
 
         if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
             // Load images from declaring plugin
@@ -193,8 +191,7 @@ public final class RepositoryFactory {
             return null;
         }
         MetaNodeTemplate template =
-                new MetaNodeTemplate(id, name, categoryPath, manager);
-        template.setPluginID(configuration.getContributor().getName());
+                new MetaNodeTemplate(id, name, categoryPath, configuration.getContributor().getName(), manager);
         if (after != null && !after.isEmpty()) {
             template.setAfterID(after);
         }
@@ -276,7 +273,6 @@ public final class RepositoryFactory {
                 || ((element.getAttribute("locked") == null) && pluginID.matches("^(?:org|com)\\.knime\\..+"));
 
         Category cat = new Category(id, str(element.getAttribute("name"), "!name is missing!"), pluginID, locked);
-        cat.setPluginID(pluginID);
         cat.setDescription(str(element.getAttribute("description"), ""));
         cat.setAfterID(str(element.getAttribute("after"), ""));
         String path = str(element.getAttribute("path"), "/");
@@ -422,10 +418,6 @@ public final class RepositoryFactory {
                     Boolean.parseBoolean(element.getAttribute("expert-flag"));
             node.setExpertNode(b);
 
-            String pluginID =
-                    element.getDeclaringExtension().getNamespaceIdentifier();
-            node.setPluginID(pluginID);
-
             if (!Boolean.getBoolean("java.awt.headless")) {
                 Image icon = ImageRepository.getScaledImage(factory, 16, 16);
                 node.setIcon(icon);
@@ -435,6 +427,8 @@ public final class RepositoryFactory {
 
             dynamicNodeTemplates.add(node);
 
+            String pluginID =
+                    element.getDeclaringExtension().getNamespaceIdentifier();
             //
             // Insert in proper location, create all categories on
             // the path
@@ -478,8 +472,7 @@ public final class RepositoryFactory {
             final String name, final String afterID, final String icon,
             final String categoryPath) {
 
-        Category cat = new Category(categoryID, str(name, "!name is missing!"));
-        cat.setPluginID(pluginID);
+        Category cat = new Category(categoryID, str(name, "!name is missing!"), pluginID);
         cat.setDescription(str(description, ""));
         cat.setAfterID(str(afterID, ""));
         String path = str(categoryPath, "/");

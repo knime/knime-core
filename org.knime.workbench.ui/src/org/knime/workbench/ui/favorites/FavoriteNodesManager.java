@@ -73,6 +73,7 @@ import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
 import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  *
@@ -144,23 +145,25 @@ public final class FavoriteNodesManager {
      *
      */
     private void createTreeModel() {
+        String pluginID = FrameworkUtil.getBundle(getClass()).getSymbolicName();
+
         m_root = new Root();
         m_root.setSortChildren(false);
-        m_favNodes = new Category(FAV_CAT_ID, FAV_TITLE);
+        m_favNodes = new Category(FAV_CAT_ID, FAV_TITLE, pluginID);
         m_favNodes.setIcon(ImageRepository
                 .getImage(SharedImages.FavoriteNodesFolder));
         m_favNodes.setAfterID("");
         m_favNodes.setSortChildren(true);
         m_root.addChild(m_favNodes);
 
-        m_freqNodes = new Category("freq", "Most frequently used nodes");
+        m_freqNodes = new Category("freq", "Most frequently used nodes", pluginID);
         m_freqNodes.setIcon(ImageRepository
                 .getImage(SharedImages.FavoriteNodesFrequentlyUsed));
         m_freqNodes.setAfterID("fav");
         m_freqNodes.setSortChildren(false);
         m_root.addChild(m_freqNodes);
 
-        m_lastNodes = new Category("last", "Last used nodes");
+        m_lastNodes = new Category("last", "Last used nodes", pluginID);
         m_lastNodes.setIcon(ImageRepository
                 .getImage(SharedImages.FavoriteNodesLastUsed));
         m_lastNodes.setAfterID("freq");

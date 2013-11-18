@@ -30,6 +30,28 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
 
     private String m_description;
 
+    /**
+     * Creates a new metanode template.
+     *
+     * @param id the (unique) id of the node template
+     * @param name the name
+     * @param categoryPath the absolute path of the category in which this template should be placed
+     * @param contributingPlugin the contributing plug-in's ID
+     * @param manager the metanode's workflow manager
+     */
+    public MetaNodeTemplate(final String id, final String name,
+            final String categoryPath, final String contributingPlugin, final WorkflowManager manager) {
+        super(id, name, contributingPlugin);
+        m_manager = manager;
+        setAfterID("");
+        setCategoryPath(categoryPath);
+    }
+
+    /**
+     * Creates a copy of the given object.
+     *
+     * @param copy the object to copy
+     */
     protected MetaNodeTemplate(final MetaNodeTemplate copy) {
         super(copy);
         this.m_manager = copy.m_manager;
@@ -37,16 +59,10 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
     }
 
     /**
+     * Returns the metanode's workflow manager.
      *
+     * @return a workflow manager
      */
-    public MetaNodeTemplate(final String id, final String name,
-            final String categoryPath, final WorkflowManager manager) {
-        super(id, name);
-        m_manager = manager;
-        setAfterID("");
-        setCategoryPath(categoryPath);
-    }
-
     public WorkflowManager getManager() {
         return m_manager;
     }
@@ -59,30 +75,35 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
         return "/meta";
     }
 
+    /**
+     * Returns a description for this metanode template.
+     *
+     * @return a description, never <code>null</code>
+     */
     public String getDescription() {
         if (m_description != null) {
             return m_description;
         }
-        return m_manager.getName() + ": " + m_manager.getCustomDescription() != null ? m_manager
-                .getCustomDescription() : "";
+        return m_manager.getName() + ": " + (m_manager.getCustomDescription() != null ? m_manager
+                .getCustomDescription() : "");
     }
 
     /**
+     * Sets a description for this metanode template.
      *
-     * @param description description of the meta node
+     * @param description a description
      */
     public void setDescription(final String description) {
         /*
-         * If we have a description in the extension but no custome description
+         * If we have a description in the extension but no custom description
          * in the meta node -> set description also as custom description If we
          * have a custom description -> add the description found in the
          * extension.
          */
         m_description = description;
-        if (m_manager != null && m_manager.getCustomDescription() == null) {
+        if ((m_manager != null) && (m_manager.getCustomDescription() == null)) {
             m_manager.setCustomDescription(m_description);
-        } else if (m_manager != null
-                && m_manager.getCustomDescription() != null) {
+        } else if ((m_manager != null) && (m_manager.getCustomDescription() != null)) {
             m_manager.setCustomDescription(m_manager.getCustomDescription()
                     + " " + m_description);
         }

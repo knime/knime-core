@@ -50,8 +50,6 @@
  */
 package org.knime.workbench.repository.model;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Realizes a root node. This has no parent (<code>null</code>) and can't be
@@ -67,6 +65,11 @@ public class Root extends AbstractContainerObject {
         super("", "Root", "org.knime.base", false);
     }
 
+    /**
+     * Creates a copy of the given repository root.
+     *
+     * @param copy the object that should be copied
+     */
     protected Root(final Root copy) {
         super(copy);
     }
@@ -82,9 +85,9 @@ public class Root extends AbstractContainerObject {
     }
 
     /**
+     * {@inheritDoc}
+     *
      * @return always <code>null</code>
-     * @see org.knime.workbench.repository.model.AbstractRepositoryObject#
-     *      getParent()
      */
     @Override
     public IContainerObject getParent() {
@@ -94,9 +97,8 @@ public class Root extends AbstractContainerObject {
     /**
      * Throws a <code>UnsupportedOperationException</code>.
      *
-     * @see org.knime.workbench.repository.model.AbstractRepositoryObject#
-     *      setParent
-     *      (org.knime.workbench.repository.model.IContainerObject)
+     * {@inheritDoc}
+     *
      */
     @Override
     public void setParent(final IContainerObject parent) {
@@ -107,7 +109,7 @@ public class Root extends AbstractContainerObject {
     /**
      * Locates a sub-container given by the supplied name.
      *
-     * @param path The path that is made up of ID segments, seperated by a slash
+     * @param path The path that is made up of ID segments, separated by a slash
      *            "/"
      * @return The container, or <code>null</code> if not found
      */
@@ -132,17 +134,6 @@ public class Root extends AbstractContainerObject {
         assert parent != null;
 
         return parent;
-    }
-
-    /**
-     * @return a list with categories that have wrong after-relationship
-     *         information.
-     */
-    public List<Category> getProblemCategories() {
-        List<Category> problemCategories = new ArrayList<Category>();
-        appendProblemCategories(problemCategories);
-
-        return problemCategories;
     }
 
     /**

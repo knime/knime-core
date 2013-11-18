@@ -90,4 +90,12 @@ public interface IRepositoryObject extends IAdaptable {
      * @return a deep copy
      */
     public IRepositoryObject deepCopy();
+
+
+    /**
+     * Returns the id of the plug-in which contributed this container.
+     *
+     * @return a plug-in id or <code>null</code> if the plug-in is unknown
+     */
+    public String getContributingPlugin();
 }

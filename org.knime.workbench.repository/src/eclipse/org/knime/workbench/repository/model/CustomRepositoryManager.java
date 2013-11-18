@@ -64,6 +64,7 @@ import org.knime.workbench.repository.model.customNodeRepository.AbstractCategor
 import org.knime.workbench.repository.model.customNodeRepository.CustomCategory;
 import org.knime.workbench.repository.model.customNodeRepository.CustomNode;
 import org.knime.workbench.repository.model.customNodeRepository.RootDocument;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * Manager for the custom node repository. It offers functionality to transform
@@ -72,7 +73,7 @@ import org.knime.workbench.repository.model.customNodeRepository.RootDocument;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class CustomRepositoryManager {
-    private static final NodeLogger logger = NodeLogger
+    private static final NodeLogger LOGGER = NodeLogger
             .getLogger(CustomRepositoryManager.class);
 
     private AbstractCategory m_customRoot;
@@ -86,7 +87,7 @@ public class CustomRepositoryManager {
      * repository returned by {@link #getRoot()} will be empty.
      */
     public CustomRepositoryManager() {
-        m_customRoot = null;
+
     }
 
     /**
@@ -166,9 +167,9 @@ public class CustomRepositoryManager {
         for (CustomCategory cat : category.getCategoryList()) {
             if (cat.getCustom()) {
                 Category newCategory;
-                if ((cat.getId() != null)
-                        && cat.getId().startsWith(CUSTOM_CATEGORY_PREFIX)) {
-                    newCategory = new Category(cat.getId(), cat.getName());
+                if ((cat.getId() != null) && cat.getId().startsWith(CUSTOM_CATEGORY_PREFIX)) {
+                    newCategory =
+                        new Category(cat.getId(), cat.getName(), FrameworkUtil.getBundle(getClass()).getSymbolicName());
                 } else {
                     newCategory = createCustomCategory(cat.getName());
                 }
@@ -183,7 +184,7 @@ public class CustomRepositoryManager {
                 Category oldCategory =
                         (Category)nodeMap.get(cat.getOriginalPath());
                 if (oldCategory == null) {
-                    logger.warn("Category '" + cat.getOriginalPath()
+                    LOGGER.warn("Category '" + cat.getOriginalPath()
                             + "' does not exist in node repository");
                 } else {
                     Category newCategory = (Category)oldCategory.deepCopy();
@@ -196,7 +197,7 @@ public class CustomRepositoryManager {
         for (CustomNode node : category.getNodeList()) {
             NodeTemplate oldNode = (NodeTemplate)nodeMap.get(node.getId());
             if (oldNode == null) {
-                logger.warn("Node '" + node.getId()
+                LOGGER.warn("Node '" + node.getId()
                         + "' does not exist in node repository");
             } else {
                 NodeTemplate newNode = (NodeTemplate)oldNode.deepCopy();
@@ -297,8 +298,8 @@ public class CustomRepositoryManager {
      * @return a new custom category
      */
     public static Category createCustomCategory(final String name) {
-        return new Category(CUSTOM_CATEGORY_PREFIX
-                + idCounter.incrementAndGet(), name);
+        return new Category(CUSTOM_CATEGORY_PREFIX + idCounter.incrementAndGet(), name, FrameworkUtil.getBundle(
+            CustomRepositoryManager.class).getSymbolicName());
     }
 
     /**

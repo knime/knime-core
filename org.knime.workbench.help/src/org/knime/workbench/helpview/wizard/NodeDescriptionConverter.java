@@ -443,7 +443,7 @@ public final class NodeDescriptionConverter {
                 Document topicFile = createNodeTocFile(c);
                 boolean hasNodes =
                         processAll(((Category)o).getChildren(), topicFile);
-                if (c.getPluginID().equals(m_pluginID)) {
+                if (c.getContributingPlugin().equals(m_pluginID)) {
                     writeCategoryTocFile(c);
                 }
                 if (hasNodes) {
@@ -465,7 +465,7 @@ public final class NodeDescriptionConverter {
     private boolean processMetaNode(final MetaNodeTemplate metaNode,
             final Document nodeToc) throws IOException {
         assert nodeToc != null;
-        if (metaNode.getPluginID().equals(m_pluginID)) {
+        if (metaNode.getContributingPlugin().equals(m_pluginID)) {
             // create HTML file
             StringBuilder builder = new StringBuilder();
             DynamicNodeDescriptionCreator.instance().addDescription(metaNode,
@@ -547,7 +547,7 @@ public final class NodeDescriptionConverter {
                 "TYPE=\"org.eclipse.help.toc\""));
         Element root = doc.createElement("toc");
         String path =
-                "../" + c.getPluginID() + "/tocs/" + fileName(getFullPath(c))
+                "../" + c.getContributingPlugin() + "/tocs/" + fileName(getFullPath(c))
                         + ".xml#" + fileName(getFullPath(c));
         root.setAttribute("link_to", path);
         root.setAttribute("label", htmlString(c.getName()));
@@ -572,7 +572,7 @@ public final class NodeDescriptionConverter {
              * label=c.getID()
              */
         } else {
-            String parentsPluginID = ((Category)c.getParent()).getPluginID();
+            String parentsPluginID = ((Category)c.getParent()).getContributingPlugin();
             String parent = fileName(getFullPath((Category)c.getParent()));
             root.setAttribute("link_to", "../" + parentsPluginID + "/"
                     + TOC_DIR + "/" + parent + ".xml#" + parent);
@@ -606,7 +606,7 @@ public final class NodeDescriptionConverter {
     private boolean processNode(final NodeTemplate node, final Document nodeToc)
             throws Exception {
         assert nodeToc != null;
-        if (node.getPluginID().equals(m_pluginID)) {
+        if (node.getContributingPlugin().equals(m_pluginID)) {
             // create HTML file
             StringBuilder builder = new StringBuilder();
             DynamicNodeDescriptionCreator.instance().addDescription(node,

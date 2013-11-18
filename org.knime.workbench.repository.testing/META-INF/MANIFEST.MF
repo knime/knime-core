@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Testcases for the Node Repository
+Bundle-SymbolicName: org.knime.workbench.repository.testing;singleton:=true
+Bundle-Version: 2.9.0.qualifier
+Fragment-Host: org.knime.workbench.repository;bundle-version="[2.9.0,3.0.0)"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Require-Bundle: org.junit;bundle-version="4.8.2",
+ org.knime.testing;bundle-version="2.9.0"

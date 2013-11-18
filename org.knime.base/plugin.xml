@@ -334,6 +334,7 @@
             path="/">
       </category>
       <category
+            after="_last_"
             description="Uncategorized nodes"
             icon="icons/16x16/category_uncategorized.png"
             level-id="uncategorized"
@@ -518,7 +519,6 @@
             factory-class="org.knime.base.node.preproc.pmml.numbertostring.NumberToStringNodeFactory"
             id="org.knime.base.node.preproc.pmml.numbertostring.NumberToStringNodeFactory"/>
       <node  
-            after="org.knime.base.node.preproc.colconvert.numbertostring.NumberToStringNodeFactory"
             category-path="/manipulation/pmml"
             factory-class="org.knime.base.node.preproc.pmml.stringtonumber.StringToNumberNodeFactory"
             id="org.knime.base.node.preproc.pmml.stringtonumber.StringToNumberNodeFactory"/>
@@ -726,7 +726,7 @@
          factory-class="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretization2NodeFactory"
          id="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"/>
     <node
-         after="org.knime.base.node.preproc.discretization.caim2.modelcreator.CAIMDiscretizationNodeFactory"
+         after="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"
    		 category-path="/manipulation/column/binning"
          factory-class="org.knime.base.node.preproc.discretization.caim2.modelapply.Discretization2ApplyNodeFactory"
          id="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"/>
@@ -935,7 +935,7 @@
             id="org.knime.base.node.io.database.DatabaseLoopingNodeFactory">
       </node>
       <node
-            after="org.knime.base.node.io.database.DatabaseLoopingnNodeFactory"
+            after="org.knime.base.node.io.database.DatabaseLoopingNodeFactory"
             category-path="/database"
             factory-class="org.knime.base.node.io.database.DBConnectionNodeFactory"
             id="org.knime.base.node.io.database.DBConnectionNodeFactory">
@@ -951,7 +951,7 @@
             factory-class="org.knime.base.node.io.database.DBQueryNodeFactory2"
             id="org.knime.base.node.io.database.DBQueryNodeFactory2"/>
       <node
-            after="org.knime.base.node.io.database.DBQueryNodeFactory"
+            after="org.knime.base.node.io.database.DBQueryNodeFactory2"
             category-path="/database"
             factory-class="org.knime.base.node.io.database.DBColumnFilterNodeFactory"
             id="org.knime.base.node.io.database.DBColumnFilterNodeFactory"/>
@@ -985,7 +985,7 @@
             factory-class="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"
             id="org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeFactory"/>
       <node
-            after="org.knime.base.node.preproc.filter.column.FilterColumnNodeFactory"
+            after="org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeFactory"
             category-path="/manipulation/column/column-filter"
             factory-class="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory"
             id="org.knime.base.node.preproc.filter.columnref.ColumnFilterRefNodeFactory">
@@ -1010,7 +1010,7 @@
             after="org.knime.base.node.io.table.read.ReadTableNodeFactory"
             category-path="/io/read"
             factory-class="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory"
-            id="org.knime.base.node.io.PMMLReaderNodeFactory">
+            id="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-split+combine"
@@ -1086,7 +1086,6 @@
             id="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory">
       </node>
       <node
-            after="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory"
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory"
             id="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory">
@@ -1173,7 +1172,7 @@
       </node>
 
       <node
-            after="org.knime.base.node.preproc.pivot.PivotNodeFactory"
+            after="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"
             category-path="/manipulation/row/row-transform"
             factory-class="org.knime.base.node.preproc.unpivot2.Unpivot2NodeFactory"
             id="org.knime.base.node.preproc.unpivot2.Unpivot2NodeFactory">
@@ -1270,13 +1269,13 @@
             id="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory">
       </node>
       <node
-            after="org.knime.base.node.switches.endcase.EndmodelcaseNodeFactory"
+            after="org.knime.base.node.switches.endmodelcase.EndmodelcaseNodeFactory"
             category-path="/flowcontrol/switches"
             factory-class="org.knime.base.node.switches.emptytableswitch.EmptyTableSwitchNodeFactory"
             id="org.knime.base.node.switches.emptytableswitch.EmptyTableSwitchNodeFactory">
       </node>
             <node
-            after="org.knime.base.node.preproc.split.SplitNodeFactory"
+            after="org.knime.base.node.preproc.split2.SplitNodeFactory2"
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.columntogrid.ColumnToGridNodeFactory"
             id="org.knime.base.node.preproc.columntogrid.ColumnToGridNodeFactory">
