@@ -10,8 +10,8 @@
             extracted using the KNIME workflow context.<br />
             The properties are: 
             <ul>
-                <li><code>context.workflow.user</code> The authenticated user if executed on KNIME server, the system user otherwise.</li>
-                <li><code>context.workflow.temp.location</code> The location for temporary files of the workflow job.</li>
+                <li><tt>context.workflow.user</tt> The authenticated user if executed on KNIME server, the system user otherwise.</li>
+                <li><tt>context.workflow.temp.location</tt> The location for temporary files of the workflow job.</li>
             </ul>
             More properties may be added in the future.
         </intro>
