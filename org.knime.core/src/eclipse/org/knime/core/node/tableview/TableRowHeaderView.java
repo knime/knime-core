@@ -52,6 +52,7 @@ package org.knime.core.node.tableview;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
@@ -280,6 +281,16 @@ public final class TableRowHeaderView extends JTable {
         super.setTableHeader(newTableHeader);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public void setFont(final Font font) {
+        super.setFont(font);
+        JTableHeader th = getTableHeader();
+        if (th != null) {
+            th.setFont(font);
+        }
+    }
+
     private void onMouseClickInHeader() {
         getModel().requestSort(this.getRootPane());
     }
@@ -430,6 +441,8 @@ public final class TableRowHeaderView extends JTable {
                     headerView.setRowHeight((Integer)evt.getNewValue());
                 } else if (propName.equals(TableContentModel.PROPERTY_DATA)) {
                     headerView.getTableHeader().repaint(); // sort icon
+                } else if (propName.equals("font")) {
+                    headerView.setFont((Font)evt.getNewValue());
                 }
             }
         };

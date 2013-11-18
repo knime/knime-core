@@ -53,6 +53,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -502,6 +503,16 @@ public class TableContentView extends JTable {
             });
         }
         super.setTableHeader(newTableHeader);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setFont(final Font font) {
+        super.setFont(font);
+        JTableHeader th = getTableHeader();
+        if (th != null) {
+            th.setFont(font);
+        }
     }
 
     private float[] m_tempHSBColor;

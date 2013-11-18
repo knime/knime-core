@@ -52,6 +52,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
@@ -1110,6 +1111,39 @@ public class TableView extends JScrollPane {
                         JOptionPane.showMessageDialog(
                                 TableView.this, "Can't parse "
                                 + in, "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            }
+        });
+        item.addPropertyChangeListener(new EnableListener(this, true, false));
+        item.setEnabled(hasData());
+        result.add(item);
+
+        item = new JMenuItem("Font Size...");
+        item.setMnemonic('F');
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                while (true) {
+                    final Font font = getContentTable().getFont();
+                    int curFontSize = font.getSize();
+                    String in = JOptionPane.showInputDialog(TableView.this, "Enter new font size: ", curFontSize);
+                    if (in == null) { // canceled
+                        return;
+                    }
+                    try {
+                        int newSize = Integer.parseInt(in);
+                        if (newSize <= 0) { // disallow negative values.
+                            JOptionPane.showMessageDialog(TableView.this, "No negative values allowed", "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            Font newFont = font.deriveFont((float)newSize);
+                            getContentTable().setFont(newFont);
+                            return;
+                        }
+                    } catch (NumberFormatException nfe) {
+                        JOptionPane.showMessageDialog(TableView.this, "Can't parse " + in, "Error",
+                            JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
