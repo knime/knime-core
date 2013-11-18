@@ -140,6 +140,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private IWorkbenchAction m_saveAction;
 
+    private IWorkbenchAction m_saveAsAction;
+
     private IWorkbenchAction m_saveAllAction;
 
     private IWorkbenchAction m_closeAllAction;
@@ -193,6 +195,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         register(m_newAction);
         m_saveAction = ActionFactory.SAVE.create(window);
         register(m_saveAction);
+        m_saveAsAction = ActionFactory.SAVE_AS.create(window);
+        register(m_saveAsAction);
         m_saveAllAction = ActionFactory.SAVE_ALL.create(window);
         register(m_saveAllAction);
         m_exitAction = ActionFactory.QUIT.create(window);
@@ -316,6 +320,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         // File menu
         fileMenu.add(m_newAction);
         fileMenu.add(m_saveAction);
+        fileMenu.add(m_saveAsAction);
         fileMenu.add(m_saveAllAction);
         fileMenu.add(m_closeAllAction);
 
@@ -392,6 +397,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         // add tools to the toolbar
         toolbar.add(m_newWizardDropdownAction);
         toolbar.add(m_saveAction);
+        toolbar.add(m_saveAsAction);
         toolbar.add(m_saveAllAction);
     }
 
