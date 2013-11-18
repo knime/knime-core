@@ -140,6 +140,9 @@ public final class FlowVariable extends FlowObject {
         if (name == null || type == null) {
             throw new NullPointerException("Argument must not be null");
         }
+        if (name.trim().isEmpty()) {
+            throw new IllegalFlowObjectStackException("Invalid (empty) flow variable name");
+        }
         scope.verifyName(name);
         m_name = name;
         m_type = type;
