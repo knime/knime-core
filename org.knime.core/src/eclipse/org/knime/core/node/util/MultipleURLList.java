@@ -349,6 +349,9 @@ public class MultipleURLList extends JScrollPane {
                     encUrl = URIUtil.encodePath(encUrl, "UTF-8");
                     u = new URL(encUrl);
                 } catch (MalformedURLException ex) {
+                    if (!encUrl.startsWith("/")) {
+                        encUrl = "/" + encUrl;
+                    }
                     try {
                         u = new URL("file:" + encUrl);
                         encUrl = "file:" + encUrl;
