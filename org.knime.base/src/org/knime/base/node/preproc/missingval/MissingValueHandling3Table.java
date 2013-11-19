@@ -400,7 +400,7 @@ public final class MissingValueHandling3Table implements DataTable {
         try {
             colSetting = getColSetting(table.getDataTableSpec(), colSettings, false);
         } catch (InvalidSettingsException ise) {
-            LOGGER.coding("getColSetting method is not supposed to throw " + "an exception, ignoring settings", ise);
+            LOGGER.coding("getColSetting method is not supposed to throw an exception, ignoring settings", ise);
             DataTableSpec s = table.getDataTableSpec();
             colSetting = new MissingValueHandling2ColSetting[s.getNumColumns()];
             for (int i = 0; i < s.getNumColumns(); i++) {
