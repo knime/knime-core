@@ -3,10 +3,10 @@
 <knimeNode icon="./extract_context_props.png" type="Source">
 	<name>Extract Context Properties</name>
 	<shortDescription>Reads workflow context related properties, 
-	   including logged in user.</shortDescription>
+	   including workflow name and the logged in user.</shortDescription>
 	<fullDescription>
 		<intro>Reads workflow context related properties, 
-            including logged in user. The fields are 
+            including workflow name and the logged in user. The fields are 
             extracted using the KNIME workflow context.<br />
             The properties are: 
             <ul>
