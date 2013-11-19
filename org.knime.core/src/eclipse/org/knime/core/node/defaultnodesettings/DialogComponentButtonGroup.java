@@ -51,9 +51,6 @@
 
 package org.knime.core.node.defaultnodesettings;
 
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.ButtonGroupEnumInterface;
-
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -70,6 +67,9 @@ import javax.swing.JRadioButton;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 
 /**
@@ -107,12 +107,14 @@ public class DialogComponentButtonGroup extends DialogComponent {
             }
         }
         m_buttonGroup = createEnumButtonGroup(elements, new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 updateModel();
             }
         });
 
         getModel().prependChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
@@ -192,12 +194,14 @@ public class DialogComponentButtonGroup extends DialogComponent {
         m_buttonGroup =
             createEnumButtonGroup(buttonLabels, actionCommands, defaultAction,
                     new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 updateModel();
             }
         });
 
         getModel().prependChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
@@ -218,10 +222,8 @@ public class DialogComponentButtonGroup extends DialogComponent {
      * @param elements the labels/action commands of the buttons
      */
     public DialogComponentButtonGroup(final SettingsModelString stringModel,
-            final boolean vertical, final String label,
-            final String... elements) {
-        this(stringModel, label, vertical, stringModel.getStringValue(),
-                elements);
+            final boolean vertical, final String label, final String... elements) {
+        this(stringModel, label, vertical, stringModel.getStringValue(), elements);
     }
     /**Constructor for class DialogComponentButtonGroup. The given
      * <code>SettingsModel</code> holds the selected element.
@@ -257,20 +259,20 @@ public class DialogComponentButtonGroup extends DialogComponent {
             }
         }
         m_buttonGroup =
-            createEnumButtonGroup(elements, actionCommands, defaultElement,
-                    new ActionListener() {
+            createEnumButtonGroup(elements, actionCommands, defaultElement, new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 updateModel();
             }
         });
 
         getModel().prependChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
         });
-        final Box buttonBox =
-            createButtonGroupBox(m_buttonGroup, label, vertical);
+        final Box buttonBox = createButtonGroupBox(m_buttonGroup, label, vertical);
         getComponentPanel().add(buttonBox);
     }
 
@@ -340,9 +342,7 @@ public class DialogComponentButtonGroup extends DialogComponent {
         return group;
     }
 
-
-    /**
-     * Creates a <code>Box</code> with the buttons of the given
+    /** Creates a <code>Box</code> with the buttons of the given
      * <code>ButtonGroup</code>. Surrounded by a border if the label is
      * not null.
      * @param group the <code>ButtonGroup</code> to create the box with
