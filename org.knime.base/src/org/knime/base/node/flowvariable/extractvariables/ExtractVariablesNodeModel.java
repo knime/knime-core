@@ -96,7 +96,7 @@ public class ExtractVariablesNodeModel extends NodeModel {
         // nothing to do: the extraction of the variable stack
         // is done by the WFM itself
         // simply output a dummy "Variable"-Port object.
-        return new PortObject[]{new FlowVariablePortObject()};
+        return new PortObject[]{FlowVariablePortObject.INSTANCE};
     }
 
     /** {@inheritDoc} */
