@@ -60,7 +60,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.NodeContext;
-import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  *
@@ -68,11 +68,16 @@ import org.knime.core.node.workflow.WorkflowContext;
  */
 final class ReadContextPropertyConfiguration {
 
-    public static String CONTEXT_SERVER_USER = "context.workflow.user";
-    public static String CONTEXT_TEMP_LOCATION = "context.workflow.temp.location";
+    /** Context variable name for workflow name. */
+    public static final String CONTEXT_WORKFLOW_NAME = "context.workflow.name";
+    /** Context variable name for workflow user. */
+    public static final String CONTEXT_SERVER_USER = "context.workflow.user";
+    /** Context variable name for workflow temporary location. */
+    public static final String CONTEXT_TEMP_LOCATION = "context.workflow.temp.location";
 
     private static List<String> contextProperties = new ArrayList<String>();
     static {
+        contextProperties.add(CONTEXT_WORKFLOW_NAME);
         contextProperties.add(CONTEXT_SERVER_USER);
         contextProperties.add(CONTEXT_TEMP_LOCATION);
     }
@@ -163,12 +168,15 @@ final class ReadContextPropertyConfiguration {
      * @return
      */
     private static String extractContextProperty(final String property) {
-        WorkflowContext context = NodeContext.getContext().getWorkflowManager().getContext();
+        WorkflowManager manager = NodeContext.getContext().getWorkflowManager();
+        if (CONTEXT_WORKFLOW_NAME.equals(property)) {
+            return manager.getName();
+        }
         if (CONTEXT_SERVER_USER.equals(property)) {
-            return context.getUserid();
+            return manager.getContext().getUserid();
         }
         if (CONTEXT_TEMP_LOCATION.equals(property)) {
-            return context.getTempLocation().getAbsolutePath();
+            return manager.getContext().getTempLocation().getAbsolutePath();
         }
         return null;
     }
