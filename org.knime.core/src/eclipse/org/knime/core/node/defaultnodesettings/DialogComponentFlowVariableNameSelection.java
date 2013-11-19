@@ -292,10 +292,6 @@ public final class DialogComponentFlowVariableNameSelection extends DialogCompon
      */
     public void replaceListItems(final Collection<FlowVariable> newItems,
             final String select) {
-        if (newItems == null || newItems.size() < 1) {
-            throw new IllegalArgumentException("The container with the new items can't be null or empty.");
-        }
-        Vector<FlowVariable> filteredItems = getFilteredFlowVariables(newItems);
 
         final String sel;
         if (select == null) {
@@ -309,21 +305,29 @@ public final class DialogComponentFlowVariableNameSelection extends DialogCompon
             m_jcombobox.addItem(new FlowVariable("NONE", " "));
         }
 
-        FlowVariable selOption = null;
-        for (final FlowVariable option : filteredItems) {
-            if (option == null) {
-                throw new NullPointerException("Options in the selection list can't be null");
+        if (newItems == null || newItems.size() < 1) {
+            if (!m_hasNone) {
+                throw new IllegalArgumentException("The container with the new items can't be null or empty.");
             }
-            m_jcombobox.addItem(option);
-            if (option.getName().equals(sel)) {
-                selOption = option;
-            }
-        }
-
-        if (selOption == null) {
-            m_jcombobox.setSelectedIndex(0);
         } else {
-            m_jcombobox.setSelectedItem(selOption);
+            Vector<FlowVariable> filteredItems = getFilteredFlowVariables(newItems);
+
+            FlowVariable selOption = null;
+            for (final FlowVariable option : filteredItems) {
+                if (option == null) {
+                    throw new NullPointerException("Options in the selection list can't be null");
+                }
+                m_jcombobox.addItem(option);
+                if (option.getName().equals(sel)) {
+                    selOption = option;
+                }
+            }
+
+            if (selOption == null) {
+                m_jcombobox.setSelectedIndex(0);
+            } else {
+                m_jcombobox.setSelectedItem(selOption);
+            }
         }
         //update the size of the comboBox and force the repainting
         //of the whole panel
