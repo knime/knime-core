@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="mailsend.png" type="Other">
-	<name>Send Mail</name>
+	<name>Send Email</name>
 	
 	<shortDescription>
 		Sends an Email upon execution.

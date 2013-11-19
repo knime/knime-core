@@ -52,6 +52,8 @@ package org.knime.base.node.util.sendmail;
 import java.io.File;
 import java.io.IOException;
 
+import javax.mail.MessagingException;
+
 import org.knime.base.node.util.FlowVariableResolvable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -92,7 +94,11 @@ final class SendMailNodeModel extends NodeModel implements FlowVariableResolvabl
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        m_configuration.send(this, getCredentialsProvider());
+        try {
+            m_configuration.send(this, getCredentialsProvider());
+        } catch (MessagingException e) {
+            throw new Exception(e.toString(), e); // toString() is better than getMessage()
+        }
         return new PortObject[0];
     }
 

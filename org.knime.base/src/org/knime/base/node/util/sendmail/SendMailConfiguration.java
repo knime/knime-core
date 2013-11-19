@@ -119,6 +119,31 @@ final class SendMailConfiguration {
         SSL
     }
 
+    /** EMail priority. */
+    enum EMailPriority {
+        /** Prio 1. */
+        Highest(1),
+        /** Prio 2. */
+        High(2),
+        /** Prio 3. */
+        Normal(3),
+        /** Prio 4. */
+        Low(4),
+        /** Prio 5. */
+        Lowest(5);
+
+        private final int m_priority;
+
+        private EMailPriority(final int priority) {
+            m_priority = priority;
+        }
+
+        /** @return for instance "1 (Highest)". */
+        String toXPriority() {
+            return m_priority + " (" + name() + ")";
+        }
+    }
+
     private String m_smtpHost;
     private int m_smtpPort;
     private boolean m_useAuthentication;
@@ -128,6 +153,7 @@ final class SendMailConfiguration {
     private String m_smtpPassword;
     private ConnectionSecurity m_connectionSecurity = ConnectionSecurity.NONE;
     private EMailFormat m_format = EMailFormat.Text;
+    private EMailPriority m_priority = EMailPriority.Normal;
     private String m_from;
     private String m_to;
     private String m_cc;
@@ -150,6 +176,7 @@ final class SendMailConfiguration {
             settings.addString("smtpPassword", m_smtpPassword);
             settings.addString("connectionSecurity", m_connectionSecurity.name());
             settings.addString("emailFormat", m_format.name());
+            settings.addString("emailPriority", m_priority.name());
             settings.addString("from", m_from);
             settings.addString("to", m_to);
             settings.addString("cc", m_cc);
@@ -198,6 +225,14 @@ final class SendMailConfiguration {
             format = EMailFormat.Text;
         }
         m_format = format;
+        String priorityS = settings.getString("emailPriority", EMailPriority.Normal.name());
+        EMailPriority priority;
+        try {
+            priority = EMailPriority.valueOf(priorityS);
+        } catch (Exception e) {
+            priority = EMailPriority.Normal;
+        }
+        m_priority = priority;
         m_from = settings.getString("from", getLastUsedHistoryElement(getFromStringHistoryID()));
         m_to = settings.getString("to", System.getProperty("user.name"));
         m_cc = settings.getString("cc", "");
@@ -249,6 +284,13 @@ final class SendMailConfiguration {
             m_format = EMailFormat.valueOf(formatS);
         } catch (Exception e) {
             throw new InvalidSettingsException("Invalid email format: " + formatS, e);
+        }
+        // added after preview was sent to customer
+        String priorityS = settings.getString("emailPriority", EMailPriority.Normal.name());
+        try {
+            m_priority = EMailPriority.valueOf(priorityS);
+        } catch (Exception e) {
+            throw new InvalidSettingsException("Invalid email priority: " + priorityS, e);
         }
         m_to = settings.getString("to");
         m_cc = settings.getString("cc");
@@ -381,6 +423,20 @@ final class SendMailConfiguration {
             throw new InvalidSettingsException("format must not be null");
         }
         m_format = format;
+    }
+
+    /** @return the priority */
+    EMailPriority getPriority() {
+        return m_priority;
+    }
+
+    /** @param priority the priority to set
+     * @throws InvalidSettingsException if null. */
+    void setPriority(final EMailPriority priority) throws InvalidSettingsException {
+        if (priority == null) {
+            throw new InvalidSettingsException("priority must not be null");
+        }
+        m_priority = priority;
     }
 
     /** @return the to */
@@ -551,6 +607,7 @@ final class SendMailConfiguration {
             message.addRecipients(Message.RecipientType.BCC, parseAndValidateRecipients(getBcc()));
         }
         message.setHeader("X-Mailer", "KNIME/" + KNIMEConstants.VERSION);
+        message.setHeader("X-Priority", m_priority.toXPriority());
         message.setSentDate(new Date());
         message.setSubject(getSubject());
 

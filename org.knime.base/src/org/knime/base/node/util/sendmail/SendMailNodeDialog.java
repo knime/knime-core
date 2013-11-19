@@ -86,6 +86,7 @@ import javax.swing.ScrollPaneConstants;
 import org.knime.base.node.util.FlowVariableResolvable.FlowVariableResolver;
 import org.knime.base.node.util.sendmail.SendMailConfiguration.ConnectionSecurity;
 import org.knime.base.node.util.sendmail.SendMailConfiguration.EMailFormat;
+import org.knime.base.node.util.sendmail.SendMailConfiguration.EMailPriority;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -111,6 +112,7 @@ final class SendMailNodeDialog extends NodeDialogPane {
     private final StringHistoryPanel m_smtpUserPanel;
     private final JPasswordField m_smtpPasswordField;
     private final JComboBox m_connectionSecurityCombo;
+    private final JComboBox m_connectionPriorityCombo;
     private final StringHistoryPanel m_fromPanel;
     private final StringHistoryPanel m_toPanel;
     private final StringHistoryPanel m_ccPanel;
@@ -132,6 +134,7 @@ final class SendMailNodeDialog extends NodeDialogPane {
         m_smtpUserPanel = new StringHistoryPanel(SendMailConfiguration.getSmtpUserStringHistoryID());
         m_smtpPasswordField = new JPasswordField();
         m_connectionSecurityCombo = new JComboBox(ConnectionSecurity.values());
+        m_connectionPriorityCombo = new JComboBox(EMailPriority.values());
         m_fromPanel = new StringHistoryPanel(SendMailConfiguration.getFromStringHistoryID());
         m_toPanel = new StringHistoryPanel(SendMailConfiguration.getToStringHistoryID());
         m_ccPanel = new StringHistoryPanel(SendMailConfiguration.getToStringHistoryID());
@@ -339,7 +342,8 @@ final class SendMailNodeDialog extends NodeDialogPane {
         splitter.setResizeWeight(0.3);
         splitter.setDividerLocation(0.3);
         p.add(splitter, BorderLayout.CENTER);
-        p.add(ViewUtils.getInFlowLayout(FlowLayout.RIGHT, m_formatTextButton, m_formatHTMLButton), BorderLayout.SOUTH);
+        p.add(ViewUtils.getInFlowLayout(FlowLayout.RIGHT, new JLabel("Priority: "), m_connectionPriorityCombo,
+            new JLabel("   "), m_formatTextButton, m_formatHTMLButton), BorderLayout.SOUTH);
         return p;
     }
 
@@ -365,6 +369,7 @@ final class SendMailNodeDialog extends NodeDialogPane {
         setValueInStringHistoryPanel(m_smtpUserPanel, config.getSmtpUser());
         m_smtpPasswordField.setText(config.getSmtpPassword());
         m_connectionSecurityCombo.setSelectedItem(config.getConnectionSecurity());
+        m_connectionPriorityCombo.setSelectedItem(config.getPriority());
         setValueInStringHistoryPanel(m_fromPanel, config.getFrom());
         setValueInStringHistoryPanel(m_toPanel, config.getTo());
         setValueInStringHistoryPanel(m_ccPanel, config.getCc());
@@ -405,6 +410,7 @@ final class SendMailNodeDialog extends NodeDialogPane {
         config.setSmtpUser(m_smtpUserPanel.getSelectedString());
         config.setSmtpPassword(new String(m_smtpPasswordField.getPassword()));
         config.setConnectionSecurity((ConnectionSecurity)m_connectionSecurityCombo.getSelectedItem());
+        config.setPriority((EMailPriority)m_connectionPriorityCombo.getSelectedItem());
         config.setFrom(m_fromPanel.getSelectedString());
         config.setTo(m_toPanel.getSelectedString());
         config.setCc(m_ccPanel.getSelectedString());
