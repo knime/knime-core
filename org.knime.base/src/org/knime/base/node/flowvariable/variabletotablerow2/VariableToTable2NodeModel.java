@@ -103,7 +103,7 @@ public class VariableToTable2NodeModel extends NodeModel {
 
     /** One input, one output. */
     public VariableToTable2NodeModel() {
-        super(new PortType[]{FlowVariablePortObject.TYPE}, new PortType[]{BufferedDataTable.TYPE});
+        super(new PortType[]{FlowVariablePortObject.TYPE_OPTIONAL}, new PortType[]{BufferedDataTable.TYPE});
         m_filter = new FlowVariableFilterConfiguration(CFG_KEY_FILTER);
         m_filter.loadDefaults(getAvailableFlowVariables(), false);
     }

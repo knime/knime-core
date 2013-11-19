@@ -96,7 +96,7 @@ public class AppendVariableToTableNodeModel extends NodeModel {
 
     /** One input, one output. */
     public AppendVariableToTableNodeModel() {
-        super(new PortType[]{FlowVariablePortObject.TYPE, BufferedDataTable.TYPE},
+        super(new PortType[]{FlowVariablePortObject.TYPE_OPTIONAL, BufferedDataTable.TYPE},
             new PortType[]{BufferedDataTable.TYPE});
         m_settings = new AppendVariableToTableSettings();
     }
