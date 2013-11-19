@@ -54,16 +54,19 @@ import java.awt.Image;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
 import org.knime.core.data.image.png.PNGImageValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.testing.core.AbstractDifferenceChecker;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
 
@@ -76,7 +79,7 @@ import org.knime.testing.core.DifferenceCheckerFactory;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-public class PngPHashChecker implements DifferenceChecker<PNGImageValue> {
+public class PngPHashChecker extends AbstractDifferenceChecker<PNGImageValue> {
     /**
      * Factory for {@link PngPHashChecker}.
      */
@@ -155,8 +158,56 @@ public class PngPHashChecker implements DifferenceChecker<PNGImageValue> {
      * {@inheritDoc}
      */
     @Override
-    public List<? extends SettingsModel> getSettings() {
-        return Arrays.asList(m_allowedDifference, m_sampleSize, m_dctSize);
+    public void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        super.loadSettings(settings);
+        m_allowedDifference.loadSettingsFrom(settings);
+        m_sampleSize.loadSettingsFrom(settings);
+        m_dctSize.loadSettingsFrom(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadSettingsForDialog(final NodeSettingsRO settings) {
+        super.loadSettingsForDialog(settings);
+        try {
+            m_allowedDifference.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            m_allowedDifference.setDoubleValue(1);
+        }
+        try {
+            m_sampleSize.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            m_sampleSize.setIntValue(8);
+        }
+        try {
+            m_dctSize.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            m_dctSize.setIntValue(8);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveSettings(final NodeSettingsWO settings) {
+        super.saveSettings(settings);
+        m_allowedDifference.saveSettingsTo(settings);
+        m_sampleSize.saveSettingsTo(settings);
+        m_dctSize.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        super.validateSettings(settings);
+        m_allowedDifference.validateSettings(settings);
+        m_sampleSize.validateSettings(settings);
+        m_dctSize.validateSettings(settings);
     }
 
     /**
@@ -164,7 +215,12 @@ public class PngPHashChecker implements DifferenceChecker<PNGImageValue> {
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
-        return Arrays.asList(m_allowedDifferenceComponent, m_sampleSizeComponent, m_dctSizeComponent);
+        List<DialogComponent> l = new ArrayList<DialogComponent>(super.getDialogComponents());
+        l.add(m_allowedDifferenceComponent);
+        l.add(m_sampleSizeComponent);
+        l.add(m_dctSizeComponent);
+        return l;
+
     }
 
     /**

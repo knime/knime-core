@@ -61,7 +61,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
 import org.knime.testing.internal.diffcheckers.CheckerUtil;
@@ -131,7 +130,7 @@ class DifferenceCheckerSettings {
     }
 
     /**
-     * Returns the internal configuration for the checker for the given column. If not internals are available
+     * Returns the internal configuration for the checker for the given column. If no internals are available
      * <code>null</code> is returned.
      *
      * @param columnName a column name
@@ -156,10 +155,7 @@ class DifferenceCheckerSettings {
             return null;
         } else {
             DifferenceChecker<? extends DataValue> checker = CheckerUtil.instance.getFactory(className).newChecker();
-
-            for (SettingsModel sm : checker.getSettings()) {
-                sm.loadSettingsFrom(internalsForColumn(columnName));
-            }
+            checker.loadSettings(internalsForColumn(columnName));
             return checker;
         }
     }

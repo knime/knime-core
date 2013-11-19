@@ -52,9 +52,12 @@ package org.knime.testing.core;
 
 import java.util.List;
 
+import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
 
 /**
  * Interface used by the difference checker node. Subclasses can implement more relaxed difference checks than pure 1:1
@@ -68,12 +71,12 @@ public interface DifferenceChecker<T extends DataValue> {
     /**
      * Interface for the result of a difference check.
      */
-    public final class Result {
+    final class Result {
         private final String m_message;
 
         /**
-        * Creates a positive result, i.e. {@link #ok()} will return <code>true</code>.
-        */
+         * Creates a positive result, i.e. {@link #ok()} will return <code>true</code>.
+         */
         public Result() {
             m_message = null;
         }
@@ -122,7 +125,7 @@ public interface DifferenceChecker<T extends DataValue> {
     /**
      * Constant result for successful checks, i.e. {@link Result#ok()} is <code>true</code>.
      */
-    final Result OK = new Result();
+    Result OK = new Result();
 
     /**
      * Checks whether the two values are "equal" in the sense of this checker.
@@ -134,15 +137,38 @@ public interface DifferenceChecker<T extends DataValue> {
     Result check(T expected, T got);
 
     /**
-     * Returns a (possibly empty) list of settings with which this checker can be configured.
+     * Loads the settings for this checker from the given node settings.
      *
-     * @return a list with {@link SettingsModel}s, never <code>null</code>
+     * @param settings a node settings object
+     * @throws InvalidSettingsException if an expected setting is missing
      */
-    List<? extends SettingsModel> getSettings();
+    void loadSettings(NodeSettingsRO settings) throws InvalidSettingsException;
 
     /**
-     * Returns a (possibly empty) list of dialog components for the settings returned by {@link #getSettings()}. The
-     * number and order of the settings and the dialog components must match.
+     * Loads the settings for this checker from the given node settings, using default values for missing settings.
+     *
+     * @param settings a node settings object
+     */
+    void loadSettingsForDialog(NodeSettingsRO settings);
+
+    /**
+     * Saves the settings for this checker into the given node settings.
+     *
+     * @param settings a node settings object
+     */
+    void saveSettings(NodeSettingsWO settings);
+
+    /**
+     * Validates the settings for this checker.
+     *
+     * @param settings a node settings object
+     * @throws InvalidSettingsException if an expected setting is missing
+     */
+    void validateSettings(NodeSettingsRO settings) throws InvalidSettingsException;
+
+
+    /**
+     * Returns a (possibly empty) list of dialog components for this checker's options.
      *
      * @return a list with {@link DialogComponent}s, never <code>null</code>
      */
@@ -154,4 +180,12 @@ public interface DifferenceChecker<T extends DataValue> {
      * @return a description, never <code>null</code>
      */
     String getDescription();
+
+    /**
+     * Returns whether the data column spec properties (see {@link DataColumnProperties}) should be ignored while
+     * comparing a column from two tables.
+     *
+     * @return <code>true</code> if the properties should be ignored, <code>false</code> otherwise
+     */
+    boolean ignoreColumnProperties();
 }

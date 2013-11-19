@@ -78,7 +78,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceChecker.Result;
@@ -141,6 +140,9 @@ class DifferenceCheckerNodeModel extends NodeModel {
             throws Exception {
         BufferedDataTable testTable = inData[0];
         BufferedDataTable refTable = inData[1];
+        for (DataColumnSpec colSpec : refTable.getDataTableSpec()) {
+            m_checkers.put(colSpec, m_settings.createCheckerForColumn(colSpec.getName()));
+        }
 
         exec.setMessage("Comparing table specs");
         checkTableSpecs(testTable.getDataTableSpec(), refTable.getDataTableSpec(), true);
@@ -150,9 +152,6 @@ class DifferenceCheckerNodeModel extends NodeModel {
                     + testTable.getRowCount());
         }
 
-        for (DataColumnSpec colSpec : refTable.getDataTableSpec()) {
-            m_checkers.put(colSpec, m_settings.createCheckerForColumn(colSpec.getName()));
-        }
 
         exec.setMessage("Comparing table contents");
         final double max = refTable.getRowCount();
@@ -276,9 +275,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
                         + s.checkerFactoryClassName(colName));
             }
             DifferenceChecker<? extends DataValue> checker = fac.newChecker();
-            for (SettingsModel sm : checker.getSettings()) {
-                sm.loadSettingsFrom(s.internalsForColumn(colName));
-            }
+            checker.validateSettings(s.internalsForColumn(colName));
         }
     }
 
@@ -303,6 +300,9 @@ class DifferenceCheckerNodeModel extends NodeModel {
         Set<String> columnNames = new HashSet<String>();
 
         for (int i = 0; i < referenceTable.getNumColumns(); i++) {
+            DataColumnSpec colSpec = referenceTable.getColumnSpec(i);
+            DifferenceChecker<DataValue> checker = (DifferenceChecker<DataValue>)m_checkers.get(colSpec);
+
             DataColumnSpec refColSpec = referenceTable.getColumnSpec(i);
             if (testTable.getNumColumns() <= i) {
                 throw new IllegalStateException("Column '" + refColSpec + "' is missing in test table");
@@ -335,7 +335,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
                         + "': expected '" + refColSpec.getElementNames() + "', got '" + testColSpec.getElementNames()
                         + "'");
             }
-            if (!refColSpec.getProperties().equals(testColSpec.getProperties())) {
+            if (!checker.ignoreColumnProperties() && !refColSpec.getProperties().equals(testColSpec.getProperties())) {
                 throw new IllegalStateException("Wrong properties in column '" + refColSpec.getName() + "': expected '"
                         + refColSpec.getProperties() + "', got '" + testColSpec.getProperties() + "'");
             }

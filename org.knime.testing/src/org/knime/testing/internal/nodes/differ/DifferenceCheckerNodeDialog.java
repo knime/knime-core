@@ -82,7 +82,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
 import org.knime.testing.internal.diffcheckers.CheckerUtil;
@@ -326,14 +325,7 @@ class DifferenceCheckerNodeDialog extends NodeDialogPane {
         for (DataColumnSpec dcs : m_spec) {
             DifferenceCheckerFactory<? extends DataValue> factory = m_settings.checkerFactory(dcs.getName());
             DifferenceChecker<? extends DataValue> checker = factory.newChecker();
-
-            for (SettingsModel sm : checker.getSettings()) {
-                try {
-                    sm.loadSettingsFrom(m_settings.internalsForColumn(dcs.getName()));
-                } catch (InvalidSettingsException ex) {
-                    // ignore it
-                }
-            }
+            checker.loadSettingsForDialog(m_settings.internalsForColumn(dcs.getName()));
             m_differenceCheckers.put(dcs, checker);
         }
 
@@ -347,9 +339,7 @@ class DifferenceCheckerNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         for (Map.Entry<DataColumnSpec, DifferenceChecker<? extends DataValue>> e : m_differenceCheckers.entrySet()) {
-            for (SettingsModel sm : e.getValue().getSettings()) {
-                sm.saveSettingsTo(m_settings.internalsForColumn(e.getKey().getName()));
-            }
+            e.getValue().saveSettings(m_settings.internalsForColumn(e.getKey().getName()));
         }
 
         m_settings.saveSettings(settings);

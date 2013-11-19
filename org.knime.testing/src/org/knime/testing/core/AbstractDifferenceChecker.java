@@ -46,11 +46,11 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18.09.2013 (thor): created
+ *   10.11.2013 (thor): created
  */
-package org.knime.testing.internal.diffcheckers;
+package org.knime.testing.core;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import org.knime.core.data.DataValue;
@@ -58,76 +58,28 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.testing.core.DifferenceChecker;
-import org.knime.testing.core.DifferenceCheckerFactory;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 
 /**
- * Difference Checker that essentially ignores the column and always returns a match, regardless of the input.
+ * Abstract base class for difference checkers that already implements some common functionality. Subclasses
+ * should take care of calling the superclass implementations when overwriting methods.
  *
+ * @param <T> value type that this checker handles
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @since 2.9
  */
-public class IgnoreChecker implements DifferenceChecker<DataValue> {
-    /**
-     * Factory for the {@link IgnoreChecker}.
-     */
-    public static class Factory implements DifferenceCheckerFactory<DataValue> {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Class<DataValue> getType() {
-            return DataValue.class;
-        }
+public abstract class AbstractDifferenceChecker<T extends DataValue> implements DifferenceChecker<T> {
+    private final SettingsModelBoolean m_ignoreColumnProperties = new SettingsModelBoolean("ignoreColumnProperties", false);
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getDescription() {
-            return DESCRIPTION;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DifferenceChecker<DataValue> newChecker() {
-            return new IgnoreChecker();
-        }
-    }
-
-    static final String DESCRIPTION = "Ignore column";
+    private final DialogComponentBoolean m_component = new DialogComponentBoolean(m_ignoreColumnProperties,
+            "Ignore column properties");
 
     /**
-     * {@inheritDoc}
+     * Creates a new abstract difference checker.
      */
-    @Override
-    public Result check(final DataValue expected, final DataValue got) {
-        return OK;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<DialogComponent> getDialogComponents() {
-        return Collections.emptyList();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return DESCRIPTION;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean ignoreColumnProperties() {
-        return true;
+    protected AbstractDifferenceChecker() {
+        m_component.setToolTipText("Ignores all properties in the data column spec");
     }
 
     /**
@@ -135,6 +87,7 @@ public class IgnoreChecker implements DifferenceChecker<DataValue> {
      */
     @Override
     public void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_ignoreColumnProperties.loadSettingsFrom(settings);
     }
 
     /**
@@ -142,6 +95,12 @@ public class IgnoreChecker implements DifferenceChecker<DataValue> {
      */
     @Override
     public void loadSettingsForDialog(final NodeSettingsRO settings) {
+        try {
+            m_ignoreColumnProperties.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            // ignore and use default
+            m_ignoreColumnProperties.setBooleanValue(false);
+        }
     }
 
     /**
@@ -149,6 +108,7 @@ public class IgnoreChecker implements DifferenceChecker<DataValue> {
      */
     @Override
     public void saveSettings(final NodeSettingsWO settings) {
+        m_ignoreColumnProperties.saveSettingsTo(settings);
     }
 
     /**
@@ -156,5 +116,22 @@ public class IgnoreChecker implements DifferenceChecker<DataValue> {
      */
     @Override
     public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_ignoreColumnProperties.validateSettings(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<? extends DialogComponent> getDialogComponents() {
+        return Arrays.asList(m_component);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean ignoreColumnProperties() {
+        return m_ignoreColumnProperties.getBooleanValue();
     }
 }

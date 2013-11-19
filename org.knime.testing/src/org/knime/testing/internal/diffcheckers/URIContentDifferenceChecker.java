@@ -53,13 +53,10 @@ package org.knime.testing.internal.diffcheckers;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Collections;
-import java.util.List;
 
 import org.knime.core.data.uri.URIDataValue;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
+import org.knime.testing.core.AbstractDifferenceChecker;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
 
@@ -68,7 +65,7 @@ import org.knime.testing.core.DifferenceCheckerFactory;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-public class URIContentDifferenceChecker implements DifferenceChecker<URIDataValue> {
+public class URIContentDifferenceChecker extends AbstractDifferenceChecker<URIDataValue> {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(URIContentDifferenceChecker.class);
 
     /**
@@ -152,22 +149,6 @@ public class URIContentDifferenceChecker implements DifferenceChecker<URIDataVal
         buffInB.close();
 
         return OK;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<? extends SettingsModel> getSettings() {
-        return Collections.emptyList();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<? extends DialogComponent> getDialogComponents() {
-        return Collections.emptyList();
     }
 
     /**

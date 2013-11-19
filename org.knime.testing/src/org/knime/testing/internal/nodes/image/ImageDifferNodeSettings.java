@@ -55,7 +55,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
 import org.knime.testing.internal.diffcheckers.CheckerUtil;
@@ -137,10 +136,7 @@ public class ImageDifferNodeSettings {
         } else {
             DifferenceChecker<? extends DataValue> checker =
                     CheckerUtil.instance.getFactory(m_checkerFactoryClass).newChecker();
-
-            for (SettingsModel sm : checker.getSettings()) {
-                sm.loadSettingsFrom(m_checkerConfig);
-            }
+            checker.loadSettings(m_checkerConfig);
             return checker;
         }
     }

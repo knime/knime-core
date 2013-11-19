@@ -50,14 +50,17 @@
  */
 package org.knime.testing.internal.diffcheckers;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.testing.core.AbstractDifferenceChecker;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
 
@@ -67,7 +70,7 @@ import org.knime.testing.core.DifferenceCheckerFactory;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.9
  */
-public class EpsilonNumberChecker implements DifferenceChecker<DoubleValue> {
+public class EpsilonNumberChecker extends AbstractDifferenceChecker<DoubleValue> {
     /**
      * Factory for the {@link EpsilonNumberChecker}.
      */
@@ -121,8 +124,40 @@ public class EpsilonNumberChecker implements DifferenceChecker<DoubleValue> {
      * {@inheritDoc}
      */
     @Override
-    public List<? extends SettingsModel> getSettings() {
-        return Collections.singletonList(m_epsilon);
+    public void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        super.loadSettings(settings);
+        m_epsilon.loadSettingsFrom(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadSettingsForDialog(final NodeSettingsRO settings) {
+        super.loadSettingsForDialog(settings);
+        try {
+            m_epsilon.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            m_epsilon.setDoubleValue(0.01);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveSettings(final NodeSettingsWO settings) {
+        super.saveSettings(settings);
+        m_epsilon.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        super.validateSettings(settings);
+        m_epsilon.validateSettings(settings);
     }
 
     /**
@@ -130,7 +165,9 @@ public class EpsilonNumberChecker implements DifferenceChecker<DoubleValue> {
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
-        return Collections.singletonList(m_component);
+        List<DialogComponent> l = new ArrayList<DialogComponent>(super.getDialogComponents());
+        l.add(m_component);
+        return l;
     }
 
     /**

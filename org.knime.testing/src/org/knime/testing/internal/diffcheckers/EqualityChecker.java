@@ -50,12 +50,8 @@
  */
 package org.knime.testing.internal.diffcheckers;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.knime.core.data.DataValue;
-import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
+import org.knime.testing.core.AbstractDifferenceChecker;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
 
@@ -65,7 +61,7 @@ import org.knime.testing.core.DifferenceCheckerFactory;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.9
  */
-public class EqualityChecker implements DifferenceChecker<DataValue> {
+public class EqualityChecker extends AbstractDifferenceChecker<DataValue> {
     /**
      * Factory for the {@link EqualityChecker}.
      */
@@ -107,22 +103,6 @@ public class EqualityChecker implements DifferenceChecker<DataValue> {
         } else {
             return new Result("expected '" + expected + "', got '" + got + "'");
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<SettingsModel> getSettings() {
-        return Collections.emptyList();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<DialogComponent> getDialogComponents() {
-        return Collections.emptyList();
     }
 
     /**

@@ -73,7 +73,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
 import org.knime.testing.core.DifferenceChecker;
@@ -205,9 +204,7 @@ class ImageDifferNodeDialog extends NodeDialogPane {
 
         if (m_currentChecker != null) {
             NodeSettings config = m_settings.newCheckerConfiguration();
-            for (SettingsModel sm : m_currentChecker.getSettings()) {
-                sm.saveSettingsTo(config);
-            }
+            m_currentChecker.saveSettings(config);
         }
 
         m_settings.saveSettings(settings);

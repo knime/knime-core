@@ -51,14 +51,17 @@
 package org.knime.testing.internal.diffcheckers;
 
 import java.awt.image.BufferedImage;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.knime.core.data.image.png.PNGImageValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
+import org.knime.testing.core.AbstractDifferenceChecker;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
 
@@ -68,7 +71,7 @@ import org.knime.testing.core.DifferenceCheckerFactory;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-public class PngFullDifferenceChecker implements DifferenceChecker<PNGImageValue> {
+public class PngFullDifferenceChecker extends AbstractDifferenceChecker<PNGImageValue> {
     /**
      * Factory for {@link PngFullDifferenceChecker}.
      */
@@ -151,8 +154,40 @@ public class PngFullDifferenceChecker implements DifferenceChecker<PNGImageValue
      * {@inheritDoc}
      */
     @Override
-    public List<? extends SettingsModel> getSettings() {
-        return Collections.singletonList(m_allowedDifference);
+    public void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        super.loadSettings(settings);
+        m_allowedDifference.loadSettingsFrom(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadSettingsForDialog(final NodeSettingsRO settings) {
+        super.loadSettingsForDialog(settings);
+        try {
+            m_allowedDifference.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            m_allowedDifference.setDoubleValue(1);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveSettings(final NodeSettingsWO settings) {
+        super.saveSettings(settings);
+        m_allowedDifference.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        super.validateSettings(settings);
+        m_allowedDifference.validateSettings(settings);
     }
 
     /**
@@ -160,7 +195,10 @@ public class PngFullDifferenceChecker implements DifferenceChecker<PNGImageValue
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
-        return Collections.singletonList(m_dialogComponent);
+        List<DialogComponent> l = new ArrayList<DialogComponent>(super.getDialogComponents());
+        l.add(m_dialogComponent);
+        return l;
+
     }
 
     /**

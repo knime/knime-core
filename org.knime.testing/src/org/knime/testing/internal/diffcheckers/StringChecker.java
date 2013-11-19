@@ -53,14 +53,17 @@ package org.knime.testing.internal.diffcheckers;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.knime.core.data.StringValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.testing.core.AbstractDifferenceChecker;
 import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
 
@@ -70,7 +73,7 @@ import org.knime.testing.core.DifferenceCheckerFactory;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.9
  */
-public class StringChecker implements DifferenceChecker<StringValue> {
+public class StringChecker extends AbstractDifferenceChecker<StringValue> {
     /**
      * Factory for the {@link StringChecker}.
      */
@@ -150,8 +153,40 @@ public class StringChecker implements DifferenceChecker<StringValue> {
      * {@inheritDoc}
      */
     @Override
-    public List<? extends SettingsModel> getSettings() {
-        return Collections.singletonList(m_ignoreLinefeeds);
+    public void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        super.loadSettings(settings);
+        m_ignoreLinefeeds.loadSettingsFrom(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadSettingsForDialog(final NodeSettingsRO settings) {
+        super.loadSettingsForDialog(settings);
+        try {
+            m_ignoreLinefeeds.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            m_ignoreLinefeeds.setBooleanValue(false);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveSettings(final NodeSettingsWO settings) {
+        super.saveSettings(settings);
+        m_ignoreLinefeeds.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        super.validateSettings(settings);
+        m_ignoreLinefeeds.validateSettings(settings);
     }
 
     /**
@@ -159,7 +194,9 @@ public class StringChecker implements DifferenceChecker<StringValue> {
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
-        return Collections.singletonList(m_component);
+        List<DialogComponent> l = new ArrayList<DialogComponent>(super.getDialogComponents());
+        l.add(m_component);
+        return l;
     }
 
     /**
