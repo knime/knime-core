@@ -48,7 +48,7 @@
  * History
  *   May 1, 2008 (wiswedel): created
  */
-package org.knime.base.node.flowvariable.appendvariabletotable;
+package org.knime.base.node.flowvariable.appendvariabletotable2;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,23 +82,32 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.util.filter.variable.FlowVariableFilterConfiguration;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.Pair;
 
-/**
+/** NodeModel for the "Variable To TableColumn" node  which adds variables as new columns to the input table.
  *
- * @author Bernd Wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
+ *
+ * @since 2.9
  */
-@Deprecated
-public class AppendVariableToTableNodeModel extends NodeModel {
+public class AppendVariableToTable2NodeModel extends NodeModel {
 
-    private final AppendVariableToTableSettings m_settings;
+    /**
+     * Key for the filter configuration.
+     */
+    static final String CFG_KEY_FILTER = "variable-filter";
+
+    private FlowVariableFilterConfiguration m_filter;
 
     /** One input, one output. */
-    public AppendVariableToTableNodeModel() {
+    public AppendVariableToTable2NodeModel() {
         super(new PortType[]{FlowVariablePortObject.TYPE, BufferedDataTable.TYPE},
             new PortType[]{BufferedDataTable.TYPE});
-        m_settings = new AppendVariableToTableSettings();
+        m_filter = new FlowVariableFilterConfiguration(CFG_KEY_FILTER);
+        m_filter.loadDefaults(getAvailableFlowVariables(), false);
     }
 
     /** {@inheritDoc} */
@@ -124,12 +133,7 @@ public class AppendVariableToTableNodeModel extends NodeModel {
         for (DataColumnSpec c : spec) {
             nameHash.add(c.getName());
         }
-        List<Pair<String, FlowVariable.Type>> vars;
-        if (m_settings.getIncludeAll()) {
-            vars = getAllVariables();
-        } else {
-            vars = m_settings.getVariablesOfInterest();
-        }
+        List<Pair<String, FlowVariable.Type>> vars = getVariablesOfInterest();
         if (vars.isEmpty()) {
             throw new InvalidSettingsException("No variables selected");
         }
@@ -138,7 +142,7 @@ public class AppendVariableToTableNodeModel extends NodeModel {
         for (int i = 0; i < vars.size(); i++) {
             Pair<String, FlowVariable.Type> c = vars.get(i);
             String name = c.getFirst();
-            DataType type;
+            final DataType type;
             switch (c.getSecond()) {
                 case DOUBLE:
                     type = DoubleCell.TYPE;
@@ -191,6 +195,18 @@ public class AppendVariableToTableNodeModel extends NodeModel {
         return arranger;
     }
 
+    private List<Pair<String, FlowVariable.Type>> getVariablesOfInterest() {
+        List<Pair<String, FlowVariable.Type>> result = new ArrayList<Pair<String, FlowVariable.Type>>();
+        if (m_filter != null) {
+            String[] names = m_filter.applyTo(getAvailableFlowVariables()).getIncludes();
+            Map<String, FlowVariable> vars = getAvailableFlowVariables();
+            for (String name : names) {
+                result.add(new Pair<String, FlowVariable.Type>(name, vars.get(name).getType()));
+            }
+        }
+        return result;
+    }
+
     /** {@inheritDoc} */
     @Override
     protected void reset() {
@@ -199,19 +215,22 @@ public class AppendVariableToTableNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_settings.loadSettingsFrom(settings);
+        FlowVariableFilterConfiguration conf = new FlowVariableFilterConfiguration(CFG_KEY_FILTER);
+        conf.loadConfigurationInModel(settings);
+        m_filter = conf;
     }
 
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_settings.saveSettingsTo(settings);
+        m_filter.saveConfiguration(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        new AppendVariableToTableSettings().loadSettingsFrom(settings);
+        FlowVariableFilterConfiguration conf = new FlowVariableFilterConfiguration(CFG_KEY_FILTER);
+        conf.loadConfigurationInModel(settings);
     }
 
     /** {@inheritDoc} */
@@ -224,16 +243,6 @@ public class AppendVariableToTableNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException {
-    }
-
-    private List<Pair<String, FlowVariable.Type>> getAllVariables() {
-        Map<String, FlowVariable> currentVars = getAvailableFlowVariables();
-        List<Pair<String, FlowVariable.Type>> variables;
-        variables = new ArrayList<Pair<String, FlowVariable.Type>>();
-        for (FlowVariable v : currentVars.values()) {
-            variables.add(new Pair<String, FlowVariable.Type>(v.getName(), v.getType()));
-        }
-        return variables;
     }
 
 }

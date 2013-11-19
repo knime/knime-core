@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="append_variable.png" type="Other" deprecated="true">
+<knimeNode icon="append_variable.png" type="Other">
 	<name>Variable To TableColumn</name>
 
 	<shortDescription>
@@ -13,12 +13,14 @@
 			them to an input table.
 		</intro>
         <option name="Variable Selection">
-            Select the variables that should be provided in the output table.
+            Include list contains all variables that are converted into new columns in the resulting table, excluded variables 
+            are not used. All variables remain on the variable stack. Enforce exclusion and 
+   		    inclusion options can be used to force all new variables to be included or excluded, resp.
         </option>
 	</fullDescription>
 
 	<ports>
-		<inPort index="0" name="Flow variables">One or more flow variables</inPort>
+		<inPort index="0" name="Flow variables">One or more flow variables (optional)</inPort>
         <inPort index="1" name="Data table">Data table to which the flow variables are appended as columns</inPort>
 		<outPort index="0" name="Input table with additional columns">
 		  The input table with additional columns, one for each selected 

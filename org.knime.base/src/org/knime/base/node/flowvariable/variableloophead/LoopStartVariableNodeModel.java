@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Sept 17 2008 (mb): created (from wiswedel's TableToVariableNode)
  */
@@ -66,16 +66,15 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
 
 /** Start of loop: pushes variables in input datatable columns
  * onto stack, taking the values from one row per iteration.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
-public class LoopStartVariableNodeModel extends TableToVariableNodeModel
-implements LoopStartNodeTerminator {
+public class LoopStartVariableNodeModel extends TableToVariableNodeModel implements LoopStartNodeTerminator {
 
     // remember which iteration we are in:
     private int m_currentIteration = -1;
     private int m_maxNrIterations = -1;
-    
+
     /** One input, one output.
      */
     protected LoopStartVariableNodeModel() {
@@ -83,21 +82,20 @@ implements LoopStartNodeTerminator {
 
     /** {@inheritDoc} */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
-        pushVariables((DataTableSpec)inSpecs[0], null);
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        pushVariables((DataTableSpec) inSpecs[0]);
         pushFlowVariableInt("maxIterations", 0);
         pushFlowVariableInt("currentIteration", 0);
         return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected PortObject[] execute(final PortObject[] inPOs,
             final ExecutionContext exec) throws Exception {
         BufferedDataTable inData = (BufferedDataTable)inPOs[0];
         if (m_currentIteration == -1) {
-            // first time we see this, initalize counters:
+            // first time we see this, initialize counters:
             m_currentIteration = 0;
             m_maxNrIterations = inData.getRowCount();
         } else {
@@ -115,16 +113,13 @@ implements LoopStartNodeTerminator {
                 break;
             }
         }
-        if (row == null) {
-            throw new Exception("Not enough rows in input table (odd)!");
-        }
         // put values for variables on stack, based on current row
         pushVariables(inData.getDataTableSpec(), row);
         // and add information about loop progress
         pushFlowVariableInt("maxIterations", m_maxNrIterations);
         pushFlowVariableInt("currentIteration", m_currentIteration);
         m_currentIteration++;
-        return new PortObject[]{new FlowVariablePortObject()};
+        return new PortObject[]{FlowVariablePortObject.INSTANCE};
     }
 
     /**
@@ -134,7 +129,7 @@ implements LoopStartNodeTerminator {
     public boolean terminateLoop() {
         return m_currentIteration >= m_maxNrIterations;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void reset() {

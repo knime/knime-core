@@ -45,58 +45,50 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Sept 17, 2008 (mb): created
+ * Created on Oct 1, 2013 by Patrick Winter
  */
-package org.knime.base.node.flowvariable.variableloophead;
+package org.knime.core.node.util.filter.variable;
 
-import org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeDialog;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.util.Arrays;
+import java.util.List;
 
+import org.knime.core.node.util.filter.InputFilter;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
+ * Class that filters FlowVariables based on the given set of FlowVariable.Types.
  *
- * @author M. Berthold, University of Konstanz
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
+ * @since 2.9
  */
-public class LoopStartVariableNodeFactory
-    extends NodeFactory<LoopStartVariableNodeModel> {
+public class FlowVariableTypeFilter extends InputFilter<FlowVariable> {
 
-    /** Create factory, that instantiates nodes.
+    private final FlowVariable.Type[] m_filterTypes;
+
+    /**
+     * Creates a new FlowVariableTypeFilter.
+     *
+     * @param filterValueTypes The types that are accepted
      */
-    public LoopStartVariableNodeFactory() {
+    public FlowVariableTypeFilter(final FlowVariable.Type... filterValueTypes) {
+        if (filterValueTypes == null || filterValueTypes.length == 0) {
+            throw new NullPointerException("Types must not be null");
+        }
+        final List<FlowVariable.Type> list = Arrays.asList(filterValueTypes);
+        if (list.contains(null)) {
+            throw new NullPointerException("List of value types must not contain null elements.");
+        }
+        m_filterTypes = filterValueTypes;
     }
 
-    /** {@inheritDoc} */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new TableToVariableNodeDialog();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public LoopStartVariableNodeModel createNodeModel() {
-        return new LoopStartVariableNodeModel();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeView<LoopStartVariableNodeModel> createNodeView(
-            final int index, final LoopStartVariableNodeModel model) {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return true;
+    public final boolean include(final FlowVariable flowVariable) {
+        for (final FlowVariable.Type ty : m_filterTypes) {
+            if (flowVariable.getType() == ty) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

@@ -40,63 +40,61 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  * History
- *   Sept 17, 2008 (mb): created
+ *   Sep 3, 2012 (Patrick Winter): created
  */
-package org.knime.base.node.flowvariable.variableloophead;
-
-import org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeDialog;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-
+package org.knime.base.node.flowvariable.tablerowtovariable;
 
 /**
+ * Enums for this policies.
  *
- * @author M. Berthold, University of Konstanz
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
+ *
+ * @since 2.9
  */
-public class LoopStartVariableNodeFactory
-    extends NodeFactory<LoopStartVariableNodeModel> {
+enum MissingValuePolicy {
 
-    /** Create factory, that instantiates nodes.
+    /**
+     * Fail the nodes execution.
      */
-    public LoopStartVariableNodeFactory() {
+    FAIL("Fail"),
+
+    /**
+     * Assign default values.
+     */
+    DEFAULT("Use Defaults"),
+
+    /**
+     * Omit missing values.
+     */
+    OMIT("Omit");
+
+    private final String m_name;
+
+    /**
+     * @param name Name of this policy
+     */
+    MissingValuePolicy(final String name) {
+        m_name = name;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new TableToVariableNodeDialog();
+    /**
+     * @return Name of this policy
+     */
+    String getName() {
+        return m_name;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public LoopStartVariableNodeModel createNodeModel() {
-        return new LoopStartVariableNodeModel();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeView<LoopStartVariableNodeModel> createNodeView(
-            final int index, final LoopStartVariableNodeModel model) {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return true;
+    /**
+     * @return Array of all policy settings
+     */
+    static String[] getAllSettings() {
+        return new String[]{FAIL.getName(), DEFAULT.getName(), OMIT.getName()};
     }
 
 }

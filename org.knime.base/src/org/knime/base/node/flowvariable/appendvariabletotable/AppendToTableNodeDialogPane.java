@@ -44,22 +44,28 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   May 1, 2008 (wiswedel): created
  */
 package org.knime.base.node.flowvariable.appendvariabletotable;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.util.Arrays;
 import java.util.Map;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JCheckBox;
 import javax.swing.JList;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -69,25 +75,47 @@ import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.Pair;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
+@Deprecated
 class AppendToTableNodeDialogPane extends NodeDialogPane {
+
+    private final JCheckBox m_all;
 
     private final JList m_list;
 
     /** Inits components. */
     public AppendToTableNodeDialogPane() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 1;
+        gbc.gridheight = 1;
+        m_all = new JCheckBox("Include all flow variables");
+        panel.add(m_all, gbc);
         m_list = new JList(new DefaultListModel());
         m_list.setCellRenderer(new FlowVariableListCellRenderer());
         m_list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        addTab("Variable Selection", new JScrollPane(m_list));
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridy++;
+        panel.add(m_list, gbc);
+        m_all.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                m_list.setEnabled(!m_all.isSelected());
+            }
+        });
+        addTab("Variable Selection", new JScrollPane(panel));
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs) throws NotConfigurableException {
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+        throws NotConfigurableException {
         Map<String, FlowVariable> scopeVars = getAvailableFlowVariables();
         AppendVariableToTableSettings sets = new AppendVariableToTableSettings();
         sets.loadSettingsFrom(settings, scopeVars);
@@ -98,24 +126,24 @@ class AppendToTableNodeDialogPane extends NodeDialogPane {
         int pointer = 0;
         for (FlowVariable v : scopeVars.values()) {
             model.addElement(v);
-            if (sets.getVariablesOfInterest().contains(new Pair<
-                    String, FlowVariable.Type>(v.getName(), v.getType()))) {
+            if (sets.getVariablesOfInterest().contains(new Pair<String, FlowVariable.Type>(v.getName(), v.getType()))) {
                 selIndices[pointer++] = current;
             }
             current += 1;
         }
         selIndices = Arrays.copyOf(selIndices, pointer);
         m_list.setSelectedIndices(selIndices);
+        m_all.setSelected(sets.getIncludeAll());
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         Object[] sels = m_list.getSelectedValues();
         FlowVariable[] svSels = new FlowVariable[sels.length];
         System.arraycopy(sels, 0, svSels, 0, sels.length);
         AppendVariableToTableSettings sets = new AppendVariableToTableSettings();
+        sets.setIncludeAll(m_all.isSelected());
         sets.setVariablesOfInterest(svSels);
         sets.saveSettingsTo(settings);
     }

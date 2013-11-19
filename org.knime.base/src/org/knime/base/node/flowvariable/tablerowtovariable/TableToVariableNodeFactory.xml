@@ -16,6 +16,9 @@
 		  are given by the values in the row. The variables are exposed
 		  using a variables out connection.
 		</intro>
+		<option name="Fail">If selected the node fails with an error on Missing Values or empty tables.</option>
+		<option name="Defaults">If selected the node replaces Missing Values or empty table columns by either integer, double, or String values as defined.</option>
+		<option name="Omit">If selected the node ignores Missing Values or empty table columns.</option>
 	</fullDescription>
 	
 	<ports>

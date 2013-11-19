@@ -74,60 +74,95 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 
-/**
+/** The node model for the table row to variable node.
  *
  * @author Bernd Wiswedel, University of Konstanz
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class TableToVariableNodeModel extends NodeModel {
 
+    private final SettingsModelString m_onMV;
+
+    private final SettingsModelInteger m_int;
+
+    private final SettingsModelDouble m_double;
+
+    private final SettingsModelString m_string;
+
     /** One in, one output. */
     protected TableToVariableNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE},
-                new PortType[]{FlowVariablePortObject.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{FlowVariablePortObject.TYPE});
+        m_onMV = TableToVariableNodeDialog.getOnMissing();
+        m_int = TableToVariableNodeDialog.getReplaceInteger();
+        m_double = TableToVariableNodeDialog.getReplaceDouble();
+        m_string = TableToVariableNodeDialog.getReplaceString();
     }
 
     /** {@inheritDoc} */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
-        pushVariables((DataTableSpec)inSpecs[0], null);
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        pushVariables((DataTableSpec) inSpecs[0]);
         return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
     }
+
+    private DataCell[] createDefaultCells(final DataTableSpec spec) {
+        final DataCell[] cells = new DataCell[spec.getNumColumns()];
+        for (int i = cells.length; --i >= 0;) {
+            final DataColumnSpec c = spec.getColumnSpec(i);
+            if (c.getType().isCompatible(IntValue.class)) {
+                cells[i] = new IntCell(m_int.getIntValue());
+            } else if (c.getType().isCompatible(DoubleValue.class)) {
+                cells[i] = new DoubleCell(m_double.getDoubleValue());
+            } else {
+                cells[i] = new StringCell(m_string.getStringValue());
+            }
+        }
+        return cells;
+    }
+
+    /** Pushes the default variables onto the stack; only used during configure.
+     * @param variablesSpec The spec (for names and types)
+     * @since 2.9
+     */
+    protected void pushVariables(final DataTableSpec variablesSpec) {
+        if (m_onMV.getStringValue().equals(MissingValuePolicy.OMIT.getName())) {
+            return;
+        }
+        final DefaultRow row = new DefaultRow(/* default value for RowID*/ "", createDefaultCells(variablesSpec));
+        try {
+            this.pushVariables(variablesSpec, row);
+        } catch (Exception e) {
+            // ignored
+        }
+    }
+
 
     /** Pushes the variable as given by the row argument onto the stack.
      * @param variablesSpec The spec (for names and types)
      * @param currentVariables The values of the variables.
+     * @throws Exception if the node is supposed to fail on missing values or empty table
      */
-    protected void pushVariables(final DataTableSpec variablesSpec,
-            final DataRow currentVariables) {
-        //push also the rowID onto the stack
+    protected void pushVariables(final DataTableSpec variablesSpec, final DataRow currentVariables) throws Exception {
+        // push also the rowID onto the stack
         final String rowIDVarName = "RowID";
-        pushFlowVariableString(rowIDVarName,
-                               currentVariables == null ? "" : currentVariables.getKey().getString());
-        int colCount = variablesSpec.getNumColumns();
-        DataCell[] cells = new DataCell[variablesSpec.getNumColumns()];
-        for (int i = 0; i < cells.length; i++) {
-            DataColumnSpec c = variablesSpec.getColumnSpec(i);
-            if (c.getType().isCompatible(IntValue.class)) {
-                cells[i] = new IntCell(0);
-            } else if (c.getType().isCompatible(DoubleValue.class)) {
-                cells[i] = new DoubleCell(0);
-            } else {
-                cells[i] = new StringCell("");
-            }
-        }
-        DataRow defaultRow = new DefaultRow("Default Vars", cells);
-        // column names starting with "knime." are uniquified as they represent
-        // global constants.
-        HashSet<String> variableNames = new HashSet<String>();
+        final boolean fail = m_onMV.getStringValue().equals(MissingValuePolicy.FAIL.getName());
+        final boolean defaults = m_onMV.getStringValue().equals(MissingValuePolicy.DEFAULT.getName());
+        pushFlowVariableString(rowIDVarName, currentVariables == null ? "" : currentVariables.getKey().getString());
+        final DataCell[] defaultCells = createDefaultCells(variablesSpec);
+        // column names starting with "knime." are uniquified as they represent global constants
+        final HashSet<String> variableNames = new HashSet<String>();
         variableNames.add(rowIDVarName);
-        for (int i = 0; i < colCount; i++) {
+        final int colCount = variablesSpec.getNumColumns();
+        for (int i = colCount; --i >= 0;) {
             DataColumnSpec spec = variablesSpec.getColumnSpec(i);
             DataType type = spec.getType();
             String name = spec.getName();
@@ -141,80 +176,114 @@ public class TableToVariableNodeModel extends NodeModel {
             while (!variableNames.add(name)) {
                 name = basename + "(#" + (uniquifier++) + ")";
             }
-            DataCell cell = currentVariables == null
-                ? defaultRow.getCell(i) : currentVariables.getCell(i);
-            if (cell.isMissing()) {
-                throw new IllegalArgumentException("Missing Values not"
-                    + " allowed for Variable Values!");
+            final DataCell cell;
+            if (currentVariables == null) {
+                if (fail) {
+                    throw new Exception("No rows in input table");
+                } else if (defaults) {
+                    cell = defaultCells[i];
+                } else {
+                    // omit
+                    cell = null;
+                }
+            } else if (currentVariables.getCell(i).isMissing()) {
+                if (fail) {
+                    throw new Exception("Missing Values not allowed as variable values");
+                } else if (defaults) {
+                    cell = defaultCells[i];
+                } else {
+                    // omit
+                    cell = null;
+                }
+            } else {
+                // take the value from the input table row
+                cell = currentVariables.getCell(i);
             }
-            if (type.isCompatible(IntValue.class)) {
-                pushFlowVariableInt(name, ((IntValue)cell).getIntValue());
-            } else if (type.isCompatible(DoubleValue.class)) {
-                pushFlowVariableDouble(
-                        name, ((DoubleValue)cell).getDoubleValue());
-            } else if (type.isCompatible(StringValue.class)) {
-                pushFlowVariableString(
-                        name, ((StringValue)cell).getStringValue());
+            if (cell != null) {
+                if (type.isCompatible(IntValue.class)) {
+                    pushFlowVariableInt(name, ((IntValue) cell).getIntValue());
+                } else if (type.isCompatible(DoubleValue.class)) {
+                    pushFlowVariableDouble(name, ((DoubleValue) cell).getDoubleValue());
+                } else if (type.isCompatible(StringValue.class)) {
+                    pushFlowVariableString(name, ((StringValue) cell).getStringValue());
+                }
             }
         }
     }
 
     /** {@inheritDoc} */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) throws Exception {
-        BufferedDataTable variables = (BufferedDataTable)inData[0];
+    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
+        final BufferedDataTable variables = (BufferedDataTable) inData[0];
         DataRow row = null;
         for (DataRow r : variables) {
+            // take the first row
             row = r;
             break;
         }
-        if (row == null) {
-            throw new Exception("No rows in input table");
-        }
-        int rowCount = variables.getRowCount();
+        final int rowCount = variables.getRowCount();
         if (rowCount > 1) {
-            setWarningMessage("Table has " + rowCount + " rows, ignored all "
-                    + "rows except the first one");
+            setWarningMessage("Table has " + rowCount + " rows, ignored all rows except the first one");
         }
         pushVariables(variables.getDataTableSpec(), row);
-        return new PortObject[]{new FlowVariablePortObject()};
+        return new PortObject[]{FlowVariablePortObject.INSTANCE};
     }
 
     /** {@inheritDoc} */
     @Override
     protected void reset() {
+        // no op
     }
 
-    /** {@inheritDoc} */
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-    }
-
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_onMV.saveSettingsTo(settings);
+        m_int.saveSettingsTo(settings);
+        m_double.saveSettingsTo(settings);
+        m_string.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        // new since 2.9
+        if (settings.containsKey(m_string.getKey())) {
+            m_onMV.loadSettingsFrom(settings);
+            m_int.loadSettingsFrom(settings);
+            m_double.loadSettingsFrom(settings);
+            m_string.loadSettingsFrom(settings);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        // new since 2.9
+        if (settings.containsKey(m_string.getKey())) {
+            m_onMV.validateSettings(settings);
+            m_int.validateSettings(settings);
+            m_double.validateSettings(settings);
+            m_string.validateSettings(settings);
+        }
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void loadInternals(
-            final File nodeInternDir, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void saveInternals(
-            final File nodeInternDir, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
     }
 
 }

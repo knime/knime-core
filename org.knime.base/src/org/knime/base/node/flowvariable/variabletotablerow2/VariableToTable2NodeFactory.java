@@ -46,44 +46,36 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Sept 17, 2008 (mb): created
+ *   May 1, 2008 (wiswedel): created
  */
-package org.knime.base.node.flowvariable.variableloophead;
+package org.knime.base.node.flowvariable.variabletotablerow2;
 
-import org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeDialog;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
-
-/**
+/** Factory for the "Variable To TableRow" node.
  *
- * @author M. Berthold, University of Konstanz
+ * @author Patrick Winters, KNIME.com AG, Zurich, Switzerland
+ *
+ * @since 2.9
  */
-public class LoopStartVariableNodeFactory
-    extends NodeFactory<LoopStartVariableNodeModel> {
+public class VariableToTable2NodeFactory extends NodeFactory<VariableToTable2NodeModel> {
 
-    /** Create factory, that instantiates nodes.
-     */
-    public LoopStartVariableNodeFactory() {
+    /** {@inheritDoc} */
+    @Override
+    protected VariableToTable2NodeDialogPane createNodeDialogPane() {
+        return new VariableToTable2NodeDialogPane();
     }
 
     /** {@inheritDoc} */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new TableToVariableNodeDialog();
+    public VariableToTable2NodeModel createNodeModel() {
+        return new VariableToTable2NodeModel();
     }
 
     /** {@inheritDoc} */
     @Override
-    public LoopStartVariableNodeModel createNodeModel() {
-        return new LoopStartVariableNodeModel();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeView<LoopStartVariableNodeModel> createNodeView(
-            final int index, final LoopStartVariableNodeModel model) {
+    public NodeView<VariableToTable2NodeModel> createNodeView(final int index, final VariableToTable2NodeModel model) {
         return null;
     }
 

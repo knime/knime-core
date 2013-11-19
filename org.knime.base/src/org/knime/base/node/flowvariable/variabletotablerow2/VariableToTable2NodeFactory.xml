@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./variable2table.png" type="Other" deprecated="true">
+<knimeNode icon="./variable2table.png" type="Other">
 	<name>Variable To TableRow</name>
 	
 	<shortDescription>
@@ -11,6 +11,9 @@
 		<intro>		
 	    Extracts scope variables and puts them into a single row table.
 		</intro>
+		<option name="Variable Filter">Include list contains all variables that are converted into a column of the resulting row, excluded variables are not used. All variables remain on the variable stack. Enforce exclusion and 
+		inclusion options can be used to force all new variables to be included or excluded, resp.</option>
+		<option name="Generated RowID">The name of the RowID used for the resulting row.</option>
 	</fullDescription>
 	
 	<ports>

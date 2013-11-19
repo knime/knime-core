@@ -48,104 +48,75 @@
  * History
  *   May 1, 2008 (wiswedel): created
  */
-package org.knime.base.node.flowvariable.variabletotablerow;
+package org.knime.base.node.flowvariable.variabletotablerow2;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.util.Arrays;
-import java.util.Map;
+import java.awt.BorderLayout;
 
-import javax.swing.DefaultListModel;
-import javax.swing.JCheckBox;
-import javax.swing.JList;
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.FlowVariableListCellRenderer;
-import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.util.Pair;
+import org.knime.core.node.util.filter.variable.FlowVariableFilterConfiguration;
+import org.knime.core.node.util.filter.variable.FlowVariableFilterPanel;
 
-/**
+/** Dialog for the "Variable To TableRow" node.
  *
- * @author wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
+ *
+ * @since 2.9
  */
-@Deprecated
-class VariableToTableNodeDialogPane extends NodeDialogPane {
+class VariableToTable2NodeDialogPane extends NodeDialogPane {
 
-    private final JCheckBox m_all;
-
-    private final JList m_list;
+    private final FlowVariableFilterPanel m_filter;
+    private final DialogComponentString m_rowID;
 
     /** Inits components. */
-    public VariableToTableNodeDialogPane() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 1;
-        gbc.gridheight = 1;
-        m_all = new JCheckBox("Include all flow variables");
-        panel.add(m_all, gbc);
-        m_list = new JList(new DefaultListModel());
-        m_list.setCellRenderer(new FlowVariableListCellRenderer());
-        m_list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        gbc.fill = GridBagConstraints.BOTH;
-        gbc.gridy++;
-        panel.add(m_list, gbc);
-        m_all.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                m_list.setEnabled(!m_all.isSelected());
-            }
-        });
+    public VariableToTable2NodeDialogPane() {
+        m_filter = new FlowVariableFilterPanel();
+        m_rowID = new DialogComponentString(createSettingsModelRowID(), "Name of RowID: ");
+        final JPanel panel = new JPanel(new BorderLayout());
+        panel.add(m_filter, BorderLayout.CENTER);
+        final JPanel panelRowID = new JPanel(new BorderLayout());
+        panelRowID.setBorder(BorderFactory.createTitledBorder(" Generated RowID "));
+        panelRowID.add(m_rowID.getComponentPanel(), BorderLayout.CENTER);
+        panel.add(panelRowID, BorderLayout.SOUTH);
         addTab("Variable Selection", new JScrollPane(panel));
+    }
+
+    /** @return settings model to set the RowID name
+     */
+    static SettingsModelString createSettingsModelRowID() {
+        return new SettingsModelString("row-id", "values");
     }
 
     /** {@inheritDoc} */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-        throws NotConfigurableException {
-        Map<String, FlowVariable> scopeVars = getAvailableFlowVariables();
-        VariableToTableSettings sets = new VariableToTableSettings();
-        sets.loadSettingsFrom(settings, scopeVars);
-        DefaultListModel model = (DefaultListModel)m_list.getModel();
-        model.removeAllElements();
-        int[] selIndices = new int[sets.getVariablesOfInterest().size()];
-        int current = 0;
-        int pointer = 0;
-        for (FlowVariable v : scopeVars.values()) {
-            model.addElement(v);
-            if (sets.getVariablesOfInterest().contains(new Pair<String, FlowVariable.Type>(v.getName(), v.getType()))) {
-                selIndices[pointer++] = current;
-            }
-            current += 1;
-        }
-        selIndices = Arrays.copyOf(selIndices, pointer);
-        m_list.setSelectedIndices(selIndices);
-        m_all.setSelected(sets.getIncludeAll());
+            throws NotConfigurableException {
+        m_rowID.loadSettingsFrom(settings, specs);
+        FlowVariableFilterConfiguration config =
+            new FlowVariableFilterConfiguration(VariableToTable2NodeModel.CFG_KEY_FILTER);
+        config.loadConfigurationInDialog(settings, getAvailableFlowVariables());
+        m_filter.loadConfiguration(config, getAvailableFlowVariables());
     }
 
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        Object[] sels = m_list.getSelectedValues();
-        FlowVariable[] svSels = new FlowVariable[sels.length];
-        System.arraycopy(sels, 0, svSels, 0, sels.length);
-        VariableToTableSettings sets = new VariableToTableSettings();
-        sets.setIncludeAll(m_all.isSelected());
-        sets.setVariablesOfInterest(svSels);
-        sets.saveSettingsTo(settings);
+        m_rowID.saveSettingsTo(settings);
+        FlowVariableFilterConfiguration config =
+            new FlowVariableFilterConfiguration(VariableToTable2NodeModel.CFG_KEY_FILTER);
+        m_filter.saveConfiguration(config);
+        config.saveConfiguration(settings);
     }
 
 }

@@ -44,14 +44,13 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   May 1, 2008 (wiswedel): created
  */
 package org.knime.base.node.flowvariable.variabletotablerow;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,31 +62,47 @@ import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.Pair;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
+@Deprecated
 final class VariableToTableSettings {
-    
-    private final List<Pair<String, FlowVariable.Type>> m_variablesOfInterest
-        = new ArrayList<Pair<String, FlowVariable.Type>>();
-    
+
+    private boolean m_includeAll;
+
+    private final List<Pair<String, FlowVariable.Type>> m_variablesOfInterest =
+        new ArrayList<Pair<String, FlowVariable.Type>>();
+
+    /**
+     * @param includeAll the includeAll to set
+     */
+    public void setIncludeAll(final boolean includeAll) {
+        m_includeAll = includeAll;
+    }
+
+    /**
+     * @return the includeAll
+     */
+    public boolean getIncludeAll() {
+        return m_includeAll;
+    }
+
     /** @param variablesOfInterest the variablesOfInterest to set */
-    public void setVariablesOfInterest(
-            final FlowVariable[] variablesOfInterest) {
+    public void setVariablesOfInterest(final FlowVariable[] variablesOfInterest) {
         m_variablesOfInterest.clear();
         for (FlowVariable v : variablesOfInterest) {
-            m_variablesOfInterest.add(new Pair<String, FlowVariable.Type>(
-                    v.getName(), v.getType()));
+            m_variablesOfInterest.add(new Pair<String, FlowVariable.Type>(v.getName(), v.getType()));
         }
     }
-    
+
     /** @return the variablesOfInterest */
     public List<Pair<String, FlowVariable.Type>> getVariablesOfInterest() {
         return m_variablesOfInterest;
     }
-    
+
     /** @param settings to save to. */
     public void saveSettingsTo(final NodeSettingsWO settings) {
+        settings.addBoolean("all", m_includeAll);
         NodeSettingsWO sub = settings.addNodeSettings("variables");
         for (Pair<String, FlowVariable.Type> v : m_variablesOfInterest) {
             NodeSettingsWO sub2 = sub.addNodeSettings(v.getFirst());
@@ -95,14 +110,16 @@ final class VariableToTableSettings {
             sub2.addString("type", v.getSecond().name());
         }
     }
-    
-    /** Loads settings.
+
+    /**
+     * Loads settings.
+     *
      * @param settings to load from
      * @throws InvalidSettingsException if settings not present
      */
-    public void loadSettingsFrom(final NodeSettingsRO settings) 
-        throws InvalidSettingsException {
+    public void loadSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_variablesOfInterest.clear();
+        m_includeAll = settings.getBoolean("all", false);
         NodeSettingsRO sub = settings.getNodeSettings("variables");
         if (sub == null) {
             throw new InvalidSettingsException("No settings available");
@@ -112,60 +129,55 @@ final class VariableToTableSettings {
             String name = sub2.getString("name");
             String typeS = sub2.getString("type");
             if (name == null || typeS == null) {
-                throw new InvalidSettingsException(
-                        "Name and type must not be null.");
+                throw new InvalidSettingsException("Name and type must not be null.");
             }
             FlowVariable.Type type;
             try {
                 type = FlowVariable.Type.valueOf(typeS);
             } catch (IllegalArgumentException iae) {
-                throw new InvalidSettingsException(
-                        "Can't parse type: " + typeS);
+                throw new InvalidSettingsException("Can't parse type: " + typeS);
             }
-            m_variablesOfInterest.add(
-                    new Pair<String, FlowVariable.Type>(name, type));
+            m_variablesOfInterest.add(new Pair<String, FlowVariable.Type>(name, type));
         }
     }
-    
+
     /**
      * Load settings.
+     *
      * @param settings to load
      * @param scopeVariableMap nap of keys to scope variables
      */
-    public void loadSettingsFrom(final NodeSettingsRO settings, 
-            final Map<String, FlowVariable> scopeVariableMap) {
+    public void loadSettingsFrom(final NodeSettingsRO settings, final Map<String, FlowVariable> scopeVariableMap) {
         m_variablesOfInterest.clear();
+        m_includeAll = settings.getBoolean("all", false);
         NodeSettingsRO sub = null;
-        Set<String> keySet;
         try {
             sub = settings.getNodeSettings("variables");
         } catch (InvalidSettingsException e) {
+            // no op
         }
-        if (sub == null) {
-            keySet = Collections.emptySet();
-        } else {
-            keySet = sub.keySet();
-        }
-        for (String key : keySet) {
-            NodeSettingsRO sub2;
-            try {
-                sub2 = sub.getNodeSettings(key);
-            } catch (InvalidSettingsException e) {
-                continue;
+        if (sub != null) {
+            final Set<String>keySet = sub.keySet();
+            for (String key : keySet) {
+                NodeSettingsRO sub2;
+                try {
+                    sub2 = sub.getNodeSettings(key);
+                } catch (InvalidSettingsException e) {
+                    continue;
+                }
+                String name = sub2.getString("name", null);
+                String typeS = sub2.getString("type", null);
+                if (name == null || typeS == null) {
+                    continue;
+                }
+                FlowVariable.Type type;
+                try {
+                    type = FlowVariable.Type.valueOf(typeS);
+                } catch (IllegalArgumentException iae) {
+                    continue;
+                }
+                m_variablesOfInterest.add(new Pair<String, FlowVariable.Type>(name, type));
             }
-            String name = sub2.getString("name", null);
-            String typeS = sub2.getString("type", null);
-            if (name == null || typeS == null) {
-                continue;
-            }
-            FlowVariable.Type type;
-            try {
-                type = FlowVariable.Type.valueOf(typeS);
-            } catch (IllegalArgumentException iae) {
-                continue;
-            }
-            m_variablesOfInterest.add(
-                    new Pair<String, FlowVariable.Type>(name, type));
         }
     }
 

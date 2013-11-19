@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 28, 2008 (wiswedel): created
  */
@@ -56,16 +56,17 @@ import org.knime.core.node.NodeView;
 
 
 /**
- * 
- * @author wiswedel, University of Konstanz
+ * The node factory for the table row to variable node.
+ *
+ * @author Bernd Wiswedel, University of Konstanz
  */
-public class TableToVariableNodeFactory 
+public class TableToVariableNodeFactory
     extends NodeFactory<TableToVariableNodeModel> {
-    
+
     /** {@inheritDoc} */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return null;
+        return new TableToVariableNodeDialog();
     }
 
     /** {@inheritDoc} */
@@ -90,7 +91,7 @@ public class TableToVariableNodeFactory
     /** {@inheritDoc} */
     @Override
     protected boolean hasDialog() {
-        return false;
+        return true;
     }
 
 }

@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   May 1, 2008 (wiswedel): created
  */
@@ -54,9 +54,10 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
+@Deprecated
 public class VariableToTableNodeFactory extends
         NodeFactory<VariableToTableNodeModel> {
 
@@ -74,7 +75,7 @@ public class VariableToTableNodeFactory extends
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<VariableToTableNodeModel> 
+    public NodeView<VariableToTableNodeModel>
         createNodeView(final int index, final VariableToTableNodeModel model) {
         return null;
     }
