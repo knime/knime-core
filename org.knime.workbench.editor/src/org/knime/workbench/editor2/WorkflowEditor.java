@@ -58,7 +58,6 @@ import java.util.EventObject;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
@@ -67,6 +66,7 @@ import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.eclipse.birt.report.designer.ui.editors.ReportEditorProxy;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -125,6 +125,7 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.ISelectionListener;
@@ -213,15 +214,9 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.editor2.pervasive.PervasiveJobExecutorHelper;
 import org.knime.workbench.editor2.svgexport.WorkflowSVGExport;
-import org.knime.workbench.explorer.ExplorerMountTable;
-import org.knime.workbench.explorer.dialogs.SpaceResourceSelectionDialog;
-import org.knime.workbench.explorer.dialogs.SpaceResourceSelectionDialog.SelectionValidator;
-import org.knime.workbench.explorer.filesystem.AbstractExplorerFileInfo;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 import org.knime.workbench.explorer.filesystem.ExplorerFileSystem;
 import org.knime.workbench.explorer.filesystem.LocalExplorerFileStore;
-import org.knime.workbench.explorer.view.AbstractContentProvider;
-import org.knime.workbench.explorer.view.ContentObject;
 import org.knime.workbench.explorer.view.actions.validators.FileStoreNameValidator;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
@@ -1374,6 +1369,12 @@ public class WorkflowEditor extends GraphicalEditor implements
             return;
         }
         File workflowDir = new File(fileResource);
+        // Only continue if no report editor to this workflow is open
+        if (reportEditorToWorkflowOpen(workflowDir.toURI())) {
+            MessageDialog.openError(activeShell, "\"Save As...\" not available",
+                    "\"Save As...\" is not possible while a report editor is open.");
+                return;
+        }
         File workflowDirParent = workflowDir.getParentFile();
         final Set<String> invalidFileNames = new HashSet<String>(
                 Arrays.asList(workflowDirParent.list()));
@@ -1416,6 +1417,37 @@ public class WorkflowEditor extends GraphicalEditor implements
             // parent is workflow dir, parent's parent is workflow group
             workflowKnimeFileStore.getParent().getParent().refresh();
         }
+    }
+
+    /**
+     * Checks if a report editor to the workflow with the given URI is open.
+     *
+     * @param workflowURI The URI to the workflow directory
+     * @return true if the editor is open, false otherwise
+     */
+    private boolean reportEditorToWorkflowOpen(final URI workflowURI) {
+        boolean isOpen = false;
+        // Go through all open editors
+        for (IEditorReference editorRef : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
+            .getEditorReferences()) {
+            IEditorPart editorPart = editorRef.getEditor(true);
+            // Check if editor is report editor
+            if (editorPart instanceof ReportEditorProxy) {
+                IEditorInput editorInput = editorPart.getEditorInput();
+                if (editorInput instanceof FileStoreEditorInput) {
+                    FileStoreEditorInput fileStoreInput = (FileStoreEditorInput)editorInput;
+                    // Get URI of the report
+                    URI uri = fileStoreInput.getURI();
+                    // Check if parent of the report is the workflow directory
+                    uri = new File(uri).getParentFile().toURI();
+                    if (workflowURI.equals(uri)) {
+                        isOpen = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return isOpen;
     }
 
     /** TODO this routine should be used in save as to le the user choose the target. The dialog needs an edit field
@@ -1466,7 +1498,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @return The new suggested name (shown in rename prompt). */
     private static String guessNewWorkflowNameOnSaveAs(
             final Set<String> invalidFileNames, final String workflowDirName) {
-        Pattern pattern = Pattern.compile("(^.*[ _\\-]?)(\\d)");
+        Pattern pattern = Pattern.compile("(.*\\D)?(\\d+)");
         Matcher matcher = pattern.matcher(workflowDirName);
         String baseName = workflowDirName;
         int index;
@@ -1477,6 +1509,9 @@ public class WorkflowEditor extends GraphicalEditor implements
                 index = 0;
             }
             baseName = matcher.group(1);
+            if (baseName == null) {
+                baseName = "";
+            }
         } else {
             index = 0;
             baseName = workflowDirName + " ";
