@@ -50,6 +50,7 @@
  */
 package org.knime.base.node.io.csvreader;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -131,8 +132,13 @@ final class CSVReaderConfig {
         try {
             m_url = new URL(urlS);
         } catch (MalformedURLException e) {
-            throw new InvalidSettingsException("Invalid URL: "
-                    + e.getMessage(), e);
+            // might be a file, bug fix 3477
+            File file = new File(urlS);
+            try {
+                m_url = file.toURI().toURL();
+            } catch (Exception fileURLEx) {
+                throw new InvalidSettingsException("Invalid URL: " + e.getMessage(), e);
+            }
         }
         m_colDelimiter = settings.getString("colDelimiter");
         m_rowDelimiter = settings.getString("rowDelimiter");
