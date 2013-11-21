@@ -644,7 +644,11 @@ final class SendMailConfiguration {
                 } else {
                     File tempDir = FileUtil.createTempDir("send-mail-attachment");
                     tempDirs.add(tempDir);
-                    file = new File(tempDir, FilenameUtils.getName(url.getPath()));
+                    try {
+                        file = new File(tempDir, FilenameUtils.getName(url.toURI().getSchemeSpecificPart()));
+                    } catch (URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
                     FileUtils.copyURLToFile(url, file);
                 }
                 if (!file.canRead()) {
