@@ -538,7 +538,9 @@ public class RulePanel extends JPanel {
         m_spec = spec;
         this.m_flowVariables = flowVariables;
         try {
-            m_replaceColumn.update(spec, m_replaceColumn.getSelectedColumn());
+            if (m_replaceColumn != null) {
+                m_replaceColumn.update(spec, m_replaceColumn.getSelectedColumn());
+            }
         } catch (NotConfigurableException e) {
             // TODO Auto-generated catch block
         }
