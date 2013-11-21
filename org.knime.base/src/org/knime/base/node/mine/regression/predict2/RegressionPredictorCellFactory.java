@@ -130,7 +130,7 @@ public abstract class RegressionPredictorCellFactory extends AbstractCellFactory
                 targetColSpec.getType().getComparator());
 
             for (DataCell value : targetCategories) {
-                String name = "P(" + targetCol + "=" + value.toString() + ")";
+                String name = "P (" + targetCol + "=" + value.toString() + ")";
                 String newColName =
                         DataTableSpec.getUniqueColumnName(tableSpec, name);
                 DataColumnSpecCreator colSpecCreator =
