@@ -1627,16 +1627,14 @@ class Buffer implements KNIMEStreamConstants {
      *
      * @return a new Iterator over all rows.
      */
-    CloseableRowIterator iterator() {
+    synchronized CloseableRowIterator iterator() {
         if (usesOutFile()) {
-            synchronized (this) {
-                if (m_useBackIntoMemoryIterator) {
-                    // the order of the following lines is very important!
-                    m_useBackIntoMemoryIterator = false;
-                    m_backIntoMemoryIterator = iterator();
-                    m_list = new ArrayList<BlobSupportDataRow>(size());
-                    return new FromListIterator();
-                }
+            if (m_useBackIntoMemoryIterator) {
+                // the order of the following lines is very important!
+                m_useBackIntoMemoryIterator = false;
+                m_backIntoMemoryIterator = iterator();
+                m_list = new ArrayList<BlobSupportDataRow>(size());
+                return new FromListIterator();
             }
             FromFileIterator f;
             try {
