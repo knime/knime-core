@@ -64,6 +64,7 @@ import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.EclipseUtil;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.Bundle;
@@ -125,10 +126,7 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
 
         // show a tips&tricks dialog only if the intro page is not shown
         // and if KNIME is not started from within Eclipse
-        String installLocation = Platform.getInstallLocation().getURL().toString();
-        String configurationLocation = Platform.getConfigurationLocation().getURL().toString();
-        if ((PlatformUI.getWorkbench().getIntroManager().getIntro() == null)
-                && configurationLocation.contains(installLocation)) {
+        if ((PlatformUI.getWorkbench().getIntroManager().getIntro() == null) && !EclipseUtil.isRunFromSDK()) {
             // try to open T&T in a separate thread because if DNS resolution
             // does not work properly this blocks KNIME startup
             Thread t = new Thread(new Runnable() {

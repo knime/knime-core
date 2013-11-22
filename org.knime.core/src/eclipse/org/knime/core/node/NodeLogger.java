@@ -73,9 +73,8 @@ import org.apache.log4j.spi.Filter;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
 import org.apache.log4j.xml.DOMConfigurator;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.osgi.service.datalocation.Location;
 import org.knime.core.eclipseUtil.OSGIHelper;
+import org.knime.core.util.EclipseUtil;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LogfileAppender;
 import org.knime.core.util.User;
@@ -541,7 +540,7 @@ public final class NodeLogger {
      * @param o the message to print
      */
     public void coding(final Object o) {
-        if (KNIMEConstants.ASSERTIONS_ENABLED || isRunFromSDK()) {
+        if (KNIMEConstants.ASSERTIONS_ENABLED || EclipseUtil.isRunFromSDK()) {
             m_logger.error("CODING PROBLEM\t" + o);
         }
     }
@@ -554,7 +553,7 @@ public final class NodeLogger {
      * @param t the exception to log at debug level, including its stack trace
      */
     public void coding(final Object o, final Throwable t) {
-        if (KNIMEConstants.ASSERTIONS_ENABLED || isRunFromSDK()) {
+        if (KNIMEConstants.ASSERTIONS_ENABLED || EclipseUtil.isRunFromSDK()) {
             this.coding(o);
             if (t != null) {
                 this.debug(o, t);
@@ -787,18 +786,5 @@ public final class NodeLogger {
             ((LevelRangeFilter) filter).setLevelMin(transLEVEL(min));
             ((LevelRangeFilter) filter).setLevelMax(transLEVEL(max));
         }
-    }
-
-    private static boolean isRunFromSDK() {
-        Location installLocation = Platform.getInstallLocation();
-        if (installLocation == null) {
-            return true;
-        }
-        Location configurationLocation = Platform.getConfigurationLocation();
-        if (configurationLocation == null) {
-            return true;
-        }
-
-        return !configurationLocation.getURL().toString().contains(installLocation.getURL().toString());
     }
 }
