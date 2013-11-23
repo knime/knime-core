@@ -302,6 +302,14 @@ public class ColumnSelectionPanel extends JPanel {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getBaseline(final int width, final int height) {
+        return m_chooser.getBaseline(width, height);
+    }
+
+    /**
      * Updates this filter panel by removing all current items and adding the
      * columns according to the content of the argument <code>spec</code>. If
      * a column name is provided and it is not filtered out the corresponding
