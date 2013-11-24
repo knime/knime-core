@@ -945,6 +945,7 @@ public class Statistics3Table {
      * for empty data tables.
      *
      * @return the minimum values as {@link DataCell}s
+     * @since 2.9
      */
     public DataCell[] getMinCells() {
         return m_minCells.clone();
@@ -967,6 +968,7 @@ public class Statistics3Table {
      * for empty data tables.
      *
      * @return the maximum values as {@link DataCell}s
+     * @since 2.9
      */
     public DataCell[] getMaxCells() {
         return m_maxCells.clone();
