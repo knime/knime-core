@@ -62,7 +62,6 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ColorHandler;
@@ -207,8 +206,8 @@ class ColorManager2NodeModel extends NodeModel {
                 upper = dom.getUpperBound();
             } else {
                 Statistics3Table stat = new Statistics3Table(in, false, 0, Collections.<String>emptyList(), exec);
-                lower = new DoubleCell(stat.getMin()[columnIndex]);
-                upper = new DoubleCell(stat.getMax()[columnIndex]);
+                lower = stat.getMinCells()[columnIndex];
+                upper = stat.getMaxCells()[columnIndex];
             }
             colorHandler = createRangeColorHandler(lower, upper, m_map);
         }

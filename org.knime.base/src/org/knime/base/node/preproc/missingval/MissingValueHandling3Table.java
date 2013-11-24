@@ -152,10 +152,10 @@ public final class MissingValueHandling3Table implements DataTable {
      *
      * @param column the column of interest
      * @return the maximum in a column
-     * @see Statistics3Table#getMax()
+     * @see Statistics3Table#getMaxCells()
      */
     protected DataCell getMax(final int column) {
-        return new DoubleCell(getStatisticsTable().getMax()[column]);
+        return getStatisticsTable().getMaxCells()[column];
     }
 
     /**
@@ -185,10 +185,10 @@ public final class MissingValueHandling3Table implements DataTable {
      *
      * @param column the column of interest
      * @return the min in a column
-     * @see Statistics3Table#getMin()
+     * @see Statistics3Table#getMinCells()
      */
     protected DataCell getMin(final int column) {
-        return new DoubleCell(getStatisticsTable().getMin()[column]);
+        return getStatisticsTable().getMinCells()[column];
     }
 
     /**

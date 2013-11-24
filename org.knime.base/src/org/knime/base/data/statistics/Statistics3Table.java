@@ -73,9 +73,11 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultTable;
@@ -164,6 +166,13 @@ public class Statistics3Table {
 
     /** Used to 'cache' the maximum values. */
     private final double[] m_maxValues;
+
+    /** Used to 'cache' the minimum values. */
+    private final DataCell[] m_minCells;
+
+    /** Used to 'cache' the maximum values. */
+    private final DataCell[] m_maxCells;
+
 
     /** Used to 'cache' the row count. */
     private final int m_rowCount;
@@ -273,6 +282,8 @@ public class Statistics3Table {
         m_sum = new double[nrCols];
         m_minValues = new double[nrCols];
         m_maxValues = new double[nrCols];
+        m_minCells = new DataCell[nrCols];
+        m_maxCells = new DataCell[nrCols];
         m_missingValueCnt = new int[nrCols];
         m_nanValueCnt = new int[nrCols];
         m_posInfinityValueCnt = new int[nrCols];
@@ -303,8 +314,8 @@ public class Statistics3Table {
             m_meanValues[i] = Double.NaN;
             m_sum[i] = Double.NaN;
             m_varianceValues[i] = Double.NaN;
-            m_minValues[i] = Double.NaN;
-            m_maxValues[i] = Double.NaN;
+            m_minCells[i] = DataType.getMissingCell();
+            m_maxCells[i] = DataType.getMissingCell();
             m_skewness[i] = Double.NaN;
             m_kurtosis[i] = Double.NaN;
             m_median[i] = Double.NaN;
@@ -346,15 +357,7 @@ public class Statistics3Table {
                         double d = ((DoubleValue)cell).getDoubleValue();
                         means[c].increment(d);
                         variances[c].increment(d);
-                        // keep the min and max for each column
-                        if ((Double.isNaN(m_minValues[c]))
-                            || (Double.compare(d, m_minValues[c]) < 0 && !Double.isNaN(d))) {
-                            m_minValues[c] = d;
-                        }
-                        if ((Double.isNaN(m_maxValues[c]))
-                            || (Double.compare(m_maxValues[c], d) < 0 && !Double.isNaN(d))) {
-                            m_maxValues[c] = d;
-                        }
+                        updateMinMax(c, cell, m_minCells, m_maxCells, cspec.getType().getComparator());
                         if (d == Double.POSITIVE_INFINITY) {
                             m_posInfinityValueCnt[c]++;
                         }
@@ -419,6 +422,8 @@ public class Statistics3Table {
                 m_skewness[j] = Double.NaN;
                 m_kurtosis[j] = Double.NaN;
             } else {
+                m_minValues[j] = m_minCells[j].isMissing() ? Double.NaN : ((DoubleValue) m_minCells[j]).getDoubleValue();
+                m_maxValues[j] = m_maxCells[j].isMissing() ? Double.NaN : ((DoubleValue) m_maxCells[j]).getDoubleValue();
                 m_meanValues[j] = means[j].getResult();
                 m_varianceValues[j] = variances[j].getResult();
                 m_sum[j] = means[j].getResult() * means[j].getN();
@@ -585,8 +590,8 @@ public class Statistics3Table {
         final DataCell[] ret = new DataCell[getStatisticsSpecification().getNumColumns()];
         int i = 0;
         ret[i++] = new StringCell(name);
-        ret[i++] = new DoubleCell(m_minValues[colIdx]);
-        ret[i++] = new DoubleCell(m_maxValues[colIdx]);
+        ret[i++] = m_minCells[colIdx];
+        ret[i++] = m_maxCells[colIdx];
         ret[i++] = new DoubleCell(m_meanValues[colIdx]);
         ret[i++] = new DoubleCell(Math.sqrt(m_varianceValues[colIdx]));
         ret[i++] = new DoubleCell(m_varianceValues[colIdx]);
@@ -925,23 +930,48 @@ public class Statistics3Table {
 
     /**
      * Returns the minimum for all columns. Will be {@link Double#NaN} for columns that only contain missing cells or
-     * for empty data tables.
+     * for empty data tables.<br />
+     * Consider using {@link #getMinCells()} instead because this gives you the correct type and can distinguish between
+     * NaN and missing cells.
      *
      * @return the minimum values
      */
     public double[] getMin() {
-        return Arrays.copyOf(m_minValues, m_minValues.length);
+        return m_minValues.clone();
+    }
+
+    /**
+     * Returns the minimum for all columns. Will be a missing cell for columns that only contain missing cells or
+     * for empty data tables.
+     *
+     * @return the minimum values as {@link DataCell}s
+     */
+    public DataCell[] getMinCells() {
+        return m_minCells.clone();
     }
 
     /**
      * Returns the maximum for all columns. Will be {@link Double#NaN} for columns that only contain missing cells or
-     * for empty data tables.
+     * for empty data tables.<br />
+     * Consider using {@link #getMinCells()} instead because this gives you the correct type and can distinguish between
+     * NaN and missing cells.
      *
      * @return the maximum values
      */
     public double[] getMax() {
-        return Arrays.copyOf(m_maxValues, m_maxValues.length);
+        return m_maxValues.clone();
     }
+
+    /**
+     * Returns the maximum for all columns. Will be a missing cell for columns that only contain missing cells or
+     * for empty data tables.
+     *
+     * @return the maximum values as {@link DataCell}s
+     */
+    public DataCell[] getMaxCells() {
+        return m_maxCells.clone();
+    }
+
 
     /**
      * Returns the median for the desired column.
@@ -1053,22 +1083,15 @@ public class Statistics3Table {
         return result;
     }
 
-    @Deprecated
-    private Statistics3Table(final DataTableSpec spec, final double[] minValues, final double[] maxValues,
-        final double[] meanValues, final double[] median, final double[] varianceValues, final double[] sum,
-        final int[] missings, final List<Map<DataCell, Integer>> nomValues, final double[] skewness,
+    private Statistics3Table(final DataTableSpec spec, final DataCell[] minCells, final double[] minValues,
+        final DataCell[] maxCells, final double[] maxValues, final double[] meanValues, final double[] median,
+        final double[] varianceValues, final double[] sum, final int[] missings, final int[] nans, final int[] posInfs,
+        final int[] negInfs, final List<Map<DataCell, Integer>> nomValues, final double[] skewness,
         final double[] kurtosis, final int rowCount) {
-        this(spec, minValues, maxValues, meanValues, median, varianceValues, sum, missings, null, null, null,
-            nomValues, skewness, kurtosis, rowCount);
-    }
-
-    private Statistics3Table(final DataTableSpec spec, final double[] minValues, final double[] maxValues,
-        final double[] meanValues, final double[] median, final double[] varianceValues, final double[] sum,
-        final int[] missings, final int[] nans, final int[] posInfs, final int[] negInfs,
-        final List<Map<DataCell, Integer>> nomValues, final double[] skewness, final double[] kurtosis,
-        final int rowCount) {
         m_spec = spec;
+        m_minCells = minCells;
         m_minValues = minValues;
+        m_maxCells = maxCells;
         m_maxValues = maxValues;
         m_meanValues = meanValues;
         m_median = median;
@@ -1117,8 +1140,47 @@ public class Statistics3Table {
                 }
             }
         }
-        double[] min = sett.getDoubleArray("minimum");
-        double[] max = sett.getDoubleArray("maximum");
+        DataCell[] minCells;
+        double[] min;
+        if (sett.containsKey("minimumCells")) { // since 2.9
+            minCells = sett.getDataCellArray("minimumCells");
+            min = new double[minCells.length];
+            for (int i = 0; i < minCells.length; i++) {
+                if (minCells[i].isMissing()) {
+                    min[i] = Double.NaN;
+                } else {
+                    min[i] = ((DoubleValue) minCells[i]).getDoubleValue();
+                }
+            }
+        } else { // until 2.8
+            min = sett.getDoubleArray("minimum");
+            minCells = new DataCell[min.length];
+            for (int i = 0; i < min.length; i++) {
+                minCells[i] = new DoubleCell(min[i]);
+            }
+        }
+
+        DataCell[] maxCells;
+        double[] max;
+        if (sett.containsKey("maximumCells")) { // since 2.9
+            maxCells = sett.getDataCellArray("maximumCells");
+            max = new double[maxCells.length];
+            for (int i = 0; i < maxCells.length; i++) {
+                if (maxCells[i].isMissing()) {
+                    max[i] = Double.NaN;
+                } else {
+                    max[i] = ((DoubleValue) maxCells[i]).getDoubleValue();
+                }
+            }
+        } else { // until 2.8
+            max = sett.getDoubleArray("maximum");
+            maxCells = new DataCell[max.length];
+            for (int i = 0; i < max.length; i++) {
+                maxCells[i] = new DoubleCell(max[i]);
+            }
+        }
+
+
         double[] mean = sett.getDoubleArray("mean");
         double[] var = sett.getDoubleArray("variance");
         double[] median = sett.getDoubleArray("median");
@@ -1135,8 +1197,8 @@ public class Statistics3Table {
         double[] kurtosis = sett.getDoubleArray("kurtosis", unknownDouble);
         // added with 2.7, fallback -1
         int rowCount = sett.getInt("row_count", -1);
-        return new Statistics3Table(spec, min, max, mean, median, var, sums, missings, nans, posInfs, negInfs,
-            nominalValues, skewness, kurtosis, rowCount);
+        return new Statistics3Table(spec, minCells, min, maxCells, max, mean, median, var, sums, missings, nans,
+            posInfs, negInfs, nominalValues, skewness, kurtosis, rowCount);
     }
 
     /**
@@ -1146,8 +1208,8 @@ public class Statistics3Table {
      */
     public void save(final NodeSettingsWO sett) {
         m_spec.save(sett.addConfig("spec"));
-        sett.addDoubleArray("minimum", m_minValues);
-        sett.addDoubleArray("maximum", m_maxValues);
+        sett.addDataCellArray("minimumCells", m_minCells);
+        sett.addDataCellArray("maximumCells", m_maxCells);
         sett.addDoubleArray("mean", m_meanValues);
         sett.addDoubleArray("variance", m_varianceValues);
         sett.addDoubleArray("median", m_median);
@@ -1177,5 +1239,48 @@ public class Statistics3Table {
      */
     public static DataTableSpec getStatisticsSpecification() {
         return STATISTICS_SPECIFICATION;
+    }
+
+
+    /** Updates the min and max value for an respective column. This method
+     * does nothing if the min and max values don't need to be stored, e.g.
+     * the column at hand contains string values.
+     * @param col The column of interest.
+     * @param cell The new value to check.
+     */
+    private void updateMinMax(final int col, final DataCell cell,
+        final DataCell[] mins, final DataCell[] maxs, final DataValueComparator comparator) {
+        if (cell.isMissing()) {
+            return;
+        }
+        DataCell value = handleNaN(cell instanceof BlobWrapperDataCell ? ((BlobWrapperDataCell)cell).getCell() : cell);
+        if (value.isMissing()) {
+            return;
+        }
+
+        if (mins[col].isMissing() || (comparator.compare(value, mins[col]) < 0)) {
+            mins[col] = value;
+        }
+        if (maxs[col].isMissing() || (comparator.compare(value, maxs[col]) > 0)) {
+            maxs[col] = value;
+        }
+    }
+
+    /*
+     * Returns
+     * - the cell if it is not a DoubleValue
+     * - the cell if it is not NaN
+     * - a missing cell if it is NaN
+     */
+    private static DataCell handleNaN(final DataCell cell) {
+        if (cell.getType().isCompatible(DoubleValue.class)) {
+            if (Double.isNaN(((DoubleValue) cell).getDoubleValue())) {
+                return DataType.getMissingCell();
+            } else {
+                return cell;
+            }
+        } else {
+            return cell;
+        }
     }
 }
