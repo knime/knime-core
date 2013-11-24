@@ -106,6 +106,10 @@ class PropertyColumnsAction extends AbstractAction {
     public void actionPerformed(final ActionEvent e) {
         int colIdx = m_table.getColumnModel().getSelectionModel()
                         .getMinSelectionIndex();
+        if (colIdx < 0) {
+            // nothing selected, do not add column with negative index
+            return;
+        }
         SortedMap<Integer, ColProperty> props =
             ((SpreadsheetTableModel)m_table.getModel()).getColumnProperties();
 
