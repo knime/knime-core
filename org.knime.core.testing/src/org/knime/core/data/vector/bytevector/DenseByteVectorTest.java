@@ -22,6 +22,9 @@
  */
 package org.knime.core.data.vector.bytevector;
 
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.knime.core.data.vector.bitvector.DenseBitVector;
@@ -758,5 +761,54 @@ public class DenseByteVectorTest extends TestCase {
         bv130.clear(129);
         assertTrue(!bv130.intersects(bv256));
         assertTrue(!bv256.intersects(bv130));
+    }
+
+    /**
+     * Checks whether the {@link DenseByteVectorCellFactory} works as expected.
+     */
+    public void testFactory() {
+        DenseByteVectorCellFactory fac = new DenseByteVectorCellFactory(5);
+        // set byte values; the will be shifted by +128
+        fac.setValue(0, (byte) -128);
+        fac.setValue(1, (byte) -127);
+        fac.setValue(2, (byte) 0);
+        fac.setValue(3, (byte) 32);
+        fac.setValue(4, (byte) 127);
+
+        DenseByteVectorCell cell = fac.createDataCell();
+        assertThat("Unexpected value at index 0", cell.get(0), is(0));
+        assertThat("Unexpected value at index 1", cell.get(1), is(1));
+        assertThat("Unexpected value at index 2", cell.get(2), is(128));
+        assertThat("Unexpected value at index 3", cell.get(3), is(160));
+        assertThat("Unexpected value at index 4", cell.get(4), is(255));
+
+        // int values
+        fac.setValue(0, 0);
+        fac.setValue(1, 1);
+        fac.setValue(2, 160);
+        fac.setValue(3, 254);
+        fac.setValue(4, 255);
+
+        cell = fac.createDataCell();
+        assertThat("Unexpected value at index 0", cell.get(0), is(0));
+        assertThat("Unexpected value at index 1", cell.get(1), is(1));
+        assertThat("Unexpected value at index 2", cell.get(2), is(160));
+        assertThat("Unexpected value at index 3", cell.get(3), is(254));
+        assertThat("Unexpected value at index 4", cell.get(4), is(255));
+
+        try {
+            fac.setValue(0, -1);
+            Assert.fail("Expected IllegalArgumentException for negative int value");
+        } catch (IllegalArgumentException ex) {
+            // OK
+        }
+
+
+        try {
+            fac.setValue(0, 256);
+            Assert.fail("Expected IllegalArgumentException for to large int value");
+        } catch (IllegalArgumentException ex) {
+            // OK
+        }
     }
 }
