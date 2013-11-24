@@ -207,4 +207,12 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/preproc/joiner/Joiner2Settings.java" type="org.knime.base.node.preproc.joiner.Joiner2Settings">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.joiner.Joiner2Settings"/>
+                <message_argument value="supportsDuplicateColumnSuffix()"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

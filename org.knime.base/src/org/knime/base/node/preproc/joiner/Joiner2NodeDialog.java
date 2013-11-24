@@ -201,7 +201,19 @@ public class Joiner2NodeDialog extends NodeDialogPane {
         c.weightx = 1;
         c.weighty = 1;
 
-        m_columnPairs = new ColumnPairsSelectionPanel();
+        m_columnPairs = new ColumnPairsSelectionPanel() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            protected void initComboBox(final DataTableSpec spec, final JComboBox comboBox, final String selected) {
+                super.initComboBox(spec, comboBox, selected);
+                // the first entry is the row id, set as default.
+                if (selected == null) {
+                    comboBox.setSelectedIndex(0);
+                }
+            }
+        };
         m_columnPairs.setRowKeyIdentifier(Joiner2Settings.ROW_KEY_IDENTIFIER);
         JScrollPane scrollPane = new JScrollPane(m_columnPairs);
         m_columnPairs.setBackground(Color.white);
@@ -477,7 +489,6 @@ public class Joiner2NodeDialog extends NodeDialogPane {
             m_settings.setDuplicateColumnSuffix(suffix);
         }
         m_settings.setVersion(Joiner2Settings.VERSION_3);
-        m_settings.setDuplicateColumnSuffix("");
 
         m_settings.setLeftIncludeCols(
                 m_leftFilterPanel.getIncludedColumnSet().toArray(

@@ -165,8 +165,7 @@ public class Joiner2Settings {
 
 
 
-    private DuplicateHandling m_duplicateHandling =
-            DuplicateHandling.AppendSuffix;
+    private DuplicateHandling m_duplicateHandling = DuplicateHandling.AppendSuffixAutomatic;
 
     private String m_duplicateColSuffix = "(*)";
 
@@ -190,20 +189,6 @@ public class Joiner2Settings {
     private boolean m_enableHiLite = false;
 
     private String m_version = VERSION_3;
-
-
-    /**
-     * Returns true when the version of the settings supports a custom suffix
-     * for duplicated columns. The option was removed in version 2
-     * (see Bug 3368) in favor of a automatically generated suffix.
-     *
-     * @return true when this supports a custom suffix for duplicated columns.
-     * @since 2.7
-     *
-     */
-    public boolean supportsDuplicateColumnSuffix() {
-        return m_version.equals(VERSION_1);
-    }
 
     /**
      * Returns true when the enhance RowID handling introduced in KNIME 2.8
