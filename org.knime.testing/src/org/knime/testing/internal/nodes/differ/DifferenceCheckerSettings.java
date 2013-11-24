@@ -127,6 +127,7 @@ class DifferenceCheckerSettings {
             throw new IllegalArgumentException("Checker factory must not be null");
         }
         m_checkerPerColumn.put(columnName, checkerFactory.getClass().getName());
+        m_perColumnConfig.put(columnName, new NodeSettings("internals"));
     }
 
     /**

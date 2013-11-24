@@ -111,7 +111,9 @@ class DifferenceCheckerNodeModel extends NodeModel {
         if (m_settings.configuredColumns().size() == 0) {
             // auto-configure
             for (DataColumnSpec dcs : inSpecs[1]) {
-                m_settings.checkerFactory(dcs.getName(), new EqualityChecker.Factory());
+                DifferenceCheckerFactory<? extends DataValue> fac = new EqualityChecker.Factory();
+                m_settings.checkerFactory(dcs.getName(), fac);
+                fac.newChecker().saveSettings(m_settings.internalsForColumn(dcs.getName()));
             }
         } else {
             for (DataColumnSpec dcs : inSpecs[1]) {
