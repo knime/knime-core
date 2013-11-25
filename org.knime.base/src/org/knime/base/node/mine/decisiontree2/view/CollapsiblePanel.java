@@ -195,9 +195,10 @@ public class CollapsiblePanel extends JPanel {
         /* Get a scaled version of the give icon */
         private ImageIcon scaled(final ImageIcon icon, final float scale) {
             Image img = icon.getImage();
+            int scaledWidth = Math.max(Math.round(icon.getIconWidth() * scale), 1);
+            int scaledHeight = Math.max(Math.round(icon.getIconHeight() * scale), 1);
             Image newimg = img.getScaledInstance(
-                    Math.round(icon.getIconWidth() * scale),
-                    Math.round(icon.getIconHeight() * scale),
+                    scaledWidth, scaledHeight,
                     java.awt.Image.SCALE_SMOOTH);
             return new ImageIcon(newimg);
         }
