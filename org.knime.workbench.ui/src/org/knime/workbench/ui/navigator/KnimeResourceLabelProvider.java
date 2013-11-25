@@ -298,7 +298,7 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
                     return EXECUTED;
                 } else if (state.isExecutionInProgress()) {
                     return EXECUTING;
-                } else if (state.isConfigured()) {
+                } else {
                     return CONFIGURED;
                 }
             } else {
