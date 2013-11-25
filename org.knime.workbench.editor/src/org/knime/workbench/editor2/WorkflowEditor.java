@@ -66,7 +66,6 @@ import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.eclipse.birt.report.designer.ui.editors.ReportEditorProxy;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -1373,10 +1372,10 @@ public class WorkflowEditor extends GraphicalEditor implements
             return;
         }
         File workflowDir = new File(fileResource);
-        // Only continue if no report editor to this workflow is open
-        if (reportEditorToWorkflowOpen(workflowDir.toURI())) {
+        // Only continue if no  other editor to this workflow is open
+        if (isOtherEditorToWorkflowOpen(workflowDir.toURI())) {
             MessageDialog.openError(activeShell, "\"Save As...\" not available",
-                    "\"Save As...\" is not possible while a report editor is open.");
+                    "\"Save As...\" is not possible while another editor to this workflow is open.");
                 return;
         }
         File workflowDirParent = workflowDir.getParentFile();
@@ -1446,25 +1445,25 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Checks if a report editor to the workflow with the given URI is open.
+     * Checks if a non workflow editor to the workflow with the given URI is open.
      *
      * @param workflowURI The URI to the workflow directory
-     * @return true if the editor is open, false otherwise
+     * @return true if an editor is open, false otherwise
      */
-    private boolean reportEditorToWorkflowOpen(final URI workflowURI) {
+    private static boolean isOtherEditorToWorkflowOpen(final URI workflowURI) {
         boolean isOpen = false;
         // Go through all open editors
         for (IEditorReference editorRef : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
             .getEditorReferences()) {
             IEditorPart editorPart = editorRef.getEditor(true);
-            // Check if editor is report editor
-            if (editorPart instanceof ReportEditorProxy) {
+            // Check if editor is something other than a workflow editor
+            if (!(editorPart instanceof WorkflowEditor)) {
                 IEditorInput editorInput = editorPart.getEditorInput();
                 if (editorInput instanceof FileStoreEditorInput) {
                     FileStoreEditorInput fileStoreInput = (FileStoreEditorInput)editorInput;
-                    // Get URI of the report
+                    // Get URI of the editor
                     URI uri = fileStoreInput.getURI();
-                    // Check if parent of the report is the workflow directory
+                    // Check if parent of the editor is the workflow directory
                     uri = new File(uri).getParentFile().toURI();
                     if (workflowURI.equals(uri)) {
                         isOpen = true;
