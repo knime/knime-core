@@ -50,6 +50,7 @@
  */
 package org.knime.base.node.mine.regression.linear2.learner;
 
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -61,6 +62,7 @@ import java.awt.event.ItemListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
@@ -92,6 +94,9 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
     private JCheckBox m_predefinedOffsetValue;
 
     private JSpinner m_offsetValue;
+
+    private JSpinner m_scatterPlotFirstRow;
+    private JSpinner m_scatterPlotRowCount;
 
 
     /**
@@ -131,6 +136,14 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
         regrPropertiesPanel.add(createRegressionPropertiesPanel());
         panel.add(regrPropertiesPanel, c);
 
+        c.gridy++;
+        c.weighty = 0;
+        JPanel scatterPlotPropertiesPanel = new JPanel(new FlowLayout());
+        scatterPlotPropertiesPanel.setBorder(BorderFactory.createTitledBorder("Scatter Plot View"));
+
+        scatterPlotPropertiesPanel.add(createScatterPlotPropertiesPanel());
+        panel.add(scatterPlotPropertiesPanel, c);
+
         addTab("Settings", panel);
 
         m_selectionPanel.addItemListener(new ItemListener() {
@@ -144,7 +157,7 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
         });
     }
 
-    private JPanel createRegressionPropertiesPanel() {
+    private JPanel createScatterPlotPropertiesPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
@@ -152,7 +165,41 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
         c.weighty = 0;
         c.gridx = 0;
         c.gridy = 0;
-        c.anchor = GridBagConstraints.FIRST_LINE_START;
+        c.gridwidth = 1;
+        c.anchor = GridBagConstraints.BASELINE;
+        c.insets = new Insets(5, 5, 0, 0);
+
+        panel.add(new JLabel("First Row:"), c);
+        c.gridx++;
+        m_scatterPlotFirstRow = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
+        m_scatterPlotFirstRow.setPreferredSize(new Dimension(
+            m_scatterPlotFirstRow.getPreferredSize().width - 50,
+            m_scatterPlotFirstRow.getPreferredSize().height));
+        panel.add(m_scatterPlotFirstRow, c);
+
+        c.gridx++;
+        c.insets = new Insets(5, 30, 0, 0);
+        panel.add(new JLabel("Row Count:"), c);
+        c.gridx++;
+        c.insets = new Insets(5, 5, 0, 0);
+        m_scatterPlotRowCount = new JSpinner(new SpinnerNumberModel(20000, 1, Integer.MAX_VALUE, 1));
+        m_scatterPlotRowCount.setPreferredSize(new Dimension(
+            m_scatterPlotRowCount.getPreferredSize().width - 50,
+            m_scatterPlotRowCount.getPreferredSize().height));
+        panel.add(m_scatterPlotRowCount, c);
+
+        return panel;
+    }
+
+    private JPanel createRegressionPropertiesPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.BASELINE;
         c.insets = new Insets(5, 5, 0, 0);
 
         m_predefinedOffsetValue = new JCheckBox("Predefined Offset Value:");
@@ -161,7 +208,10 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
         c.gridx++;
         m_offsetValue = new JSpinner(new SpinnerNumberModel(0.0,
             Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 1.0));
-        panel.add(m_offsetValue);
+        m_offsetValue.setPreferredSize(new Dimension(
+            m_offsetValue.getPreferredSize().width + 70,
+            m_offsetValue.getPreferredSize().height));
+        panel.add(m_offsetValue, c);
 
         m_predefinedOffsetValue.addActionListener(new ActionListener() {
 
@@ -173,6 +223,7 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
 
         return panel;
     }
+
 
     private void updateHiddenColumns(final DataColumnSpec toHide) {
         m_filterPanel.resetHiding();
@@ -198,6 +249,8 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
         m_offsetValue.setValue(settings.getOffsetValue());
         m_offsetValue.setEnabled(m_predefinedOffsetValue.isSelected());
 
+        m_scatterPlotFirstRow.setValue(settings.getScatterPlotFirstRow());
+        m_scatterPlotRowCount.setValue(settings.getScatterPlotRowCount());
     }
 
     /**
@@ -212,6 +265,10 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
         settings.setTargetColumn(m_selectionPanel.getSelectedColumn());
         settings.setIncludeConstant(!m_predefinedOffsetValue.isSelected());
         settings.setOffsetValue((Double)m_offsetValue.getValue());
+        settings.setScatterPlotFirstRow((Integer)m_scatterPlotFirstRow.getValue());
+        settings.setScatterPlotRowCount((Integer)m_scatterPlotRowCount.getValue());
+
+
         settings.saveSettings(s);
     }
 

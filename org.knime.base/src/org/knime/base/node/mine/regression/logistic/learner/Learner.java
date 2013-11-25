@@ -54,20 +54,16 @@ import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.knime.base.node.mine.regression.RegressionTrainingData;
+import org.knime.base.node.mine.regression.RegressionTrainingRow;
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.NominalValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
@@ -126,8 +122,9 @@ final class Learner {
         int iter = 0;
         boolean converged = false;
 
-        TrainingData trainingData = new TrainingData(data, m_outSpec);
-        int tcC = trainingData.getTargetCategoryCount();
+        RegressionTrainingData trainingData = new RegressionTrainingData(data, m_outSpec);
+        int targetIndex = data.getDataTableSpec().findColumnIndex(m_outSpec.getTargetCols().get(0).getName());
+        int tcC = trainingData.getDomainValues().get(targetIndex).size();
         int rC = trainingData.getRegressorCount();
 
         Matrix beta = new Matrix(1, (tcC - 1) * (rC + 1));
@@ -229,7 +226,7 @@ final class Learner {
      * @param rC regressors count
      * @param tcC target category count
      */
-    private void irlsRls(final Iterator<TrainingRow> iter, final Matrix beta,
+    private void irlsRls(final Iterator<RegressionTrainingRow> iter, final Matrix beta,
             final int rC, final int tcC) {
         int rowCount = 0;
         int dim = (rC + 1) * (tcC - 1);
@@ -241,7 +238,7 @@ final class Learner {
         Matrix pi = new Matrix(1, tcC - 1);
         while (iter.hasNext()) {
             rowCount++;
-            TrainingRow row = iter.next();
+            RegressionTrainingRow row = iter.next();
             x.set(0, 0, 1);
             x.setMatrix(0, 0, 1, rC, row.getParameter());
 
@@ -294,7 +291,7 @@ final class Learner {
                 }
             }
 
-            int g = row.getTarget();
+            int g = (int)row.getTarget();
             // fill matrix xTyu
             for (int k = 0; k < tcC - 1; k++) {
                 for (int i = 0; i < rC + 1; i++) {
@@ -348,14 +345,14 @@ final class Learner {
      * @param rC regressors count
      * @param tcC target category count
      */
-    private double likelihood(final Iterator<TrainingRow> iter,
+    private double likelihood(final Iterator<RegressionTrainingRow> iter,
             final Matrix beta,
             final int rC, final int tcC) {
         double loglike = 0;
 
         Matrix x = new Matrix(1, rC + 1);
         while (iter.hasNext()) {
-            TrainingRow row = iter.next();
+            RegressionTrainingRow row = iter.next();
 
             x.set(0, 0, 1);
             x.setMatrix(0, 0, 1, rC, row.getParameter());
@@ -368,7 +365,7 @@ final class Learner {
                 sumEBetaTx += Math.exp(betaITx.get(0, 0));
             }
 
-            int y = row.getTarget();
+            int y = (int)row.getTarget();
             double yBetaTx = 0;
             if (y < tcC - 1) {
                 yBetaTx = x.times(
@@ -380,278 +377,5 @@ final class Learner {
         }
 
         return loglike;
-    }
-
-    /** This class is a decorator for a DataTable.*/
-    private static class TrainingData implements Iterable<TrainingRow> {
-        private DataTable m_data;
-        private List<Integer> m_learningCols;
-        private Map<Integer, Boolean> m_isNominal;
-        private Map<Integer, List<DataCell>> m_domainValues;
-
-        private int m_targetIndex;
-        private List<DataCell> m_targetDomainValues;
-
-        private int m_parameterCount;
-
-        /**
-         * @param data training data.
-         * @param spec port object spec.
-         */
-        public TrainingData(final DataTable data,
-                final PMMLPortObjectSpec spec) {
-            m_data = data;
-            m_learningCols = new ArrayList<Integer>();
-            m_isNominal = new HashMap<Integer, Boolean>();
-            m_domainValues = new HashMap<Integer, List<DataCell>>();
-
-            DataTableSpec inSpec = data.getDataTableSpec();
-            m_parameterCount = 0;
-            for (DataColumnSpec colSpec : spec.getLearningCols()) {
-                int i = inSpec.findColumnIndex(colSpec.getName());
-                if (colSpec.getType().isCompatible(NominalValue.class)) {
-                    // Create Design Variables
-                    m_learningCols.add(i);
-                    m_isNominal.put(i, true);
-                    List<DataCell> valueList = new ArrayList<DataCell>();
-                    valueList.addAll(colSpec.getDomain().getValues());
-                    Collections.sort(valueList,
-                            colSpec.getType().getComparator());
-                    m_domainValues.put(i, valueList);
-                    m_parameterCount += valueList.size() - 1;
-                } else {
-                    m_learningCols.add(i);
-                    m_isNominal.put(i, false);
-                    m_domainValues.put(i, null);
-                    m_parameterCount++;
-                }
-            }
-
-            String target = spec.getTargetFields().get(0);
-            m_targetIndex = inSpec.findColumnIndex(target);
-            m_targetDomainValues = new ArrayList<DataCell>();
-            DataColumnSpec targetSpec = inSpec.getColumnSpec(target);
-            m_targetDomainValues.addAll(targetSpec.getDomain().getValues());
-            Collections.sort(m_targetDomainValues,
-                    targetSpec.getType().getComparator());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Iterator<TrainingRow> iterator() {
-            return new TrainingDataIterator(m_data.iterator(),
-                    m_parameterCount, m_learningCols,
-                    m_isNominal, m_domainValues,
-                    m_targetIndex, m_targetDomainValues);
-        }
-
-        /**
-         * @return the regressorCount
-         */
-        public int getRegressorCount() {
-            return m_parameterCount;
-        }
-
-        /**
-         * @return the targetCategoryCount
-         */
-        public int getTargetCategoryCount() {
-            return m_targetDomainValues.size();
-        }
-
-        /**
-         * @return the indices
-         */
-        public List<Integer> getActiveCols() {
-            return m_learningCols;
-        }
-
-        /**
-         * @return the isDesignVariable
-         */
-        public Map<Integer, Boolean> getIsNominal() {
-            return m_isNominal;
-        }
-
-        /**
-         * @return the values
-         */
-        public Map<Integer, List<DataCell>> getDomainValues() {
-            return m_domainValues;
-        }
-
-        /**
-         * @return the targetIndex
-         */
-        public int getTargetIndex() {
-            return m_targetIndex;
-        }
-
-        /**
-         * @return the targetValues
-         */
-        public List<DataCell> getTargetValues() {
-            return m_targetDomainValues;
-        }
-
-    }
-
-    /** This is a decorator for a iterator over DataRows.*/
-    private static class TrainingDataIterator implements Iterator<TrainingRow> {
-        private Iterator<DataRow> m_iter;
-
-        private int m_parameterCount;
-        private List<Integer> m_learningCols;
-        private Map<Integer, Boolean> m_isNominal;
-        private Map<Integer, List<DataCell>> m_domainValues;
-
-        private int m_target;
-        private List<DataCell> m_targetDomainValues;
-
-        /**
-         * @param iter the underlying iterator
-         * @param parameterCount number of parameters which will be generated
-         * from the learning columns
-         * @param learningCols indices of the learning columns
-         * @param isNominal whether a learning column is nominal
-         * @param domainValues the domain values of the nominal learning columns
-         * @param target the index of the target value
-         * @param targetDomainValues the domain values of the target
-         */
-        public TrainingDataIterator(final Iterator<DataRow> iter,
-                final int parameterCount,
-                final List<Integer> learningCols,
-                final Map<Integer, Boolean> isNominal,
-                final Map<Integer, List<DataCell>> domainValues,
-                final int target,
-                final List<DataCell> targetDomainValues) {
-            m_iter = iter;
-            m_parameterCount = parameterCount;
-            m_learningCols = learningCols;
-            m_isNominal = isNominal;
-            m_domainValues = domainValues;
-            m_target = target;
-            m_targetDomainValues = targetDomainValues;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean hasNext() {
-            return m_iter.hasNext();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public TrainingRow next() {
-            return new TrainingRow(m_iter.next(), m_parameterCount,
-                    m_learningCols,
-                    m_isNominal, m_domainValues,
-                    m_target, m_targetDomainValues);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    /** A decorator for a data row. */
-    private static class TrainingRow {
-        private int m_target;
-        private Matrix m_parameter;
-
-        /**
-         * @param row The underlying row
-         * @param parameterCount number of parameters which will be generated
-         * from the learning columns
-         * @param learningCols indices of the learning columns
-         * @param isNominal whether a learning column is nominal
-         * @param domainValues the domain values of the nominal learning columns
-         * @param target the index of the target value
-         * @param targetDomainValues the domain values of the target
-         */
-        public TrainingRow(final DataRow row,
-                final int parameterCount,
-                final List<Integer> learningCols,
-                final Map<Integer, Boolean> isNominal,
-                final Map<Integer, List<DataCell>> domainValues,
-                final int target,
-                final List<DataCell> targetDomainValues) {
-            m_parameter = new Matrix(1, parameterCount);
-            int c = 0;
-            for (int i : learningCols) {
-                if (isNominal.get(i)) {
-                    DataCell cell = row.getCell(i);
-                    checkMissing(cell);
-                    int index = domainValues.get(i).indexOf(cell);
-                    if (index < 0) {
-                        throw new IllegalStateException("DataCell \""
-                        + cell.toString()
-                        + "\" is not in the DataColumnDomain. Please apply a "
-                        + "Domain Calculator on the columns with nominal "
-                        + "values.");
-                    }
-                    for (int k = 1; k < domainValues.get(i).size(); k++) {
-                        if (k == index) {
-                            m_parameter.set(0, c, 1.0);
-                        } else {
-                            m_parameter.set(0, c, 0.0);
-                        }
-                        c++;
-                    }
-                } else {
-                    DataCell cell = row.getCell(i);
-                    checkMissing(cell);
-                    DoubleValue value = (DoubleValue)cell;
-                    m_parameter.set(0, c, value.getDoubleValue());
-                    c++;
-                }
-            }
-
-            DataCell targetCell = row.getCell(target);
-            checkMissing(targetCell);
-            m_target = targetDomainValues.indexOf(targetCell);
-            if (m_target < 0) {
-                throw new IllegalStateException("DataCell \""
-                + row.getCell(target).toString()
-                + "\" is not in the DataColumnDomain of target column. "
-                + "Please apply a "
-                + "Domain Calculator on the target column.");
-            }
-        }
-
-
-        private void checkMissing(final DataCell cell) {
-            if (cell.isMissing()) {
-                throw new IllegalStateException("Missing values are not "
-                        + "supported by this node.");
-            }
-        }
-
-        /**
-         * The value of the target for this row.
-         * @return the value of the target.
-         */
-        public int getTarget() {
-            return m_target;
-        }
-
-        /**
-         * Returns a {@link Matrix} with values of the parameters retrieved
-         * from the learning columns.
-         * @return the parameters
-         */
-        public Matrix getParameter() {
-            return m_parameter;
-        }
     }
 }

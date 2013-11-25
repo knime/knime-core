@@ -62,6 +62,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.math3.distribution.TDistribution;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
@@ -94,16 +95,16 @@ import Jama.Matrix;
  *
  * @author Heiko Hofer
  */
-final class LinearRegressionContent {
-    private final PMMLPortObjectSpec m_outSpec;
+public final class LinearRegressionContent {
+    private PMMLPortObjectSpec m_outSpec;
 
-    private final List<String> m_factorList;
-    private final Map<String, List<DataCell>> m_factorDomainValues;
-    private final List<String> m_covariateList;
+    private List<String> m_factorList;
+    private Map<String, List<DataCell>> m_factorDomainValues;
+    private List<String> m_covariateList;
 
-    private final Matrix m_beta;
+    private Matrix m_beta;
 
-    private final Matrix m_covMat;
+    private Matrix m_covMat;
 
     /** The number of data values in the training data set. */
     private int m_valueCount;
@@ -119,8 +120,31 @@ final class LinearRegressionContent {
     /** false when the estimate should go through the origin. */
     private boolean m_includeConstant;
 
-    /** offset value (a user defined intercept) */
+    /** offset value (a user defined intercept). */
     private double m_offsetValue;
+
+    /** the mean of the parameters. */
+    private double[] m_means;
+
+    /**
+     * Empty constructor used for serialisation.
+     */
+    private LinearRegressionContent() {
+        // Internal use only.
+        m_outSpec = null;
+        m_valueCount = -1;
+        m_rSquared = Double.NaN;
+        m_adjustedRSquared = Double.NaN;
+        m_factorList = null;
+        m_factorDomainValues = new HashMap<String, List<DataCell>>();
+        m_covariateList = null;
+        m_beta = null;
+        m_includeConstant = false;
+        m_offsetValue = -1;
+        m_covMat = null;
+        m_means = null;
+
+    }
 
     /**
      * Create new instance.
@@ -134,6 +158,7 @@ final class LinearRegressionContent {
      * @param covMat the covariance matrix
      * @param rSquared the r-square value
      * @param adjustedRSquared the adjusted r-quare value
+     * @param stats summary statistics of the parameters
      */
     LinearRegressionContent(
             final PMMLPortObjectSpec outSpec,
@@ -144,26 +169,36 @@ final class LinearRegressionContent {
             final boolean includeConstant,
             final double offsetValue,
             final Matrix covMat,
-            final double rSquared, final double adjustedRSquared) {
+            final double rSquared,
+            final double adjustedRSquared,
+            final SummaryStatistics[] stats) {
         m_outSpec = outSpec;
         m_valueCount = valueCount;
         m_rSquared = rSquared;
         m_adjustedRSquared = adjustedRSquared;
         m_factorList = factorList;
         m_factorDomainValues = new HashMap<String, List<DataCell>>();
-        DataTableSpec inSpec = outSpec.getDataTableSpec();
-        for (String factor : factorList) {
+        m_covariateList = covariateList;
+        m_beta = beta;
+        m_includeConstant = includeConstant;
+        m_offsetValue = offsetValue;
+        m_covMat = covMat;
+        m_means = new double[stats.length];
+        for (int i = 0; i < stats.length; i++) {
+            m_means[i] = stats[i].getMean();
+        }
+        init();
+    }
+
+    private void init() {
+        DataTableSpec inSpec = m_outSpec.getDataTableSpec();
+        for (String factor : m_factorList) {
             DataColumnSpec colSpec = inSpec.getColumnSpec(factor);
             List<DataCell> domainValues = new ArrayList<DataCell>();
             domainValues.addAll(colSpec.getDomain().getValues());
             Collections.sort(domainValues, colSpec.getType().getComparator());
             m_factorDomainValues.put(factor, domainValues);
         }
-        m_covariateList = covariateList;
-        m_beta = beta;
-        m_includeConstant = includeConstant;
-        m_offsetValue = offsetValue;
-        m_covMat = covMat;
     }
 
     /** Computes the standard error. */
@@ -208,6 +243,14 @@ final class LinearRegressionContent {
      */
     private int getN() {
         return m_valueCount;
+    }
+
+    /**
+     * Get the means of the parameters.
+     * @return the means of the parameters
+     */
+    public double[] getMeans() {
+        return m_means;
     }
 
     /**
@@ -371,6 +414,22 @@ final class LinearRegressionContent {
         return m_offsetValue;
     }
 
+    /**
+     * Get the factors.
+     * @return the list of factors.
+     */
+    public List<String> getFactors() {
+        return m_factorList;
+    }
+
+    /**
+     * Get the covariates.
+     * @return the list of covariates.
+     */
+    public List<String> getCovariates() {
+        return m_covariateList;
+    }
+
 
     /**
      * Creates a BufferedDataTable with the estimated parameters and statistics.
@@ -505,7 +564,7 @@ final class LinearRegressionContent {
     private static final String CFG_COVARIANCE_MATRIX = "covariance_matrix";
     private static final String CFG_R_SQUARED = "r_squared";
     private static final String CFG_ADJUSTED_R_SQUARED = "adjusted_r_squared";
-
+    private static final String CFG_MEANS = "means";
 
     /**
      * @param parContent the content that holds the internals
@@ -516,28 +575,35 @@ final class LinearRegressionContent {
     static LinearRegressionContent load(
             final ModelContentRO parContent,
             final DataTableSpec spec) throws InvalidSettingsException  {
+        LinearRegressionContent c = new LinearRegressionContent();
         String target = parContent.getString(CFG_TARGET);
         String[] learningCols = parContent.getStringArray(CFG_LEARNING_COLS);
-        PMMLPortObjectSpec pmmlSpec = createSpec(spec, target, learningCols);
+        c.m_outSpec = createSpec(spec, target, learningCols);
+        c.m_valueCount = parContent.getInt(CFG_VALUE_COUNT);
 
-        int valueCount = parContent.getInt(CFG_VALUE_COUNT);
         String[] factors = parContent.getStringArray(CFG_FACTORS);
+        c.m_factorList = Arrays.asList(factors);
+
         String[] covariates = parContent.getStringArray(CFG_COVARIATES);
+        c.m_covariateList = Arrays.asList(covariates);
+
         double[] coeff = parContent.getDoubleArray(CFG_COEFFICIENTS);
-        boolean includeConstant = parContent.getBoolean(CFG_INCLUDE_CONSTANT);
-        double offsetValue = parContent.getDouble(CFG_OFFSET_VALUE);
+        c.m_beta = toMatrix(coeff, coeff.length);
+
         double[] covMat = parContent.getDoubleArray(CFG_COVARIANCE_MATRIX);
-        double rSquared = parContent.getDouble(CFG_R_SQUARED);
-        double adjustedRSquared = parContent.getDouble(CFG_ADJUSTED_R_SQUARED);
-        return new LinearRegressionContent(pmmlSpec, valueCount,
-                Arrays.asList(factors), Arrays.asList(covariates),
-                toMatrix(coeff, coeff.length),
-                includeConstant,
-                offsetValue,
-                toMatrix(covMat, coeff.length),
-                rSquared, adjustedRSquared);
+        c.m_covMat = toMatrix(covMat, covMat.length);
 
+        c.m_includeConstant = parContent.getBoolean(CFG_INCLUDE_CONSTANT);
+        c.m_offsetValue = parContent.getDouble(CFG_OFFSET_VALUE);
 
+        c.m_rSquared = parContent.getDouble(CFG_R_SQUARED);
+        c.m_adjustedRSquared = parContent.getDouble(CFG_ADJUSTED_R_SQUARED);
+
+        c.m_means = parContent.getDoubleArray(CFG_MEANS);
+
+        c.init();
+
+        return c;
     }
 
     private static PMMLPortObjectSpec createSpec(final DataTableSpec spec,
@@ -565,6 +631,7 @@ final class LinearRegressionContent {
         parContent.addBoolean(CFG_INCLUDE_CONSTANT, m_includeConstant);
         parContent.addDouble(CFG_R_SQUARED, m_rSquared);
         parContent.addDouble(CFG_ADJUSTED_R_SQUARED, m_adjustedRSquared);
+        parContent.addDoubleArray(CFG_MEANS, m_means);
     }
 
     private static double[] toArray(final Matrix matrix) {
@@ -636,6 +703,5 @@ final class LinearRegressionContent {
     public double getAdjustedRSquared() {
         return m_adjustedRSquared;
     }
-
 
 }

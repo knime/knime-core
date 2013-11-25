@@ -133,12 +133,11 @@ final class LinReg2Learner {
         PMMLPortObject inPMMLPort = (PMMLPortObject)portObjects[1];
         PMMLPortObjectSpec inPMMLSpec = inPMMLPort.getSpec();
         init(data.getDataTableSpec(), inPMMLSpec);
-//        DataTable dataTable = recalcDomainForTargeAndLearningFields(data, inPMMLSpec, exec);
-        DataTable dataTable = data;
+        DataTable dataTable = recalcDomainOfLearningFields(data, inPMMLSpec, exec);
         return m_learner.perform(dataTable, exec);
     }
 
-    private DataTable recalcDomainForTargeAndLearningFields(
+    private DataTable recalcDomainOfLearningFields(
             final BufferedDataTable data, final PMMLPortObjectSpec inPMMLSpec,
             final ExecutionContext exec) throws InvalidSettingsException, CanceledExecutionException {
         Map<String, Set<DataCell>> recalcValuesFor = new HashMap<String, Set<DataCell>>();
@@ -152,16 +151,6 @@ final class LinReg2Learner {
                 }
                 recalcValuesFor.put(col, domainValues);
             }
-        }
-        String targetCol = m_pmmlOutSpec.getTargetFields().get(0);
-        DataColumnSpec targetColSpec = dataTableSpec.getColumnSpec(
-                targetCol);
-        if (targetColSpec.getType().isCompatible(NominalValue.class)) {
-            Set<DataCell> domainValues = new LinkedHashSet<DataCell>();
-            if (targetColSpec.getDomain().getValues() != null) {
-                domainValues.addAll(targetColSpec.getDomain().getValues());
-            }
-            recalcValuesFor.put(targetCol, domainValues);
         }
 
         int[] valuesI = new int[recalcValuesFor.size()];

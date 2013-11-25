@@ -46,68 +46,25 @@
  * -------------------------------------------------------------------
  *
  * History
- *   21.01.2010 (hofer): created
+ *   Mar 30, 2006 (wiswedel): created
  */
-package org.knime.base.node.mine.regression.linear2.learner;
+package org.knime.base.node.mine.regression.linear2.view;
 
-import org.knime.base.node.mine.regression.linear2.view.LinReg2LineNodeView;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.base.node.mine.regression.linear2.learner.LinearRegressionContent;
+import org.knime.base.node.viz.plotter.DataProvider;
 
 /**
- * Factory class for linear regression node.
+ * An interface that both the learner node model and the predictor node model
+ * implement. It describes the access methods for the 2D line viewer.
  *
- * @author Heiko Hofer
+ * @author Bernd Wiswedel, University of Konstanz
  */
-public final class LinReg2LearnerNodeFactory
-    extends NodeFactory<LinReg2LearnerNodeModel> {
+public interface LinReg2DataProvider extends DataProvider {
     /**
-     * {@inheritDoc}
+     * Get the parameters for the regression line.
+     *
+     * @return the parameters, may be <code>null</code>
      */
-    @Override
-    public LinReg2LearnerNodeModel createNodeModel() {
-        return new LinReg2LearnerNodeModel();
-    }
+    public LinearRegressionContent getLinRegContent();
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 2;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public NodeView<LinReg2LearnerNodeModel> createNodeView(
-            final int index, final LinReg2LearnerNodeModel model) {
-        switch (index) {
-        case 0:
-            return new LinReg2LearnerNodeView(model);
-        case 1:
-            return new LinReg2LineNodeView(model);
-        default:
-            throw new IndexOutOfBoundsException();
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new LinReg2LearnerNodeDialogPane();
-    }
 }

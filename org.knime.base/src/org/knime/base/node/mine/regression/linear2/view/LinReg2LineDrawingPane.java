@@ -46,68 +46,67 @@
  * -------------------------------------------------------------------
  *
  * History
- *   21.01.2010 (hofer): created
+ *   Apr 6, 2006 (wiswedel): created
  */
-package org.knime.base.node.mine.regression.linear2.learner;
+package org.knime.base.node.mine.regression.linear2.view;
 
-import org.knime.base.node.mine.regression.linear2.view.LinReg2LineNodeView;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+
+import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
+
+
 
 /**
- * Factory class for linear regression node.
+ * DrawingPane that also draws the regression line.
  *
- * @author Heiko Hofer
+ * @author Bernd Wiswedel, University of Konstanz
+ * @author Fabian Dill, University of Konstanz
  */
-public final class LinReg2LearnerNodeFactory
-    extends NodeFactory<LinReg2LearnerNodeModel> {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public LinReg2LearnerNodeModel createNodeModel() {
-        return new LinReg2LearnerNodeModel();
-    }
+public class LinReg2LineDrawingPane extends ScatterPlotterDrawingPane {
+    private int m_x1;
+
+    private int m_y1;
+
+    private int m_x2;
+
+    private int m_y2;
+
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getNrNodeViews() {
-        return 2;
+    public void paintContent(final Graphics g) {
+        g.setColor(Color.BLACK);
+        // bug fix#481, minimum thickness 1
+        final int hDotSize = Math.max(1, getDotSize() / 3);
+        ((Graphics2D)g).setStroke(new BasicStroke(hDotSize));
+        g.drawLine(m_x1, m_y1, m_x2, m_y2);
+        super.paintContent(g);
     }
 
     /**
-     * {@inheritDoc}
+     * Set first point of regression line.
+     *
+     * @param x1 x-coordinate of first point
+     * @param y1 y-coordinate of first point
      */
-    @SuppressWarnings("unchecked")
-    @Override
-    public NodeView<LinReg2LearnerNodeModel> createNodeView(
-            final int index, final LinReg2LearnerNodeModel model) {
-        switch (index) {
-        case 0:
-            return new LinReg2LearnerNodeView(model);
-        case 1:
-            return new LinReg2LineNodeView(model);
-        default:
-            throw new IndexOutOfBoundsException();
-        }
+    void setLineFirstPoint(final int x1, final int y1) {
+        m_x1 = x1;
+        m_y1 = y1;
     }
 
     /**
-     * {@inheritDoc}
+     * Set last point of regression line.
+     *
+     * @param x2 x-coordinate of last point
+     * @param y2 y-coordinate of last point
      */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new LinReg2LearnerNodeDialogPane();
+    void setLineLastPoint(final int x2, final int y2) {
+        m_x2 = x2;
+        m_y2 = y2;
     }
 }

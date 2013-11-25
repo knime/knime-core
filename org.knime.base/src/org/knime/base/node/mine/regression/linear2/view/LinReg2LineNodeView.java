@@ -46,68 +46,74 @@
  * -------------------------------------------------------------------
  *
  * History
- *   21.01.2010 (hofer): created
+ *   Mar 30, 2006 (wiswedel): created
  */
-package org.knime.base.node.mine.regression.linear2.learner;
+package org.knime.base.node.mine.regression.linear2.view;
 
-import org.knime.base.node.mine.regression.linear2.view.LinReg2LineNodeView;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeModel;
+import org.knime.base.node.mine.regression.linear2.learner.LinearRegressionContent;
+import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
 
 /**
- * Factory class for linear regression node.
+ * 2D plot showing the linear regression line. The plot allows to choose one
+ * input column as x-coordinate and has the y-coordinate fixed to the response
+ * variable.
  *
  * @author Heiko Hofer
  */
-public final class LinReg2LearnerNodeFactory
-    extends NodeFactory<LinReg2LearnerNodeModel> {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public LinReg2LearnerNodeModel createNodeModel() {
-        return new LinReg2LearnerNodeModel();
-    }
+public class LinReg2LineNodeView extends DefaultVisualizationNodeView {
+
+    private final LinReg2LinePlotter m_plotter;
+    private Component m_scatterPlot;
+    private JPanel m_message;
 
     /**
-     * {@inheritDoc}
+     * Create new view with a scatter plot an the regression line.
+     *
+     * @param nodeModel the model to look at
      */
-    @Override
-    public int getNrNodeViews() {
-        return 2;
+    public LinReg2LineNodeView(final LinReg2LearnerNodeModel nodeModel) {
+        this(nodeModel, new LinReg2LinePlotter(
+                new LinReg2LineDrawingPane(),
+                new LinReg2LinePlotterProperties()));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
+    private LinReg2LineNodeView(final LinReg2LearnerNodeModel nodeModel,
+            final LinReg2LinePlotter plotter) {
+        super(nodeModel, plotter);
+        m_plotter = plotter;
+        m_scatterPlot = getComponent();
+        GridBagConstraints c = new GridBagConstraints();
+        m_message = new JPanel(new GridBagLayout());
+        m_message.add(new JLabel(
+            "This view is only available for regression models with numerical independent variables."), c);
+        m_message.setPreferredSize(new Dimension(
+            m_scatterPlot.getPreferredSize().width, m_scatterPlot.getPreferredSize().height));
+    }
+
+    /** {@inheritDoc} */
     @Override
-    public NodeView<LinReg2LearnerNodeModel> createNodeView(
-            final int index, final LinReg2LearnerNodeModel model) {
-        switch (index) {
-        case 0:
-            return new LinReg2LearnerNodeView(model);
-        case 1:
-            return new LinReg2LineNodeView(model);
-        default:
-            throw new IndexOutOfBoundsException();
+    protected void modelChanged() {
+        super.modelChanged();
+        m_plotter.updatePaintModel();
+        LinearRegressionContent content = ((LinReg2LearnerNodeModel)getNodeModel()).getLinRegContent();
+        if (content != null && content.getCovariates().size() > 0) {
+            if (getComponent() != m_scatterPlot) {
+                setComponent(m_scatterPlot);
+            }
+        } else {
+            if (getComponent() != m_message) {
+                setComponent(m_message);
+            }
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new LinReg2LearnerNodeDialogPane();
-    }
 }

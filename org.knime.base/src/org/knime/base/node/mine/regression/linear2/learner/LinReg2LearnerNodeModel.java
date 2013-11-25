@@ -59,8 +59,13 @@ import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.knime.base.node.mine.regression.linear2.view.LinReg2DataProvider;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionTranslator;
+import org.knime.base.node.util.DataArray;
+import org.knime.base.node.util.DefaultDataArray;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -85,8 +90,11 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  *
  * @author Heiko Hofer
  */
-final class LinReg2LearnerNodeModel extends NodeModel {
+public final class LinReg2LearnerNodeModel extends NodeModel implements LinReg2DataProvider {
     private final LinReg2LearnerSettings m_settings;
+
+    /** The row container for the line view. */
+    private DataArray m_rowContainer;
 
     /** The learned regression model. */
     private LinearRegressionContent m_content;
@@ -134,6 +142,10 @@ final class LinReg2LearnerNodeModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] inObjects,
             final ExecutionContext exec) throws Exception {
         final BufferedDataTable data = (BufferedDataTable)inObjects[0];
+        // cache the entire table as otherwise the color information
+        // may be lost (filtering out the "colored" column)
+        m_rowContainer = new DefaultDataArray(data, m_settings.getScatterPlotFirstRow(),
+                m_settings.getScatterPlotRowCount());
         DataTableSpec tableSpec = data.getDataTableSpec();
 
         // handle the optional PMML input
@@ -194,6 +206,7 @@ final class LinReg2LearnerNodeModel extends NodeModel {
         m_content = null;
     }
 
+    private static final String FILE_DATA = "rowcontainer.zip";
 
     private static final String FILE_SAVE = "model.xml.gz";
 
@@ -219,11 +232,14 @@ final class LinReg2LearnerNodeModel extends NodeModel {
             ModelContentRO parContent = c.getModelContent(CFG_LinReg2_CONTENT);
             m_content = LinearRegressionContent.load(parContent, spec);
         } catch (InvalidSettingsException ise) {
-            IOException ioe = new IOException("Unable to restore state: "
-                    + ise.getMessage());
+            IOException ioe = new IOException("Unable to restore state: " + ise.getMessage());
             ioe.initCause(ise);
             throw ioe;
         }
+        File dataFile = new File(internDir, FILE_DATA);
+        ContainerTable t = DataContainer.readFromZip(dataFile);
+        int rowCount = t.getRowCount();
+        m_rowContainer = new DefaultDataArray(t, 1, rowCount, exec);
     }
 
     /**
@@ -239,8 +255,26 @@ final class LinReg2LearnerNodeModel extends NodeModel {
         ModelContentWO parContent = content.addModelContent(CFG_LinReg2_CONTENT);
         m_content.save(parContent);
         File outFile = new File(internDir, FILE_SAVE);
-        content.saveToXML(new BufferedOutputStream(new GZIPOutputStream(
-                new FileOutputStream(outFile))));
+        content.saveToXML(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(outFile))));
+        File dataFile = new File(internDir, FILE_DATA);
+        DataContainer.writeToZip(m_rowContainer, dataFile, exec);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataArray getDataArray(final int index) {
+        return m_rowContainer;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public LinearRegressionContent getLinRegContent() {
+        return m_content;
+    }
+
 
 }

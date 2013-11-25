@@ -72,6 +72,11 @@ final class LinReg2LearnerSettings {
     /** offset value (a user defined intercept). */
     private double m_offsetValue;
 
+    /** first row used in scatter plot view. */
+    private int m_scatterPlotFirstRow;
+
+    /** row count used for scatter plot view. */
+    private int m_scatterPlotRowCount;
 
     /**
      * Create a new instance.
@@ -80,7 +85,10 @@ final class LinReg2LearnerSettings {
         m_columnFilter = new DataColumnSpecFilterConfiguration(CFG_COLUMN_FILTER);
         m_includeConstant = true;
         m_offsetValue = 0;
+        m_scatterPlotFirstRow = 1;
+        m_scatterPlotRowCount = 20000;
     }
+
     /**
      * The target column which is the dependent variable.
      *
@@ -100,9 +108,16 @@ final class LinReg2LearnerSettings {
     }
 
     private static final String CFG_TARGET = "target";
+
     private static final String CFG_COLUMN_FILTER = "column_filter";
+
     private static final String CFG_INCLUDE_CONSTANT = "include_constant";
+
     private static final String CFG_OFFSET_VALUE = "offset_value";
+
+    private static final String CFG_SCATTER_PLOT_FIRST_ROW = "scatter_plot_first_row";
+
+    private static final String CFG_SCATTER_PLOT_ROW_COUNT = "scatter_plot_row_count";
 
     /**
      * Loads the settings from the node settings object.
@@ -110,17 +125,18 @@ final class LinReg2LearnerSettings {
      * @param settings a node settings object
      * @throws InvalidSettingsException if some settings are missing
      */
-    public void loadSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    public void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_targetColumn = settings.getString(CFG_TARGET);
         m_columnFilter.loadConfigurationInModel(settings);
         m_includeConstant = settings.getBoolean(CFG_INCLUDE_CONSTANT);
         m_offsetValue = settings.getDouble(CFG_OFFSET_VALUE);
+        // use default if not present (settings are only used in the scatter plot view).
+        m_scatterPlotFirstRow = settings.getInt(CFG_SCATTER_PLOT_FIRST_ROW, 1);
+        m_scatterPlotRowCount = settings.getInt(CFG_SCATTER_PLOT_ROW_COUNT, 20000);
     }
 
     /**
-     * Loads the settings from the node settings object using default values if
-     * some settings are missing.
+     * Loads the settings from the node settings object using default values if some settings are missing.
      *
      * @param settings a node settings object
      * @param spec the spec of the input table
@@ -130,6 +146,8 @@ final class LinReg2LearnerSettings {
         m_columnFilter.loadConfigurationInDialog(settings, spec);
         m_includeConstant = settings.getBoolean(CFG_INCLUDE_CONSTANT, true);
         m_offsetValue = settings.getDouble(CFG_OFFSET_VALUE, 0.0);
+        m_scatterPlotFirstRow = settings.getInt(CFG_SCATTER_PLOT_FIRST_ROW, 1);
+        m_scatterPlotRowCount = settings.getInt(CFG_SCATTER_PLOT_ROW_COUNT, 20000);
     }
 
     /**
@@ -142,10 +160,13 @@ final class LinReg2LearnerSettings {
         m_columnFilter.saveConfiguration(settings);
         settings.addBoolean(CFG_INCLUDE_CONSTANT, m_includeConstant);
         settings.addDouble(CFG_OFFSET_VALUE, m_offsetValue);
+        settings.addInt(CFG_SCATTER_PLOT_FIRST_ROW, m_scatterPlotFirstRow);
+        settings.addInt(CFG_SCATTER_PLOT_ROW_COUNT, m_scatterPlotRowCount);
     }
 
     /**
      * Get filter for included columns (independent variables).
+     *
      * @return the included columns
      */
     public DataColumnSpecFilterConfiguration getFilterConfiguration() {
@@ -154,6 +175,7 @@ final class LinReg2LearnerSettings {
 
     /**
      * Returns true when the constant term (intercept) should be estimated.
+     *
      * @return the include constant property
      */
     public boolean getIncludeConstant() {
@@ -162,6 +184,7 @@ final class LinReg2LearnerSettings {
 
     /**
      * Defines if the constant term (intercept) should be estimated.
+     *
      * @param includeConstant the include constant property
      */
     public void setIncludeConstant(final boolean includeConstant) {
@@ -170,18 +193,48 @@ final class LinReg2LearnerSettings {
 
     /**
      * Get offset value (a user defined intercept).
+     *
      * @return offset value (a user defined intercept)
      */
-    public double getOffsetValue()  {
+    public double getOffsetValue() {
         return m_offsetValue;
     }
 
     /**
      * Set offset value (a user defined intercept).
+     *
      * @param offsetValue offset value (a user defined intercept)
      */
     public void setOffsetValue(final double offsetValue) {
         m_offsetValue = offsetValue;
+    }
+
+    /**
+     * @return the scatterPlotFirstRow
+     */
+    public int getScatterPlotFirstRow() {
+        return m_scatterPlotFirstRow;
+    }
+
+    /**
+     * @param scatterPlotFirstRow the scatterPlotFirstRow to set
+     */
+    public void setScatterPlotFirstRow(final int scatterPlotFirstRow) {
+        this.m_scatterPlotFirstRow = scatterPlotFirstRow;
+    }
+
+    /**
+     * @return the scatterPlotRowCount
+     */
+    public int getScatterPlotRowCount() {
+        return m_scatterPlotRowCount;
+    }
+
+    /**
+     * @param scatterPlotRowCount the scatterPlotRowCount to set
+     */
+    public void setScatterPlotRowCount(final int scatterPlotRowCount) {
+        this.m_scatterPlotRowCount = scatterPlotRowCount;
     }
 
 }

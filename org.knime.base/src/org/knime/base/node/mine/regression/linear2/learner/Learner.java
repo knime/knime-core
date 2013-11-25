@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.regression.MillerUpdatingRegression;
 import org.apache.commons.math3.stat.regression.RegressionResults;
 import org.apache.commons.math3.stat.regression.UpdatingMultipleLinearRegression;
@@ -121,10 +122,18 @@ final class Learner {
 
         UpdatingMultipleLinearRegression regr = new MillerUpdatingRegression(
                 trainingData.getRegressorCount(), m_includeConstant);
+        SummaryStatistics[] stats = new SummaryStatistics[trainingData.getRegressorCount()];
+        for (int i = 0; i < trainingData.getRegressorCount(); i++) {
+            stats[i] = new SummaryStatistics();
+        }
+
 
         int rowCount = 0;
         for (RegressionTrainingRow row : trainingData) {
             double[] parameter = row.getParameter().getArray()[0];
+            for (int i = 0; i < trainingData.getRegressorCount(); i++) {
+                stats[i].addValue(parameter[i]);
+            }
             regr.addObservation(parameter, row.getTarget() - m_offsetValue);
             rowCount++;
         }
@@ -164,7 +173,7 @@ final class Learner {
 
         LinearRegressionContent content = new LinearRegressionContent(m_outSpec,
             rowCount, factorList, covariateList, beta, m_includeConstant, m_offsetValue, covMat,
-            result.getRSquared(), result.getAdjustedRSquared());
+            result.getRSquared(), result.getAdjustedRSquared(), stats);
         return content;
     }
 }

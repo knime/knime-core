@@ -43,5 +43,15 @@
 		<view index="0" name="Linear Regression Result View">
     		Displays the estimated coefficients and error statistics.
 		</view>
+		<view index="1" name="Linear Regression Scatterplot View">
+			Displays the input data along with the regression line in a 
+			scatterplot. The y-coordinate is fixed to the response column
+			(the column that has been approximated) while the x-column can be
+			chosen among the independent variables with numerical values. 
+			Note: If you have multiple input
+			variables, this view is only an approximation. It will fix the value
+			of each variable that is not shown in the view to its mean. Thus, 
+			this view generally only makes sense if you only have a few input variables.
+		</view>		
 	</views>
 </knimeNode>

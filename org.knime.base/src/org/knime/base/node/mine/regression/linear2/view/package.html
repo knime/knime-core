@@ -1,5 +1,5 @@
-/*
- * ------------------------------------------------------------------------
+<!--
+========================================================================
  *
  *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
@@ -43,71 +43,8 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- *
- * History
- *   21.01.2010 (hofer): created
- */
-package org.knime.base.node.mine.regression.linear2.learner;
-
-import org.knime.base.node.mine.regression.linear2.view.LinReg2LineNodeView;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-
-/**
- * Factory class for linear regression node.
- *
- * @author Heiko Hofer
- */
-public final class LinReg2LearnerNodeFactory
-    extends NodeFactory<LinReg2LearnerNodeModel> {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public LinReg2LearnerNodeModel createNodeModel() {
-        return new LinReg2LearnerNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 2;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public NodeView<LinReg2LearnerNodeModel> createNodeView(
-            final int index, final LinReg2LearnerNodeModel model) {
-        switch (index) {
-        case 0:
-            return new LinReg2LearnerNodeView(model);
-        case 1:
-            return new LinReg2LineNodeView(model);
-        default:
-            throw new IndexOutOfBoundsException();
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new LinReg2LearnerNodeDialogPane();
-    }
-}
+====================================================================
+-->
+<body>
+  Customized scatter plot view that also shows the regression line.
+</body>
