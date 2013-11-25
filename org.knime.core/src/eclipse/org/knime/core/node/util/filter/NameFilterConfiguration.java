@@ -351,7 +351,7 @@ public class NameFilterConfiguration implements Cloneable {
         if (!m_type.equals(other.m_type)) {
             return false;
         }
-        if (m_patternConfig.equals(other.m_patternConfig)) {
+        if (!m_patternConfig.equals(other.m_patternConfig)) {
             return false;
         }
         return true;
@@ -371,6 +371,27 @@ public class NameFilterConfiguration implements Cloneable {
         result = prime * result + Arrays.hashCode(m_includeList);
         result = prime * result + m_patternConfig.hashCode();
         return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        if (m_type.equals(PatternFilterConfigurationImpl.TYPE)) {
+            return m_patternConfig.toString();
+        } else {
+            StringBuilder includes = new StringBuilder();
+            for (String include : m_includeList) {
+                includes.append(", " + include);
+            }
+            StringBuilder excludes = new StringBuilder();
+            for (String exclude : m_excludeList) {
+                includes.append(", " + exclude);
+            }
+            return "Includes: " + includes.toString().replaceFirst(", ", "") + "\nExcludes: "
+                + excludes.toString().replaceFirst(", ", "");
+        }
     }
 
     /**
