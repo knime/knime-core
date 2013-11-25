@@ -38,6 +38,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 public class DialogComponentColumnFilter2 extends DialogComponent {
 
     private final DataColumnSpecFilterPanel m_colFilterPanel;
+    private boolean m_componentUpdateOngoing;
 
     private final int m_inPortIdx;
 
@@ -66,7 +67,9 @@ public class DialogComponentColumnFilter2 extends DialogComponent {
         m_colFilterPanel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
-                updateModel();
+                if (!m_componentUpdateOngoing) {
+                    updateModel();
+                }
             }
         });
         getModel().prependChangeListener(new ChangeListener() {
@@ -89,7 +92,13 @@ public class DialogComponentColumnFilter2 extends DialogComponent {
         m_colFilterPanel.saveConfiguration(panelConfig);
         if (!modelConfig.equals(panelConfig)) {
             // only update if out of sync
-            m_colFilterPanel.loadConfiguration(modelConfig, (DataTableSpec)getLastTableSpec(m_inPortIdx));
+            m_componentUpdateOngoing = true;
+            try {
+                // causes events to be fired and recursive calls, prevent updates
+                m_colFilterPanel.loadConfiguration(modelConfig, (DataTableSpec)getLastTableSpec(m_inPortIdx));
+            } finally {
+                m_componentUpdateOngoing = false;
+            }
         }
 
         m_colFilterPanel.setEnabled(model.isEnabled());
