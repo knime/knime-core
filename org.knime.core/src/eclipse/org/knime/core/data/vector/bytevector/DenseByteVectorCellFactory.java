@@ -134,25 +134,11 @@ public class DenseByteVectorCellFactory {
      *             than or equal to the length of the vector.
      * @throws IllegalArgumentException if the byte value is negative or larger than
      *             127
-     * @deprecated use {@link #setValue(int, byte)} instead because this method cannot set values between 0 and 127
+     * @deprecated use {@link #setValue(int, int)} instead because this method cannot set values between 0 and 127
      */
     @Deprecated
     public void set(final int byteIndex, final byte byteVal) {
-        m_vector.set(byteIndex, byteVal + 128);
-    }
-
-    /**
-     * Sets the new byte value at the specified index. Note that the byte is interpreted as a value between 0 and 255
-     * i.e. it will be shifted by 128.
-     *
-     * @param byteIndex the index of the value to change
-     * @param byteVal the new value for the specified position
-     * @throws ArrayIndexOutOfBoundsException if the index is negative or larger than or equal to the length of the
-     *             vector
-     * @since 2.9
-     */
-    public void setValue(final int byteIndex, final byte byteVal) {
-        m_vector.set(byteIndex, byteVal + 128);
+        m_vector.set(byteIndex, byteVal);
     }
 
     /**
