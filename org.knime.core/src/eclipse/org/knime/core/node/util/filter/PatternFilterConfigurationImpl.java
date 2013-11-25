@@ -52,6 +52,7 @@ package org.knime.core.node.util.filter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -120,6 +121,11 @@ final class PatternFilterConfigurationImpl implements Cloneable {
         String typeS = settings.getString(CFG_TYPE);
         m_type = PatternFilterType.parseType(typeS);
         m_caseSensitive = settings.getBoolean(CFG_CASESENSITIVE);
+        try {
+            compilePattern(m_pattern, m_type, m_caseSensitive);
+        } catch (PatternSyntaxException e) {
+            throw new InvalidSettingsException("The pattern is invalid", e);
+        }
     }
 
     /** Loads the configuration from the given settings object. Sets defaults if invalid.
@@ -151,16 +157,7 @@ final class PatternFilterConfigurationImpl implements Cloneable {
      * @return FilterResult with the included and excluded names
      */
     public FilterResult applyTo(final String[] names) {
-        String pattern = m_pattern;
-        if (m_type.equals(PatternFilterType.Wildcard)) {
-            pattern = wildcardToRegex(pattern);
-        }
-        Pattern regex;
-        if (m_caseSensitive) {
-            regex = Pattern.compile(pattern);
-        } else {
-            regex = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-        }
+        Pattern regex = compilePattern(m_pattern, m_type, m_caseSensitive);
         List<String> incls = new ArrayList<String>();
         List<String> excls = new ArrayList<String>();
         for (String name : names) {
@@ -171,6 +168,30 @@ final class PatternFilterConfigurationImpl implements Cloneable {
             }
         }
         return new FilterResult(incls, excls, new ArrayList<String>(), new ArrayList<String>());
+    }
+
+    /**
+     * Creates a regex pattern from the given pattern string and with the given settings.
+     *
+     * @param pattern The string containing the pattern
+     * @param type The strings type of pattern
+     * @param caseSensitive If case sensitivity should be enabled
+     * @return The regex pattern
+     * @throws PatternSyntaxException If the pattern could not be compiled
+     */
+    public static Pattern compilePattern(final String pattern, final PatternFilterType type,
+        final boolean caseSensitive) throws PatternSyntaxException {
+        Pattern regex;
+        String regexString = pattern;
+        if (type.equals(PatternFilterType.Wildcard)) {
+            regexString = wildcardToRegex(pattern);
+        }
+        if (caseSensitive) {
+            regex = Pattern.compile(regexString);
+        } else {
+            regex = Pattern.compile(regexString, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        }
+        return regex;
     }
 
     /**

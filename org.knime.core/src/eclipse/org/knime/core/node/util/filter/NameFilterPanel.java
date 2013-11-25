@@ -194,7 +194,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     private JPanel m_nameFilterPanel;
 
-    private PatternFilterPanelImpl m_patternPanel;
+    private PatternFilterPanelImpl<T> m_patternPanel;
 
     private JRadioButton m_nameButton;
 
@@ -236,7 +236,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
     protected NameFilterPanel(final boolean showSelectionListsOnly, final InputFilter<T> filter) {
         super(new GridLayout(1, 1));
         m_filter = filter;
-        m_patternPanel = new PatternFilterPanelImpl();
+        m_patternPanel = new PatternFilterPanelImpl<T>(this, filter);
         m_patternPanel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -525,7 +525,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
                 m_enforceInclusion.doClick();
                 break;
         }
-        m_patternPanel.loadConfiguration(config.getPatternConfig());
+        m_patternPanel.loadConfiguration(config.getPatternConfig(), names);
         setPatternFilterEnabled(config.isPatternFilterEnabled());
         m_currentType = config.getType();
         boolean typeOk = false;

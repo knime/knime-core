@@ -49,15 +49,26 @@
  */
 package org.knime.core.node.util.filter;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultListModel;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.border.Border;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.ChangeEvent;
@@ -68,11 +79,34 @@ import org.knime.core.node.util.filter.PatternFilterConfigurationImpl.PatternFil
 /**
  * Filters based on the given regular expression or wildcard pattern.
  *
+ * @param <T> The type of object that this filter is filtering
  * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
  * @since 2.9
  */
 @SuppressWarnings("serial")
-final class PatternFilterPanelImpl extends JPanel {
+final class PatternFilterPanelImpl<T> extends JPanel {
+
+    /** Border title for exclude list. */
+    private static final String NON_MATCH_LABEL = "Mismatch (Exclude)";
+
+    /** Border title for include list. */
+    private static final String MATCH_LABEL = "Match (Include)";
+
+    private static final Dimension SMALL_LIST = new Dimension(150, 120);
+
+    private static final Dimension NORMAL_LIST = new Dimension(150, 170);
+
+    private static final Border BORDER_INCLUDE_ENABLED = BorderFactory.createTitledBorder(
+        BorderFactory.createLineBorder(new Color(0, 221, 0), 2), MATCH_LABEL);
+
+    private static final Border BORDER_INCLUDE_DISABLED = BorderFactory.createTitledBorder(
+        BorderFactory.createLineBorder(Color.GRAY, 2), MATCH_LABEL);
+
+    private static final Border BORDER_EXCLUDE_ENABLED = BorderFactory.createTitledBorder(
+        BorderFactory.createLineBorder(new Color(240, 0, 0), 2), NON_MATCH_LABEL);
+
+    private static final Border BORDER_EXCLUDE_DISABLED = BorderFactory.createTitledBorder(
+        BorderFactory.createLineBorder(Color.GRAY, 2), NON_MATCH_LABEL);
 
     private JTextField m_pattern;
 
@@ -84,6 +118,20 @@ final class PatternFilterPanelImpl extends JPanel {
 
     private JCheckBox m_caseSensitive;
 
+    private JLabel m_invalid;
+
+    private JList<T> m_includeList;
+
+    private DefaultListModel<T> m_includeListModel;
+
+    private JScrollPane m_includePane;
+
+    private JList<T> m_excludeList;
+
+    private DefaultListModel<T> m_excludeListModel;
+
+    private JScrollPane m_excludePane;
+
     private List<ChangeListener> m_listeners;
 
     private String m_patternValue;
@@ -92,10 +140,22 @@ final class PatternFilterPanelImpl extends JPanel {
 
     private boolean m_caseSensitiveValue;
 
+    private NameFilterPanel<T> m_parentFilter;
+
+    private String[] m_names = new String[0];
+
+    private InputFilter<T> m_filter;
+
     /**
      * Create the pattern filter panel.
+     *
+     * @param parentFilter The filter that is parent to this pattern filter
+     * @param filter The filter that filters out Ts that are not available for selection
      */
-    PatternFilterPanelImpl() {
+    @SuppressWarnings("unchecked")
+    PatternFilterPanelImpl(final NameFilterPanel<T> parentFilter, final InputFilter<T> filter) {
+        m_parentFilter = parentFilter;
+        m_filter = filter;
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         m_pattern = new JTextField();
@@ -153,6 +213,28 @@ final class PatternFilterPanelImpl extends JPanel {
                 }
             }
         });
+        // Add preview twin list
+        JPanel previewPanel = new JPanel();
+        previewPanel.setLayout(new GridLayout(1, 2));
+        m_includeListModel = new DefaultListModel<T>();
+        m_includeList = new JList<T>(m_includeListModel);
+        m_includeList.setSelectionBackground(super.getBackground());
+        m_includeList.setBackground(super.getBackground());
+        m_excludeListModel = new DefaultListModel<T>();
+        m_excludeList = new JList<T>(m_excludeListModel);
+        m_excludeList.setSelectionBackground(super.getBackground());
+        m_excludeList.setBackground(super.getBackground());
+        m_includeList.setCellRenderer(m_parentFilter.getListCellRenderer());
+        m_excludeList.setCellRenderer(m_parentFilter.getListCellRenderer());
+        m_includePane = new JScrollPane(m_includeList);
+        m_excludePane = new JScrollPane(m_excludeList);
+        previewPanel.add(m_excludePane);
+        previewPanel.add(m_includePane);
+        panel.add(previewPanel);
+        // Add invalid pattern label
+        m_invalid = new JLabel();
+        m_invalid.setForeground(Color.RED);
+        panel.add(m_invalid);
         super.add(panel);
     }
 
@@ -168,8 +250,10 @@ final class PatternFilterPanelImpl extends JPanel {
         m_caseSensitive.setEnabled(enabled);
     }
 
-    /** @param config to load from */
-    void loadConfiguration(final PatternFilterConfigurationImpl config) {
+    /** @param config to load from
+     * @param names the available names that will be shown in the selection preview */
+    void loadConfiguration(final PatternFilterConfigurationImpl config, final String[] names) {
+        m_names = names;
         m_pattern.setText(config.getPattern());
         if (config.getType().equals(PatternFilterType.Regex)) {
             m_regex.doClick();
@@ -177,6 +261,7 @@ final class PatternFilterPanelImpl extends JPanel {
             m_wildcard.doClick();
         }
         m_caseSensitive.setSelected(config.isCaseSensitive());
+        update();
     }
 
     /** @param config to save to */
@@ -214,6 +299,7 @@ final class PatternFilterPanelImpl extends JPanel {
     }
 
     private void fireFilteringChangedEvent() {
+        update();
         if (m_listeners != null) {
             for (ChangeListener listener : m_listeners) {
                 listener.stateChanged(new ChangeEvent(this));
@@ -229,6 +315,74 @@ final class PatternFilterPanelImpl extends JPanel {
             return PatternFilterType.Wildcard;
         }
         return null;
+    }
+
+    /**
+     * Updates the preview lists and the error message.
+     */
+    private void update() {
+        // Clear the lists
+        m_includeListModel.clear();
+        m_excludeListModel.clear();
+        boolean patternInvalid = false;
+        try {
+            // Create regex, this will throw an exception if the current pattern is invalid
+            Pattern regex = PatternFilterConfigurationImpl.compilePattern(m_patternValue, m_typeValue,
+                m_caseSensitiveValue);
+            // Fill lists
+            for (String name : m_names) {
+                T t = m_parentFilter.getTforName(name);
+                // Skip Ts that are filtered out
+                if (m_filter != null) {
+                    if (!m_filter.include(t)) {
+                        continue;
+                    }
+                }
+                if (regex.matcher(name).matches()) {
+                    m_includeListModel.addElement(t);
+                } else {
+                    m_excludeListModel.addElement(t);
+                }
+            }
+        } catch (PatternSyntaxException e) {
+            // Build HTML message for label, replacing newlines with line break '<br>' and spaces with non breaking
+            // spaces '&nbsp;'
+            String htmlMessage =
+                "<html><div style=\"font-family: monospace\">"
+                    + e.getMessage().replace("\n", "<br>").replace(" ", "&nbsp;") + "</div></html>";
+            m_invalid.setText(htmlMessage);
+            patternInvalid = true;
+            // Put all Ts into excludes (if not filtered out)
+            for (String name : m_names) {
+                T t = m_parentFilter.getTforName(name);
+                if (m_filter != null) {
+                    if (!m_filter.include(t)) {
+                        continue;
+                    }
+                }
+                m_excludeListModel.addElement(t);
+            }
+        }
+        // Show error if pattern was invalid
+        m_invalid.setVisible(patternInvalid);
+        // Disable twin lists if pattern was invalid
+        m_includeList.setEnabled(!patternInvalid);
+        m_includePane.setEnabled(!patternInvalid);
+        m_excludeList.setEnabled(!patternInvalid);
+        m_excludePane.setEnabled(!patternInvalid);
+        // Change border style so they look gray if disabled or colorful if enabled and change size to make place for
+        // the error message
+        if (patternInvalid) {
+            m_includePane.setBorder(BORDER_INCLUDE_DISABLED);
+            m_excludePane.setBorder(BORDER_EXCLUDE_DISABLED);
+            m_includePane.setPreferredSize(SMALL_LIST);
+            m_excludePane.setPreferredSize(SMALL_LIST);
+        } else {
+            m_includePane.setBorder(BORDER_INCLUDE_ENABLED);
+            m_excludePane.setBorder(BORDER_EXCLUDE_ENABLED);
+            m_includePane.setPreferredSize(NORMAL_LIST);
+            m_excludePane.setPreferredSize(NORMAL_LIST);
+        }
     }
 
 }
