@@ -74,12 +74,24 @@ final class ReadContextPropertyConfiguration {
     public static final String CONTEXT_SERVER_USER = "context.workflow.user";
     /** Context variable name for workflow temporary location. */
     public static final String CONTEXT_TEMP_LOCATION = "context.workflow.temp.location";
+    /** Context variable name for workflow author's name. */
+    public static final String CONTEXT_AUTHOR = "context.workflow.author.name";
+    /** Context variable name for workflow last editor's name. */
+    public static final String CONTEXT_EDITOR = "context.workflow.last.editor.name";
+    /** Context variable name for the creation date of the workflow. */
+    public static final String CONTEXT_CREATION_DATE = "context.workflow.creation.date";
+    /** Context variable name for last modified time of workflow. */
+    public static final String CONTEXT_LAST_MODIFIED = "context.workflow.last.time.modified";
 
     private static List<String> contextProperties = new ArrayList<String>();
     static {
         contextProperties.add(CONTEXT_WORKFLOW_NAME);
         contextProperties.add(CONTEXT_SERVER_USER);
         contextProperties.add(CONTEXT_TEMP_LOCATION);
+        contextProperties.add(CONTEXT_AUTHOR);
+        contextProperties.add(CONTEXT_EDITOR);
+        contextProperties.add(CONTEXT_CREATION_DATE);
+        contextProperties.add(CONTEXT_LAST_MODIFIED);
     }
 
     private boolean m_isExtractAllProps;
@@ -163,10 +175,6 @@ final class ReadContextPropertyConfiguration {
     }
 
 
-    /**
-     * @param property
-     * @return
-     */
     private static String extractContextProperty(final String property) {
         WorkflowManager manager = NodeContext.getContext().getWorkflowManager();
         if (CONTEXT_WORKFLOW_NAME.equals(property)) {
@@ -178,8 +186,22 @@ final class ReadContextPropertyConfiguration {
         if (CONTEXT_TEMP_LOCATION.equals(property)) {
             return manager.getContext().getTempLocation().getAbsolutePath();
         }
+        if (CONTEXT_AUTHOR.equals(property)) {
+            return manager.getAuthorInformation().getAuthor();
+        }
+        if (CONTEXT_EDITOR.equals(property)) {
+            return manager.getAuthorInformation().getLastEditor();
+        }
+        if (CONTEXT_CREATION_DATE.equals(property)) {
+            return manager.getAuthorInformation().getAuthoredDate().toString();
+        }
+        if (CONTEXT_LAST_MODIFIED.equals(property)) {
+                return manager.getAuthorInformation().getLastEditDate().toString();
+        }
+
         return null;
     }
+
     /** Creates a result object for the current configuration.
      * @return A new result.
      * @throws InvalidSettingsException If any property is missing and the
@@ -187,8 +209,6 @@ final class ReadContextPropertyConfiguration {
      */
     Result createResult() throws InvalidSettingsException {
         Map<String, String> props;
-//        InetAddress add = InetAddress.getLocalHost();
-//        add.getCanonicalHostName();
         String message = null;
         if (isExtractAllProps()) {
             props = readAllProps();
