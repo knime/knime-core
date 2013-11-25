@@ -245,6 +245,51 @@ public final class DataColumnSpecFilterConfiguration extends NameFilterConfigura
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        DataColumnSpecFilterConfiguration other = (DataColumnSpecFilterConfiguration)obj;
+        if (!m_typeConfig.equals(other.m_typeConfig)) {
+            return false;
+        }
+        return super.equals(obj);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + m_typeConfig.hashCode();
+        result = prime * result + super.hashCode();
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        if (getType().equals(TypeFilterConfigurationImpl.TYPE)) {
+            return m_typeConfig.toString();
+        } else {
+            return super.toString();
+        }
+    }
+
+    /**
      * Guess default settings on the argument spec. If the flag is set all appropriate columns will be put into the
      * include list, otherwise they are put into the exclude list.
      *

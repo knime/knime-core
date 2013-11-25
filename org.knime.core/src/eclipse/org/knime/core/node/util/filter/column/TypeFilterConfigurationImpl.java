@@ -176,4 +176,50 @@ final class TypeFilterConfigurationImpl implements Cloneable {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        TypeFilterConfigurationImpl other = (TypeFilterConfigurationImpl)obj;
+        if (!m_selections.equals(other.m_selections)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + m_selections.hashCode();
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        for (String type : m_selections.keySet()) {
+            if (m_selections.get(type).booleanValue()) {
+                builder.append(", " + type);
+            }
+        }
+        return "Selected types: " + builder.toString().replaceFirst(", ", "");
+    }
+
 }
