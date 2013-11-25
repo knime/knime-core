@@ -58,6 +58,7 @@ import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.container.AbstractCellFactory;
@@ -77,14 +78,14 @@ public abstract class RegressionPredictorCellFactory extends AbstractCellFactory
      *
      * @param portSpec the spec of the pmml input port
      * @param tableSpec the spec of the data input port
-     * @param includeProbabilites add probabilities to the output
+     * @param settings settings for the predictor node
      * @return The spec of the output or null
      * @throws InvalidSettingsException when tableSpec and portSpec do not match
      */
     public static DataColumnSpec[] createColumnSpec(
             final PMMLPortObjectSpec portSpec,
             final DataTableSpec tableSpec,
-            final boolean includeProbabilites) throws InvalidSettingsException {
+            final RegressionPredictorSettings settings) throws InvalidSettingsException {
         // Assertions
         if (portSpec.getTargetCols().isEmpty()) {
             throw new InvalidSettingsException("The general regression model"
@@ -120,23 +121,19 @@ public abstract class RegressionPredictorCellFactory extends AbstractCellFactory
         String targetCol = portSpec.getTargetFields().get(0);
         DataColumnSpec targetColSpec = portSpec.getDataTableSpec().getColumnSpec(targetCol);
 
-        if (includeProbabilites && targetColSpec.getType().isCompatible(NominalValue.class)) {
+        if (settings.getIncludeProbabilities() && targetColSpec.getType().isCompatible(NominalValue.class)) {
             if (!targetColSpec.getDomain().hasValues()) {
                 return null;
             }
             List<DataCell> targetCategories = new ArrayList<DataCell>();
             targetCategories.addAll(targetColSpec.getDomain().getValues());
-            Collections.sort(targetCategories,
-                targetColSpec.getType().getComparator());
+            Collections.sort(targetCategories, targetColSpec.getType().getComparator());
 
             for (DataCell value : targetCategories) {
-                String name = "P (" + targetCol + "=" + value.toString() + ")";
-                String newColName =
-                        DataTableSpec.getUniqueColumnName(tableSpec, name);
-                DataColumnSpecCreator colSpecCreator =
-                        new DataColumnSpecCreator(newColName, DoubleCell.TYPE);
-                DataColumnDomainCreator domainCreator =
-                        new DataColumnDomainCreator(new DoubleCell(0.0),
+                String name = "P(" + targetCol + "=" + value.toString() + ")" + settings.getPropColumnSuffix();
+                String newColName = DataTableSpec.getUniqueColumnName(tableSpec, name);
+                DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(newColName, DoubleCell.TYPE);
+                DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(new DoubleCell(0.0),
                                 new DoubleCell(1.0));
                 colSpecCreator.setDomain(domainCreator.createDomain());
                 newColsSpec.add(colSpecCreator.createSpec());
@@ -145,17 +142,17 @@ public abstract class RegressionPredictorCellFactory extends AbstractCellFactory
 
 
 
-        String oldTargetName = targetCol;
-        if (tableSpec.containsName(oldTargetName)
-                && !oldTargetName.toLowerCase().endsWith("(prediction)")) {
-            oldTargetName = oldTargetName + " (prediction)";
-        }
-        String newTargetColName = DataTableSpec.getUniqueColumnName(tableSpec, oldTargetName);
+        String targetColName = settings.getHasCustomPredictionName()
+                ? settings.getCustomPredictionName() : "Prediction (" + targetCol + ")";
+        String uniqueTargetColName = DataTableSpec.getUniqueColumnName(tableSpec, targetColName);
 
-        DataColumnSpecCreator targetColSpecCreator =
-                new DataColumnSpecCreator(newTargetColName, targetColSpec.getType());
-        DataColumnDomainCreator targetDomainCreator = new DataColumnDomainCreator(targetColSpec.getDomain());
-        targetColSpecCreator.setDomain(targetDomainCreator.createDomain());
+        DataType targetType = targetColSpec.getType().isCompatible(NominalValue.class)
+            ? targetColSpec.getType() : DoubleCell.TYPE;
+        DataColumnSpecCreator targetColSpecCreator = new DataColumnSpecCreator(uniqueTargetColName, targetType);
+        if (targetColSpec.getType().isCompatible(NominalValue.class)) {
+            DataColumnDomainCreator targetDomainCreator = new DataColumnDomainCreator(targetColSpec.getDomain());
+            targetColSpecCreator.setDomain(targetDomainCreator.createDomain());
+        }
         newColsSpec.add(targetColSpecCreator.createSpec());
 
         return newColsSpec.toArray(new DataColumnSpec[0]);
@@ -168,13 +165,13 @@ public abstract class RegressionPredictorCellFactory extends AbstractCellFactory
      *
      * @param portSpec the spec of the pmml input port
      * @param tableSpec the spec of the data input port
-     * @param includeProbabilites add probabilities to the output
+     * @param settings settings for the predictor node
      * @throws InvalidSettingsException when tableSpec and portSpec do not match
      */
     public RegressionPredictorCellFactory(final PMMLPortObjectSpec portSpec,
             final DataTableSpec tableSpec,
-            final boolean includeProbabilites
+            final RegressionPredictorSettings settings
             ) throws InvalidSettingsException {
-        super(createColumnSpec(portSpec, tableSpec, includeProbabilites));
+        super(createColumnSpec(portSpec, tableSpec, settings));
     }
 }

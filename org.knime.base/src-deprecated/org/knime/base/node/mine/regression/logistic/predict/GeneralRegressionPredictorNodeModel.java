@@ -61,6 +61,7 @@ import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionTransla
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.base.node.mine.regression.predict2.LogRegPredictor;
 import org.knime.base.node.mine.regression.predict2.RegressionPredictorCellFactory;
+import org.knime.base.node.mine.regression.predict2.RegressionPredictorSettings;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -177,11 +178,11 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "No input specification available");
         }
-        if (null != RegressionPredictorCellFactory.createColumnSpec(regModelSpec, dataSpec,
-                m_settings.getIncludeProbabilities())) {
+        RegressionPredictorSettings s = createRegressionPredictorSettings(regModelSpec, dataSpec);
+        if (null != RegressionPredictorCellFactory.createColumnSpec(regModelSpec, dataSpec, s)) {
+
             ColumnRearranger c = new ColumnRearranger(dataSpec);
-            c.append(new RegressionPredictorCellFactory(regModelSpec, dataSpec,
-                m_settings.getIncludeProbabilities()) {
+            c.append(new RegressionPredictorCellFactory(regModelSpec, dataSpec, s) {
 
                 @Override
                 public DataCell[] getCells(final DataRow row) {
@@ -194,6 +195,24 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Create RegressionPredictorSettings to achieve a backward compatible behavior.
+     */
+    private RegressionPredictorSettings createRegressionPredictorSettings(final PMMLPortObjectSpec portSpec,
+            final DataTableSpec tableSpec) {
+        RegressionPredictorSettings s = new RegressionPredictorSettings();
+        s.setIncludeProbabilities(m_settings.getIncludeProbabilities());
+        s.setHasCustomPredictionName(true);
+
+        String targetName = portSpec.getTargetFields().get(0);
+        if (tableSpec.containsName(targetName)
+                && !targetName.toLowerCase().endsWith("(prediction)")) {
+            targetName = targetName + " (prediction)";
+        }
+        s.setCustomPredictionName(targetName);
+        return s;
     }
 
     private ColumnRearranger createRearranger(
@@ -249,9 +268,9 @@ public class GeneralRegressionPredictorNodeModel extends NodeModel {
         }
 
         ColumnRearranger c = new ColumnRearranger(inDataSpec);
+        RegressionPredictorSettings s = createRegressionPredictorSettings(pmmlSpec, inDataSpec);
         c.append(new LogRegPredictor(content, inDataSpec,
-                pmmlSpec, pmmlSpec.getTargetFields().get(0),
-                m_settings.getIncludeProbabilities()));
+                pmmlSpec, pmmlSpec.getTargetFields().get(0), s));
         return c;
     }
 

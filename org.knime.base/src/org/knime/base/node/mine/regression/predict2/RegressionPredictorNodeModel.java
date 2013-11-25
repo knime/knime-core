@@ -118,7 +118,13 @@ final class RegressionPredictorNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // do nothing, settings cannot be invalid.
+        RegressionPredictorSettings s = new RegressionPredictorSettings();
+        s.loadSettings(settings);
+
+        if (s.getHasCustomPredictionName()
+            && (s.getCustomPredictionName() == null || s.getCustomPredictionName().isEmpty())) {
+            throw new InvalidSettingsException("Please define a name for the prediction column.");
+        }
     }
 
     /**
@@ -178,9 +184,9 @@ final class RegressionPredictorNodeModel extends NodeModel {
         }
 
         if (null != RegressionPredictorCellFactory.createColumnSpec(regModelSpec, dataSpec,
-                m_settings.getIncludeProbabilities())) {
+                m_settings)) {
             ColumnRearranger c = new ColumnRearranger(dataSpec);
-            c.append(new RegressionPredictorCellFactory(regModelSpec, dataSpec, m_settings.getIncludeProbabilities()) {
+            c.append(new RegressionPredictorCellFactory(regModelSpec, dataSpec, m_settings) {
                 @Override
                 public DataCell[] getCells(final DataRow row) {
                     // not called during configure
@@ -261,12 +267,10 @@ final class RegressionPredictorNodeModel extends NodeModel {
         ColumnRearranger c = new ColumnRearranger(inDataSpec);
         if (content.getModelType().equals(ModelType.generalLinear)) {
             c.append(new LinReg2Predictor(content, inDataSpec,
-                    pmmlSpec, pmmlSpec.getTargetFields().get(0),
-                    m_settings.getIncludeProbabilities()));
+                    pmmlSpec, pmmlSpec.getTargetFields().get(0), m_settings));
         } else {
             c.append(new LogRegPredictor(content, inDataSpec,
-                pmmlSpec, pmmlSpec.getTargetFields().get(0),
-                m_settings.getIncludeProbabilities()));
+                pmmlSpec, pmmlSpec.getTargetFields().get(0), m_settings));
         }
         return c;
     }

@@ -107,17 +107,16 @@ final class LinReg2Predictor extends RegressionPredictorCellFactory {
      * @param inSpec the spec of the data input port
      * @param portSpec the pmml port object spec
      * @param targetVariableName the name of the target variable
-     * @param includeProbabilites add probabilities to the output
+     * @param settings settings for the predictor node
      * @throws InvalidSettingsException when inSpec and regModel do not match
      */
     public LinReg2Predictor(final PMMLGeneralRegressionContent content,
             final DataTableSpec inSpec,
             final PMMLPortObjectSpec  portSpec,
-
             final String targetVariableName,
-            final boolean includeProbabilites)
+            final RegressionPredictorSettings settings)
             throws InvalidSettingsException {
-        super(portSpec, inSpec, includeProbabilites);
+        super(portSpec, inSpec, settings);
 
         m_content = content;
         m_ppMatrix = new PPMatrix(m_content.getPPMatrix());

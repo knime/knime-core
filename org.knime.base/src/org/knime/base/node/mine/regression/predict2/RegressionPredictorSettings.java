@@ -59,14 +59,72 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Heiko Hofer
  */
-final class RegressionPredictorSettings {
-    /** Key for whether to include probabilities in the output. */
-    static final String CFG_INCLUDE_PROBABILITIES = "include_probabilites";
+public final class RegressionPredictorSettings {
+    /** If custom name for the prediction column should be used. */
+    private boolean m_hasCustomPredictionName;
 
-    /** Key for the target column, used for dialog settings. */
-    static final String CFG_TARGET = "target";
+    /** The custom prediction name. */
+    private String m_customPredictionName;
 
-    private boolean m_includeProbabilities = false;
+    /** If probability columns should be added to the output table. */
+    private boolean m_includeProbabilities;
+
+    /** The suffix for the probability columns. */
+    private String m_propColumnSuffix;
+
+    /**
+     * Create instance with default values.
+     */
+    public RegressionPredictorSettings() {
+        m_hasCustomPredictionName = false;
+        m_customPredictionName = null;
+        m_includeProbabilities = false;
+        m_propColumnSuffix = "";
+    }
+
+    private static final String CFG_HAS_CUSTOM_PREDICTION_NAME = "has_custom_predicition_name";
+    private static final String CFG_CUSTOM_PREDICTION_NAME = "custom_prediction_name";
+    private static final String CFG_INCLUDE_PROBABILITIES = "include_probabilites";
+    private static final String CFG_PROP_COLUMN_SUFFIX = "propability_columns_suffix";
+
+    /**
+     * Loads the settings from the node settings object.
+     *
+     * @param settings a node settings object
+     * @throws InvalidSettingsException if some settings are missing
+     */
+    public void loadSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        m_hasCustomPredictionName = settings.getBoolean(CFG_HAS_CUSTOM_PREDICTION_NAME);
+        m_customPredictionName = settings.getString(CFG_CUSTOM_PREDICTION_NAME);
+        m_includeProbabilities = settings.getBoolean(CFG_INCLUDE_PROBABILITIES);
+        m_propColumnSuffix = settings.getString(CFG_PROP_COLUMN_SUFFIX);
+    }
+
+    /**
+     * Loads the settings from the node settings object using default values if
+     * some settings are missing.
+     *
+     * @param settings a node settings object
+     */
+    public void loadSettingsForDialog(final NodeSettingsRO settings) {
+        m_hasCustomPredictionName = settings.getBoolean(CFG_HAS_CUSTOM_PREDICTION_NAME, false);
+        m_customPredictionName = settings.getString(CFG_CUSTOM_PREDICTION_NAME, null);
+        m_includeProbabilities = settings.getBoolean(CFG_INCLUDE_PROBABILITIES, false);
+        m_propColumnSuffix = settings.getString(CFG_PROP_COLUMN_SUFFIX, "");
+    }
+
+    /**
+     * Saves the settings into the node settings object.
+     *
+     * @param settings a node settings object
+     */
+    public void saveSettings(final NodeSettingsWO settings) {
+        settings.addBoolean(CFG_HAS_CUSTOM_PREDICTION_NAME, m_hasCustomPredictionName);
+        settings.addString(CFG_CUSTOM_PREDICTION_NAME, m_customPredictionName);
+        settings.addBoolean(CFG_INCLUDE_PROBABILITIES, m_includeProbabilities);
+        settings.addString(CFG_PROP_COLUMN_SUFFIX, m_propColumnSuffix);
+    }
 
 
     /**
@@ -84,33 +142,46 @@ final class RegressionPredictorSettings {
     }
 
     /**
-     * Loads the settings from the node settings object.
-     *
-     * @param settings a node settings object
-     * @throws InvalidSettingsException if some settings are missing
+     * @return the hasCustomPredictionName
      */
-    public void loadSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_includeProbabilities = settings.getBoolean(CFG_INCLUDE_PROBABILITIES);
+    public boolean getHasCustomPredictionName() {
+        return m_hasCustomPredictionName;
     }
 
     /**
-     * Loads the settings from the node settings object using default values if
-     * some settings are missing.
-     *
-     * @param settings a node settings object
+     * @param hasCustomPredictionName the hasCustomPredictionName to set
      */
-    public void loadSettingsForDialog(final NodeSettingsRO settings) {
-        m_includeProbabilities =
-                settings.getBoolean(CFG_INCLUDE_PROBABILITIES, true);
+    public void setHasCustomPredictionName(final boolean hasCustomPredictionName) {
+        this.m_hasCustomPredictionName = hasCustomPredictionName;
     }
 
     /**
-     * Saves the settings into the node settings object.
-     *
-     * @param settings a node settings object
+     * @return the customPredictionName
      */
-    public void saveSettings(final NodeSettingsWO settings) {
-        settings.addBoolean(CFG_INCLUDE_PROBABILITIES, m_includeProbabilities);
+    public String getCustomPredictionName() {
+        return m_customPredictionName;
     }
+
+    /**
+     * @param customPredictionName the customPredictionName to set
+     */
+    public void setCustomPredictionName(final String customPredictionName) {
+        this.m_customPredictionName = customPredictionName;
+    }
+
+    /**
+     * @return the propColumnSuffix
+     */
+    public String getPropColumnSuffix() {
+        return m_propColumnSuffix;
+    }
+
+    /**
+     * @param propColumnSuffix the propColumnSuffix to set
+     */
+    public void setPropColumnSuffix(final String propColumnSuffix) {
+        this.m_propColumnSuffix = propColumnSuffix;
+    }
+
+
 }
