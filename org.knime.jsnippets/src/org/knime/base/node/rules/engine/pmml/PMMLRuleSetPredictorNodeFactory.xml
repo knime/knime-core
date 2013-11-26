@@ -2,7 +2,7 @@
 <knimeNode icon="./rule_engine_predictor.png" type="Predictor"
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>RuleSet Predictor</name>
+	<name>PMML Ruleset Predictor</name>
 
 	<shortDescription>
         Applies the rules to the input table.
@@ -11,7 +11,7 @@
 	<fullDescription>
 		<intro>
 			This node takes a data table and a PMML model for
-			<a href="http://www.dmg.org/v4-1/RuleSet.html">RuleSet</a>s, e.g. create by the <i>PMML Rule Editor</i> node,
+			<a href="http://www.dmg.org/v4-1/RuleSet.html">RuleSet</a>s, e.g. create by the <i>PMML Ruleset Editor</i> node,
 			and predicts a new column according to the rules.
 		</intro>
 

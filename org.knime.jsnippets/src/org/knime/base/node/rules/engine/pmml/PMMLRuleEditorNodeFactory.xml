@@ -2,10 +2,10 @@
 <knimeNode icon="./rule_engine.png" type="Learner"
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>PMML Rule Editor</name>
+	<name>PMML Ruleset Editor</name>
 
 	<shortDescription>
-        Edits PMML RuleSets.
+        Edits PMML Rulesets.
     </shortDescription>
 
 	<fullDescription>
