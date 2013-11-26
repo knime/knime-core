@@ -206,7 +206,7 @@ final class ReadSysPropertyConfiguration {
                 String value = sysProps.getProperty(s);
                 if (value == null && failIfSomeMissing) {
                     throw new InvalidSettingsException("System property \""
-                            + s + "\" + not available in runtime environment");
+                            + s + "\" not available in runtime environment");
                 } else if (value == null) {
                     ignored.add(s);
                 } else {
