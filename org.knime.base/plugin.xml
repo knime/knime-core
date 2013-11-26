@@ -1526,6 +1526,30 @@
             factory-class="org.knime.base.node.io.extractcontextprop.ReadContextPropertyNodeFactory"
             id="org.knime.base.node.io.extractcontextprop.ReadContextPropertyNodeFactory">
       </node>
+      <node
+            category-path="/flowcontrol/loopsupport"
+            expert-flag="false"
+            factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopStartNodeFactory"
+            id="org.knime.base.node.meta.looper.recursive.RecursiveLoopStartNodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/loopsupport"
+            expert-flag="false"
+            factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopEndNodeFactory"
+            id="org.knime.base.node.meta.looper.recursive.RecursiveLoopEndNodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/loopsupport"
+            expert-flag="false"
+            factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopStart2NodeFactory"
+            id="org.knime.base.node.meta.looper.recursive.RecursiveLoopStart2NodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/loopsupport"
+            expert-flag="false"
+            factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopEnd2NodeFactory"
+            id="org.knime.base.node.meta.looper.recursive.RecursiveLoopEnd2NodeFactory">
+      </node>
 
    </extension>
    

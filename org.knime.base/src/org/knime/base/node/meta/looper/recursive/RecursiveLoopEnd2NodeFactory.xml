@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./delegateloopend.png" type="LoopEnd">
+    <name>Recursive Loop End (2 ports)</name>
+    
+    <shortDescription>
+    The loop end node for recursion. This type of loop enables you to receive two data tables from the loop end.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>
+        
+        Using the recursive loop construct you have the possibility to receive a data table passed to a 
+        corresponding loop end back in the loop start node. 
+        
+        First the loop start node needs an initialization table. This table is output in the first iteration of the recursive loop.
+        
+        The corresponding loop end receives a data table and passes it back to the loop start node.
+        Starting with the second iteration of the recursive loop the loop start node outputs the data as inserted into the loop end in the previous run.
+        <br/>
+        The data passed to port 0 is collected and passed to the output. <br/>
+        The data in port 1 and 2 is returned to the recursive loop start.
+        </intro>
+        <option name="Maximal number of iterations">The loop will stop after these number of iterations, to ensure no endless loop is created.</option>
+        <option name="Minimal number of rows">The minimal number of rows passed back to the loop start. If the input contains less rows, the loop ends.</option>
+        <option name="Collect data from last iteration only">If this option is checked only the last input to the collecting data port is passed through to the outport. Hence, the data of earlier iterations is discarded.</option>  
+        <option name="End loop">Use a flow variable for this option if you want to have an optional possibility to stop the loop.</option>   
+        <option name="Add iteration column">Allows you to add a column containing the iteration number to the output table.</option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Collecting data">Data to be collected for the output.</inPort>
+          <inPort index="1" name="Recursion data 1">Data to be passed back to loop start.</inPort>
+          <inPort index="2" name="Recursion data 2">Data to be passed back to loop start.</inPort>
+      
+        <outPort index="0" name="Collected data"> The rows collected from the first in port. </outPort>
+    </ports>
+</knimeNode>
