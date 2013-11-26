@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./linear_regression_predict.png" type="Predictor" deprecated="true">
-    <name>Linear Regression (Predictor)</name>
+    <name>Linear Regression Predictor</name>
     <shortDescription>Predicts the response using a linear regression model.</shortDescription>
     <fullDescription>
         <intro>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./general_regression_predict.png" type="Predictor" deprecated="true">
-    <name>Logistic Regression (Predictor)</name>
+    <name>Logistic Regression Predictor</name>
     <shortDescription>Predicts the response using a general regression model.</shortDescription>
     <fullDescription>
         <intro>
