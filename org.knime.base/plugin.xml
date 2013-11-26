@@ -1527,6 +1527,11 @@
             id="org.knime.base.node.io.extractcontextprop.ReadContextPropertyNodeFactory">
       </node>
       <node
+            category-path="/misc"
+            factory-class="org.knime.base.node.workflow.save.SaveWorkflowNodeFactory"
+            id="org.knime.base.node.workflow.save.SaveWorkflowNodeFactory">
+      </node>
+      <node
             category-path="/flowcontrol/loopsupport"
             expert-flag="false"
             factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopStartNodeFactory"
