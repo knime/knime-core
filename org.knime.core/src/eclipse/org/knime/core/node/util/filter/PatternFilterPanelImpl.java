@@ -110,8 +110,6 @@ final class PatternFilterPanelImpl<T> extends JPanel {
 
     private JTextField m_pattern;
 
-    private ButtonGroup m_type;
-
     private JRadioButton m_regex;
 
     private JRadioButton m_wildcard;
@@ -152,7 +150,6 @@ final class PatternFilterPanelImpl<T> extends JPanel {
      * @param parentFilter The filter that is parent to this pattern filter
      * @param filter The filter that filters out Ts that are not available for selection
      */
-    @SuppressWarnings("unchecked")
     PatternFilterPanelImpl(final NameFilterPanel<T> parentFilter, final InputFilter<T> filter) {
         m_parentFilter = parentFilter;
         m_filter = filter;
@@ -162,12 +159,12 @@ final class PatternFilterPanelImpl<T> extends JPanel {
         m_pattern.setText("");
         m_patternValue = m_pattern.getText();
         panel.add(m_pattern);
-        m_type = new ButtonGroup();
+        ButtonGroup typeGroup = new ButtonGroup();
         m_wildcard = new JRadioButton("Wildcard ('?' matches any character, '*' matches a sequence of any characters)");
-        m_type.add(m_wildcard);
+        typeGroup.add(m_wildcard);
         panel.add(m_wildcard);
         m_regex = new JRadioButton("Regular expression");
-        m_type.add(m_regex);
+        typeGroup.add(m_regex);
         panel.add(m_regex);
         m_wildcard.setSelected(true);
         m_typeValue = getSelectedFilterType();
