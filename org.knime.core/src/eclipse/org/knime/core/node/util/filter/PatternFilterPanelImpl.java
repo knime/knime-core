@@ -120,15 +120,15 @@ final class PatternFilterPanelImpl<T> extends JPanel {
 
     private JLabel m_invalid;
 
-    private JList<T> m_includeList;
+    private JList m_includeList;
 
-    private DefaultListModel<T> m_includeListModel;
+    private DefaultListModel m_includeListModel;
 
     private JScrollPane m_includePane;
 
-    private JList<T> m_excludeList;
+    private JList m_excludeList;
 
-    private DefaultListModel<T> m_excludeListModel;
+    private DefaultListModel m_excludeListModel;
 
     private JScrollPane m_excludePane;
 
@@ -216,12 +216,12 @@ final class PatternFilterPanelImpl<T> extends JPanel {
         // Add preview twin list
         JPanel previewPanel = new JPanel();
         previewPanel.setLayout(new GridLayout(1, 2));
-        m_includeListModel = new DefaultListModel<T>();
-        m_includeList = new JList<T>(m_includeListModel);
+        m_includeListModel = new DefaultListModel();
+        m_includeList = new JList(m_includeListModel);
         m_includeList.setSelectionBackground(super.getBackground());
         m_includeList.setBackground(super.getBackground());
-        m_excludeListModel = new DefaultListModel<T>();
-        m_excludeList = new JList<T>(m_excludeListModel);
+        m_excludeListModel = new DefaultListModel();
+        m_excludeList = new JList(m_excludeListModel);
         m_excludeList.setSelectionBackground(super.getBackground());
         m_excludeList.setBackground(super.getBackground());
         m_includeList.setCellRenderer(m_parentFilter.getListCellRenderer());
