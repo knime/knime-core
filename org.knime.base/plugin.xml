@@ -1086,11 +1086,6 @@
             id="org.knime.base.node.meta.looper.condition.LoopEndConditionNodeFactory">
       </node>
       <node
-            category-path="/flowcontrol/variables"
-            factory-class="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory"
-            id="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory">
-      </node>
-      <node
             after="org.knime.base.node.flowvariable.injectvariables.InjectVariablesDBNodeFactory"
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesNodeFactory"
@@ -1144,7 +1139,6 @@
              id="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeFactory">
        </node>
       <node
-            after="org.knime.base.node.io.filereader.VariableFileReaderNodeFactory"
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.flowvariable.injectvariables.InjectVariablesNodeFactory"
             id="org.knime.base.node.flowvariable.injectvariables.InjectVariablesNodeFactory">
