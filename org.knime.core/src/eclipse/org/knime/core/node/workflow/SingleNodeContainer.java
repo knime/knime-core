@@ -798,17 +798,19 @@ public abstract class SingleNodeContainer extends NodeContainer {
             throws InvalidSettingsException {
         synchronized (m_nodeMutex) {
             super.loadSettings(settings);
-            m_settings = new SingleNodeContainerSettings(settings);
+            // assign to temp variable first, then load (which may fail during validation), then assign to class member
+            SingleNodeContainerSettings tempSettings = new SingleNodeContainerSettings(settings);
             NodeContext.pushContext(this);
             try {
-                final NodeSettingsRO modelSettings = m_settings.getModelSettings();
+                final NodeSettingsRO modelSettings = tempSettings.getModelSettings();
                 if (modelSettings != null) {
                     performLoadModelSettingsFrom(modelSettings);
                 }
-                setDirty();
             } finally {
                 NodeContext.removeLastContext();
             }
+            m_settings = tempSettings;
+            setDirty();
         }
     }
 
