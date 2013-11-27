@@ -195,7 +195,6 @@ public class NodeDocuGenerator implements IApplication {
         // write css file
         Writer css = createDocumentWriter("style.css", m_directory);
         css.write(NodeFactoryHTMLCreator.instance.getCss());
-        css.flush();
         css.close();
 
         System.out.println("Reading node repository");
@@ -297,14 +296,13 @@ public class NodeDocuGenerator implements IApplication {
             }
 
             // the node repository-like menu
-            m_nodeRepository.append("<li><div><span class=\"childs\">");
-            m_nodeRepository.append("<img width=\"16px\" src=\"");
+            m_nodeRepository.append("<li style=\"list-style-image: url(");
             m_nodeRepository.append(nodeIcon);
-            m_nodeRepository.append("\"/>&nbsp;<a href=\"");
+            m_nodeRepository.append(");\" class=\"knime-node\"><span class=\"childs\"><a href=\"");
             m_nodeRepository.append(current.getID());
             m_nodeRepository.append(".html\" target=\"Node Description\">");
             m_nodeRepository.append(((NodeTemplate)current).getName());
-            m_nodeRepository.append("</a></span></div></li>");
+            m_nodeRepository.append("</a></span></li>\n");
 
             // create page with node description and return, as no more
             // children
@@ -341,12 +339,12 @@ public class NodeDocuGenerator implements IApplication {
                 } else {
                     catIcon = "knime_default_icon.png";
                 }
-                m_nodeRepository.append("<li><div><span class=\"childs\"><img src=\"triangle.png\"/> &nbsp;");
+                m_nodeRepository.append("<li style=\"list-style-image: url(triangle.png);\" class=\"knime-category\">");
                 m_nodeRepository.append("<img width=\"16px\" src=\"");
                 m_nodeRepository.append(catIcon);
                 m_nodeRepository.append("\"/>&nbsp;");
                 m_nodeRepository.append(((Category)current).getName());
-                m_nodeRepository.append("</span></div><ul>");
+                m_nodeRepository.append("</span><ul>");
             }
 
             boolean hasChildren = false;

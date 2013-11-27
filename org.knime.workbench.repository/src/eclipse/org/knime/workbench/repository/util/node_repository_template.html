@@ -1,47 +1,50 @@
-<!-- Most of the code was copied from http://aktuell.de.selfhtml.org/artikel/javascript/treemenu/ -->
 <html>
 <head>
-<title>Beispiel</title>
+<title>Node Repository</title>
 <style type="text/css">
+    /* import knime style*/
+    @import "style.css";
+     /* format of the menu tree */
+    span.childs {
+        cursor: pointer;
+    }
+  
+    /* Klassen für das öffnen und schließen eines Knotens */
+    li.treeMenu_opened ul {
+        display: block;
+    }
+    li.treeMenu_closed ul {
+        display: none;
+    }
+  
+    ul {
+        padding: 0px;
+    padding-top: 0.4em;
+    padding-left: 14px;
+        list-style-type: none;
+    }
 
-/* import knime style*/
-@import "style.css";
+    ul ul {
+      margin-left: 8px;
+    }
+  
+    li {
+        padding: 0em;
+        margin: 0em;
+    margin-bottom: 0.4em;
+    font-size: 16px;
+    }
 
-  /* format of the menu tree */
-  span.childs {
-    cursor: pointer;
-  }
-  
-  /* Klassen für das öffnen und schließen eines Knotens */
-  li.treeMenu_opened ul {
-    display: block;
-  }
-  li.treeMenu_closed ul {
-    display: none;
-  }
-  
-  ul {
-  	margin: 0em;
-  	margin-top: 0.5em;
-  	padding: 0em;
-  	list-style-type: none;
-  }
-  
-  li {
-  padding: 0em;
-  margin: 0em;
-  margin-left: 1.5em;
-  padding-bottom: 0.5em;
-}
-  
-  li div {
-  padding-top:0.0em;  
-  }
-  
-  li div span {
-  padding-left: 10px;
-  }
-   
+    li.knime-node {
+      margin-left: 4px;
+    }
+
+    a {
+        text-decoration: none;
+    }
+    a:visited {
+        color: black;
+    }
 </style>
 <script type="text/javascript">
   /*
@@ -106,6 +109,7 @@
       }
     }
     event.currentTarget.className = array.join(" ");
+    clearSelection();
   }
 
   /*
@@ -155,6 +159,14 @@
       }
     }
     return result.join(" ");
+  }
+  
+  function clearSelection() {
+    if ( document.selection ) {
+        document.selection.empty();
+    } else if ( window.getSelection ) {
+        window.getSelection().removeAllRanges();
+    }
   }
 </script>
 <body onload="treeMenu_init(document.getElementById('menu'), '')">
