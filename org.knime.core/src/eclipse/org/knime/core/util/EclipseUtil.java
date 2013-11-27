@@ -51,6 +51,7 @@ package org.knime.core.util;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.service.datalocation.Location;
+import org.knime.core.node.NodeLogger;
 
 /**
  * This class contains some misc utility methods around basic Eclipse funtionality.
@@ -62,7 +63,16 @@ public final class EclipseUtil {
     private static final boolean RUN_FROM_SDK;
 
     static {
-        RUN_FROM_SDK = checkSDK();
+        boolean b = false;
+        try {
+            b = checkSDK();
+        } catch (RuntimeException ex) {
+            NodeLogger.getLogger(EclipseUtil.class).error(
+                "Could not determine if we are run from the SDK: " + ex.getMessage(), ex);
+            throw ex;
+        } finally {
+            RUN_FROM_SDK = b;
+        }
     }
 
     private EclipseUtil() { }
