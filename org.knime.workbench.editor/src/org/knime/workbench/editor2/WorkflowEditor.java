@@ -1631,7 +1631,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     @Override
     public boolean isSaveAsAllowed() {
-        return m_parentEditor == null; // disallow save-as on subworkflow editors
+        return true; // disallow save-as on subworkflow editors
     }
 
     /**
