@@ -22,4 +22,16 @@ a data &quot;workflow&quot;
          </description>
       </view>
    </extension>
+   <extension
+         id="org.knime.doc.NodeDocuGenerator"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="org.knime.workbench.repository.util.NodeDocuGenerator">
+         </run>
+      </application>
+   </extension>   
 </plugin>

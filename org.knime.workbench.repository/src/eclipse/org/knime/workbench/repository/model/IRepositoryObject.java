@@ -98,4 +98,11 @@ public interface IRepositoryObject extends IAdaptable {
      * @return a plug-in id or <code>null</code> if the plug-in is unknown
      */
     public String getContributingPlugin();
+
+    /**
+     * Return the name of this object.
+     *
+     * @return the object's name
+     */
+    public String getName();
 }
