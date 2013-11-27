@@ -52,7 +52,7 @@ package org.knime.base.node.preproc.constantvalue;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
- * Thrown by TypeCellFactory#createCell(String, String) if something went wrong during string convertion.
+ * Thrown by TypeCellFactory#createCell(String, String) if something went wrong during string conversion.
  *
  * @author Marcel Hanser
  */

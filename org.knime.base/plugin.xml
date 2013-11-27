@@ -640,6 +640,11 @@
             id="org.knime.base.node.preproc.columnrenameregex.ColumnRenameRegexNodeFactory"
             after="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
       <node
+            category-path="/manipulation/column/column-convert+replace"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.constantvalue.ConstantValueColumnNodeFactory"
+            id="org.knime.base.node.preproc.constantvalue.ConstantValueColumnNodeFactory" />
+      <node
             category-path="/mining/subgroup"
             factory-class="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"
             id="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"/>

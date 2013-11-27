@@ -48,9 +48,6 @@
  */
 package org.knime.base.node.preproc.constantvalue;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -60,27 +57,20 @@ import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 
 /**
  * Model for the Constant Value Column.
  *
  * @author Marcel Hanser
  */
-final class ConstantValueColumnNodeModel extends NodeModel {
+final class ConstantValueColumnNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private ConstantValueColumnConfig m_config = new ConstantValueColumnConfig();
-
-    /** One in, one out. */
-    public ConstantValueColumnNodeModel() {
-        super(1, 1);
-    }
 
     /** {@inheritDoc} */
     @Override
@@ -100,7 +90,9 @@ final class ConstantValueColumnNodeModel extends NodeModel {
         return new BufferedDataTable[]{out};
     }
 
-    private ColumnRearranger createColumnRearranger(final DataTableSpec in) throws InvalidSettingsException {
+    /** {@inheritDoc} */
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec in) throws InvalidSettingsException {
         final String value = m_config.getValue();
         checkSetting(value != null, "Configuration missing.");
 
@@ -139,12 +131,6 @@ final class ConstantValueColumnNodeModel extends NodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected void reset() {
-        // no internals
-    }
-
-    /** {@inheritDoc} */
-    @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         new ConstantValueColumnConfig().loadInModel(settings);
     }
@@ -163,20 +149,6 @@ final class ConstantValueColumnNodeModel extends NodeModel {
         if (m_config.getNewColumnName() != null) {
             m_config.save(settings);
         }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-        CanceledExecutionException {
-        // no internals
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-        CanceledExecutionException {
-        // no internals
     }
 
     /**
