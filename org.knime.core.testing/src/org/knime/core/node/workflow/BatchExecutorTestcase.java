@@ -539,7 +539,7 @@ public class BatchExecutorTestcase {
         LicenseStore.getDefaultStore().addLicense(new FileInputStream(licenseFile));
         String providerId = new SharedSpaceContentProviderFactory().getID();
         File teamspaceLocation = findInPlugin("/files/originalMetanode");
-        ExplorerMountTable.mount("org.knime.core.testing", providerId, teamspaceLocation.getAbsolutePath(), true);
+        ExplorerMountTable.mount("org.knime.core.testing", providerId, teamspaceLocation.getAbsolutePath());
 
         // check for updates with no update available
         int ret =
@@ -553,7 +553,7 @@ public class BatchExecutorTestcase {
         csvOut.delete();
         ExplorerMountTable.unmount("org.knime.core.testing");
         teamspaceLocation = findInPlugin("/files/updatedMetanode");
-        ExplorerMountTable.mount("org.knime.core.testing", providerId, teamspaceLocation.getAbsolutePath(), true);
+        ExplorerMountTable.mount("org.knime.core.testing", providerId, teamspaceLocation.getAbsolutePath());
 
         ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
@@ -566,7 +566,7 @@ public class BatchExecutorTestcase {
         csvOut.delete();
         ExplorerMountTable.unmount("org.knime.core.testing");
         teamspaceLocation = findInPlugin("/files/brokenMetanode");
-        ExplorerMountTable.mount("org.knime.core.testing", providerId, teamspaceLocation.getAbsolutePath(), true);
+        ExplorerMountTable.mount("org.knime.core.testing", providerId, teamspaceLocation.getAbsolutePath());
 
         ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
