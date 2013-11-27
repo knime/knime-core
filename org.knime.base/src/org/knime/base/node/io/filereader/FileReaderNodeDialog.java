@@ -99,6 +99,8 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.FlowVariableModel;
+import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
@@ -108,6 +110,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.tableview.TableView;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.util.FileReaderFileFilter;
@@ -280,6 +283,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         // Creating the brows button here in order to get its preferred height
         JButton browse = new JButton("Browse...");
         int buttonHeight = browse.getPreferredSize().height;
+        FlowVariableModel flowVarBrowseModel = createFlowVariableModel(FileReaderSettings.CFGKEY_DATAURL, Type.STRING);
+        FlowVariableModelButton flowVarBrowseButton = new FlowVariableModelButton(flowVarBrowseModel);
 
         m_urlCombo = new JComboBox();
         m_urlCombo.setEditable(true);
@@ -296,6 +301,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         fileBox.add(m_urlCombo);
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
         fileBox.add(browse);
+        fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
+        fileBox.add(flowVarBrowseButton);
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
         fileBox.add(Box.createVerticalStrut(50));
         fileBox.add(Box.createHorizontalGlue());
