@@ -188,7 +188,9 @@ public class TableToVariableNodeModel extends NodeModel {
                 }
             } else if (currentVariables.getCell(i).isMissing()) {
                 if (fail) {
-                    throw new Exception("Missing Values not allowed as variable values");
+                    throw new Exception(String.format("Missing Values not allowed as variable values -- "
+                            + "in row with ID \"%s\", column \"%s\" (index %d)",
+                            currentVariables.getKey(), variablesSpec.getColumnSpec(i).getName(), i));
                 } else if (defaults) {
                     cell = defaultCells[i];
                 } else {
