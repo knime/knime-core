@@ -1101,6 +1101,7 @@ public final class FileAnalyzer {
 
         // add '\n' as the only delimiter, so we get one line per token
         settings.addDelimiterPattern("\n", true, false, false);
+        settings.addDelimiterPattern("\r", true, false, false);
         tokenizer.setSettings(settings);
         settings.removeAllDelimiters(); // reconstruct original settings.
 
@@ -1225,7 +1226,7 @@ public final class FileAnalyzer {
      * It'll try out semicolon, comma, tab, or space delimiters; in this order.
      * Whatever produces more than one column (consistently) will be set. If no
      * settings create more than one column no column delimiters will be set. A
-     * row delimiter ('\n') is always set.
+     * row delimiter ('\n' and '\r') is always set.
      */
     private static void setDelimitersAndColNum(
             final FileReaderNodeSettings userSettings,
@@ -1249,8 +1250,9 @@ public final class FileAnalyzer {
                 ExecutionMonitor subExec = createSubExecWithRemainder(exec);
                 try {
                     result.removeAllDelimiters();
-                    // make sure '\n' is a row delimiter. Always.
+                    // make sure '\n' and '\r' is a row delimiter. Always.
                     result.addRowDelimiter("\n", true);
+                    result.addRowDelimiter("\r", true);
                     result.addDelimiterPattern(";", false, false, false);
 
                     if (testDelimiterSettingsSetColNum(result, subExec)) {
@@ -1266,11 +1268,12 @@ public final class FileAnalyzer {
             //
             if ((userSettings.getThousandsSeparator() != ',')
                     && (userSettings.getDecimalSeparator() != ',')) {
-                // make sure '\n' is a row delimiter. Always.
+                // make sure '\n' and '\r' is a row delimiter. Always.
                 ExecutionMonitor subExec = createSubExecWithRemainder(exec);
                 try {
                     result.removeAllDelimiters();
                     result.addRowDelimiter("\n", true);
+                    result.addRowDelimiter("\r", true);
                     result.addDelimiterPattern(",", false, false, false);
 
                     if (testDelimiterSettingsSetColNum(result, subExec)) {
@@ -1289,8 +1292,9 @@ public final class FileAnalyzer {
                 ExecutionMonitor subExec = createSubExecWithRemainder(exec);
                 try {
                     result.removeAllDelimiters();
-                    // make sure '\n' is a row delimiter. Always.
+                    // make sure '\n' and '\r' is a row delimiter. Always.
                     result.addRowDelimiter("\n", true);
+                    result.addRowDelimiter("\r", true);
 
                     result.addDelimiterPattern("\t", false, false, false);
 
@@ -1311,8 +1315,9 @@ public final class FileAnalyzer {
                 ExecutionMonitor subExec = createSubExecWithRemainder(exec);
                 try {
                     result.removeAllDelimiters();
-                    // make sure '\n' is a row delimiter. Always.
+                    // make sure '\n' and '\r' is a row delimiter. Always.
                     result.addRowDelimiter("\n", true);
+                    result.addRowDelimiter("\r", true);
 
                     result.addDelimiterPattern(" ", true, false, false);
                     result.setIgnoreEmptyTokensAtEndOfRow(true);
@@ -1332,8 +1337,9 @@ public final class FileAnalyzer {
                 subExec = createSubExecWithRemainder(exec);
                 try {
                     result.removeAllDelimiters();
-                    // make sure '\n' is a row delimiter. Always.
+                    // make sure '\n' and '\r' is a row delimiter. Always.
                     result.addRowDelimiter("\n", true);
+                    result.addRowDelimiter("\r", true);
                     result.addDelimiterPattern(" ", true, false, false);
 
                     if (testDelimiterSettingsSetColNum(result, subExec)) {
@@ -1349,6 +1355,7 @@ public final class FileAnalyzer {
             result.removeAllDelimiters();
             // but always have one row per line
             result.addRowDelimiter("\n", true);
+            result.addRowDelimiter("\r", true);
             result.setNumberOfColumns(1);
             return;
 
