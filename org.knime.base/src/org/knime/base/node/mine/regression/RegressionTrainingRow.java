@@ -59,11 +59,21 @@ import org.knime.core.data.DoubleValue;
 import Jama.Matrix;
 
 
-/** A decorator for a data row.
- * @since 2.9 */
+/**
+ * A decorator for a data row.
+ *
+ * @author Heiko Hofer
+ * @since 2.9
+ */
 public class RegressionTrainingRow {
+    /** The value of the target cell. */
     private double m_target;
+    /** The independent variables. */
     private Matrix m_parameter;
+    /** True when row has missing cells. */
+    private boolean m_hasMissingCells;
+    /** If true an exception is thrown when a missing cell is observed. */
+    private boolean m_failOnMissing;
 
     /**
      * @param row The underlying row
@@ -73,66 +83,91 @@ public class RegressionTrainingRow {
      * @param isNominal whether a learning column is nominal
      * @param domainValues the domain values of the nominal learning columns
      * @param target the index of the target value
+     * @param failOnMissing when true an exception is thrown when a missing cell is observed
      */
     public RegressionTrainingRow(final DataRow row,
             final int target,
             final int parameterCount,
             final List<Integer> learningCols,
             final Map<Integer, Boolean> isNominal,
-            final Map<Integer, List<DataCell>> domainValues) {
+            final Map<Integer, List<DataCell>> domainValues,
+            final boolean failOnMissing) {
         m_parameter = new Matrix(1, parameterCount);
+        m_failOnMissing = failOnMissing;
         int c = 0;
         for (int i : learningCols) {
             if (isNominal.get(i)) {
                 DataCell cell = row.getCell(i);
-                checkMissing(cell);
-                int index = domainValues.get(i).indexOf(cell);
-                if (index < 0) {
-                    throw new IllegalStateException("DataCell \""
-                    + cell.toString()
-                    + "\" is not in the DataColumnDomain. Please apply a "
-                    + "Domain Calculator on the columns with nominal "
-                    + "values.");
-                }
-                for (int k = 1; k < domainValues.get(i).size(); k++) {
-                    if (k == index) {
-                        m_parameter.set(0, c, 1.0);
-                    } else {
-                        m_parameter.set(0, c, 0.0);
+                if (!isMissing(cell)) {
+                    int index = domainValues.get(i).indexOf(cell);
+                    if (index < 0) {
+                        throw new IllegalStateException("DataCell \""
+                        + cell.toString()
+                        + "\" is not in the DataColumnDomain. Please apply a "
+                        + "Domain Calculator on the columns with nominal "
+                        + "values.");
                     }
-                    c++;
+                    for (int k = 1; k < domainValues.get(i).size(); k++) {
+                        if (k == index) {
+                            m_parameter.set(0, c, 1.0);
+                        } else {
+                            m_parameter.set(0, c, 0.0);
+                        }
+                        c++;
+                    }
+                } else {
+                    for (int k = 1; k < domainValues.get(i).size(); k++) {
+                        m_parameter.set(0, c, Double.NaN);
+                        c++;
+                    }
                 }
             } else {
                 DataCell cell = row.getCell(i);
-                checkMissing(cell);
-                DoubleValue value = (DoubleValue)cell;
-                m_parameter.set(0, c, value.getDoubleValue());
+                if (!isMissing(cell)) {
+                    DoubleValue value = (DoubleValue)cell;
+                    m_parameter.set(0, c, value.getDoubleValue());
+                } else {
+                    m_parameter.set(0, c, Double.NaN);
+                }
                 c++;
             }
         }
 
         DataCell targetCell = row.getCell(target);
-        checkMissing(targetCell);
-        if (isNominal.get(target)) {
-            m_target = domainValues.get(target).indexOf(targetCell);
-            if (m_target < 0) {
-                throw new IllegalStateException("DataCell \""
-                + row.getCell(target).toString()
-                + "\" is not in the DataColumnDomain of target column. "
-                + "Please apply a "
-                + "Domain Calculator on the target column.");
+        if (!isMissing(targetCell)) {
+            if (isNominal.get(target)) {
+                m_target = domainValues.get(target).indexOf(targetCell);
+                if (m_target < 0) {
+                    throw new IllegalStateException("DataCell \""
+                    + row.getCell(target).toString()
+                    + "\" is not in the DataColumnDomain of target column. "
+                    + "Please apply a "
+                    + "Domain Calculator on the target column.");
+                }
+            } else {
+                m_target = ((DoubleValue)targetCell).getDoubleValue();
             }
         } else {
-            m_target = ((DoubleValue)targetCell).getDoubleValue();
+            m_target = Double.NaN;
         }
     }
 
 
-    private void checkMissing(final DataCell cell) {
-        if (cell.isMissing()) {
-            throw new IllegalStateException("Missing values are not "
-                    + "supported by this node.");
+    private boolean isMissing(final DataCell cell) {
+        boolean isMissing = cell.isMissing();
+        if (isMissing && m_failOnMissing) {
+            throw new IllegalStateException("Observed missing value in input data.");
         }
+        m_hasMissingCells = m_hasMissingCells || isMissing;
+        return isMissing;
+    }
+
+    /**
+     * Returns true when row has missing cells.
+     * @return whether row has missing cells or not.
+     */
+    public boolean hasMissingCells() {
+        return m_hasMissingCells;
     }
 
     /**

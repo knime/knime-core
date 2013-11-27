@@ -25,7 +25,11 @@
         </option>
         <option name="Values">
             To specify the independent columns the should be included in the regression model. 
-            Numeric and nominal data can be included.
+            Numeric and nominal data can be included, whereby for nominal data dummy variables are automatically
+            created as described in section 
+            <a href="http://en.wikipedia.org/wiki/Categorical_variable#Categorical_variables_in_regression">
+            Categorical variables in regression</a>.
+            
         </option>  		
         <option name="Predefined Offset Value">
             By default, the regression model includes a constant term. 

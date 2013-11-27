@@ -61,13 +61,16 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
 
+import org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerSettings.MissingValueHandling;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -98,6 +101,8 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
     private JSpinner m_scatterPlotFirstRow;
     private JSpinner m_scatterPlotRowCount;
 
+    private JRadioButton m_missingValueHandlingIgnore;
+    private JRadioButton m_missingValueHandlingFail;
 
     /**
      * Create new dialog for linear regression model.
@@ -117,6 +122,7 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
         c.gridy = 0;
         c.anchor = GridBagConstraints.FIRST_LINE_START;
         c.insets = new Insets(5, 5, 0, 0);
+        c.gridwidth = 2;
 
         JPanel columnSelectionPanel = new JPanel(new FlowLayout());
         columnSelectionPanel.setBorder(BorderFactory.createTitledBorder("Target"));
@@ -136,7 +142,16 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
         regrPropertiesPanel.add(createRegressionPropertiesPanel());
         panel.add(regrPropertiesPanel, c);
 
+        c.gridwidth = 1;
         c.gridy++;
+        c.weighty = 0;
+        JPanel missingValueHandlingPanel = new JPanel(new FlowLayout());
+        missingValueHandlingPanel.setBorder(BorderFactory.createTitledBorder("Missing Values in Input Data"));
+
+        missingValueHandlingPanel.add(createMissingValueHandlingPanel());
+        panel.add(missingValueHandlingPanel, c);
+
+        c.gridx++;
         c.weighty = 0;
         JPanel scatterPlotPropertiesPanel = new JPanel(new FlowLayout());
         scatterPlotPropertiesPanel.setBorder(BorderFactory.createTitledBorder("Scatter Plot View"));
@@ -157,39 +172,7 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
         });
     }
 
-    private JPanel createScatterPlotPropertiesPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.BOTH;
-        c.weightx = 1;
-        c.weighty = 0;
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 1;
-        c.anchor = GridBagConstraints.BASELINE;
-        c.insets = new Insets(5, 5, 0, 0);
 
-        panel.add(new JLabel("First Row:"), c);
-        c.gridx++;
-        m_scatterPlotFirstRow = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
-        m_scatterPlotFirstRow.setPreferredSize(new Dimension(
-            m_scatterPlotFirstRow.getPreferredSize().width - 50,
-            m_scatterPlotFirstRow.getPreferredSize().height));
-        panel.add(m_scatterPlotFirstRow, c);
-
-        c.gridx++;
-        c.insets = new Insets(5, 30, 0, 0);
-        panel.add(new JLabel("Row Count:"), c);
-        c.gridx++;
-        c.insets = new Insets(5, 5, 0, 0);
-        m_scatterPlotRowCount = new JSpinner(new SpinnerNumberModel(20000, 1, Integer.MAX_VALUE, 1));
-        m_scatterPlotRowCount.setPreferredSize(new Dimension(
-            m_scatterPlotRowCount.getPreferredSize().width - 50,
-            m_scatterPlotRowCount.getPreferredSize().height));
-        panel.add(m_scatterPlotRowCount, c);
-
-        return panel;
-    }
 
     private JPanel createRegressionPropertiesPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
@@ -224,6 +207,65 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
         return panel;
     }
 
+    private JPanel createMissingValueHandlingPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.BASELINE;
+        c.insets = new Insets(5, 5, 0, 0);
+
+        m_missingValueHandlingIgnore = new JRadioButton("Ignore rows with missing values.");
+        panel.add(m_missingValueHandlingIgnore, c);
+
+        c.gridy++;
+        m_missingValueHandlingFail = new JRadioButton("Fail on observing missing values.");
+        panel.add(m_missingValueHandlingFail, c);
+
+        ButtonGroup missingValueHandling = new ButtonGroup();
+        missingValueHandling.add(m_missingValueHandlingIgnore);
+        missingValueHandling.add(m_missingValueHandlingFail);
+
+        return panel;
+    }
+
+    private JPanel createScatterPlotPropertiesPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 1;
+        c.anchor = GridBagConstraints.BASELINE;
+        c.insets = new Insets(5, 5, 0, 0);
+
+        panel.add(new JLabel("First Row:"), c);
+        c.gridx++;
+        m_scatterPlotFirstRow = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
+        m_scatterPlotFirstRow.setPreferredSize(new Dimension(
+            m_scatterPlotFirstRow.getPreferredSize().width - 50,
+            m_scatterPlotFirstRow.getPreferredSize().height));
+        panel.add(m_scatterPlotFirstRow, c);
+
+        c.gridy++;
+        c.gridx = 0;
+        c.insets = new Insets(5, 5, 0, 0);
+        panel.add(new JLabel("Row Count:"), c);
+        c.gridx++;
+        c.insets = new Insets(5, 5, 0, 0);
+        m_scatterPlotRowCount = new JSpinner(new SpinnerNumberModel(20000, 1, Integer.MAX_VALUE, 1));
+        m_scatterPlotRowCount.setPreferredSize(new Dimension(
+            m_scatterPlotRowCount.getPreferredSize().width - 50,
+            m_scatterPlotRowCount.getPreferredSize().height));
+        panel.add(m_scatterPlotRowCount, c);
+
+        return panel;
+    }
 
     private void updateHiddenColumns(final DataColumnSpec toHide) {
         m_filterPanel.resetHiding();
@@ -244,13 +286,18 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
         m_selectionPanel.update(spec, target);
 
         m_filterPanel.loadConfiguration(settings.getFilterConfiguration(), spec);
-        updateHiddenColumns(spec.getColumnSpec(target));
+        updateHiddenColumns(m_selectionPanel.getSelectedColumnAsSpec());
         m_predefinedOffsetValue.setSelected(!settings.getIncludeConstant());
         m_offsetValue.setValue(settings.getOffsetValue());
         m_offsetValue.setEnabled(m_predefinedOffsetValue.isSelected());
 
         m_scatterPlotFirstRow.setValue(settings.getScatterPlotFirstRow());
         m_scatterPlotRowCount.setValue(settings.getScatterPlotRowCount());
+
+        m_missingValueHandlingIgnore.setSelected(
+            settings.getMissingValueHandling().equals(MissingValueHandling.ignore));
+        m_missingValueHandlingFail.setSelected(
+            settings.getMissingValueHandling().equals(MissingValueHandling.fail));
     }
 
     /**
@@ -267,7 +314,11 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
         settings.setOffsetValue((Double)m_offsetValue.getValue());
         settings.setScatterPlotFirstRow((Integer)m_scatterPlotFirstRow.getValue());
         settings.setScatterPlotRowCount((Integer)m_scatterPlotRowCount.getValue());
-
+        if (m_missingValueHandlingFail.isSelected()) {
+            settings.setMissingValueHandling(MissingValueHandling.fail);
+        } else {
+            settings.setMissingValueHandling(MissingValueHandling.ignore);
+        }
 
         settings.saveSettings(s);
     }

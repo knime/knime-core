@@ -56,8 +56,12 @@ import java.util.Map;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 
-/** This is a decorator for a iterator over DataRows.
- * @since 2.9*/
+/**
+ * This is a decorator for a iterator over DataRows.
+ *
+ * @author Heiko Hofer
+ * @since 2.9
+ */
 public  class RegressionTrainingDataIterator implements Iterator<RegressionTrainingRow> {
     private Iterator<DataRow> m_iter;
 
@@ -66,6 +70,8 @@ public  class RegressionTrainingDataIterator implements Iterator<RegressionTrain
     private List<Integer> m_learningCols;
     private Map<Integer, Boolean> m_isNominal;
     private Map<Integer, List<DataCell>> m_domainValues;
+    /** If true an exception is thrown when a missing cell is observed. */
+    private boolean m_failOnMissing;
 
     /**
      * @param iter the underlying iterator
@@ -75,19 +81,22 @@ public  class RegressionTrainingDataIterator implements Iterator<RegressionTrain
      * @param isNominal whether a learning column is nominal
      * @param domainValues the domain values of the nominal learning columns
      * @param target the index of the target value
+     * @param failOnMissing when true an exception is thrown when a missing cell is observed
      */
     public RegressionTrainingDataIterator(final Iterator<DataRow> iter,
             final int target,
             final int parameterCount,
             final List<Integer> learningCols,
             final Map<Integer, Boolean> isNominal,
-            final Map<Integer, List<DataCell>> domainValues) {
+            final Map<Integer, List<DataCell>> domainValues,
+            final boolean failOnMissing) {
         m_iter = iter;
         m_target = target;
         m_parameterCount = parameterCount;
         m_learningCols = learningCols;
         m_isNominal = isNominal;
         m_domainValues = domainValues;
+        m_failOnMissing = failOnMissing;
     }
 
     /**
@@ -105,7 +114,7 @@ public  class RegressionTrainingDataIterator implements Iterator<RegressionTrain
     public RegressionTrainingRow next() {
         return new RegressionTrainingRow(m_iter.next(), m_target,
                 m_parameterCount, m_learningCols,
-                m_isNominal, m_domainValues);
+                m_isNominal, m_domainValues, m_failOnMissing);
     }
 
     /**

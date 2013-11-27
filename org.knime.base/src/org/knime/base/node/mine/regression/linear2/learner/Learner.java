@@ -77,23 +77,25 @@ import Jama.Matrix;
  */
 final class Learner {
     /** Logger to print debug info to. */
-    private static final NodeLogger LOGGER = NodeLogger
-          .getLogger(Learner.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(Learner.class);
 
     private final PMMLPortObjectSpec m_outSpec;
 
+    /** whether to include the constant term during the estimation process. */
     private boolean m_includeConstant;
 
     /** offset value (a user defined intercept). */
     private double m_offsetValue;
 
+    /** If true an exception is thrown when a missing cell is observed. */
+    private boolean m_failOnMissing;
 
 
     /**
      * @param spec The {@link PMMLPortObjectSpec} of the output table.
      */
     Learner(final PMMLPortObjectSpec spec) {
-        this(spec, true, 0.0);
+        this(spec, true, 0.0, true);
     }
 
 
@@ -101,24 +103,30 @@ final class Learner {
      * @param spec The {@link PMMLPortObjectSpec} of the output table.
      * @param includeConstant include a constant automatically
      * @param offsetValue offset value (a user defined intercept)
+     * @param failOnMissing when true an exception is thrown when a missing cell is observed
      */
-    Learner(final PMMLPortObjectSpec spec, final boolean includeConstant, final double offsetValue) {
+    Learner(final PMMLPortObjectSpec spec, final boolean includeConstant, final double offsetValue,
+        final boolean failOnMissing) {
         m_outSpec = spec;
         m_includeConstant = includeConstant;
         m_offsetValue = offsetValue;
+        m_failOnMissing = failOnMissing;
     }
 
     /**
      * @param data The data table.
+     * @param rowCount the number of rows in the input table, used for reporting progress.
+     *      Set to -1 if progress should not be reported.
      * @param exec The execution context used for reporting progress.
      * @return An object which holds the results.
      * @throws CanceledExecutionException When method is cancelled
      */
     public LinearRegressionContent perform(final DataTable data,
-            final ExecutionContext exec) throws CanceledExecutionException {
+            final int rowCount, final ExecutionContext exec) throws CanceledExecutionException {
         exec.checkCanceled();
 
-        RegressionTrainingData trainingData = new RegressionTrainingData(data, m_outSpec);
+        RegressionTrainingData trainingData = new RegressionTrainingData(data, m_outSpec,
+            m_failOnMissing);
 
         UpdatingMultipleLinearRegression regr = new MillerUpdatingRegression(
                 trainingData.getRegressorCount(), m_includeConstant);
@@ -128,21 +136,32 @@ final class Learner {
         }
 
 
-        int rowCount = 0;
+        exec.setProgress(0, "Estimating linear regression model.");
+        int r = 1;
+        double progress = 0;
         for (RegressionTrainingRow row : trainingData) {
-            double[] parameter = row.getParameter().getArray()[0];
-            for (int i = 0; i < trainingData.getRegressorCount(); i++) {
-                stats[i].addValue(parameter[i]);
+            exec.checkCanceled();
+            if (!row.hasMissingCells()) {
+                double[] parameter = row.getParameter().getArray()[0];
+                for (int i = 0; i < trainingData.getRegressorCount(); i++) {
+                    stats[i].addValue(parameter[i]);
+                }
+                regr.addObservation(parameter, row.getTarget() - m_offsetValue);
             }
-            regr.addObservation(parameter, row.getTarget() - m_offsetValue);
-            rowCount++;
+            if (rowCount > 0) {
+                double progressUpdate = r / (double)rowCount;
+                // report progress if update above 1%
+                if (progressUpdate - progress > 0.01) {
+                    progress = progressUpdate;
+                    exec.setProgress(progress);
+                }
+                r++;
+            }
         }
 
         RegressionResults result = regr.regress();
 
         Matrix beta = new Matrix(result.getParameterEstimates(), 1);
-
-
 
         List<String> factorList = new ArrayList<String>();
         List<String> covariateList = new ArrayList<String>();
@@ -172,8 +191,10 @@ final class Learner {
         }
 
         LinearRegressionContent content = new LinearRegressionContent(m_outSpec,
-            rowCount, factorList, covariateList, beta, m_includeConstant, m_offsetValue, covMat,
+            (int)stats[0].getN(), factorList, covariateList, beta,
+            m_includeConstant, m_offsetValue, covMat,
             result.getRSquared(), result.getAdjustedRSquared(), stats);
+
         return content;
     }
 }

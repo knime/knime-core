@@ -230,9 +230,9 @@ public final class LinearRegressionContent {
         // p-value
         Matrix pValueMatrix = new Matrix(1, m_covMat.getRowDimension());
         for (int i = 0; i < m_covMat.getRowDimension(); i++) {
-            TDistribution distribution = new TDistribution(getN() - m_covMat.getRowDimension() - 1);
+            TDistribution distribution = new TDistribution(getN() - m_covMat.getRowDimension());
             double t = Math.abs(tValues.get(0, i));
-            pValueMatrix.set(0, i, 1 - distribution.cumulativeProbability(t));
+            pValueMatrix.set(0, i, 2 * (1 - distribution.cumulativeProbability(t)));
         }
         return pValueMatrix;
     }
@@ -591,7 +591,7 @@ public final class LinearRegressionContent {
         c.m_beta = toMatrix(coeff, coeff.length);
 
         double[] covMat = parContent.getDoubleArray(CFG_COVARIANCE_MATRIX);
-        c.m_covMat = toMatrix(covMat, covMat.length);
+        c.m_covMat = toMatrix(covMat, coeff.length);
 
         c.m_includeConstant = parContent.getBoolean(CFG_INCLUDE_CONSTANT);
         c.m_offsetValue = parContent.getDouble(CFG_OFFSET_VALUE);

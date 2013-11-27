@@ -63,15 +63,20 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
-/** This class is a decorator for a DataTable.
- * @since 2.9*/
+/**
+ * This class is a decorator for a DataTable.
+ *
+ * @author Heiko Hofer
+ * @since 2.9
+ */
 public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
     private DataTable m_data;
     private List<Integer> m_learningCols;
     private Integer m_target;
     private Map<Integer, Boolean> m_isNominal;
     private Map<Integer, List<DataCell>> m_domainValues;
-
+    /** If true an exception is thrown when a missing cell is observed. */
+    private boolean m_failOnMissing;
     private int m_parameterCount;
 
     /**
@@ -80,7 +85,19 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
      */
     public RegressionTrainingData(final DataTable data,
             final PMMLPortObjectSpec spec) {
+        this(data, spec, true);
+    }
+
+    /**
+     * @param data training data.
+     * @param spec port object spec.
+     * @param failOnMissing when true an exception is thrown when a missing cell is observed
+     */
+    public RegressionTrainingData(final DataTable data,
+            final PMMLPortObjectSpec spec,
+            final boolean failOnMissing) {
         m_data = data;
+        m_failOnMissing = failOnMissing;
         m_learningCols = new ArrayList<Integer>();
         m_isNominal = new HashMap<Integer, Boolean>();
         m_domainValues = new HashMap<Integer, List<DataCell>>();
@@ -130,7 +147,7 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
     public Iterator<RegressionTrainingRow> iterator() {
         return new RegressionTrainingDataIterator(m_data.iterator(), m_target,
                 m_parameterCount, m_learningCols,
-                m_isNominal, m_domainValues);
+                m_isNominal, m_domainValues, m_failOnMissing);
     }
 
     /**

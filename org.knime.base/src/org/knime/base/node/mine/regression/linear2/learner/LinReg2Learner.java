@@ -134,7 +134,7 @@ final class LinReg2Learner {
         PMMLPortObjectSpec inPMMLSpec = inPMMLPort.getSpec();
         init(data.getDataTableSpec(), inPMMLSpec);
         DataTable dataTable = recalcDomainOfLearningFields(data, inPMMLSpec, exec);
-        return m_learner.perform(dataTable, exec);
+        return m_learner.perform(dataTable, data.getRowCount(), exec);
     }
 
     private DataTable recalcDomainOfLearningFields(
@@ -238,7 +238,7 @@ final class LinReg2Learner {
                }
             }
             if (possibleTargets.size() > 1) {
-                m_settings.setTargetColumn(possibleTargets.get(0).getName());
+                m_settings.setTargetColumn(possibleTargets.get(possibleTargets.size() - 1).getName());
                 // TODO: set warning for node (auto-guessing case)
             } else if (possibleTargets.size() == 1) {
                 m_settings.setTargetColumn(possibleTargets.get(0).getName());
@@ -300,7 +300,8 @@ final class LinReg2Learner {
             creator.setTargetCols(Arrays.asList(targetColSpec));
             creator.setLearningCols(regressorColSpecs);
             m_pmmlOutSpec = creator.createSpec();
-            m_learner = new Learner(m_pmmlOutSpec, m_settings.getIncludeConstant(), m_settings.getOffsetValue());
+            m_learner = new Learner(m_pmmlOutSpec, m_settings.getIncludeConstant(), m_settings.getOffsetValue(),
+                m_settings.getMissingValueHandling().equals(LinReg2LearnerSettings.MissingValueHandling.fail));
         } else {
             throw new InvalidSettingsException("The target is "
                     + "not in the input.");
