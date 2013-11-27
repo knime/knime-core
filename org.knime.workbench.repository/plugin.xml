@@ -23,7 +23,7 @@ a data &quot;workflow&quot;
       </view>
    </extension>
    <extension
-         id="org.knime.doc.NodeDocuGenerator"
+         id="NodeDocumentationGenerator"
          point="org.eclipse.core.runtime.applications">
       <application
             cardinality="singleton-global"
