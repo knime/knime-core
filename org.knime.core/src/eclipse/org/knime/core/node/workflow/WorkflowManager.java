@@ -1217,14 +1217,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (!haveMetaPortsChanged(newPorts, true, subFlowMgr)) {
                 return;
             }
-            final Set<ConnectionContainer> connectionsToMetaNode =
-                m_workflow.getConnectionsByDest(subFlowID);
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
                 m_workflow.changeDestinationPortsForMetaNode(subFlowID, newPorts);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer old = p.getFirst();
-                connectionsToMetaNode.remove(old);
-                m_workflow.getConnectionsBySource(old.getSource()).remove(old);
+                m_workflow.removeConnection(old);
                 notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
@@ -1232,11 +1229,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             Workflow subFlow = subFlowMgr.m_workflow;
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
                 subFlow.changeSourcePortsForMetaNode(subFlowID, newPorts);
-            Set<ConnectionContainer> connectionsFromInsideMetaNode = subFlow.getConnectionsBySource(subFlowID);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer old = p.getFirst();
-                connectionsFromInsideMetaNode.remove(old);
-                subFlow.getConnectionsByDest(old.getDest()).remove(old);
+                subFlow.removeConnection(old);
                 subFlowMgr.notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
@@ -1256,15 +1251,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer newConn = p.getSecond();
-                connectionsToMetaNode.add(newConn);
-                m_workflow.getConnectionsBySource(newConn.getSource()).add(newConn);
+                m_workflow.addConnection(newConn);
                 notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer newConn = p.getSecond();
-                connectionsFromInsideMetaNode.add(newConn);
-                subFlow.getConnectionsByDest(newConn.getDest()).add(newConn);
+                subFlow.addConnection(newConn);
                 subFlowMgr.notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
@@ -1282,14 +1275,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (!haveMetaPortsChanged(newPorts, false, subFlowMgr)) {
                 return;
             }
-            final Set<ConnectionContainer> connectionsFromMetaNode =
-                m_workflow.getConnectionsBySource(subFlowID);
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
                 m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer old = p.getFirst();
-                connectionsFromMetaNode.remove(old);
-                m_workflow.getConnectionsByDest(old.getDest()).remove(old);
+                m_workflow.removeConnection(old);
                 notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
@@ -1297,11 +1287,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             Workflow subFlow = subFlowMgr.m_workflow;
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
                 subFlow.changeDestinationPortsForMetaNode(subFlowID, newPorts);
-            Set<ConnectionContainer> connectionsFromInsideMetaNode = subFlow.getConnectionsByDest(subFlowID);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer old = p.getFirst();
-                connectionsFromInsideMetaNode.remove(old);
-                subFlow.getConnectionsBySource(old.getSource()).remove(old);
+                subFlow.removeConnection(old);
                 subFlowMgr.notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
@@ -1321,15 +1309,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer newConn = p.getSecond();
-                connectionsFromMetaNode.add(newConn);
-                m_workflow.getConnectionsByDest(newConn.getDest()).add(newConn);
+                m_workflow.addConnection(newConn);
                 notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer newConn = p.getSecond();
-                connectionsFromInsideMetaNode.add(newConn);
-                subFlow.getConnectionsBySource(newConn.getSource()).add(newConn);
+                subFlow.addConnection(newConn);
                 subFlowMgr.notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
