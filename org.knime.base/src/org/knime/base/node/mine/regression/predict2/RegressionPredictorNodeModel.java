@@ -61,6 +61,7 @@ import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionTransla
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -147,7 +148,14 @@ final class RegressionPredictorNodeModel extends NodeModel {
         if (models.isEmpty()) {
             org.knime.base.node.mine.regression.predict.RegressionPredictorNodeModel regrPredictor =
                     new org.knime.base.node.mine.regression.predict.RegressionPredictorNodeModel();
-            return regrPredictor.execute(inData, exec);
+            PortObject[] regrPredOut = regrPredictor.execute(inData, exec);
+            if (regrPredOut.length > 0 && regrPredOut[0] instanceof BufferedDataTable) {
+                BufferedDataTable regrPredOutTable = (BufferedDataTable)regrPredOut[0];
+                // replace name of prediction column (the last column of regrPredOutTable)
+                return new PortObject[]{adjustSpecOfRegressionPredictorTable(regrPredOutTable, inData, exec)};
+            } else {
+                return regrPredOut;
+            }
         }
         PMMLGeneralRegressionTranslator trans = new PMMLGeneralRegressionTranslator();
         port.initializeModelTranslator(trans);
@@ -157,6 +165,43 @@ final class RegressionPredictorNodeModel extends NodeModel {
         ColumnRearranger c = createRearranger(trans.getContent(), port.getSpec(), spec);
         BufferedDataTable out = exec.createColumnRearrangeTable(data, c, exec);
         return new BufferedDataTable[]{out};
+    }
+
+
+    private BufferedDataTable adjustSpecOfRegressionPredictorTable(final BufferedDataTable table,
+        final PortObject[] inData, final ExecutionContext exec) throws InvalidSettingsException {
+        String predColumn = determinPredictedColumName(inData);
+        if (predColumn != null) {
+            DataColumnSpec[] colSpecs = getColumnSpecs(table.getSpec());
+            colSpecs[colSpecs.length - 1] = replaceNameOf(colSpecs[colSpecs.length - 1], predColumn);
+            return exec.createSpecReplacerTable(table, new DataTableSpec(colSpecs));
+        } else {
+            return table;
+        }
+    }
+
+    private DataColumnSpec replaceNameOf(final DataColumnSpec colSpec, final String name) {
+        DataColumnSpecCreator creator = new DataColumnSpecCreator(colSpec);
+        creator.setName(name);
+        return creator.createSpec();
+    }
+
+    private DataColumnSpec[] getColumnSpecs(final DataTableSpec spec) {
+        DataColumnSpec[] colSpecs = new DataColumnSpec[spec.getNumColumns()];
+        for (int i = 0; i < spec.getNumColumns(); i++) {
+            colSpecs[i] = spec.getColumnSpec(i);
+        }
+        return colSpecs;
+    }
+
+    private String determinPredictedColumName(final PortObject[] inData) throws InvalidSettingsException {
+        PortObjectSpec[] outPortSpec = configure(new PortObjectSpec[] {inData[0].getSpec(), inData[1].getSpec()});
+        if (outPortSpec != null) {
+            DataTableSpec outSpec = (DataTableSpec)outPortSpec[0];
+            return outSpec.getColumnSpec(outSpec.getNumColumns() - 1).getName();
+        } else {
+            return null;
+        }
     }
 
     /**
