@@ -24,7 +24,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 
 /**
  * Stores workflow editor specific settings (like grid settings and zoom level, etc.).
@@ -192,5 +191,55 @@ public class EditorUIInformation implements UIInformation {
         return "Grid: " + (m_snapToGrid?"on/":"off/") + (m_showGrid?"show":"hide") + "(" + m_gridX + "/" + m_gridY
         + "), Zoom: " + m_zoomLevel;
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        // auto-generated (eclipse action)
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + m_gridX;
+        result = prime * result + m_gridY;
+        result = prime * result + (m_showGrid ? 1231 : 1237);
+        result = prime * result + (m_snapToGrid ? 1231 : 1237);
+        long temp;
+        temp = Double.doubleToLongBits(m_zoomLevel);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        return result;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        // auto-generated (eclipse action)
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        EditorUIInformation other = (EditorUIInformation)obj;
+        if (m_gridX != other.m_gridX) {
+            return false;
+        }
+        if (m_gridY != other.m_gridY) {
+            return false;
+        }
+        if (m_showGrid != other.m_showGrid) {
+            return false;
+        }
+        if (m_snapToGrid != other.m_snapToGrid) {
+            return false;
+        }
+        if (Double.doubleToLongBits(m_zoomLevel) != Double.doubleToLongBits(other.m_zoomLevel)) {
+            return false;
+        }
+        return true;
+    }
+
+
 
 }
