@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./number_string.png" type="Manipulator">
-	<name>Number To String</name>
+	<name>Number To String (PMML)</name>
 	
 	<shortDescription>
 		Converts numbers in a column to strings.

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./denormalize.png" type="Manipulator">
-    <name>Denormalizer</name>
+    <name>Denormalizer (PMML)</name>
     <shortDescription>Denormalizes the attributes of a table reversing the information in the PMML model.</shortDescription>
     <fullDescription>
         <intro>

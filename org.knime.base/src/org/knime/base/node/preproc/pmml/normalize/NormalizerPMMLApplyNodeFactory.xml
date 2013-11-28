@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./normalizeapply.png" type="Manipulator">
-    <name>Normalizer (Apply)</name>
+    <name>Normalizer Apply (PMML)</name>
     <shortDescription>Normalizes the attributes of a table according to a PMML model.</shortDescription>
     <fullDescription>
         <intro>
