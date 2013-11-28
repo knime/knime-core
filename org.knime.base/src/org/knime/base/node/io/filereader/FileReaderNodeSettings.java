@@ -828,7 +828,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     protected void addStatusOfSettings(final SettingsStatus status,
             final boolean openDataFile, final DataTableSpec tableSpec) {
 
-        if (getDataFileLocation() != null && m_numOfColumns < 1) {
+        if (getDataFileLocation() != null && m_numOfColumns < 0) {
             /*
              * Special case: the file location is set and no other settings are
              * specified. This occurs when a file is dropped on the editor. No
@@ -843,7 +843,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     private void addThisStatus(final SettingsStatus status) {
 
-        if (m_numOfColumns < 1) {
+        if (m_numOfColumns < 0) {
             status.addError("Invalid number of columns specified ('"
                     + m_numOfColumns + "').");
             return;
