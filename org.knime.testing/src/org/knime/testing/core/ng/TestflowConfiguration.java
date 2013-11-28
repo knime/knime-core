@@ -510,7 +510,7 @@ class TestflowConfiguration {
             }
             patternString.append("\\Q").append(message).append("\\E");
 
-            return Pattern.compile(patternString.toString());
+            return Pattern.compile(patternString.toString(), Pattern.DOTALL);
         }
     }
 
