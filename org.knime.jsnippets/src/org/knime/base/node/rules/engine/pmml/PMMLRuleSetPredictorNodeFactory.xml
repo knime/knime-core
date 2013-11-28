@@ -2,7 +2,7 @@
 <knimeNode icon="./rule_engine_predictor.png" type="Predictor"
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Ruleset Predictor (PMML)</name>
+	<name>Ruleset Predictor</name>
 
 	<shortDescription>
         Applies the rules to the input table.
