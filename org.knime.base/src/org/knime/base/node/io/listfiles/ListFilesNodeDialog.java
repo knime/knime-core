@@ -433,13 +433,14 @@ public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener 
     }
 
     /**
-     * This Method creates the String for the Location textfield from the given
-     * fileurls.
-     *
-     * @param fileurls
-     * @return
+     * This method creates the String for the Location textfield from the given file URLs.
+     * @param fileurls to concatenate
+     * @return a semi-colon separated list of locations
      */
     private String getStringForBox(final String[] fileurls) {
+        if (fileurls.length == 1) {
+            return fileurls[0];
+        }
         StringBuilder buff = new StringBuilder();
         for (int i = 0; i < fileurls.length; i++) {
             buff.append(fileurls[i]).append(';');
