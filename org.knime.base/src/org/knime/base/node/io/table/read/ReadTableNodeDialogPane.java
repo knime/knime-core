@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   May 19, 2006 (wiswedel): created
  */
@@ -65,10 +65,9 @@ public class ReadTableNodeDialogPane extends DefaultNodeSettingsPane {
     /**
      */
     public ReadTableNodeDialogPane() {
-        addDialogComponent(new DialogComponentFileChooser(
-                new SettingsModelString(ReadTableNodeModel.CFG_FILENAME, ""),
-                ReadTableNodeDialogPane.class.getName(), 
-                JFileChooser.OPEN_DIALOG, 
+        final SettingsModelString stringModel = new SettingsModelString(ReadTableNodeModel.CFG_FILENAME, "");
+        addDialogComponent(new DialogComponentFileChooser(stringModel, ReadTableNodeDialogPane.class.getName(),
+                JFileChooser.OPEN_DIALOG, false, createFlowVariableModel(stringModel),
                 ReadTableNodeModel.PREFERRED_FILE_EXTENSION));
     }
 

@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   May 19, 2006 (wiswedel): created
  */
@@ -52,6 +52,7 @@ package org.knime.base.node.io.table.write;
 
 import javax.swing.JFileChooser;
 
+import org.knime.base.node.io.table.read.ReadTableNodeDialogPane;
 import org.knime.base.node.io.table.read.ReadTableNodeModel;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
@@ -71,9 +72,8 @@ public class WriteTableNodeDialogPane extends DefaultNodeSettingsPane {
      */
     public WriteTableNodeDialogPane() {
         addDialogComponent(new DialogComponentFileChooser(
-                new SettingsModelString(WriteTableNodeModel.CFG_FILENAME, ""), 
-                WriteTableNodeDialogPane.class.getName(),
-                JFileChooser.SAVE_DIALOG, 
+                new SettingsModelString(WriteTableNodeModel.CFG_FILENAME, ""),
+                ReadTableNodeDialogPane.class.getName(), JFileChooser.SAVE_DIALOG,
                 ReadTableNodeModel.PREFERRED_FILE_EXTENSION));
         addDialogComponent(new DialogComponentBoolean(new SettingsModelBoolean(
                 WriteTableNodeModel.CFG_OVERWRITE_OK, false), "Overwrite OK"));
