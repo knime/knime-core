@@ -447,6 +447,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         setFileHasRowHeaders(true);
         setRowHeaderPrefix(null);
         addRowDelimiter("\n", false);
+        addRowDelimiter("\r", false);
 
         // the tokenizer settings
         addDelimiterPattern(",", false, false, false);
