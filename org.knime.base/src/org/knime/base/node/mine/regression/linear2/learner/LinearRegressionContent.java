@@ -65,6 +65,7 @@ import org.apache.commons.math3.distribution.TDistribution;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.LinkFunction;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.ModelType;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPCell;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPCovCell;
@@ -550,6 +551,7 @@ public final class LinearRegressionContent {
         if (!m_includeConstant) {
             content.setOffsetValue(m_offsetValue);
         }
+        content.setLinkFunction(LinkFunction.identity);
         return content;
     }
 
