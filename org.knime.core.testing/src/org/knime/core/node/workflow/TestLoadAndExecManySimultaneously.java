@@ -46,7 +46,7 @@ public class TestLoadAndExecManySimultaneously extends WorkflowTestCase {
 
     private ExecutorService m_executorService;
     private OneInstanceWorkflowTest[] m_instances;
-    private static final int NR_CONCURRENT = 250;
+    private static final int NR_CONCURRENT = 100;
 
     /** {@inheritDoc} */
     @Override
