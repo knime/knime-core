@@ -118,18 +118,25 @@ final class CSVReaderNodeModel extends NodeModel {
         settings.setDataFileLocationAndUpdateTableName(url);
 
         String colDel = m_config.getColDelimiter();
-        settings.addDelimiterPattern(colDel, false, false, false);
+        if (colDel != null && !colDel.isEmpty()) {
+            settings.addDelimiterPattern(colDel, false, false, false);
+        }
         settings.setDelimiterUserSet(true);
 
         String rowDel = m_config.getRowDelimiter();
-        settings.addRowDelimiter(rowDel, true);
-
+        if (rowDel != null && !rowDel.isEmpty()) {
+            settings.addRowDelimiter(rowDel, true);
+        }
         String quote = m_config.getQuoteString();
-        settings.addQuotePattern(quote, quote);
+        if (quote != null && !quote.isEmpty()) {
+            settings.addQuotePattern(quote, quote);
+        }
         settings.setQuoteUserSet(true);
 
         String commentStart = m_config.getCommentStart();
-        settings.addSingleLineCommentPattern(commentStart, false, false);
+        if (commentStart != null && !commentStart.isEmpty()) {
+            settings.addSingleLineCommentPattern(commentStart, false, false);
+        }
         settings.setCommentUserSet(true);
 
         boolean hasColHeader = m_config.hasColHeader();
