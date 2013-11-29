@@ -81,30 +81,10 @@ public final class PMMLGeneralRegressionContent {
      * @author Heiko Hofer
      */
     public enum FunctionName {
-        /** E.g. used in linear regression. */
+        /** Currently not supported. */
         regression,
         /** Main purpose is classification, e.g. used in logistic regression. */
         classification
-    }
-
-    /**
-     * The link function. From PMML spec: The link function property attribute the type of
-     * link function to use when generalizedLinear model type is specified.
-     * @author Heiko Hofer
-     * @since 2.9
-     */
-    public enum LinkFunction {
-        // the enum member's names *must* match the corresponding values in the PMML spec
-        cloglog,
-        identity,
-        log,
-        logc,
-        logit,
-        loglog,
-        negbin,
-        oddspower,
-        power,
-        probit
     }
 
     /* required */
@@ -133,9 +113,7 @@ public final class PMMLGeneralRegressionContent {
 
     private Double m_offsetValue;
 
-    private LinkFunction m_linkFunction;
-
-    /** Empty Constructor used when reading xml file. */
+    /** Empty Contstuctor used when reading xml file. */
     PMMLGeneralRegressionContent() {
         // Fields are defined by setters.
     }
@@ -170,7 +148,6 @@ public final class PMMLGeneralRegressionContent {
         m_pCovMatrix = pCovMatrix;
         m_paramMatrix = paramMatrix;
         m_offsetValue = null;
-        m_linkFunction = null;
     }
 
 
@@ -345,21 +322,5 @@ public final class PMMLGeneralRegressionContent {
      */
     public void setOffsetValue(final Double offsetValue) {
         m_offsetValue = offsetValue;
-    }
-
-    /**
-     * @return the link function or null if the link function is not defined
-     * @since 2.9
-     */
-    public LinkFunction getLinkFunction() {
-        return m_linkFunction;
-    }
-
-    /**
-     * @param linkFunction the link function to set
-     * @since 2.9
-     */
-    public void setLinkFunction(final LinkFunction linkFunction) {
-        m_linkFunction = linkFunction;
     }
 }

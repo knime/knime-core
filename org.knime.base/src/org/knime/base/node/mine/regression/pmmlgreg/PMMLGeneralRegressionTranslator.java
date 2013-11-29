@@ -55,7 +55,6 @@ import org.dmg.pmml.CovariateListDocument.CovariateList;
 import org.dmg.pmml.FactorListDocument.FactorList;
 import org.dmg.pmml.GeneralRegressionModelDocument.GeneralRegressionModel;
 import org.dmg.pmml.GeneralRegressionModelDocument.GeneralRegressionModel.ModelType;
-import org.dmg.pmml.LINKFUNCTION;
 import org.dmg.pmml.MININGFUNCTION;
 import org.dmg.pmml.PCellDocument.PCell;
 import org.dmg.pmml.PCovCellDocument.PCovCell;
@@ -68,7 +67,6 @@ import org.dmg.pmml.ParameterDocument.Parameter;
 import org.dmg.pmml.ParameterListDocument.ParameterList;
 import org.dmg.pmml.PredictorDocument.Predictor;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.FunctionName;
-import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent.LinkFunction;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
@@ -105,7 +103,8 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
      *
      * @param content the regression content for the model
      */
-    public PMMLGeneralRegressionTranslator(final PMMLGeneralRegressionContent content) {
+    public PMMLGeneralRegressionTranslator(
+            final PMMLGeneralRegressionContent content) {
         m_content = content;
     }
 
@@ -115,7 +114,8 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
     @Override
     public void initializeFrom(final PMMLDocument pmmlDoc) {
         m_nameMapper = new DerivedFieldMapper(pmmlDoc);
-        GeneralRegressionModel[] models = pmmlDoc.getPMML().getGeneralRegressionModelArray();
+        GeneralRegressionModel[] models
+                = pmmlDoc.getPMML().getGeneralRegressionModelArray();
         if (models.length == 0) {
             throw new IllegalArgumentException("No general regression model"
                 + " provided.");
@@ -144,8 +144,6 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
        if (reg.isSetOffsetValue()) {
            m_content.setOffsetValue(reg.getOffsetValue());
        }
-       // read the link function
-       m_content.setLinkFunction(LinkFunction.valueOf(reg.getLinkFunction().toString()));
 
        // read the parameter list
        ParameterList pmmlParamList = reg.getParameterList();
@@ -261,10 +259,13 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
             final PMMLPortObjectSpec spec) {
         m_nameMapper = new DerivedFieldMapper(pmmlDoc);
 
-        GeneralRegressionModel reg = pmmlDoc.getPMML().addNewGeneralRegressionModel();
+        GeneralRegressionModel reg =
+            pmmlDoc.getPMML().addNewGeneralRegressionModel();
         PMMLMiningSchemaTranslator.writeMiningSchema(spec, reg);
-        reg.setModelType(getPMMLRegModelType(m_content.getModelType()));
-        reg.setFunctionName(getPMMLMiningFunction(m_content.getFunctionName()));
+        reg.setModelType(
+                getPMMLRegModelType(m_content.getModelType()));
+        reg.setFunctionName(
+                getPMMLMiningFunction(m_content.getFunctionName()));
         String algorithmName = m_content.getAlgorithmName();
         if (algorithmName != null && !algorithmName.isEmpty()) {
             reg.setAlgorithmName(algorithmName);
@@ -276,10 +277,6 @@ public class PMMLGeneralRegressionTranslator implements PMMLTranslator {
         String targetReferenceCategory = m_content.getTargetReferenceCategory();
         if (targetReferenceCategory != null && !targetReferenceCategory.isEmpty()) {
             reg.setTargetReferenceCategory(targetReferenceCategory);
-        }
-
-        if (m_content.getLinkFunction() != null) {
-            reg.setLinkFunction(LINKFUNCTION.Enum.forString(m_content.getLinkFunction().name()));
         }
         if (m_content.getOffsetValue() != null) {
             reg.setOffsetValue(m_content.getOffsetValue());
