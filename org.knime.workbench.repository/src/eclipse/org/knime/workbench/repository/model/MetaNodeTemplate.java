@@ -156,4 +156,13 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
         }
         return true;
     }
+
+    /**
+    *
+    * {@inheritDoc}
+    */
+   @Override
+   public String toString() {
+       return m_description;
+   }
 }
