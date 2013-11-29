@@ -349,7 +349,7 @@ public final class FlowVariable extends FlowObject {
         case STRING: value = m_valueS; break;
         default: throw new InternalError("m_type must not be null");
         }
-        return "SV: \"" + m_name + "\" (" + m_type + ": " + value + ")";
+        return m_name + "\" (" + m_type + ": " + value + ")";
     }
 
     /** {@inheritDoc} */
