@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *    25.10.2006 (tg): cleanup
  *    31.10.2006 (tm, cs): reviewed
@@ -64,24 +64,24 @@ import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
 /**
- * A <code>DataColumnSpec</code> describes one column in a 
+ * A <code>DataColumnSpec</code> describes one column in a
  * {@link org.knime.core.data.DataTable}.
  * It contains information about type, name, domain, data properties, and
  * optionally color/size/shape handling. This class can only be created using
  * the {@link org.knime.core.data.DataColumnSpecCreator} within this package.
- * 
+ *
  * @see DataColumnSpecCreator
  * @see DataTableSpec
- * 
+ *
  * @author Michael Berthold, University of Konstanz
- * 
+ *
  */
 public final class DataColumnSpec {
 
     /** Keeps the column name. */
     private final String m_name;
-    
-    /** Names array of sub elements such as bit vector positions or 
+
+    /** Names array of sub elements such as bit vector positions or
      * array types. By default contains m_name in an array of length 1.
      * We use a unmodifiable list here, this member is non-null.
      */
@@ -107,7 +107,7 @@ public final class DataColumnSpec {
 
     /** Config key for the column name. */
     private static final String CFG_COLUMN_NAME = "column_name";
-    
+
     /** Config key for the element names. */
     private static final String CFG_ELEMENT_NAMES = "element_names";
 
@@ -133,9 +133,9 @@ public final class DataColumnSpec {
      * Constructor taking all properties of this column spec as arguments. It
      * creates a read-only <code>DataColumnSpec</code> and should only be
      * called from the {@link DataColumnSpecCreator} in this package.
-     * 
+     *
      * @param name the name of the column, must not be <code>null</code>
-     * @param elNames Names of sub elements (if any), 
+     * @param elNames Names of sub elements (if any),
      * must not be <code>null</code>, nor contain <code>null</code> elements.
      * @param type the type of the column, must not be <code>null</code>
      * @param domain the domain, must not be <code>null</code>
@@ -155,7 +155,7 @@ public final class DataColumnSpec {
             throw new NullPointerException("Do not init DataColumnSpec with"
                     + " null arguments!");
         }
-        List<String> elNamesAsList = 
+        List<String> elNamesAsList =
             Collections.unmodifiableList(Arrays.asList(elNames));
         if (elNamesAsList.contains(null)) {
             throw new NullPointerException(
@@ -173,13 +173,13 @@ public final class DataColumnSpec {
 
     /**
      * Returns the name of this column.
-     * 
+     *
      * @return the column name
      */
     public String getName() {
         return m_name;
     }
-    
+
     /**
      * Get names of sub elements such as bit vector positions or elements of
      * other vector data types. For non-vector types (most types are non-vector
@@ -188,7 +188,7 @@ public final class DataColumnSpec {
      * <code>BitVectorCell</code>) the elements of this list represent
      * identifiers for each of the different vector positions. There is,
      * however, no need that such a list is set.
-     * 
+     *
      * @return Names of the elements in a unmodifiable, random access list. The
      *         returned value will never be null, nor contain null elements. The
      *         length of the list may vary from 0 to any length.
@@ -199,10 +199,10 @@ public final class DataColumnSpec {
 
     /**
      * Returns the column type which is a subclass of {@link DataType}.
-     * 
+     *
      * @return the <code>DataType</code> of this column; all data cells of
      *         this column are type-castable to its native type
-     * 
+     *
      * @see org.knime.core.data.DataType
      * @see org.knime.core.data.DataCell
      */
@@ -213,7 +213,7 @@ public final class DataColumnSpec {
     /**
      * Returns the domain of this column spec including meta-information such as
      * bounds, possible values, etc.
-     * 
+     *
      * @return the domain of the column spec; can be empty, but never
      *         <code>null</code>
      */
@@ -224,7 +224,7 @@ public final class DataColumnSpec {
     /**
      * Returns the properties assigned to this column spec. These properties can
      * be seen as some sort of annotations to this column.
-     * 
+     *
      * @return the column's annotation properties, never <code>null</code>
      */
     public DataColumnProperties getProperties() {
@@ -234,7 +234,7 @@ public final class DataColumnSpec {
     /**
      * Returns the <code>SizeHandler</code> defined on this column, if
      * available. Otherwise <code>null</code> will be returned.
-     * 
+     *
      * @return attached <code>SizeHandler</code> or <code>null</code>
      */
     public SizeHandler getSizeHandler() {
@@ -244,7 +244,7 @@ public final class DataColumnSpec {
     /**
      * Returns the <code>ShapeHandler</code> defined on this column, if
      * available. Otherwise <code>null</code> will be returned.
-     * 
+     *
      * @return atached <code>ShapeHandler</code> or <code>null</code>
      */
     public ShapeHandler getShapeHandler() {
@@ -254,23 +254,23 @@ public final class DataColumnSpec {
     /**
      * Returns the <code>ColorHandler</code> defined on this column, if
      * available. Otherwise <code>null</code> will be returned.
-     * 
+     *
      * @return attached <code>ColorHandler</code> or <code>null</code>
      */
     public ColorHandler getColorHandler() {
         return m_colorHandler;
     }
-    
+
     /**
      * Two <code>DataColumnSpec</code>s are equal if they have the same
      * column name and type. Domain info, properties, and handlers are not
-     * considered during the comparison. 
-     * 
-     * @param cspec another <code>DataColumnSpec</code> to compare this column 
+     * considered during the comparison.
+     *
+     * @param cspec another <code>DataColumnSpec</code> to compare this column
      *              to
      * @return <code>true</code> if both have the same column name and type,
      *          otherwise <code>false</code>
-     * 
+     *
      * @see java.lang.Object#equals(java.lang.Object)
      */
     public boolean equalStructure(final DataColumnSpec cspec) {
@@ -280,14 +280,14 @@ public final class DataColumnSpec {
         if (cspec == null) {
             return false;
         }
-        return getName().equals(cspec.getName()) 
+        return getName().equals(cspec.getName())
                 && getType().equals(cspec.getType());
     }
-    
+
     /**
-     * Two <code>DataColumnSpec</code>s are equal, if the name, type, 
+     * Two <code>DataColumnSpec</code>s are equal, if the name, type,
      * properties, domain, all property handlers, and element names are equal.
-     * 
+     *
      * @param o the <code>DataColumnSpec</code> to check equality
      * @return <code>true</code> if both objects are equal, otherwise
      *      <code>false</code>
@@ -311,7 +311,7 @@ public final class DataColumnSpec {
             && equalsHandlers(m_sizeHandler, cspec.m_sizeHandler)
             && equalsHandlers(m_shapeHandler, cspec.m_shapeHandler);
     }
-    
+
     /** @return helper method that compares two <code>PropertyHandler</code>s */
     private boolean equalsHandlers(
             final PropertyHandler h1, final PropertyHandler h2) {
@@ -323,7 +323,7 @@ public final class DataColumnSpec {
 
     /**
      * The hash code is computed based on the hash code of column name and type.
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -332,26 +332,26 @@ public final class DataColumnSpec {
 
     /**
      * Returns a string summary of this column spec including name and type.
-     * 
+     *
      * @return a string summary of this column spec with column name and type
      */
     @Override
     public String toString() {
-        return "name=" + getName() + ",type=" + getType();
+        return getName() + " (" + getType() + ")";
     }
 
     /**
      * Saves name, type, domain, and properties and - if available - color,
      * size, and shape handler to the given <code>ConfigWO</code>.
-     * 
+     *
      * @param config write properties into
      * @throws NullPointerException if the config object is <code>null</code>
      */
     public void save(final ConfigWO config) {
         config.addString(CFG_COLUMN_NAME, m_name);
-        if (m_elementNames.size() != 1 
+        if (m_elementNames.size() != 1
                 || !m_name.equals(m_elementNames.get(0))) {
-            config.addStringArray(CFG_ELEMENT_NAMES, 
+            config.addStringArray(CFG_ELEMENT_NAMES,
                     m_elementNames.toArray(new String[m_elementNames.size()]));
         }
         m_type.save(config.addConfig(CFG_COLUMN_TYPE));
@@ -373,7 +373,7 @@ public final class DataColumnSpec {
      * <code>ConfigRO</code> and - if available - size, shape, and color
      * handler. Returns a new <code>DataColumnSpec</code> object initialized
      * with the information read.
-     * 
+     *
      * @param config to read properties from
      * @return a new column spec object
      * @throws InvalidSettingsException if one of the non-optional properties is
