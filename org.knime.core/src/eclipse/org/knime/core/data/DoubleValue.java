@@ -105,7 +105,7 @@ public interface DoubleValue extends DataValue {
          */
         @Override
         public String getName() {
-            return "Real numbers";
+            return "Double numbers";
         }
 
         /**
