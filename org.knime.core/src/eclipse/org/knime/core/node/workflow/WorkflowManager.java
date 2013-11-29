@@ -2597,6 +2597,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 //                                   snc.getNode().setPauseLoopExecution(false);
                                 }
                             } catch (IllegalLoopException ile) {
+                                LOGGER.error(ile.getMessage(), ile);
                                 latestNodeMessage = new NodeMessage(NodeMessage.Type.ERROR, ile.getMessage());
                                 success = false;
                             }
