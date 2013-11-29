@@ -45,45 +45,92 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Nov 28, 2013 by Patrick Winter, KNIME.com AG, Zurich, Switzerland
  */
 package org.knime.base.node.meta.looper;
 
-import javax.swing.JCheckBox;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
-/**
- *
- * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
+/** Abstract class for Loop End node settings.
+ * @author Thorsten Meinl, KNIME.com AG, Zurich, Switzerland
+ * @since 2.9
  */
-public class LoopEndNodeDialog extends AbstractLoopEndNodeDialog<LoopEndNodeSettings> {
+public class AbstractLoopEndNodeSettings {
 
-    private final JCheckBox m_ignoreEmptyTables = new JCheckBox("Ignore empty input tables");
+    private boolean m_addIterationColumn = true;
+
+    /** @since 2.3 */
+    private boolean m_uniqueRowIDs = true;
 
     /**
      *
      */
-    public LoopEndNodeDialog() {
-        super(new LoopEndNodeSettings());
-        addComponent(m_ignoreEmptyTables);
+    public AbstractLoopEndNodeSettings() {
+        super();
     }
 
     /**
-     * {@inheritDoc}
-     * @since 2.9
+     * Sets if row keys are made unique by adding the iteration number.
+     *
+     * @param b <code>true</code> if the iteration number is added,
+     *            <code>false</code> otherwise
+     * @since 2.3
      */
-    @Override
-    protected void addToSettings(final LoopEndNodeSettings settings) {
-        settings.ignoreEmptyTables(m_ignoreEmptyTables.isSelected());
+    public void uniqueRowIDs(final boolean b) {
+        m_uniqueRowIDs = b;
     }
 
     /**
-     * {@inheritDoc}
-     * @since 2.9
+     * Returns if row keys are made unique by adding the iteration number.
+     *
+     * @return <code>true</code> if the iteration number is added,
+     *         <code>false</code> otherwise
+     * @since 2.3
      */
-    @Override
-    protected void loadFromSettings(final LoopEndNodeSettings settings) {
-        m_ignoreEmptyTables.setSelected(settings.ignoreEmptyTables());
+    public boolean uniqueRowIDs() {
+        return m_uniqueRowIDs;
     }
 
+    /**
+     * Sets if a column containing the iteration number should be appended to
+     * the output table.
+     *
+     * @param add <code>true</code> if a column should be added,
+     *            <code>false</code> otherwise
+     */
+    public void addIterationColumn(final boolean add) {
+        m_addIterationColumn = add;
+    }
+
+    /**
+     * Returns if a column containing the iteration number should be appended to
+     * the output table.
+     *
+     * @return <code>true</code> if a column should be added, <code>false</code>
+     *         otherwise
+     */
+    public boolean addIterationColumn() {
+        return m_addIterationColumn;
+    }
+
+    /**
+     * Writes the settings into the node settings object.
+     *
+     * @param settings a node settings object
+     */
+    public void saveSettings(final NodeSettingsWO settings) {
+        settings.addBoolean("addIterationColumn", m_addIterationColumn);
+        settings.addBoolean("uniqueRowIDs", m_uniqueRowIDs);
+    }
+
+    /**
+     * Loads the settings from the node settings object.
+     *
+     * @param settings a node settings object
+     */
+    public void loadSettings(final NodeSettingsRO settings) {
+        m_addIterationColumn = settings.getBoolean("addIterationColumn", true);
+        m_uniqueRowIDs = settings.getBoolean("uniqueRowIDs", true);
+    }
 
 }

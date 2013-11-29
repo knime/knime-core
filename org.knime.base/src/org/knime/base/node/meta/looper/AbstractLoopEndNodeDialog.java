@@ -45,66 +45,109 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   15.05.2009 (meinl): created
  */
 package org.knime.base.node.meta.looper;
 
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+
+import javax.swing.JCheckBox;
+import javax.swing.JPanel;
+
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-
+import org.knime.core.node.NotConfigurableException;
 
 /**
- * This class holds the settings for the generic loop end node.
+ * This is the dialog for the loop end node.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @since 2.9
+ * @param <T> type of settings model
  */
-public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
+public abstract class AbstractLoopEndNodeDialog<T extends AbstractLoopEndNodeSettings> extends NodeDialogPane {
 
-    /** @since 2.9 */
-    private boolean m_ignoreEmptyTables = true;
+    private final JCheckBox m_addIterationColumn = new JCheckBox("Add iteration column");
+    private final JCheckBox m_uniqueRowIDs = new JCheckBox("Uniquify row IDs");
+
+    private final T m_settings;
+
+    private GridBagConstraints m_gbc;
+
+    private JPanel m_panel;
 
     /**
-     * Sets if iterations with empty tables are ignored in the output.
+     * Creates a new dialog.
+     * @param settings a new settings object
+     */
+    public AbstractLoopEndNodeDialog(final T settings) {
+        m_settings = settings;
+        m_panel = new JPanel(new GridBagLayout());
+
+        m_gbc = new GridBagConstraints();
+
+        m_gbc.gridx = 0;
+        m_gbc.gridy = 0;
+        m_gbc.anchor = GridBagConstraints.WEST;
+        m_gbc.insets = new Insets(0, 0, 5, 0);
+        m_panel.add(m_addIterationColumn, m_gbc);
+        m_gbc.gridy++;
+        m_panel.add(m_uniqueRowIDs, m_gbc);
+
+        addTab("Standard settings", m_panel);
+    }
+
+    /**
+     * Adds the given component to the panel.
      *
-     * @param ignore <code>true</code> empty tables will be ignored,
-     *               <code>false</code> empty tables that have different specs will cause an exception
+     * @param component The component to add
      * @since 2.9
      */
-    public void ignoreEmptyTables(final boolean ignore) {
-        m_ignoreEmptyTables = ignore;
+    protected void addComponent(final Component component) {
+        m_gbc.gridy++;
+        m_panel.add(component, m_gbc);
     }
 
     /**
-     * Returns if iterations with empty tables are ignored in the output.
-     *
-     * @return <code>true</code> empty tables will be ignored,
-     *         <code>false</code> empty tables that have different specs will cause an exception
-     * @since 2.9
-     */
-    public boolean ignoreEmptyTables() {
-        return m_ignoreEmptyTables;
-    }
-
-    /**
-     * Writes the settings into the node settings object.
-     *
-     * @param settings a node settings object
+     * {@inheritDoc}
      */
     @Override
-    public void saveSettings(final NodeSettingsWO settings) {
-        super.saveSettings(settings);
-        settings.addBoolean("ignoreEmptyTables", m_ignoreEmptyTables);
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        m_settings.addIterationColumn(m_addIterationColumn.isSelected());
+        m_settings.uniqueRowIDs(m_uniqueRowIDs.isSelected());
+        addToSettings(m_settings);
+        m_settings.saveSettings(settings);
     }
 
     /**
-     * Loads the settings from the node settings object.
+     * Enables subclasses to add there settings to the settings object.
      *
-     * @param settings a node settings object
+     * @param settings The settings object
+     */
+    protected abstract void addToSettings(final T settings);
+
+    /**
+     * {@inheritDoc}
      */
     @Override
-    public void loadSettings(final NodeSettingsRO settings) {
-        super.loadSettings(settings);
-        m_ignoreEmptyTables = settings.getBoolean("ignoreEmptyTables", false);
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
+        m_settings.loadSettings(settings);
+        m_addIterationColumn.setSelected(m_settings.addIterationColumn());
+        m_uniqueRowIDs.setSelected(m_settings.uniqueRowIDs());
+        loadFromSettings(m_settings);
     }
+
+    /**
+     * Enables subclasses to load there settings from the settings object.
+     *
+     * @param settings The settings object
+     */
+    protected abstract void loadFromSettings(final T settings);
+
 }

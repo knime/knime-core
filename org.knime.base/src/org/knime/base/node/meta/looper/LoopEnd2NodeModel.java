@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -51,11 +52,13 @@ import org.knime.core.node.workflow.LoopStartNodeTerminator;
  */
 public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
 
-    private BufferedDataContainer[] m_resultContainer;
+    private BufferedDataContainer[] m_resultContainer = new BufferedDataContainer[2];
 
-    private int m_count;
+    private int m_count = 0;
 
-    private final LoopEndNodeSettings m_settings = new LoopEndNodeSettings();
+    private final LoopEnd2NodeSettings m_settings = new LoopEnd2NodeSettings();
+
+    private BufferedDataTable[] m_emptyTable = new BufferedDataTable[2];
 
     /**
      * Creates a new model.
@@ -70,8 +73,19 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        return new DataTableSpec[]{createSpec(inSpecs[0]),
-                createSpec(inSpecs[1])};
+        final DataTableSpec spec0;
+        if (m_settings.ignoreEmptyTables1()) {
+            spec0 = null;
+        } else {
+            spec0 = createSpec(inSpecs[0]);
+        }
+        final DataTableSpec spec1;
+        if (m_settings.ignoreEmptyTables2()) {
+            spec1 = null;
+        } else {
+            spec1 = createSpec(inSpecs[1]);
+        }
+        return new DataTableSpec[]{spec0, spec1};
     }
 
     private DataTableSpec createSpec(final DataTableSpec inSpec) {
@@ -100,34 +114,51 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
                    + " to matching/corresponding loop start node. You"
                    + "are trying to create an infinite loop!");
         }
-        if (m_resultContainer == null) {
-            // first time we are getting to this: open container
-            m_resultContainer = new BufferedDataContainer[] {
-                    exec.createDataContainer(createSpec(inData[0]
-                            .getDataTableSpec())),
-                    exec.createDataContainer(createSpec(inData[1]
-                            .getDataTableSpec()))
-            };
+
+        if (m_settings.ignoreEmptyTables1() && inData[0].getRowCount() < 1) {
+            if (m_emptyTable[0] == null) {
+                m_emptyTable[0] = inData[0];
+            }
+        } else if (m_resultContainer[0] == null) {
+            m_resultContainer[0] = exec.createDataContainer(createSpec(inData[0]
+                    .getDataTableSpec()));
+        }
+        if (m_settings.ignoreEmptyTables2() && inData[1].getRowCount() < 1) {
+            if (m_emptyTable[1] == null) {
+                m_emptyTable[1] = inData[1];
+            }
+        } else if (m_resultContainer[1] == null) {
+            m_resultContainer[1] = exec.createDataContainer(createSpec(inData[1]
+                    .getDataTableSpec()));
         }
 
-        if (m_settings.addIterationColumn()) {
-            final IntCell currIterCell = new IntCell(m_count);
-            for (DataRow row : inData[0]) {
-                AppendedColumnRow newRow = new AppendedColumnRow(
-                       createNewRow(row), currIterCell);
-                m_resultContainer[0].addRowToTable(newRow);
+        final IntCell currIterCell = new IntCell(m_count);
+        if (!m_settings.ignoreEmptyTables1() || inData[0].getRowCount() > 0) {
+            checkSpec(createSpec(inData[0].getDataTableSpec()), m_resultContainer[0].getTableSpec());
+            if (m_settings.addIterationColumn()) {
+                for (DataRow row : inData[0]) {
+                    AppendedColumnRow newRow = new AppendedColumnRow(
+                           createNewRow(row), currIterCell);
+                    m_resultContainer[0].addRowToTable(newRow);
+                }
+            } else {
+                for (DataRow row : inData[0]) {
+                    m_resultContainer[0].addRowToTable(createNewRow(row));
+                }
             }
-            for (DataRow row : inData[1]) {
-                AppendedColumnRow newRow = new AppendedColumnRow(
-                        createNewRow(row), currIterCell);
-                m_resultContainer[1].addRowToTable(newRow);
-            }
-        } else {
-            for (DataRow row : inData[0]) {
-                m_resultContainer[0].addRowToTable(createNewRow(row));
-            }
-            for (DataRow row : inData[1]) {
-                m_resultContainer[1].addRowToTable(createNewRow(row));
+        }
+        if (!m_settings.ignoreEmptyTables2() || inData[1].getRowCount() > 0) {
+            checkSpec(createSpec(inData[1].getDataTableSpec()), m_resultContainer[1].getTableSpec());
+            if (m_settings.addIterationColumn()) {
+                for (DataRow row : inData[1]) {
+                    AppendedColumnRow newRow = new AppendedColumnRow(
+                           createNewRow(row), currIterCell);
+                    m_resultContainer[1].addRowToTable(newRow);
+                }
+            } else {
+                for (DataRow row : inData[1]) {
+                    m_resultContainer[1].addRowToTable(createNewRow(row));
+                }
             }
         }
 
@@ -135,12 +166,20 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
             ((LoopStartNodeTerminator)this.getLoopStartNode()).terminateLoop();
         if (terminateLoop) {
             // this was the last iteration - close container and continue
-            m_resultContainer[0].close();
-            m_resultContainer[1].close();
-            final BufferedDataTable[] outTables =
-                {m_resultContainer[0].getTable(),
-                    m_resultContainer[1].getTable()};
-            m_resultContainer = null;
+            final BufferedDataTable[] outTables = new BufferedDataTable[2];
+            if (m_settings.ignoreEmptyTables1() && m_resultContainer[0] == null) {
+                outTables[0] = m_emptyTable[0];
+            } else {
+                m_resultContainer[0].close();
+                outTables[0] = m_resultContainer[0].getTable();
+            }
+            if (m_settings.ignoreEmptyTables2() && m_resultContainer[1] == null) {
+                outTables[1] = m_emptyTable[1];
+            } else {
+                m_resultContainer[1].close();
+                outTables[1] = m_resultContainer[1].getTable();
+            }
+            m_resultContainer = new BufferedDataContainer[2];
             m_count = 0;
 
             return outTables;
@@ -148,6 +187,39 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
             continueLoop();
             m_count++;
             return new BufferedDataTable[2];
+        }
+    }
+
+    /**
+     * Checks if the two given specs are equal in structure and throws an exception if this is not the case.
+     *
+     * @param spec1 The spec to check
+     * @param spec2 The spec to check against
+     * @throws IllegalArgumentException If the two specs are not equal in structure
+     */
+    private void checkSpec(final DataTableSpec spec1, final DataTableSpec spec2) throws IllegalArgumentException {
+        if (!spec1
+                .equalStructure(spec2)) {
+            StringBuilder error =
+                    new StringBuilder(
+                            "Input table's structure differs from reference "
+                                    + "(first iteration) table: ");
+            if (spec1.getNumColumns() != spec2.getNumColumns()) {
+                error.append("different column counts ");
+                error.append(spec1.getNumColumns());
+                error.append(" vs. ").append(spec2.getNumColumns());
+            } else {
+                for (int i = 0; i < spec1.getNumColumns(); i++) {
+                    DataColumnSpec inCol = spec1.getColumnSpec(i);
+                    DataColumnSpec predCol = spec2.getColumnSpec(i);
+                    if (!inCol.equalStructure(predCol)) {
+                        error.append("Column ").append(i).append(" [");
+                        error.append(inCol).append("] vs. [");
+                        error.append(predCol).append("]");
+                    }
+                }
+            }
+            throw new IllegalArgumentException(error.toString());
         }
     }
 
@@ -185,7 +257,7 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
      */
     @Override
     protected void reset() {
-        m_resultContainer = null;
+        m_resultContainer = new BufferedDataContainer[2];
         m_count = 0;
     }
 
@@ -213,7 +285,7 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        LoopEndNodeSettings s = new LoopEndNodeSettings();
+        AbstractLoopEndNodeSettings s = new LoopEndNodeSettings();
         s.loadSettings(settings);
     }
 }

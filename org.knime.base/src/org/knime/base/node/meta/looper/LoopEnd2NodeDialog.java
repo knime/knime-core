@@ -54,36 +54,38 @@ import javax.swing.JCheckBox;
 /**
  *
  * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * @since 2.9
  */
-public class LoopEndNodeDialog extends AbstractLoopEndNodeDialog<LoopEndNodeSettings> {
+public class LoopEnd2NodeDialog extends AbstractLoopEndNodeDialog<LoopEnd2NodeSettings> {
 
-    private final JCheckBox m_ignoreEmptyTables = new JCheckBox("Ignore empty input tables");
+    private final JCheckBox m_ignoreEmptyTables1 = new JCheckBox("Ignore empty input tables at port 1");
+    private final JCheckBox m_ignoreEmptyTables2 = new JCheckBox("Ignore empty input tables at port 2");
 
     /**
      *
      */
-    public LoopEndNodeDialog() {
-        super(new LoopEndNodeSettings());
-        addComponent(m_ignoreEmptyTables);
+    public LoopEnd2NodeDialog() {
+        super(new LoopEnd2NodeSettings());
+        addComponent(m_ignoreEmptyTables1);
+        addComponent(m_ignoreEmptyTables2);
     }
 
     /**
      * {@inheritDoc}
-     * @since 2.9
      */
     @Override
-    protected void addToSettings(final LoopEndNodeSettings settings) {
-        settings.ignoreEmptyTables(m_ignoreEmptyTables.isSelected());
+    protected void addToSettings(final LoopEnd2NodeSettings settings) {
+        settings.ignoreEmptyTables1(m_ignoreEmptyTables1.isSelected());
+        settings.ignoreEmptyTables2(m_ignoreEmptyTables2.isSelected());
     }
 
     /**
      * {@inheritDoc}
-     * @since 2.9
      */
     @Override
-    protected void loadFromSettings(final LoopEndNodeSettings settings) {
-        m_ignoreEmptyTables.setSelected(settings.ignoreEmptyTables());
+    protected void loadFromSettings(final LoopEnd2NodeSettings settings) {
+        m_ignoreEmptyTables1.setSelected(settings.ignoreEmptyTables1());
+        m_ignoreEmptyTables2.setSelected(settings.ignoreEmptyTables2());
     }
-
 
 }

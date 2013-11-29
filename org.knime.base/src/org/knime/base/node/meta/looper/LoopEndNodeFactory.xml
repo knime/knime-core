@@ -17,6 +17,9 @@
             the row IDs unique over all iterations. If unset, the incoming row keys are not altered. In this case you
             have to make sure that there are not duplicate row IDs in different iterations. Otherwise an error occurs.
         </option>
+        <option name="Ignore empty input tables">
+        	If this option is checked empty input tables and there structure are ignored and will not cause the node to fail.
+        </option>
     </fullDescription>
 
     <ports>

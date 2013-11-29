@@ -37,7 +37,7 @@ public class LoopEnd2NodeFactory extends NodeFactory<LoopEnd2NodeModel> {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new LoopEndNodeDialog();
+        return new LoopEnd2NodeDialog();
     }
 
     /**

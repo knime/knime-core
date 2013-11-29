@@ -55,35 +55,61 @@ import org.knime.core.node.NodeSettingsWO;
 
 
 /**
- * This class holds the settings for the generic loop end node.
+ * This class holds the settings for the generic loop end node (2 ports).
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @since 2.9
  */
-public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
+public class LoopEnd2NodeSettings extends AbstractLoopEndNodeSettings {
 
     /** @since 2.9 */
-    private boolean m_ignoreEmptyTables = true;
+    private boolean m_ignoreEmptyTables1 = true;
+
+    /** @since 2.9 */
+    private boolean m_ignoreEmptyTables2 = true;
 
     /**
-     * Sets if iterations with empty tables are ignored in the output.
+     * Sets if iterations with empty tables are ignored in the first output port.
      *
      * @param ignore <code>true</code> empty tables will be ignored,
      *               <code>false</code> empty tables that have different specs will cause an exception
      * @since 2.9
      */
-    public void ignoreEmptyTables(final boolean ignore) {
-        m_ignoreEmptyTables = ignore;
+    public void ignoreEmptyTables1(final boolean ignore) {
+        m_ignoreEmptyTables1 = ignore;
     }
 
     /**
-     * Returns if iterations with empty tables are ignored in the output.
+     * Returns if iterations with empty tables are ignored in the first output port.
      *
      * @return <code>true</code> empty tables will be ignored,
      *         <code>false</code> empty tables that have different specs will cause an exception
      * @since 2.9
      */
-    public boolean ignoreEmptyTables() {
-        return m_ignoreEmptyTables;
+    public boolean ignoreEmptyTables1() {
+        return m_ignoreEmptyTables1;
+    }
+
+    /**
+     * Sets if iterations with empty tables are ignored in the second output port.
+     *
+     * @param ignore <code>true</code> empty tables will be ignored,
+     *               <code>false</code> empty tables that have different specs will cause an exception
+     * @since 2.9
+     */
+    public void ignoreEmptyTables2(final boolean ignore) {
+        m_ignoreEmptyTables2 = ignore;
+    }
+
+    /**
+     * Returns if iterations with empty tables are ignored in the second output port.
+     *
+     * @return <code>true</code> empty tables will be ignored,
+     *         <code>false</code> empty tables that have different specs will cause an exception
+     * @since 2.9
+     */
+    public boolean ignoreEmptyTables2() {
+        return m_ignoreEmptyTables2;
     }
 
     /**
@@ -94,7 +120,8 @@ public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
     @Override
     public void saveSettings(final NodeSettingsWO settings) {
         super.saveSettings(settings);
-        settings.addBoolean("ignoreEmptyTables", m_ignoreEmptyTables);
+        settings.addBoolean("ignoreEmptyTables1", m_ignoreEmptyTables1);
+        settings.addBoolean("ignoreEmptyTables2", m_ignoreEmptyTables2);
     }
 
     /**
@@ -105,6 +132,7 @@ public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
     @Override
     public void loadSettings(final NodeSettingsRO settings) {
         super.loadSettings(settings);
-        m_ignoreEmptyTables = settings.getBoolean("ignoreEmptyTables", false);
+        m_ignoreEmptyTables1 = settings.getBoolean("ignoreEmptyTables1", true);
+        m_ignoreEmptyTables2 = settings.getBoolean("ignoreEmptyTables2", true);
     }
 }
