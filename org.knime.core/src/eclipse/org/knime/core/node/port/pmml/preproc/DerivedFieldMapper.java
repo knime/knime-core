@@ -256,6 +256,8 @@ public class DerivedFieldMapper {
         } else if (pmml.getTreeModelArray().length > 0) {
             localTrans = pmml.getTreeModelArray(0)
                     .getLocalTransformations();
+        } else if (pmml.sizeOfRuleSetModelArray() > 0) {
+            localTrans = pmml.getRuleSetModelArray(0).getLocalTransformations();
         }
         if (localTrans != null) {
             derivedFields.addAll(Arrays.asList(

@@ -103,6 +103,10 @@ import org.w3c.dom.Node;
  * @author Gabor Bakos
  */
 public class PMMLRuleSetPredictorNodeModel extends NodeModel {
+    private static final int MODEL_INDEX = 0;
+
+    private static final int DATA_INDEX = 1;
+
     static final String CFGKEY_OUTPUT_COLUMN = "output column";
 
     static final String DEFAULT_OUTPUT_COLUMN = "prediction";
@@ -153,7 +157,7 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
      * Constructor for the node model.
      */
     protected PMMLRuleSetPredictorNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, PMMLPortObject.TYPE}, new PortType[]{BufferedDataTable.TYPE});
+        super(new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE});
     }
 
     /**
@@ -161,22 +165,31 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
-        PMMLPortObject obj = (PMMLPortObject)inData[1];
-        ColumnRearranger rearranger = createColumnRearranger(obj, (DataTableSpec)inData[0].getSpec(), exec);
-        BufferedDataTable table = exec.createColumnRearrangeTable((BufferedDataTable)inData[0], rearranger, exec);
+        PMMLPortObject obj = (PMMLPortObject)inData[MODEL_INDEX];
+        BufferedDataTable data = (BufferedDataTable)inData[DATA_INDEX];
+        ColumnRearranger rearranger = createColumnRearranger(obj, data.getSpec(), exec);
+        BufferedDataTable table = exec.createColumnRearrangeTable(data, rearranger, exec);
         if (m_doReplaceColumn.getBooleanValue()) {
             DataTableSpec preSpec = table.getSpec();
             DataColumnSpec[] columns = new DataColumnSpec[preSpec.getNumColumns()];
             for (int i = columns.length; i-- > 0;) {
                 columns[i] = preSpec.getColumnSpec(i);
             }
-            int columnIndex =
-                ((BufferedDataTable)inData[0]).getSpec().findColumnIndex(m_replaceColumn.getStringValue());
-            DataColumnSpecCreator creator = new DataColumnSpecCreator(columns[columnIndex]);
-            creator.setName(m_replaceColumn.getStringValue());
-            columns[columnIndex] = creator.createSpec();
-            DataTableSpec newSpec = new DataTableSpec(columns);
-            table = exec.createSpecReplacerTable(table, newSpec);
+            int columnIndex = data.getSpec().findColumnIndex(m_replaceColumn.getStringValue());
+            if (m_addConfidence.getBooleanValue()) {
+                ColumnRearranger mover = new ColumnRearranger(table.getSpec());
+                //Move confidence to the end
+                mover.move(columnIndex, table.getSpec().getNumColumns());
+                //Move the result to its place
+                mover.move(table.getSpec().getNumColumns() - 2, columnIndex);
+                table = exec.createColumnRearrangeTable(table, mover, exec);
+            } else {
+                DataColumnSpecCreator creator = new DataColumnSpecCreator(columns[columnIndex]);
+                creator.setName(m_replaceColumn.getStringValue());
+                columns[columnIndex] = creator.createSpec();
+                DataTableSpec newSpec = new DataTableSpec(columns);
+                table = exec.createSpecReplacerTable(table, newSpec);
+            }
         }
         return new BufferedDataTable[]{table};
     }
@@ -206,10 +219,11 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         final List<PMMLRuleTranslator.Rule> rules = translator.getRules();
         ColumnRearranger ret = new ColumnRearranger(spec);
         final List<DataColumnSpec> targetCols = obj.getSpec().getTargetCols();
-        final DataType dataType = targetCols.isEmpty() ? StringCell.TYPE : targetCols.get(0).getType();//createType(m_outputColumnType.getStringValue());
+        // createType(m_outputColumnType.getStringValue());
+        final DataType dataType = targetCols.isEmpty() ? StringCell.TYPE : targetCols.get(0).getType();
         DataColumnSpecCreator specCreator =
             new DataColumnSpecCreator(m_doReplaceColumn.getBooleanValue() ? m_replaceColumn.getStringValue()
-                : m_outputColumn.getStringValue(), dataType);
+                : DataTableSpec.getUniqueColumnName(spec, m_outputColumn.getStringValue()), dataType);
         Set<DataCell> outcomes = new LinkedHashSet<DataCell>();
         for (Rule rule : rules) {
             DataCell outcome;
@@ -252,18 +266,18 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
         if (m_addConfidence.getBooleanValue()) {
             specs =
                 new DataColumnSpec[]{
-                    new DataColumnSpecCreator(m_confidenceColumn.getStringValue(), DoubleCell.TYPE).createSpec(),
-                    colSpec};
+                    new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(ret.createSpec(),
+                        m_confidenceColumn.getStringValue()), DoubleCell.TYPE).createSpec(), colSpec};
         } else {
             specs = new DataColumnSpec[]{colSpec};
         }
         final int oldColumnIndex =
             m_doReplaceColumn.getBooleanValue() ? ret.indexOf(m_replaceColumn.getStringValue()) : -1;
         ret.append(new AbstractCellFactory(true, specs) {
-            List<String> values;
+            private final List<String> m_values;
             {
                 Map<String, List<String>> dd = translator.getDataDictionary();
-                values = dd.get(targetCols.get(0).getName());
+                m_values = dd.get(targetCols.get(0).getName());
             }
 
             /**
@@ -314,7 +328,7 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
              */
             private Pair<DataCell, Double> selectWeightedSum(final DataRow row) {
                 final Map<String, Double> scoreToSumWeight = new LinkedHashMap<String, Double>();
-                for (String val : values) {
+                for (String val : m_values) {
                     scoreToSumWeight.put(val, 0.0);
                 }
                 int matchedRuleCount = 0;
@@ -459,9 +473,9 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        DataTableSpec original = (DataTableSpec)inSpecs[0];
+        DataTableSpec original = (DataTableSpec)inSpecs[DATA_INDEX];
         ColumnRearranger rearranger = new ColumnRearranger(original);
-        PMMLPortObjectSpec portObjectSpec = (PMMLPortObjectSpec)inSpecs[1];
+        PMMLPortObjectSpec portObjectSpec = (PMMLPortObjectSpec)inSpecs[MODEL_INDEX];
         List<DataColumnSpec> activeColumnList = portObjectSpec.getActiveColumnList();
         List<DataColumnSpec> notFound = new ArrayList<DataColumnSpec>();
         for (DataColumnSpec dataColumnSpec : activeColumnList) {
@@ -490,7 +504,9 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
             String col = m_replaceColumn.getStringValue();
             specCreator = new DataColumnSpecCreator(col, dataType);
         } else {
-            specCreator = new DataColumnSpecCreator(m_outputColumn.getStringValue(), dataType);
+            specCreator =
+                new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(original, m_outputColumn.getStringValue()),
+                    dataType);
         }
         SingleCellFactory dummy = new SingleCellFactory(specCreator.createSpec()) {
             /**
@@ -502,8 +518,8 @@ public class PMMLRuleSetPredictorNodeModel extends NodeModel {
             }
         };
         if (m_addConfidence.getBooleanValue()) {
-            rearranger.append(new SingleCellFactory(new DataColumnSpecCreator(m_confidenceColumn.getStringValue(),
-                DoubleCell.TYPE).createSpec()) {
+            rearranger.append(new SingleCellFactory(new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(
+                rearranger.createSpec(), m_confidenceColumn.getStringValue()), DoubleCell.TYPE).createSpec()) {
                 @Override
                 public DataCell getCell(final DataRow row) {
                     throw new IllegalStateException();

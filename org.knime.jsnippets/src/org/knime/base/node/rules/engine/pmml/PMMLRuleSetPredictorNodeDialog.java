@@ -111,7 +111,7 @@ public class PMMLRuleSetPredictorNodeDialog extends NodeDialogPane {
         @SuppressWarnings("unchecked")
         DialogComponentColumnNameSelection colSelection =
             new DialogComponentColumnNameSelection(PMMLRuleSetPredictorNodeModel.createReplaceColumn(),
-                "", 0, DoubleValue.class, StringValue.class, BooleanValue.class);
+                "", 1, DoubleValue.class, StringValue.class, BooleanValue.class);
         m_replacedColumn = colSelection;
         JPanel newColumnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         newColumnPanel.add(m_newColumn);

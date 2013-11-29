@@ -11,7 +11,7 @@
 	<fullDescription>
 		<intro>
 			This node takes a data table and a PMML model for
-			<a href="http://www.dmg.org/v4-1/RuleSet.html">RuleSet</a>s, e.g. create by the <i>PMML Ruleset Editor</i> node,
+			<a href="http://www.dmg.org/v4-1/RuleSet.html">RuleSet</a>s, e.g. created by the <i>PMML Ruleset Editor</i> node,
 			and predicts a new column according to the rules.
 		</intro>
 
@@ -23,9 +23,9 @@
 	</fullDescription>
 
 	<ports>
-		<inPort index="0" name="Table">An input table with compatible columns to the PMML rules.
+		<inPort index="0" name="RuleSet Model">PMML rules to apply.
 		</inPort>
-		<inPort index="1" name="RuleSet Model">PMML rules to apply.
+		<inPort index="1" name="Table">An input table with compatible columns to the PMML rules.
 		</inPort>
 		<outPort index="0" name="Classified values">The table with the column with predicted values.
 		</outPort>

@@ -316,8 +316,7 @@ public final class PMMLPortObject implements PortObject {
      * {@link PMMLContentHandler#addPMMLModel(DocumentFragment,
      * PMMLPortObjectSpec)} method.
      * Only {@link PMMLModelType} elements can be added.
-     *
-     * @param model the model fragment to add
+     * @param handler PMML content handler
      * @throws SAXException if the pmml model could not be added
      */
     @Deprecated
@@ -502,6 +501,12 @@ public final class PMMLPortObject implements PortObject {
             if (localTrans == null) {
                 localTrans = model.addNewLocalTransformations();
             }
+        } else if (pmml.sizeOfRuleSetModelArray() > 0) {
+            RuleSetModel model = pmml.getRuleSetModelArray(0);
+            localTrans = model.getLocalTransformations();
+            if (localTrans == null) {
+                localTrans = model.addNewLocalTransformations();
+            }
         }
         if (localTrans != null) {
             DerivedField[] derivedFields = appendDerivedFields(
@@ -625,8 +630,7 @@ public final class PMMLPortObject implements PortObject {
     * @throws IOException if the file cannot be found
     */
     @Deprecated
-    public void loadFrom(final PMMLPortObjectSpec spec, final InputStream in,
-            @SuppressWarnings("unused") final String version)
+    public void loadFrom(final PMMLPortObjectSpec spec, final InputStream in, final String version)
             throws IOException, ParserConfigurationException, SAXException {
         // Version is ignored and only maintained due to compatibility reasons
         try {
