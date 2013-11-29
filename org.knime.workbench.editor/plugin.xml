@@ -598,6 +598,6 @@
             class="org.knime.workbench.nodemonitorview.NodeMonitorView"
             icon="icons/node_description.png"
             id="org.knime.workbench.nodemonitorview.nodemonitorview"
-            name="KNIME Node Monitor"/>
+            name="Node Monitor"/>
    </extension>
 </plugin>
