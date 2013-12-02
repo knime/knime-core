@@ -49,18 +49,20 @@
  */
 package org.knime.core.node.util.filter.column;
 
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.filter.InputFilter;
+import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
 /**
  * Configuration to the {@link TypeFilterPanelImpl}.
@@ -77,14 +79,14 @@ final class TypeFilterConfigurationImpl implements Cloneable {
 
     private LinkedHashMap<String, Boolean> m_selections = new LinkedHashMap<String, Boolean>();
 
-    private final InputFilter<Class<? extends DataValue>> m_filter;
+    private final InputFilter<DataColumnSpec> m_filter;
 
     /**
      * Creates a configuration to the DataValue filter panel.
      *
      * @param filter The filter to use, if null no filter will be applied.
      */
-    TypeFilterConfigurationImpl(final InputFilter<Class<? extends DataValue>> filter) {
+    TypeFilterConfigurationImpl(final InputFilter<DataColumnSpec> filter) {
         m_filter = filter;
     }
 
@@ -131,22 +133,34 @@ final class TypeFilterConfigurationImpl implements Cloneable {
     }
 
     /**
-     * Applies this configuration to the given collection of data values.
+     * Applies this configuration to the column.
      *
-     * @param values The data values to check
-     * @return The set of values that were accepted
+     * @param columns The columns whose types to check
+     * @return The filter result
      */
-    Set<Class<? extends DataValue>> applyTo(final Collection<Class<? extends DataValue>> values) {
-        Set<Class<? extends DataValue>> includes = new HashSet<Class<? extends DataValue>>();
-        for (Class<? extends DataValue> value : values) {
-            if (m_filter == null || m_filter.include(value)) {
-                String key = value.getName();
-                if (m_selections.containsKey(key) && m_selections.get(key)) {
-                    includes.add(value);
+    FilterResult applyTo(final Iterable<DataColumnSpec> columns) {
+        List<String> includes = new ArrayList<String>();
+        List<String> excludes = new ArrayList<String>();
+        for (DataColumnSpec column : columns) {
+            if (m_filter == null || m_filter.include(column)) {
+                final Class<? extends DataValue> preferredValueClass = column.getType().getPreferredValueClass();
+                boolean toInclude = false;
+                if (preferredValueClass != null) {
+                    String key = preferredValueClass.getName();
+                    if (m_selections.containsKey(key) && m_selections.get(key)) {
+                        toInclude = true;
+                    }
                 }
+                if (toInclude) {
+                    includes.add(column.getName());
+                } else {
+                    excludes.add(column.getName());
+                }
+            } else {
+                excludes.add(column.getName());
             }
         }
-        return includes;
+        return new FilterResult(includes, excludes, Collections.<String>emptyList(), Collections.<String>emptyList());
     }
 
     /**

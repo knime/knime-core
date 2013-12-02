@@ -54,13 +54,9 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -79,6 +75,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.ExtensibleUtilityFactory;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.util.ViewUtils;
@@ -101,7 +98,7 @@ final class TypeFilterPanelImpl extends JPanel {
 
     private final JPanel m_selectionPanel;
 
-    private final InputFilter<Class<? extends DataValue>> m_filter;
+    private final InputFilter<DataColumnSpec> m_filter;
 
     private List<ChangeListener> m_listeners;
 
@@ -112,7 +109,7 @@ final class TypeFilterPanelImpl extends JPanel {
      *
      * @param filter The filter to use, if null no filter will be applied.
      */
-    TypeFilterPanelImpl(final InputFilter<Class<? extends DataValue>> filter) {
+    TypeFilterPanelImpl(final InputFilter<DataColumnSpec> filter) {
         m_filter = filter;
         m_selectionPanel = new JPanel(new GridLayout(0, 2));
         m_selections = new LinkedHashMap<String, JCheckBox>();
@@ -133,7 +130,7 @@ final class TypeFilterPanelImpl extends JPanel {
     void loadConfiguration(final TypeFilterConfigurationImpl config, final DataTableSpec spec) {
         clearTypes();
         addDataValues(DEFAULT_TYPES);
-        addDataValues(getDataValuesFromSpec(spec));
+        addDataColumns(spec);
         // copy to remove
         Map<String, Boolean> mapping = new LinkedHashMap<String, Boolean>(config.getSelections());
         for (Map.Entry<String, Boolean> entry : mapping.entrySet()) {
@@ -151,21 +148,6 @@ final class TypeFilterPanelImpl extends JPanel {
         }
     }
 
-    private Set<Class<? extends DataValue>> getDataValuesFromSpec(final DataTableSpec spec) {
-        if (spec == null) {
-            return Collections.emptySet();
-        }
-        Set<Class<? extends DataValue>> values = new LinkedHashSet<Class<? extends DataValue>>();
-        for (DataColumnSpec colspec : spec) {
-            final Class<? extends DataValue> preferredValueClass = colspec.getType().getPreferredValueClass();
-            if (preferredValueClass != null) {
-                values.add(preferredValueClass);
-            }
-        }
-        return values;
-    }
-
-
     void saveConfiguration(final TypeFilterConfigurationImpl config) {
         LinkedHashMap<String, Boolean> mapping = new LinkedHashMap<String, Boolean>();
         for (String key : m_selections.keySet()) {
@@ -175,13 +157,34 @@ final class TypeFilterPanelImpl extends JPanel {
     }
 
     /**
+     * Add columns to selection.
+     *
+     * @param columns The columns contained in the current data table.
+     */
+    void addDataColumns(final Iterable<DataColumnSpec> columns) {
+        for (DataColumnSpec column : columns) {
+            if (m_filter == null || m_filter.include(column)) {
+                Class<? extends DataValue> prefValueClass = column.getType().getPreferredValueClass();
+                if (prefValueClass != null && !m_selections.containsKey(prefValueClass.getName())) {
+                    UtilityFactory utilityFor = DataType.getUtilityFor(prefValueClass);
+                    if (utilityFor instanceof ExtensibleUtilityFactory) {
+                        ExtensibleUtilityFactory eu = (ExtensibleUtilityFactory)utilityFor;
+                        String label = eu.getName();
+                        String key = prefValueClass.getName();
+                        m_selections.put(key, addCheckBox(label, false));
+                    }
+                }
+            }
+        }
+    }
+    /**
      * Add data values to the selection.
      *
      * @param values The data values to add
      */
-    void addDataValues(final Collection<Class<? extends DataValue>> values) {
+    void addDataValues(final Iterable<Class<? extends DataValue>> values) {
         for (Class<? extends DataValue> value : values) {
-            if (m_filter == null || m_filter.include(value)) {
+            if (isIncludedByFilter(value)) {
                 if (value != null && !m_selections.containsKey(value.getName())) {
                     UtilityFactory utilityFor = DataType.getUtilityFor(value);
                     if (utilityFor instanceof ExtensibleUtilityFactory) {
@@ -193,6 +196,28 @@ final class TypeFilterPanelImpl extends JPanel {
                 }
             }
         }
+    }
+
+    /**
+     * @param value
+     * @return
+     */
+    private boolean isIncludedByFilter(final Class<? extends DataValue> valueClass) {
+        if (m_filter instanceof DataTypeColumnFilter) {
+            Class<? extends DataValue>[] filterClasses = ((DataTypeColumnFilter)m_filter).getFilterClasses();
+            final List<Class<? extends DataValue>> filterClassesAsList = Arrays.asList(filterClasses);
+            if (filterClassesAsList.contains(valueClass)) {
+                return true;
+            }
+            if (StringValue.class.equals(valueClass) && filterClassesAsList.contains(NominalValue.class)) {
+                // Often the filter is configured to include NominalValue, which is implemented by StringCell.
+                // Since the default type list only contains StringValue, which is often used as synonym for nominal
+                // values, we treat them as if they were the same
+                return true;
+            }
+            return false;
+        }
+        return true;
     }
 
     private void clearTypes() {

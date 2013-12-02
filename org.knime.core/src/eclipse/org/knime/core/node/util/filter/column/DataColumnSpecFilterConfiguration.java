@@ -51,13 +51,10 @@
 package org.knime.core.node.util.filter.column;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -128,11 +125,7 @@ public final class DataColumnSpecFilterConfiguration extends NameFilterConfigura
         final int filterEnableMask) {
         super(configRootName, filterEnableMask);
         m_filter = filter;
-        DataValueFilter valFilter = null;
-        if (m_filter != null && m_filter instanceof DataTypeColumnFilter) {
-            valFilter = new DataValueFilter(((DataTypeColumnFilter)m_filter).getFilterClasses());
-        }
-        m_typeConfig = new TypeFilterConfigurationImpl(valFilter);
+        m_typeConfig = new TypeFilterConfigurationImpl(filter);
         m_typeFilterEnabled = (filterEnableMask & FILTER_BY_DATATYPE) != 0;
     }
 
@@ -219,17 +212,7 @@ public final class DataColumnSpecFilterConfiguration extends NameFilterConfigura
      */
     public FilterResult applyTo(final DataTableSpec spec) {
         if (getType().equals(TypeFilterConfigurationImpl.TYPE)) {
-            Set<Class<? extends DataValue>> includes = m_typeConfig.applyTo(getDataValuesFromSpec(spec));
-            List<String> incls = new ArrayList<String>();
-            List<String> excls = new ArrayList<String>();
-            for (DataColumnSpec colspec : spec) {
-                if (includes.contains(colspec.getType().getPreferredValueClass())) {
-                    incls.add(colspec.getName());
-                } else {
-                    excls.add(colspec.getName());
-                }
-            }
-            return new FilterResult(incls, excls, new ArrayList<String>(), new ArrayList<String>());
+            return m_typeConfig.applyTo(spec);
         } else {
             String[] names = toFilteredStringArray(spec);
             return super.applyTo(names);
@@ -356,14 +339,6 @@ public final class DataColumnSpecFilterConfiguration extends NameFilterConfigura
             }
         }
         return acceptedInNames.toArray(new String[acceptedInNames.size()]);
-    }
-
-    private Set<Class<? extends DataValue>> getDataValuesFromSpec(final DataTableSpec spec) {
-        Set<Class<? extends DataValue>> values = new HashSet<Class<? extends DataValue>>();
-        for (DataColumnSpec colspec : spec) {
-            values.add(colspec.getType().getPreferredValueClass());
-        }
-        return values;
     }
 
 }

@@ -222,11 +222,7 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
     }
 
     private void init() {
-        DataValueFilter filter = null;
-        if (m_filter != null && m_filter instanceof DataTypeColumnFilter) {
-            filter = new DataValueFilter(((DataTypeColumnFilter)m_filter).getFilterClasses());
-        }
-        m_typePanel = new TypeFilterPanelImpl(filter);
+        m_typePanel = new TypeFilterPanelImpl(m_filter);
         m_typePanel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
