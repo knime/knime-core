@@ -73,13 +73,6 @@
                relationship="right"
                relative="org.eclipse.ui.editorss"/>
          <view
-               id="com.knime.enterprise.client.repositoryview.views.RemoteRepositoryView"
-               ratio="0.55"
-               relationship="bottom"
-               relative="org.knime.workbench.helpview"
-               visible="false">
-         </view>
-         <view
                closeable="true"
                id="org.knime.workbench.ui.favorites"
                moveable="true"
