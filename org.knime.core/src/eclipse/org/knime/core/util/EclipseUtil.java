@@ -67,7 +67,7 @@ public final class EclipseUtil {
         try {
             b = checkSDK();
         } catch (RuntimeException ex) {
-            NodeLogger.getLogger(EclipseUtil.class).error(
+            NodeLogger.getLogger("org.knime.core.util.EclipseUtil").error(
                 "Could not determine if we are run from the SDK: " + ex.getMessage(), ex);
             throw ex;
         } finally {
