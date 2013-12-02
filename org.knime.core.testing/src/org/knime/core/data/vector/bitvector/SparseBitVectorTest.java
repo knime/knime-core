@@ -890,6 +890,47 @@ public class SparseBitVectorTest extends TestCase {
         assertTrue(!bv256.intersects(bv130));
     }
 
+    public void testToBinaryString() {
+        SparseBitVector bv = new SparseBitVector("1F03");
+        assertEquals(bv.toBinaryString(), "0001111100000011");
+    }
+
+    public void testToHexString() {
+        SparseBitVector bv = new SparseBitVector("1F03");
+        assertEquals("1F03", bv.toHexString());
+
+        bv = new SparseBitVector("1F0329384abedf7cA7FC29FF0");
+        assertEquals("1F0329384ABEDF7CA7FC29FF0", bv.toHexString());
+
+        bv = new SparseBitVector("");
+        assertEquals("", bv.toHexString());
+
+        bv = new SparseBitVector(3);
+        bv.set(0);
+        bv.set(2);
+        assertEquals("5", bv.toHexString());
+
+        bv = new SparseBitVector(13L);
+        bv.set(8);
+        bv.set(3);
+        assertEquals("0108", bv.toHexString());
+
+        bv = new SparseBitVector("FFF");
+        assertEquals("FFF", bv.toHexString());
+
+        bv = new SparseBitVector("FFFF8888EEEEFFFF");
+        assertEquals("FFFF8888EEEEFFFF", bv.toHexString());
+
+        bv = new SparseBitVector("1FFFF8888EEEEFFFF");
+        assertEquals("1FFFF8888EEEEFFFF", bv.toHexString());
+
+        String hex = "E02008440A840140480081012400304040200432829D00102440110020265B20082C811354080040D80046A65806080" +
+                "502004031204000812483400000898010";
+        bv = new SparseBitVector(hex);
+        assertEquals(hex, bv.toHexString());
+    }
+
+
     /**
      * tests toString
      */
@@ -903,5 +944,4 @@ public class SparseBitVectorTest extends TestCase {
         assertEquals("{length=" + length + ", set bits=18, 700, 7645, 381966}", bv.toString());
 
     }
-
 }

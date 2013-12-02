@@ -866,41 +866,75 @@ public class SparseBitVector {
      * @return the hex representation of this bit vector.
      */
     public String toHexString() {
-        // TODO: needs to be optimized. No need to call get() for each bit.
+        if (m_lastIdx == -1) {
+            return "";
+        }
+
         // the number of bits we store in the string
-        long max = (int)Math.min(m_length, BitVectorValue.MAX_DISPLAY_BITS);
-        // compute number of hex characters, which come in blocks of 4!
-        final int nrHexChars = (int)(((max / 4 + 1) / 8 + 1) * 8);
-        assert (nrHexChars % 8 == 0);
-        assert (nrHexChars > (max / 4 + 1));
+        int max = (int)Math.min(m_length, BitVectorValue.MAX_DISPLAY_BITS);
         // reserve space for resulting string
-        final StringBuffer buf = new StringBuffer(nrHexChars);
-        for (long b = 0; b < max; b += 32) {
-            // process bits in chunks of 32 (= 8 chars)
-            for (int blockId = 7; blockId >= 0; blockId--) {
-                // go through the 8 blocks backwards
-                // convert block of 4 bits to one hex character
-                int i = 0;
-                for (int k = 0; k < 4; k++) {
-                    long bitIndex = b + k + (blockId * 4);
-                    if (bitIndex < max) {
-                        i += (1 << k) * (get(bitIndex) ? 1 : 0);
-                    }
+        final StringBuilder buf = new StringBuilder(max / 4 + 1);
+
+        // we process blocks of four bits
+        // the blockStartIndex is the highest of the four bits; it does not necessarily exist in the vector
+        long blockStartIndex = m_length - 1;
+
+        // a block starts every four bits, i.e. at index 3, 7, 11, ...
+        if ((blockStartIndex % 4) != 3) {
+            blockStartIndex = ((blockStartIndex / 4) + 1) * 4 - 1;
+        }
+        int tempVal = 0;
+        for (int k = m_lastIdx; k >= 0; k--) {
+            long bitIndex = m_idxStorage[k];
+            if (blockStartIndex - bitIndex >= 4) {
+                // there is at least a full hex character (i.e. four bits) between the last block and the current block
+                // => output the last hex value...
+                if (tempVal > 9) {
+                    buf.append((char) ('A' + tempVal - 10));
+                } else {
+                    buf.append((char) ('0' + tempVal));
                 }
-                assert (i >= 0 && i < 16);
-                int charI = i + '0';
-                if (charI > '9') {
-                    charI += ('A' - ('9' + 1));
+                tempVal = 0;
+
+                // ...and potentially add zeros if there are more than three zero bits between the two blocks
+                long zeros = (blockStartIndex - bitIndex) / 4 - 1;
+                for (int i = 0; i < zeros; i++) {
+                    buf.append('0');
                 }
-                // add character to string
-                buf.append((char)(charI));
+
+
+                // compute the start of the current block
+                if ((bitIndex % 4) != 3) {
+                    blockStartIndex = ((bitIndex / 4) + 1) * 4 - 1;
+                } else {
+                    blockStartIndex = bitIndex;
+                }
+                if (buf.length() >= max) {
+                    break;
+                }
             }
+
+            // set the value corresponding to the current bit index
+            tempVal += 1 << 3 - (blockStartIndex - bitIndex);
         }
+
+        // add the remaining hex character...
+        if (tempVal > 9) {
+            buf.append((char) ('A' + tempVal - 10));
+        } else if (tempVal > 0) {
+            buf.append((char) ('0' + tempVal));
+        }
+        // ... and possibly and missing zeros until the end
+        long zeros = (blockStartIndex + 1) / 4 - 1;
+        for (int i = 0; i < zeros; i++) {
+            buf.append('0');
+        }
+
         if (max < m_length) {
-            buf.append("...");
+            return buf.substring(0, max) + "...";
+        } else {
+            return buf.toString();
         }
-        // done, return hex representation
-        return buf.toString();
     }
 
     /**
@@ -916,10 +950,10 @@ public class SparseBitVector {
         // the number of bits we store in the string
         int max = (int)Math.min(m_length, BitVectorValue.MAX_DISPLAY_BITS);
 
-        StringBuilder result = new StringBuilder(max);
         if (max == 0) {
-            return result.toString();
+            return "";
         }
+        StringBuilder result = new StringBuilder(max);
 
         // TODO: might be faster to add sequences of '0's
         // of length bitIdx - m_idxStorage[storageIdx]

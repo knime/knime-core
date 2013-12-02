@@ -971,31 +971,36 @@ public class DenseBitVectorTest extends TestCase {
 
     public void testToHexString() {
         DenseBitVector bv = new DenseBitVector("1F03");
-        assertEquals(bv.toHexString(), "1F03");
+        assertEquals("1F03", bv.toHexString());
 
         bv = new DenseBitVector("1F0329384abedf7cA7FC29FF0");
-        assertEquals(bv.toHexString(), "1F0329384ABEDF7CA7FC29FF0");
+        assertEquals("1F0329384ABEDF7CA7FC29FF0", bv.toHexString());
 
         bv = new DenseBitVector("");
-        assertEquals(bv.toHexString(), "");
+        assertEquals("", bv.toHexString());
 
         bv = new DenseBitVector(3);
         bv.set(0);
         bv.set(2);
-        assertEquals(bv.toHexString(), "5");
+        assertEquals("5", bv.toHexString());
 
         bv = new DenseBitVector(13L);
         bv.set(8);
         bv.set(3);
-        assertEquals(bv.toHexString(), "0108");
+        assertEquals("0108", bv.toHexString());
 
         bv = new DenseBitVector("FFF");
-        assertEquals(bv.toHexString(), "FFF");
+        assertEquals("FFF", bv.toHexString());
 
         bv = new DenseBitVector("FFFF8888EEEEFFFF");
-        assertEquals(bv.toHexString(), "FFFF8888EEEEFFFF");
+        assertEquals("FFFF8888EEEEFFFF", bv.toHexString());
 
         bv = new DenseBitVector("1FFFF8888EEEEFFFF");
-        assertEquals(bv.toHexString(), "1FFFF8888EEEEFFFF");
+        assertEquals("1FFFF8888EEEEFFFF", bv.toHexString());
+
+        String hex = "E02008440A840140480081012400304040200432829D00102440110020265B20082C811354080040D80046A65806080" +
+        		"502004031204000812483400000898010";
+        bv = new DenseBitVector(hex);
+        assertEquals(hex, bv.toHexString());
     }
 }
