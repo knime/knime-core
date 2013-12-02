@@ -243,6 +243,23 @@ public class DecisionTreeNodeSplitNominalBinary extends
      * {@inheritDoc}
      */
     @Override
+    public DecisionTreeNode getWinnerNode(final DataCell cell, final DataRow row, final DataTableSpec spec) {
+        int childIndex = getIndexOfChild(cell);
+        if (childIndex >= 0) {
+            return super.getChildNodeAt(childIndex).getWinnerNode(row, spec);
+        }
+
+        LOGGER.error("Decision Tree Prediction failed."
+                + " Could not find branch for value '" + cell.toString()
+                + "' for attribute '" + getSplitAttr().toString() + "'."
+                + "Return Missing instead.");
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void addCoveredPattern(final DataCell cell, final DataRow row,
             final DataTableSpec spec, final double weight) throws Exception {
         // first add pattern to the branch that contains the cell's value
@@ -407,7 +424,7 @@ public class DecisionTreeNodeSplitNominalBinary extends
     @Override
     public void removeChildren(final Set<Integer> indices) {
        super.removeChildren(indices);
-       /* Additional processing is not needed for the binary case as the 
+       /* Additional processing is not needed for the binary case as the
         * learner would stop earlier and add a leave if on of the two branches
         * had not contained any data. */
     }

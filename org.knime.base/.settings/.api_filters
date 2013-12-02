@@ -162,6 +162,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/mine/decisiontree2/model/DecisionTreeNodeSplit.java" type="org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplit">
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplit"/>
+                <message_argument value="getWinnerNode(DataCell, DataRow, DataTableSpec)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/preproc/columnTrans/Many2OneColNodeModel.java" type="org.knime.base.node.preproc.columnTrans.Many2OneColNodeModel">
         <filter id="338886760">
             <message_arguments>

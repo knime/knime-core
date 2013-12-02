@@ -270,10 +270,33 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DecisionTreeNode getWinnerNode(final DataRow row, final DataTableSpec spec) {
+        assert (spec != null);
+        if (m_splitAttr != null && !m_splitAttr.isEmpty()) {
+            if (spec != m_previousSpec) {
+                m_previousIndex = spec.findColumnIndex(m_splitAttr);
+                m_previousSpec = spec;
+            }
+            assert (m_previousIndex != -1);
+            DataCell cell = row.getCell(m_previousIndex);
+            if (cell.isMissing()) {
+                // we can not determine the split at this node because value is missing
+                return this;
+            }
+            return getWinnerNode(cell, row, spec);
+        }
+        return getWinnerNode(null, row, spec);
+    }
+
+    /**
      * Combines all class weights from _all_ branches of this node.
      * @return the combined class weights.
+     * @since 2.9
      */
-    protected LinkedHashMap<DataCell, Double> getNodeClassWeights() {
+    public LinkedHashMap<DataCell, Double> getNodeClassWeights() {
         // initialize result HashMap
         LinkedHashMap<DataCell, Double> result =
                 new LinkedHashMap<DataCell, Double>();
@@ -307,9 +330,20 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      * @param row input pattern
      * @param spec the corresponding table spec
      * @return HashMap class/count
-     * @throws Exception if something went wrong (unknown attriubte for example)
      */
     public abstract LinkedHashMap<DataCell, Double> getClassCounts(
+            final DataCell cell, final DataRow row, final DataTableSpec spec);
+
+    /**
+     * Determine the leaf where the prediction ends up.
+     *
+     * @param cell the call to be used for classification at this node
+     * @param row input pattern
+     * @param spec the corresponding table spec
+     * @return the winner leaf
+     * @since 2.9
+     */
+    public abstract DecisionTreeNode getWinnerNode(
             final DataCell cell, final DataRow row, final DataTableSpec spec);
 
     /**

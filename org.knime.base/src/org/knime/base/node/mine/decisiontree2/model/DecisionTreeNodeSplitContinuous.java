@@ -203,7 +203,6 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
      * @param row input pattern
      * @param spec the corresponding table spec
      * @return HashMap class/count
-     * @throws Exception if something went wrong (unknown attribute for example)
      */
     @Override
     public LinkedHashMap<DataCell, Double> getClassCounts(final DataCell cell,
@@ -214,6 +213,30 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
             return super.getChildNodeAt(0).getClassCounts(row, spec);
         }
         return super.getChildNodeAt(1).getClassCounts(row, spec);
+    }
+
+    /**
+     * Determine winning leaf node for a new pattern given as a row of values.
+     * Returns the decision tree node that we end up when traversing the tree.
+     * For the continuous split we need to analyze the attribute for this split
+     * and then ask the left resp. right subtree for it's prediction.
+     * Whoever calls us was nice enough to already pick out the DataCell used
+     * for this split so we do not need to find it. It is also guaranteed that
+     * it is not missing and of the right type.
+     *
+     * @param cell the cell to be used for the split at this level
+     * @param row input pattern
+     * @param spec the corresponding table spec
+     * @return the found node
+     */
+    @Override
+    public DecisionTreeNode getWinnerNode(final DataCell cell, final DataRow row, final DataTableSpec spec) {
+        assert cell.getType().isCompatible(DoubleValue.class);
+        double value = ((DoubleValue)cell).getDoubleValue();
+        if (value <= m_threshold) {
+            return super.getChildNodeAt(0).getWinnerNode(row, spec);
+        }
+        return super.getChildNodeAt(1).getWinnerNode(row, spec);
     }
 
     /**

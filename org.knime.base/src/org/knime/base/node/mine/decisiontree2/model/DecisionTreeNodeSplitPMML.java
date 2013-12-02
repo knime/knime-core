@@ -247,6 +247,25 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DecisionTreeNode getWinnerNode(final DataCell cell, final DataRow row, final DataTableSpec spec) {
+        assert (spec != null);
+        DecisionTreeNode matchingChild = getMatchingChild(row, spec);
+        if (matchingChild == this) {
+            return this;
+        } else if (matchingChild != null) {
+            return matchingChild.getWinnerNode(row, spec);
+        } else { // return null prediction strategy
+            LOGGER.warn("Decision Tree Prediction failed."
+                    + " Could not find branch for row '" + row.toString());
+            // return empty map
+            return null;
+        }
+    }
+
+    /**
      * Returns the first child which has a matching predicate. If there exists
      * no matching child and the strategy is last prediction the current node
      * is returned, otherwise null.

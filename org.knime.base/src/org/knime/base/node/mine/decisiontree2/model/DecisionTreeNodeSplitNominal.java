@@ -198,6 +198,23 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
      * {@inheritDoc}
      */
     @Override
+    public DecisionTreeNode getWinnerNode(final DataCell cell, final DataRow row, final DataTableSpec spec) {
+        for (int i = 0; i < m_splitValues.length; i++) {
+            if (m_splitValues[i].equals(cell)) {
+                return super.getChildNodeAt(i).getWinnerNode(row, spec);
+            }
+        }
+        LOGGER.error("Decision Tree Prediction failed."
+                + " Could not find branch for value '" + cell.toString()
+                + "' for attribute '" + getSplitAttr().toString() + "'."
+                + "Return Missing instead.");
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void addCoveredPattern(final DataCell cell, final DataRow row,
             final DataTableSpec spec, final double weight) throws Exception {
         // first add pattern to the branch that matches the cell's value

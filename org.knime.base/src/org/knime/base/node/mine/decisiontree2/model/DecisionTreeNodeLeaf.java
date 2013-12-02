@@ -138,18 +138,22 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
-     * Determine class counts for a new pattern given as a row of values.
-     * Returns a HashMap listing counts for all classes.
-     *
-     * @param row input pattern
-     * @param spec the corresponding table spec
-     * @return HashMap class/count
-     * @throws Exception if something went wrong (unknown attriubte for example)
+     * {@inheritDoc}
      */
     @Override
     public LinkedHashMap<DataCell, Double> getClassCounts(final DataRow row,
             final DataTableSpec spec) {
         return getClassCounts();
+    }
+
+    /**
+     * Returns this node because if the decision tree predictor ends up here, we are done.
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public DecisionTreeNode getWinnerNode(final DataRow row, final DataTableSpec spec) {
+        return this;
     }
 
     /**

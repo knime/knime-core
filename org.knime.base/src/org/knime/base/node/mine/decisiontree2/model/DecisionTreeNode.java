@@ -68,7 +68,7 @@ import org.knime.base.data.util.DataCellStringMapper;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
@@ -299,41 +299,44 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     public final Pair<DataCell, LinkedHashMap<DataCell, Double>>
             getWinnerAndClasscounts(final DataRow row,
             final DataTableSpec spec) throws Exception {
-        LinkedHashMap<DataCell, Double> classCounts = getClassCounts(row, spec);
-        DataCell winner = getWinner(classCounts);
+        DecisionTreeNode winnerNode = getWinnerNode(row, spec);
+        LinkedHashMap<DataCell, Double> classCounts;
+        DataCell winner = null;
+
+        if (winnerNode == null) {
+            // Missing value encountered, return null and empty map
+            classCounts = new LinkedHashMap<DataCell, Double>();
+            winner = new MissingCell("Error in decision tree prediction");
+        } else if (winnerNode instanceof DecisionTreeNodeSplit) {
+            // We stopped before reaching a leaf (eg due to a missing value)
+            classCounts = ((DecisionTreeNodeSplit)winnerNode).getNodeClassWeights();
+            double max = 0;
+            for (DataCell key : classCounts.keySet()) {
+                Double val = classCounts.get(key);
+                if (val != null && val > max) {
+                    max = val;
+                    winner = key;
+                }
+            }
+        } else {
+            // We reached a leaf node, return its score and class counts
+            DecisionTreeNodeLeaf leaf = (DecisionTreeNodeLeaf)winnerNode;
+            winner = leaf.getMajorityClass();
+            classCounts = leaf.getClassCounts();
+        }
         return new Pair<DataCell, LinkedHashMap<DataCell, Double>>(
                 winner, classCounts);
     }
 
     /**
-     * Find the winning data cell. Returns the class with the maximum count.
-     * @param classCounts HashMap with the class counts
+     * Determine the leaf node where the walk through of the predictor ends.
      *
-     * @return class of pattern the decision tree predicts
+     * @param row input pattern
+     * @param spec the corresponding table spec
+     * @return the leaf where the decision tree walk ends up in
+     * @since 2.9
      */
-    private final DataCell getWinner(final LinkedHashMap<DataCell, Double>
-            classCounts) {
-        double winnerCount = -1.0;
-        DataCell winner = null;
-        for (DataCell classCell : classCounts.keySet()) {
-            double thisClassCount = classCounts.get(classCell);
-            if (thisClassCount >= winnerCount) {
-                winnerCount = thisClassCount;
-                winner = classCell;
-            }
-        }
-        /* If the winner count equals the class count of the majority class of
-           this node, the majority class is the winner to avoid inconsistencies
-            on ties. */
-        if (classCounts.get(m_class) != null &&
-                winnerCount == classCounts.get(m_class)) {
-            winner = m_class;
-        }
-        if (winner == null) {
-            return DataType.getMissingCell();
-        }
-        return winner;
-    }
+    public abstract DecisionTreeNode getWinnerNode(final DataRow row, final DataTableSpec spec);
 
     /**
      * Determine class counts for a new pattern given as a row of values.
