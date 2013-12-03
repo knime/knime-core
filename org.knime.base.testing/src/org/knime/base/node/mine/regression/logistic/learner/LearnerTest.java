@@ -129,7 +129,7 @@ public class LearnerTest {
      * @throws CanceledExecutionException
      */
     @Test
-    public final void testPerformChdAgeData() throws CanceledExecutionException {
+    public final void testPerformChdAgeData() throws Exception {
         DataTable data = new ChdAgeData();
         PMMLPortObjectSpecCreator specCreator =
             new PMMLPortObjectSpecCreator(data.getDataTableSpec());
@@ -137,7 +137,7 @@ public class LearnerTest {
         specCreator.setTargetColName("Evidence of Coronary Heart Disease");
         PMMLPortObjectSpec spec = specCreator.createSpec();
 
-        Learner learner = new Learner(spec);
+        Learner learner = new Learner(spec, null, true, true);
         LogisticRegressionContent content = learner.perform(data, m_exec);
         // Reference results are published in the book:
         //   Applied Logistic Regression,
@@ -152,7 +152,7 @@ public class LearnerTest {
      * @throws CanceledExecutionException
      */
     @Test
-    public final void testPerformLowBirthWeightData() throws CanceledExecutionException {
+    public final void testPerformLowBirthWeightData() throws Exception {
         DataTable data = new LowBirthWeightData();
         PMMLPortObjectSpecCreator specCreator =
             new PMMLPortObjectSpecCreator(data.getDataTableSpec());
@@ -161,7 +161,7 @@ public class LearnerTest {
         specCreator.setTargetColName("LOW");
         PMMLPortObjectSpec spec = specCreator.createSpec();
 
-        Learner learner = new Learner(spec);
+        Learner learner = new Learner(spec, null, true, true);
         LogisticRegressionContent content = learner.perform(data, m_exec);
         // Reference results are published in the book:
         //   Applied Logistic Regression,
@@ -182,6 +182,7 @@ public class LearnerTest {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataTableSpec getDataTableSpec() {
             List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>();
             colSpecs.add((new DataColumnSpecCreator(
@@ -200,13 +201,14 @@ public class LearnerTest {
         /**
          * {@inheritDoc}
          */
+        @Override
         public RowIterator iterator() {
             return new ChdAgeDataIterator();
         }
 
         private static class ChdAgeDataIterator extends RowIterator {
             private int m_counter;
-            private int[][] m_data;
+            private final int[][] m_data;
 
             public ChdAgeDataIterator() {
                 m_counter = 0;
@@ -343,11 +345,12 @@ public class LearnerTest {
     //   David W. Hosmer and Stanley Lemeshow
     //   Wiley, 2000 (2nd. ed)
     private static class LowBirthWeightData implements DataTable {
-        private List<DataRow> m_data;
+        private final List<DataRow> m_data;
 
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataTableSpec getDataTableSpec() {
             //Variable    Description             Codes/Values       Name
             //    1       Identification Code     ID Number          ID
@@ -647,6 +650,7 @@ public class LearnerTest {
         /**
          * {@inheritDoc}
          */
+        @Override
         public RowIterator iterator() {
             return new LowBirthWeightDataIterator(m_data.iterator());
         }

@@ -65,6 +65,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
@@ -120,9 +121,11 @@ final class Learner {
      * @param exec The execution context used for reporting progress.
      * @return An object which holds the results.
      * @throws CanceledExecutionException When method is cancelled
+     * @throws InvalidSettingsException When settings are inconsistent with the data
      */
     public LinearRegressionContent perform(final DataTable data,
-            final int rowCount, final ExecutionContext exec) throws CanceledExecutionException {
+            final int rowCount, final ExecutionContext exec)
+                    throws CanceledExecutionException, InvalidSettingsException {
         exec.checkCanceled();
 
         RegressionTrainingData trainingData = new RegressionTrainingData(data, m_outSpec,

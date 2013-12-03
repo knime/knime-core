@@ -61,6 +61,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.NominalValue;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
@@ -82,9 +83,10 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
     /**
      * @param data training data.
      * @param spec port object spec.
+     * @throws InvalidSettingsException When settings are inconsistent with the data
      */
     public RegressionTrainingData(final DataTable data,
-            final PMMLPortObjectSpec spec) {
+            final PMMLPortObjectSpec spec) throws InvalidSettingsException {
         this(data, spec, true);
     }
 
@@ -92,10 +94,29 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
      * @param data training data.
      * @param spec port object spec.
      * @param failOnMissing when true an exception is thrown when a missing cell is observed
+     * @throws InvalidSettingsException When settings are inconsistent with the data
      */
     public RegressionTrainingData(final DataTable data,
             final PMMLPortObjectSpec spec,
-            final boolean failOnMissing) {
+            final boolean failOnMissing) throws InvalidSettingsException {
+        this(data, spec, failOnMissing, null, true, true);
+    }
+
+    /**
+     * @param data training data.
+     * @param spec port object spec.
+     * @param failOnMissing when true an exception is thrown when a missing cell is observed
+     * @param targetReferenceCategory the target reference category, if not set it is the last category
+     * @param sortTargetCategories true when target categories should be sorted
+     * @param sortFactorsCategories true when categories of nominal data in the include list should be sorted
+     * @throws InvalidSettingsException When settings are inconsistent with the data
+     */
+    public RegressionTrainingData(final DataTable data,
+            final PMMLPortObjectSpec spec,
+            final boolean failOnMissing,
+            final DataCell targetReferenceCategory,
+            final boolean sortTargetCategories,
+            final boolean sortFactorsCategories) throws InvalidSettingsException {
         m_data = data;
         m_failOnMissing = failOnMissing;
         m_learningCols = new ArrayList<Integer>();
@@ -112,8 +133,9 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
                 m_isNominal.put(i, true);
                 List<DataCell> valueList = new ArrayList<DataCell>();
                 valueList.addAll(colSpec.getDomain().getValues());
-                Collections.sort(valueList,
-                        colSpec.getType().getComparator());
+                if (sortFactorsCategories) {
+                    Collections.sort(valueList, colSpec.getType().getComparator());
+                }
                 m_domainValues.put(i, valueList);
                 m_parameterCount += valueList.size() - 1;
             } else {
@@ -131,8 +153,19 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
             m_isNominal.put(m_target, true);
             List<DataCell> valueList = new ArrayList<DataCell>();
             valueList.addAll(colSpec.getDomain().getValues());
-            Collections.sort(valueList,
-                    colSpec.getType().getComparator());
+            if (sortTargetCategories) {
+                Collections.sort(valueList, colSpec.getType().getComparator());
+            }
+            if (targetReferenceCategory != null) {
+                // targetReferenceCategory must be the last element
+                boolean removed = valueList.remove(targetReferenceCategory);
+                if (!removed) {
+                    throw new InvalidSettingsException(
+                        "The target reference category (\"" + targetReferenceCategory
+                        + "\") is not found in the target column");
+                }
+                valueList.add(targetReferenceCategory);
+            }
             m_domainValues.put(m_target, valueList);
         } else {
             m_isNominal.put(m_target, false);

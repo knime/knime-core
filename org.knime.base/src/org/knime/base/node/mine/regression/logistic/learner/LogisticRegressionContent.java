@@ -109,12 +109,22 @@ public final class LogisticRegressionContent {
 
     private final int m_iter;
 
+    /** the target reference category, if not set it is the last category. */
+    private DataCell m_targetReferenceCategory;
+    /** true when target categories should be sorted. */
+    private boolean m_sortTargetCategories;
+    /** true when categories of nominal data in the include list should be sorted. */
+    private boolean m_sortFactorsCategories;
+
 
     /**
      * Create new instance.
      * @param outSpec the spec of the output
      * @param factorList the factors (nominla parameters)
      * @param covariateList the covariates (numeric parameters)
+     * @param targetReferenceCategory the target reference category, if not set it is the last category
+     * @param sortTargetCategories true when target categories should be sorted
+     * @param sortFactorsCategories true when categories of nominal data in the include list should be sorted
      * @param beta the estimated regression factors
      * @param loglike the estimated likelihood
      * @param covMat the covariance matrix
@@ -124,18 +134,27 @@ public final class LogisticRegressionContent {
             final PMMLPortObjectSpec outSpec,
             final List<String> factorList,
             final List<String> covariateList,
+            final DataCell targetReferenceCategory,
+            final boolean sortTargetCategories,
+            final boolean sortFactorsCategories,
             final Matrix beta, final double loglike,
             final Matrix covMat, final int iter) {
         m_iter = iter;
         m_outSpec = outSpec;
         m_factorList = factorList;
         m_factorDomainValues = new HashMap<String, List<DataCell>>();
+        m_targetReferenceCategory = targetReferenceCategory;
+        m_sortTargetCategories = sortTargetCategories;
+        m_sortFactorsCategories = sortFactorsCategories;
+
         DataTableSpec inSpec = outSpec.getDataTableSpec();
         for (String factor : factorList) {
             DataColumnSpec colSpec = inSpec.getColumnSpec(factor);
             List<DataCell> domainValues = new ArrayList<DataCell>();
             domainValues.addAll(colSpec.getDomain().getValues());
-            Collections.sort(domainValues, colSpec.getType().getComparator());
+            if (m_sortFactorsCategories) {
+                Collections.sort(domainValues, colSpec.getType().getComparator());
+            }
             m_factorDomainValues.put(factor, domainValues);
         }
         m_covariateList = covariateList;
@@ -143,7 +162,14 @@ public final class LogisticRegressionContent {
         DataColumnSpec colSpec = inSpec.getColumnSpec(target);
         List<DataCell> domainValues = new ArrayList<DataCell>();
         domainValues.addAll(colSpec.getDomain().getValues());
-        Collections.sort(domainValues, colSpec.getType().getComparator());
+        if (m_sortTargetCategories) {
+            Collections.sort(domainValues, colSpec.getType().getComparator());
+        }
+        if (m_targetReferenceCategory != null) {
+            // targetReferenceCategory must be the last element
+            domainValues.remove(m_targetReferenceCategory);
+            domainValues.add(m_targetReferenceCategory);
+        }
         m_targetCategories = domainValues;
         m_beta = beta;
         m_loglike = loglike;
@@ -517,7 +543,9 @@ public final class LogisticRegressionContent {
     private static final String CFG_COVARIANCE_MATRIX = "covariance_matrix";
     private static final String CFG_LOG_LIKELIHOOD = "likelihood";
     private static final String CFG_ITER = "iteration";
-
+    private static final String CFG_TARGET_REFERENCE_CATEGORY = "target_reference_category";
+    private static final String CFG_SORT_TARGET_CATEGORIES = "sort_target_categories";
+    private static final String CFG_SORT_FACTORS_CATEGORIES = "sort_factorss_categories";
 
     /**
      * @param parContent the content that holds the internals
@@ -538,8 +566,14 @@ public final class LogisticRegressionContent {
         double likelihood = parContent.getDouble(CFG_LOG_LIKELIHOOD);
         double[] covMat = parContent.getDoubleArray(CFG_COVARIANCE_MATRIX);
         int iter = parContent.getInt(CFG_ITER);
+        // introduced in 2.9
+        DataCell targetReferenceCategory = parContent.getDataCell(CFG_TARGET_REFERENCE_CATEGORY, null);
+        boolean sortTargetCategories = parContent.getBoolean(CFG_SORT_TARGET_CATEGORIES, true);
+        boolean sortFactorsCategories = parContent.getBoolean(CFG_SORT_FACTORS_CATEGORIES, true);
         return new LogisticRegressionContent(pmmlSpec,
                 Arrays.asList(factors), Arrays.asList(covariates),
+                targetReferenceCategory,
+                sortTargetCategories, sortFactorsCategories,
                 toMatrix(coeff, coeff.length), likelihood,
                 toMatrix(covMat, coeff.length), iter);
 
@@ -572,6 +606,10 @@ public final class LogisticRegressionContent {
         parContent.addDoubleArray(CFG_COEFFICIENTS, toArray(m_beta));
         parContent.addDouble(CFG_LOG_LIKELIHOOD, m_loglike);
         parContent.addInt(CFG_ITER, m_iter);
+        // introduced in 2.9
+        parContent.addDataCell(CFG_TARGET_REFERENCE_CATEGORY, m_targetReferenceCategory);
+        parContent.addBoolean(CFG_SORT_TARGET_CATEGORIES, m_sortTargetCategories);
+        parContent.addBoolean(CFG_SORT_FACTORS_CATEGORIES, m_sortFactorsCategories);
     }
 
     private static double[] toArray(final Matrix matrix) {

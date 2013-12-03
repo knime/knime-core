@@ -51,14 +51,22 @@
 package org.knime.base.node.mine.regression.logistic.learner;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.NominalValue;
@@ -77,30 +85,78 @@ import org.knime.core.node.util.ColumnSelectionPanel;
  * @author Heiko Hofer
  */
 public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
-    private final ColumnFilterPanel m_filterPanel;
+    private ColumnFilterPanel m_filterPanel;
+    private JComboBox m_targetReferenceCategory;
+    private JCheckBox m_notSortTarget;
 
-    private final ColumnSelectionPanel m_selectionPanel;
 
-    private final LogRegLearnerSettings m_settings;
+    private ColumnSelectionPanel m_selectionPanel;
+    private JCheckBox m_notSortIncludes;
+    private DataTableSpec m_inSpec;
+
 
     /**
      * Create new dialog for linear regression model.
      */
-    @SuppressWarnings("unchecked")
     public LogRegLearnerNodeDialogPane() {
         super();
-        m_settings = new LogRegLearnerSettings();
-        m_filterPanel = new ColumnFilterPanel(true);
-        m_selectionPanel = new ColumnSelectionPanel(new EmptyBorder(0, 0, 0, 0),
-                NominalValue.class);
+
         JPanel panel = new JPanel(new BorderLayout());
-        JPanel northPanel = new JPanel(new FlowLayout());
+        JPanel northPanel = createTargetOptionsPanel();
         northPanel.setBorder(BorderFactory.createTitledBorder("Target"));
-        northPanel.add(m_selectionPanel);
         panel.add(northPanel, BorderLayout.NORTH);
 
-        m_filterPanel.setBorder(BorderFactory.createTitledBorder("Values"));
-        panel.add(m_filterPanel, BorderLayout.CENTER);
+        JPanel centerPanel = createIncludesPanel();
+        centerPanel.setBorder(BorderFactory.createTitledBorder("Values"));
+        panel.add(centerPanel, BorderLayout.CENTER);
+
+        addTab("Settings", panel);
+    }
+
+
+    /**
+     * Create options panel for the target.
+     */
+    private JPanel createTargetOptionsPanel() {
+        JPanel p = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.BASELINE_LEADING;
+        c.insets = new Insets(5, 5, 0, 0);
+
+
+        p.add(new JLabel("Target Column:"), c);
+
+        c.gridx++;
+        m_selectionPanel = new ColumnSelectionPanel(new EmptyBorder(0, 0, 0, 0), NominalValue.class);
+        m_selectionPanel.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                updateTargetCategories((DataCell)m_targetReferenceCategory.getSelectedItem());
+            }
+        });
+        p.add(m_selectionPanel, c);
+
+        c.gridx = 0;
+        c.gridy++;
+        p.add(new JLabel("Reference Category:"), c);
+
+        c.gridx++;
+        m_targetReferenceCategory = new JComboBox();
+        p.add(m_targetReferenceCategory, c);
+
+        c.gridx = 0;
+        c.gridy++;
+        c.gridwidth = 3;
+        c.weightx = 1;
+        m_notSortTarget = new JCheckBox("Use natural order of target categories.");
+        p.add(m_notSortTarget, c);
+
 
         m_selectionPanel.addItemListener(new ItemListener() {
             @Override
@@ -113,36 +169,95 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
             }
         });
 
-        addTab("Settings", panel);
+
+        return p;
+    }
+
+    /**
+     * Create options panel for the included columns.
+     */
+    private JPanel createIncludesPanel() {
+        JPanel p = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.BASELINE_LEADING;
+        c.insets = new Insets(5, 5, 0, 0);
+
+
+        m_filterPanel = new ColumnFilterPanel(true);
+        p.add(m_filterPanel, c);
+
+        c.gridy++;
+        m_notSortIncludes = new JCheckBox("Use natural order of categories. "
+            + "Applies to included columns with nominal data.");
+        p.add(m_notSortIncludes, c);
+
+        return p;
+    }
+
+
+
+    /**
+     * Update list of target categories.
+     */
+    private void updateTargetCategories(final DataCell selectedItem) {
+        m_targetReferenceCategory.removeAllItems();
+
+        String selectedColumn = m_selectionPanel.getSelectedColumn();
+        if (selectedColumn != null) {
+            DataColumnSpec colSpec = m_inSpec.getColumnSpec(selectedColumn);
+            if (null != colSpec) {
+                // select last as default
+                DataCell newSelectedItem = null;
+                DataCell lastItem = null;
+                for (DataCell cell : colSpec.getDomain().getValues()) {
+                    m_targetReferenceCategory.addItem(cell);
+                    lastItem = cell;
+                    if (cell.equals(selectedItem)) {
+                        newSelectedItem = selectedItem;
+                    }
+                }
+                if (newSelectedItem == null) {
+                    newSelectedItem = lastItem;
+                }
+                m_targetReferenceCategory.getModel().setSelectedItem(newSelectedItem);
+            }
+        }
+        m_targetReferenceCategory.setEnabled(m_targetReferenceCategory.getModel().getSize() > 0);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
+    protected void loadSettingsFrom(final NodeSettingsRO s,
             final PortObjectSpec[] specs) throws NotConfigurableException {
-        m_settings.loadSettingsForDialog(settings);
+        LogRegLearnerSettings settings = new LogRegLearnerSettings();
+        settings.loadSettingsForDialog(s);
 
-        boolean includeAll = m_settings.getIncludeAll();
-        String[] includes = m_settings.getIncludedColumns();
-        String target = m_settings.getTargetColumn();
+        boolean includeAll = settings.getIncludeAll();
+        String[] includes = settings.getIncludedColumns();
+        String target = settings.getTargetColumn();
 
-        DataTableSpec dts = (DataTableSpec)specs[0];
-        m_selectionPanel.update(dts, target);
+        m_inSpec = (DataTableSpec)specs[0];
+        m_selectionPanel.update(m_inSpec, target);
         m_filterPanel.setKeepAllSelected(includeAll);
         // if includes is not set, put everything into the include list
         if (null != includes) {
-            m_filterPanel.update(dts, false, includes);
+            m_filterPanel.update(m_inSpec, false, includes);
         } else {
-            m_filterPanel.update(dts, true, new String[0]);
+            m_filterPanel.update(m_inSpec, true, new String[0]);
         }
         // must hide the target from filter panel
         // updating m_filterPanel first does not work as the first
         // element in the spec will always be in the exclude list.
         String selected = m_selectionPanel.getSelectedColumn();
         if (null == selected) {
-            for (DataColumnSpec colSpec : dts) {
+            for (DataColumnSpec colSpec : m_inSpec) {
                 if (colSpec.getType().isCompatible(NominalValue.class)) {
                     selected = colSpec.getName();
                     break;
@@ -150,23 +265,36 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
             }
         }
         if (selected != null) {
-            DataColumnSpec colSpec = dts.getColumnSpec(selected);
+            DataColumnSpec colSpec = m_inSpec.getColumnSpec(selected);
             m_filterPanel.hideColumns(colSpec);
         }
+
+
+        updateTargetCategories(settings.getTargetReferenceCategory());
+
+        m_notSortTarget.setSelected(!settings.getSortTargetCategories());
+        m_notSortIncludes.setSelected(!settings.getSortIncludesCategories());
     }
+
+
+
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
+    protected void saveSettingsTo(final NodeSettingsWO s)
             throws InvalidSettingsException {
-        m_settings.setIncludeAll(m_filterPanel.isKeepAllSelected());
+        LogRegLearnerSettings settings = new LogRegLearnerSettings();
+        settings.setIncludeAll(m_filterPanel.isKeepAllSelected());
         String[] includes = m_filterPanel.getIncludedColumnSet().toArray(
                 new String[0]);
-        m_settings.setIncludedColumns(includes);
-        m_settings.setTargetColumn(m_selectionPanel.getSelectedColumn());
+        settings.setIncludedColumns(includes);
+        settings.setTargetColumn(m_selectionPanel.getSelectedColumn());
+        settings.setTargetReferenceCategory((DataCell)m_targetReferenceCategory.getSelectedItem());
+        settings.setSortTargetCategories(!m_notSortTarget.isSelected());
+        settings.setSortIncludesCategories(!m_notSortIncludes.isSelected());
 
-        m_settings.saveSettings(settings);
+        settings.saveSettings(s);
     }
 }

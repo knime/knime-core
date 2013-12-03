@@ -66,6 +66,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
@@ -90,21 +91,44 @@ final class Learner {
     private Matrix b;
     private double m_penaltyTerm;
 
+
+    /** the target reference category, if not set it is the last category. */
+    private DataCell m_targetReferenceCategory;
+    /** true when target categories should be sorted. */
+    private boolean m_sortTargetCategories;
+    /** true when categories of nominal data in the include list should be sorted. */
+    private boolean m_sortFactorsCategories;
+
     /**
      * @param spec The {@link PMMLPortObjectSpec} of the output table.
+     * @param targetReferenceCategory the target reference category, if not set it is the last category
+     * @param sortTargetCategories true when target categories should be sorted
+     * @param sortFactorsCategories true when categories of nominal data in the include list should be sorted
      */
-    Learner(final PMMLPortObjectSpec spec) {
-        this(spec, 30, 1e-14);
+    Learner(final PMMLPortObjectSpec spec,
+        final DataCell targetReferenceCategory,
+        final boolean sortTargetCategories,
+        final boolean sortFactorsCategories) {
+        this(spec, targetReferenceCategory, sortTargetCategories, sortFactorsCategories, 30, 1e-14);
     }
 
     /**
      * @param spec The {@link PMMLPortObjectSpec} of the output table.
+     * @param targetReferenceCategory the target reference category, if not set it is the last category
+     * @param sortTargetCategories true when target categories should be sorted
+     * @param sortFactorsCategories true when categories of nominal data in the include list should be sorted
      * @param maxIter the maximum number of iterations
      * @param eps threshold used to identify convergence
      */
     Learner(final PMMLPortObjectSpec spec,
+            final DataCell targetReferenceCategory,
+            final boolean sortTargetCategories,
+            final boolean sortFactorsCategories,
             final int maxIter, final double eps) {
         m_outSpec = spec;
+        m_targetReferenceCategory = targetReferenceCategory;
+        m_sortTargetCategories = sortTargetCategories;
+        m_sortFactorsCategories = sortFactorsCategories;
         m_maxIter = maxIter;
         m_eps = eps;
         m_penaltyTerm = 0.0;
@@ -115,14 +139,16 @@ final class Learner {
      * @param exec The execution context used for reporting progress.
      * @return An object which holds the results.
      * @throws CanceledExecutionException When method is cancelled
+     * @throws InvalidSettingsException When settings are inconsistent with the data
      */
     public LogisticRegressionContent perform(final DataTable data,
-            final ExecutionContext exec) throws CanceledExecutionException {
+            final ExecutionContext exec) throws CanceledExecutionException, InvalidSettingsException {
         exec.checkCanceled();
         int iter = 0;
         boolean converged = false;
 
-        RegressionTrainingData trainingData = new RegressionTrainingData(data, m_outSpec);
+        RegressionTrainingData trainingData = new RegressionTrainingData(data, m_outSpec, true,
+            m_targetReferenceCategory, m_sortTargetCategories, m_sortFactorsCategories);
         int targetIndex = data.getDataTableSpec().findColumnIndex(m_outSpec.getTargetCols().get(0).getName());
         int tcC = trainingData.getDomainValues().get(targetIndex).size();
         int rC = trainingData.getRegressorCount();
@@ -213,8 +239,9 @@ final class Learner {
         // create content
         LogisticRegressionContent content =
             new LogisticRegressionContent(m_outSpec,
-                    factorList,
-                    covariateList, beta, loglike, covMat, iter);
+                    factorList, covariateList,
+                    m_targetReferenceCategory, m_sortTargetCategories, m_sortFactorsCategories,
+                    beta, loglike, covMat, iter);
         return content;
     }
 

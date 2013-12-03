@@ -322,7 +322,8 @@ public final class LogRegLearner {
             creator.setTargetCols(Arrays.asList(targetColSpec));
             creator.setLearningCols(regressorColSpecs);
             m_pmmlOutSpec = creator.createSpec();
-            m_learner = new Learner(m_pmmlOutSpec);
+            m_learner = new Learner(m_pmmlOutSpec, m_settings.getTargetReferenceCategory(),
+                m_settings.getSortTargetCategories(), m_settings.getSortIncludesCategories());
         } else {
             throw new InvalidSettingsException("The target is "
                     + "not in the input.");

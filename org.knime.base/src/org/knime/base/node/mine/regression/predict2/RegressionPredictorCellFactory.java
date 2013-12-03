@@ -50,9 +50,15 @@
 package org.knime.base.node.mine.regression.predict2;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLPPCell;
+import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -127,7 +133,6 @@ public abstract class RegressionPredictorCellFactory extends AbstractCellFactory
             }
             List<DataCell> targetCategories = new ArrayList<DataCell>();
             targetCategories.addAll(targetColSpec.getDomain().getValues());
-            Collections.sort(targetCategories, targetColSpec.getType().getComparator());
 
             for (DataCell value : targetCategories) {
                 String name = "P (" + targetCol + "=" + value.toString() + ")" + settings.getPropColumnSuffix();
@@ -158,6 +163,59 @@ public abstract class RegressionPredictorCellFactory extends AbstractCellFactory
         return newColsSpec.toArray(new DataColumnSpec[0]);
     }
 
+
+
+
+    /**
+     * @param trainingSpec the table spec of the training set
+     * @param content the content
+     * @return the factors name mapped to its values
+     * @throws InvalidSettingsException If the PMML data dictionary contains more elements for a nominal column
+     *                                  than represented in the data
+     */
+    protected static Map<String, List<DataCell>> determineFactorValues(final PMMLGeneralRegressionContent content,
+        final DataTableSpec trainingSpec) throws InvalidSettingsException {
+        HashMap<String, List<DataCell>> values = new HashMap<String, List<DataCell>>();
+
+        for (PMMLPredictor factor : content.getFactorList()) {
+            String factorName = factor.getName();
+            Map<String, DataCell> domainValues = new HashMap<String, DataCell>();
+            for (DataCell cell : trainingSpec.getColumnSpec(factorName).getDomain().getValues()) {
+                domainValues.put(cell.toString(), cell);
+            }
+
+            Set<DataCell> factorValues = new LinkedHashSet<DataCell>();
+            // add all values for all PMMLGeneralRegression model that do not specify all values in the PPMatrix
+            factorValues.addAll(trainingSpec.getColumnSpec(factorName).getDomain().getValues());
+            int count = 0;
+            for (PMMLPPCell ppCell : content.getPPMatrix()) {
+                if (ppCell.getPredictorName().equals(factorName)) {
+                    DataCell cell = domainValues.get(ppCell.getValue());
+                    // move cell to the end of the list, this gives in the end the same ordering
+                    // as in the PPMatrix of the PMMLGeneralRegression model
+                    factorValues.remove(cell);
+                    factorValues.add(cell);
+                    count++;
+                }
+            }
+            // The base line category may not be in the PPMatrix of the PMMLGeneralRegression model
+            // in this case count is lower than the number of domain values, but if count if even
+            // less than that the base line category is ambiguous.
+            final int valuesDataDictionary = trainingSpec.getColumnSpec(factorName).getDomain().getValues().size();
+            if (count < valuesDataDictionary - 1) {
+                throw new InvalidSettingsException("The data dictionary to column \"" + factorName
+                    + "\" contains more elements than represented in the regression model "
+                    + "(unable to decode dummy variables as reference is unknown: "
+                    + valuesDataDictionary + " > " + count + " + 1)");
+            }
+
+            List<DataCell> vals = new ArrayList<DataCell>();
+            vals.addAll(factorValues);
+            values.put(factorName, vals);
+        }
+        return values;
+    }
+
     /**
      * This constructor should be used during the configure phase of a node.
      * The created instance will give a valid spec of the output but cannot
@@ -174,4 +232,6 @@ public abstract class RegressionPredictorCellFactory extends AbstractCellFactory
             ) throws InvalidSettingsException {
         super(createColumnSpec(portSpec, tableSpec, settings));
     }
+
+
 }

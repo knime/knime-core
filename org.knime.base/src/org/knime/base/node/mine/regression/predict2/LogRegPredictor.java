@@ -54,8 +54,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,7 +63,6 @@ import java.util.Set;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLPCell;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLParameter;
-import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -148,16 +147,7 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
         m_targetCategoryIndex = createTargetCategoryToOutputMap(m_targetCategories, targetColSpec);
         m_targetDomainValuesCount = targetColSpec.getDomain().getValues().size();
 
-        m_values = new HashMap<String, List<DataCell>>();
-
-        for (PMMLPredictor factor : m_content.getFactorList()) {
-            String factorName = factor.getName();
-            DataColumnSpec colSpec = m_trainingSpec.getColumnSpec(factorName);
-            List<DataCell> values = new ArrayList<DataCell>();
-            values.addAll(colSpec.getDomain().getValues());
-            Collections.sort(values, colSpec.getType().getComparator());
-            m_values.put(factorName, values);
-        }
+        m_values = determineFactorValues(m_content, m_trainingSpec);
         m_factors = m_values.keySet();
         m_beta = getBetaMatrix();
     }
@@ -193,17 +183,20 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
      */
     private static List<DataCell> determineTargetCategories(final DataColumnSpec targetCol,
             final PMMLGeneralRegressionContent content) throws InvalidSettingsException {
-        List<DataCell> targetCategories = new ArrayList<DataCell>();
-        targetCategories.addAll(targetCol.getDomain().getValues());
-        Collections.sort(targetCategories,
-                targetCol.getType().getComparator());
+        Map<String, DataCell> domainValues = new HashMap<String, DataCell>();
+        for (DataCell cell : targetCol.getDomain().getValues()) {
+            domainValues.put(cell.toString(), cell);
+        }
         // Collect target categories from model
-        Set<String> modelTargetCategories = new HashSet<String>();
+        Set<DataCell> modelTargetCategories = new LinkedHashSet<DataCell>();
         for (PMMLPCell cell : content.getParamMatrix()) {
-            modelTargetCategories.add(cell.getTargetCategory());
+            modelTargetCategories.add(domainValues.get(cell.getTargetCategory()));
         }
         String targetReferenceCategory = content.getTargetReferenceCategory();
         if (targetReferenceCategory == null || targetReferenceCategory.isEmpty()) {
+            List<DataCell> targetCategories = new ArrayList<DataCell>();
+            targetCategories.addAll(targetCol.getDomain().getValues());
+            Collections.sort(targetCategories, targetCol.getType().getComparator());
             if (targetCategories.size() == modelTargetCategories.size() + 1) {
                 targetReferenceCategory = targetCategories.get(targetCategories.size() - 1).toString();
                 // the last target category is the target reference category
@@ -214,17 +207,11 @@ public final class LogRegPredictor extends RegressionPredictorCellFactory {
                         + "\"GeneralRegression\" element in the PMML file.");
             }
         }
-        modelTargetCategories.add(targetReferenceCategory);
-        // Remove all target categories not found in the logistic regression model. When PMML is load from file the
-        // spec of the target column may contain more domain values than used for training the
-        // logistic regression model.
-        for (Iterator<DataCell> iter = targetCategories.iterator(); iter.hasNext();) {
-            String str = iter.next().toString();
-            if (!modelTargetCategories.contains(str)) {
-                iter.remove();
-            }
-        }
-        return targetCategories;
+        modelTargetCategories.add(domainValues.get(targetReferenceCategory));
+
+        List<DataCell> toReturn = new ArrayList<DataCell>();
+        toReturn.addAll(modelTargetCategories);
+        return toReturn;
     }
 
 

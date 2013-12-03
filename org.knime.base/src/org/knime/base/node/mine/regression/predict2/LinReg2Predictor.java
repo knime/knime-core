@@ -51,7 +51,6 @@
 package org.knime.base.node.mine.regression.predict2;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -60,9 +59,7 @@ import java.util.Set;
 
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionContent;
 import org.knime.base.node.mine.regression.pmmlgreg.PMMLParameter;
-import org.knime.base.node.mine.regression.pmmlgreg.PMMLPredictor;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -133,16 +130,7 @@ final class LinReg2Predictor extends RegressionPredictorCellFactory {
 
         m_trainingSpec = portSpec.getDataTableSpec();
 
-        m_values = new HashMap<String, List<DataCell>>();
-
-        for (PMMLPredictor factor : m_content.getFactorList()) {
-            String factorName = factor.getName();
-            DataColumnSpec colSpec = m_trainingSpec.getColumnSpec(factorName);
-            List<DataCell> values = new ArrayList<DataCell>();
-            values.addAll(colSpec.getDomain().getValues());
-            Collections.sort(values, colSpec.getType().getComparator());
-            m_values.put(factorName, values);
-        }
+        m_values = determineFactorValues(m_content, m_trainingSpec);
         m_factors = m_values.keySet();
         m_beta = getBetaMatrix();
     }
@@ -181,8 +169,7 @@ final class LinReg2Predictor extends RegressionPredictorCellFactory {
             } else {
                 if (m_factors.contains(predictor)) {
                     List<DataCell> values = m_values.get(predictor);
-                    DataCell cell =
-                        row.getCell(m_parameterI.get(parameter));
+                    DataCell cell = row.getCell(m_parameterI.get(parameter));
                     int index = values.indexOf(cell);
                     // these are design variables
                     /* When building a general regression model, for each

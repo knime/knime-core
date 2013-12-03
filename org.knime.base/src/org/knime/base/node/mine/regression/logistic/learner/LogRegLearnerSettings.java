@@ -50,6 +50,7 @@
  */
 package org.knime.base.node.mine.regression.logistic.learner;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -60,20 +61,87 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Heiko Hofer
  */
 public class LogRegLearnerSettings {
-    /** Key for the included columns, used for dialog settings. */
-    static final String CFG_VARIATES = "included_columns";
+    private static final String CFG_VARIATES = "included_columns";
+    private static final String CFG_VARIATES_USE_ALL = "included_columns_use_all";
+    private static final String CFG_TARGET = "target";
+    private static final String CFG_TARGET_REFERENCE_CATEGORY = "target_reference_category";
+    private static final String CFG_SORT_TARGET_CATEGORIES = "sort_target_categories";
+    private static final String CFG_SORT_INCLUDES_CATEGORIES = "sort_includes_categories";
 
-    /** Key for whether to include all appropriate columns by default. */
-    static final String CFG_VARIATES_USE_ALL = "included_columns_use_all";
+    private String m_targetColumn;
 
-    /** Key for the target column, used for dialog settings. */
-    static final String CFG_TARGET = "target";
+    private String[] m_includedColumns;
 
-    private String m_targetColumn = null;
+    private boolean m_includeAll;
 
-    private String[] m_includedColumns = null;
+    /** The target reference category, if not set it is the last category. */
+    private DataCell m_targetReferenceCategory;
+    /** True when target categories should be sorted. */
+    private boolean m_sortTargetCategories;
+    /** True when categories of nominal data in the include list should be sorted. */
+    private boolean m_sortIncludesCategories;
 
-    private boolean m_includeAll = true;
+    /**
+     * Create default settings.
+     */
+    public LogRegLearnerSettings() {
+        m_targetColumn = null;
+        m_includedColumns = null;
+        m_includeAll = true;
+        m_targetReferenceCategory = null;
+        m_sortTargetCategories = true;
+        m_sortIncludesCategories = true;
+    }
+
+
+    /**
+     * Loads the settings from the node settings object.
+     *
+     * @param settings a node settings object
+     * @throws InvalidSettingsException if some settings are missing
+     */
+    public void loadSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        m_targetColumn = settings.getString(CFG_TARGET);
+        m_includedColumns = settings.getStringArray(CFG_VARIATES);
+        m_includeAll = settings.getBoolean(CFG_VARIATES_USE_ALL);
+        // introduced in 2.9 -- load with defaults
+        m_targetReferenceCategory = settings.getDataCell(CFG_TARGET_REFERENCE_CATEGORY, null);
+        m_sortTargetCategories = settings.getBoolean(CFG_SORT_TARGET_CATEGORIES, true);
+        m_sortIncludesCategories = settings.getBoolean(CFG_SORT_INCLUDES_CATEGORIES, true);
+
+    }
+
+    /**
+     * Loads the settings from the node settings object using default values if
+     * some settings are missing.
+     *
+     * @param settings a node settings object
+     */
+    public void loadSettingsForDialog(final NodeSettingsRO settings) {
+        m_targetColumn = settings.getString(CFG_TARGET, null);
+        m_includedColumns = settings.getStringArray(CFG_VARIATES, new String[0]);
+        m_includeAll = settings.getBoolean(CFG_VARIATES_USE_ALL, true);
+        // introduced in 2.9
+        m_targetReferenceCategory = settings.getDataCell(CFG_TARGET_REFERENCE_CATEGORY, null);
+        m_sortTargetCategories = settings.getBoolean(CFG_SORT_TARGET_CATEGORIES, true);
+        m_sortIncludesCategories = settings.getBoolean(CFG_SORT_INCLUDES_CATEGORIES, true);
+    }
+
+    /**
+     * Saves the settings into the node settings object.
+     *
+     * @param settings a node settings object
+     */
+    public void saveSettings(final NodeSettingsWO settings) {
+        settings.addString(CFG_TARGET, m_targetColumn);
+        settings.addStringArray(CFG_VARIATES, m_includedColumns);
+        settings.addBoolean(CFG_VARIATES_USE_ALL, m_includeAll);
+        // introduced in 2.9
+        settings.addDataCell(CFG_TARGET_REFERENCE_CATEGORY, m_targetReferenceCategory);
+        settings.addBoolean(CFG_SORT_TARGET_CATEGORIES, m_sortTargetCategories);
+        settings.addBoolean(CFG_SORT_INCLUDES_CATEGORIES, m_sortIncludesCategories);
+    }
 
     /**
      * The target column which is the dependent variable.
@@ -131,40 +199,59 @@ public class LogRegLearnerSettings {
         m_includeAll = includeAll;
     }
 
-    /**
-     * Loads the settings from the node settings object.
-     *
-     * @param settings a node settings object
-     * @throws InvalidSettingsException if some settings are missing
-     */
-    public void loadSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        m_targetColumn = settings.getString(CFG_TARGET);
-        m_includedColumns = settings.getStringArray(CFG_VARIATES);
-        m_includeAll = settings.getBoolean(CFG_VARIATES_USE_ALL);
-    }
 
     /**
-     * Loads the settings from the node settings object using default values if
-     * some settings are missing.
-     *
-     * @param settings a node settings object
+     * @return the targetReferenceCategory
+     * @since 2.9
      */
-    public void loadSettingsForDialog(final NodeSettingsRO settings) {
-        m_targetColumn = settings.getString(CFG_TARGET, null);
-        m_includedColumns =
-                settings.getStringArray(CFG_VARIATES, new String[0]);
-        m_includeAll = settings.getBoolean(CFG_VARIATES_USE_ALL, true);
+    public DataCell getTargetReferenceCategory() {
+        return m_targetReferenceCategory;
     }
 
+
     /**
-     * Saves the settings into the node settings object.
-     *
-     * @param settings a node settings object
+     * @param targetReferenceCategory the targetReferenceCategory to set
+     * @since 2.9
      */
-    public void saveSettings(final NodeSettingsWO settings) {
-        settings.addString(CFG_TARGET, m_targetColumn);
-        settings.addStringArray(CFG_VARIATES, m_includedColumns);
-        settings.addBoolean(CFG_VARIATES_USE_ALL, m_includeAll);
+    public void setTargetReferenceCategory(final DataCell targetReferenceCategory) {
+        m_targetReferenceCategory = targetReferenceCategory;
     }
+
+
+    /**
+     * @return the sortTargetCategories
+     * @since 2.9
+     */
+    public boolean getSortTargetCategories() {
+        return m_sortTargetCategories;
+    }
+
+
+    /**
+     * @param sortTargetCategories the sortTargetCategories to set
+     * @since 2.9
+     */
+    public void setSortTargetCategories(final boolean sortTargetCategories) {
+        m_sortTargetCategories = sortTargetCategories;
+    }
+
+
+    /**
+     * @return the sortIncludesCategories
+     * @since 2.9
+     */
+    public boolean getSortIncludesCategories() {
+        return m_sortIncludesCategories;
+    }
+
+
+    /**
+     * @param sortIncludesCategories the sortIncludesCategories to set
+     * @since 2.9
+     */
+    public void setSortIncludesCategories(final boolean sortIncludesCategories) {
+        m_sortIncludesCategories = sortIncludesCategories;
+    }
+
 }
+
