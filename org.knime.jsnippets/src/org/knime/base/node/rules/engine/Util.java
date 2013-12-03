@@ -50,6 +50,7 @@
 package org.knime.base.node.rules.engine;
 
 import java.awt.Component;
+import java.text.ParseException;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -360,5 +361,33 @@ public final class Util {
             default:
                 throw new UnsupportedOperationException("Unknown flow variable type: " + type);
         }
+    }
+
+    /**
+     * @param n An int.
+     * @return A {@link String} of {@code max(0, n)} spaces.
+     */
+    public static String nSpaces(final int n) {
+        StringBuilder ret = new StringBuilder();
+        for (int i = n; i-- > 0;) {
+            ret.append(' ');
+        }
+        return ret.toString();
+    }
+
+    /**
+     * Adds some details/context to the error message of the exception.
+     *
+     * @param pe The original {@link ParseException}.
+     * @param line The line with problem.
+     * @param lineNo The line number.
+     * @return A new {@link ParseException} with a bit more context coded into the message.
+     */
+    public static ParseException addContext(final ParseException pe, final String line, final int lineNo) {
+        final ParseException ret =
+            new ParseException("Line: " + lineNo + ": " + pe.getMessage() + "\n" + line + "\n"
+                + nSpaces(pe.getErrorOffset()) + "^", pe.getErrorOffset());
+        ret.setStackTrace(pe.getStackTrace());
+        return ret;
     }
 }

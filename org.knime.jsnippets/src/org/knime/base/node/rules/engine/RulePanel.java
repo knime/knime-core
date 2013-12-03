@@ -97,7 +97,6 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -115,19 +114,11 @@ import org.knime.core.util.ThreadUtils;
  */
 @SuppressWarnings({"serial"})
 public class RulePanel extends JPanel {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(RulePanel.class);
-
-    //    private final boolean m_hasOutputColumn;
-
     private JCheckBox m_inclusionBox;
-
-    //    private final String m_inclusionLabel;
 
     private JLabel m_outputType;
 
     private JTextField m_newColumnName;
-
-    //private JCheckBox m_appendColumn;
 
     private ColumnSelectionPanel m_replaceColumn;
 
@@ -137,8 +128,6 @@ public class RulePanel extends JPanel {
 
     private volatile long m_outputTypeLastSet, m_outputMarkersLastSet;
 
-    //    private JTextComponent m_lastUsedTextComponent;
-    //
     private RuleMainPanel m_mainPanel;
 
     private DataTableSpec m_spec;
@@ -149,8 +138,6 @@ public class RulePanel extends JPanel {
     private Map<String, FlowVariable> m_flowVariables;
 
     private AbstractRuleParser m_parser;
-
-    //    private final boolean m_showColumns;
 
     private RuleNodeSettings m_nodeType;
 
@@ -284,10 +271,7 @@ public class RulePanel extends JPanel {
         return ret;
     }
     private Component createNewColumnTextFieldWithReplace(final String watermark, final int colWidth, final String label) {
-        Box ret = Box.createVerticalBox();//Box.createHorizontalBox();
-//        if (label != null) {
-//            ret.add(new JLabel(label));
-//        }
+        Box ret = Box.createVerticalBox();
         JPanel addColumnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JPanel replaceColumnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         m_outputGroup = new ButtonGroup();
@@ -297,14 +281,6 @@ public class RulePanel extends JPanel {
         JTextField comp = Util.createTextFieldWithWatermark(watermark, colWidth, /*label*/null);
         m_newColumnName = comp;
         addColumnPanel.add(comp);
-//        m_appendColumn = new JCheckBox("Add new column", true);
-//        m_appendColumn.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(final ActionEvent e) {
-//                m_newColumnName.setEnabled(m_appendColumn.isSelected());
-//                m_replaceColumn.setEnabled(!m_appendColumn.isSelected());
-//            }
-//        });
         ActionListener actionListener = new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
@@ -320,9 +296,7 @@ public class RulePanel extends JPanel {
         m_replaceColumn = colSelectionPanel;
         m_outputType = new JLabel(DataValue.UTILITY.getIcon());
         addColumnPanel.add(m_outputType);
-        //ret.add(m_appendColumn);
         replaceColumnPanel.add(m_replaceColRadio);
-        //ret.add(new JLabel("Replace column: "));
         replaceColumnPanel.add(m_replaceColumn);
         ret.add(addColumnPanel);
         ret.add(replaceColumnPanel);
@@ -542,7 +516,7 @@ public class RulePanel extends JPanel {
                 m_replaceColumn.update(spec, m_replaceColumn.getSelectedColumn());
             }
         } catch (NotConfigurableException e) {
-            // TODO Auto-generated catch block
+            throw new IllegalStateException(e.getMessage(), e);
         }
         m_mainPanel.update(m_mainPanel.getExpression(), spec, m_nodeType.allowFlowVariables() ? flowVariables
             : Collections.<String, FlowVariable> emptyMap(), m_nodeType.expressions());
@@ -564,13 +538,13 @@ public class RulePanel extends JPanel {
                 ruleSettings.setReplaceColumn(m_replaceColumn.getSelectedColumn());
                 if (m_outputGroup.isSelected(m_replaceColRadio.getModel())
                     && m_replaceColumn.getSelectedColumn() == null) {
-                    //            if (!m_appendColumn.isSelected() && m_replaceColumn.getSelectedColumn() == null) {
                     throw new InvalidSettingsException("No column was selected for replacement!");
                 }
             }
         } else {
             ruleSettings.setNewcolName("");
         }
+        //Check the rule integrity, configure will also check.
         try {
             computeRules();
         } catch (ParseException e) {
@@ -604,7 +578,6 @@ public class RulePanel extends JPanel {
         if (specs == null || specs.length == 0 || specs[0] == null /*|| specs[0].getNumColumns() == 0*/) {
             throw new NotConfigurableException("No columns available!");
         }
-        //m_ruleEditor.setText("");
         m_spec = specs[0];
         m_parser.setDataTableSpec(m_spec);
         m_parser.setFlowVariables(availableFlowVariables);
@@ -614,10 +587,6 @@ public class RulePanel extends JPanel {
         if (m_nodeType.hasOutput()) {
             String newColName = ruleSettings.getNewColName();
             m_newColumnName.setText(newColName);
-//            m_appendColumn.setSelected(ruleSettings.isAppendColumn());
-//            for (ActionListener l: m_appendColumn.getActionListeners()) {
-//                l.actionPerformed(null);
-//            }
             if (m_replaceColumn != null) {
                 m_outputGroup.setSelected(m_outputGroup.getElements().nextElement().getModel(), ruleSettings.isAppendColumn());
                 m_outputGroup.setSelected(m_replaceColRadio.getModel(), !ruleSettings.isAppendColumn());
@@ -629,32 +598,16 @@ public class RulePanel extends JPanel {
         }
         final KnimeSyntaxTextArea textEditor = m_mainPanel.getTextEditor();
         textEditor.setText("");
-        int line = 0;
-        final RuleFactory factory = RuleFactory.getInstance(m_nodeType);
         StringBuilder text = new StringBuilder();
         for (Iterator<String> it = ruleSettings.rules().iterator(); it.hasNext();) {
             final String rs = it.next();
-            try {
-                factory.parse(rs, m_spec, availableFlowVariables);
-                text.append(rs);
-                if (it.hasNext()) {
-                    text.append('\n');
-                }
-            } catch (ParseException e) {
-                LOGGER.warn("Rule '" + rs + "' (" + line + ") removed, because of " + e.getMessage());
-            } finally {
-                ++line;
+            text.append(rs);
+            if (it.hasNext()) {
+                text.append('\n');
             }
         }
         if (!ruleSettings.rules().iterator().hasNext()) {
             final String defaultText = m_nodeType.defaultText();
-            //            if (!m_hasOutputColumn) {
-            //                defaultText = RuleEngineNodeDialog.FILTER_RULE_LABEL;
-            //            } else if (m_showColumns) {
-            //                defaultText = RuleEngineNodeDialog.RULE_LABEL;
-            //            } else {
-            //                defaultText = RuleEngineVariableNodeDialog.RULE_LABEL;
-            //            }
             final String noText = RuleSupport.toComment(defaultText);
             textEditor.setText(noText);
             text.append(noText);

@@ -30,7 +30,7 @@ import org.knime.core.node.workflow.FlowVariable;
  */
 @RunWith(value = Parameterized.class)
 public class SimpleRuleParserPositiveTest {
-	private SimpleRuleParser simpleRuleParser;
+	private SimpleRuleParser simpleRuleParser, noColumnParser;
 	private String m_rule;
 	private final DataType m_outcomeType;
 	private final String m_ruleToString;
@@ -61,6 +61,9 @@ public class SimpleRuleParserPositiveTest {
 		DataTableSpec spec = new DataTableSpec(dbl, str, integer, bool);
 		simpleRuleParser = new SimpleRuleParser(spec,
 				Collections.<String, FlowVariable> emptyMap());
+        noColumnParser = new SimpleRuleParser(null,
+            Collections.<String, FlowVariable> emptyMap());
+        noColumnParser.disableColumnCheck();
 	}
 
 	/**
@@ -130,7 +133,16 @@ public class SimpleRuleParserPositiveTest {
 		assertNotNull(m_rule, rule);
 		assertEquals(m_rule, m_outcomeType, rule.getOutcome().getType());
 		assertEquals(m_rule, m_ruleToString, rule.toString().split("\n")[0]);
-
 	}
 
+	/**
+	 * Tests, whether we could disable column name check, or not.
+	 * 
+	 * @throws ParseException Should not happen.
+	 */
+	@Test
+	public void testDummyParse() throws ParseException {
+        final Rule dummyRule = noColumnParser.parse(m_rule);
+        assertNotNull(m_rule, dummyRule);
+	}
 }

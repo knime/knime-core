@@ -115,10 +115,16 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
         final Map<String, FlowVariable> availableFlowVariables = getAvailableFlowVariables();
         final RuleFactory factory = RuleFactory.getInstance(RuleNodeSettings.VariableRule);
         final DataTableSpec spec = new DataTableSpec();
+        int line = 0;
         for (String s : m_settings.rules()) {
-            final Rule rule = factory.parse(s, spec, availableFlowVariables);
-            if (rule.getCondition().isEnabled()) {
-                rules.add(rule);
+            ++line;
+            try {
+                final Rule rule = factory.parse(s, spec, availableFlowVariables);
+                if (rule.getCondition().isEnabled()) {
+                    rules.add(rule);
+                }
+            } catch (ParseException e) {
+                throw Util.addContext(e, s, line);
             }
         }
         return rules;
@@ -314,5 +320,21 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         RuleEngineSettings s = new RuleEngineSettings();
         s.loadSettings(settings);
+        validateRules(s.rules());
+    }
+
+    /**
+     * @param rules The rules from a settings.
+     * @throws InvalidSettingsException Parsing failed.
+     */
+    protected void validateRules(final Iterable<String> rules) throws InvalidSettingsException {
+        RuleFactory ruleFactory = RuleFactory.getInstance(RuleNodeSettings.VariableRule);
+        for (String rule : rules) {
+            try {
+                ruleFactory.parse(rule, null, getAvailableInputFlowVariables());
+            } catch (ParseException e) {
+                throw new InvalidSettingsException(e.getMessage(), e);
+            }
+        }
     }
 }

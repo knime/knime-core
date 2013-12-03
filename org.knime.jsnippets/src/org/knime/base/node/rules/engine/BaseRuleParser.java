@@ -52,6 +52,7 @@ package org.knime.base.node.rules.engine;
 import java.io.Serializable;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,6 +62,7 @@ import org.knime.base.node.rules.engine.Rule.Operators;
 import org.knime.base.node.rules.engine.Rule.Outcome;
 import org.knime.base.node.rules.engine.Rule.Outcome.GenericOutcome;
 import org.knime.base.node.rules.engine.Rule.TableReference;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
@@ -92,6 +94,9 @@ public class BaseRuleParser<PredicateType> {
     protected final boolean m_allowTableReferences;
 
     private final Set<Operators> m_operators;
+
+    /** Should we check columns' conformance to the specs? */
+    private boolean m_checkColumns = true;
 
     /**
      * The current state used to parse rules. It also contains helper methods.
@@ -558,6 +563,13 @@ public class BaseRuleParser<PredicateType> {
         this.m_factoryRef = refFactory;
         this.m_allowTableReferences = allowTableReferences;
         this.m_operators = operators;
+    }
+
+    /**
+     * Turns off column check.
+     */
+    protected void disableColumnCheck() {
+        m_checkColumns = false;
     }
 
     /**
@@ -1041,6 +1053,35 @@ public class BaseRuleParser<PredicateType> {
         int startPos = state.getPosition();
         if (state.isColumnRef()) {
             String columnRef = state.readColumnRef();
+            if (!m_checkColumns) {
+                // Create a dummy expression
+                return new Expression() {
+                    @Override
+                    public boolean isConstant() {
+                        return false;
+                    }
+                    @Override
+                    public ASTType getTreeType() {
+                        return ASTType.ColRef;
+                    }
+                    @Override
+                    public DataType getOutputType() {
+                        return DataType.getMissingCell().getType();
+                    }
+                    @Override
+                    public List<DataType> getInputArgs() {
+                        return Collections.emptyList();
+                    }
+                    @Override
+                    public List<Expression> getChildren() {
+                        return Collections.emptyList();
+                    }
+                    @Override
+                    public ExpressionValue evaluate(final DataRow row, final VariableProvider provider) {
+                        throw new IllegalStateException("This expression is only for configuration.");
+                    }
+                };
+            }
             if (m_spec == null) {
                 throw new ParseException("No columns present.", startPos);
             }

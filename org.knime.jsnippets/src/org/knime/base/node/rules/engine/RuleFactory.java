@@ -66,7 +66,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * @author Gabor Bakos
  * @since 2.8
  */
-public class RuleFactory {
+public class RuleFactory implements Cloneable {
     private static final RuleFactory INSTANCE = new RuleFactory(null, true,
         RuleNodeSettings.RuleEngine.supportedOperators());
 
@@ -84,6 +84,9 @@ public class RuleFactory {
             if (!RuleSupport.isComment(rule)) {
                 ParseState state = new ParseState(rule);
                 PMMLRuleParser pmmlRuleParser = new PMMLRuleParser(spec, Collections.<String, FlowVariable> emptyMap());
+                if (!super.m_checkColumns) {
+                    pmmlRuleParser.disableColumnCheck();
+                }
                 pmmlRuleParser.parseBooleanExpression(state);
                 state.skipWS();
                 state.consumeText("=>");
@@ -99,11 +102,24 @@ public class RuleFactory {
 
     private final Set<Operators> m_operators;
 
+    private boolean m_checkColumns = true;
+
     private RuleFactory(final Boolean booleanOutcome, final boolean allowTableReference, final Set<Operators> operators) {
         super();
         this.m_booleanOutcome = booleanOutcome;
         this.m_allowTableReference = allowTableReference;
         this.m_operators = operators;
+    }
+
+    /**
+     * Disables the check for the column names. <br/>
+     * Be careful with this method, as the instance of this class might be shared across different callers, so please
+     * consider {@link #cloned() cloning} before calling this method.
+     *
+     * @see #cloned()
+     */
+    public void disableColumnChecks() {
+        m_checkColumns = false;
     }
 
     /**
@@ -118,8 +134,12 @@ public class RuleFactory {
      */
     public Rule parse(final String rule, final DataTableSpec spec, final Map<String, FlowVariable> flowVariables)
         throws ParseException {
-        return new SimpleRuleParser(spec, flowVariables, ExpressionFactory.getInstance(),
-            ExpressionFactory.getInstance(), m_allowTableReference, m_operators).parse(rule, m_booleanOutcome);
+        SimpleRuleParser parser = new SimpleRuleParser(spec, flowVariables, ExpressionFactory.getInstance(),
+                ExpressionFactory.getInstance(), m_allowTableReference, m_operators);
+        if (!m_checkColumns) {
+            parser.disableColumnCheck();
+        }
+        return parser.parse(rule, m_booleanOutcome);
     }
 
     /**
@@ -140,6 +160,18 @@ public class RuleFactory {
                 return VARIABLE_INSTANCE;
             default:
                 throw new UnsupportedOperationException("Not supported: " + nodeType);
+        }
+    }
+
+    /**
+     * @return A clone of the current instance.
+     * @since 2.9
+     */
+    public RuleFactory cloned() {
+        try {
+            return (RuleFactory)clone();
+        } catch (CloneNotSupportedException e) {
+            throw new IllegalStateException(e);
         }
     }
 }

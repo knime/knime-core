@@ -70,7 +70,10 @@ import org.knime.base.node.rules.engine.BaseRuleParser.ParseState;
 import org.knime.base.node.rules.engine.Expression;
 import org.knime.base.node.rules.engine.RuleEngineNodeModel;
 import org.knime.base.node.rules.engine.RuleEngineSettings;
+import org.knime.base.node.rules.engine.RuleFactory;
+import org.knime.base.node.rules.engine.RuleNodeSettings;
 import org.knime.base.node.rules.engine.RuleSupport;
+import org.knime.base.node.rules.engine.Util;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -176,22 +179,26 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
             if (RuleSupport.isComment(ruleText)) {
                 continue;
             }
-            ParseState state = new ParseState(ruleText);
-            PMMLPredicate expression = parser.parseBooleanExpression(state);
-            SimpleRule simpleRule = ruleSet.addNewSimpleRule();
-            setCondition(simpleRule, expression);
-            state.skipWS();
-            state.consumeText("=>");
-            state.skipWS();
-            Expression outcome = parser.parseOutcomeOperand(state, null);
-            // Only constants are allowed in the outcomes.
-            assert outcome.isConstant() : outcome;
-            rules.add(new Pair<PMMLPredicate, Expression>(expression, outcome));
-            outcomeTypes.add(outcome.getOutputType());
-            simpleRule.setScore(outcome.toString());
-            simpleRule.setConfidence(confidenceForRule(simpleRule, line, ruleText));
-            simpleRule.setWeight(weightForRule(simpleRule, line, ruleText));
-            outcomes.add(simpleRule.getScore());
+            try {
+                ParseState state = new ParseState(ruleText);
+                PMMLPredicate expression = parser.parseBooleanExpression(state);
+                SimpleRule simpleRule = ruleSet.addNewSimpleRule();
+                setCondition(simpleRule, expression);
+                state.skipWS();
+                state.consumeText("=>");
+                state.skipWS();
+                Expression outcome = parser.parseOutcomeOperand(state, null);
+                // Only constants are allowed in the outcomes.
+                assert outcome.isConstant() : outcome;
+                rules.add(new Pair<PMMLPredicate, Expression>(expression, outcome));
+                outcomeTypes.add(outcome.getOutputType());
+                simpleRule.setScore(outcome.toString());
+                simpleRule.setConfidence(confidenceForRule(simpleRule, line, ruleText));
+                simpleRule.setWeight(weightForRule(simpleRule, line, ruleText));
+                outcomes.add(simpleRule.getScore());
+            } catch (ParseException e) {
+                throw Util.addContext(e, ruleText, line);
+            }
         }
         DataType outcomeType = RuleEngineNodeModel.computeOutputType(outcomeTypes, true);
         ColumnRearranger rearranger = new ColumnRearranger(tableSpec);
@@ -364,7 +371,17 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        new RuleEngineSettings().loadSettings(settings);
+        RuleEngineSettings res = new RuleEngineSettings();
+        res.loadSettings(settings);
+        RuleFactory ruleFactory = RuleFactory.getInstance(RuleNodeSettings.PMMLRule).cloned();
+        ruleFactory.disableColumnChecks();
+        for (String rule : res.rules()) {
+            try {
+                ruleFactory.parse(rule, null, getAvailableInputFlowVariables());
+            } catch (ParseException e) {
+                throw new InvalidSettingsException(e.getMessage(), e);
+            }
+        }
     }
 
     /**

@@ -127,10 +127,16 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
         final Map<String, FlowVariable> availableFlowVariables = getAvailableFlowVariables();
         //SimpleRuleParser ruleParser = new SimpleRuleParser(spec, availableFlowVariables);
         RuleFactory factory = RuleFactory.getInstance(nodeType);
+        int line = 0;
         for (String s : m_settings.rules()) {
-            final Rule rule = factory.parse(s, spec, availableFlowVariables);
-            if (rule.getCondition().isEnabled()) {
-                rules.add(rule);
+            ++line;
+            try {
+                final Rule rule = factory.parse(s, spec, availableFlowVariables);
+                if (rule.getCondition().isEnabled()) {
+                    rules.add(rule);
+                }
+            } catch (ParseException e) {
+                throw Util.addContext(e, s, line);
             }
         }
 
@@ -333,6 +339,22 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         RuleEngineSettings s = new RuleEngineSettings();
         s.loadSettings(settings);
+        validateRules(s.rules());
     }
 
+    /**
+     * @param rules
+     * @throws InvalidSettingsException
+     */
+    protected void validateRules(final Iterable<String> rules) throws InvalidSettingsException {
+        RuleFactory ruleFactory = RuleFactory.getInstance(RuleNodeSettings.RuleEngine).cloned();
+        ruleFactory.disableColumnChecks();
+        for (String rule : rules) {
+            try {
+                ruleFactory.parse(rule, null, getAvailableInputFlowVariables());
+            } catch (ParseException e) {
+                throw new InvalidSettingsException(e.getMessage(), e);
+            }
+        }
+    }
 }
