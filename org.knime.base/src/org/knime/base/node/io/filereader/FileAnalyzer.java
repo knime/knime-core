@@ -954,8 +954,9 @@ public final class FileAnalyzer {
                 // do it only for types not set by the user
                 assert types[t].equals(IntCell.TYPE);
                 types[t] = StringCell.TYPE;
+                boolean gotOneVal = missValPattern[t] != null;
                 missValPattern[t] = null;
-                if ((cnt < 21)
+                if ((cnt < 21) && !gotOneVal
                         && ((userColProps == null)
                                 || (userColProps.size() <= t)
                                 || (userColProps.get(t) == null)
@@ -1433,7 +1434,10 @@ public final class FileAnalyzer {
         int consEmptyTokens = 0; // consecutive empty tokens read
 
         while (true) {
-
+            if ((settings.getMaximumNumberOfRowsToRead() > -1)
+                && (linesRead >= settings.getMaximumNumberOfRowsToRead())) {
+                break;
+            }
             String token = tokenizer.nextToken();
             if (fileSize > 0) {
                 exec.setProgress(reader.getNumberOfBytesRead()
@@ -1564,7 +1568,7 @@ public final class FileAnalyzer {
         tokenizer.setSettings(settings);
         double fileSize = reader.getFileSize();
 
-        int linesRead = 0;
+        int dataLinesRead = 0; // non-empty lines
         int colCount = 0; // the counter per line
         int numOfCols = 0; // the maximum
         int consEmptyTokens = 0; // consecutive empty tokens
@@ -1584,12 +1588,11 @@ public final class FileAnalyzer {
                     } else {
                         consEmptyTokens = 0;
                     }
-
                 } else {
                     // null token (=EOF) is a row delimiter
                     if (colCount > 0) {
                         // ignore empty lines
-                        linesRead++;
+                        dataLinesRead++;
                     }
                     if (token == null && colCount >= numOfCols) {
                         // if the last line has no LF, EOF is delimits the last column
@@ -1613,14 +1616,19 @@ public final class FileAnalyzer {
                     if (token == null) {
                         break;
                     }
-
+                    if (settings.getMaximumNumberOfRowsToRead() > -1) {
+                        if (tokenizer.getLineNumber() > settings.getSkipFirstLines()
+                            + settings.getMaximumNumberOfRowsToRead()) {
+                            break;
+                        }
+                    }
                     if (cutItShort(exec)) {
                         // cutItShort also checks for interrupts
-                        if (linesRead >= NUMOFLINES) {
+                        if (dataLinesRead >= NUMOFLINES) {
                             settings.setAnalyzeUsedAllRows(false);
                             break;
                         }
-                        exec.setProgress(linesRead / (double)NUMOFLINES);
+                        exec.setProgress(dataLinesRead / (double)NUMOFLINES);
                     } else {
                         if (fileSize > 0) {
                             exec.setProgress(reader.getNumberOfBytesRead()
