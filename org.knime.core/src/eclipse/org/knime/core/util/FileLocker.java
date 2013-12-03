@@ -57,7 +57,7 @@ import java.nio.channels.FileLock;
 
 /**
  * This class can be used to get a lock on the specified file. The lock can be
- * aquired and released. If it is not explicitly released, it will be released
+ * acquired and released. If it is not explicitly released, it will be released
  * as soon as the JVM is terminated.
  *
  * @author Christoph Sieb, University of Konstanz
@@ -81,9 +81,9 @@ public class FileLocker {
     }
 
     /**
-     * Tries to auquire the lock on the given {@link File}.
+     * Tries to acquire the lock on the given {@link File}.
      *
-     * @return true, if the lock could be aquired, false otherwise
+     * @return true, if the lock could be acquired, false otherwise
      *
      * @throws IOException in case there is something wrong with the io actions
      */
@@ -97,7 +97,7 @@ public class FileLocker {
                     "Lock could not be aquired on: '" + m_lockFile
                             + "'. Reason: " + ioe.getMessage();
 
-            throw new IOException(specificMessage);
+            throw new IOException(specificMessage, ioe);
         }
         if (m_fileLock != null) {
             return true;
@@ -108,7 +108,7 @@ public class FileLocker {
     }
 
     /**
-     * Releases a previously aquired lock on the specified file. If there was no
+     * Releases a previously acquired lock on the specified file. If there was no
      * lock on the file, nothing happens.
      */
     public synchronized void release() {
