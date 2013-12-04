@@ -328,7 +328,8 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
      * @throws InvalidSettingsException Parsing failed.
      */
     protected void validateRules(final Iterable<String> rules) throws InvalidSettingsException {
-        RuleFactory ruleFactory = RuleFactory.getInstance(RuleNodeSettings.VariableRule);
+        RuleFactory ruleFactory = RuleFactory.getInstance(RuleNodeSettings.VariableRule).cloned();
+        ruleFactory.disableFlowVariableChecks();
         for (String rule : rules) {
             try {
                 ruleFactory.parse(rule, null, getAvailableInputFlowVariables());
