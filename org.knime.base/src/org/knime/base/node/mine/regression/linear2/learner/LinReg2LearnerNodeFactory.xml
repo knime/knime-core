@@ -29,13 +29,19 @@
             created as described in section 
             <a href="http://en.wikipedia.org/wiki/Categorical_variable#Categorical_variables_in_regression">
             Categorical variables in regression</a>.
-            
         </option>  		
         <option name="Predefined Offset Value">
             By default, the regression model includes a constant term. 
             Selecting this option the given constant term is used. The value works like
             a user defined intercept.
-        </option>         
+        </option>   
+        <option name="Missing Values in Input Data">
+			Define wether missing value in the input are ignored or whether the node execution should fail
+			on missing values. 
+        </option>      
+        <option name="Scatter Plot View">
+			Specify the rows that shall be available as data points in the scatter plot view. 
+        </option>             
 	</fullDescription>
     <ports>
         <inPort index="0" name="Input data">Table on which to perform regression.</inPort>
