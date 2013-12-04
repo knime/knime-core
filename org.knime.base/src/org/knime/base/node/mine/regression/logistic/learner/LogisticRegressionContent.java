@@ -677,6 +677,9 @@ public final class LogisticRegressionContent {
             if (z >  8.0) {
                 return 1.0;
             }
+            if (Double.isNaN(z)) {
+                return Double.NaN;
+            }
             double sum = 0.0, term = z;
             for (int i = 3; sum + term != sum; i += 2) {
                 sum  = sum + term;

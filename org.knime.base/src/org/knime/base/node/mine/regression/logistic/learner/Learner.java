@@ -166,6 +166,9 @@ final class Learner {
             irlsRls(trainingData.iterator(), beta, rC, tcC);
             exec.checkCanceled();
             loglike = likelihood(trainingData.iterator(), beta, rC, tcC);
+            if (Double.isInfinite(loglike) || Double.isNaN(loglike)) {
+                throw new RuntimeException("Log-likelihood is not a number.");
+            }
             exec.checkCanceled();
             // test for decreasing likelihood
             while ((Double.isInfinite(loglike) || Double.isNaN(loglike)
