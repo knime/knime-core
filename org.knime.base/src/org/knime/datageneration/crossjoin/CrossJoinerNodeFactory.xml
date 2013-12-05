@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./xjoiner.png" type="Manipulator">
+    <name>Cross Joiner</name>
+    
+    <shortDescription>
+        Performs a cross join of two tables
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>Performs a cross join of two tables. Each row of the first table is concatenated with 
+        each row of the second table.</intro>
+        <option name="Second table column suffix">
+        The suffix attached to a column's name if the second table contains a column with the same name.
+        The column names of the first inport are always obtained. If there are duplicates found in the second table
+        the suffix is added once or multiple times to ensure uniqueness. 
+        </option>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="First Table">The first table to be joined</inPort>
+        <inPort index="1" name="Second Table">The second table to be joined</inPort>
+        <outPort index="0" name="Joined Table">Cross join</outPort>
+    </ports>    
+</knimeNode>

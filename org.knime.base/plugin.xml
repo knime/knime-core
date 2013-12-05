@@ -455,6 +455,11 @@
             id="org.knime.base.node.preproc.joiner.Joiner2NodeFactory"/>
       <node
             category-path="/manipulation/column/column-split+combine"
+            factory-class="org.knime.datageneration.crossjoin.CrossJoinerNodeFactory"
+            id="org.knime.datageneration.crossjoin.CrossJoinerNodeFactory"
+            after="org.knime.base.node.preproc.joiner.Joiner2NodeFactory" />
+      <node
+            category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.split2.SplitNodeFactory2"
             id="org.knime.base.node.preproc.split2.SplitNodeFactory2"/>
       <node
