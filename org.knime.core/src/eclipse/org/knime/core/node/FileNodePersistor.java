@@ -66,8 +66,11 @@ import java.util.UUID;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.FileStorePortObject;
+import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.FileStoreKey;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
@@ -429,6 +432,14 @@ public class FileNodePersistor implements NodePersistor {
                     PortObjectSerializer<?> serializer =
                         PortUtil.getPortObjectSerializer(cl.asSubclass(PortObject.class));
                     object = serializer.loadPortObject(in, spec, exec);
+                    if (object instanceof FileStorePortObject) {
+                        File fileStoreXML = new File(objectFile.getParent(), "filestore.xml");
+                        final ModelContentRO fileStoreModelContent =
+                                ModelContent.loadFromXML(new FileInputStream(fileStoreXML));
+                        FileStoreKey fileStoreKey = FileStoreKey.load(fileStoreModelContent);
+                        FileStoreUtil.retrieveFileStoreHandlerFrom(
+                            (FileStorePortObject)object, fileStoreKey, fileStoreHandlerRepository);
+                    }
                     in.close();
                 }
             }
@@ -1340,6 +1351,13 @@ public class FileNodePersistor implements NodePersistor {
                         PortUtil.getPortObjectZipOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
                     PortObjectSerializer serializer = PortUtil.getPortObjectSerializer(object.getClass());
                     serializer.savePortObject(object, out, exec);
+                    if (object instanceof FileStorePortObject) {
+                        FileStoreKey fileStoreKey = FileStoreUtil.translateToLocal((FileStorePortObject)object);
+                        File fileStoreXML = new File(objectDir, "filestore.xml");
+                        final ModelContent fileStoreModelContent = new ModelContent("filestore");
+                        fileStoreKey.save(fileStoreModelContent);
+                        fileStoreModelContent.saveToXML(new FileOutputStream(fileStoreXML));
+                    }
                     out.close();
                 }
                 settings.addString("port_object_location", objectPath);

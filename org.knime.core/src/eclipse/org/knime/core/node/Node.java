@@ -75,6 +75,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerException;
+import org.knime.core.data.filestore.FileStorePortObject;
+import org.knime.core.data.filestore.FileStoreUtil;
+import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
@@ -1216,6 +1219,13 @@ public final class Node implements NodeModelWarningListener {
         PortObjectZipInputStream objIn = PortUtil.getPortObjectZipInputStream(inStream);
         PortObject result = obSer.loadPortObject(objIn, specCopy, exec);
         objIn.close();
+        if (portObject instanceof FileStorePortObject) {
+            FileStorePortObject sourceFSObj = (FileStorePortObject)portObject;
+            FileStoreProxy sourceFSProxy = FileStoreUtil.getFileStoreProxy(sourceFSObj);
+            FileStorePortObject resultFSObj = (FileStorePortObject)result;
+            FileStoreUtil.retrieveFileStoreHandlerFrom(resultFSObj, sourceFSProxy.getFileStoreKey(),
+                sourceFSProxy.getFileStoreHandler().getFileStoreHandlerRepository());
+        }
         if (!deferredOutputStream.isInMemory()) {
             deferredOutputStream.getFile().delete();
         }
