@@ -46,7 +46,7 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.datageneration.crossjoin;
+package org.knime.base.node.preproc.crossjoin;
 
 import java.io.File;
 import java.io.IOException;
@@ -75,8 +75,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * This is the model implementation of CrossJoiner.
  *
  *
- * @author Alexander Fillbrunn, Universität Konstanz
- * @author  Iris Adae, Universität Konstanz
+ * @author Alexander Fillbrunn, Universitï¿½t Konstanz
+ * @author  Iris Adae, Universitï¿½t Konstanz
  */
 public class CrossJoinerNodeModel extends NodeModel {
 

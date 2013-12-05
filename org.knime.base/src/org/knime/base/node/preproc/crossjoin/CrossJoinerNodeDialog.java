@@ -46,62 +46,26 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.datageneration.crossjoin;
+package org.knime.base.node.preproc.crossjoin;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
 
 /**
- * <code>NodeFactory</code> for the "CrossJoiner" Node.
+ * <code>NodeDialog</code> for the "CrossJoiner" Node.
  *
- *
- * @author Alexander Fillbrunn, Universität Konstanz
- * @author  Iris Adae, Universität Konstanz
+ * @author Alexander Fillbrunn, Universitï¿½t Konstanz
+ * @author  Iris Adae, Universitï¿½t Konstanz
  */
-public class CrossJoinerNodeFactory
-        extends NodeFactory<CrossJoinerNodeModel> {
+public class CrossJoinerNodeDialog extends DefaultNodeSettingsPane {
 
     /**
-     * {@inheritDoc}
+     * New pane for configuring the CrossJoiner node.
      */
-    @Override
-    public CrossJoinerNodeModel createNodeModel() {
-        return new CrossJoinerNodeModel();
+    protected CrossJoinerNodeDialog() {
+        addDialogComponent(new DialogComponentString(
+                            CrossJoinerNodeModel.createRightColumnNameSuffixSettingsModel(),
+                                                     "Second table's column name suffix"));
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<CrossJoinerNodeModel> createNodeView(final int viewIndex,
-            final CrossJoinerNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new CrossJoinerNodeDialog();
-    }
-
 }
 
