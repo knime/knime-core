@@ -85,6 +85,11 @@ public final class FileStoreProxy {
         return m_fileStoreKey;
     }
 
+    /** @return the fileStoreHandler */
+    public IFileStoreHandler getFileStoreHandler() {
+        return m_fileStoreHandler;
+    }
+
     /** @noreference This method is not intended to be referenced by clients. */
     public void retrieveFileStoreHandlerFrom(final FileStoreKey key,
             final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
@@ -125,6 +130,14 @@ public final class FileStoreProxy {
     @Override
     public int hashCode() {
         return m_fileStoreKey.hashCode();
+    }
+
+    public FileStoreKey translateToLocal(final FlushCallback callback) {
+        if (m_fileStoreHandler instanceof IWriteFileStoreHandler) {
+            return ((IWriteFileStoreHandler)m_fileStoreHandler).translateToLocal(getFileStore(), callback);
+        } else {
+            return m_fileStoreKey;
+        }
     }
 
     /** Marker interface implemented by the {@link FileStorePortObject} and {@link FileStoreCell}. Both classes

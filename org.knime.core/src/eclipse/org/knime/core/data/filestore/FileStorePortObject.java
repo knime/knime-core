@@ -140,4 +140,10 @@ public abstract class FileStorePortObject implements PortObject, FlushCallback {
         return m_fileStoreProxy.hashCode();
     }
 
+    /** @return the fileStoreProxy */
+    FileStoreProxy getFileStoreProxy() {
+        return m_fileStoreProxy;
+    }
+
+
 }

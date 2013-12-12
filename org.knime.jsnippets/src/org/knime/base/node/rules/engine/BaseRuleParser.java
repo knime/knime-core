@@ -98,6 +98,9 @@ public class BaseRuleParser<PredicateType> {
     /** Should we check columns' conformance to the specs? */
     private boolean m_checkColumns = true;
 
+    /** Should we check flow variables' conformance to the available flow vars? */
+    private boolean m_checkFlowVars = true;
+
     /**
      * The current state used to parse rules. It also contains helper methods.
      *
@@ -573,6 +576,13 @@ public class BaseRuleParser<PredicateType> {
     }
 
     /**
+     * Turns off flow variable check.
+     */
+    protected void disableFlowVariableCheck() {
+        m_checkFlowVars = false;
+    }
+
+    /**
      * For outcomes we might want to restrict the parsing, you can override this method to specify how should the
      * {@link Outcome} be parsed.
      *
@@ -979,8 +989,7 @@ public class BaseRuleParser<PredicateType> {
             state.consume();
             return m_factoryRef.list(operands);
         }
-        String columnRef = state.readColumnRef();
-        return m_factoryRef.columnRef(m_spec, columnRef);
+        return parseColumnExpression(state, false);
     }
 
     /**
@@ -1110,6 +1119,35 @@ public class BaseRuleParser<PredicateType> {
         int startPos = state.getPosition();
         if (state.isFlowVariableRef()) {
             String flowVarRef = state.readFlowVariable();
+            if (!m_checkFlowVars) {
+                // Create a dummy expression
+                return new Expression() {
+                    @Override
+                    public boolean isConstant() {
+                        return false;
+                    }
+                    @Override
+                    public ASTType getTreeType() {
+                        return ASTType.FlowVarRef;
+                    }
+                    @Override
+                    public DataType getOutputType() {
+                        return DataType.getMissingCell().getType();
+                    }
+                    @Override
+                    public List<DataType> getInputArgs() {
+                        return Collections.emptyList();
+                    }
+                    @Override
+                    public List<Expression> getChildren() {
+                        return Collections.emptyList();
+                    }
+                    @Override
+                    public ExpressionValue evaluate(final DataRow row, final VariableProvider provider) {
+                        throw new IllegalStateException("This expression is only for configuration.");
+                    }
+                };
+            }
             try {
                 return m_factoryRef.flowVarRef(m_flowVariables, flowVarRef);
             } catch (IllegalStateException e) {

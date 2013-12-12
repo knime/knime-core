@@ -54,6 +54,7 @@ import java.io.IOException;
 
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.FileStoreKey;
+import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
@@ -79,6 +80,11 @@ public final class FileStoreUtil {
     /** @noreference This method is not intended to be referenced by clients. */
     public static FileStoreKey getFileStoreKey(final FileStoreCell cell) {
         return cell.getFileStoreKey();
+    }
+
+    /** @noreference This method is not intended to be referenced by clients. */
+    public static FileStoreProxy getFileStoreProxy(final FileStorePortObject object) {
+        return object.getFileStoreProxy();
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
@@ -119,6 +125,18 @@ public final class FileStoreUtil {
             final FileStoreKey key,
             final FileStoreHandlerRepository repos) throws IOException {
         cell.retrieveFileStoreHandlerFrom(key, repos);
+    }
+
+    /** @noreference This method is not intended to be referenced by clients. */
+    public static void retrieveFileStoreHandlerFrom(final FileStorePortObject object,
+        final FileStoreKey key, final FileStoreHandlerRepository repos) throws IOException {
+        object.retrieveFileStoreHandlerFrom(key, repos);
+    }
+
+    /** @noreference This method is not intended to be referenced by clients. */
+    public static FileStoreKey translateToLocal(final FileStorePortObject object) {
+        FileStoreProxy fileStoreProxy = object.getFileStoreProxy();
+        return fileStoreProxy.translateToLocal(object);
     }
 
     /** @noreference This method is not intended to be referenced by clients. */

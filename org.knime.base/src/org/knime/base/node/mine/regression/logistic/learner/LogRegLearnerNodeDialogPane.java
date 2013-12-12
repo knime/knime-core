@@ -67,6 +67,7 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.NominalValue;
@@ -154,7 +155,8 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         c.gridy++;
         c.gridwidth = 3;
         c.weightx = 1;
-        m_notSortTarget = new JCheckBox("Use natural order of target categories.");
+        m_notSortTarget =
+                new JCheckBox("Use order from target column domain (only relevant for output representation)");
         p.add(m_notSortTarget, c);
 
 
@@ -192,8 +194,8 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
         p.add(m_filterPanel, c);
 
         c.gridy++;
-        m_notSortIncludes = new JCheckBox("Use natural order of categories. "
-            + "Applies to included columns with nominal data.");
+        m_notSortIncludes = new JCheckBox("Use order from column domain (applies only to nominal columns). "
+            + "First value is chosen as reference for dummy variables.");
         p.add(m_notSortIncludes, c);
 
         return p;
@@ -214,17 +216,20 @@ public final class LogRegLearnerNodeDialogPane extends NodeDialogPane {
                 // select last as default
                 DataCell newSelectedItem = null;
                 DataCell lastItem = null;
-                for (DataCell cell : colSpec.getDomain().getValues()) {
-                    m_targetReferenceCategory.addItem(cell);
-                    lastItem = cell;
-                    if (cell.equals(selectedItem)) {
-                        newSelectedItem = selectedItem;
+                final DataColumnDomain domain = colSpec.getDomain();
+                if (domain.hasValues()) {
+                    for (DataCell cell : domain.getValues()) {
+                        m_targetReferenceCategory.addItem(cell);
+                        lastItem = cell;
+                        if (cell.equals(selectedItem)) {
+                            newSelectedItem = selectedItem;
+                        }
                     }
+                    if (newSelectedItem == null) {
+                        newSelectedItem = lastItem;
+                    }
+                    m_targetReferenceCategory.getModel().setSelectedItem(newSelectedItem);
                 }
-                if (newSelectedItem == null) {
-                    newSelectedItem = lastItem;
-                }
-                m_targetReferenceCategory.getModel().setSelectedItem(newSelectedItem);
             }
         }
         m_targetReferenceCategory.setEnabled(m_targetReferenceCategory.getModel().getSize() > 0);

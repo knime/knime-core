@@ -24,11 +24,25 @@
     		added to the learned model.
 		</intro>
         <option name="Target">
-            To select the target column. Only columns with nominal data are allowed.
+            Select the target column. Only columns with nominal data are allowed. The reference category is empty
+            if the domain of the target column is not available. In this case the node determines the domain values right 
+            before computing the logistic regression model and chooses the last domain value as the targets reference 
+            category.<br />
+            By default the target domain values are sorted lexicographically in the output, but you can enforce the 
+            order of the target column domain to be preserved by checking the box.
+            <br />
+            Note, if a target reference column is selected in the dropdown the checkbox will have no influence on the
+            coefficients of the model except that the output representation (e.g. order of rows in the coefficient table)
+            may vary.
         </option>
         <option name="Values">
-            To specify the independent columns the should be included in the regression model. 
-            Numeric and nominal data can be included.
+            Specify the independent columns that should be included in the regression model. 
+            Numeric and nominal data can be included.<br />
+            By default the domain values (categories) of nominal valued columns are sorted lexicographically, 
+            but you can check that the order from the column domain is used. Please note that the first
+            category is used as a reference when creating the 
+            <a href="http://en.wikipedia.org/wiki/Categorical_variable#Categorical_variables_in_regression">
+            dummy variables</a>.
         </option>  		
 	</fullDescription>
     <ports>

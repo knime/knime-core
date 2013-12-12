@@ -104,6 +104,8 @@ public class RuleFactory implements Cloneable {
 
     private boolean m_checkColumns = true;
 
+    private boolean m_checkFlowVars = true;
+
     private RuleFactory(final Boolean booleanOutcome, final boolean allowTableReference, final Set<Operators> operators) {
         super();
         this.m_booleanOutcome = booleanOutcome;
@@ -123,6 +125,17 @@ public class RuleFactory implements Cloneable {
     }
 
     /**
+     * Disables the check for the flow variable names. <br/>
+     * Be careful with this method, as the instance of this class might be shared across different callers, so please
+     * consider {@link #cloned() cloning} before calling this method.
+     *
+     * @see #cloned()
+     */
+    public void disableFlowVariableChecks() {
+        m_checkFlowVars = false;
+    }
+
+    /**
      * Creates a new rule by parsing a rule string.
      *
      * @param rule the rule string
@@ -138,6 +151,9 @@ public class RuleFactory implements Cloneable {
                 ExpressionFactory.getInstance(), m_allowTableReference, m_operators);
         if (!m_checkColumns) {
             parser.disableColumnCheck();
+        }
+        if (!m_checkFlowVars) {
+            parser.disableFlowVariableCheck();
         }
         return parser.parse(rule, m_booleanOutcome);
     }

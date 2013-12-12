@@ -349,6 +349,7 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
     protected void validateRules(final Iterable<String> rules) throws InvalidSettingsException {
         RuleFactory ruleFactory = RuleFactory.getInstance(RuleNodeSettings.RuleEngine).cloned();
         ruleFactory.disableColumnChecks();
+        ruleFactory.disableFlowVariableChecks();
         for (String rule : rules) {
             try {
                 ruleFactory.parse(rule, null, getAvailableInputFlowVariables());

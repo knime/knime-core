@@ -375,6 +375,7 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
         res.loadSettings(settings);
         RuleFactory ruleFactory = RuleFactory.getInstance(RuleNodeSettings.PMMLRule).cloned();
         ruleFactory.disableColumnChecks();
+        ruleFactory.disableFlowVariableChecks();
         for (String rule : res.rules()) {
             try {
                 ruleFactory.parse(rule, null, getAvailableInputFlowVariables());
