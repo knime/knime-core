@@ -50,6 +50,7 @@
  */
 package org.knime.base.node.io.extractcontextprop;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -60,6 +61,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -70,6 +72,8 @@ final class ReadContextPropertyConfiguration {
 
     /** Context variable name for workflow name. */
     public static final String CONTEXT_WORKFLOW_NAME = "context.workflow.name";
+    /** Context variable name for mount-point-relative workflow path. */
+    public static final String CONTEXT_WORKFLOW_PATH = "context.workflow.path";
     /** Context variable name for workflow user. */
     public static final String CONTEXT_SERVER_USER = "context.workflow.user";
     /** Context variable name for workflow temporary location. */
@@ -86,6 +90,7 @@ final class ReadContextPropertyConfiguration {
     private static List<String> contextProperties = new ArrayList<String>();
     static {
         contextProperties.add(CONTEXT_WORKFLOW_NAME);
+        contextProperties.add(CONTEXT_WORKFLOW_PATH);
         contextProperties.add(CONTEXT_SERVER_USER);
         contextProperties.add(CONTEXT_TEMP_LOCATION);
         contextProperties.add(CONTEXT_AUTHOR);
@@ -179,6 +184,20 @@ final class ReadContextPropertyConfiguration {
         WorkflowManager manager = NodeContext.getContext().getWorkflowManager();
         if (CONTEXT_WORKFLOW_NAME.equals(property)) {
             return manager.getName();
+        }
+        if (CONTEXT_WORKFLOW_PATH.equals(property)) {
+            WorkflowContext context = manager.getContext();
+            File wfLocation = context.getOriginalLocation() == null
+                    ? context.getCurrentLocation() : context.getOriginalLocation();
+            File mpLocation = context.getMountpointRoot();
+            if (mpLocation == null || wfLocation == null) {
+                return "";
+            }
+            String wfPath = wfLocation.getAbsolutePath();
+            String mpPath = mpLocation.getAbsolutePath();
+            assert wfPath.startsWith(mpPath);
+            String resultPath = wfPath.substring(mpPath.length());
+            return resultPath.replace("\\", "/");
         }
         if (CONTEXT_SERVER_USER.equals(property)) {
             return manager.getContext().getUserid();
