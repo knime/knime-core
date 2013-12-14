@@ -227,7 +227,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 // is warned later during configuration)
                 NodeSettings washedSettings = new NodeSettings("model");
                 m_node.saveModelSettingsTo(washedSettings);
-                washedModelSettings = modelSettings;
+                washedModelSettings = washedSettings;
             }
         } catch (Exception e) {
             final String error;
