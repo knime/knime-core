@@ -111,34 +111,39 @@ class WorkflowDialogsTest extends WorkflowTest {
             }
 
             if (node instanceof SingleNodeContainer) {
-                LOGGER.debug("Opening dialog of node " + ((SingleNodeContainer)node).getName());
-                final AtomicReference<Exception> exRef = new AtomicReference<Exception>();
-                SwingUtilities.invokeAndWait(new Runnable() {
-                    @Override
-                    public void run() {
-                        final JFrame testFrame = new JFrame("Dialog for " + node.getName());
-                        try {
-                            NodeDialogPane dlg = node.getDialogPaneWithSettings();
-                            testFrame.getContentPane().add(dlg.getPanel());
-                            testFrame.pack();
-                            testFrame.setVisible(true);
-                            NodeSettings settings = new NodeSettings("bla");
-                            dlg.finishEditingAndSaveSettingsTo(settings);
-                            dlg.callOnClose();
-                        } catch (Exception ex) {
-                            exRef.set(ex);
-                        } finally {
-                            testFrame.dispose();
+                if (((SingleNodeContainer)node).isInactive()) {
+                    LOGGER.debug("Skipping dialog of node " + ((SingleNodeContainer)node).getName()
+                            + " because the node is inactive");
+                } else {
+                    LOGGER.debug("Opening dialog of node " + ((SingleNodeContainer)node).getName());
+                    final AtomicReference<Exception> exRef = new AtomicReference<Exception>();
+                    SwingUtilities.invokeAndWait(new Runnable() {
+                        @Override
+                        public void run() {
+                            final JFrame testFrame = new JFrame("Dialog for " + node.getName());
+                            try {
+                                NodeDialogPane dlg = node.getDialogPaneWithSettings();
+                                testFrame.getContentPane().add(dlg.getPanel());
+                                testFrame.pack();
+                                testFrame.setVisible(true);
+                                NodeSettings settings = new NodeSettings("bla");
+                                dlg.finishEditingAndSaveSettingsTo(settings);
+                                dlg.callOnClose();
+                            } catch (Exception ex) {
+                                exRef.set(ex);
+                            } finally {
+                                testFrame.dispose();
+                            }
                         }
+                    });
+                    if (exRef.get() != null) {
+                        String msg =
+                                "Dialog of node '" + node.getNameWithID() + "' has thrown an "
+                                        + exRef.get().getClass().getSimpleName() + ": " + exRef.get().getMessage();
+                        AssertionFailedError error = new AssertionFailedError(msg);
+                        error.initCause(exRef.get());
+                        result.addFailure(this, error);
                     }
-                });
-                if (exRef.get() != null) {
-                    String msg =
-                            "Dialog of node '" + node.getNameWithID() + "' has thrown an "
-                                    + exRef.get().getClass().getSimpleName() + ": " + exRef.get().getMessage();
-                    AssertionFailedError error = new AssertionFailedError(msg);
-                    error.initCause(exRef.get());
-                    result.addFailure(this, error);
                 }
             } else if (node instanceof WorkflowManager) {
                 checkDialogs(result, (WorkflowManager)node);
