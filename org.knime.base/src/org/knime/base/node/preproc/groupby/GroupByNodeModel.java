@@ -714,7 +714,7 @@ public class GroupByNodeModel extends NodeModel {
             final BufferedDataTable table, final List<String> groupByCols,
             final int maxUniqueVals) {
         return new GlobalSettings(FileStoreFactory.createWorkflowFileStoreFactory(exec), groupByCols,
-                maxUniqueVals, m_valueDelimiter.getStringValue(),
+                maxUniqueVals, m_valueDelimiter.getJavaUnescapedStringValue(),
                 table.getDataTableSpec(), table.getRowCount());
     }
 

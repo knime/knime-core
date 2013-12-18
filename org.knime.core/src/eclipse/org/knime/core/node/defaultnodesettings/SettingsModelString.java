@@ -50,6 +50,7 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -158,6 +159,17 @@ implements SettingsModelFlowVariableCompatible {
      */
     public String getStringValue() {
         return m_value;
+    }
+
+    /**
+     * Get current value unescaping special characters from the literal string ("\n", "\t", etc. will be
+     * replaced by newline, tab, etc.).
+     * @return The unescaped string (or null if not set).
+     * @since 2.10
+     * @see StringEscapeUtils#unescapeJava(String)
+     */
+    public String getJavaUnescapedStringValue() {
+        return StringEscapeUtils.unescapeJava(getStringValue());
     }
 
     /**
