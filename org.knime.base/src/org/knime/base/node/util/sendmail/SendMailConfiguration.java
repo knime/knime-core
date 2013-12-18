@@ -606,6 +606,9 @@ final class SendMailConfiguration {
         if (!StringUtils.isBlank(getBcc())) {
             message.addRecipients(Message.RecipientType.BCC, parseAndValidateRecipients(getBcc()));
         }
+        if (message.getAllRecipients() == null) {
+            throw new InvalidSettingsException("No recipients specified");
+        }
         message.setHeader("X-Mailer", "KNIME/" + KNIMEConstants.VERSION);
         message.setHeader("X-Priority", m_priority.toXPriority());
         message.setSentDate(new Date());
