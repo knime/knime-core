@@ -191,6 +191,9 @@ public class HistogramColumn implements Cloneable {
          * @param delta
          */
         private void update(final KeyEvent event, final int delta) {
+            if (m_rowKeys == null) {
+                return;
+            }
             for (Entry<Integer, Set<RowKey>> entry : m_rowKeys.entrySet()) {
                 Set<RowKey> set = entry.getValue();
                 int bin = entry.getKey().intValue();
