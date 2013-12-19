@@ -257,7 +257,8 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         try {
-            parseRules();
+            List<Rule> rules = parseRules();
+            performExecute(rules);
             return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
         } catch (ParseException ex) {
             throw new InvalidSettingsException(ex.getMessage(), ex);
