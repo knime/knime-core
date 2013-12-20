@@ -55,6 +55,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.regex.Matcher;
@@ -81,41 +82,71 @@ public class BrowserInitializer {
 
     private static final Pattern VERSION_PATTERN = Pattern.compile("Milestone=(\\d+)\\.(\\d+)");
 
+    private static final String WEBKIT = "webkit";
+
+    private static final String MOZILLA = "mozilla";
+
     static {
-        try {
-            if (System.getProperty(PROPERTY_DEFAULTTYPE) == null) {
-                Class<?> webkitClass = Class.forName("org.eclipse.swt.browser.WebKit");
-                Method m = webkitClass.getDeclaredMethod("isInstalled");
-                Boolean compatibleWebkitInstalled = (Boolean)m.invoke(null);
-
-                if (compatibleWebkitInstalled) {
-                    System.setProperty(PROPERTY_DEFAULTTYPE, "webkit");
-                    logger.debug("Using WebKit as browser");
-                } else if (System.getProperty("XUL") == null) {
-                    File xulRunner = findCompatibleXulrunner();
-                    if (xulRunner != null) {
-                        System.setProperty(XUL, xulRunner.getAbsolutePath());
-                        System.setProperty(PROPERTY_DEFAULTTYPE, "mozilla");
-                        logger.info("Using xulrunner at '" + xulRunner.getAbsolutePath()
-                                + "' as internal web browser. If you want to change this," + " add '-D" + XUL
-                                + "=...' to knime.ini");
-                    } else {
-                        // this is for safety, because incompatible version lead to hard crashes
-                        System.setProperty(XUL, "/dev/null");
-
-                        String msg =
-                                "No compatible web browser found. Node descriptions and online help will not work."
-                                        + "Please see http://tech.knime.org/faq#q6 for details";
-                        logger.warn(msg);
-                        System.err.println(msg);
-                    }
+        if (System.getProperty(PROPERTY_DEFAULTTYPE) == null) {
+            try {
+                if (isWebkitInstalled() && isWebkitComaptible()) {
+                    // At this point the installed webkit is ok
+                    System.setProperty(PROPERTY_DEFAULTTYPE, WEBKIT);
+                    logger.debug("Using WebKit as browser.");
+                } else {
+                    // Default to mozilla
+                    System.setProperty(PROPERTY_DEFAULTTYPE, MOZILLA);
+                    logger.debug("Using Mozilla as browser.");
                 }
+            } catch (Exception e) {
+                // Default to mozilla
+                System.setProperty(PROPERTY_DEFAULTTYPE, MOZILLA);
+                logger.debug("Using Mozilla as browser.", e);
             }
-        } catch (Exception ex) {
-            // this is for safety, because incompatible xulrunner versions lead to hard crashes
-            System.setProperty(XUL, "/dev/null");
+        }
+        if ((System.getProperty(XUL) == null) && MOZILLA.equals(System.getProperty(PROPERTY_DEFAULTTYPE))) {
+            try {
+                File xulRunner = findCompatibleXulrunner();
+                if (xulRunner != null) {
+                    System.setProperty(XUL, xulRunner.getAbsolutePath());
+                    logger.info("Using Xulrunner at '" + xulRunner.getAbsolutePath() + "'. To change this, add '-D" + XUL
+                        + "=<PATH>' to knime.ini");
+                } else {
+                    // Disable xulrunner
+                    System.setProperty(XUL, "/dev/null");
+                    logger.error("No Xulrunner installation found.");
+                }
+            } catch (IOException e) {
+                // Disable xulrunner
+                System.setProperty(XUL, "/dev/null");
+                logger.error("Error while determining Xulrunner: " + e.getMessage(), e);
+            }
+        }
+    }
 
-            logger.error("Error while determining web browser: " + ex.getMessage(), ex);
+    private static boolean isWebkitInstalled() throws ClassNotFoundException, SecurityException, NoSuchMethodException,
+        IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+        Class<?> webkitClass = Class.forName("org.eclipse.swt.browser.WebKit");
+        Method m = webkitClass.getDeclaredMethod("isInstalled");
+        return (Boolean)m.invoke(null);
+    }
+
+    private static boolean isWebkitComaptible() throws ClassNotFoundException, SecurityException,
+        NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+        // Check if webkit version is < 2
+        Class<?> webkitGTKClass = Class.forName("org.eclipse.swt.internal.webkit.WebKitGTK");
+        Method majorVersionMethod = webkitGTKClass.getDeclaredMethod("webkit_major_version");
+        int majorVersion = (Integer)majorVersionMethod.invoke(null);
+        Method minorVersionMethod = webkitGTKClass.getDeclaredMethod("webkit_minor_version");
+        int minorVersion = (Integer)minorVersionMethod.invoke(null);
+        Method microVersionMethod = webkitGTKClass.getDeclaredMethod("webkit_micro_version");
+        int microVersion = (Integer)microVersionMethod.invoke(null);
+        String webkitVersion = majorVersion + "." + minorVersion + "." + microVersion;
+        if (majorVersion >= 2) {
+            logger.warn("Found WebKit version " + webkitVersion + ". Only WebKit version 1.x is supported.");
+            return false;
+        } else {
+            return true;
         }
     }
 
