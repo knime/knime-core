@@ -56,6 +56,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.dmg.pmml.PMMLDocument;
+import org.knime.core.data.xml.util.XmlDomComparer;
+import org.knime.core.data.xml.util.XmlDomComparer.Diff;
+import org.knime.core.data.xml.util.XmlDomComparerCustomizer;
+import org.knime.core.data.xml.util.XmlDomComparerCustomizer.ChildrenCompareStrategy;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -64,6 +68,7 @@ import org.xml.sax.SAXException;
 
 /**
  * Checks if two PMML documents are equal.
+ *
  * @author Alexander Fillbrunn
  *
  */
@@ -137,9 +142,10 @@ public class PMMLDocumentComparer {
     private boolean m_checkExtensions;
 
     private boolean m_checkSchema;
-    
+
     /**
      * Constructor for PMMLDocumentComparer.
+     *
      * @param checkDataDictionaries Determines whether the PMMLs' data dictionaries are compared
      * @param checkTransformationDictionaries Determines whether the PMMLs' transformation dictionaries are compared
      * @param checkHeader Determines whether the PMMLs' headers are compared
@@ -147,12 +153,9 @@ public class PMMLDocumentComparer {
      * @param checkModelVerification Determines whether the PMMLs' model verifications are compared
      * @param checkExtensions Determines whether the PMMLs' extensions are compared
      */
-    public PMMLDocumentComparer(final boolean checkDataDictionaries,
-                                final boolean checkTransformationDictionaries,
-                                final boolean checkHeader,
-                                final boolean checkMiningBuildTask,
-                                final boolean checkModelVerification,
-                                final boolean checkExtensions,
+    public PMMLDocumentComparer(final boolean checkDataDictionaries, final boolean checkTransformationDictionaries,
+                                final boolean checkHeader, final boolean checkMiningBuildTask,
+                                final boolean checkModelVerification, final boolean checkExtensions,
                                 final boolean checkSchema) {
         m_checkDataDictionaries = checkDataDictionaries;
         m_checkTransformationDictionaries = checkTransformationDictionaries;
@@ -172,47 +175,51 @@ public class PMMLDocumentComparer {
 
     /**
      * Checks if two PMML Documents are equal.
+     *
      * @param doc1 The first document
      * @param doc2 The second document
-     * @return A boolean value determining whether the documents are equal with respect to the settings given two
-     * this instance of PMMLDocumentComparer
+     * @return A boolean value determining whether the documents are equal with respect to the settings given two this
+     *         instance of PMMLDocumentComparer
      * @throws ParserConfigurationException If a DocumentBuilder cannot be created.
      * @throws SAXException If the pmml document cannot be parsed
      * @throws IOException If any IO error occurs
      */
-    public DOMComparer.CompareResult areEqual(final PMMLDocument doc1, final PMMLDocument doc2)
-                throws ParserConfigurationException, SAXException, IOException {
+    public Diff areEqual(final PMMLDocument doc1, final PMMLDocument doc2) throws ParserConfigurationException,
+            SAXException, IOException {
 
-        DOMComparerFilter listener = new DOMComparerFilter() {
+        XmlDomComparerCustomizer listener = new XmlDomComparerCustomizer(ChildrenCompareStrategy.UNORDERED) {
             @Override
-            public boolean isCheckedNode(final Node n) {
-            if (n.getNodeType() == ATTRIBUTE_NODE_TYPE) {
-            	// Either we are not in the PMML Element, or even schema attributes are checked
-            	// or the node is the version attribute.
-            	Element parent = ((Attr)n).getOwnerElement();
-        		return parent.getNodeName() != "PMML" || m_checkSchema || n.getNodeName().equals("version");
-            } else {
-	            return !(n.getNodeType() == COMMENT_NODE_TYPE
-	                    || (!m_checkModelVerification && n.getNodeName().equals(MODEL_VERIFICATION_XML_NODE_NAME))
-	                    || (!m_checkDataDictionaries && n.getNodeName().equals(DATADICT_XML_NODE_NAME))
-	                    || (!m_checkTransformationDictionaries && n.getNodeName().equals(TRANSDICT_XML_NODE_NAME))
-	                    || (!m_checkHeader && n.getNodeName().equals(HEADER_XML_NODE_NAME))
-	                    || (!m_checkMiningBuildTask && n.getNodeName().equals(MINING_BUILD_TASK_XML_NODE_NAME))
-	                    || (!m_checkModelVerification && n.getNodeName().equals(MODEL_VERIFICATION_XML_NODE_NAME))
-	                    || (!m_checkExtensions && n.getNodeName().equals(EXTENSION_XML_NODE_NAME))
-	                    || (n.getNodeType() == TEXT_NODE_TYPE && n.getNodeValue().trim().length() == 0));
-            	}
+            public boolean include(final Node n) {
+                if (n.getNodeType() == ATTRIBUTE_NODE_TYPE) {
+                    // Either we are not in the PMML Element, or even schema
+                    // attributes are checked
+                    // or the node is the version attribute.
+                    Element parent = ((Attr)n).getOwnerElement();
+                    return parent.getNodeName() != "PMML" || m_checkSchema || n.getNodeName().equals("version");
+                } else {
+                    return !(n.getNodeType() == COMMENT_NODE_TYPE
+                            || (!m_checkModelVerification && n.getNodeName().equals(MODEL_VERIFICATION_XML_NODE_NAME))
+                            || (!m_checkDataDictionaries && n.getNodeName().equals(DATADICT_XML_NODE_NAME))
+                            || (!m_checkTransformationDictionaries && n.getNodeName().equals(TRANSDICT_XML_NODE_NAME))
+                            || (!m_checkHeader && n.getNodeName().equals(HEADER_XML_NODE_NAME))
+                            || (!m_checkMiningBuildTask && n.getNodeName().equals(MINING_BUILD_TASK_XML_NODE_NAME))
+                            || (!m_checkModelVerification && n.getNodeName().equals(MODEL_VERIFICATION_XML_NODE_NAME))
+                            || (!m_checkExtensions && n.getNodeName().equals(EXTENSION_XML_NODE_NAME)) || (n
+                            .getNodeType() == TEXT_NODE_TYPE && n.getNodeValue().trim().length() == 0));
+                }
             }
         };
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
 
-        Element pmml1 = (Element)builder.parse(new InputSource(new StringReader(doc1.toString())))
-                .getElementsByTagName(PMML_XML_NODE_NAME).item(0);
-        Element pmml2 = (Element)builder.parse(new InputSource(new StringReader(doc2.toString())))
-                .getElementsByTagName(PMML_XML_NODE_NAME).item(0);
+        Element pmml1 =
+                (Element)builder.parse(new InputSource(new StringReader(doc1.toString())))
+                        .getElementsByTagName(PMML_XML_NODE_NAME).item(0);
+        Element pmml2 =
+                (Element)builder.parse(new InputSource(new StringReader(doc2.toString())))
+                        .getElementsByTagName(PMML_XML_NODE_NAME).item(0);
 
-        return DOMComparer.areNodesEqual(pmml1, pmml2, listener);
+        return XmlDomComparer.compareNodes(pmml1, pmml2, listener);
     }
 }

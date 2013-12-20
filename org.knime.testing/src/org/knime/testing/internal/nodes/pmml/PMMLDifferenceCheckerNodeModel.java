@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.dmg.pmml.PMMLDocument;
+import org.knime.core.data.xml.util.XmlDomComparer.Diff;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -93,11 +94,12 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
     private static final String CFG_CHK_MODELVERIFICATION = "cfg_checkModelVerification";
 
     private static final String CFG_CHK_EXTENSIONS = "cfg_checkExtensions";
-    
+
     private static final String CFG_CHK_SCHEMA = "cfg_checkSchema";
 
     /**
      * Creates a settings model for the check data dictionary setting.
+     *
      * @return the settings model
      */
     static SettingsModelBoolean createCheckDataDictionariesSettingsModel() {
@@ -106,6 +108,7 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
 
     /**
      * Creates a settings model for the check transformation dictionary setting.
+     *
      * @return the settings model
      */
     static SettingsModelBoolean createCheckTransformationDictionarySettingsModel() {
@@ -114,6 +117,7 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
 
     /**
      * Creates a settings model for the check header setting.
+     *
      * @return the settings model
      */
     static SettingsModelBoolean createCheckHeaderSettingsModel() {
@@ -122,6 +126,7 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
 
     /**
      * Creates a settings model for the check mining build task setting.
+     *
      * @return the settings model
      */
     static SettingsModelBoolean createCheckMiningBuildTaskSettingsModel() {
@@ -130,6 +135,7 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
 
     /**
      * Creates a settings model for the check model verification setting.
+     *
      * @return the settings model
      */
     static SettingsModelBoolean createCheckModelVerificationSettingsModel() {
@@ -138,14 +144,16 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
 
     /**
      * Creates a settings model for the check extensions setting.
+     *
      * @return the settings model
      */
     static SettingsModelBoolean createCheckExtensionsSettingsModel() {
         return new SettingsModelBoolean(CFG_CHK_EXTENSIONS, true);
     }
-    
+
     /**
      * Creates a settings model for the check schema setting.
+     *
      * @return the settings model
      */
     static SettingsModelBoolean createCheckSchemaSettingsModel() {
@@ -163,56 +171,49 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
     private SettingsModelBoolean m_checkModelVerification = createCheckModelVerificationSettingsModel();
 
     private SettingsModelBoolean m_checkExtensions = createCheckExtensionsSettingsModel();
-    
+
     private SettingsModelBoolean m_checkSchema = createCheckSchemaSettingsModel();
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inPorts,
-            final ExecutionContext exec) throws Exception {
+    protected PortObject[] execute(final PortObject[] inPorts, final ExecutionContext exec) throws Exception {
         PMMLDocument doc1 = PMMLDocument.Factory.parse(((PMMLPortObject)inPorts[0]).getPMMLValue().getDocument());
         PMMLDocument doc2 = PMMLDocument.Factory.parse(((PMMLPortObject)inPorts[1]).getPMMLValue().getDocument());
 
-        PMMLDocumentComparer comp = new PMMLDocumentComparer(
-                                m_checkDataDictionaries.getBooleanValue(),
-                                m_checkTransformationDictionaries.getBooleanValue(),
-                                m_checkHeader.getBooleanValue(),
-                                m_checkMiningBuildTask.getBooleanValue(),
-                                m_checkModelVerification.getBooleanValue(),
-                                m_checkExtensions.getBooleanValue(),
-                                m_checkSchema.getBooleanValue());
+        PMMLDocumentComparer comp =
+                new PMMLDocumentComparer(m_checkDataDictionaries.getBooleanValue(),
+                        m_checkTransformationDictionaries.getBooleanValue(), m_checkHeader.getBooleanValue(),
+                        m_checkMiningBuildTask.getBooleanValue(), m_checkModelVerification.getBooleanValue(),
+                        m_checkExtensions.getBooleanValue(), m_checkSchema.getBooleanValue());
 
-        DOMComparer.CompareResult res = comp.areEqual(doc1, doc2);
-        if (!res.isSuccess()) {
-            throw new IllegalStateException("Mismatch at: " + crToString(res, ""));
+        Diff res = comp.areEqual(doc1, doc2);
+        if (res != null) {
+            throw new IllegalStateException("Mismatch at: " + crToString(res));
         }
         return new PortObject[0];
     }
 
     // Creates a string that gives the approximate mismatch location
-    private String crToString(final DOMComparer.CompareResult res, final String path) {
-        String nodePath = path + res.getNode().getNodeName();
-        NamedNodeMap attributes = res.getNode().getAttributes();
-        if (attributes != null) {
-            Node id = attributes.getNamedItem("id");
-            if (id != null) {
-                nodePath += "[id=" + id.getNodeValue() + "]";
-            }
-        }
-        nodePath += "/";
-        if (!res.isPartialSuccess()) {
-            return nodePath;
-        } else {
-            for (DOMComparer.CompareResult r : res.getChildren()) {
-                String s = crToString(r, nodePath);
-                if (s != null) {
-                    return s;
+    private String crToString(final Diff res) {
+
+        StringBuilder builder = new StringBuilder();
+        for (Node node : res.getReversePath()) {
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                String nodePath = node.getNodeName();
+                NamedNodeMap attributes = node.getAttributes();
+                if (attributes != null) {
+                    Node id = attributes.getNamedItem("id");
+                    if (id != null) {
+                        nodePath += "[id=" + id.getNodeValue() + "]";
+                    }
                 }
+                builder.insert(0, "/");
+                builder.insert(0, nodePath);
             }
         }
-        return null;
+        return builder.toString();
     }
 
     /**
@@ -226,8 +227,7 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         return null;
     }
 
@@ -249,8 +249,7 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_checkDataDictionaries.loadSettingsFrom(settings);
         m_checkTransformationDictionaries.loadSettingsFrom(settings);
         m_checkHeader.loadSettingsFrom(settings);
@@ -264,8 +263,7 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_checkDataDictionaries.validateSettings(settings);
         m_checkTransformationDictionaries.validateSettings(settings);
         m_checkHeader.validateSettings(settings);
@@ -279,8 +277,7 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File internDir,
-            final ExecutionMonitor exec) throws IOException,
+    protected void loadInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
     }
 
@@ -288,10 +285,8 @@ class PMMLDifferenceCheckerNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File internDir,
-            final ExecutionMonitor exec) throws IOException,
+    protected void saveInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
     }
 
 }
-
