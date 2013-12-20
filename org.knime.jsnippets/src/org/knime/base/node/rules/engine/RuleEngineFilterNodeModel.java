@@ -54,8 +54,10 @@ import java.text.ParseException;
 import java.util.List;
 
 import org.knime.base.node.rules.engine.Condition.MatchOutcome.MatchState;
+import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.container.RowAppender;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -156,7 +158,13 @@ public class RuleEngineFilterNodeModel extends RuleEngineNodeModel {
                 for (Rule r : rules) {
                     if (r.getCondition().matches(row, provider).getOutcome() == MatchState.matchedAndStop) {
                         //                        r.getSideEffect().perform(row, provider);
-                        containers[matchIndex].addRowToTable(row);
+                        DataValue value = r.getOutcome().getComputedResult(row, provider);
+                        if (value instanceof BooleanValue) {
+                            final BooleanValue bv = (BooleanValue)value;
+                            containers[bv.getBooleanValue() ? matchIndex : otherIndex].addRowToTable(row);
+                        } else {
+                            containers[matchIndex].addRowToTable(row);
+                        }
                         wasMatch = true;
                         break;
                     }
