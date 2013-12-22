@@ -113,8 +113,10 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
     private static final String INCOMPATIBLE_COLUMN = "!---INCOMPATIBLE_COLUMN---!";
 
     /**
-     *
+     * Dummy panel for computing the default width of the individual panel.
      */
+    private static final MissingValueHandling2Panel DUMMY_PANEL = new MissingValueHandling2Panel(
+        new MissingValueHandling2ColSetting(MissingValueHandling2ColSetting.TYPE_INT));
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MissingValueHandling2NodeDialogPane.class);
 
@@ -605,6 +607,9 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
         /** {@inheritDoc} */
         @Override
         public Dimension getPreferredSize() {
+            if (getComponentCount() < 1) {
+                return DUMMY_PANEL.getPreferredSize();
+            }
             int height = 0;
             int width = 0;
             for (Component c : getComponents()) {
