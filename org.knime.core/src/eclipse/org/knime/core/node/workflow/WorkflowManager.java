@@ -3106,10 +3106,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public String canExpandMetaNode(final NodeID wfmID) {
         synchronized (m_workflowMutex) {
-            if (!(getNodeContainer(wfmID) instanceof WorkflowManager)) {
+            NodeContainer nc = m_workflow.getNode(wfmID);
+            if (nc == null) {
+                return "No node with id \"" + wfmID + "\"";
+            }
+            if (!(nc instanceof WorkflowManager)) {
                 // wrong type of node!
-                return "Can not expand "
-                        + "selected node (not a metanode).";
+                return "Can not expand selected node (not a metanode).";
             }
             if (!canRemoveNode(wfmID)) {
                 // we can not - bail!
@@ -3934,7 +3937,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             return getParent().hasSuccessorInProgress(nodeID);
         }
         NodeContainer nc = m_workflow.getNode(nodeID);
-        if (nc == null) {  // somehow the node has disappeared...
+        if (nc == null) {
+            // node has disappeared. Fixes bug 4881: a editor of a deleted meta node updates the enable status
+            // of its action buttons one last time
             return false;
         }
         // get all successors of the node, including the WFM itself
@@ -4257,6 +4262,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private boolean hasExecutablePredecessor(final NodeID nodeID) {
         if (this.getID().equals(nodeID)) {  // we are talking about this WFM
             return getParent().hasExecutablePredecessor(nodeID);
+        }
+        if (m_workflow.getNode(nodeID) == null) {
+            // node has disappeared. Fixes bug 4881: a editor of a deleted meta node updates the enable status
+            // of its action buttons one last time
+            return false;
         }
         // get all predeccessors of the node, including the WFM itself if there are  connections:
         Set<NodeID> nodes = m_workflow.getPredecessors(nodeID);
