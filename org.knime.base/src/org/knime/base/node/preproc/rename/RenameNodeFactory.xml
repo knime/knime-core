@@ -9,7 +9,8 @@
 			you to change the name of individual columns by editing the text field
 			or to change the column type by picking one of the possible types
 			in the combo box. Compatible types are those to which the cells in 
-			a column can be either safely cast or transformed to.
+			a column can be either safely cast or transformed to. A configuration with a red border indicates that the
+			configured column does not longer exist.
 		</intro>
 	</fullDescription>
     <ports>

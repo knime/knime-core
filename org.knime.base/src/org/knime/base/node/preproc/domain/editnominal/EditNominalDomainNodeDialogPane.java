@@ -58,8 +58,6 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -96,7 +94,12 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnFilter;
-import org.knime.core.node.util.ColumnSelectionComboxBox;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel.ConfigurationRequestEvent;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel.ConfigurationRequestListener;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel.ConfiguredColumnDeterminer;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel.ListModifier;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel.SearchedItemsSelectionMode;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
@@ -112,10 +115,23 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(EditNominalDomainNodeDialogPane.class);
 
+    private static final ColumnFilter STRING_VALUE_FILTER = new ColumnFilter() {
+
+        @Override
+        public boolean includeColumn(final DataColumnSpec name) {
+            return StringCell.TYPE.equals(name.getType());
+        }
+
+        @Override
+        public String allFilteredMsg() {
+            return "";
+        }
+    };
+
     /**
-     * The slection box on top of the dialog.
+     * The list of all columns.
      */
-    private ColumnSelectionComboxBox m_columnComboBox;
+    private ColumnSelectionSearchableListPanel m_searchableListPanel;
 
     /**
      * The list of (maybe resorted) data cells.
@@ -125,7 +141,7 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
     /**
      * The data model behind the {@link #m_jlist}.
      */
-    private ListListModel<DataCell> m_currentSorting = new ListListModel<DataCell>();
+    private ListListModel<DataCell> m_currentSorting;
 
     /**
      * The table spec of the input table.
@@ -156,6 +172,8 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
 
     private Map<String, JRadioButton> m_buttonMap = new HashMap<String, JRadioButton>();
 
+    private ListModifier m_searchableListModifier;
+
     /** Inits members, does nothing else. */
     public EditNominalDomainNodeDialogPane() {
         createEditNominalDomainTab();
@@ -163,7 +181,54 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
 
     private void createEditNominalDomainTab() {
 
-        createColumnComboBox();
+        m_currentSorting = new ListListModel<DataCell>();
+        m_searchableListPanel =
+            new ColumnSelectionSearchableListPanel(SearchedItemsSelectionMode.SELECT_FIRST,
+                new ConfiguredColumnDeterminer() {
+
+                    @Override
+                    public boolean isConfiguredColumn(final DataColumnSpec spec) {
+                        return checkConfigured(spec);
+                    }
+                });
+
+        m_searchableListPanel.addConfigurationRequestListener(new ConfigurationRequestListener() {
+
+            @Override
+            public void configurationRequested(final ConfigurationRequestEvent searchEvent) {
+                switch (searchEvent.getType()) {
+                    case DELETION:
+                        DataColumnSpec selectedColumn = m_searchableListPanel.getSelectedColumn();
+                        if (checkConfigured(selectedColumn)) {
+                            removeConfiguration();
+                        }
+                        break;
+                    case SELECTION:
+                        DataColumnSpec newSpec = m_searchableListPanel.getSelectedColumn();
+
+                        if (newSpec != null && newSpec != m_currentColSpec) {
+
+                            storeCurrentList();
+
+                            m_currentSorting.clear();
+
+                            m_currentColSpec = newSpec;
+
+                            addDataCellElements(m_currentColSpec);
+
+                            if (isInvalid(m_currentColSpec)) {
+                                m_resetButton.setText("Delete");
+                            } else {
+                                m_resetButton.setText("Reset");
+                            }
+
+                            m_somethingChanged = false;
+                        }
+                    default:
+                        break;
+                }
+            }
+        });
 
         // if something is changed in the currentSorting we set the save flag, which leads wo a storage
         m_currentSorting.addListDataListener(new ListDataListener() {
@@ -185,7 +250,6 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
         });
 
         JScrollPane scrollPane = new JScrollPane();
-        //        m_listModel = new DefaultListModel<DataCell>();
         m_jlist = new JList(m_currentSorting);
         scrollPane.setViewportView(m_jlist);
         m_jlist.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
@@ -213,7 +277,7 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
         buttonBox.add(createLegend());
         //
         JPanel tabpanel = new JPanel(new BorderLayout());
-        tabpanel.add(m_columnComboBox, BorderLayout.NORTH);
+        tabpanel.add(m_searchableListPanel, BorderLayout.WEST);
 
         JPanel jPanel = new JPanel(new BorderLayout());
         jPanel.add(scrollPane, BorderLayout.CENTER);
@@ -224,63 +288,11 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
         radioGroups.add(createRadioButtonGroup(IGNORE_COLUMNS_NOT_PRESENT_IN_DATA), BorderLayout.CENTER);
         radioGroups.add(createRadioButtonGroup(IGNORE_COLUMNS_NOT_MATCHING_TYPES), BorderLayout.SOUTH);
 
-        jPanel.add(radioGroups, BorderLayout.SOUTH);
+        tabpanel.add(radioGroups, BorderLayout.SOUTH);
 
         tabpanel.add(jPanel);
 
         addTab("Edit Domain Values", tabpanel);
-    }
-
-    private void createColumnComboBox() {
-        m_columnComboBox =
-            new ColumnSelectionComboxBox(BorderFactory.createTitledBorder("Select column"), new ColumnFilter() {
-
-                @Override
-                public boolean includeColumn(final DataColumnSpec colSpec) {
-                    return StringCell.TYPE.equals(colSpec.getType());
-                }
-
-                @Override
-                public String allFilteredMsg() {
-                    return String.format("No column type equals %s", StringCell.TYPE);
-                }
-            });
-
-        m_columnComboBox.setRenderer(new HighlightSpecialColumnsRenderer());
-
-        m_columnComboBox.addItemListener(new ItemListener() {
-
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-
-                    //check for new selected column
-                    DataColumnSpec newSpec = null;
-
-                    if (e.getItem() instanceof DataColumnSpec) {
-                        newSpec = ((DataColumnSpec)e.getItem());
-
-                        storeCurrentList();
-
-                        m_currentSorting.clear();
-
-                        m_currentColSpec = newSpec;
-
-                        addDataCellElements(m_currentColSpec);
-
-                        if (isInvalid(m_currentColSpec)) {
-                            m_resetButton.setText("Delete");
-                        } else {
-                            m_resetButton.setText("Reset");
-                        }
-
-                        m_somethingChanged = false;
-                    }
-                }
-            }
-
-        });
     }
 
     /**
@@ -291,28 +303,32 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
 
             @Override
             public void actionPerformed(final ActionEvent e) {
-                if (m_currentColSpec != null) {
-                    m_currentSorting.clear();
-                    m_configuration.removeSorting(m_currentColSpec.getName());
-
-                    if (isInvalid(m_currentColSpec)) {
-                        m_columnComboBox.removeItem(m_currentColSpec);
-
-                        if (m_columnComboBox.getItemCount() > 0) {
-                            m_columnComboBox.setSelectedIndex(0);
-                        }
-                    } else {
-                        Set<DataCell> values = m_currentColSpec.getDomain().getValues();
-                        m_currentSorting.addAll(values == null ? Collections.<DataCell> emptySet() : values);
-                        m_currentSorting.add(EditNominalDomainConfiguration.UNKNOWN_VALUES_CELL);
-                    }
-                    m_columnComboBox.repaint();
-
-                    // Reset also removed incoming chages
-                    m_somethingChanged = false;
-                }
+                removeConfiguration();
             }
         };
+    }
+
+    /**
+     *
+     */
+    private void removeConfiguration() {
+        if (m_currentColSpec != null) {
+            m_currentSorting.clear();
+            m_configuration.removeSorting(m_currentColSpec.getName());
+
+            if (m_searchableListPanel.isAdditionalColumn(m_currentColSpec)) {
+                m_searchableListModifier.removeAdditionalColumn(m_currentColSpec.getName());
+                m_currentColSpec = null;
+            } else {
+                Set<DataCell> values = m_currentColSpec.getDomain().getValues();
+                m_currentSorting.addAll(values == null ? Collections.<DataCell> emptySet() : values);
+                m_currentSorting.add(EditNominalDomainConfiguration.UNKNOWN_VALUES_CELL);
+            }
+            m_searchableListPanel.repaint();
+
+            // Reset also removed incoming chages
+            m_somethingChanged = false;
+        }
     }
 
     /**
@@ -419,7 +435,7 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
                     (String)JOptionPane.showInputDialog(EditNominalDomainNodeDialogPane.this.getPanel(), "Value: ",
                         "Add Data Cell", JOptionPane.PLAIN_MESSAGE, null, null, "");
 
-                if (s != null && !s.isEmpty()) {
+                if (s != null && !s.isEmpty() && m_currentColSpec != null) {
                     int index = m_jlist.getSelectedIndex() == -1 ? 0 : m_jlist.getSelectedIndex();
                     StringCell stringCell = new StringCell(s);
 
@@ -506,7 +522,7 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
         return toReturn;
     }
 
-    private boolean isConfiguredColumn(final DataColumnSpec value) {
+    private boolean checkConfigured(final DataColumnSpec value) {
         return m_configuration.isConfiguredColumn(value.getName());
     }
 
@@ -531,27 +547,28 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException {
-        if (specs[0].getNumColumns() == 0) {
-            throw new NotConfigurableException("No data at input.");
-        }
-        m_orgSpec = specs[0];
+        try {
+            if (specs[0].getNumColumns() == 0) {
+                throw new NotConfigurableException("No data at input.");
+            }
+            m_orgSpec = specs[0];
 
-        m_currentSorting.clear();
+            m_currentSorting.clear();
 
-        m_configuration = new EditNominalDomainConfiguration();
-        m_configuration.loadConfigurationInDialog(settings);
+            m_configuration = new EditNominalDomainConfiguration();
+            m_configuration.loadConfigurationInDialog(settings);
 
-        m_columnComboBox.update(m_orgSpec, m_orgSpec.getColumnNames()[0]);
+            if (m_configuration.isIgnoreNotExistingColumns()) {
+                m_buttonMap.get(IGNORE_COLUMNS_NOT_PRESENT_IN_DATA).doClick();
+            }
+            if (m_configuration.isIgnoreWrongTypes()) {
+                m_buttonMap.get(IGNORE_COLUMNS_NOT_MATCHING_TYPES).doClick();
+            }
 
-        if (m_configuration.isIgnoreNotExistingColumns()) {
-            m_buttonMap.get(IGNORE_COLUMNS_NOT_PRESENT_IN_DATA).doClick();
-        }
-        if (m_configuration.isIgnoreWrongTypes()) {
-            m_buttonMap.get(IGNORE_COLUMNS_NOT_MATCHING_TYPES).doClick();
-        }
-        addComboBoxItemsForNotExistingColumns();
-        if (m_columnComboBox.getItemCount() > 0) {
-            m_columnComboBox.setSelectedIndex(0);
+            m_searchableListModifier = m_searchableListPanel.update(m_orgSpec, STRING_VALUE_FILTER);
+            addColumnSpecsForNotExistingColumns();
+        } catch (Error e) {
+            e.printStackTrace();
         }
     }
 
@@ -585,7 +602,7 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
             m_currentSorting.add(EditNominalDomainConfiguration.UNKNOWN_VALUES_CELL);
         } else {
             // determine the difference set between the original cells and the stored configuration.
-            // to them at the UNKOWN_VALUE_CELL position.
+            // Add them at the UNKOWN_VALUE_CELL position.
             Set<DataCell> diff = EditNominalDomainNodeModel.diff(m_orgDomainCells, sorting);
 
             for (DataCell cell : sorting) {
@@ -601,14 +618,14 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
         }
     }
 
-    private void addComboBoxItemsForNotExistingColumns() {
+    private void addColumnSpecsForNotExistingColumns() {
         Set<String> configuredColumns = m_configuration.getConfiguredColumns();
+
         for (String s : configuredColumns) {
-            // add the additional item in the combo box only if the current table does not
             // include the given cell name or if the table has a wrong type.
             if (m_orgSpec.getColumnSpec(s) == null || !StringCell.TYPE.equals(m_orgSpec.getColumnSpec(s).getType())) {
                 DataColumnSpec invalidSpec = DataColumnSpecListCellRenderer.createInvalidSpec(s, StringCell.TYPE);
-                m_columnComboBox.addItem(invalidSpec);
+                m_searchableListModifier.addAdditionalColumn(invalidSpec);
             }
         }
     }
@@ -686,25 +703,6 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
         }
     }
 
-    @SuppressWarnings("serial")
-    private class HighlightSpecialColumnsRenderer extends DataColumnSpecListCellRenderer {
-        @Override
-        public Component getListCellRendererComponent(final JList list, final Object value, final int index,
-            final boolean isSelected, final boolean cellHasFocus) {
-            Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-
-            assert (c == this);
-
-            if (isInvalid((DataColumnSpec)value)) {
-                setBorder(BorderFactory.createLineBorder(Color.RED));
-            } else if (isConfiguredColumn((DataColumnSpec)value)) {
-                setBorder(BorderFactory.createLineBorder(Color.GREEN));
-            }
-
-            return this;
-        }
-    }
-
     /**
      * UI creation methods.
      *
@@ -744,9 +742,6 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
             + "                              ");
     }
 
-    /**
-     * @param string
-     */
     private JPanel createRadioButtonGroup(final String string, final String first, final String second) {
         JPanel toReturn = new JPanel(new GridLayout(2, 1));
         toReturn.setBorder(BorderFactory.createTitledBorder(string));

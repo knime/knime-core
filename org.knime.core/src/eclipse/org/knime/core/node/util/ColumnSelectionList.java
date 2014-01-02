@@ -54,30 +54,29 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.swing.DefaultListModel;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JList;
+import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 
 /**
- * This class show columns from a {@link DataTableSpec} inside a {@link JList}.
- * The usual renderer for {@link DataColumnSpec}s is used and the list can be
- * made non-selectable without disabling it, so that the entries are still shown
- * in black and not gray.
+ * This class show columns from a {@link DataTableSpec} inside a {@link JList}. The usual renderer for
+ * {@link DataColumnSpec}s is used and the list can be made non-selectable without disabling it, so that the entries are
+ * still shown in black and not gray.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
+@SuppressWarnings("serial")
 public class ColumnSelectionList extends JList {
-    private final DefaultListModel m_listModel;
+    private final FilterableListModel m_listModel;
 
     private boolean m_selectionChangeAllowed;
 
     /**
-     * Selection model allows list selection changes only if
-     * m_selectionChangeAllowed is <code>true</code>.
+     * Selection model allows list selection changes only if m_selectionChangeAllowed is <code>true</code>.
      *
      * @author Thorsten Meinl, University of Konstanz
      */
@@ -86,8 +85,7 @@ public class ColumnSelectionList extends JList {
          * {@inheritDoc}
          */
         @Override
-        public void insertIndexInterval(final int index, final int length,
-                final boolean before) {
+        public void insertIndexInterval(final int index, final int length, final boolean before) {
             if (m_selectionChangeAllowed) {
                 super.insertIndexInterval(index, length, before);
             }
@@ -169,32 +167,67 @@ public class ColumnSelectionList extends JList {
      */
     @Override
     public void setSelectionModel(final ListSelectionModel selectionModel) {
-        throw new UnsupportedOperationException("This list does not support "
-                + "changing the list selection model");
+        throw new UnsupportedOperationException("This list does not support " + "changing the list selection model");
     }
 
     /**
-     * Creates a new column selection list. By default the selection can't be
-     * changed.
+     * Creates a new column selection list. By default the selection can't be changed.
      */
     public ColumnSelectionList() {
-        super(new DefaultListModel());
+        super(new FilterableListModel());
         m_selectionChangeAllowed = false;
-        m_listModel = (DefaultListModel)getModel();
+        m_listModel = (FilterableListModel)getModel();
         setCellRenderer(new DataColumnSpecListCellRenderer());
         super.setSelectionModel(new MyListSelectionModel());
     }
 
     /**
-     * Updates the list model by first removing all entries and then inserting
-     * all columns from the given spec. Several columns can be pre-selected.
+     * Updates the list model by first removing all entries and then inserting all columns from the given spec. Several
+     * columns can be pre-selected.
      *
      * @param spec a data table spec
      * @param selectedCols an array with selected column names.
      */
     public void update(final DataTableSpec spec, final String... selectedCols) {
+        update(spec, null, selectedCols);
+    }
+
+    /**
+     * Updates the list model by first removing all entries and then inserting all columns from the given spec. Several
+     * columns can be pre-selected.
+     *
+     * @param spec a data table spec
+     * @param inputFilter the input filter
+     * @param selectedCols an array with selected column names.
+     * @since 2.10
+     */
+    public void update(final DataTableSpec spec, final ColumnFilter inputFilter, //
+        final String... selectedCols) {
+        if (inputFilter == null) {
+            update((Iterable<DataColumnSpec>)spec, selectedCols);
+        } else {
+            List<DataColumnSpec> cspecs = new ArrayList<DataColumnSpec>();
+
+            for (DataColumnSpec cspec : spec) {
+                if (inputFilter.includeColumn(cspec)) {
+                    cspecs.add(cspec);
+                }
+            }
+            update(cspecs, selectedCols);
+        }
+    }
+
+    /**
+     * Updates the list model by first removing all entries and then inserting all columns contained in the given
+     * iterable. Several columns can be pre-selected.
+     *
+     * @param columnSpecs the columns specs
+     * @param selectedCols an array with selected column names.
+     * @since 2.10
+     */
+    public void update(final Iterable<DataColumnSpec> columnSpecs, final String... selectedCols) {
         m_listModel.clear();
-        for (DataColumnSpec cs : spec) {
+        for (DataColumnSpec cs : columnSpecs) {
             m_listModel.addElement(cs);
         }
         if (selectedCols != null) {
@@ -203,21 +236,18 @@ public class ColumnSelectionList extends JList {
     }
 
     /**
-     * Updates the list model by first removing all entries and then inserting
-     * all columns from the given spec. Several columns can be pre-selected.
+     * Updates the list model by first removing all entries and then inserting all columns from the given spec. Several
+     * columns can be pre-selected.
      *
      * @param spec a data table spec
-     * @param selectedCols a collection with selected column names. Must not be
-     *            <code>null</code>.
+     * @param selectedCols a collection with selected column names. Must not be <code>null</code>.
      */
-    public void update(final DataTableSpec spec,
-            final Collection<String> selectedCols) {
+    public void update(final DataTableSpec spec, final Collection<String> selectedCols) {
         update(spec, selectedCols.toArray(new String[selectedCols.size()]));
     }
 
     /**
-     * Updates the list model by first removing all entries and then inserting
-     * all columns from the given collection.
+     * Updates the list model by first removing all entries and then inserting all columns from the given collection.
      *
      * @param spec a data table spec
      */
@@ -242,13 +272,37 @@ public class ColumnSelectionList extends JList {
     /**
      * Selects all given columns in the list. Non-existing columns are ignored.
      *
-     * @param selCols a collection with column names. Must not be
-     *            <code>null</code>.
+     * @param selCols a collection with column names. Must not be <code>null</code>.
      */
     public void setSelectedColumns(final Collection<String> selCols) {
-
         setSelectedColumns(selCols.toArray(new String[selCols.size()]));
+    }
 
+    /**
+     * Hides all other elements but the given indices from the list. To receive a view off all added items use
+     * {@link #getUnfilteredModel()} and {@link #showAll()} for undoing the filtering.
+     *
+     * @param indexesToShow the indices to show
+     */
+    void filterItems(final int[] indexesToShow) {
+        m_listModel.filterIndices(indexesToShow);
+    }
+
+    /**
+     * Resets the previous done filtering.
+     */
+    void showAll() {
+        m_listModel.showAll();
+    }
+
+    /**
+     * Returns the complete list of added {@link DataColumnSpec}s, which may differ from the ListModel returned by
+     * {@link #getModel()} if {@link #filterItems(int[])} has been called previously.
+     *
+     * @return the complete list
+     */
+    ListModel getUnfilteredModel() {
+        return m_listModel.getUnfilteredModel();
     }
 
     /**
@@ -281,8 +335,7 @@ public class ColumnSelectionList extends JList {
     /**
      * Makes the list selection (un)changeable by the user.
      *
-     * @param b <code>true</code> if the user can change the selection,
-     *            <code>false</code> otherwise
+     * @param b <code>true</code> if the user can change the selection, <code>false</code> otherwise
      */
     public void setUserSelectionAllowed(final boolean b) {
         m_selectionChangeAllowed = b;
@@ -291,8 +344,7 @@ public class ColumnSelectionList extends JList {
     /**
      * Returns if the user can change the list selection or not.
      *
-     * @return <code>true</code> if the user can change the selection,
-     *            <code>false</code> otherwise
+     * @return <code>true</code> if the user can change the selection, <code>false</code> otherwise
      */
     public boolean isUserSelectionAllowed() {
         return m_selectionChangeAllowed;

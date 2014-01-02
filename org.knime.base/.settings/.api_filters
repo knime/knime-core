@@ -223,4 +223,26 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/preproc/rename/RenameNodeFactory.java" type="org.knime.base.node.preproc.rename.RenameNodeFactory">
+        <filter comment="no api" id="337768515">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
+            </message_arguments>
+        </filter>
+        <filter comment="no api" id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeDialogPane()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="no api" id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeModel()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="no api" id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeView(int, RenameNodeModel)"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

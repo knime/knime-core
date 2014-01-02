@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 1, 2006 (wiswedel): created
  */
@@ -74,21 +74,18 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
 /**
  * NodeModel implementation for the renaming node.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class RenameNodeModel extends NodeModel {
     /**
-     * Config identifier for the NodeSettings object contained in the
-     * NodeSettings which contains the settings.
+     * Config identifier for the NodeSettings object contained in the NodeSettings which contains the settings.
      */
     public static final String CFG_SUB_CONFIG = "all_columns";
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(RenameNodeModel.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(RenameNodeModel.class);
 
     /** contains settings for each individual column. */
     private RenameColumnSetting[] m_settings;
@@ -108,8 +105,7 @@ public class RenameNodeModel extends NodeModel {
         NodeSettingsWO subSettings = settings.addNodeSettings(CFG_SUB_CONFIG);
         if (m_settings != null) {
             for (RenameColumnSetting set : m_settings) {
-                NodeSettingsWO subSub = subSettings.addNodeSettings(set
-                        .getName().toString());
+                NodeSettingsWO subSub = subSettings.addNodeSettings(set.getName().toString());
                 set.saveSettingsTo(subSub);
             }
         }
@@ -119,8 +115,7 @@ public class RenameNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         load(settings);
     }
 
@@ -128,17 +123,14 @@ public class RenameNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_settings = load(settings);
     }
 
     /* Reads all settings from a settings object, used by validate and load. */
-    private RenameColumnSetting[] load(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    private RenameColumnSetting[] load(final NodeSettingsRO settings) throws InvalidSettingsException {
         NodeSettingsRO subSettings = settings.getNodeSettings(CFG_SUB_CONFIG);
-        ArrayList<RenameColumnSetting> result = 
-            new ArrayList<RenameColumnSetting>();
+        ArrayList<RenameColumnSetting> result = new ArrayList<RenameColumnSetting>();
         for (String identifier : subSettings) {
             NodeSettingsRO col = subSettings.getNodeSettings(identifier);
             result.add(RenameColumnSetting.createFrom(col));
@@ -150,8 +142,8 @@ public class RenameNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
+        throws Exception {
         BufferedDataTable in = inData[0];
         DataTableSpec inSpec = in.getDataTableSpec();
         final DataTableSpec outSpec = configure(new DataTableSpec[]{inSpec})[0];
@@ -159,15 +151,13 @@ public class RenameNodeModel extends NodeModel {
         // (for those columns it is not sufficient to just change the column
         // type, we do need to change the cells, too)
         ArrayList<Integer> toStringColumnsIndex = new ArrayList<Integer>();
-        ArrayList<DataColumnSpec> toStringColumns = 
-            new ArrayList<DataColumnSpec>();
+        ArrayList<DataColumnSpec> toStringColumns = new ArrayList<DataColumnSpec>();
         for (int i = 0; i < inSpec.getNumColumns(); i++) {
             DataType oldType = inSpec.getColumnSpec(i).getType();
             DataType newType = outSpec.getColumnSpec(i).getType();
             // using toString iff new type is String_Type and the old type
             // is not a string type compatible
-            boolean useToStringMethod = newType.equals(StringCell.TYPE)
-                    && !StringCell.TYPE.isASuperTypeOf(oldType);
+            boolean useToStringMethod = newType.equals(StringCell.TYPE) && !StringCell.TYPE.isASuperTypeOf(oldType);
             if (useToStringMethod) {
                 toStringColumnsIndex.add(i);
                 toStringColumns.add(outSpec.getColumnSpec(i));
@@ -178,14 +168,12 @@ public class RenameNodeModel extends NodeModel {
         // depending on whether we have to change some of the columns, we
         // create a ReplacedColumnsTable
         if (!toStringColumnsIndex.isEmpty()) {
-            DataColumnSpec[] changedColumns = toStringColumns
-                    .toArray(new DataColumnSpec[0]);
+            DataColumnSpec[] changedColumns = toStringColumns.toArray(new DataColumnSpec[0]);
             int[] changedColumnsIndex = new int[toStringColumnsIndex.size()];
             for (int i = 0; i < changedColumnsIndex.length; i++) {
                 changedColumnsIndex[i] = toStringColumnsIndex.get(i);
             }
-            ToStringCellsFactory cellsFactory = new ToStringCellsFactory(
-                    changedColumns, changedColumnsIndex);
+            ToStringCellsFactory cellsFactory = new ToStringCellsFactory(changedColumns, changedColumnsIndex);
             ColumnRearranger rearranger = new ColumnRearranger(out.getSpec());
             rearranger.replace(cellsFactory, changedColumnsIndex);
             out = exec.createColumnRearrangeTable(out, rearranger, exec);
@@ -204,26 +192,23 @@ public class RenameNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         DataTableSpec inSpec = inSpecs[0];
         DataColumnSpec[] colSpecs = new DataColumnSpec[inSpec.getNumColumns()];
         HashMap<String, Integer> duplicateHash = new HashMap<String, Integer>();
@@ -233,8 +218,7 @@ public class RenameNodeModel extends NodeModel {
             RenameColumnSetting set = findSettings(name);
             DataColumnSpec newColSpec;
             if (set == null) {
-                LOGGER.debug("No rename settings for column \"" + name
-                        + "\" leaving untouched.");
+                LOGGER.debug("No rename settings for column \"" + name + "\" leaving untouched.");
                 newColSpec = current;
             } else {
                 newColSpec = set.configure(current);
@@ -247,8 +231,7 @@ public class RenameNodeModel extends NodeModel {
             }
             Integer duplIndex = duplicateHash.put(newName, i);
             if (duplIndex != null) {
-                String warnMessage = "Duplicate column name \"" + newName 
-                    + "\" at index " + duplIndex + " and " + i;
+                String warnMessage = "Duplicate column name \"" + newName + "\" at index " + duplIndex + " and " + i;
                 setWarningMessage(warnMessage);
                 throw new InvalidSettingsException(warnMessage);
             }
@@ -258,9 +241,8 @@ public class RenameNodeModel extends NodeModel {
     }
 
     /**
-     * Traverses the array m_settings and finds the settings object for a given
-     * column.
-     * 
+     * Traverses the array m_settings and finds the settings object for a given column.
+     *
      * @param colName The column name.
      * @return The settings to the column (if any), otherwise null.
      */
@@ -277,8 +259,7 @@ public class RenameNodeModel extends NodeModel {
     }
 
     /**
-     * Helper class being used to use cell's toString() method to return
-     * StringCells.
+     * Helper class being used to use cell's toString() method to return StringCells.
      */
     private static class ToStringCellsFactory implements CellFactory {
         private final DataColumnSpec[] m_returnSpecs;
@@ -287,11 +268,11 @@ public class RenameNodeModel extends NodeModel {
 
         /**
          * Create a new factory.
+         *
          * @param returnSpecs the new, replacement spec
          * @param columns column indices to replace
          */
-        public ToStringCellsFactory(final DataColumnSpec[] returnSpecs,
-                final int[] columns) {
+        public ToStringCellsFactory(final DataColumnSpec[] returnSpecs, final int[] columns) {
             m_returnSpecs = returnSpecs;
             m_columns = columns;
         }
@@ -299,6 +280,7 @@ public class RenameNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataColumnSpec[] getColumnSpecs() {
             return m_returnSpecs;
         }
@@ -306,15 +288,17 @@ public class RenameNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
-        public void setProgress(final int curRowNr, final int rowCount,
-                final RowKey lastKey, final ExecutionMonitor exec) {
-            exec.setProgress(curRowNr / (double)rowCount, "Changed row "
-                    + curRowNr + "/" + rowCount + " (\"" + lastKey + "\")");
+        @Override
+        public void setProgress(final int curRowNr, final int rowCount, final RowKey lastKey,
+            final ExecutionMonitor exec) {
+            exec.setProgress(curRowNr / (double)rowCount, "Changed row " + curRowNr + "/" + rowCount + " (\"" + lastKey
+                + "\")");
         }
 
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataCell[] getCells(final DataRow row) {
             DataCell[] result = new DataCell[m_columns.length];
             for (int i = 0; i < result.length; i++) {

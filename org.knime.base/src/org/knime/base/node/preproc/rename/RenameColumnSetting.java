@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 1, 2006 (wiswedel): created
  */
@@ -65,17 +65,15 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
 /**
- * Helper class that combines settings as to what should be happen with one
- * column. That is one object of this class is responsible for only one column!
- * 
+ * Helper class that combines settings as to what should be happen with one column. That is one object of this class is
+ * responsible for only one column!
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class RenameColumnSetting {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(RenameColumnSetting.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(RenameColumnSetting.class);
 
     /** Config identifier for the original column name, used for sanity check. */
     public static final String CFG_OLD_COLNAME = "old_column_name";
@@ -84,8 +82,8 @@ final class RenameColumnSetting {
     public static final String CFG_NEW_COLNAME = "new_column_name";
 
     /**
-     * Config identifier for the index of the new type. The index is calculated
-     * on the order of the compatible types in constructPossibleTypes(DataType)
+     * Config identifier for the index of the new type. The index is calculated on the order of the compatible types in
+     * constructPossibleTypes(DataType)
      */
     public static final String CFG_NEW_COLTYPE = "new_column_type";
 
@@ -93,8 +91,7 @@ final class RenameColumnSetting {
     private final String m_name;
 
     /**
-     * Array with all types that the column can be casted to. May be null if
-     * first constructor is used
+     * Array with all types that the column can be casted to. May be null if first constructor is used
      */
     private final Class<? extends DataValue>[] m_possibleValueClasses;
 
@@ -107,9 +104,9 @@ final class RenameColumnSetting {
     private int m_newValueClassIndex;
 
     /**
-     * Inits a settings object for a given column. This constructor is used in
-     * the NodeModel' load and validate method (no DataTableSpec availabe).
-     * 
+     * Inits a settings object for a given column. This constructor is used in the NodeModel' load and validate method
+     * (no DataTableSpec availabe).
+     *
      * @param name the column to get settings (e.g. compatible types) from
      * @throws NullPointerException if argument is <code>null</code>
      */
@@ -119,10 +116,9 @@ final class RenameColumnSetting {
     }
 
     /**
-     * Constructor being used in the NodeModel's configure method (for
-     * validation) and in the NodeDialog (DataTableSpec used to init default
-     * values like possible types).
-     * 
+     * Constructor being used in the NodeModel's configure method (for validation) and in the NodeDialog (DataTableSpec
+     * used to init default values like possible types).
+     *
      * @param column the column spec form which to get values
      */
     @SuppressWarnings("unchecked")
@@ -135,9 +131,8 @@ final class RenameColumnSetting {
     }
 
     /**
-     * The name of the new column, if any. May be <code>null</code> when no
-     * new name was set.
-     * 
+     * The name of the new column, if any. May be <code>null</code> when no new name was set.
+     *
      * @return the newColumnName
      */
     String getNewColumnName() {
@@ -146,7 +141,7 @@ final class RenameColumnSetting {
 
     /**
      * Sets a new column name or <code>null</code>.
-     * 
+     *
      * @param newColumnName the newColumnName to set
      */
     void setNewColumnName(final String newColumnName) {
@@ -155,7 +150,7 @@ final class RenameColumnSetting {
 
     /**
      * The index of the type to cast the column to.
-     * 
+     *
      * @return the newType
      */
     int getNewValueClassIndex() {
@@ -164,7 +159,7 @@ final class RenameColumnSetting {
 
     /**
      * Set new type.
-     * 
+     *
      * @param newType the newType to set
      */
     void setNewValueClassIndex(final int newType) {
@@ -179,9 +174,8 @@ final class RenameColumnSetting {
     }
 
     /**
-     * Result may be <code>null</code> when the first constructor was used
-     * (based on a column name only).
-     * 
+     * Result may be <code>null</code> when the first constructor was used (based on a column name only).
+     *
      * @return the possibleTypes
      */
     Class<? extends DataValue>[] getPossibleValueClasses() {
@@ -190,7 +184,7 @@ final class RenameColumnSetting {
 
     /**
      * Loads settings from a settings object.
-     * 
+     *
      * @param settings to load from
      */
     void loadSettingsFrom(final NodeSettingsRO settings) {
@@ -200,23 +194,19 @@ final class RenameColumnSetting {
         } catch (InvalidSettingsException ise) {
             // this method is called from the dialog which inits "this" first
             // and immediately calls this method, name should (must) match
-            LOGGER.warn("Can't safely update settings for column \"" + m_name
-                    + "\": No matching identifier.", ise);
+            LOGGER.warn("Can't safely update settings for column \"" + m_name + "\": No matching identifier.", ise);
             name = m_name;
         }
         if (!m_name.equals(name)) {
-            LOGGER.warn("Can't update settings for column \"" + m_name
-                    + "\": got NodeSettings for \"" + name + "\"");
+            LOGGER.warn("Can't update settings for column \"" + m_name + "\": got NodeSettings for \"" + name + "\"");
         }
         String newName = settings.getString(CFG_NEW_COLNAME, null);
         setNewColumnName(newName);
         int newVal = settings.getInt(CFG_NEW_COLTYPE, 0);
         boolean off = newVal < 0;
-        off |= m_possibleValueClasses != null
-                && newVal >= m_possibleValueClasses.length;
+        off |= m_possibleValueClasses != null && newVal >= m_possibleValueClasses.length;
         if (off) {
-            LOGGER.debug("New type identifier for column \"" + m_name
-                    + "\" out of range: " + newVal);
+            LOGGER.debug("New type identifier for column \"" + m_name + "\" out of range: " + newVal);
             newVal = 0;
         }
         setNewValueClassIndex(newVal);
@@ -224,7 +214,7 @@ final class RenameColumnSetting {
 
     /**
      * Save the current settings to a config.
-     * 
+     *
      * @param settings to save to
      */
     void saveSettingsTo(final NodeSettingsWO settings) {
@@ -235,38 +225,30 @@ final class RenameColumnSetting {
 
     /**
      * Called by configure in NodeModel to compute the new column spec.
-     * 
+     *
      * @param inSpec the original input spec (names must match)
      * @return the new column spec
      * @throws InvalidSettingsException if that fails
      */
-    DataColumnSpec configure(final DataColumnSpec inSpec)
-            throws InvalidSettingsException {
+    DataColumnSpec configure(final DataColumnSpec inSpec) throws InvalidSettingsException {
         String name = inSpec.getName();
         DataType oldType = inSpec.getType();
         if (!name.equals(m_name)) {
-            throw new InvalidSettingsException("Column names don't match: \""
-                    + m_name + "\" vs. \"" + name + "\"");
+            throw new InvalidSettingsException("Column names don't match: \"" + m_name + "\" vs. \"" + name + "\"");
         }
-        Set<Class<? extends DataValue>> possibleTypeSet = constructPossibleTypes(inSpec
-                .getType());
+        Set<Class<? extends DataValue>> possibleTypeSet = constructPossibleTypes(inSpec.getType());
         // no generics in array definition
         @SuppressWarnings("unchecked")
-        Class<? extends DataValue>[] possibleTypes = possibleTypeSet
-                .toArray(new Class[possibleTypeSet.size()]);
+        Class<? extends DataValue>[] possibleTypes = possibleTypeSet.toArray(new Class[possibleTypeSet.size()]);
         if (getNewValueClassIndex() >= possibleTypes.length) {
-            throw new InvalidSettingsException("Invalid type index: "
-                    + getNewValueClassIndex());
+            throw new InvalidSettingsException("Invalid type index: " + getNewValueClassIndex());
         }
         String newName = m_newColumnName == null ? m_name : m_newColumnName;
-        Class<? extends DataValue> newVal = 
-            possibleTypes[getNewValueClassIndex()];
-        boolean useToString = 
-            newVal.equals(StringValue.class) 
-                // columns with only missing values (and corresponding col-spec)
-                // need to handled separately, bug #1939
-                && (DataType.getMissingCell().getType().equals(oldType)
-                    || !oldType.isCompatible(StringValue.class));
+        Class<? extends DataValue> newVal = possibleTypes[getNewValueClassIndex()];
+        boolean useToString = newVal.equals(StringValue.class)
+        // columns with only missing values (and corresponding col-spec)
+        // need to handled separately, bug #1939
+            && (DataType.getMissingCell().getType().equals(oldType) || !oldType.isCompatible(StringValue.class));
         DataColumnDomain newDomain;
         DataType newType;
         if (useToString) {
@@ -290,20 +272,18 @@ final class RenameColumnSetting {
 
     /**
      * Factory method used in NodeModel#validate and #loadSettingsFrom.
-     * 
+     *
      * @param settings to load from
      * @return a new object of this class with the settings
      * @throws InvalidSettingsException if that fails
      */
-    static RenameColumnSetting createFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    static RenameColumnSetting createFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         String name = settings.getString(CFG_OLD_COLNAME);
         String newName = settings.getString(CFG_NEW_COLNAME);
         int newType = settings.getInt(CFG_NEW_COLTYPE, 0);
         if (newType < 0) {
-            throw new InvalidSettingsException(
-                    "New type identifier for column \"" + name
-                            + "\" out of range: " + newType);
+            throw new InvalidSettingsException("New type identifier for column \"" + name + "\" out of range: "
+                + newType);
         }
         RenameColumnSetting result = new RenameColumnSetting(name);
         result.setNewColumnName(newName);
@@ -312,17 +292,15 @@ final class RenameColumnSetting {
     }
 
     /**
-     * Construct a set with all types a given type can be cast to. It also
-     * contains always <code>StringValue.class</code>.
-     * 
+     * Construct a set with all types a given type can be cast to. It also contains always
+     * <code>StringValue.class</code>.
+     *
      * @param type the type for which to determine all possible types
-     * @return a set containing all compatible types, including
-     *         <code>type</code>
+     * @return a set containing all compatible types, including <code>type</code>
      */
-    static Set<Class<? extends DataValue>> constructPossibleTypes(
-            final DataType type) {
-        LinkedHashSet<Class<? extends DataValue>> possibleValues = new LinkedHashSet<Class<? extends DataValue>>(
-                type.getValueClasses());
+    static Set<Class<? extends DataValue>> constructPossibleTypes(final DataType type) {
+        LinkedHashSet<Class<? extends DataValue>> possibleValues =
+            new LinkedHashSet<Class<? extends DataValue>>(type.getValueClasses());
         // disallow DataValue.class
         if (possibleValues.size() > 1) {
             possibleValues.remove(DataValue.class);
