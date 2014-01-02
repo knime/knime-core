@@ -53,12 +53,12 @@ import java.io.File;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.image.ImageContent;
 import org.knime.core.data.image.ImageValue;
-import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -84,9 +84,6 @@ class TableRowToImageNodeModel extends NodeModel {
     private SettingsModelString m_imageColSettingsModel =
             TableRowToImageNodeDialog.getImageColumnSettingsModel();
 
-    private static final ImagePortObjectSpec OUTSPEC = new ImagePortObjectSpec(
-            PNGImageContent.TYPE);
-
     /**
      * New node model with on image port input and a data table output.
      */
@@ -108,17 +105,21 @@ class TableRowToImageNodeModel extends NodeModel {
         if (columnIndex < 0) {
             columnIndex = findImageColumnIndex(inSpec);
             if (columnIndex >= 0) {
-                setWarningMessage("Found image column '"
-                        + inSpec.getColumnSpec(columnIndex).getName() + "'.");
+                setWarningMessage("Found image column '" + inSpec.getColumnSpec(columnIndex).getName() + "'.");
             }
         }
 
         if (columnIndex < 0) {
-            throw new InvalidSettingsException(
-                    "No image column in input table.");
+            String error = column == null ? "No image column in input"
+                : "No such image column in input table: " + column;
+            throw new InvalidSettingsException(error);
+        }
+        DataColumnSpec columnSpec = inSpec.getColumnSpec(columnIndex);
+        if (!columnSpec.getType().isCompatible(ImageValue.class)) {
+            throw new InvalidSettingsException("Column \"" + column + "\" does not contain images");
         }
 
-        return new PortObjectSpec[]{OUTSPEC};
+        return new PortObjectSpec[]{new ImagePortObjectSpec(columnSpec.getType()) };
     }
 
     /**
@@ -145,13 +146,17 @@ class TableRowToImageNodeModel extends NodeModel {
             columnIndex = findImageColumnIndex(inSpec);
         }
 
+        ImagePortObjectSpec imagePortObjectSpec = new ImagePortObjectSpec(
+            inSpec.getColumnSpec(columnIndex).getType());
+
         final RowIterator it = inTable.iterator();
         while (it.hasNext()) {
             DataRow row = it.next();
             DataCell cell = row.getCell(columnIndex);
             if (!cell.isMissing()) {
                 ImageContent ic = ((ImageValue)cell).getImageContent();
-                return new PortObject[]{new ImagePortObject(ic, OUTSPEC)};
+
+                return new PortObject[]{new ImagePortObject(ic, imagePortObjectSpec)};
             } else {
                 setWarningMessage("Found missing image cell, skipping it...");
             }
