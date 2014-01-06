@@ -187,9 +187,9 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
             }
         } else {
             for (Class<? extends DataValue> v : valueClasses) {
-                if (!v.isAssignableFrom(valueCell.getClass())) {
+                if (!valueCell.isMissing() && !v.isAssignableFrom(valueCell.getClass())) {
                     throw new IllegalArgumentException("A " + valueCell.getClass().getSimpleName()
-                                                       + " is not compatible with" + v.getSimpleName());
+                                                       + " is not compatible with " + v.getSimpleName());
                 }
                 m_adapterMap.put(v, valueCell);
             }
@@ -254,7 +254,7 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
         AdapterCell clone = clone();
         clone.m_adapterMap = new BlobWrapperHashMap(m_adapterMap);
         for (Class<? extends DataValue> v : valueClasses) {
-            if (!v.isAssignableFrom(valueCell.getClass())) {
+            if (!valueCell.isMissing() && !v.isAssignableFrom(valueCell.getClass())) {
                 throw new IllegalArgumentException("A " + valueCell.getClass().getSimpleName()
                         + " is not compatible with" + v.getSimpleName());
             }
@@ -303,7 +303,7 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
      */
     @Override
     public <V extends DataValue> MissingValue getAdapterError(final Class<V> valueClass) {
-        V c = getAdapter(valueClass);
+        DataCell c = lookupFromAdapterMap(valueClass);
         if (c instanceof MissingValue) {
             return (MissingValue)c;
         } else {
