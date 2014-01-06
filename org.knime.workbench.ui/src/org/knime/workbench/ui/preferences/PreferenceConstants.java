@@ -104,8 +104,13 @@ public interface PreferenceConstants {
         "knime.metanode.updateOnLoad";
 
     /** Preference constant for mount points for the Explorer. */
+    @Deprecated
     public static final String P_EXPLORER_MOUNT_POINT =
         "knime.explorer.mountpoint";
+
+    /** Preference constant for mount points for the Explorer (xml format). */
+    public static final String P_EXPLORER_MOUNT_POINT_XML =
+        "knime.explorer.mountpoint.xml";
 
     /** Pref constant to link the original meta node to a newly
      * defined template. */
