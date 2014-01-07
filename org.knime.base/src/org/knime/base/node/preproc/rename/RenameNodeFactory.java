@@ -44,28 +44,26 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 1, 2006 (wiswedel): created
  */
 package org.knime.base.node.preproc.rename;
 
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * NodeFactory implementation for the renaming node.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class RenameNodeFactory extends NodeFactory {
+public final class RenameNodeFactory extends NodeFactory<RenameNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public RenameNodeModel createNodeModel() {
         return new RenameNodeModel();
     }
 
@@ -81,8 +79,7 @@ public class RenameNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<RenameNodeModel> createNodeView(final int viewIndex, final RenameNodeModel nodeModel) {
         throw new IndexOutOfBoundsException();
     }
 
@@ -98,7 +95,7 @@ public class RenameNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeDialogPane createNodeDialogPane() {
+    public RenameNodeDialogPane createNodeDialogPane() {
         return new RenameNodeDialogPane();
     }
 }

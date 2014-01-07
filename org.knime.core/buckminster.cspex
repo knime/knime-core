@@ -1,31 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<cspecExtension xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:bc="http://www.eclipse.org/buckminster/Common-1.0" xmlns="http://www.eclipse.org/buckminster/CSpec-1.0">
-    <actions>
-        <!-- Updates the build date in KNIMEConstants if this is a nightly build. -->
-        <public name="knime.constants.setDate" actor="knime.buildDate">
-            <prerequisites alias="action.requirements">
-                <attribute name="knime.constants.java" />
-            </prerequisites>
-        </public>
-    </actions>
-    <groups>
-        <public name="knime.source">
-            <attribute name="eclipse.build.source" />
-        </public>
-        <public name="knime.libs">
-            <attribute name="java.binaries" />
-            <attribute name="bin.includes" />
-        </public>
-    </groups>
-    <artifacts>
-        <private name="knime.constants.java" path="src/eclipse/org/knime/core/node/KNIMEConstants.java" />
-    </artifacts>
-    <alterActions>
-        <private name="eclipse.build">
-            <prerequisites>
-                <attribute name="knime.constants.setDate" filter="(knime.nightly=true)"/>                
-            </prerequisites>
-        </private>
-    </alterActions>
+<cspecExtension xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bc="http://www.eclipse.org/buckminster/Common-1.0" xmlns="http://www.eclipse.org/buckminster/CSpec-1.0">
+  <dependencies>
+    <dependency name="org.knime.config" componentType="osgi.bundle"/>
+  </dependencies>
+  <actions>
+    <!-- Updates the build date in KNIMEConstants if this is a nightly build. -->
+    <public name="knime.constants.setDate" actor="knime.buildDate">
+      <prerequisites alias="action.requirements">
+        <attribute name="knime.constants.java"/>
+      </prerequisites>
+    </public>
+  </actions>
+  <groups>
+    <public name="knime.source">
+      <attribute name="eclipse.build.source"/>
+    </public>
+    <public name="knime.libs">
+      <attribute name="java.binaries"/>
+      <attribute name="bin.includes"/>
+    </public>
+  </groups>
+  <artifacts>
+    <private name="knime.constants.java" path="src/eclipse/org/knime/core/node/KNIMEConstants.java"/>
+  </artifacts>
+  <alterActions>
+    <private name="eclipse.build">
+      <prerequisites>
+        <attribute name="knime.constants.setDate" filter="(knime.nightly=true)"/>
+      </prerequisites>
+    </private>
+  </alterActions>
 </cspecExtension>

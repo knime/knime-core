@@ -64,7 +64,7 @@ import javax.xml.namespace.NamespaceContext;
 /**
  * A default implementation of {@link NamespaceContext}. The JDK does not
  * provide a default implementation.
- * 
+ *
  * @author Heiko Hofer
  */
 public class DefaultNamespaceContext implements NamespaceContext {
@@ -72,8 +72,8 @@ public class DefaultNamespaceContext implements NamespaceContext {
 	private final Map<String, List<String>> m_nsRevers;
 
 	/**
-	 * The context with the mapping prefixes[i] matches namespaces[i]
-	 * 
+	 * The context with the mapping prefixes[i] matches namespaces[i].
+	 *
 	 * @param prefixes the namespace prefixes
 	 * @param namespaces the namespaces
 	 */
@@ -134,8 +134,9 @@ public class DefaultNamespaceContext implements NamespaceContext {
 	 */
 	@Override
 	public String getNamespaceURI(final String prefix) {
-		if (prefix == null)
-			throw new IllegalArgumentException("Null prefix");
+		if (prefix == null) {
+            throw new IllegalArgumentException("Null prefix");
+        }
 		if (m_namespaces.containsKey(prefix)) {
 			return m_namespaces.get(prefix);
 		} else {
@@ -148,8 +149,9 @@ public class DefaultNamespaceContext implements NamespaceContext {
 	 */
 	@Override
 	public String getPrefix(final String uri) {
-		if (uri == null)
-			throw new IllegalArgumentException("Null uri");
+		if (uri == null) {
+            throw new IllegalArgumentException("Null uri");
+        }
 		if (m_nsRevers.containsKey(uri)) {
 			return m_nsRevers.get(uri).get(0);
 		} else {
@@ -163,8 +165,9 @@ public class DefaultNamespaceContext implements NamespaceContext {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public Iterator getPrefixes(final String uri) {
-		if (uri == null)
-			throw new IllegalArgumentException("Null uri");
+		if (uri == null) {
+            throw new IllegalArgumentException("Null uri");
+        }
 		if (m_nsRevers.containsKey(uri)) {
 			return m_nsRevers.get(uri).iterator();
 		} else {

@@ -575,6 +575,96 @@ public final class NodeLogger {
     }
 
     /**
+     * Write warning message, created by {@link String#format(String, Object...)} into this logger. The String is only
+     * formatted if actually necessary.
+     *
+     * @param format the format for printing
+     * @param args the arguments for {@link String#format(String, Object...)}
+     * @throws NullPointerException if format argument is <code>null</code>
+     * @since 2.10
+     */
+    public void warnWithFormat(final String format, final Object... args) {
+        if (isEnabledFor(LEVEL.WARN)) {
+            m_logger.warn(String.format(format, args));
+        }
+    }
+
+    /**
+     * Write debug message, created by {@link String#format(String, Object...)} into this logger. The String is only
+     * formatted if actually necessary.
+     *
+     * @param format the format for printing
+     * @param args the arguments for {@link String#format(String, Object...)}
+     * @throws NullPointerException if format argument is <code>null</code>
+     * @since 2.10
+     */
+    public void debugWithFormat(final String format, final Object... args) {
+        if (isEnabledFor(LEVEL.DEBUG)) {
+            m_logger.debug(String.format(format, args));
+        }
+    }
+
+    /**
+     * Write info message, created by {@link String#format(String, Object...)} into this logger. The String is only
+     * formatted if actually necessary.
+     *
+     * @param format the format for printing
+     * @param args the arguments for {@link String#format(String, Object...)}
+     * @throws NullPointerException if format argument is <code>null</code>
+     * @since 2.10
+     */
+    public void infoWithFormat(final String format, final Object... args) {
+        if (isEnabledFor(LEVEL.INFO)) {
+            m_logger.info(String.format(format, args));
+        }
+    }
+
+    /**
+     * Write error message, created by {@link String#format(String, Object...)} into this logger. The String is only
+     * formatted if actually necessary.
+     *
+     * @param format the format for printing
+     * @param args the arguments for {@link String#format(String, Object...)}
+     * @throws NullPointerException if format argument is <code>null</code>
+     * @since 2.10
+     */
+    public void errorWithFormat(final String format, final Object... args) {
+        if (isEnabledFor(LEVEL.ERROR)) {
+            m_logger.error(String.format(format, args));
+        }
+    }
+
+    /**
+     * Write fatal message, created by {@link String#format(String, Object...)} into this logger. The String is only
+     * formatted if actually necessary.
+     *
+     * @param format the format for printing
+     * @param args the arguments for {@link String#format(String, Object...)}
+     * @throws NullPointerException if format argument is <code>null</code>
+     * @since 2.10
+     */
+    public void fatalWithFormat(final String format, final Object... args) {
+        if (isEnabledFor(LEVEL.FATAL)) {
+            m_logger.fatal(String.format(format, args));
+        }
+    }
+
+    /**
+     * Write coding message, created by {@link String#format(String, Object...)} into this logger. The String is only
+     * formatted if actually necessary.
+     *
+     * @param format the format for printing
+     * @param args the arguments for {@link String#format(String, Object...)}
+     * @throws NullPointerException if format argument is <code>null</code>
+     * @since 2.10
+     */
+    public void codingWithFormat(final String format, final Object... args) {
+        if (KNIMEConstants.ASSERTIONS_ENABLED || EclipseUtil.isRunFromSDK()) {
+            coding(String.format(format, args));
+        }
+    }
+
+    /**
      * Adds a new {@link java.io.Writer} with the given level to this logger.
      *
      * @param writer The writer to add.

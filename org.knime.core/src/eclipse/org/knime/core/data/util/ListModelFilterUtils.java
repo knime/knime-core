@@ -61,8 +61,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
- * Utility class providing filter methods on <code>JList</code> and
- * <code>ListModel</code>.
+ * Utility class providing filter methods on <code>JList</code> and <code>ListModel</code>.
  *
  * @author Thomas Gabriel, KNIME.com AG, Zurich, Switzerland
  */
@@ -73,20 +72,18 @@ public final class ListModelFilterUtils {
     }
 
     /**
-     * This method is called when the user wants to search the given
-     * {@link JList} for the text of the given {@link JTextField}.
+     * This method is called when the user wants to search the given {@link JList} for the text of the given
+     * {@link JTextField}.
+     *
      * @param list the list to search in
      * @param model the list model on which the list is based on
      * @param searchText the text with the string to search for
-     * @param markAllHits if set to <code>true</code> the method will mark all
-     *            occurrences of the given search text in the given list. If set
-     *            to <code>false</code> the method will mark the next
-     *            occurrences of the search text after the current marked list
-     *            element.
+     * @param markAllHits if set to <code>true</code> the method will mark all occurrences of the given search text in
+     *            the given list. If set to <code>false</code> the method will mark the next occurrences of the search
+     *            text after the current marked list element.
      */
-    public static void onSearch(final JList list,
-            final DefaultListModel model, final String searchText,
-            final boolean markAllHits) {
+    public static void onSearch(final JList list, final DefaultListModel model, final String searchText,
+        final boolean markAllHits) {
         if (list == null || model == null || searchText == null) {
             return;
         }
@@ -100,15 +97,14 @@ public final class ListModelFilterUtils {
             list.clearSelection();
             if (searchHits.length > 0) {
                 list.setSelectedIndices(searchHits);
-                list.scrollRectToVisible(list.getCellBounds(searchHits[0],
-                        searchHits[0]));
+                list.scrollRectToVisible(list.getCellBounds(searchHits[0], searchHits[0]));
             }
         } else {
             int start = Math.max(0, list.getSelectedIndex() + 1);
             if (start >= model.getSize()) {
                 start = 0;
             }
-            int f = searchInList(list, searchStr, start);
+            int f = searchInList(list.getModel(), searchStr, start);
             if (f >= 0) {
                 list.scrollRectToVisible(list.getCellBounds(f, f));
                 list.setSelectedIndex(f);
@@ -119,11 +115,9 @@ public final class ListModelFilterUtils {
     /*
      * Finds in the list any occurrence of the argument string (as substring).
      */
-    private static int searchInList(final JList list, final String str,
-            final int startIndex) {
+    private static int searchInList(final ListModel model, final String str, final int startIndex) {
         // this method was (slightly modified) copied from
         // JList#getNextMatch
-        ListModel model = list.getModel();
         int max = model.getSize();
         String prefix = str;
         if (prefix == null) {
@@ -142,8 +136,7 @@ public final class ListModelFilterUtils {
                 if (o instanceof String) {
                     string = ((String)o).toUpperCase();
                 } else if (o instanceof DataColumnSpec) {
-                    string = ((DataColumnSpec)o).getName().toString()
-                            .toUpperCase();
+                    string = ((DataColumnSpec)o).getName().toString().toUpperCase();
                 } else {
                     string = o.toString();
                     if (string != null) {
@@ -161,23 +154,21 @@ public final class ListModelFilterUtils {
     }
 
     /**
-     * Uses the <code>searchInList(JList, String, int)</code> method to get all
-     * occurrences of the given string in the given list and returns the index
-     * off all occurrences as a <code>int[]</code>.
-     * @param list the list to search in
-     * @param str the string to search for
-     * @return <code>int[]</code> with the indices off all objects from the
-     *         given list which match the given string. If no hits exists the
-     *         method returns an empty <code>int[]</code>.
+     * Uses the <code>searchInList(JList, String, int)</code> method to get all occurrences of the given string in the
+     * given list and returns the indices of all occurrences as a <code>int[]</code>.
      *
+     * @param model the list model to search in
+     * @param str the string to search for
+     * @return <code>int[]</code> with the indices of all objects from the given list which match the given string. If
+     *         no hits exists the method returns an empty <code>int[]</code>.
+     * @since 2.10
      */
-    public static int[] getAllSearchHits(final JList list, final String str) {
-        ListModel model = list.getModel();
+    public static int[] getAllSearchHits(final ListModel model, final String str) {
         int max = model.getSize();
-        final ArrayList<Integer> hits = new ArrayList<Integer>(max);
+        final ArrayList hits = new ArrayList(max);
         int index = 0;
         do {
-            int tempIndex = searchInList(list, str, index);
+            int tempIndex = searchInList(model, str, index);
             // if the search returns no hit or returns a hit before the
             // current search position exit the while loop
             if (tempIndex < index || tempIndex < 0) {
@@ -190,18 +181,30 @@ public final class ListModelFilterUtils {
             index++;
         } while (index < max);
 
-        if (hits.size() > 0) {
-            final int[] resultArray = new int[hits.size()];
-            for (int i = 0, length = hits.size(); i < length; i++) {
-                resultArray[i] = hits.get(i).intValue();
-            }
-            return resultArray;
+        final int[] resultArray = new int[hits.size()];
+        for (int i = 0, length = hits.size(); i < length; i++) {
+            resultArray[i] = ((Integer)hits.get(i)).intValue();
         }
-        return new int[0];
+        return resultArray;
+    }
+
+    /**
+     * Uses the <code>searchInList(JList, String, int)</code> method to get all occurrences of the given string in the
+     * given list and returns the index off all occurrences as a <code>int[]</code>.
+     *
+     * @param list the list to search in
+     * @param str the string to search for
+     * @return <code>int[]</code> with the indices off all objects from the given list which match the given string. If
+     *         no hits exists the method returns an empty <code>int[]</code>.
+     *
+     */
+    public static int[] getAllSearchHits(final JList list, final String str) {
+        return getAllSearchHits(list.getModel(), str);
     }
 
     /**
      * Returns a set of all valid columns as String.
+     *
      * @param model The list from which to retrieve the elements
      * @return a set of valid columns
      */
@@ -211,6 +214,7 @@ public final class ListModelFilterUtils {
 
     /**
      * Returns a set of all invalid columns as String.
+     *
      * @param model The list from which to retrieve the elements
      * @return a set of invalid columns
      * @since 2.8
@@ -221,8 +225,8 @@ public final class ListModelFilterUtils {
 
     /**
      * @param model The list from which to retrieve the elements
-     * @param invalid if set to <code>true</code> only the invalid columns are retrieved if set
-     * to <code>false</code> only the valid columns are retrieved
+     * @param invalid if set to <code>true</code> only the invalid columns are retrieved if set to <code>false</code>
+     *            only the valid columns are retrieved
      * @return a list of valid columns
      */
     private static Set<String> getColumnList(final ListModel model, final boolean invalid) {
