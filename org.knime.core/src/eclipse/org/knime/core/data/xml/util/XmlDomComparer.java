@@ -124,10 +124,10 @@ public final class XmlDomComparer {
             return null;
         }
         if (node1 == null) {
-            return new Diff(node1, node1, Type.ELEMENT_MISSING);
+            return new Diff(node2, node2, Type.NODE_MISSING);
         }
         if (node2 == null) {
-            return new Diff(node2, node2, Type.ELEMENT_MISSING);
+            return new Diff(node1, node1, Type.NODE_MISSING);
         }
         return areNodesEqual(node1, node2, l == null ? DEFAULT_ALL_TRUE_ORDERED_FILTER : l);
     }
@@ -383,7 +383,6 @@ public final class XmlDomComparer {
         return null;
     }
 
-
     private static Diff areAttributesEqual(final Node node1, final Node node2, final XmlDomComparerCustomizer l) {
         // Check attributes
         NamedNodeMap attributes1 = node1.getAttributes();
@@ -544,7 +543,12 @@ public final class XmlDomComparer {
             /**
              * A text differs. Expected and actual values contain the text content.
              */
-            TEXT_MISSMATCH;
+            TEXT_MISSMATCH,
+            /**
+             * The other given node is <code>null</code>. Expected value is the string representation of the node which
+             * is not null.
+             */
+            NODE_MISSING;
         }
 
         private final Node m_node;

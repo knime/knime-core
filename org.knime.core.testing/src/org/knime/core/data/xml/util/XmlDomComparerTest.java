@@ -22,9 +22,9 @@ import org.xml.sax.InputSource;
 
 /**
  * Test for the {@link XmlDomComparer}
- *
+ * 
  * @author Marcel Hanser
- *
+ * 
  */
 public class XmlDomComparerTest {
 
@@ -53,6 +53,8 @@ public class XmlDomComparerTest {
 	private static final Document NS_X_b100 = document("<x xmlns:a='http:test' a:b='0.100'/>");
 	private static final Document NS_X_b10E00 = document("<x xmlns:a='http:test' a:b='1.00E-1'/>");
 	private static final Document NS_X_b10e00 = document("<x xmlns:a='http:test' a:b='10.00e-2'/>");
+
+	private static final Document NS_X_b2 = document("<x xmlns:a='http:test' a:b='2.1'/>");
 
 	private static final XmlDomComparerCustomizer UNORDERED_CUSTOMIZER = new XmlDomComparerCustomizer(
 			ChildrenCompareStrategy.UNORDERED) {
@@ -208,6 +210,25 @@ public class XmlDomComparerTest {
 				XmlDomComparer.hashCode(NS_X_b1));
 		assertEquals(XmlDomComparer.hashCode(NS_X_b10E00),
 				XmlDomComparer.hashCode(NS_X_b100));
+
+		assertFalse(XmlDomComparer.equals(NS_X_b1, NS_X_b2));
+	}
+
+	@Test
+	public void testElementVSNullComparison() {
+		assertTrue(XmlDomComparer.equals(null, null));
+		assertFalse(XmlDomComparer.equals(NS_X, null));
+		assertFalse(XmlDomComparer.equals(null, NS_X));
+
+		Diff compareNodes = XmlDomComparer.compareNodes(X, null);
+		assertNotNull(compareNodes);
+		assertEquals(Type.NODE_MISSING, compareNodes.getType());
+		assertTrue(compareNodes.getNode() instanceof Document);
+
+		compareNodes = XmlDomComparer.compareNodes(null, X);
+		assertNotNull(compareNodes);
+		assertEquals(Type.NODE_MISSING, compareNodes.getType());
+		assertTrue(compareNodes.getNode() instanceof Document);
 	}
 
 	/**
