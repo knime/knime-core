@@ -85,6 +85,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOCase;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -155,6 +158,7 @@ import org.knime.core.quickform.in.QuickFormInputNode;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
+import org.knime.core.util.VMFileLocker;
 import org.knime.core.util.pathresolve.ResolverUtil;
 
 /**
@@ -7298,7 +7302,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     exec.setMessage(copymsg);
                     LOGGER.debug(copymsg);
                     copyExec.setProgress(1.0);
-                    FileUtil.copyDir(ncDir, directory);
+                    FileUtils.copyDirectory(ncDir, directory, /* all but .knimeLock */FileFilterUtils.notFileFilter(
+                        FileFilterUtils.nameFileFilter(VMFileLocker.LOCK_FILE, IOCase.SENSITIVE)));
                     exec.setMessage("Incremental save");
                     ncDirRef.changeRoot(directory);
                     m_isWorkflowDirectoryReadonly = false;
