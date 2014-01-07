@@ -57,6 +57,7 @@ import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -90,50 +91,76 @@ public class TableToVariableNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(missingGroup);
         // Default Values
         createNewGroup(" Default Values ");
-        m_replaceDouble = getReplaceDouble();
+        m_replaceDouble = getReplaceDouble(m_onMissing);
         addDialogComponent(new DialogComponentNumber(m_replaceDouble, "Double: ", 0.1, 10));
-        m_replaceInteger = getReplaceInteger();
+        m_replaceInteger = getReplaceInteger(m_onMissing);
         addDialogComponent(new DialogComponentNumber(m_replaceInteger, "Integer: ", 1, 10));
-        m_replaceString = getReplaceString();
+        m_replaceString = getReplaceString(m_onMissing);
         addDialogComponent(new DialogComponentString(m_replaceString, "String: ", true, 13));
-
-        m_onMissing.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                updateFields(m_onMissing.getStringValue().equals(MissingValuePolicy.DEFAULT.getName()));
-            }
-
-        });
-        updateFields(m_onMissing.getStringValue().equals(MissingValuePolicy.DEFAULT.getName()));
-    }
-
-    private void updateFields(final boolean show) {
-        m_replaceDouble.setEnabled(show);
-        m_replaceInteger.setEnabled(show);
-        m_replaceString.setEnabled(show);
     }
 
     /** @return the SM for failing on Missing Values in Cells.
      */
-    public static final SettingsModelString getOnMissing() {
-        return new SettingsModelString("CFG_FAILONMISS", "Fail");
+    static final SettingsModelString getOnMissing() {
+        return new SettingsModelString("CFG_FAILONMISS", MissingValuePolicy.FAIL.getName());
     }
 
-    /** @return the SM for the new Double Value.
+    /** @param policyModel The policy model.
+     * @return the SM for the new Double Value.
      */
-    public static final SettingsModelDouble getReplaceDouble() {
-        return new SettingsModelDouble("CFG_Double", 0);
+    static final SettingsModelDouble getReplaceDouble(final SettingsModelString policyModel) {
+        final SettingsModelDouble model = new SettingsModelDouble("CFG_Double", 0);
+        ChangeListener listener = new PolicyChangeListener(policyModel, model);
+        policyModel.addChangeListener(listener);
+        listener.stateChanged(null);
+        return model;
     }
 
-    /** @return the SM for the new String value.
+    /** @param policyModel The policy model.
+     * @return the SM for the new String value.
      */
-    public static final SettingsModelString getReplaceString() {
-        return new SettingsModelString("CFG_String", "");
+    static final SettingsModelString getReplaceString(final SettingsModelString policyModel) {
+        SettingsModelString model = new SettingsModelString("CFG_String", "");
+        ChangeListener listener = new PolicyChangeListener(policyModel, model);
+        policyModel.addChangeListener(listener);
+        listener.stateChanged(null);
+        return model;
     }
 
-    /** @return the SM for the new integer value.
+    /** @param policyModel The policy model.
+     * @return the SM for the new integer value.
      */
-    public static final SettingsModelInteger getReplaceInteger() {
-        return new SettingsModelInteger("CFG_Integer", 0);
+    static final SettingsModelInteger getReplaceInteger(final SettingsModelString policyModel) {
+        SettingsModelInteger model = new SettingsModelInteger("CFG_Integer", 0);
+        ChangeListener listener = new PolicyChangeListener(policyModel, model);
+        policyModel.addChangeListener(listener);
+        listener.stateChanged(null);
+        return model;
+    }
+
+    private static class PolicyChangeListener implements ChangeListener {
+
+        private SettingsModelString m_policyModel;
+
+        private SettingsModel m_model;
+
+        /**
+         * @param policyModel The policy model
+         * @param defaultValueModel The model that will be enabled if the policy "default" is enabled
+         */
+        public PolicyChangeListener(final SettingsModelString policyModel, final SettingsModel defaultValueModel) {
+            m_policyModel = policyModel;
+            m_model = defaultValueModel;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void stateChanged(final ChangeEvent arg0) {
+            boolean isDefaultMissValue = MissingValuePolicy.DEFAULT.getName().equals(m_policyModel.getStringValue());
+            m_model.setEnabled(isDefaultMissValue);
+        }
+
     }
 }

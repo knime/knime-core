@@ -102,9 +102,9 @@ public class TableToVariableNodeModel extends NodeModel {
     protected TableToVariableNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{FlowVariablePortObject.TYPE});
         m_onMV = TableToVariableNodeDialog.getOnMissing();
-        m_int = TableToVariableNodeDialog.getReplaceInteger();
-        m_double = TableToVariableNodeDialog.getReplaceDouble();
-        m_string = TableToVariableNodeDialog.getReplaceString();
+        m_int = TableToVariableNodeDialog.getReplaceInteger(m_onMV);
+        m_double = TableToVariableNodeDialog.getReplaceDouble(m_onMV);
+        m_string = TableToVariableNodeDialog.getReplaceString(m_onMV);
     }
 
     /** {@inheritDoc} */
