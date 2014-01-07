@@ -4360,7 +4360,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 job.cancel();
             } else {
                 for (NodeContainer nc : m_workflow.getNodeValues()) {
-                    nc.cancelExecution();
+                    if (nc.getInternalState().isExecutionInProgress()) {
+                        nc.cancelExecution();
+                    }
                 }
                 checkForNodeStateChanges(true);
             }
