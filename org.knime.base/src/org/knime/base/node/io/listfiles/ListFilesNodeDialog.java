@@ -242,7 +242,7 @@ public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener 
                 // sets the path in the file text field.
                 String[] newFile = popupFileChooser();
                 if (newFile != null) {
-                    m_locations.setSelectedItem(getStringForBox(newFile));
+                    m_locations.getEditor().setItem(getStringForBox(newFile));
                 }
             }
         });
@@ -311,10 +311,10 @@ public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener 
      * @return Array containing the File locations
      **/
     protected String[] popupFileChooser() {
-        Object selection = m_locations.getSelectedItem();
+        String selection = m_locations.getEditor().getItem().toString();
         String startingDir;
         if (selection != null) {
-            String[] parts = selection.toString().split(";");
+            String[] parts = selection.split(";");
             if (parts.length == 1) {
                 startingDir = parts[0];
             } else {
