@@ -173,15 +173,17 @@ public class TreeEnsembleLearnerConfiguration {
     /** indicates minimum leaf size parameter is not defined. */
     public static final int MIN_CHILD_SIZE_UNDEFINED = -1;
 
-    static final int DEF_MAX_LEVEL = 5;
+    static final int DEF_MAX_LEVEL = MAX_LEVEL_INFINITE;
 
-    public static final double DEF_DATA_FRACTION = 0.7;
+    public static final double DEF_DATA_FRACTION = 1.0;
 
     public static final double DEF_COLUMN_FRACTION = 1.0;
 
+    public static final ColumnSamplingMode DEF_COLUMN_SAMPLING_MODE = ColumnSamplingMode.SquareRoot;
+
     public static final int DEF_COLUMN_ABSOLUTE = 10;
 
-    public static final int DEF_NR_MODELS = 50;
+    public static final int DEF_NR_MODELS = 100;
 
     public static final boolean DEF_AVERAGE_SPLIT_POINTS = true;
 
@@ -204,7 +206,7 @@ public class TreeEnsembleLearnerConfiguration {
 
     private int m_columnAbsoluteValue = DEF_COLUMN_ABSOLUTE;
 
-    private ColumnSamplingMode m_columnSamplingMode = ColumnSamplingMode.None;
+    private ColumnSamplingMode m_columnSamplingMode = ColumnSamplingMode.SquareRoot;
 
     private boolean m_isUseDifferentAttributesAtEachNode;
 
@@ -789,9 +791,9 @@ public class TreeEnsembleLearnerConfiguration {
             m_columnAbsoluteValue = DEF_COLUMN_ABSOLUTE;
         }
 
-        m_isDataSelectionWithReplacement = settings.getBoolean(KEY_IS_DATA_SELECTION_WITH_REPLACEMENT, false);
+        m_isDataSelectionWithReplacement = settings.getBoolean(KEY_IS_DATA_SELECTION_WITH_REPLACEMENT, true);
 
-        ColumnSamplingMode defColSamplingMode = ColumnSamplingMode.None;
+        ColumnSamplingMode defColSamplingMode = DEF_COLUMN_SAMPLING_MODE;
         ColumnSamplingMode colSamplingMode = defColSamplingMode;
         String colSamplingModeS = settings.getString(KEY_COLUMN_SAMPLING_MODE, null);
         if (colSamplingModeS == null) {
@@ -816,7 +818,7 @@ public class TreeEnsembleLearnerConfiguration {
         }
         m_columnSamplingMode = colSamplingMode;
         m_columnFractionLinearValue = colFracLinValue;
-        m_isUseDifferentAttributesAtEachNode = settings.getBoolean(KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE, false);
+        m_isUseDifferentAttributesAtEachNode = settings.getBoolean(KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE, true);
 
         m_nrModels = settings.getInt(KEY_NR_MODELS, DEF_NR_MODELS);
         if (m_nrModels <= 0) {
