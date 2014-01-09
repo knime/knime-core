@@ -1342,11 +1342,6 @@
             id="org.knime.base.node.io.listfiles.ListFilesNodeFactory">
       </node>
       <node
-            category-path="/io/io-other"
-            factory-class="org.knime.base.node.image.readpng.ReadPNGFromURLNodeFactory"
-            id="org.knime.base.node.image.readpng.ReadPNGFromURLNodeFactory">
-      </node>
-      <node
             category-path="/misc"
             factory-class="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory"
             id="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory">
