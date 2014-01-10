@@ -55,13 +55,13 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.timeseries.node.extract.AbstractFieldExtractorNodeDialog;
 
 /**
- * Node dialog for the date field extractor node that configures which of the 
- * date fields (year, quarter, month, week, day, day of week) should be 
+ * Node dialog for the date field extractor node that configures which of the
+ * date fields (year, quarter, month, week, day, day of week) should be
  * appended as an int column.
- * 
+ *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class DateFieldExtractorNodeDialog 
+public class DateFieldExtractorNodeDialog
     extends AbstractFieldExtractorNodeDialog {
 
     /** Year name. */
@@ -76,25 +76,30 @@ public class DateFieldExtractorNodeDialog
     static final String DAY_OF_WEEK = "Day of week";
     /** Day of year name. */
     static final String DAY_OF_YEAR = "Day of year";
-    
+    /** Week of year name. 
+     * @since 2.9 */
+    static final String WEEK_OF_YEAR = "Week of year";
+
 
     /**
-     * 
+     *
      */
     @SuppressWarnings("unchecked")
     public DateFieldExtractorNodeDialog() {
         addDialogComponent(new DialogComponentColumnNameSelection(
-                createColumnSelectionModel(), 
-                "Column to extract time fields from:", 0, 
+                createColumnSelectionModel(),
+                "Column to extract time fields from:", 0,
                 DateAndTimeValue.class));
         createUIComponentFor(YEAR);
         createUIComponentFor(QUARTER);
-        // the month UI component looks differently because of 
+        // the month UI component looks differently because of
         // the string or int radio buttons
         createUIComponentWithFormatSelection(MONTH);
         createUIComponentFor(DAY_OF_MONTH);
         createUIComponentWithFormatSelection(DAY_OF_WEEK);
         createUIComponentFor(DAY_OF_YEAR);
+        // new since 2.9.1
+        createUIComponentFor(WEEK_OF_YEAR);
     }
-    
+
 }
