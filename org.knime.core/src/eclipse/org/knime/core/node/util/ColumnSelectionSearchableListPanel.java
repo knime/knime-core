@@ -100,8 +100,9 @@ import org.knime.core.node.util.ColumnSelectionSearchableListPanel.Configuration
 /**
  * A panel comprising a column list, search field and some search customizers for the user. The list should be
  * initialized using {@link #update(DataTableSpec)} afterwards the returned {@link ListModifier} can be used to
- * add/remove additional {@link DataColumnSpec}s (usually used to add invalid columns, for which a model specific
- * configuration does exist but which does actually not exist any more in the input table).
+ * add/remove additional {@link DataColumnSpec}s. Usually additional columns are used to add 'invalid' columns, for
+ * which a model specific configuration does exist but which does actually not exist any more in the input table. See
+ * {@link ListModifier} to get more information about additional columns.
  *
  * @author Marcel Hanser
  * @since 2.10
@@ -155,7 +156,7 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
             // prevents the list to render all components. (See javadoc of JList#setFixedCellWidth)
             m_columnList.setFixedCellWidth(listFixedWidth);
         }
-        m_selectionMode = checkNotNull(searchedItemsSelectionMode);
+        m_selectionMode = CheckUtils.checkNotNull(searchedItemsSelectionMode);
 
         m_searchField = new JTextField(14);
         switch (m_selectionMode) {
@@ -251,7 +252,7 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
      * {@link ListModifier}. The {@link DataColumnSpec}s added by this function cannot be deleted from list using the
      * {@link ListModifier}. This variant creates for each column given by allConfiguredColumns, which does not exists
      * in the input spec an {@link DataColumnSpecListCellRenderer#createInvalidSpec(String)} and adds it as an
-     * additional column.
+     * additional column. See {@link ListModifier} for more information about additional and invalid columns.
      *
      * @param spec containing the immutable part of the column list
      * @param filter the column filter for filtering the spec
@@ -268,7 +269,7 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
      * {@link ListModifier}. The {@link DataColumnSpec}s added by this function cannot be deleted from list using the
      * {@link ListModifier}. This variant creates for each column given by allConfiguredColumns, which does not exists
      * in the input spec an {@link DataColumnSpecListCellRenderer#createInvalidSpec(String)} and adds it as an
-     * additional column.
+     * additional column. See {@link ListModifier} for more information about additional and invalid columns.
      *
      * @param spec containing the immutable part of the column list
      * @param filter the column filter for filtering the spec
@@ -494,15 +495,19 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
     /**
      * The ListModifier is returned by calling {@link ColumnSelectionSearchableListPanel#update(DataTableSpec)} or
      * {@link ColumnSelectionSearchableListPanel#update(DataTableSpec, ColumnFilter)} and provides the functions to
-     * add/remove additional {@link DataColumnSpec}s. These columns can be 'invalid' columns created by
-     * DataColumnSpecListCellRenderer#createInvalidSpec(String, DataType) or any other type. Usually this is used during
-     * cell rendering to highlight different types of {@link DataColumnSpec}s.
+     * add/remove additional {@link DataColumnSpec}s. An additional column is one which is not part of the actual
+     * DataTableSpec, which also indicates that it is possible to remove them. A special variant of additional columns
+     * are the 'invalid' ones created by {@link DataColumnSpecListCellRenderer#createInvalidSpec(String, DataType)}
+     * indicating columns which are previously configured but actually do not exist in the input table. These columns
+     * are rendered with a red border on default. Other types of additional columns and a customized
+     * {@link ListCellRenderer} may be used for a arbitrary highlighting of certain additional columns.
      *
      * @author Marcel Hanser
      */
     public static interface ListModifier {
         /**
-         * Creates and adds invalid columnspecs of the given type for the given column names.
+         * Creates and adds invalid column specs of the given type for the given column names. See {@link ListModifier}
+         * for more information about invalid columns.
          *
          * @see DataColumnSpecListCellRenderer#createInvalidSpec(String, DataType)
          * @param type the type of the invalud column
@@ -515,7 +520,8 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
         ListModifier addInvalidColumns(DataType type, final String... columns);
 
         /**
-         * Creates and adds invalid columnspecs for the given column names.
+         * Creates and adds invalid columns pecs for the given column names.See {@link ListModifier} for more
+         * information about invalid columns.
          *
          * @see DataColumnSpecListCellRenderer#createInvalidSpec(String)
          * @param columns the column names
@@ -527,7 +533,7 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
         ListModifier addInvalidColumns(final String... columns);
 
         /**
-         * Adds additional columns to the model.
+         * Adds additional columns to the model. See {@link ListModifier} for more information about additional columns.
          *
          * @param columns the columns to add
          * @return this modfier
@@ -538,7 +544,7 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
         ListModifier addAdditionalColumns(final Iterable<DataColumnSpec> columns);
 
         /**
-         * Adds additional columns to the model.
+         * Adds additional columns to the model. See {@link ListModifier} for more information about additional columns.
          *
          * @param columns the columns to add
          * @return this modfier
@@ -549,7 +555,8 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
         ListModifier addAdditionalColumns(final DataColumnSpec... columns);
 
         /**
-         * Adds an additional column to the model.
+         * Adds an additional column to the model. See {@link ListModifier} for more information about additional
+         * columns.
          *
          * @param column the column to add
          * @return this modfier
@@ -560,7 +567,8 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
         ListModifier addAdditionalColumn(DataColumnSpec column);
 
         /**
-         * Removes additional columns from the model.
+         * Removes additional columns from the model. See {@link ListModifier} for more information about additional
+         * columns.
          *
          * @param columns the columns to remove
          * @return this modfier
@@ -570,7 +578,8 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
         ListModifier removeAdditionalColumns(final String... columns);
 
         /**
-         * Removes additional columns from the model.
+         * Removes additional columns from the model. See {@link ListModifier} for more information about additional
+         * columns.
          *
          * @param columns the columns to remove
          * @return this modfier
@@ -580,12 +589,13 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
         ListModifier removeAdditionalColumns(final Iterable<String> columns);
 
         /**
-         * Removes an additional column from the model.
+         * Removes an additional column from the model. See {@link ListModifier} for more information about additional
+         * columns.
          *
          * @param column the column to remove
          * @return this modfier
          * @throws IllegalStateException if this modfier is invalid
-         * @throws IllegalArgumentException if one column is contained in the original {@link DataTableSpec}
+         * @throws IllegalArgumentException if the column is contained in the original {@link DataTableSpec}
          */
         ListModifier removeAdditionalColumn(final String column);
 
@@ -750,13 +760,9 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
         public ListModifier addAdditionalColumn(final DataColumnSpec additionalColumn) {
             checkValid();
             String name = additionalColumn.getName();
-            if (m_additionalNames.containsKey(name)) {
-                throw new IllegalArgumentException(String.format(
-                    "column %s has been already added as additional column ", name));
-            }
-            if (m_spec.containsName(name)) {
-                throw new IllegalArgumentException(String.format("column %s already exists in input table ", name));
-            }
+            CheckUtils.checkArgument(!m_additionalNames.containsKey(name),
+                "column '%s' has been already added as additional column ", name);
+            CheckUtils.checkArgument(!m_spec.containsName(name), "column '%s' already exists in input table ", name);
             m_parent.setUnkownFilterVisible(true);
             m_additionalNames.put(name, additionalColumn);
             ((DefaultListModel)m_parent.m_columnList.getModel()).addElement(additionalColumn);
@@ -791,10 +797,8 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
         @Override
         public ListModifier removeAdditionalColumn(final String columns) {
             checkValid();
-            if (m_spec.containsName(columns)) {
-                throw new IllegalArgumentException(String.format(
-                    "column: '%s' cannot be deleted as it is part of the original DataTableSpec", columns));
-            }
+            CheckUtils.checkArgument(!m_spec.containsName(columns),
+                "column: '%s' cannot be deleted as it is part of the original DataTableSpec", columns);
             DataColumnSpec dataColumnSpec = m_additionalNames.remove(columns);
             if (dataColumnSpec != null) {
                 ((DefaultListModel)m_parent.m_columnList.getModel()).removeElement(dataColumnSpec);
@@ -869,6 +873,7 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
                 ((ConfigurationRequestListener)listeners[i + 1]).configurationRequested(e);
             }
         }
+        m_columnList.repaint();
     }
 
     private void addKeyMouseSelectionListerersToColumnList() {
@@ -1051,13 +1056,4 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
         }
         return arr;
     }
-
-    private static <T> T checkNotNull(final T object) {
-        // nullcheck
-        if (object == null) {
-            throw new NullPointerException();
-        }
-        return object;
-    }
-
 }
