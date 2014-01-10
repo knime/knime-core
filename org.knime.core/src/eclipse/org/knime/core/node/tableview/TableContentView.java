@@ -71,6 +71,7 @@ import java.util.Set;
 import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.ButtonGroup;
+import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -820,7 +821,21 @@ public class TableContentView extends JTable {
             // only occurs if someone overrides the addColumn method.
             return null;
         }
+        return createSortPopupMenu(getContentModel(), this, convertColumnIndexToModel(columnInView), sortKey);
+    }
 
+    /** Create a custom popup menu when the mouse was clicked in a column header.
+     * This popup menu will contain possible sort options, ascending, descending, and clear sorting.
+     * @param contentModel The content model on which to call the sort routines.
+     * @param parentComp Component on which the sort-progress bar will be made modal
+     * @param columnInModel column (in model), which is going to be sorted.
+     * @param sortKey the new sort key
+     * @return a popup menu displaying these properties
+     * @see #onMouseClickInHeader(MouseEvent)
+     * @since 2.8
+     */
+    static JPopupMenu createSortPopupMenu(final TableContentModel contentModel,
+        final JComponent parentComp, final int columnInModel, final TableSortKey sortKey) {
         /** Action listener for all sort actions. */
         final class SortKeyActionListener implements ActionListener {
             private final TableSortKey m_sortKey;
@@ -830,7 +845,7 @@ public class TableContentView extends JTable {
             }
             @Override
             public void actionPerformed(final ActionEvent action) {
-                onSortRequest(convertColumnIndexToModel(columnInView), m_sortKey);
+                contentModel.requestSort(columnInModel, parentComp, m_sortKey);
             }
         }
         final JPopupMenu popup = new JPopupMenu("Column Context Menu");
