@@ -293,25 +293,28 @@ public final class TableRowHeaderView extends JTable {
     }
 
     private void onMouseClickInHeader(final MouseEvent e) {
-        if (e.isControlDown()) {
+        TableRowHeaderModel rowHeaderModel = getModel();
+        TableContentInterface cntIface = rowHeaderModel.getTableContent();
+        boolean isSortingAllowed = false;
+        TableContentModel cntModel = null;
+        if (cntIface instanceof TableContentModel) {
+            cntModel = (TableContentModel)cntIface;
+            isSortingAllowed = cntModel.isSortingAllowed();
+        }
+        if (e.isControlDown() && isSortingAllowed) {
             getModel().requestSort(this.getRootPane());
-        } else if (SwingUtilities.isLeftMouseButton(e)) { // left click in header.
+        } else if (SwingUtilities.isLeftMouseButton(e) && isSortingAllowed) { // left click in header.
             TableSortOrder sortOrder = null;
-            TableRowHeaderModel rowHeaderModel = getModel();
-            TableContentInterface cntIface = rowHeaderModel.getTableContent();
-            if (cntIface instanceof TableContentModel) {
-                TableContentModel cntModel = (TableContentModel)cntIface;
-                sortOrder = cntModel.getTableSortOrder();
-                TableSortKey sortKey;
-                if (sortOrder == null) {
-                    sortKey = TableSortKey.NONE;
-                } else {
-                    sortKey = sortOrder.getSortKeyForColumn(TableSortOrder.COLIDX_ROWKEY);
-                }
-                final JPopupMenu popup = TableContentView.createSortPopupMenu(
-                    cntModel, this, TableSortOrder.COLIDX_ROWKEY, sortKey);
-                popup.show(getTableHeader(), e.getX(), e.getY());
+            sortOrder = cntModel.getTableSortOrder(); // can't be null here
+            TableSortKey sortKey;
+            if (sortOrder == null) {
+                sortKey = TableSortKey.NONE;
+            } else {
+                sortKey = sortOrder.getSortKeyForColumn(TableSortOrder.COLIDX_ROWKEY);
             }
+            final JPopupMenu popup = TableContentView.createSortPopupMenu(
+                cntModel, this, TableSortOrder.COLIDX_ROWKEY, sortKey);
+            popup.show(getTableHeader(), e.getX(), e.getY());
         }
 
     }

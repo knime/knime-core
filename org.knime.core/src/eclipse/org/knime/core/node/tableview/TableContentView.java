@@ -675,9 +675,9 @@ public class TableContentView extends JTable {
             if (popup.getSubElements().length > 0) { // only if it has content
                 popup.show(header, e.getX(), e.getY());
             }
-        } else if (e.isControlDown()) { // control pressed.
+        } else if (e.isControlDown() && getContentModel().isSortingAllowed()) { // control pressed.
             onSortRequest(convertColumnIndexToModel(columnInView), null);
-        } else if (SwingUtilities.isLeftMouseButton(e)) { // left click in header.
+        } else if (SwingUtilities.isLeftMouseButton(e) && getContentModel().isSortingAllowed()) { // left click in header.
             TableSortOrder sortOrder = null;
             int colIndexInModel = -1;
             TableModel model = getModel();
