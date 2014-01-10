@@ -66,6 +66,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.testing.data.filestore.LargeFile;
 import org.knime.testing.data.filestore.LargeFileStoreValue;
 
@@ -74,6 +75,8 @@ import org.knime.testing.data.filestore.LargeFileStoreValue;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class FileStoreTestNodeModel extends NodeModel {
+    
+    private final SettingsModelBoolean m_allowMissingModel = createAllowMissingModel();
 
     /**
      *  */
@@ -93,6 +96,7 @@ final class FileStoreTestNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        final boolean isAllowMissings = m_allowMissingModel.getBooleanValue();
         BufferedDataTable data = inData[0];
         DataTableSpec spec = data.getDataTableSpec();
         int[] fsColumns = getFSColumns(spec);
@@ -102,7 +106,11 @@ final class FileStoreTestNodeModel extends NodeModel {
             for (int i = 0; i < fsColumns.length; i++) {
                 DataCell c = r.getCell(fsColumns[i]);
                 if (c.isMissing()) {
-                    continue;
+                    if (isAllowMissings) {
+                        continue;
+                    } else {
+                        throw new Exception("Missings not allowed as per dialog option, row " + i);
+                    }
                 }
                 LargeFileStoreValue v = (LargeFileStoreValue)c;
                 LargeFile lf = v.getLargeFile();
@@ -155,24 +163,25 @@ final class FileStoreTestNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // TODO Auto-generated method stub
-
+        m_allowMissingModel.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+        // allow missings added after release
     }
 
     /** {@inheritDoc} */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // TODO Auto-generated method stub
-
+        try {
+            m_allowMissingModel.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            m_allowMissingModel.setBooleanValue(true);
+        }
     }
 
     /** {@inheritDoc} */
@@ -180,6 +189,10 @@ final class FileStoreTestNodeModel extends NodeModel {
     protected void reset() {
         // TODO Auto-generated method stub
 
+    }
+    
+    static final SettingsModelBoolean createAllowMissingModel() {
+        return new SettingsModelBoolean("allowMissings", false);
     }
 
 }

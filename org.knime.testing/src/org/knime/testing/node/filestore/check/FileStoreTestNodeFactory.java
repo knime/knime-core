@@ -83,13 +83,13 @@ public final class FileStoreTestNodeFactory extends
     /** {@inheritDoc} */
     @Override
     protected boolean hasDialog() {
-        return false;
+        return true;
     }
 
     /** {@inheritDoc} */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        throw new IllegalStateException();
+        return new FileStoreTestNodeDialogPane();
     }
 
 }
