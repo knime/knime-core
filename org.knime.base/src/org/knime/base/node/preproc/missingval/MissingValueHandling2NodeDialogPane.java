@@ -65,9 +65,11 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -94,6 +96,7 @@ import org.knime.core.node.util.ColumnSelectionSearchableListPanel;
 import org.knime.core.node.util.ColumnSelectionSearchableListPanel.ConfigurationRequestEvent;
 import org.knime.core.node.util.ColumnSelectionSearchableListPanel.ConfigurationRequestListener;
 import org.knime.core.node.util.ColumnSelectionSearchableListPanel.ConfiguredColumnDeterminer;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel.ListModifier;
 import org.knime.core.node.util.ColumnSelectionSearchableListPanel.SearchedItemsSelectionMode;
 
 /**
@@ -119,6 +122,8 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
     private final JButton m_addButton;
 
     private final ColumnSelectionSearchableListPanel m_searchableListPanel;
+
+    private ListModifier m_searchableListModifier;
 
     /**
      * Constructs new dialog with an appropriate dialog title.
@@ -227,7 +232,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException {
 
-        m_searchableListPanel.update(specs[0]);
+        m_searchableListModifier = m_searchableListPanel.update(specs[0]);
 
         MissingValueHandling2ColSetting[] defaults =
             MissingValueHandling2ColSetting.loadMetaColSettings(settings, specs[0]);
@@ -240,6 +245,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
             m_defaultsPanel.add(p);
         }
         m_individualsPanel.removeAll();
+        Set<String> invalidColumns = new LinkedHashSet<String>();
         for (int i = 0; i < individuals.length; i++) {
             String[] names = individuals[i].getNames();
             ArrayList<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>();
@@ -249,6 +255,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
                     LOGGER.debug("No such column in spec: " + names[j]);
                     DataColumnSpec createUnkownSpec = createUnkownSpec(names[j], individuals[i]);
                     colSpecs.add(createUnkownSpec);
+                    invalidColumns.add(names[j]);
                 } else {
                     colSpecs.add(cspec);
                 }
@@ -275,6 +282,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
                 addToIndividualPanel(p);
             }
         }
+        m_searchableListModifier.addInvalidColumns(invalidColumns.toArray(new String[invalidColumns.size()]));
         m_individualsPanel.setPreferredSize(m_defaultsPanel.getPreferredSize());
         checkButtonStatus();
     }
@@ -410,6 +418,11 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
     }
 
     private void removeFromIndividualPanel(final MissingValueHandling2Panel panel) {
+        for (String name : panel.getSettings().getNames()) {
+            if (m_searchableListPanel.isAdditionalColumn(name)) {
+                m_searchableListModifier.removeAdditionalColumn(name);
+            }
+        }
         m_individualsPanel.remove(panel);
         m_individualsPanel.revalidate();
         m_individualsPanel.repaint();
@@ -431,6 +444,14 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
                 /** {@inheritDoc} */
                 @Override
                 public void propertyChange(final PropertyChangeEvent evt) {
+                    DataColumnSpec[] removedSpecs = (DataColumnSpec[])evt.getNewValue();
+                    if (removedSpecs != null) {
+                        for (DataColumnSpec spec : removedSpecs) {
+                            if (m_searchableListPanel.isAdditionalColumn(spec.getName())) {
+                                m_searchableListModifier.removeAdditionalColumn(spec.getName());
+                            }
+                        }
+                    }
                     checkButtonStatus();
                     m_searchableListPanel.repaint();
                 }

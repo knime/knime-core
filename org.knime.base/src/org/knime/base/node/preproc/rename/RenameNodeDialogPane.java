@@ -109,6 +109,8 @@ public class RenameNodeDialogPane extends NodeDialogPane {
 
     private JScrollPane m_individualsScrollPanel;
 
+    private ListModifier m_searchableListModifier;
+
     /**
      * Constructs new dialog, inits members.
      */
@@ -179,7 +181,7 @@ public class RenameNodeDialogPane extends NodeDialogPane {
         m_errornousColNames.clear();
         m_individualsPanel.removeAll();
 
-        ListModifier modifier = m_searchableListPanel.update(spec);
+        m_searchableListModifier = m_searchableListPanel.update(spec);
 
         NodeSettingsRO subSettings;
         try {
@@ -213,7 +215,7 @@ public class RenameNodeDialogPane extends NodeDialogPane {
 
                 if (orgSpec == null) {
                     DataColumnSpec invalidSpec = createInvalidSpec(nameForSettings);
-                    modifier.addAdditionalColumn(invalidSpec);
+                    m_searchableListModifier.addAdditionalColumn(invalidSpec);
                     m_columnToSettings.put(invalidSpec, renameColumnSetting);
                 } else {
                     m_columnToSettings.put(orgSpec, renameColumnSetting);
@@ -345,6 +347,9 @@ public class RenameNodeDialogPane extends NodeDialogPane {
     }
 
     private void removeFromIndividualPanel(final RenameColumnPanel panel) {
+        if (m_searchableListPanel.isAdditionalColumn(panel.getColumnSpec())) {
+            m_searchableListModifier.removeAdditionalColumn(panel.getColumnSpec().getName());
+        }
         m_columnToSettings.remove(panel.getColumnSpec());
         m_individualsPanel.remove(panel);
         m_individualsPanel.revalidate();

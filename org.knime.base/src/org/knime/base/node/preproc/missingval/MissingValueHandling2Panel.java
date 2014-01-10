@@ -266,7 +266,8 @@ final class MissingValueHandling2Panel extends JPanel {
 
                         // recreate the content, based on the new settings with removed invalid columns
                         createContent(diff(m_setting, invalidColumns), diff(spec, invalidColumns));
-                        firePropertyChange(REMOVED_INVALID_COLUMNS, null, null);
+                        firePropertyChange(REMOVED_INVALID_COLUMNS, null,
+                            invalidColumns.toArray(new DataColumnSpec[invalidColumns.size()]));
                     }
 
                 });
