@@ -104,8 +104,9 @@ public class RenameNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         NodeSettingsWO subSettings = settings.addNodeSettings(CFG_SUB_CONFIG);
         if (m_settings != null) {
-            for (RenameColumnSetting set : m_settings) {
-                NodeSettingsWO subSub = subSettings.addNodeSettings(set.getName().toString());
+            for (int i = 0; i < m_settings.length; i++) {
+                RenameColumnSetting set = m_settings[i];
+                NodeSettingsWO subSub = subSettings.addNodeSettings(Integer.toString(i));
                 set.saveSettingsTo(subSub);
             }
         }

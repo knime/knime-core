@@ -241,6 +241,7 @@ public class RenameNodeDialogPane extends NodeDialogPane {
 
         clearBorders();
 
+        int i = 0;
         for (RenameColumnSetting colSet : m_columnToSettings.values()) {
             String newName = colSet.getNewColumnName();
             final String oldName = colSet.getName();
@@ -288,7 +289,7 @@ public class RenameNodeDialogPane extends NodeDialogPane {
                 throw new InvalidSettingsException(warnMessage);
             }
 
-            NodeSettingsWO subSub = subSettings.addNodeSettings(oldName);
+            NodeSettingsWO subSub = subSettings.addNodeSettings(Integer.toString(i++));
             colSet.saveSettingsTo(subSub);
         }
     }
