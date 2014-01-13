@@ -149,7 +149,7 @@ public class NominalValueRowFilterNodeDialog extends NodeDialogPane implements
         panel.add(colBox);
         panel.add(createAttributeSelectionLists());
         panel.add(Box.createVerticalGlue());
-        addTab("Selection", panel);
+        addTab("Selection", new JScrollPane(panel));
     }
 
     private Box createAttributeSelectionLists() {
