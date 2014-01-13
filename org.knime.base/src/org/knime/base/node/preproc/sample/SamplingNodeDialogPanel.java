@@ -91,7 +91,7 @@ public class SamplingNodeDialogPanel extends JPanel {
             new JRadioButton("Relative[%]   ");
 
     private final JSpinner m_absoluteSpinner =
-            new JSpinner(new SpinnerNumberModel(100, 1, Integer.MAX_VALUE, 50));
+            new JSpinner(new SpinnerNumberModel(100, 0, Integer.MAX_VALUE, 50));
 
     private final JSpinner m_relativeSpinner =
             new JSpinner(new SpinnerNumberModel(10.0, 0.0, 100.0, 2.0));
