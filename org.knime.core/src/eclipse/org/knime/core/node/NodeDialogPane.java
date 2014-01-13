@@ -102,6 +102,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelFlowVariableCompatib
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowObjectStack;
@@ -785,7 +786,7 @@ public abstract class NodeDialogPane {
                 /** {@inheritDoc} */
                 @Override
                 public void stateChanged(final ChangeEvent e) {
-                    if (m_pane.getSelectedComponent() == m_flowVariableTab) {
+                    if (m_pane.getSelectedIndex() == getTabIndex(TAB_NAME_VARIABLES)) {
                         updateFlowVariablesTab();
                     }
                 }
@@ -849,7 +850,7 @@ public abstract class NodeDialogPane {
         // see if they are reusing the component (with a different title)
         if (m_tabs.containsValue(comp)) {
             // Not good. Rename that tab!
-            int compIdx = m_pane.indexOfComponent(comp);
+            int compIdx = getTabIndex(comp);
             assert compIdx >= 0;
             String oldTitle = m_pane.getTitleAt(compIdx);
             renameTab(oldTitle, titleToUse);
@@ -976,9 +977,9 @@ public abstract class NodeDialogPane {
             /** {@inheritDoc} */
             @Override
             public void run() {
-                int varTabIdx = m_pane.indexOfComponent(m_flowVariableTab);
-                int memIndex = m_pane.indexOfComponent(m_memPolicyTab);
-                int jobMgrIdx = m_pane.indexOfComponent(m_jobMgrTab);
+                int varTabIdx = getTabIndex(m_flowVariableTab);
+                int memIndex = getTabIndex(m_memPolicyTab);
+                int jobMgrIdx = getTabIndex(m_jobMgrTab);
 
                 if (memIndex >= 0) {
                     // make sure the miscellaneous tab is the last tab
@@ -1004,9 +1005,11 @@ public abstract class NodeDialogPane {
                     insertIdx.setValue(m_pane.getTabCount());
                 }
 
-                // add it to the tabbed pane and the hash map
-                m_pane.insertTab(title, null, newTab, null,
-                        insertIdx.intValue());
+                // fix for bug 4933: All node dialog panes are wrapped in a scroll panel
+                // to avoid layouting issues on smallish screens
+                JScrollPane scrollPane = newTab instanceof JScrollPane
+                        ? (JScrollPane)newTab : new JScrollPane(newTab);
+                m_pane.insertTab(title, null, scrollPane, null, insertIdx.intValue());
                 m_tabs.put(title, newTab);
 
                 // listens to components added/removed from this dialog
@@ -1047,7 +1050,7 @@ public abstract class NodeDialogPane {
             /** {@inheritDoc} */
             @Override
             public void run() {
-                int tabIdx = m_pane.indexOfComponent(pane);
+                int tabIdx = getTabIndex(pane);
                 if (tabIdx < 0) {
                     // Ooops. Our hash map is out of sync...
                     m_tabs.remove(pane);
@@ -1125,15 +1128,16 @@ public abstract class NodeDialogPane {
      * @see #addTabAt(int, String, Component)
      */
     protected final void removeTab(final String name) {
+        final int compIndex = getTabIndex(name);
         final Component comp = getTab(name);
 
-        if (comp != null) {
+        if (compIndex >= 0) {
             ViewUtils.invokeAndWaitInEDT(new Runnable() {
                 /** {@inheritDoc} */
                 @Override
                 public void run() {
                     comp.removeHierarchyListener(HIERARCHY_LISTENER);
-                    m_pane.remove(comp);
+                    m_pane.removeTabAt(compIndex);
                     m_tabs.remove(name);
                 }
 
@@ -1150,6 +1154,33 @@ public abstract class NodeDialogPane {
      */
     protected final int getTabIndex(final String title) {
         return m_pane.indexOfTab(title);
+    }
+
+    /** Iterates panels in m_pane and finds the tab pane index representing comp or -1 if not present. Used
+     * instead of {@link JTabbedPane#indexOfComponent(Component)} to handle extra wrapping in JScrollPane in
+     * {@link #insertNewTabAt(int, String, Component)}.
+     * @param comp Component to query
+     * @return Index in tab pane or -1.
+     */
+    private int getTabIndex(final Component comp) {
+        int compIdx = -1;
+        for (int i = 0; i < m_pane.getTabCount(); i++) {
+            // search through the tabs and find index of that components, it's possibly wrapped in a scroll pane
+            Component tabComponentAt = m_pane.getComponentAt(i); // don't use getTabComponent - not sure what it is for
+            if (ConvenienceMethods.areEqual(tabComponentAt, comp)) {
+                compIdx = i;
+                break;
+            }
+            if (tabComponentAt instanceof JScrollPane) {
+                JScrollPane scroll = (JScrollPane)tabComponentAt;
+                Component scrollCompnent = scroll.getViewport() != null ? scroll.getViewport().getView() : null;
+                if (ConvenienceMethods.areEqual(scrollCompnent, comp)) {
+                    compIdx = i;
+                    break;
+                }
+            }
+        }
+        return compIdx;
     }
 
     /**
@@ -1274,7 +1305,8 @@ public abstract class NodeDialogPane {
     /** Updates the warning message below the panel to inform the user
      * whether any parameter is overwritten using flow variables. */
     private void updateFlowVariablesOverwriteWarning() {
-        Component activeTab = m_pane.getSelectedComponent();
+        final int activeTabIndex = m_pane.getSelectedIndex();
+        final int flowVarTabIndex = getTabIndex(m_flowVariableTab);
         Set<String> overwrittenParams =
             m_flowVariableTab.getVariableControlledParameters();
         if (m_flowVariablesModelChanged) {
@@ -1288,7 +1320,7 @@ public abstract class NodeDialogPane {
                 }
             }
         }
-        if (activeTab != m_flowVariableTab && !overwrittenParams.isEmpty()) {
+        if (activeTabIndex != flowVarTabIndex && !overwrittenParams.isEmpty()) {
             String msg = buildVariableOverwriteWarning(overwrittenParams);
             m_statusBarLabel.setVisible(true);
             m_statusBarLabel.setText(msg);

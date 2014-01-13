@@ -170,7 +170,6 @@ public class GroupByNodeDialog extends NodeDialogPane {
 //The last tab: aggregations and advance settings
         final JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        addTab("Options", panel);
 
 //The aggregation column box
         panel.add(m_aggrColPanel.getComponentPanel());
