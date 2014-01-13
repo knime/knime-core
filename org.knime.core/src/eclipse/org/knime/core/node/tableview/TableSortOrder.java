@@ -74,7 +74,7 @@ final class TableSortOrder {
     /** Indicates that no secondary sorting is used. */
     private static final int COLIDX_NONE = -2;
     /** Indicates that the sorting is on the rowID column. */
-    private static final int COLIDX_ROWKEY = -1;
+    static final int COLIDX_ROWKEY = -1;
 
     private final int m_colIndexPrimary;
     private final int m_colIndexSecondary;

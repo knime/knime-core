@@ -40,6 +40,9 @@
         <option name="Day of Year">Check if the day of year should be 
         extracted and appended as an integer column. 
         The name of this column can be specified.</option>
+        <option name="Week of Year">Check if the week of year (the week number) should be 
+        extracted and appended as an integer column. 
+        The name of this column can be specified.</option>
     </fullDescription>
     <ports>
         <inPort index="0" name="Input column">

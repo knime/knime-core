@@ -49,16 +49,19 @@
  */
 package org.knime.core.node.util.filter;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.JCheckBox;
@@ -151,25 +154,41 @@ final class PatternFilterPanelImpl<T> extends JPanel {
      * @param filter The filter that filters out Ts that are not available for selection
      */
     PatternFilterPanelImpl(final NameFilterPanel<T> parentFilter, final InputFilter<T> filter) {
+        setLayout(new BorderLayout());
         m_parentFilter = parentFilter;
         m_filter = filter;
         JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setLayout(new GridBagLayout());
         m_pattern = new JTextField();
         m_pattern.setText("");
         m_patternValue = m_pattern.getText();
-        panel.add(m_pattern);
+        JPanel patternPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        patternPanel.add(new JLabel("Pattern:"), gbc);
+        gbc.gridx++;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
+        gbc.insets = new Insets(0, 5, 0, 0);
+        patternPanel.add(m_pattern, gbc);
+        gbc.gridx = 0;
+        panel.add(patternPanel, gbc);
         ButtonGroup typeGroup = new ButtonGroup();
         m_wildcard = new JRadioButton("Wildcard ('?' matches any character, '*' matches a sequence of any characters)");
         typeGroup.add(m_wildcard);
-        panel.add(m_wildcard);
+        gbc.gridy++;
+        gbc.insets = new Insets(0, 20, 0, 0);
+        panel.add(m_wildcard, gbc);
         m_regex = new JRadioButton("Regular expression");
         typeGroup.add(m_regex);
-        panel.add(m_regex);
+        gbc.gridy++;
+        panel.add(m_regex, gbc);
         m_wildcard.setSelected(true);
         m_typeValue = getSelectedFilterType();
         m_caseSensitive = new JCheckBox("Case Sensitive");
-        panel.add(m_caseSensitive);
+        gbc.gridy++;
+        panel.add(m_caseSensitive, gbc);
         m_caseSensitive.setSelected(true);
         m_caseSensitiveValue = m_caseSensitive.isSelected();
         m_pattern.addCaretListener(new CaretListener() {
@@ -227,11 +246,18 @@ final class PatternFilterPanelImpl<T> extends JPanel {
         m_excludePane = new JScrollPane(m_excludeList);
         previewPanel.add(m_excludePane);
         previewPanel.add(m_includePane);
-        panel.add(previewPanel);
+        gbc.insets = new Insets(0, 0, 0, 0);
+        gbc.gridy++;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1;
+        panel.add(previewPanel, gbc);
         // Add invalid pattern label
         m_invalid = new JLabel();
         m_invalid.setForeground(Color.RED);
-        panel.add(m_invalid);
+        gbc.gridy++;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weighty = 0;
+        panel.add(m_invalid, gbc);
         super.add(panel);
     }
 

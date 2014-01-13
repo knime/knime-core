@@ -58,8 +58,10 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.event.TableModelEvent;
@@ -70,6 +72,7 @@ import javax.swing.table.TableModel;
 
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.renderer.DataValueRenderer;
+import org.knime.core.node.tableview.TableSortOrder.TableSortKey;
 
 
 /**
@@ -271,9 +274,7 @@ public final class TableRowHeaderView extends JTable {
             newTableHeader.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(final MouseEvent e) {
-                    if (e.isControlDown()) {
-                        onMouseClickInHeader();
-                    }
+                    onMouseClickInHeader(e);
                 }
 
             });
@@ -291,8 +292,31 @@ public final class TableRowHeaderView extends JTable {
         }
     }
 
-    private void onMouseClickInHeader() {
-        getModel().requestSort(this.getRootPane());
+    private void onMouseClickInHeader(final MouseEvent e) {
+        TableRowHeaderModel rowHeaderModel = getModel();
+        TableContentInterface cntIface = rowHeaderModel.getTableContent();
+        boolean isSortingAllowed = false;
+        TableContentModel cntModel = null;
+        if (cntIface instanceof TableContentModel) {
+            cntModel = (TableContentModel)cntIface;
+            isSortingAllowed = cntModel.isSortingAllowed();
+        }
+        if (e.isControlDown() && isSortingAllowed) {
+            getModel().requestSort(this.getRootPane());
+        } else if (SwingUtilities.isLeftMouseButton(e) && isSortingAllowed) { // left click in header.
+            TableSortOrder sortOrder = null;
+            sortOrder = cntModel.getTableSortOrder(); // can't be null here
+            TableSortKey sortKey;
+            if (sortOrder == null) {
+                sortKey = TableSortKey.NONE;
+            } else {
+                sortKey = sortOrder.getSortKeyForColumn(TableSortOrder.COLIDX_ROWKEY);
+            }
+            final JPopupMenu popup = TableContentView.createSortPopupMenu(
+                cntModel, this, TableSortOrder.COLIDX_ROWKEY, sortKey);
+            popup.show(getTableHeader(), e.getX(), e.getY());
+        }
+
     }
     /**
      * Shall row header encode the color information in an icon?

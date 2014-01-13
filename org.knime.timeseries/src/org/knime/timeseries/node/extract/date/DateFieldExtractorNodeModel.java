@@ -131,6 +131,12 @@ public class DateFieldExtractorNodeModel extends NodeModel {
     private final SettingsModelString m_dayOfYearColName
             = AbstractFieldExtractorNodeDialog.createTimeFieldColumnNameModel(DateFieldExtractorNodeDialog.DAY_OF_YEAR);
 
+    // week of year
+    private final SettingsModelBoolean m_useWeekOfYear = AbstractFieldExtractorNodeDialog.createUseTimeFieldModel(
+                    DateFieldExtractorNodeDialog.WEEK_OF_YEAR);
+    private final SettingsModelString m_weekOfYearColName
+        = AbstractFieldExtractorNodeDialog.createTimeFieldColumnNameModel(DateFieldExtractorNodeDialog.WEEK_OF_YEAR);
+
      /**
      * One in port containing {@link DateAndTimeValue}s, one out port with the
      * extracted date fields appended.
@@ -142,6 +148,7 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         AbstractFieldExtractorNodeDialog.addListener(m_useDay, m_dayColName);
         AbstractFieldExtractorNodeDialog.addListener(m_useDayOfWeek, m_dayOfWeekColName);
         AbstractFieldExtractorNodeDialog.addListener(m_useDayOfYear, m_dayOfYearColName);
+        AbstractFieldExtractorNodeDialog.addListener(m_useWeekOfYear, m_weekOfYearColName);
     }
 
 
@@ -213,24 +220,18 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         return new BufferedDataTable[] {out};
     }
 
-    private SingleCellFactoryCompound createColumnRearranger(
-            final DataTableSpec inSpec) {
-        final int colIdx = inSpec.findColumnIndex(
-                m_selectedColumn.getStringValue());
+    private SingleCellFactoryCompound createColumnRearranger(final DataTableSpec inSpec) {
+        final int colIdx = inSpec.findColumnIndex(m_selectedColumn.getStringValue());
         ColumnRearranger rearranger = new ColumnRearranger(inSpec);
-        List<AbstractTimeExtractorCellFactory>cellFactories
-            = new ArrayList<AbstractTimeExtractorCellFactory>();
+        List<AbstractTimeExtractorCellFactory>cellFactories = new ArrayList<AbstractTimeExtractorCellFactory>();
         /* ************************* DATE fields factories *******************/
         // year
         if (m_useYear.getBooleanValue()) {
-            String colName = DataTableSpec.getUniqueColumnName(inSpec,
-                    m_yearColName.getStringValue());
-            AbstractTimeExtractorCellFactory yearFactory
-                = new AbstractTimeExtractorIntCellFactory(
+            String colName = DataTableSpec.getUniqueColumnName(inSpec, m_yearColName.getStringValue());
+            AbstractTimeExtractorCellFactory yearFactory = new AbstractTimeExtractorIntCellFactory(
                     colName, colIdx, false) {
                 @Override
-                protected int extractTimeField(
-                        final DateAndTimeValue value) {
+                protected int extractTimeField(final DateAndTimeValue value) {
                     return value.getYear();
                 }
             };
@@ -239,14 +240,11 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         }
         // quarter
         if (m_useQuarter.getBooleanValue()) {
-            String colName = DataTableSpec.getUniqueColumnName(inSpec,
-                    m_quarterColName.getStringValue());
-            AbstractTimeExtractorCellFactory quarterFactory
-                = new AbstractTimeExtractorIntCellFactory(
+            String colName = DataTableSpec.getUniqueColumnName(inSpec, m_quarterColName.getStringValue());
+            AbstractTimeExtractorCellFactory quarterFactory = new AbstractTimeExtractorIntCellFactory(
                     colName, colIdx, false) {
                 @Override
-                protected int extractTimeField(
-                        final DateAndTimeValue value) {
+                protected int extractTimeField(final DateAndTimeValue value) {
                     int month = value.getMonth();
                     // calculate the quarter under the assumption that
                     // the month returned by DateAndTimeCell is 0-based
@@ -260,15 +258,11 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         // month
         AbstractTimeExtractorCellFactory monthFactory = null;
         if (m_useMonth.getBooleanValue()) {
-            String colName = DataTableSpec.getUniqueColumnName(inSpec,
-                    m_monthColName.getStringValue());
-            if (m_monthRepresentation.getStringValue().equals(
-                    AbstractFieldExtractorNodeDialog.AS_INT)) {
-                monthFactory = new AbstractTimeExtractorIntCellFactory(
-                        colName, colIdx, false) {
+            String colName = DataTableSpec.getUniqueColumnName(inSpec, m_monthColName.getStringValue());
+            if (m_monthRepresentation.getStringValue().equals(AbstractFieldExtractorNodeDialog.AS_INT)) {
+                monthFactory = new AbstractTimeExtractorIntCellFactory(colName, colIdx, false) {
                     @Override
-                    protected int extractTimeField(
-                            final DateAndTimeValue value) {
+                    protected int extractTimeField(final DateAndTimeValue value) {
                         // add 1 in order to start with 1, in contrast
                         // to java.util.Calendar#MONTH
                         return value.getMonth() + 1;
@@ -276,15 +270,12 @@ public class DateFieldExtractorNodeModel extends NodeModel {
                 };
             } else {
                 // extract the display name of the month
-                monthFactory = new AbstractTimeExtractorStringCellFactory(
-                        colName, colIdx, false) {
+                monthFactory = new AbstractTimeExtractorStringCellFactory(colName, colIdx, false) {
 
                     @Override
-                    protected String extractTimeField(
-                            final DateAndTimeValue value) {
+                    protected String extractTimeField(final DateAndTimeValue value) {
                         return value.getUTCCalendarClone().getDisplayName(
-                                Calendar.MONTH, Calendar.LONG,
-                                Locale.getDefault());
+                                Calendar.MONTH, Calendar.LONG, Locale.getDefault());
                     }
                 };
             }
@@ -293,14 +284,11 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         }
         // day of month
         if (m_useDay.getBooleanValue()) {
-            String colName = DataTableSpec.getUniqueColumnName(inSpec,
-                    m_dayColName.getStringValue());
-            AbstractTimeExtractorCellFactory dayFactory
-                = new AbstractTimeExtractorIntCellFactory(
+            String colName = DataTableSpec.getUniqueColumnName(inSpec, m_dayColName.getStringValue());
+            AbstractTimeExtractorCellFactory dayFactory = new AbstractTimeExtractorIntCellFactory(
                     colName, colIdx, false) {
                 @Override
-                protected int extractTimeField(
-                        final DateAndTimeValue value) {
+                protected int extractTimeField(final DateAndTimeValue value) {
                     return value.getDayOfMonth();
                 }
             };
@@ -356,6 +344,21 @@ public class DateFieldExtractorNodeModel extends NodeModel {
             rearranger.append(dayofYearFactory);
             cellFactories.add(dayofYearFactory);
         }
+
+
+        // week of year
+        if (m_useWeekOfYear.getBooleanValue()) {
+            String colName = DataTableSpec.getUniqueColumnName(inSpec, m_weekOfYearColName.getStringValue());
+            AbstractTimeExtractorCellFactory weekofYearFactory
+                = new AbstractTimeExtractorIntCellFactory(colName, colIdx, false) {
+                @Override
+                protected int extractTimeField(final DateAndTimeValue value) {
+                    return value.getUTCCalendarClone().get(Calendar.WEEK_OF_YEAR);
+                }
+            };
+            rearranger.append(weekofYearFactory);
+            cellFactories.add(weekofYearFactory);
+        }
         return new SingleCellFactoryCompound(rearranger, cellFactories);
     }
 
@@ -375,6 +378,7 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         atLeastOneSelected |= m_useDay.getBooleanValue();
         atLeastOneSelected |= m_useDayOfWeek.getBooleanValue();
         atLeastOneSelected |= m_useDayOfYear.getBooleanValue();
+        atLeastOneSelected |= m_useWeekOfYear.getBooleanValue();
         return atLeastOneSelected;
     }
 
@@ -409,6 +413,15 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         } catch (InvalidSettingsException ise) {
             m_useDayOfYear.setBooleanValue(false);
             m_dayOfYearColName.setEnabled(false);
+        }
+        // new since 2.9.1
+        // week of year
+        try {
+            m_useWeekOfYear.loadSettingsFrom(settings);
+            m_weekOfYearColName.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            m_useWeekOfYear.setBooleanValue(false);
+            m_weekOfYearColName.setEnabled(false);
         }
     }
 
@@ -464,15 +477,23 @@ public class DateFieldExtractorNodeModel extends NodeModel {
             m_useDayOfYear.validateSettings(settings);
             m_dayOfYearColName.validateSettings(settings);
             atLeastOneChecked |= AbstractFieldExtractorNodeDialog
-                .validateColumnName(settings, m_useDayOfYear,
-                        m_dayOfYearColName);
+                .validateColumnName(settings, m_useDayOfYear, m_dayOfYearColName);
+        } catch (InvalidSettingsException ise) {
+            // nothing to do
+        }
+        // new since 2.9.1
+        try {
+            // week of year
+            m_useWeekOfYear.validateSettings(settings);
+            m_weekOfYearColName.validateSettings(settings);
+            atLeastOneChecked |= AbstractFieldExtractorNodeDialog
+                    .validateColumnName(settings, m_useWeekOfYear, m_weekOfYearColName);
         } catch (InvalidSettingsException ise) {
             // nothing to do
         }
         // all unchecked?
         if (!atLeastOneChecked) {
-            setWarningMessage("No time field selected. "
-                    + "Output table will be same as input table!");
+            setWarningMessage("No time field selected. Output table will be same as input table!");
         }
     }
 
@@ -502,6 +523,9 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         // day of year
         m_dayOfYearColName.saveSettingsTo(settings);
         m_useDayOfYear.saveSettingsTo(settings);
+        // week of year
+        m_weekOfYearColName.saveSettingsTo(settings);
+        m_useWeekOfYear.saveSettingsTo(settings);
     }
 
 

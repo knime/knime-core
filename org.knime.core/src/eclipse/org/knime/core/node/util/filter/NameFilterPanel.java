@@ -50,6 +50,8 @@ package org.knime.core.node.util.filter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -1013,7 +1015,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     private void initPanel() {
         JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setLayout(new GridBagLayout());
         // Setup the mode panel, containing the options by column name and by column type
         m_typeGroup = new ButtonGroup();
         m_typePanel = new JPanel();
@@ -1022,17 +1024,20 @@ public abstract class NameFilterPanel<T> extends JPanel {
         // Default has priority 0 which is smaller than FILTER_BY_NAMEPATTERN
         addType(m_nameButton, 0);
         // Setup the filter panel which will contain the filter for the selected mode
-        m_filterPanel = new JPanel();
-        JScrollPane scrollPane = new JScrollPane(m_filterPanel);
-        Dimension size = m_nameFilterPanel.getPreferredSize();
-        scrollPane.setPreferredSize(new Dimension(size.width + 15, size.height + 15));
+        m_filterPanel = new JPanel(new BorderLayout());
         // Activate the selected filter
         m_filterPanel.add(m_nameFilterPanel);
         m_nameButton.setSelected(true);
-        // Only add the modes panel if there are more than one
-        panel.add(m_typePanel);
-        panel.add(scrollPane);
-        this.add(panel);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(m_typePanel, gbc);
+        gbc.gridy++;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
+        panel.add(m_filterPanel, gbc);
+        this.add(new JScrollPane(panel));
         updateTypePanel();
         updateFilterPanel();
     }

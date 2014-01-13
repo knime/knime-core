@@ -20,6 +20,7 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import java.awt.BorderLayout;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -63,6 +64,7 @@ public class DialogComponentColumnFilter2 extends DialogComponent {
         // the model needs the port index in the loadSettingsFrom method
         model.setInputPortIndex(inPortIdx);
         m_colFilterPanel = new DataColumnSpecFilterPanel(showSelectionListsOnly, model.getColumnFilter());
+        getComponentPanel().setLayout(new BorderLayout());
         getComponentPanel().add(m_colFilterPanel);
         m_colFilterPanel.addChangeListener(new ChangeListener() {
             @Override

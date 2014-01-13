@@ -550,7 +550,7 @@ public class ColumnFilterPanel extends JPanel {
             all.add(keepAllPanel);
         }
         super.setLayout(new GridLayout(1, 1));
-        super.add(all);
+        super.add(new JScrollPane(all));
     }
 
     /**
