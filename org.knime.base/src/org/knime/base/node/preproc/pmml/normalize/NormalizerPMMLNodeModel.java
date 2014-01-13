@@ -51,8 +51,9 @@
 package org.knime.base.node.preproc.pmml.normalize;
 
 import org.knime.base.data.normalize.Normalizer;
+import org.knime.base.data.normalize.Normalizer2;
 import org.knime.base.data.normalize.PMMLNormalizeTranslator;
-import org.knime.base.node.preproc.normalize.NormalizerNodeModel;
+import org.knime.base.node.preproc.normalize2.Normalizer2NodeModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -70,7 +71,7 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
  * @see Normalizer
  * @author Nicolas Cebron, University of Konstanz
  */
-public class NormalizerPMMLNodeModel extends NormalizerNodeModel {
+public class NormalizerPMMLNodeModel extends Normalizer2NodeModel {
 
     /**
      * Creates a new normalizer node model with an optional PMML inport and
@@ -103,7 +104,7 @@ public class NormalizerPMMLNodeModel extends NormalizerNodeModel {
         PMMLPortObjectSpecCreator pmmlSpecCreator
                 = new PMMLPortObjectSpecCreator(pmmlSpec, spec);
         return new PortObjectSpec[]{
-                Normalizer.generateNewSpec(spec, getColumns()),
+                Normalizer2.generateNewSpec(spec, getColumns()),
                 pmmlSpecCreator.createSpec()};
     }
 
