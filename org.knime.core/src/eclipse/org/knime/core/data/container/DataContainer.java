@@ -485,14 +485,14 @@ public class DataContainer implements RowAppender {
                 Set<DataCell> values = colSpec.getDomain().getValues();
                 if (values != null) {
                     m_possibleValues[i] = new LinkedHashSet<DataCell>(values);
-                    // negative value means: store all!
-                    m_possibleValuesSizes[i] = -1;
+                    m_possibleValuesSizes[i] = MAX_POSSIBLE_VALUES;
                 } else if (colType.isCompatible(NominalValue.class)) {
                     // mb: used to test for StringValue - let's be more specific
                     m_possibleValues[i] = new LinkedHashSet<DataCell>();
                     m_possibleValuesSizes[i] = MAX_POSSIBLE_VALUES;
                 } else {
                     m_possibleValues[i] = null;
+                    // negative value means: store all!
                     m_possibleValuesSizes[i] = -1;
                 }
             } else if (colType.isCompatible(NominalValue.class)) {
@@ -1025,8 +1025,8 @@ public class DataContainer implements RowAppender {
         }
         DataCell value = cell instanceof BlobWrapperDataCell
             ? ((BlobWrapperDataCell)cell).getCell() : cell;
-        m_possibleValues[col].add(value);
-        if (m_possibleValuesSizes[col] >= 0
+        // bug fix 4940: The possible value list management is only done if new values are seen
+        if (m_possibleValues[col].add(value) && m_possibleValuesSizes[col] >= 0
                 && m_possibleValues[col].size() > m_possibleValuesSizes[col]) {
             // forget possible values
             m_possibleValues[col] = null;
