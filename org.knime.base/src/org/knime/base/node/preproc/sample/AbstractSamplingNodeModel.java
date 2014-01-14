@@ -103,13 +103,13 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
         temp.loadSettingsFrom(settings, false);
 
         if (temp.countMethod() == SamplingNodeSettings.CountMethods.Relative) {
-            if (temp.fraction() <= 0.0 || temp.fraction() > 1.0) {
+            if (temp.fraction() < 0.0 || temp.fraction() > 1.0) {
                 NumberFormat f = NumberFormat.getPercentInstance(Locale.US);
                 String p = f.format(100.0 * temp.fraction());
                 throw new InvalidSettingsException("Invalid percentage: " + p);
             }
         } else if (temp.countMethod() == SamplingNodeSettings.CountMethods.Absolute) {
-            if (temp.count() <= 0) {
+            if (temp.count() < 0) {
                 throw new InvalidSettingsException("Invalid count: "
                         + temp.count());
             }
