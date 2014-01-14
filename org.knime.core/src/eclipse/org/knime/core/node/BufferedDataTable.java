@@ -67,6 +67,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
+import org.apache.commons.io.FileUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -545,6 +546,11 @@ public final class BufferedDataTable implements DataTable, PortObject {
         throws IOException, InvalidSettingsException {
         File specFile = new File(dataPortDir.getFile(), TABLE_SPEC_FILE);
         if (specFile.exists()) {
+            if (specFile.length() > 10 * 1024 * 1024) { // 10MB
+                NodeLogger.getLogger(BufferedDataTable.class).warn(String.format(
+                    "Table spec file is %s large - this may result in increased memory consumption (path '%s')",
+                        FileUtils.byteCountToDisplaySize(specFile.length()), specFile.getAbsolutePath()));
+            }
             ConfigRO c = NodeSettings.loadFromXML(new BufferedInputStream(
                     new FileInputStream(specFile)));
             return DataTableSpec.load(c);
