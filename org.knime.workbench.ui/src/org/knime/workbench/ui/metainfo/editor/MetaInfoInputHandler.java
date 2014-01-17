@@ -52,7 +52,7 @@ public class MetaInfoInputHandler extends DefaultHandler {
     @Override
     public void startElement(final String uri, final String localName, final String name,
             final Attributes atts) throws SAXException {
-        if (name.equals(MetaGUIElement.ELEMENT)) {
+        if (localName.equals(MetaGUIElement.ELEMENT)) {
             m_currentForm = atts.getValue(MetaGUIElement.FORM);
             m_currentLabel = atts.getValue(MetaGUIElement.NAME);
             m_isReadOnly = Boolean.valueOf(
@@ -64,7 +64,7 @@ public class MetaInfoInputHandler extends DefaultHandler {
     @Override
     public void endElement(final String uri, final String localName, final String name)
             throws SAXException {
-        if (name.equals(MetaGUIElement.ELEMENT)) {
+        if (localName.equals(MetaGUIElement.ELEMENT)) {
             m_elements.add(MetaGUIElement.create(m_currentForm, m_currentLabel,
                     m_buffer.toString(), m_isReadOnly));
             m_buffer = new StringBuffer();
