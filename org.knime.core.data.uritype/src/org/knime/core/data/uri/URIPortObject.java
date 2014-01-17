@@ -63,22 +63,16 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.AbstractSimplePortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class URIPortObject extends AbstractSimplePortObject {
+public class URIPortObject extends AbstractSimplePortObject implements IURIPortObject {
 
     private URIPortObjectSpec m_uriPortObjectSpec;
     private List<URIContent> m_uriContents;
-
-    /**
-     * Type of this port.
-     */
-    public static final PortType TYPE = new PortType(URIPortObject.class);
 
     /**
      * Framework constructor. <b>Do not use in client code.</b>
@@ -116,6 +110,7 @@ public class URIPortObject extends AbstractSimplePortObject {
     /**
      * @return The uriContent of this object.
      */
+    @Override
     public List<URIContent> getURIContents() {
         return m_uriContents;
     }
