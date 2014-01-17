@@ -2034,8 +2034,8 @@
     <g id="g1898" inkscape:label="Ebene 1" transform="translate(4.695586,14.28567)">
       <g id="g2137" transform="translate(1.086609,119.656)">
         <rect height="326.88168" id="rect1391" style="fill:#ffffff;fill-opacity:1;stroke:#333333;stroke-width:2.1183157;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" width="451.88168" x="225.98663" y="-44.592197"/>
-        <text id="text1365" sodipodi:linespacing="125%" style="line-height:125%;fill:#000000;fill-opacity:1;stroke:none" x="247.14232" xml:space="preserve" y="275.74597">
-<tspan id="tspan3828" style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;">Copyright, 2003 - 2013, KNIME GmbH, Germany, http://www.knime.org/, contact@knime.org</tspan>
+        <text id="text1365" sodipodi:linespacing="125%" style="line-height:125%;fill:#000000;fill-opacity:1;stroke:none" x="271.0" xml:space="preserve" y="275.74597">
+<tspan id="tspan3828" style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;">Copyright by KNIME GmbH, Germany, http://www.knime.org/, contact@knime.org</tspan>
 </text>
         <rect height="491.77713" id="rect1389" style="fill:none;stroke-width:0.35433072;stroke-miterlimit:4;stroke-dasharray:none" width="729.85242" x="6.4344668" y="123.96052"/>
         <text id="KNIME-Version" inkscape:label="#text2163" sodipodi:linespacing="125%" style="text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;" x="668.18286" xml:space="preserve" y="134.34628">
