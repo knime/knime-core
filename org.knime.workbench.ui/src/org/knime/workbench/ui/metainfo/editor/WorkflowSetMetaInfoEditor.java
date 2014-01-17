@@ -215,6 +215,7 @@ public class WorkflowSetMetaInfoEditor extends EditorPart {
         MetaInfoInputHandler hdl = new MetaInfoInputHandler();
         try {
             SAXParserFactory saxFac = SAXParserFactory.newInstance();
+            saxFac.setNamespaceAware(true);
             SAXParser parser = saxFac.newSAXParser();
             parser.parse(inputFile, hdl);
         } catch (Exception e) {
