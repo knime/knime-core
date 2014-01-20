@@ -10,18 +10,25 @@
     <fullDescription>
         <intro>Appends the difference between two dates with the selected aggregation level 
         (year, quarter, month, week, day, hour, minute) and a selected precision for rounding.
-        For the second date/time there are four possibilites. The node can be configured 
-        to use the time at execution, the entries of a second column, a fixed date/time or 
+        For the second date/time there are four possibilities. The node can be configured 
+        to use the time at execution, the entries of a second column, a fixed date/time, or 
         the time contained in the previous row. 
         </intro>
         
-        <option name="Select first date column">Select the column containing the start date</option>
-        <option name="Select second date column">Select a second column containing the end date</option>
-        <option name="Fixed time">Select a fixed time as the end date.</option>   
+        <option name="Use execution time">Calculates the difference "current time" - "first date column"</option>
+        <option name="Use second column">Calculates the difference "second date column" - "first date column"</option>
+        <option name="Use fixed date">Calculates the difference "fixed date" - "first selected column"</option>
+        <option name="Use previous row">Calculates in row <i>n</i> the difference "first date column in row <i>n</i>"
+            - "first date column in row <i>n - 1</i>". The first cell will be missing.</option>
+        
+        <option name="Select first date column">Select the column containing the start date ("first date column")</option>
+        <option name="Select second date column">Select a second column containing the end date
+            ("second date column"; only for option "Use second column" available)</option>
         <option name="Select granularity of time difference">The granularity of the difference 
             (in years, quarters, months, weeks, days, hours, minutes)</option>
         <option name="Rounding mode">How many fraction digits</option>
-        <option name="Appended column name">Name of the newly appended column containing the time difference</option>                                
+        <option name="Appended column name">Name of the newly appended column containing the time difference</option>  
+        <option name="Fixed time">Select a fixed time as the end date. ("fixed dates"; only for option "Use fixed date" available)</option>                                 
     </fullDescription>
     
     <ports>
