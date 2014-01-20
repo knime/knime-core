@@ -50,6 +50,16 @@
  */
 package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -68,15 +78,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
-
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * This class represents the learned Naive Bayes model. This basic model
@@ -635,7 +636,7 @@ public class NaiveBayesModel {
                     buf.append(", ");
                 }
                 final AttributeModel model = skippedAttrs.get(i);
-                buf.append(model.getAttributeName());
+                buf.append(StringEscapeUtils.escapeHtml(model.getAttributeName()));
                 buf.append("/");
                 buf.append(model.getInvalidCause());
             }
@@ -650,15 +651,14 @@ public class NaiveBayesModel {
                 if (i != 0) {
                     buf.append(", ");
                 }
-                buf.append(missingValAttrs.get(i));
+                buf.append(StringEscapeUtils.escapeHtml(missingValAttrs.get(i)));
             }
             buf.append("<hr>");
             buf.append("</div>");
         }
         if (m_skipMissingVals) {
             buf.append("<div>");
-            buf.append("Rows with at least one missing value will be skipped "
-                    + "during learning and prediction phase");
+            buf.append("Rows with at least one missing value will be skipped during learning and prediction phase");
             buf.append("<hr>");
             buf.append("</div>");
         }

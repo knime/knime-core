@@ -55,6 +55,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.NominalValue;
@@ -269,7 +270,7 @@ class ClassAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLViewHeadLine() {
-        return "Class counts for " + getAttributeName();
+        return "Class counts for " + StringEscapeUtils.escapeHtml(getAttributeName());
     }
 
     /**
@@ -278,8 +279,7 @@ class ClassAttributeModel extends AttributeModel {
     @Override
     String getHTMLView(final int totalNoOfRecs) {
         final StringBuilder buf = new StringBuilder();
-        buf.append(AttributeModel.createHTMLTable(null, "Class: ",
-                "Count: ", 10, m_recsCounterByClassVal, true));
+        buf.append(AttributeModel.createHTMLTable(null, "Class: ", "Count: ", 10, m_recsCounterByClassVal, true));
         buf.append("<b>Total count: </b>" + totalNoOfRecs + "<br><br>");
         return buf.toString();
     }

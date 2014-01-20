@@ -51,16 +51,17 @@
 
 package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataValue;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.Config;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang.StringEscapeUtils;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.Config;
 
 
 /**
@@ -208,7 +209,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             }
         } else if (!attrValue.getType().isCompatible(getCompatibleType())) {
             throw new IllegalArgumentException(
-                    "Attribute value type is not compatible");
+                m_attributeName + ": Attribute value type is not compatible");
         }
         addValueInternal(classValue, attrValue);
     }
@@ -274,7 +275,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             final DataCell attributeValue, final double laplaceCorrector) {
         if (!attributeValue.getType().isCompatible(getCompatibleType())) {
             throw new IllegalArgumentException(
-                    "Attribute value type is not compatible");
+                    m_attributeName + ": Attribute value type is not compatible");
         }
         if (attributeValue.isMissing() && m_skipMissingVals) {
             return null;
@@ -361,10 +362,8 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @param addLineBreak if each sub table should be displayed on a new line
      * @return a html table with the keys and values of the given map
      */
-    static String createHTMLTable(final String tableHeading,
-            final String keyHeading, final String valueHeading,
-            final int noOfRows, final Map<String, ? extends Object> map,
-            final boolean addLineBreak) {
+    static String createHTMLTable(final String tableHeading, final String keyHeading, final String valueHeading,
+            final int noOfRows, final Map<String, ? extends Object> map, final boolean addLineBreak) {
         //create the partial maps
         final List<String> sortedClassValues = sortCollection(map.keySet());
         final List<String> keys = new ArrayList<String>(noOfRows);
@@ -381,8 +380,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             keys.add(classVal);
             vals.add(map.get(classVal));
             if (i % noOfRows == noOfRows - 1 || i == noOfVals - 1) {
-                buf.append(createPartialHTMLTable(tableHeading, keyHeading,
-                        valueHeading, keys, vals));
+                buf.append(createPartialHTMLTable(tableHeading, keyHeading, valueHeading, keys, vals));
                 if (addLineBreak) {
                     buf.append("<br>");
                 }
@@ -391,9 +389,8 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         return buf.toString();
     }
 
-    private static String createPartialHTMLTable(final String tableHeading,
-            final String keyHeading, final String valueHeading,
-            final List<String> keys, final List<Object> vals) {
+    private static String createPartialHTMLTable(final String tableHeading, final String keyHeading,
+        final String valueHeading, final List<String> keys, final List<Object> vals) {
         final boolean rowHeading = (keyHeading != null || valueHeading != null);
         final int noOfVals = vals.size();
         final int tableHeadColspan;
@@ -407,7 +404,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         if (tableHeading != null) {
             buf.append("<tr>");
             buf.append("<th colspan='" + tableHeadColspan + "'>");
-            buf.append(tableHeading);
+            buf.append(StringEscapeUtils.escapeHtml(tableHeading));
             buf.append("</th>");
             buf.append("</tr>");
         }
@@ -416,7 +413,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             if (rowHeading) {
                 buf.append("<th>");
                 if (keyHeading != null) {
-                    buf.append(keyHeading);
+                    buf.append(StringEscapeUtils.escapeHtml(keyHeading));
                 } else {
                     buf.append("&nbsp;");
                 }
@@ -425,7 +422,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             if (keys != null) {
                 for (final String classVal : keys) {
                     buf.append("<th>");
-                    buf.append(classVal);
+                    buf.append(StringEscapeUtils.escapeHtml(classVal));
                     buf.append("</th>");
                 }
             }
@@ -435,7 +432,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         if (rowHeading) {
             buf.append("<th>");
             if (valueHeading != null) {
-                buf.append(valueHeading);
+                buf.append(StringEscapeUtils.escapeHtml(valueHeading));
             } else {
                 buf.append("&nbsp;");
             }
@@ -443,7 +440,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         }
         for (final Object classVal : vals) {
             buf.append("<td align='center'>");
-            buf.append(classVal.toString());
+            buf.append(StringEscapeUtils.escapeHtml(classVal.toString()));
             buf.append("</td>");
         }
         buf.append("</tr>");
@@ -463,18 +460,18 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         buf.append("<tr>");
         if (firstHeading != null) {
             buf.append("<th>");
-            buf.append(firstHeading);
+            buf.append(StringEscapeUtils.escapeHtml(firstHeading));
             buf.append("</th>");
         }
         //create the header
         for (final String attrVal : headings) {
             buf.append("<th>");
-            buf.append(attrVal);
+            buf.append(StringEscapeUtils.escapeHtml(attrVal));
             buf.append("</th>");
         }
         if (lastHeading != null) {
             buf.append("<th>");
-            buf.append(lastHeading);
+            buf.append(StringEscapeUtils.escapeHtml(lastHeading));
             buf.append("</th>");
         }
         buf.append("</tr>");
