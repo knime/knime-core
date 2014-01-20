@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -527,8 +527,19 @@ public final class AggregationMethods {
      * @return all {@link AggregationOperator}s that are compatible with
      * the given {@link DataType} or an empty list if none is compatible
      */
-    public static List<AggregationMethod> getCompatibleMethods(
-            final DataType type) {
+    public static List<AggregationMethod> getCompatibleMethods(final DataType type) {
+        return getCompatibleMethods(type, false);
+    }
+
+    /**
+     * @param type the {@link DataType} to check
+     * @param sorted <code>true</code> if the compatible methods should be sorted in ascending order by the
+     * user displayed label
+     * @return all {@link AggregationOperator}s that are compatible with
+     * the given {@link DataType} or an empty list if none is compatible
+     * @since 2.10
+     */
+    public static List<AggregationMethod> getCompatibleMethods(final DataType type, final boolean sorted) {
         final List<AggregationMethod> compatibleMethods =
             new ArrayList<AggregationMethod>();
         if (type == null) {
@@ -546,6 +557,9 @@ public final class AggregationMethods {
             if (operator.isCompatible(dataType)) {
                 compatibleMethods.add(cloneOperator(operator));
             }
+        }
+        if (sorted) {
+            Collections.sort(compatibleMethods, AggregationMethod.ASC_NAME_COMPARATOR);
         }
         return compatibleMethods;
     }

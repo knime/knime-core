@@ -116,7 +116,7 @@ public class DialogComponentAggregationMethod extends DialogComponent
     public DialogComponentAggregationMethod(final SettingsModelAggregationMethod model, final String label,
                                 final boolean addGlobalSetttings, final DataType supportedType) {
         this(model, label, addGlobalSetttings,
-             AggregationMethods.getCompatibleMethods(supportedType).toArray(new AggregationMethod[0]));
+             AggregationMethods.getCompatibleMethods(supportedType, true).toArray(new AggregationMethod[0]));
     }
 
     /**
@@ -394,7 +394,7 @@ public class DialogComponentAggregationMethod extends DialogComponent
      */
     public void replaceListItems(final DataType supportedType) {
         final List<AggregationMethod> compatibleMethods =
-                AggregationMethods.getCompatibleMethods(supportedType);
+                AggregationMethods.getCompatibleMethods(supportedType, true);
         replaceListItems(((SettingsModelAggregationMethod)getModel()).getAggregationMethod(),
                          compatibleMethods.toArray(new AggregationMethod[0]));
     }
@@ -403,8 +403,7 @@ public class DialogComponentAggregationMethod extends DialogComponent
      * @param select the selected method
      * @param newItems the list of new {@link AggregationMethod}s to select from
      */
-    public void replaceListItems(final AggregationMethod select,
-            final AggregationMethod... newItems) {
+    public void replaceListItems(final AggregationMethod select, final AggregationMethod... newItems) {
         if (newItems == null || newItems.length < 1) {
             throw new NullPointerException("The container with the new items"
                     + " can't be null or empty.");

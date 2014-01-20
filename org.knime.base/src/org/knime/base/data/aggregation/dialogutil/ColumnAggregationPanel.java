@@ -240,8 +240,7 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
             final DataTableSpec spec) {
         m_type = type;
         //update the compatible methods list
-        final List<NamedAggregationOperator> methods2Use =
-            new ArrayList<NamedAggregationOperator>(methods.size());
+        final List<NamedAggregationOperator> methods2Use = new ArrayList<NamedAggregationOperator>(methods.size());
         if (m_type != null) {
             //remove selected methods that are not compatible with the new type
             for (final NamedAggregationOperator method : methods) {
@@ -249,8 +248,7 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
                     methods2Use.add(method);
                 }
             }
-            super.initialize(AggregationMethods.getCompatibleMethods(m_type),
-                    methods2Use, spec);
+            super.initialize(AggregationMethods.getCompatibleMethods(m_type, true), methods2Use, spec);
         }
     }
 

@@ -48,15 +48,14 @@
  */
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataType;
-
-import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethods;
-
 import java.util.List;
 
 import javax.swing.JComboBox;
+
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
 
 /**
  * This combo box is used in the aggregation column table to let the user
@@ -85,13 +84,12 @@ public class AggregationMethodComboBox extends JComboBox {
      * @param spec the {@link DataColumnSpec} used to initialize this combobox
      * @param selectedMethod the current selected method
      */
-    public void update(final DataColumnSpec spec,
-            final AggregationMethod selectedMethod) {
+    public void update(final DataColumnSpec spec, final AggregationMethod selectedMethod) {
         if (m_type == null || !m_type.equals(spec.getType())) {
             //recreate the combo box if the type has change
             removeAllItems();
             final List<AggregationMethod> compatibleMethods =
-                AggregationMethods.getCompatibleMethods(spec.getType());
+                    AggregationMethods.getCompatibleMethods(spec.getType(), true);
             for (final AggregationMethod method : compatibleMethods) {
                 addItem(method);
             }

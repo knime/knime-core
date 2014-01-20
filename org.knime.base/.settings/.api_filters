@@ -168,6 +168,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/data/aggregation/AggregationMethod.java" type="org.knime.base.data.aggregation.AggregationMethod">
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.AggregationMethod"/>
+                <message_argument value="ASC_NAME_COMPARATOR"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/flowvariable/tablerowtovariable/TableToVariableNodeDialog.java" type="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeDialog">
         <filter comment="no api" id="338792546">
             <message_arguments>
