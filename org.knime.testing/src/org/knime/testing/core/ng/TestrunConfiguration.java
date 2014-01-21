@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -90,6 +90,8 @@ public class TestrunConfiguration {
     private boolean m_checkMemoryLeaks = false;
 
     private int m_allowedMemoryIncrease = DEFAULT_ALLOWED_MEMORY_INCREASE;
+
+    private boolean m_stacktraceOnTimeout;
 
     /**
      * Sets if dialogs for all nodes in the workflow should be tested, i.e. load settings and save settings after the
@@ -309,5 +311,27 @@ public class TestrunConfiguration {
      */
     public void setAllowedMemoryIncrease(final int allowedMemoryIncrease) {
         m_allowedMemoryIncrease = allowedMemoryIncrease;
+    }
+
+
+    /**
+     * Sets whether a full stack trace dump should be output if a workflow times out. The stack trace will be part of
+     * the test result message.
+     *
+     * @param stacktraceOnTimeout <code>true</code> if a stack trace dump should be output, <code>false</code> otherwise
+     */
+    public void setStacktraceOnTimeout(final boolean stacktraceOnTimeout) {
+        m_stacktraceOnTimeout = stacktraceOnTimeout;
+    }
+
+
+    /**
+     * Returns whether a full stack trace dump should be output if a workflow times out. The stack trace will be part of
+     * the test result message.
+     *
+     * @return <code>true</code> if a stack trace dump should be output, <code>false</code> otherwise
+     */
+    public boolean isStacktraceOnTimeout() {
+        return m_stacktraceOnTimeout;
     }
 }

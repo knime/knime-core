@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,6 +50,9 @@
  */
 package org.knime.testing.core.ng;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -107,8 +110,12 @@ class WorkflowExecuteTest extends WorkflowTest {
                         String status =
                                 m_context.getWorkflowManager().printNodeSummary(m_context.getWorkflowManager().getID(),
                                                                                 0);
-                        result.addFailure(WorkflowExecuteTest.this, new AssertionFailedError(
-                                "Worklow running longer than " + (timeout / 1000.0) + " seconds.\n" + status));
+                        String message = "Worklow running longer than " + (timeout / 1000.0) + " seconds.\n"
+                                                                                + "Node status:\n" + status;
+                        if (m_runConfiguration.isStacktraceOnTimeout()) {
+                            message += "\nThread status:\n" + createStacktrace();
+                        }
+                        result.addFailure(WorkflowExecuteTest.this, new AssertionFailedError(message));
                         m_context.getWorkflowManager().getParent().cancelExecution(m_context.getWorkflowManager());
                         this.cancel();
                     }
@@ -129,6 +136,17 @@ class WorkflowExecuteTest extends WorkflowTest {
             }
         }
 
+    }
+
+
+    private static String createStacktrace() {
+        StringBuilder buf = new StringBuilder(4096);
+
+        ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+        for (ThreadInfo ti : bean.dumpAllThreads(true, true)) {
+            buf.append(ti);
+        }
+        return buf.toString();
     }
 
     /**

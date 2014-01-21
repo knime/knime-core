@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright by 
+ * Copyright by
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -372,6 +372,12 @@ public class TestflowRunnerApplication implements IApplication {
                 continue;
             }
 
+            if ((stringArgs[i] != null) && stringArgs[i].equals("-stacktraceOnTimeout")) {
+                m_runConfiguration.setStacktraceOnTimeout(true);
+                i++;
+                continue;
+            }
+
             if ((stringArgs[i] != null) && stringArgs[i].equals("-untestedNodes")) {
                 i++;
                 // requires another argument
@@ -464,6 +470,8 @@ public class TestflowRunnerApplication implements IApplication {
         System.err.println("    -save <directory_name>: optional, specifies the directory "
                 + " into which each testflow is saved after execution. If not specified the workflows are not saved.");
         System.err.println("    -timeout <seconds>: optional, specifies the timeout for each individual workflow.");
+        System.err.println("    -stacktraceOnTimeout: optional, if specified output a full stack trace in case of"
+                + " timeouts.");
         System.err.println("    -memLeaks <bytes>: optional, specifies the maximum allowed increaes in heap usage for "
                 + "each testflow. If not specified no test for memory leaks is performed.");
     }
