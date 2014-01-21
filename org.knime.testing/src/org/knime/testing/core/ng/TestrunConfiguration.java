@@ -93,6 +93,8 @@ public class TestrunConfiguration {
 
     private boolean m_stacktraceOnTimeout;
 
+    private boolean m_checkNodeMessages = true;
+
     /**
      * Sets if dialogs for all nodes in the workflow should be tested, i.e. load settings and save settings after the
      * workflow has been executed.
@@ -333,5 +335,24 @@ public class TestrunConfiguration {
      */
     public boolean isStacktraceOnTimeout() {
         return m_stacktraceOnTimeout;
+    }
+
+    /**
+     * Sets whether all node messages should be checked for required or unexpected messages.
+     *
+     * @param checkNodeMessages <code>true</code> when node messages should be checked, <code>false</code> otherwise
+     */
+    public void setCheckNodeMessages(final boolean checkNodeMessages) {
+        m_checkNodeMessages = checkNodeMessages;
+    }
+
+
+    /**
+     * Returns whether all node messages should be checked for required or unexpected messages.
+     *
+     * @return <code>true</code> when node messages should be checked, <code>false</code> otherwise
+     */
+    public boolean isCheckNodeMessages() {
+        return m_checkNodeMessages;
     }
 }

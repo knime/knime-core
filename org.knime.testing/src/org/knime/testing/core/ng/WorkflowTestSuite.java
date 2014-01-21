@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -127,7 +127,10 @@ public class WorkflowTestSuite extends WorkflowTest {
         }
 
         m_allTests.add(new WorkflowExecuteTest(m_workflowName, m_progressMonitor, runConfig, m_context));
-        m_allTests.add(new WorkflowNodeMessagesTest(m_workflowName, m_progressMonitor, m_context));
+
+        if (runConfig.isCheckNodeMessages()) {
+            m_allTests.add(new WorkflowNodeMessagesTest(m_workflowName, m_progressMonitor, m_context));
+        }
 
         if (runConfig.isTestDialogs()) {
             m_allTests.add(new WorkflowDialogsTest(m_workflowName, m_progressMonitor, m_context));

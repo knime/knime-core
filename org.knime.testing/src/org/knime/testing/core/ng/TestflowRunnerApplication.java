@@ -421,6 +421,13 @@ public class TestflowRunnerApplication implements IApplication {
                 continue;
             }
 
+            if ((stringArgs[i] != null) && stringArgs[i].equals("-ignoreNodeMessages")) {
+                m_runConfiguration.setCheckNodeMessages(false);
+                i++;
+                continue;
+            }
+
+
             if ((stringArgs[i] != null) && stringArgs[i].equals("-deprecated")) {
                 m_runConfiguration.setReportDeprecatedNodes(true);
                 i++;
@@ -465,6 +472,7 @@ public class TestflowRunnerApplication implements IApplication {
         System.err.println("    -views: optional, opens all views during a workflow test.");
         System.err.println("    -dialogs: optional, additional tests all node dialogs.");
         System.err.println("    -logMessages: optional, checks for required or unexpected log messages.");
+        System.err.println("    -ignoreNodeMessages: optional, ignores any warning messages on nodes.");
         System.err.println("    -untestedNodes <regex>: optional, checks for untested nodes, only node factories "
                 + "matching the regular expression are reported");
         System.err.println("    -save <directory_name>: optional, specifies the directory "
