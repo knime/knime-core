@@ -509,8 +509,8 @@
             after="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"/>
       <node
             category-path="/manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.normalize2.Normalizer2NodeFactory"
-            id="org.knime.base.node.preproc.normalize2.Normalize2NodeFactory"/>
+            factory-class="org.knime.base.node.preproc.normalize3.Normalizer3NodeFactory"
+            id="org.knime.base.node.preproc.normalize3.Normalize3NodeFactory"/>
      <node
             category-path="/manipulation/pmml"
             factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLNodeFactory"

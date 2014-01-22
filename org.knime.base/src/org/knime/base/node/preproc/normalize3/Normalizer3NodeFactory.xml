@@ -13,7 +13,7 @@
 			Linear transformation of all values such that the minimum and maximum 
 			in each column are as given.
 		</option>
-		<option name="Z-score normalization">
+		<option name="Z-score normalization (Gaussian)">
 			Linear transformation such that the values in each column are 
 			Gaussian-(0,1)-distributed, i.e. mean is 0.0 and standard deviation 
 			is 1.0.
