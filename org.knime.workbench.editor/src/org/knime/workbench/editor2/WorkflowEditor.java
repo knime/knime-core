@@ -374,9 +374,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         getSite().getWorkbenchWindow().getSelectionService()
                 .addSelectionListener(this);
 
-        // add this editor as a listener to WorkflowEvents
-        m_manager.addListener(this);
-        m_manager.addNodePropertyChangedListener(this);
         IPreferenceStore prefStore =
             KNIMEUIPlugin.getDefault().getPreferenceStore();
         prefStore.addPropertyChangeListener(this);
@@ -459,9 +456,6 @@ public class WorkflowEditor extends GraphicalEditor implements
             // disposed is also called when workflow load fails or is canceled
             ProjectWorkflowMap.unregisterClientFrom(m_fileResource, this);
             ProjectWorkflowMap.remove(m_fileResource);
-            m_manager.removeListener(this);
-            m_manager.removeNodeStateChangeListener(this);
-            m_manager.removeUIInformationListener(this);
         }
         // remember that this editor has been closed
         m_closed = true;
@@ -469,9 +463,6 @@ public class WorkflowEditor extends GraphicalEditor implements
             child.getEditorSite().getPage().closeEditor(child, false);
         }
         NodeProvider.INSTANCE.removeListener(this);
-        if (m_manager != null) {
-            m_manager.removeNodePropertyChangedListener(this);
-        }
         getSite().getWorkbenchWindow().getSelectionService()
                 .removeSelectionListener(this);
         if (m_parentEditor != null && m_manager != null) {
@@ -489,7 +480,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 hist.remove(wfmInput);
             }
         }
-
+        setWorkflowManager(null); // unregisters wfm listeners
         getCommandStack().removeCommandStackListener(this);
         IPreferenceStore prefStore =
             KNIMEUIPlugin.getDefault().getPreferenceStore();
@@ -2443,19 +2434,22 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @param manager the workflow manager to set
      */
     void setWorkflowManager(final WorkflowManager manager) {
-        if (manager == null) {
-            throw new IllegalArgumentException("WFM must not be null");
-        }
         if (manager == m_manager) {
             return;
-        } else if (m_manager != null) {
-            throw new IllegalStateException("Can't set new manager on initialzed editor (old "
-                    + m_manager.getNameWithID() + "; new " + manager.getNameWithID());
+        }
+        if (m_manager != null) {
+            m_manager.removeListener(this);
+            m_manager.removeNodePropertyChangedListener(this);
+            m_manager.removeNodeStateChangeListener(this);
+            m_manager.removeUIInformationListener(this);
         }
         m_manager = manager;
-        m_manager.addListener(this);
-        m_manager.addNodeStateChangeListener(this);
-        m_manager.addUIInformationListener(this);
+        if (m_manager != null) {
+            m_manager.addListener(this);
+            m_manager.addNodePropertyChangedListener(this);
+            m_manager.addNodeStateChangeListener(this);
+            m_manager.addUIInformationListener(this);
+        }
     }
 
     /**
