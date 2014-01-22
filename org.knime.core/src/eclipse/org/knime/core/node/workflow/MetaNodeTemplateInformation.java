@@ -312,7 +312,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      * @throws InvalidSettingsException If that fails.
      */
     public static MetaNodeTemplateInformation load(
-            final NodeSettingsRO settings, final WorkflowPersistorVersion1xx.LoadVersion version)
+            final NodeSettingsRO settings, final FileWorkflowPersistor.LoadVersion version)
         throws InvalidSettingsException {
         String roleS = settings.getString("role");
         Role role;

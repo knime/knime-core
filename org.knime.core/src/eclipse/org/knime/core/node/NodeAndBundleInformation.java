@@ -53,8 +53,8 @@ package org.knime.core.node;
 import java.util.Dictionary;
 
 import org.knime.core.eclipseUtil.OSGIHelper;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
+import org.knime.core.node.workflow.FileWorkflowPersistor;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.osgi.framework.Bundle;
 
 /** Information object to a node. Contains bundle information and node name.
@@ -171,7 +171,7 @@ public final class NodeAndBundleInformation {
      * @throws InvalidSettingsException ...
      * @noreference This method is not intended to be referenced by clients. */
     public static NodeAndBundleInformation load(final NodeSettingsRO settings,
-            final WorkflowPersistorVersion1xx.LoadVersion version) throws InvalidSettingsException {
+            final FileWorkflowPersistor.LoadVersion version) throws InvalidSettingsException {
         String factoryClass = settings.getString("factory");
         if (factoryClass == null) {
             throw new InvalidSettingsException("Factory class is null");
@@ -180,7 +180,7 @@ public final class NodeAndBundleInformation {
         String bundleName;
         String bundleVendor;
         String nodeName;
-        if (version.ordinal() < WorkflowPersistorVersion1xx.LoadVersion.V260.ordinal()) {
+        if (version.ordinal() < FileWorkflowPersistor.LoadVersion.V260.ordinal()) {
             nodeName = null;
             bundleName = null;
             bundleVendor = null;

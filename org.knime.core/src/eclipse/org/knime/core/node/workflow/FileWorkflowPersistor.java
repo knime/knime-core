@@ -100,7 +100,7 @@ import org.knime.core.util.LockFailedException;
  *
  * @author wiswedel, University of Konstanz
  */
-public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileNodeContainerPersistor {
+public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeContainerPersistor {
 
     /**
      * A Version representing a specific workflow format. This enum covers only the version that this specific class can
@@ -282,7 +282,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
      * @param loadHelper The load helper as required by meta persistor.
      * @param version of loading workflow.
      */
-    WorkflowPersistorVersion1xx(final HashMap<Integer, ContainerTable> tableRep,
+    FileWorkflowPersistor(final HashMap<Integer, ContainerTable> tableRep,
         final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final ReferencedFile workflowKNIMEFile,
         final WorkflowLoadHelper loadHelper, final LoadVersion version, final boolean isProject) {
         assert version != null;
@@ -1403,7 +1403,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
     boolean loadIsMetaNode(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
             String factory = settings.getString("factory");
-            return ObsoleteMetaNodeWorkflowPersistorVersion1xx.OLD_META_NODES.contains(factory);
+            return ObsoleteMetaNodeFileWorkflowPersistor.OLD_META_NODES.contains(factory);
         } else {
             return settings.getBoolean("node_is_meta");
         }
@@ -1768,12 +1768,12 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
         return new FileNativeNodeContainerPersistor(this, nodeFile, getLoadHelper(), getLoadVersion());
     }
 
-    WorkflowPersistorVersion1xx createWorkflowPersistorLoad(final ReferencedFile wfmFile) {
+    FileWorkflowPersistor createWorkflowPersistorLoad(final ReferencedFile wfmFile) {
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
-            return new ObsoleteMetaNodeWorkflowPersistorVersion1xx(getGlobalTableRepository(),
+            return new ObsoleteMetaNodeFileWorkflowPersistor(getGlobalTableRepository(),
                 getFileStoreHandlerRepository(), wfmFile, getLoadHelper(), getLoadVersion());
         } else {
-            return new WorkflowPersistorVersion1xx(getGlobalTableRepository(), getFileStoreHandlerRepository(),
+            return new FileWorkflowPersistor(getGlobalTableRepository(), getFileStoreHandlerRepository(),
                 wfmFile, getLoadHelper(), getLoadVersion(), false);
         }
     }
@@ -2106,7 +2106,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
         ReferencedFile nodeDirectoryRef = new ReferencedFile(workflowDirRef, nodeDirID);
         String fileName;
         if (container instanceof WorkflowManager) {
-            fileName = WorkflowPersistorVersion1xx.save((WorkflowManager)container, nodeDirectoryRef, exec, isSaveData);
+            fileName = FileWorkflowPersistor.save((WorkflowManager)container, nodeDirectoryRef, exec, isSaveData);
         } else if (container instanceof NativeNodeContainer) {
             fileName =  FileSingleNodeContainerPersistor.save(
                 (NativeNodeContainer)container, nodeDirectoryRef, exec, isSaveData);

@@ -82,7 +82,7 @@ import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -103,7 +103,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
     private final FileNodeContainerMetaPersistor m_metaPersistor;
 
     /** WFM persistor, only set when used to load a workflow. */
-    private final WorkflowPersistorVersion1xx m_wfmPersistor;
+    private final FileWorkflowPersistor m_wfmPersistor;
 
     private WorkflowPersistor m_parentPersistor;
 
@@ -121,7 +121,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
 
 
     /** Load persistor. */
-    FileSingleNodeContainerPersistor(final WorkflowPersistorVersion1xx workflowPersistor,
+    FileSingleNodeContainerPersistor(final FileWorkflowPersistor workflowPersistor,
         final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper, final LoadVersion version) {
         this(workflowPersistor, new FileNodeContainerMetaPersistor(nodeSettingsFile, loadHelper, version),
             version);
@@ -134,7 +134,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
      * @param metaPersistor
      * @param wfmPersistor
      */
-    FileSingleNodeContainerPersistor(final WorkflowPersistorVersion1xx wfmPersistor,
+    FileSingleNodeContainerPersistor(final FileWorkflowPersistor wfmPersistor,
         final FileNodeContainerMetaPersistor metaPersistor, final LoadVersion version) {
         if (version == null || wfmPersistor == null) {
             throw new NullPointerException();
@@ -509,7 +509,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         return getLoadVersion().isOlderThan(LoadVersion.V200);
     }
 
-    WorkflowPersistorVersion1xx getWorkflowManagerPersistor() {
+    FileWorkflowPersistor getWorkflowManagerPersistor() {
         return m_wfmPersistor;
     }
 

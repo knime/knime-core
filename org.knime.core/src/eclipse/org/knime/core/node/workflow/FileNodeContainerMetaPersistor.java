@@ -62,7 +62,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -497,7 +497,7 @@ class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
             // in 2.8 we merged the "settings.xml" with the "node.xml". Both files contained the node_message,
             // therefore we write the NC message under a new name to allow old KNIME instances (2.7-) to load
             // the node message in the Node class.
-            if (getLoadVersion().ordinal() >= WorkflowPersistorVersion1xx.LoadVersion.V280.ordinal()) {
+            if (getLoadVersion().ordinal() >= FileWorkflowPersistor.LoadVersion.V280.ordinal()) {
                 key = "nodecontainer_message";
             } else {
                 key = "node_message";

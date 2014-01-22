@@ -74,8 +74,8 @@ import org.knime.core.node.port.PortType;
  *
  * @author wiswedel, University of Konstanz
  */
-public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
-        WorkflowPersistorVersion1xx {
+public class ObsoleteMetaNodeFileWorkflowPersistor extends
+        FileWorkflowPersistor {
 
     private enum MetaNodeType {
         ORDINARY,
@@ -106,12 +106,12 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
 
     private MetaNodeType m_metaNodeType = MetaNodeType.ORDINARY;
 
-    ObsoleteMetaNodeWorkflowPersistorVersion1xx(
+    ObsoleteMetaNodeFileWorkflowPersistor(
             final HashMap<Integer, ContainerTable> globalRep,
             final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
             final ReferencedFile workflowKNIMEFile,
             final WorkflowLoadHelper loadHelper,
-            final WorkflowPersistorVersion1xx.LoadVersion version) {
+            final FileWorkflowPersistor.LoadVersion version) {
         super(globalRep, fileStoreHandlerRepository,
                 workflowKNIMEFile, loadHelper, version, false);
     }
@@ -199,7 +199,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     @Override
     protected FileSingleNodeContainerPersistor
         createSingleNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
-        return new ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
+        return new ObsoleteSpecialNodeFileNativeNodeContainerPersistor(
                 this, nodeFile, getLoadHelper(), getLoadVersion());
     }
 
@@ -415,17 +415,17 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         return false;
     }
 
-    private class ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx
+    private class ObsoleteSpecialNodeFileNativeNodeContainerPersistor
         extends FileNativeNodeContainerPersistor {
 
         /**
          *
          */
-        public ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
-                final WorkflowPersistorVersion1xx workflowPersistor,
+        public ObsoleteSpecialNodeFileNativeNodeContainerPersistor(
+                final FileWorkflowPersistor workflowPersistor,
                 final ReferencedFile nodeSettingsFile,
                 final WorkflowLoadHelper loadHelper,
-                final WorkflowPersistorVersion1xx.LoadVersion version) {
+                final FileWorkflowPersistor.LoadVersion version) {
             super(workflowPersistor, nodeSettingsFile, loadHelper, version);
         }
 

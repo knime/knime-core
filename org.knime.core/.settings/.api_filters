@@ -138,6 +138,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.ObsoleteMetaNodeWorkflowPersistorVersion1xx">
+        <filter comment="renaming persistor classes - no API anyway" id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ObsoleteMetaNodeWorkflowPersistorVersion1xx"/>
+                <message_argument value="org.knime.core_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx">
         <filter comment="changes to non-api persistor code" id="305324134">
             <message_arguments>
@@ -151,6 +159,14 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200"/>
                 <message_argument value="org.knime.core_2.9.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.WorkflowPersistorVersion1xx">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistorVersion1xx"/>
+                <message_argument value="org.knime.core_2.10.0"/>
             </message_arguments>
         </filter>
     </resource>
@@ -247,9 +263,25 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/FileNodePersistor.java" type="org.knime.core.node.FileNodePersistor">
+        <filter comment="renaming persistor classes - no API anyway" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.FileNodePersistor"/>
+                <message_argument value="getLoadVersion()"/>
+            </message_arguments>
+        </filter>
         <filter comment="changes to non-api persistor code" id="1110441988">
             <message_arguments>
                 <message_argument value="org.knime.core.node.FileNodePersistor"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="FileNodePersistor(FileNativeNodeContainerPersistor, FileWorkflowPersistor.LoadVersion, NodeSettingsRO)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="getLoadVersion()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -268,6 +300,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/NodeAndBundleInformation.java" type="org.knime.core.node.NodeAndBundleInformation">
+        <filter comment="renaming persistor classes - no API anyway" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodeAndBundleInformation"/>
+                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.NodeAndBundleInformation"/>
@@ -331,10 +369,21 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/Annotation.java" type="org.knime.core.node.workflow.Annotation">
+        <filter comment="renaming persistor classes - no API anyway" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.Annotation"/>
+                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.Annotation"/>
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
             </message_arguments>
         </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
@@ -344,10 +393,21 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/AnnotationData.java" type="org.knime.core.node.workflow.AnnotationData">
+        <filter comment="renaming persistor classes - no API anyway" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.AnnotationData"/>
+                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.AnnotationData"/>
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
             </message_arguments>
         </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
@@ -357,10 +417,21 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/ConnectionUIInformation.java" type="org.knime.core.node.workflow.ConnectionUIInformation">
+        <filter comment="renaming persistor classes - no API anyway" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ConnectionUIInformation"/>
+                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.ConnectionUIInformation"/>
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
             </message_arguments>
         </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
@@ -377,10 +448,21 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/EditorUIInformation.java" type="org.knime.core.node.workflow.EditorUIInformation">
+        <filter comment="renaming persistor classes - no API anyway" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
+                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
             </message_arguments>
         </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
@@ -390,9 +472,31 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/FileNativeNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileNativeNodeContainerPersistor">
+        <filter comment="renaming persistor classes - no API anyway" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileNativeNodeContainerPersistor"/>
+                <message_argument value="FileNativeNodeContainerPersistor(WorkflowPersistorVersion1xx, FileNodeContainerMetaPersistor, WorkflowPersistorVersion1xx.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileNativeNodeContainerPersistor"/>
+                <message_argument value="FileNativeNodeContainerPersistor(WorkflowPersistorVersion1xx, ReferencedFile, WorkflowLoadHelper, WorkflowPersistorVersion1xx.LoadVersion)"/>
+            </message_arguments>
+        </filter>
         <filter comment="changes to non-api persistor code" id="1110441988">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.FileNativeNodeContainerPersistor"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="FileNativeNodeContainerPersistor(FileWorkflowPersistor, FileNodeContainerMetaPersistor, FileWorkflowPersistor.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="FileNativeNodeContainerPersistor(FileWorkflowPersistor, ReferencedFile, WorkflowLoadHelper, FileWorkflowPersistor.LoadVersion)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -402,12 +506,35 @@
                 <message_argument value="org.knime.core.node.workflow.FileSingleNodeContainerPersistor"/>
             </message_arguments>
         </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="getLoadVersion()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/FileWorkflowPersistor.java" type="org.knime.core.node.workflow.FileWorkflowPersistor">
+        <filter comment="changing persistor api" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FileWorkflowPersistor"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/MetaNodeTemplateInformation.java" type="org.knime.core.node.workflow.MetaNodeTemplateInformation">
+        <filter comment="renaming persistor classes - no API anyway" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.MetaNodeTemplateInformation"/>
+                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.MetaNodeTemplateInformation"/>
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
             </message_arguments>
         </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
@@ -425,10 +552,21 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeUIInformation.java" type="org.knime.core.node.workflow.NodeUIInformation">
+        <filter comment="renaming persistor classes - no API anyway" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
+                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
             </message_arguments>
         </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
@@ -437,16 +575,10 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/ObsoleteMetaNodeWorkflowPersistorVersion1xx.java" type="org.knime.core.node.workflow.ObsoleteMetaNodeWorkflowPersistorVersion1xx">
-        <filter comment="changes to non-api persistor code" id="338792546">
+    <resource path="src/eclipse/org/knime/core/node/workflow/ObsoleteMetaNodeFileWorkflowPersistor.java" type="org.knime.core.node.workflow.ObsoleteMetaNodeFileWorkflowPersistor">
+        <filter comment="renaming persistor classes - no API anyway" id="1110441988">
             <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.ObsoleteMetaNodeWorkflowPersistorVersion1xx"/>
-                <message_argument value="createSingleNodeContainerPersistorLoad(ReferencedFile)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes to non-api persistor code" id="1143996420">
-            <message_arguments>
-                <message_argument value="createSingleNodeContainerPersistorLoad(ReferencedFile)"/>
+                <message_argument value="org.knime.core.node.workflow.ObsoleteMetaNodeFileWorkflowPersistor"/>
             </message_arguments>
         </filter>
     </resource>
@@ -627,7 +759,19 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/UIInformation.java" type="org.knime.core.node.workflow.UIInformation">
+        <filter comment="renaming persistor classes - no API anyway" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.UIInformation"/>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.UIInformation"/>
+                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="405901410">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.UIInformation"/>
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
@@ -639,6 +783,11 @@
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
             </message_arguments>
         </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1211105284">
+            <message_arguments>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="1211105284">
             <message_arguments>
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
@@ -646,10 +795,32 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter comment="renaming persistor classes - no API anyway" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="createLoadPersistor(File, WorkflowLoadHelper)"/>
+            </message_arguments>
+        </filter>
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
                 <message_argument value="getInteractiveWebViewTemplate()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="load(WorkflowPersistorVersion1xx, ExecutionMonitor, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="createLoadPersistor(File, WorkflowLoadHelper)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="load(FileWorkflowPersistor, ExecutionMonitor, boolean)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -676,196 +847,6 @@
         <filter comment="persistor code rewrite - not meant as public api" id="1211105284">
             <message_arguments>
                 <message_argument value="getLoadVersion()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistorVersion1xx.java" type="org.knime.core.node.workflow.WorkflowPersistorVersion1xx">
-        <filter comment="persistor code rewrite - not meant as public api" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowPersistorVersion1xx"/>
-                <message_argument value="getLoadVersion()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes to non-api persistor code" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowPersistorVersion1xx"/>
-                <message_argument value="getMetaPersistor()"/>
-            </message_arguments>
-        </filter>
-        <filter id="643842064">
-            <message_arguments>
-                <message_argument value="WorkflowFileStoreHandlerRepository"/>
-                <message_argument value="WorkflowPersistorVersion1xx"/>
-                <message_argument value="getFileStoreHandlerRepository()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1141899266">
-            <message_arguments>
-                <message_argument value="2.8"/>
-                <message_argument value="2.9"/>
-                <message_argument value="saveAuthorInformation(WorkflowManager.AuthorInformation, NodeSettingsWO)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="getLoadVersion()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes to non-api persistor code" id="1143996420">
-            <message_arguments>
-                <message_argument value="getMetaPersistor()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="getSaveVersion()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="save(WorkflowManager, ReferencedFile, ExecutionMonitor, boolean)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveConnection(NodeSettingsWO, ConnectionContainer)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveCredentials(WorkflowManager, NodeSettingsWO)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveFileLocation(NodeSettingsWO, String)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveInPort(NodeSettingsWO, WorkflowManager, int)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveInPortSetting(NodeSettingsWO, int)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveInPortsEnumSetting(NodeSettingsWO)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveInPortsSetting(NodeSettingsWO)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveInportsBarUIInfoClassName(NodeSettingsWO, UIInformation)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveInportsBarUIInfoSettings(NodeSettingsWO, UIInformation)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveIsMeta(NodeSettingsWO, NodeContainer)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveNodeContainer(NodeSettingsWO, ReferencedFile, NodeContainer, ExecutionMonitor, boolean)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveNodeIDSuffix(NodeSettingsWO, NodeContainer)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveOutPort(NodeSettingsWO, WorkflowManager, int)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveOutPortSetting(NodeSettingsWO, int)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveOutPortsEnumSetting(NodeSettingsWO)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveOutPortsSetting(NodeSettingsWO)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveOutportsBarUIInfoClassName(NodeSettingsWO, UIInformation)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveOutportsBarUIInfoSettings(NodeSettingsWO, UIInformation)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveSettingsForConnections(NodeSettingsWO)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveSettingsForNodes(NodeSettingsWO)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveTemplateInformation(MetaNodeTemplateInformation, NodeSettingsWO)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveUIInfoClassName(NodeSettingsWO, UIInformation)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveUIInfoSettings(NodeSettingsWO, UIInformation)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveWorkflowAnnotations(WorkflowManager, NodeSettingsWO)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveWorkflowCipher(NodeSettings, WorkflowCipher)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveWorkflowName(NodeSettingsWO, String)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="saveWorkflowVariables(WorkflowManager, NodeSettingsWO)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistorVersion1xx.java" type="org.knime.core.node.workflow.WorkflowPersistorVersion1xx$LoadVersion">
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="LoadVersion"/>
             </message_arguments>
         </filter>
     </resource>

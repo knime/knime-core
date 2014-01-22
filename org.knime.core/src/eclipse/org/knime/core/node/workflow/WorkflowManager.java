@@ -142,7 +142,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResult
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -5830,7 +5830,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeContext.pushContext(meta);
         try {
             File localDir = ResolverUtil.resolveURItoLocalOrTempFile(sourceURI);
-            WorkflowPersistorVersion1xx loadPersistor = WorkflowManager.createLoadPersistor(localDir, loadHelper);
+            FileWorkflowPersistor loadPersistor = WorkflowManager.createLoadPersistor(localDir, loadHelper);
             loadPersistor.setNameOverwrite(localDir.getName()); // used in preLoadNodeContainer
             loadPersistor.setTemplateInformationLinkURI(sourceURI);
             loadResultChild = tempParent.load(loadPersistor, new ExecutionMonitor(), false);
@@ -6670,7 +6670,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @noreference Clients should only be required to load projects using
      * {@link #loadProject(File, ExecutionMonitor, WorkflowLoadHelper)}
      */
-    public static WorkflowPersistorVersion1xx createLoadPersistor(
+    public static FileWorkflowPersistor createLoadPersistor(
             final File directory, final WorkflowLoadHelper loadHelper)
             throws IOException, UnsupportedWorkflowVersionException {
         if (directory == null) {
@@ -6705,12 +6705,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             versionString = "0.9.0";
         }
         boolean isProject = !loadHelper.isTemplateFlow();
-        WorkflowPersistorVersion1xx persistor;
+        FileWorkflowPersistor persistor;
         // TODO only create new hash map if workflow is a project?
         HashMap<Integer, ContainerTable> tableRep = new GlobalTableRepository();
         WorkflowFileStoreHandlerRepository fileStoreHandlerRepository =
             new WorkflowFileStoreHandlerRepository();
-        LoadVersion version = WorkflowPersistorVersion1xx.parseVersion(versionString);
+        LoadVersion version = FileWorkflowPersistor.parseVersion(versionString);
         if (version == null) { // future version
             StringBuilder versionDetails = new StringBuilder(versionString);
             String createdBy = settings.getString(CFG_CREATED_BY, null);
@@ -6725,7 +6725,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         "Unable to load workflow, version string \"" + v + "\" is unknown");
             default:
                 version = LoadVersion.FUTURE;
-                persistor = new WorkflowPersistorVersion1xx(tableRep, fileStoreHandlerRepository, workflowknimeRef,
+                persistor = new FileWorkflowPersistor(tableRep, fileStoreHandlerRepository, workflowknimeRef,
                         loadHelper, version, isProject);
                 persistor.setDirtyAfterLoad();
             }
@@ -6736,7 +6736,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         + "might not be possible to load all data or some nodes can't be configured. "
                         + "Please re-configure and/or re-execute these nodes.");
             }
-            persistor = new WorkflowPersistorVersion1xx(tableRep, fileStoreHandlerRepository, workflowknimeRef,
+            persistor = new FileWorkflowPersistor(tableRep, fileStoreHandlerRepository, workflowknimeRef,
                 loadHelper, version, isProject);
         }
         return persistor;
@@ -6787,7 +6787,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         try {
-            WorkflowPersistorVersion1xx persistor = createLoadPersistor(directory, loadHelper);
+            FileWorkflowPersistor persistor = createLoadPersistor(directory, loadHelper);
             return load(persistor, exec, keepNodeMessages);
         } finally {
             if (!isTemplate) {
@@ -6813,7 +6813,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws UnsupportedWorkflowVersionException If the version of the
      *             workflow is unknown (future version)
      */
-    public WorkflowLoadResult load(final WorkflowPersistorVersion1xx persistor,
+    public WorkflowLoadResult load(final FileWorkflowPersistor persistor,
             final ExecutionMonitor exec, final boolean keepNodeMessages)
     throws IOException, InvalidSettingsException, CanceledExecutionException,
             UnsupportedWorkflowVersionException {
@@ -7341,7 +7341,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             try {
                 final boolean isWorkingDirectory =
                         workflowDirRef.equals(getNodeContainerDirectory());
-                final LoadVersion saveVersion = WorkflowPersistorVersion1xx.VERSION_LATEST;
+                final LoadVersion saveVersion = FileWorkflowPersistor.VERSION_LATEST;
                 if (m_loadVersion != null
                         && !m_loadVersion.equals(saveVersion)) {
                     LOGGER.info("Workflow was created with another version "
@@ -7359,7 +7359,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     m_authorInformation = new AuthorInformation(m_authorInformation);
                 }
                 workflowDirRef.getFile().mkdirs();
-                WorkflowPersistorVersion1xx.save(
+                FileWorkflowPersistor.save(
                     this, workflowDirRef, exec, isSaveData);
             } finally {
                 workflowDirRef.writeUnlock();

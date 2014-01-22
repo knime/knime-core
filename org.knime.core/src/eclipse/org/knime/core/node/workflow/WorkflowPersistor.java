@@ -66,7 +66,7 @@ import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  *
@@ -107,7 +107,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     /** Constant for the meta info file name. */
     public static final String METAINFO_FILE = "workflowset.meta";
 
-    WorkflowPersistorVersion1xx.LoadVersion getLoadVersion();
+    FileWorkflowPersistor.LoadVersion getLoadVersion();
 
     /** @return if the persistor represent a workflow project.
      * @since 2.6 */

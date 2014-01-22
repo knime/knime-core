@@ -63,7 +63,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
+import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 
@@ -120,7 +120,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
             Display d = Display.getDefault();
             GUIWorkflowLoadHelper loadHelper =
                     new GUIWorkflowLoadHelper(d, parentFile.getName(), parentFile, null, true);
-            WorkflowPersistorVersion1xx loadPersistor =
+            FileWorkflowPersistor loadPersistor =
                     WorkflowManager.createLoadPersistor(parentFile, loadHelper);
             loadPersistor.setTemplateInformationLinkURI(sourceURI);
             loadPersistor.setNameOverwrite(parentFile.getName());

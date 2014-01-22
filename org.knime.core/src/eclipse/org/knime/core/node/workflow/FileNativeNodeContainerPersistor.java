@@ -85,7 +85,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeFactoryUnknownException;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  *
@@ -117,7 +117,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
      * @param metaPersistor
      * @param version
      */
-    public FileNativeNodeContainerPersistor(final WorkflowPersistorVersion1xx wfmPersistor,
+    public FileNativeNodeContainerPersistor(final FileWorkflowPersistor wfmPersistor,
         final FileNodeContainerMetaPersistor metaPersistor, final LoadVersion version) {
         super(wfmPersistor, metaPersistor, version);
         // TODO Auto-generated constructor stub
@@ -129,7 +129,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
      * @param loadHelper
      * @param version
      */
-    public FileNativeNodeContainerPersistor(final WorkflowPersistorVersion1xx workflowPersistor,
+    public FileNativeNodeContainerPersistor(final FileWorkflowPersistor workflowPersistor,
         final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper, final LoadVersion version) {
         super(workflowPersistor, nodeSettingsFile, loadHelper, version);
         // TODO Auto-generated constructor stub
@@ -266,7 +266,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             }
         }
         try {
-            WorkflowPersistorVersion1xx wfmPersistor = getWorkflowManagerPersistor();
+            FileWorkflowPersistor wfmPersistor = getWorkflowManagerPersistor();
             HashMap<Integer, ContainerTable> globalTableRepository = wfmPersistor.getGlobalTableRepository();
             WorkflowFileStoreHandlerRepository fileStoreHandlerRepository =
                 wfmPersistor.getFileStoreHandlerRepository();
@@ -470,7 +470,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             }
             MissingNodeFactory nodefactory =
                 new MissingNodeFactory(nodeInfo, additionalFactorySettings, inPortTypes, outPortTypes);
-            if (getLoadVersion().ordinal() < WorkflowPersistorVersion1xx.VERSION_LATEST.ordinal()) {
+            if (getLoadVersion().ordinal() < FileWorkflowPersistor.VERSION_LATEST.ordinal()) {
                 nodefactory.setCopyInternDirForWorkflowVersionChange(true);
             }
             nodefactory.init();
