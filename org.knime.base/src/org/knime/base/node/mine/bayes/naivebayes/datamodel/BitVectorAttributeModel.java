@@ -56,6 +56,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -409,7 +410,7 @@ public class BitVectorAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLViewHeadLine() {
-        return "P(" + getAttributeName() + " | class=?)";
+        return "P(" + StringEscapeUtils.escapeHtml(getAttributeName()) + " | class=?)";
     }
 
 
@@ -433,7 +434,7 @@ public class BitVectorAttributeModel extends AttributeModel {
         //first table header section
         buf.append("<tr>");
         buf.append("<th rowspan=2>");
-        buf.append(classHeading);
+        buf.append(StringEscapeUtils.escapeHtml(classHeading));
         buf.append("</th>");
 //first table header row
         for (int i = 0, length = getVectorLength(); i < length; i++) {
@@ -443,7 +444,7 @@ public class BitVectorAttributeModel extends AttributeModel {
         }
         if (missingHeading != null) {
             buf.append("<th rowspan = 2>");
-            buf.append(missingHeading);
+            buf.append(StringEscapeUtils.escapeHtml(missingHeading));
             buf.append("</th>");
         }
         buf.append("</tr>");
@@ -468,7 +469,7 @@ public class BitVectorAttributeModel extends AttributeModel {
             final BitVectorClassValue classValue = m_classValues.get(classVal);
             buf.append("<tr>");
             buf.append("<th>");
-            buf.append(classVal);
+            buf.append(StringEscapeUtils.escapeHtml(classVal));
             buf.append("</th>");
             for(int i = 0; i < bitVectorLength; i++) {
                 //the bit vector value section

@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
@@ -464,8 +465,8 @@ class NumericalAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLViewHeadLine() {
-        return "Gaussian distribution for " + getAttributeName()
-        + " per class value";
+        return "Gaussian distribution for " + StringEscapeUtils.escapeHtml(getAttributeName())
+                + " per class value";
     }
 
     /**
@@ -481,8 +482,7 @@ class NumericalAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLView(final int totalNoOfRecs) {
-        final List<String> sortedClassVal =
-            AttributeModel.sortCollection(m_classValues.keySet());
+        final List<String> sortedClassVal = AttributeModel.sortCollection(m_classValues.keySet());
         if (sortedClassVal == null) {
             return "";
         }
@@ -500,13 +500,11 @@ class NumericalAttributeModel extends AttributeModel {
             countRow.append("</td>");
 
             meanRow.append("<td align='center'>");
-            meanRow.append(NaiveBayesModel.HTML_VALUE_FORMATER.format(
-                    classValue.getMean()));
+            meanRow.append(NaiveBayesModel.HTML_VALUE_FORMATER.format(classValue.getMean()));
             meanRow.append("</td>");
 
             stdDevRow.append("<td align='center'>");
-            stdDevRow.append(NaiveBayesModel.HTML_VALUE_FORMATER.format(
-                    classValue.getStdDeviation()));
+            stdDevRow.append(NaiveBayesModel.HTML_VALUE_FORMATER.format(classValue.getStdDeviation()));
             stdDevRow.append("</td>");
 
             rateRow.append("<td align='center'>");

@@ -60,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -433,8 +434,8 @@ class NominalAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLViewHeadLine() {
-        return getAttributeName()
-        + ": Number of occurences per attribute and class value";
+        return StringEscapeUtils.escapeHtml(getAttributeName())
+                + ": Number of occurences per attribute and class value";
     }
 
     /**
@@ -450,13 +451,11 @@ class NominalAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLView(final int totalNoOfRecs) {
-        final List<String> sortedClassVal =
-            AttributeModel.sortCollection(m_classValues.keySet());
+        final List<String> sortedClassVal = AttributeModel.sortCollection(m_classValues.keySet());
         if (sortedClassVal == null) {
             return "";
         }
-        final List<String> sortedAttrValues =
-            AttributeModel.sortCollection(m_attributeVals);
+        final List<String> sortedAttrValues = AttributeModel.sortCollection(m_attributeVals);
         final String classHeading = "Class/" + getAttributeName();
         final String missingHeading = getMissingValueHeader(m_attributeVals);
         final int arraySize;
@@ -467,8 +466,7 @@ class NominalAttributeModel extends AttributeModel {
         }
         final StringBuilder buf = new StringBuilder();
         buf.append("<table border='1' width='100%'>");
-        buf.append(createTableHeader(classHeading , sortedAttrValues,
-                missingHeading));
+        buf.append(createTableHeader(classHeading , sortedAttrValues, missingHeading));
         final int[] rowsPerValCounts = new int[arraySize];
         Arrays.fill(rowsPerValCounts, 0);
         //create the value section
@@ -476,12 +474,11 @@ class NominalAttributeModel extends AttributeModel {
             final NominalClassValue classValue = m_classValues.get(classVal);
             buf.append("<tr>");
             buf.append("<th>");
-            buf.append(classVal);
+            buf.append(StringEscapeUtils.escapeHtml(classVal));
             buf.append("</th>");
             for (int i = 0, length = sortedAttrValues.size(); i < length; i++) {
                 final String attrVal = sortedAttrValues.get(i);
-                final MutableInteger rowCounter =
-                    classValue.getNoOfRows4AttributeValue(attrVal);
+                final MutableInteger rowCounter = classValue.getNoOfRows4AttributeValue(attrVal);
                 final int rowCount;
                 if (rowCounter != null) {
                     rowCount = rowCounter.intValue();
@@ -494,8 +491,7 @@ class NominalAttributeModel extends AttributeModel {
                 buf.append("</td>");
             }
             if (missingHeading != null) {
-                final MutableInteger rowCounter =
-                    classValue.getMissingValueRecs();
+                final MutableInteger rowCounter = classValue.getMissingValueRecs();
                 rowsPerValCounts[arraySize - 1] += rowCounter.intValue();
                 buf.append("<td align='center'>");
                 buf.append(rowCounter);
@@ -509,8 +505,7 @@ class NominalAttributeModel extends AttributeModel {
         return buf.toString();
     }
 
-    private static String createSummarySection(final int totalRowCount,
-            final int[] rowsPerValCounts) {
+    private static String createSummarySection(final int totalRowCount, final int[] rowsPerValCounts) {
         final NumberFormat nf = NumberFormat.getPercentInstance();
         final StringBuilder buf = new StringBuilder();
         buf.append("<tr>");
