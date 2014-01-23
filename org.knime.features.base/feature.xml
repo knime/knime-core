@@ -778,8 +778,7 @@ propagated with or for interoperation with KNIME.
          id="org.knime.workbench.ui"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="org.knime.workbench.repository"
@@ -905,15 +904,6 @@ propagated with or for interoperation with KNIME.
 
    <plugin
          id="javax.activation"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.knime.workbench.ui.macos"
-         os="macosx"
-         ws="cocoa"
          download-size="0"
          install-size="0"
          version="0.0.0"
