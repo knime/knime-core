@@ -30,9 +30,11 @@
             </option>
             <option name="Log Errors, Warnings, Infos">
                 These lists contains error, warning, or info messages that must be present
-                in the log
-                file after the workflows has been fully executed. Usually these
-                are messages written by a NodeLogger.
+                in the log file after the workflows has been fully executed. Usually these
+                are messages written by a NodeLogger.<br />
+                You can also use regular expression for log messages in case there are slight variations.
+                By default the message is treated as a plain string. By enclosing parts of the string by <tt>_!_</tt>
+                you can enter regular expressions in between, e.g. <i>File _!_.+_!_ not found</i>.
             </option>
         </tab>
         <tab name="Node settings">
@@ -48,7 +50,10 @@
                 selected node (if there is any), indicated by the gray text color.
                 If you want to really use this message click in the text field,
                 and possibly edit it. Once the text color is black, the message
-                is used.
+                is used.<br />
+                You can also use regular expression for required error messages in case there are slight variations.
+                By default the message is treated as a plain string. By enclosing parts of the string by <tt>_!_</tt>
+                you can enter regular expressions in between, e.g. <i>File _!_.+_!_ not found</i>.
             </option>
             <option name="Required warning message">
                 Enter the error message on the node selected above that must be
@@ -58,7 +63,8 @@
                 selected node (if there is any), indicated by the gray text color.
                 If you want to really use this message click in the text field,
                 and possibly edit it. Once the text color is black, the message
-                is used.
+                is used.<br />
+                Also warning messages can contain regular expressions, see above.
             </option>
         </tab>
     </fullDescription>
