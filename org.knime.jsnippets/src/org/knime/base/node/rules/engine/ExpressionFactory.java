@@ -246,10 +246,12 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
             final Map<String, Map<String, String>> mergedObjects =
                 Util.mergeObjects(leftValue.getMatchedObjects(), rightObjects);
             for (int i = 1; i <= matcher.groupCount(); ++i) {
-                if (!mergedObjects.containsKey(m_key)) {
-                    mergedObjects.put(m_key, new HashMap<String, String>());
+                if (res) {
+                    if (!mergedObjects.containsKey(m_key)) {
+                        mergedObjects.put(m_key, new HashMap<String, String>());
+                    }
+                    mergedObjects.get(m_key).put(Integer.toString(i), matcher.group(i));
                 }
-                mergedObjects.get(m_key).put(Integer.toString(i), matcher.group(i));
             }
             return new ExpressionValue(BooleanCell.get(res), mergedObjects);
         }

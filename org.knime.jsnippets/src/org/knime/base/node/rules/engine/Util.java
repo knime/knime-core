@@ -170,7 +170,7 @@ public final class Util {
      */
     static <K, V> Map<K, V> clone(final Map<K, V> input) {
         if (input.isEmpty()) {
-            return Collections.<K, V> emptyMap();
+            return new HashMap<K, V>();
         }
         Map<K, V> ret = new HashMap<K, V>();
         for (Entry<K, V> entry : input.entrySet()) {
@@ -205,7 +205,7 @@ public final class Util {
     public static Map<String, Map<String, String>> mergeObjects(final Map<String, Map<String, String>> first,
                                                                 final Map<String, Map<String, String>> second) {
         if (first.isEmpty() && second.isEmpty()) {
-            return Collections.emptyMap();
+            return new HashMap<String, Map<String,String>>();
         }
         Map<String, Map<String, String>> ret = clone(first);
         for (Entry<String, Map<String, String>> entry : second.entrySet()) {
