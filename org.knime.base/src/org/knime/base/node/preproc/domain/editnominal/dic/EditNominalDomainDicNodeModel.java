@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -78,8 +78,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.streamable.InputPortRole;
-import org.knime.core.node.streamable.OutputPortRole;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
@@ -89,8 +87,6 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
  * @author Marcel Hanser
  */
 final class EditNominalDomainDicNodeModel extends NodeModel {
-
-    private static final int MAX_UNKNOWN_COLS = 20;
 
     private EditNominalDomainDicConfiguration m_configuration;
 
@@ -107,22 +103,6 @@ final class EditNominalDomainDicNodeModel extends NodeModel {
 
         return new DataTableSpec[]{mergeTableSpecs(orgSpec,
             createNewSpec(orgSpec, valueSpec, new NewDomainValuesAdder<InvalidSettingsException>())).createSpec()};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public InputPortRole[] getInputPortRoles() {
-        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_STREAMABLE};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public OutputPortRole[] getOutputPortRoles() {
-        return new OutputPortRole[]{OutputPortRole.NONDISTRIBUTED};
     }
 
     /** {@inheritDoc} */
@@ -274,13 +254,16 @@ final class EditNominalDomainDicNodeModel extends NodeModel {
             orgColIndexToColName.remove(i);
         }
 
+        StringBuilder warnings = new StringBuilder();
+
         if (filterResult.getIncludes().length == 0) {
-            StringBuilder warnings = new StringBuilder("No columns in value table [2] are included.");
-            if (filterResult.getRemovedFromIncludes().length > 0) {
-                warnings.append("\nThe following columns were included before but do not longer exist:\n");
-                warnings.append(ConvenienceMethods.getShortStringFrom(
-                    Arrays.asList(filterResult.getRemovedFromIncludes()), MAX_UNKNOWN_COLS));
-            }
+            warnings.append("No columns in value table [2] are included.");
+        }
+        if (filterResult.getRemovedFromIncludes().length > 0) {
+            warnings.append("\nFollowing columns are configured but do not longer exist: "
+                + ConvenienceMethods.getShortStringFrom(Arrays.asList(filterResult.getRemovedFromIncludes()), 5));
+        }
+        if (warnings.length() > 0) {
             setWarningMessage(warnings.toString());
         }
     }

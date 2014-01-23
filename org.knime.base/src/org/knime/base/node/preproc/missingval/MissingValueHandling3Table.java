@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -80,6 +80,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.util.MutableInteger;
 
 /**
@@ -225,12 +226,13 @@ public final class MissingValueHandling3Table implements DataTable {
      *
      * @param spec the spec of the original input table
      * @param sets the column settings to apply
+     * @param warningsBuffer buffer to print warnings messages to the UI
      * @return the new DataTableSpec when handling missing values
      * @throws InvalidSettingsException if the settings don't fit to the data
      */
-    static DataTableSpec createTableSpec(final DataTableSpec spec, final MissingValueHandling2ColSetting[] sets)
-        throws InvalidSettingsException {
-        MissingValueHandling2ColSetting[] realSettings = getColSetting(spec, sets, true);
+    static DataTableSpec createTableSpec(final DataTableSpec spec, final MissingValueHandling2ColSetting[] sets,
+        final StringBuilder warningsBuffer) throws InvalidSettingsException {
+        MissingValueHandling2ColSetting[] realSettings = getColSetting(spec, sets, true, warningsBuffer);
         return createTableSpecPrivate(spec, realSettings);
 
     }
@@ -279,8 +281,9 @@ public final class MissingValueHandling3Table implements DataTable {
     }
 
     /* Does internal mapping of the constructor argument. */
-    private static MissingValueHandling2ColSetting[] getColSetting(final DataTableSpec spec,
-        final MissingValueHandling2ColSetting[] sets, final boolean throwExeception) throws InvalidSettingsException {
+    private static MissingValueHandling2ColSetting[]
+        getColSetting(final DataTableSpec spec, final MissingValueHandling2ColSetting[] sets,
+            final boolean throwExeception, final StringBuilder warningsBuffer) throws InvalidSettingsException {
         MissingValueHandling2ColSetting[] results = new MissingValueHandling2ColSetting[spec.getNumColumns()];
 
         // fill up the default (i.e. meta-settings for String, Double, Int,
@@ -321,6 +324,8 @@ public final class MissingValueHandling3Table implements DataTable {
             results[i] = setting;
         }
 
+        Set<String> missingColumns = new LinkedHashSet<String>();
+
         for (int i = 0; i < sets.length; i++) {
             if (sets[i].isMetaConfig()) {
                 continue;
@@ -332,9 +337,11 @@ public final class MissingValueHandling3Table implements DataTable {
                 final int index = spec.findColumnIndex(name);
                 if (index < 0) {
                     String error =
-                        "Unable to do missing value handling for" + " column '" + name + "', no such column in table";
+                        "Unable to do missing value handling for column '" + name + "', no such column in table";
                     if (throwExeception) {
-                        throw new InvalidSettingsException(error);
+                        // to be consistent with other nodes no exception is thrown here,
+                        // instead a warnings is propagated. See at the end of this method.
+                        missingColumns.add(name);
                     } else {
                         error = error + "; skip it.";
                         LOGGER.warn(error);
@@ -379,6 +386,11 @@ public final class MissingValueHandling3Table implements DataTable {
                 results[index] = sets[i];
             }
         }
+
+        if (!missingColumns.isEmpty()) {
+            warningsBuffer.append("Following columns are configured but do not longer exist: "
+                    + ConvenienceMethods.getShortStringFrom(missingColumns, 5));
+        }
         return results;
     }
 
@@ -395,10 +407,10 @@ public final class MissingValueHandling3Table implements DataTable {
      */
     public static BufferedDataTable createMissingValueHandlingTable(final BufferedDataTable table,
         final MissingValueHandling2ColSetting[] colSettings, final ExecutionContext exec,
-        final StringBuffer warningBuffer) throws CanceledExecutionException {
+        final StringBuilder warningBuffer) throws CanceledExecutionException {
         MissingValueHandling2ColSetting[] colSetting;
         try {
-            colSetting = getColSetting(table.getDataTableSpec(), colSettings, false);
+            colSetting = getColSetting(table.getDataTableSpec(), colSettings, false, warningBuffer);
         } catch (InvalidSettingsException ise) {
             LOGGER.coding("getColSetting method is not supposed to throw an exception, ignoring settings", ise);
             DataTableSpec s = table.getDataTableSpec();
@@ -443,6 +455,9 @@ public final class MissingValueHandling3Table implements DataTable {
             ExecutionContext subExec = exec.createSubExecutionContext(0.5);
             myT = new MyStatisticsTable(table, subExec, mostFrequentCols);
             if (myT.m_warningMessage != null) {
+                if (warningBuffer.length() > 0) {
+                    warningBuffer.append('\n');
+                }
                 warningBuffer.append(myT.m_warningMessage);
             }
             // for the iterator
@@ -531,8 +546,7 @@ public final class MissingValueHandling3Table implements DataTable {
         }
 
         /**
-         * Derived classes may do additional calculations here. This method is called
-         * with all of the rows.
+         * Derived classes may do additional calculations here. This method is called with all of the rows.
          *
          * @param row For processing.
          */

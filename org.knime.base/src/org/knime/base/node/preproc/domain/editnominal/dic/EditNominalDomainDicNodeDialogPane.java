@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -68,6 +68,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
@@ -182,7 +183,7 @@ final class EditNominalDomainDicNodeDialogPane extends NodeDialogPane {
      * @throws InvalidSettingsException
      */
     private int checkPositive(final int int1) throws InvalidSettingsException {
-        checkSetting(int1 >= 0, "Maximum amount of possbile domain values must not be negative");
+        CheckUtils.checkSetting(int1 >= 0, "Maximum amount of possbile domain values must not be negative");
         return int1;
     }
 
@@ -243,20 +244,4 @@ final class EditNominalDomainDicNodeDialogPane extends NodeDialogPane {
 
         return inFlowLayout;
     }
-
-    /**
-     * Throws an {@link InvalidSettingsException} with the given string template, if the given predicate is
-     * <code>false</code>.
-     *
-     * @param predicate the predicate
-     * @param template the template
-     * @throws InvalidSettingsException
-     */
-    private static void checkSetting(final boolean predicate, final String template, final Object... args)
-        throws InvalidSettingsException {
-        if (!predicate) {
-            throw new InvalidSettingsException(String.format(template, args));
-        }
-    }
-
 }

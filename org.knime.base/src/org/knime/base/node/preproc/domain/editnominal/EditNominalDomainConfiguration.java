@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -64,6 +64,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 
 /**
  * Config proxy of node.
@@ -167,7 +168,7 @@ final class EditNominalDomainConfiguration {
             DataCell[] dataCellArray = colSettings.getDataCellArray(COLUMN_ORDERING, new DataCell[0]);
             DataCell[] createdSettings = colSettings.getDataCellArray(COLUMN_CREATED_VALS, new DataCell[0]);
 
-            checkSetting(dataCellArray != null, "invalid settings for column '%s'", cols);
+            CheckUtils.checkSetting(dataCellArray != null, "invalid settings for column '%s'", cols);
 
             m_colMapping.put(cols, Arrays.asList(dataCellArray));
             m_createdDomainValues.put(cols, new HashSet<DataCell>(Arrays.asList(createdSettings)));
@@ -278,21 +279,5 @@ final class EditNominalDomainConfiguration {
      */
     void setIgnoreWrongTypes(final boolean ignoreWrongTypes) {
         m_ignoreWrongTypes = ignoreWrongTypes;
-    }
-
-    /**
-     * Throws an {@link InvalidSettingsException} with the given string template, if the given predicate is
-     * <code>false</code>.
-     *
-     * @param predicate the predicate
-     * @param template {@link String#format(String, Object...)} string
-     * @param args {@link String#format(String, Object...)} arguments
-     * @throws InvalidSettingsException if predicate is <code>falsse</code>
-     */
-    static void checkSetting(final boolean predicate, final String template, final Object... args)
-        throws InvalidSettingsException {
-        if (!predicate) {
-            throw new InvalidSettingsException(String.format(template, args));
-        }
     }
 }

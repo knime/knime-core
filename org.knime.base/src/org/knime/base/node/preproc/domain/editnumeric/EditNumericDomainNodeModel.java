@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -84,8 +84,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.streamable.InputPortRole;
-import org.knime.core.node.streamable.OutputPortRole;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
@@ -98,8 +96,6 @@ final class EditNumericDomainNodeModel extends NodeModel {
 
     private static final DataValueComparator DOUBLE_VALUE_COMPARATOR = new DoubleValueComparator();
 
-    private static final int MAX_UNKNOWN_COLS = 20;
-
     private EditNumericDomainConfiguration m_configuration;
 
     /** One in, one out. */
@@ -111,22 +107,6 @@ final class EditNumericDomainNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         return new DataTableSpec[]{processDomainSettings(inSpecs[0])};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public InputPortRole[] getInputPortRoles() {
-        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_STREAMABLE};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public OutputPortRole[] getOutputPortRoles() {
-        return new OutputPortRole[]{OutputPortRole.NONDISTRIBUTED};
     }
 
     /** {@inheritDoc} */
@@ -236,19 +216,6 @@ final class EditNumericDomainNodeModel extends NodeModel {
                 .compare(currCell, domain.getUpperBound()) > 0);
     }
 
-    //
-    //    private static <F, T> List<T> transform(final List<F> previousList, final Function<F, T> function) {
-    //        List<T> toReturn = new ArrayList<T>(previousList.size());
-    //        for (F curr : previousList) {
-    //            toReturn.add(function.apply(curr));
-    //        }
-    //        return Collections.unmodifiableList(toReturn);
-    //    }
-    //
-    //    private static interface Function<F, T> {
-    //        public T apply(F args);
-    //    }
-
     private DataTableSpec processDomainSettings(final DataTableSpec dataTableSpec) throws InvalidSettingsException {
         if (m_configuration == null) {
             throw new InvalidSettingsException("Missing Configuration.");
@@ -283,12 +250,16 @@ final class EditNumericDomainNodeModel extends NodeModel {
             }
         }
 
+        StringBuilder warnings = new StringBuilder();
+
         if (includeSet.isEmpty()) {
-            StringBuilder warnings =
-                new StringBuilder("No columns were changed, since no columns are included.\n"
-                    + "The following columns were included before but do not longer exist:\n");
-            warnings.append(ConvenienceMethods.getShortStringFrom(Arrays.asList(filterResult.getRemovedFromIncludes()),
-                MAX_UNKNOWN_COLS));
+            warnings.append("No columns are included.");
+        }
+        if (filterResult.getRemovedFromIncludes().length > 0) {
+            warnings.append("\nFollowing columns are configured but do not longer exist: "
+                + ConvenienceMethods.getShortStringFrom(Arrays.asList(filterResult.getRemovedFromIncludes()), 5));
+        }
+        if (warnings.length() > 0) {
             setWarningMessage(warnings.toString());
         }
 
