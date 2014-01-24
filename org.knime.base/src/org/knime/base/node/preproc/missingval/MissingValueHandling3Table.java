@@ -404,6 +404,29 @@ public final class MissingValueHandling3Table implements DataTable {
      * @return a cache table, cleaned up
      * @throws CanceledExecutionException if canceled
      * @since 2.8
+     * @deprecated use {@link #createMissingValueHandlingTable(BufferedDataTable, MissingValueHandling2ColSetting[],
+     *              ExecutionContext, StringBuilder)} instead
+     */
+    @Deprecated
+    public static BufferedDataTable createMissingValueHandlingTable(final BufferedDataTable table,
+        final MissingValueHandling2ColSetting[] colSettings, final ExecutionContext exec,
+        final StringBuffer warningBuffer) throws CanceledExecutionException {
+        StringBuilder temp = new StringBuilder();
+        BufferedDataTable outTable = createMissingValueHandlingTable(table, colSettings, exec, temp);
+        warningBuffer.append(temp);
+        return outTable;
+    }
+
+    /**
+     * Does missing value handling to the argument table given the col settings in an array and also reports progress.
+     *
+     * @param table the table to do missing value handling on
+     * @param colSettings the settings
+     * @param exec for progress/cancel and to create the buffered data table
+     * @param warningBuffer To which potential warning messages are added.
+     * @return a cache table, cleaned up
+     * @throws CanceledExecutionException if canceled
+     * @since 2.10
      */
     public static BufferedDataTable createMissingValueHandlingTable(final BufferedDataTable table,
         final MissingValueHandling2ColSetting[] colSettings, final ExecutionContext exec,
