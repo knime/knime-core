@@ -154,7 +154,7 @@ final class EditNominalDomainNodeModel extends NodeModel {
 
         if (!configuredColumns.isEmpty()) {
             String missingColumnsString =
-                "Following columns are configured but do not longer exist: \n"
+                "Following columns are configured but no longer exist: \n"
                     + ConvenienceMethods.getShortStringFrom(configuredColumns, 5);
 
             CheckUtils.checkSetting(m_configuration.isIgnoreNotExistingColumns(), missingColumnsString);

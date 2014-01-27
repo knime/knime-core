@@ -309,7 +309,7 @@ final class Normalizer3NodeModel extends NodeModel {
         if (includes.length == 0) {
             StringBuilder warnings = new StringBuilder("No columns included - input stays unchanged.");
             if (filterResult.getRemovedFromIncludes().length > 0) {
-                warnings.append("\nThe following columns were included before but do not longer exist:\n");
+                warnings.append("\nThe following columns were included before but no longer exist:\n");
                 warnings.append(ConvenienceMethods.getShortStringFrom(
                     Arrays.asList(filterResult.getRemovedFromIncludes()), MAX_UNKNOWN_COLS));
             }

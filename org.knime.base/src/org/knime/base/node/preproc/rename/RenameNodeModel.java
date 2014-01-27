@@ -256,7 +256,7 @@ public class RenameNodeModel extends NodeModel {
                 }
             }
 
-            setWarningMessage("Following columns are configured but do not longer exist: "
+            setWarningMessage("Following columns are configured but no longer exist: "
                 + ConvenienceMethods.getShortStringFrom(missingColumnNames, 5));
         }
         return new DataTableSpec[]{new DataTableSpec(colSpecs)};

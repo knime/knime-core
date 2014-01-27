@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -666,7 +666,7 @@ final class EditNominalDomainNodeDialogPane extends NodeDialogPane {
 
     /**
      * Highlights the {@link EditNominalDomainConfiguration#UNKNOWN_VALUES_CELL} cell, self created cells and cells
-     * which do not longer exist in the input table.
+     * which do not exist in the input table.
      *
      * @author Marcel Hanser
      */

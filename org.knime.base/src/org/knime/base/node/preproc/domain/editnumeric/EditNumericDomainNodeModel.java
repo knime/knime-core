@@ -256,7 +256,7 @@ final class EditNumericDomainNodeModel extends NodeModel {
             warnings.append("No columns are included.");
         }
         if (filterResult.getRemovedFromIncludes().length > 0) {
-            warnings.append("\nFollowing columns are configured but do not longer exist: "
+            warnings.append("\nFollowing columns are configured but no longer exist: "
                 + ConvenienceMethods.getShortStringFrom(Arrays.asList(filterResult.getRemovedFromIncludes()), 5));
         }
         if (warnings.length() > 0) {

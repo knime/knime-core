@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -235,7 +235,7 @@ final class MissingValueHandling2Panel extends JPanel {
             final List<DataColumnSpec> incompatibleColumns = getIncompatibleTypedColumns(setting.getType(), spec);
 
             if (!notExistingColumns.isEmpty()) {
-                warningMessages.add("Some columns do not longer exist (red borderd)");
+                warningMessages.add("Some columns no longer exist (red bordered)");
             }
 
             if (!incompatibleColumns.isEmpty()) {

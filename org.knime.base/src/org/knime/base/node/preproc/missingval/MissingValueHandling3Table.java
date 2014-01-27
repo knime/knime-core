@@ -388,7 +388,7 @@ public final class MissingValueHandling3Table implements DataTable {
         }
 
         if (!missingColumns.isEmpty()) {
-            warningsBuffer.append("Following columns are configured but do not longer exist: "
+            warningsBuffer.append("Following columns are configured but no longer exist: "
                     + ConvenienceMethods.getShortStringFrom(missingColumns, 5));
         }
         return results;
