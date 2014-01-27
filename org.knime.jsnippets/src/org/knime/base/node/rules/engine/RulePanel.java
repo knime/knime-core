@@ -286,6 +286,7 @@ public class RulePanel extends JPanel {
             public void actionPerformed(final ActionEvent e) {
                 m_newColumnName.setEnabled(newColumn.isSelected());
                 m_replaceColumn.setEnabled(m_replaceColRadio.isSelected());
+                m_replaceColumn.setRequired(m_replaceColRadio.isSelected());
             }};
         newColumn.addActionListener(actionListener);
         m_replaceColRadio.addActionListener(actionListener);
@@ -581,7 +582,6 @@ public class RulePanel extends JPanel {
         m_spec = specs[0];
         m_parser.setDataTableSpec(m_spec);
         m_parser.setFlowVariables(availableFlowVariables);
-        update(m_spec, availableFlowVariables);
         RuleEngineSettings ruleSettings = new RuleEngineSettings();
         ruleSettings.loadSettingsForDialog(settings);
         if (m_nodeType.hasOutput()) {
@@ -596,6 +596,7 @@ public class RulePanel extends JPanel {
                 m_replaceColumn.setSelectedColumn(ruleSettings.getReplaceColumn());
             }
         }
+        update(m_spec, availableFlowVariables);
         final KnimeSyntaxTextArea textEditor = m_mainPanel.getTextEditor();
         textEditor.setText("");
         StringBuilder text = new StringBuilder();
