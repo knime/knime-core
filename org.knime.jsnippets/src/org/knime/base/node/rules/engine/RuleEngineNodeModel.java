@@ -145,6 +145,10 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
 
     private ColumnRearranger createRearranger(final DataTableSpec inSpec, final List<Rule> rules)
             throws InvalidSettingsException {
+        if (m_settings.isAppendColumn() && m_settings.getNewColName().isEmpty()) {
+            throw new InvalidSettingsException("No name for prediction column provided");
+        }
+
         ColumnRearranger crea = new ColumnRearranger(inSpec);
 
         String newColName =

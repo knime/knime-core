@@ -167,9 +167,15 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
      * @param parser The parser for the rules.
      * @return The {@link ColumnRearranger}.
      * @throws ParseException Problem during parsing.
+     * @throws InvalidSettingsException if settings are invalid
      */
     private ColumnRearranger createRearranger(final DataTableSpec tableSpec, final RuleSet ruleSet,
-        final PMMLRuleParser parser) throws ParseException {
+        final PMMLRuleParser parser) throws ParseException, InvalidSettingsException {
+        if (m_settings.isAppendColumn() && m_settings.getNewColName().isEmpty()) {
+            throw new InvalidSettingsException("No name for prediction column provided");
+        }
+
+
         Set<String> outcomes = new LinkedHashSet<String>();
         List<DataType> outcomeTypes = new ArrayList<DataType>();
         int line = 0;
@@ -278,8 +284,11 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
      * @return The {@link PMMLPortObjectSpec} filled with proper data for configuration.
      */
     private PMMLPortObjectSpec createPMMLPortObjectSpec(final DataTableSpec spec, final List<String> usedColumns) {
+        // this assumes that the new column is always the last column in the spec; which is the case if
+        // #createRearranger uses ColumnRearranger.append.
         String targetCol =
-            m_settings.isAppendColumn() ? m_settings.getNewColName() : m_settings.getReplaceColumn();
+            m_settings.isAppendColumn() ? spec.getColumnSpec(spec.getNumColumns() - 1).getName() : m_settings
+                .getReplaceColumn();
         Set<String> set = new LinkedHashSet<String>(usedColumns);
         List<String> learnCols = new LinkedList<String>();
         for (int i = 0; i < spec.getNumColumns(); i++) {
@@ -337,7 +346,6 @@ public class PMMLRuleEditorNodeModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-
         RuleSet ruleSet = RuleSet.Factory.newInstance();
         PMMLRuleParser parser = new PMMLRuleParser((DataTableSpec)inSpecs[0], getAvailableInputFlowVariables());
         try {
