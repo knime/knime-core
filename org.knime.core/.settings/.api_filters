@@ -322,7 +322,118 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/dialog/DialogNode.java" type="org.knime.core.node.dialog.DialogNode">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="getDialogRepresentation()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="getDialogValue()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="getNodeRepresentation()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="getNodeValue()"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="VAL"/>
+                <message_argument value="org.knime.core.node.dialog.DialogNodeValue"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="VAL"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/dialog/DialogNodePanel.java" type="org.knime.core.node.dialog.DialogNodePanel">
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNodePanel"/>
+                <message_argument value="VAL"/>
+                <message_argument value="org.knime.core.node.dialog.DialogNodeValue"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNodePanel"/>
+                <message_argument value="VAL"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/dialog/DialogNodeRepresentation.java" type="org.knime.core.node.dialog.DialogNodeRepresentation">
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNodeRepresentation"/>
+                <message_argument value="VAL"/>
+                <message_argument value="org.knime.core.node.dialog.DialogNodeValue"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNodeRepresentation"/>
+                <message_argument value="VAL"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/dialog/DialogNodeValue.java" type="org.knime.core.node.dialog.DialogNodeValue">
+        <filter id="337809484">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNodeValue"/>
+                <message_argument value="4"/>
+                <message_argument value="8"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/interactive/InteractiveClientNodeView.java" type="org.knime.core.node.interactive.InteractiveClientNodeView">
+        <filter id="336793632">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveClientNodeView"/>
+                <message_argument value="VAL"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveClientNodeView"/>
+                <message_argument value="V"/>
+                <message_argument value="org.knime.core.node.interactive.ViewContent"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveClientNodeView"/>
+                <message_argument value="V"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/interactive/InteractiveNode.java" type="org.knime.core.node.interactive.InteractiveNode">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+                <message_argument value="getViewRepresentation()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+                <message_argument value="getViewValue()"/>
+            </message_arguments>
+        </filter>
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
@@ -335,6 +446,12 @@
                 <message_argument value="loadViewContent(VC)"/>
             </message_arguments>
         </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+                <message_argument value="loadViewValue(VAL)"/>
+            </message_arguments>
+        </filter>
         <filter id="403902496">
             <message_arguments>
                 <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
@@ -344,7 +461,105 @@
         <filter id="405901410">
             <message_arguments>
                 <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+                <message_argument value="createViewContent()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+                <message_argument value="loadViewContent(VC)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
                 <message_argument value="reExecute(V, PortObject[], ExecutionContext)"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+                <message_argument value="VC"/>
+                <message_argument value="org.knime.core.node.interactive.ViewContent"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+                <message_argument value="VC"/>
+            </message_arguments>
+        </filter>
+        <filter id="1209008130">
+            <message_arguments>
+                <message_argument value="2.9"/>
+                <message_argument value="2.10"/>
+                <message_argument value="getViewRepresentation()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/interactive/InteractiveNodeFactoryExtension.java" type="org.knime.core.node.interactive.InteractiveNodeFactoryExtension">
+        <filter id="403902496">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNodeFactoryExtension"/>
+                <message_argument value="VAL"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNodeFactoryExtension"/>
+                <message_argument value="VC"/>
+                <message_argument value="org.knime.core.node.interactive.ViewContent"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNodeFactoryExtension"/>
+                <message_argument value="VC"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/interactive/InteractiveView.java" type="org.knime.core.node.interactive.InteractiveView">
+        <filter id="403902496">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveView"/>
+                <message_argument value="VAL"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveView"/>
+                <message_argument value="V"/>
+                <message_argument value="org.knime.core.node.interactive.ViewContent"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveView"/>
+                <message_argument value="V"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/interactive/InteractiveViewDelegate.java" type="org.knime.core.node.interactive.InteractiveViewDelegate">
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveViewDelegate"/>
+                <message_argument value="V"/>
+                <message_argument value="org.knime.core.node.interactive.ViewContent"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveViewDelegate"/>
+                <message_argument value="V"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/interactive/ViewContent.java" type="org.knime.core.node.interactive.ViewContent">
+        <filter id="337809484">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.ViewContent"/>
+                <message_argument value="4"/>
+                <message_argument value="8"/>
             </message_arguments>
         </filter>
     </resource>
@@ -365,6 +580,121 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.util.filter.NameFilterConfiguration"/>
                 <message_argument value="saveConfiguration(NodeSettingsWO)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/web/JSONViewContent.java" type="org.knime.core.node.web.JSONViewContent">
+        <filter id="338849923">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.web.JSONViewContent"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/web/WebViewContent.java" type="org.knime.core.node.web.WebViewContent">
+        <filter id="337809484">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.web.WebViewContent"/>
+                <message_argument value="4"/>
+                <message_argument value="8"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/wizard/WizardNode.java" type="org.knime.core.node.wizard.WizardNode">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="createEmptyViewRepresentation()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="createEmptyViewValue()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="getViewRepresentation()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="getViewValue()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403902496">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="VAL"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="createEmptyInstance()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="createViewContent()"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="VC"/>
+                <message_argument value="org.knime.core.node.web.WebViewContent"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="VC"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/wizard/WizardNodeFactoryExtension.java" type="org.knime.core.node.wizard.WizardNodeFactoryExtension">
+        <filter id="403902496">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNodeFactoryExtension"/>
+                <message_argument value="VAL"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNodeFactoryExtension"/>
+                <message_argument value="VC"/>
+                <message_argument value="org.knime.core.node.web.WebViewContent"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNodeFactoryExtension"/>
+                <message_argument value="VC"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/wizard/WizardNodeView.java" type="org.knime.core.node.wizard.WizardNodeView">
+        <filter id="336793632">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNodeView"/>
+                <message_argument value="VAL"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNodeView"/>
+                <message_argument value="VC"/>
+                <message_argument value="org.knime.core.node.web.WebViewContent"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNodeView"/>
+                <message_argument value="VC"/>
             </message_arguments>
         </filter>
     </resource>

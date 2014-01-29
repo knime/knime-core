@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -49,6 +49,8 @@
  */
 package org.knime.core.node.interactive;
 
+import org.knime.core.node.web.WebViewContent;
+
 
 
 
@@ -56,22 +58,29 @@ package org.knime.core.node.interactive;
  * execution when the view has been modified by the user.
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @param <VC> The concrete class of the {@link ViewContent}
+ * @param <REP> The concrete class of the {@link WebViewContent} acting as representation of the view.
+ * @param <VAL> The concrete class of the {@link WebViewContent} acting as value of the view.
  * @since 2.8
  */
-public interface InteractiveNode<VC extends ViewContent> {
+public interface InteractiveNode<REP extends ViewContent, VAL extends ViewContent> {
 
     /**
      * Create content which can be used by the interactive view implementation.
-     * @return Content required for the interactive view.
-     * @since 2.9
+     * @return View representation implementation required for the interactive view.
+     * @since 2.10
      */
-    VC createViewContent();
+    REP getViewRepresentation();
+
+    /**
+     * @return View value implementation required for the interactive view.
+     * @since 2.10
+     */
+    VAL getViewValue();
 
     /**
      * @param viewContent The view content to load.
-     * @since 2.9
+     * @since 2.10
      */
-    void loadViewContent(VC viewContent);
+    void loadViewValue(VAL viewContent);
 
 }

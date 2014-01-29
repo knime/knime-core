@@ -238,7 +238,13 @@
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.base.node.preproc.filter.hilite.collector.InteractiveHiLiteCollectorNodeModel"/>
-                <message_argument value="reExecute(InteractiveHiLiteCollectorViewContent, PortObject[], ExecutionContext)"/>
+                <message_argument value="createViewContent()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.filter.hilite.collector.InteractiveHiLiteCollectorNodeModel"/>
+                <message_argument value="loadViewContent(InteractiveHiLiteCollectorViewContent)"/>
             </message_arguments>
         </filter>
     </resource>

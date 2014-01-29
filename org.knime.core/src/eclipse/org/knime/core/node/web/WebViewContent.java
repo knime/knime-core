@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,6 +52,7 @@ package org.knime.core.node.web;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.interactive.ViewContent;
@@ -62,7 +63,7 @@ import org.knime.core.node.interactive.ViewContent;
  * @author B. Wiswedel, Th. Gabriel, M. Berthold, C. Albrecht
  * @since 2.9
  */
-public abstract class WebViewContent extends ViewContent {
+public interface WebViewContent extends ViewContent {
 
     /**
      * @param viewContentStream an input stream, that is used to create the instance of a view content.
@@ -86,5 +87,5 @@ public abstract class WebViewContent extends ViewContent {
      * @param settings
      * @since 2.9
      */
-    public abstract void loadFromNodeSettings(NodeSettingsRO settings);
+    public abstract void loadFromNodeSettings(NodeSettingsRO settings) throws InvalidSettingsException;
 }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -77,7 +77,7 @@ import org.knime.core.node.wizard.WizardNode;
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-public class InteractiveValueSelectNodeModel extends NodeModel implements WizardNode<InteractiveValueSelectViewContent> {
+public class InteractiveValueSelectNodeModel extends NodeModel implements WizardNode<InteractiveValueSelectViewContent, InteractiveValueSelectViewContent> {
 
     static SettingsModelStringArray createSelectedValuesArray() {
         return new SettingsModelStringArray("selectedValuesKey", new String[] {});
@@ -119,7 +119,7 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Wizard
      * {@inheritDoc}
      */
     @Override
-    public InteractiveValueSelectViewContent createViewContent() {
+    public InteractiveValueSelectViewContent getViewRepresentation() {
         return new InteractiveValueSelectViewContent(possibleValues.getStringArrayValue(), selectedValues.getStringArrayValue());
     }
 
@@ -212,7 +212,7 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Wizard
      * {@inheritDoc}
      */
     @Override
-    public InteractiveValueSelectViewContent createEmptyInstance() {
+    public InteractiveValueSelectViewContent createEmptyViewRepresentation() {
         try {
             return InteractiveValueSelectViewContent.class.newInstance();
         } catch (Exception e) {
@@ -223,7 +223,7 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Wizard
     /**
      * {@inheritDoc}
      */
-    public void loadViewContent(final InteractiveValueSelectViewContent viewContent) {
+    public void loadViewValue(final InteractiveValueSelectViewContent viewContent) {
         // TODO Auto-generated method stub
 
     }
@@ -232,6 +232,22 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Wizard
      * {@inheritDoc}
      */
     public String getJavascriptObjectID() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InteractiveValueSelectViewContent getViewValue() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InteractiveValueSelectViewContent createEmptyViewValue() {
         // TODO Auto-generated method stub
         return null;
     }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -60,7 +60,7 @@ import org.knime.core.node.wizard.WizardNodeFactoryExtension;
  */
 public class InteractiveValueSelectNodeFactory extends NodeFactory<InteractiveValueSelectNodeModel>
                 implements WizardNodeFactoryExtension<InteractiveValueSelectNodeModel,
-                InteractiveValueSelectViewContent> {
+                InteractiveValueSelectViewContent, InteractiveValueSelectViewContent> {
 
     /**
      * {@inheritDoc}

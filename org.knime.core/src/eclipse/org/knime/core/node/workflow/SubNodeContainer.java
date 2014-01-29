@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -370,7 +370,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      * {@inheritDoc}
      */
     @Override
-    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView() {
+    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V getInteractiveView() {
         return null;
     }
 
@@ -579,7 +579,7 @@ public class SubNodeContainer extends SingleNodeContainer {
                 try {
                     NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
                     DialogNode node = entry.getValue();
-                    node.getNodeValue().validateSettings(conf);
+                    node.getDialogValue().validateSettings(conf);
                 } catch (InvalidSettingsException e) {
                     return false;
                 }
@@ -602,9 +602,9 @@ public class SubNodeContainer extends SingleNodeContainer {
                 NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
                 NodeSettingsWO oldSettings = new NodeSettings(nodeID);
                 DialogNode node = entry.getValue();
-                node.getNodeValue().saveToNodeSettings(oldSettings);
+                node.getDialogValue().saveToNodeSettings(oldSettings);
                 if (!conf.equals(oldSettings)) {
-                    node.getNodeValue().loadFromNodeSettings(conf);
+                    node.getDialogValue().loadFromNodeSettings(conf);
                 }
             }
         }
@@ -631,7 +631,7 @@ public class SubNodeContainer extends SingleNodeContainer {
         for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
             String nodeID = Integer.toString(entry.getKey().getIndex());
             NodeSettingsWO subSettings = modelSettings.addNodeSettings(nodeID);
-            entry.getValue().getNodeValue().saveToNodeSettings(subSettings);
+            entry.getValue().getDialogValue().saveToNodeSettings(subSettings);
         }
     }
 

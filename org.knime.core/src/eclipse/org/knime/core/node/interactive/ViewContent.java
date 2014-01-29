@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -54,6 +54,6 @@ package org.knime.core.node.interactive;
  * @author B. Wiswedel, Ch. Albrecht, M. Berthold
  * @since 2.8
  */
-public abstract class ViewContent {
+public interface ViewContent {
 
 }

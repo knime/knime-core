@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -56,10 +56,10 @@ import org.knime.core.node.NodeModel;
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold
  * @param <T> requires NodeModel implementing InteractiveNode
- * @param <VC>
+ * @param <REP>
  * @since 2.8
  */
-public interface InteractiveNodeFactoryExtension<T extends NodeModel & InteractiveNode<VC>, VC extends ViewContent> {
+public interface InteractiveNodeFactoryExtension<T extends NodeModel & InteractiveNode<REP, VAL>, REP extends ViewContent, VAL extends ViewContent> {
 
     /**
      * Creates and returns a new instance of the node's corresponding model.
@@ -80,6 +80,6 @@ public interface InteractiveNodeFactoryExtension<T extends NodeModel & Interacti
      * @return interactive view.
      * @since 2.8
      */
-    public <V extends AbstractNodeView<T> & InteractiveView<T, VC>> V createInteractiveView(final T model);
+    public <V extends AbstractNodeView<T> & InteractiveView<T, REP, VAL>> V createInteractiveView(final T model);
 
 }

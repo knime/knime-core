@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -61,12 +61,14 @@ public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL exten
 
     /**
      * @return The representation content of the dialog node.
+     * @since 2.10
      */
-    public REP getNodeRepresentation();
+    public REP getDialogRepresentation();
 
     /**
      * @return The node value content of the dialog node.
+     * @since 2.10
      */
-    public VAL getNodeValue();
+    public VAL getDialogValue();
 
 }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -95,14 +95,15 @@ import org.knime.core.node.workflow.WorkflowManager;
  *
  * @author B. Wiswedel, M. Berthold, Th. Gabriel, C. Albrecht
  * @param <T> requires a {@link NodeModel} implementing {@link WizardNode} as well
- * @param <VC> the {@link WebViewContent} implementation used
+ * @param <REP> the {@link WebViewContent} implementation used
+ * @param <VAL>
  * @since 2.9
  */
-public final class WizardNodeView<T extends NodeModel & WizardNode<VC>, VC extends WebViewContent>
-                extends AbstractNodeView<T> implements InteractiveView<T, VC> {
+public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, REP extends WebViewContent, VAL extends WebViewContent>
+                extends AbstractNodeView<T> implements InteractiveView<T, REP, VAL> {
 
     private static final String CONTAINER_ID = "view";
-    private final InteractiveViewDelegate<VC> m_delegate;
+    private final InteractiveViewDelegate<REP> m_delegate;
     private final WebTemplate m_template;
     private File m_tempFolder;
 
@@ -114,7 +115,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<VC>, VC exten
     public WizardNodeView(final T nodeModel, final WebTemplate wvt) {
         super(nodeModel);
         m_template = wvt;
-        m_delegate = new InteractiveViewDelegate<VC>();
+        m_delegate = new InteractiveViewDelegate<REP>();
     }
 
     @Override
@@ -128,7 +129,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<VC>, VC exten
     }
 
     @Override
-    public void triggerReExecution(final VC vc, final ReexecutionCallback callback) {
+    public void triggerReExecution(final REP vc, final ReexecutionCallback callback) {
         m_delegate.triggerReExecution(vc, callback);
     }
 
@@ -142,15 +143,15 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<VC>, VC exten
      *
      * @param vc the new content of the view.
      */
-    protected final void loadViewContentIntoNode(final VC vc) {
+    protected final void loadViewContentIntoNode(final REP vc) {
         triggerReExecution(vc, new DefaultReexecutionCallback());
     }
 
     /**
      * @return ViewContent of the underlying NodeModel.
      */
-    protected final VC getViewContentFromNode() {
-        return getNodeModel().createViewContent();
+    protected final REP getViewContentFromNode() {
+        return getNodeModel().getViewRepresentation();
     }
 
     /** Set current ViewContent as new default settings of the underlying NodeModel.
@@ -174,7 +175,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<VC>, VC exten
     public final void callOpenView(final String title) {
         final String jsonViewContent;
         try {
-            VC vc = getViewContentFromNode();
+            REP vc = getViewContentFromNode();
             jsonViewContent = ((ByteArrayOutputStream)vc.saveToStream()).toString("UTF-8");
         } catch (Exception e) {
             throw new IllegalArgumentException("No view content available!");
@@ -433,7 +434,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<VC>, VC exten
         String evalCode = wrapInTryCatch("return " + getJSMethodCall(pullMethod, CONTAINER_ID));
         String jsonString = (String)browser.evaluate(evalCode);
         try {
-            VC viewContent = getNodeModel().createEmptyInstance();
+            REP viewContent = getNodeModel().createEmptyViewRepresentation();
             viewContent.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
             loadViewContentIntoNode(viewContent);
         } catch (Exception e) {

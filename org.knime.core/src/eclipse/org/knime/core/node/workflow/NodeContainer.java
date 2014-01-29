@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -1151,7 +1151,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @return interactive view.
      * @since 2.8
      */
-    public abstract <V extends AbstractNodeView<?> & InteractiveView<?,? extends ViewContent>> V getInteractiveView();
+    public abstract <V extends AbstractNodeView<?> & InteractiveView<?,? extends ViewContent, ? extends ViewContent>> V getInteractiveView();
 
     /**
      * @return interactive web view template.

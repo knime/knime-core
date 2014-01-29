@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -311,7 +311,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView() {
+    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V getInteractiveView() {
         NodeContext.pushContext(this);
         try {
             V ainv = m_node.getNodeModel().getInteractiveNodeView();
@@ -334,7 +334,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         }
     }
 
-    
+
     /* ------------------ Job Handling ---------------- */
 
     /** {@inheritDoc} */

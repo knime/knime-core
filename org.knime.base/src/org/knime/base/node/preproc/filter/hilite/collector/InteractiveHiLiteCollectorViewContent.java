@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -56,6 +56,6 @@ import org.knime.core.node.interactive.ViewContent;
  * @author Berthold
  * @since 2.8
  */
-public class InteractiveHiLiteCollectorViewContent extends ViewContent {
+public class InteractiveHiLiteCollectorViewContent implements ViewContent {
 
 }

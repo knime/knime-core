@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -58,7 +58,7 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @since 2.9
  */
-public abstract class DialogNodeValue {
+public interface DialogNodeValue {
 
     /**
      * @param settings

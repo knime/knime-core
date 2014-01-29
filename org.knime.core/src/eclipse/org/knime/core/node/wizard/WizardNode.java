@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,24 +55,39 @@ import org.knime.core.node.web.WebViewContent;
 /**
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
- * @param <VC> The concrete class of the {@link WebViewContent} acting as representation of the view.
+ * @param <REP> The concrete class of the {@link WebViewContent} acting as representation of the view.
  * @param <VAL> The concrete class of the {@link WebViewContent} acting as value of the view.
  * @since 2.9
  */
-public interface WizardNode<VC extends WebViewContent>
-        extends InteractiveNode<VC> {
+public interface WizardNode<REP extends WebViewContent, VAL extends WebViewContent>
+        extends InteractiveNode<REP, VAL> {
 
     /**
      * Create content which can be used by the web view implementation.
      * @return Content required for the web view.
+     * @since 2.10
      */
     @Override
-    VC createViewContent();
+    public REP getViewRepresentation();
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public VAL getViewValue();
 
     /**
      * @return an empty instance of the concrete {@link WebViewContent} implementation
+     * @since 2.10
      */
-    public VC createEmptyInstance();
+    public REP createEmptyViewRepresentation();
+
+    /**
+     * @return an empty instance of the concrete {@link WebViewContent} implementation
+     * @since 2.10
+     */
+    public VAL createEmptyViewValue();
 
     /**
      * @return The object id used in the javascript implementation of the view.
