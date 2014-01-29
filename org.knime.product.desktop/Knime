@@ -32,6 +32,8 @@ readArguments() {
         elif [[ "$arg" == "-startup" ]]; then
             CLASSPATH="${params[i+1]}"
             ((i++))
+        elif [[ "$arg" == --launcher.* ]]; then
+        	echo "Launcher argument '$arg' ignored"
         else
             APP_ARGS+=("$arg")
         fi
