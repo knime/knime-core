@@ -198,7 +198,7 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
     /** {@inheritDoc} */
     @Override
     protected FileSingleNodeContainerPersistor
-        createSingleNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
+        createNativeNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new ObsoleteSpecialNodeFileNativeNodeContainerPersistor(
                 this, nodeFile, getLoadHelper(), getLoadVersion());
     }

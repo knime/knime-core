@@ -841,6 +841,11 @@
                 <message_argument value="getLoadVersion()"/>
             </message_arguments>
         </filter>
+        <filter comment="subnode save/load" id="1143996420">
+            <message_arguments>
+                <message_argument value="save(SingleNodeContainer, ReferencedFile, ExecutionMonitor, boolean)"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/FileWorkflowPersistor.java" type="org.knime.core.node.workflow.FileWorkflowPersistor">
         <filter comment="changing persistor api" id="1110441988">
@@ -878,6 +883,14 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.NodeContainer"/>
                 <message_argument value="getInteractiveWebViewTemplate()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerOutPort.java" type="org.knime.core.node.workflow.NodeContainerOutPort">
+        <filter comment="subnode enhancements" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainerOutPort"/>
+                <message_argument value="NodeContainerOutPort(SingleNodeContainer, int)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1088,6 +1101,52 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainer.java" type="org.knime.core.node.workflow.SubNodeContainer">
+        <filter comment="persistor save/load" id="337768515">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SubNodeContainer"/>
+            </message_arguments>
+        </filter>
+        <filter comment="persistor save/load" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SubNodeContainer"/>
+                <message_argument value="SubNodeContainer(WorkflowManager, NodeID, NodeContainerMetaPersistor)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="persistor save/load" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SubNodeContainer"/>
+                <message_argument value="SubNodeContainer(WorkflowManager, NodeID, WorkflowManager)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="persistor save/load" id="1143996420">
+            <message_arguments>
+                <message_argument value="SubNodeContainer(WorkflowManager, NodeID, WorkflowManager, String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainerPersistor.java" type="org.knime.core.node.workflow.SubNodeContainerPersistor">
+        <filter comment="subnode enhancements" id="1211105284">
+            <message_arguments>
+                <message_argument value="getInPortTemplates()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="subnode enhancements" id="1211105284">
+            <message_arguments>
+                <message_argument value="getOutPortTemplates()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="subnode enhancements" id="1211105284">
+            <message_arguments>
+                <message_argument value="getVirtualInNodeIDSuffix()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="subnode enhancements" id="1211105284">
+            <message_arguments>
+                <message_argument value="getVirtualOutNodeIDSuffix()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/UIInformation.java" type="org.knime.core.node.workflow.UIInformation">
         <filter comment="renaming persistor classes - no API anyway" id="403804204">
             <message_arguments>
@@ -1125,6 +1184,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter comment="subnode save/load" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="convertMetaNodeToSubNode(NodeID)"/>
+            </message_arguments>
+        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>

@@ -78,16 +78,19 @@ import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.ChangeMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
+import org.knime.workbench.editor2.actions.CollapseSubNodeAction;
 import org.knime.workbench.editor2.actions.ConvertMetaNodeToSubNodeAction;
 import org.knime.workbench.editor2.actions.DisconnectMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.ExpandMetaNodeAction;
+import org.knime.workbench.editor2.actions.ExpandSubNodeAction;
 import org.knime.workbench.editor2.actions.LockMetaNodeAction;
 import org.knime.workbench.editor2.actions.MetaNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.OpenInteractiveViewAction;
 import org.knime.workbench.editor2.actions.OpenPortViewAction;
+import org.knime.workbench.editor2.actions.OpenSubNodeEditorAction;
 import org.knime.workbench.editor2.actions.OpenSubworkflowEditorAction;
 import org.knime.workbench.editor2.actions.OpenViewAction;
 import org.knime.workbench.editor2.actions.OpenWorkflowPortViewAction;
@@ -250,11 +253,23 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         action = m_actionRegistry.getAction(CollapseMetaNodeAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
+        // collapse sub nodes
+        if (ConvertMetaNodeToSubNodeAction.ENABLE_SUBNODE_ACTION) {
+            action = m_actionRegistry.getAction(CollapseSubNodeAction.ID);
+            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+            ((AbstractNodeAction)action).update();
+        }
         // expand meta nodes
         action = m_actionRegistry.getAction(ExpandMetaNodeAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
-        // convert meta node to subnode
+        // expand sub nodes
+        if (ConvertMetaNodeToSubNodeAction.ENABLE_SUBNODE_ACTION) {
+            action = m_actionRegistry.getAction(ExpandSubNodeAction.ID);
+            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+            ((AbstractNodeAction)action).update();
+        }
+        // convert meta node to sub node
         if (ConvertMetaNodeToSubNodeAction.ENABLE_SUBNODE_ACTION) {
             action = m_actionRegistry.getAction(ConvertMetaNodeToSubNodeAction.ID);
             manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
@@ -351,9 +366,11 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 }
 
                 // Add open editor action to sub node
-                if (container instanceof SubNodeContainer) {
-                    action = new OpenSubworkflowEditorAction((NodeContainerEditPart)p);
-                    manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                if (ConvertMetaNodeToSubNodeAction.ENABLE_SUBNODE_ACTION) {
+                    if (container instanceof SubNodeContainer) {
+                        action = new OpenSubNodeEditorAction((NodeContainerEditPart)p);
+                        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                    }
                 }
 
                 // add port views

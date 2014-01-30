@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -79,13 +79,14 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeFactoryUnknownException;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  *
@@ -111,18 +112,6 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     }
 
     private Node m_node;
-
-    /**
-     * @param wfmPersistor
-     * @param metaPersistor
-     * @param version
-     */
-    public FileNativeNodeContainerPersistor(final FileWorkflowPersistor wfmPersistor,
-        final FileNodeContainerMetaPersistor metaPersistor, final LoadVersion version) {
-        super(wfmPersistor, metaPersistor, version);
-        // TODO Auto-generated constructor stub
-    }
-
     /**
      * @param workflowPersistor
      * @param nodeSettingsFile
@@ -494,6 +483,24 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             return m_node.getOutputType(index);
         }
         return null;
+    }
+
+    static void save(final NativeNodeContainer nnc, final NodeSettingsWO settings,
+        final ExecutionMonitor execMon, final ReferencedFile nodeDirRef,
+        final boolean isSaveData) throws IOException, CanceledExecutionException {
+        saveNodeFactory(settings, nnc);
+        FileNodePersistor.save(nnc, settings, execMon, nodeDirRef,
+            isSaveData && nnc.getInternalState().equals(InternalNodeContainerState.EXECUTED));
+    }
+
+    private static void saveNodeFactory(final NodeSettingsWO settings, final NativeNodeContainer nnc) {
+        final Node node = nnc.getNode();
+        // node info to missing node is the info to the actual instance, not MissingNodeFactory
+        NodeAndBundleInformation nodeInfo = node.getNodeAndBundleInformation();
+        nodeInfo.save(settings);
+
+        NodeSettingsWO subSets = settings.addNodeSettings("factory_settings");
+        node.getFactory().saveAdditionalFactorySettings(subSets);
     }
 
 }

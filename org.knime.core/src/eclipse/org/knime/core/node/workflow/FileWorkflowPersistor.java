@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -91,6 +91,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
 import org.knime.core.util.FileUtil;
@@ -134,6 +135,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
             /** node.xml and settings.xml are one file, settings in SNC, meta data in workflow.knime.
              * @since 2.8 */
             V280("2.8.0"),
+            /** subnode support.
+             * @since 2.10 */
+            V2100Pre("2.10.0Pre"),
             /** Try to be forward compatible.
              * @since 2.8 */
             FUTURE("<future>");
@@ -175,7 +179,26 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
 
     }
 
-    static final LoadVersion VERSION_LATEST = LoadVersion.V280;
+    /** KNIME Node type: native, meta or sub node.*/
+    private enum NodeType {
+        NativeNode("node"),
+        MetaNode("meta node"),
+        SubNode("sub node");
+
+        private final String m_shortName;
+
+        /** @param shortName -- toString result */
+        private NodeType(final String shortName) {
+            m_shortName = shortName;
+        }
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return m_shortName;
+        }
+    }
+
+    static final LoadVersion VERSION_LATEST = LoadVersion.V2100Pre;
 
     /** Format used to save author/edit infos. */
     static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
@@ -909,17 +932,17 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
                 setDirtyAfterLoad();
                 loadResult.addError(error);
             }
-            boolean isMeta;
+            NodeType nodeType;
             try {
-                isMeta = loadIsMetaNode(nodeSetting);
+                nodeType = loadNodeType(nodeSetting);
             } catch (InvalidSettingsException e) {
                 String error =
-                    "Can't retrieve meta flag for contained node " + "with id suffix " + nodeIDSuffix
-                        + ", attempting to read" + "ordinary (not-meta) node: " + e.getMessage();
+                    "Can't retrieve node type for contained node with id suffix " + nodeIDSuffix
+                        + ", attempting to read" + "ordinary (native) node: " + e.getMessage();
                 getLogger().debug(error, e);
                 setDirtyAfterLoad();
                 loadResult.addError(error);
-                isMeta = false;
+                nodeType = NodeType.NativeNode;
             }
             NodeUIInformation nodeUIInfo = null;
             String uiInfoClassName;
@@ -974,14 +997,18 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
                 continue;
             }
             FromFileNodeContainerPersistor persistor;
-            if (isMeta) {
-                persistor = createWorkflowPersistorLoad(nodeFile);
-            } else {
-                persistor = createSingleNodeContainerPersistorLoad(nodeFile);
+            switch (nodeType) {
+                case MetaNode:
+                    persistor = createWorkflowPersistorLoad(nodeFile); break;
+                case NativeNode:
+                    persistor = createNativeNodeContainerPersistorLoad(nodeFile); break;
+                case SubNode:
+                    persistor = createSubNodeContainerPersistorLoad(nodeFile); break;
+                default:
+                    throw new IllegalStateException("Unknown node type: " + nodeType);
             }
             try {
-                LoadResult childResult =
-                    new LoadResult((isMeta ? "meta " : "") + "node with ID suffix " + nodeIDSuffix);
+                LoadResult childResult = new LoadResult(nodeType.toString() + " with ID suffix " + nodeIDSuffix);
                 persistor.preLoadNodeContainer(this, nodeSetting, childResult);
                 loadResult.addChildError(childResult);
             } catch (Throwable e) {
@@ -1400,12 +1427,24 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         return result;
     }
 
-    boolean loadIsMetaNode(final NodeSettingsRO settings) throws InvalidSettingsException {
+    NodeType loadNodeType(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
             String factory = settings.getString("factory");
-            return ObsoleteMetaNodeFileWorkflowPersistor.OLD_META_NODES.contains(factory);
+            if (ObsoleteMetaNodeFileWorkflowPersistor.OLD_META_NODES.contains(factory)) {
+                return NodeType.MetaNode;
+            } else {
+                return NodeType.NativeNode;
+            }
+        } else if (getLoadVersion().isOlderThan(LoadVersion.V2100Pre)) {
+            return settings.getBoolean("node_is_meta") ? NodeType.MetaNode : NodeType.NativeNode;
         } else {
-            return settings.getBoolean("node_is_meta");
+            final String nodeTypeString = settings.getString("node_type");
+            CheckUtils.checkSettingNotNull(nodeTypeString, "node type must not be null");
+            try {
+                return NodeType.valueOf(nodeTypeString);
+            } catch (IllegalArgumentException iae) {
+                throw new InvalidSettingsException("Can't parse node type: " + nodeTypeString);
+            }
         }
     }
 
@@ -1761,11 +1800,16 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
             return true;
         }
-        return new File(workflowDir, SAVED_WITH_DATA_FILE).isFile();
+        return true;
+//        return new File(workflowDir, SAVED_WITH_DATA_FILE).isFile();
     }
 
-    FileSingleNodeContainerPersistor createSingleNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
+    FileSingleNodeContainerPersistor createNativeNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new FileNativeNodeContainerPersistor(this, nodeFile, getLoadHelper(), getLoadVersion());
+    }
+
+    FileSubNodeContainerPersistor createSubNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
+        return new FileSubNodeContainerPersistor(this, nodeFile, getLoadHelper(), getLoadVersion());
     }
 
     FileWorkflowPersistor createWorkflowPersistorLoad(final ReferencedFile wfmFile) {
@@ -2107,14 +2151,12 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         String fileName;
         if (container instanceof WorkflowManager) {
             fileName = FileWorkflowPersistor.save((WorkflowManager)container, nodeDirectoryRef, exec, isSaveData);
-        } else if (container instanceof NativeNodeContainer) {
-            fileName =  FileSingleNodeContainerPersistor.save(
-                (NativeNodeContainer)container, nodeDirectoryRef, exec, isSaveData);
         } else {
-            throw new IOException("Sorry, can't save SubnodeContainers yet...");
+            fileName =  FileSingleNodeContainerPersistor.save(
+                (SingleNodeContainer)container, nodeDirectoryRef, exec, isSaveData);
         }
         saveFileLocation(settings, nodeDirID + "/" + fileName);
-        saveIsMeta(settings, container);
+        saveNodeType(settings, container);
         saveUIInfoClassName(settings, container.getUIInformation());
         saveUIInfoSettings(settings, container.getUIInformation());
     }
@@ -2127,8 +2169,22 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         settings.addString("node_settings_file", location);
     }
 
-    protected static void saveIsMeta(final NodeSettingsWO settings, final NodeContainer nc) {
-        settings.addBoolean("node_is_meta", nc instanceof WorkflowManager);
+    protected static void saveNodeType(final NodeSettingsWO settings, final NodeContainer nc) {
+        // obsolote since LoadVersion.V2100 - written to help old knime installs to read new workflows
+        // treat sub and meta nodes the same
+        settings.addBoolean("node_is_meta", !(nc instanceof NativeNodeContainer));
+        NodeType nodeType;
+        if (nc instanceof NativeNodeContainer) {
+            nodeType = NodeType.NativeNode;
+        } else if (nc instanceof WorkflowManager) {
+            nodeType = NodeType.MetaNode;
+        } else if (nc instanceof SubNodeContainer) {
+            nodeType = NodeType.SubNode;
+        } else {
+            throw new IllegalArgumentException(
+                "Unsupported node container class: " + nc == null ? "<null>" : nc.getClass().getName());
+        }
+        settings.addString("node_type", nodeType.name()); // added for 2.10Pre
     }
 
     protected static NodeSettingsWO saveInPortsSetting(final NodeSettingsWO settings) {

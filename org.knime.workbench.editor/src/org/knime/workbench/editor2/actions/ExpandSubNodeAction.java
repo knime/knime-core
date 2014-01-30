@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -43,9 +43,8 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
- * Created on Oct 4, 2013 by Berthold
  */
 package org.knime.workbench.editor2.actions;
 
@@ -54,32 +53,32 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.commands.ConvertMetaNodeToSubNodeCommand;
+import org.knime.workbench.editor2.commands.ExpandSubNodeCommand;
 import org.knime.workbench.editor2.editparts.GUIWorkflowCipherPrompt;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
-/** Convert meta node to a sub node.
+/**
+ * Action to expand the selected sub node.
  *
- * @author M. Berthold
+ * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
  */
-public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ConvertMetaNodeToSubNodeAction.class);
+public class ExpandSubNodeAction extends AbstractNodeAction {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ExpandSubNodeAction.class);
 
     /**
      * unique ID for this action.
      */
-    public static final String ID = "knime.action.convertmetanodetosubnode";
-
-    /** Subnode disabled by default (under development). Enable with -Dknime.subnode.enable=true. */
-    public static final boolean ENABLE_SUBNODE_ACTION = Boolean.getBoolean("knime.subnode.enable");
+    public static final String ID = "knime.action.expandsubnode";
 
     /**
      * @param editor The workflow editor
      */
-    public ConvertMetaNodeToSubNodeAction(final WorkflowEditor editor) {
+    public ExpandSubNodeAction(final WorkflowEditor editor) {
         super(editor);
     }
 
@@ -96,7 +95,7 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Convert Meta Node to Sub Node";
+        return "Expand Sub Node";
     }
 
     /**
@@ -104,8 +103,7 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor(
-                "icons/meta/metanode_collapse.png");
+        return ImageRepository.getImageDescriptor("icons/meta/metanode_expand.png");
     }
 
     /**
@@ -113,11 +111,11 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Convert Meta Node into a Sub Node";
+        return "Expand selected Sub Node";
     }
 
     /**
-     * @return <code>true</code>, if more than one node is selected.
+     * @return <code>true</code>, if exactly one sub node is selected.
      *
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
@@ -130,48 +128,53 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
         if (parts.length != 1) {
             return false;
         }
-        if (parts[0].getNodeContainer() instanceof WorkflowManager) {
-            WorkflowManager wm = (WorkflowManager)parts[0].getNodeContainer();
+        if (parts[0].getNodeContainer() instanceof SubNodeContainer) {
+            WorkflowManager wm = ((SubNodeContainer)parts[0].getNodeContainer()).getWorkflowManager();
             return !wm.isWriteProtected();
         }
         return false;
     }
 
     /**
-     * Expand meta node!
+     * Expand sub node!
      *
      * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        LOGGER.debug("Creating 'Convert Meta Node to Sub Node' job for " + nodeParts.length + " node(s)...");
+        LOGGER.debug("Creating 'Expand Sub Node' job for " + nodeParts.length + " node(s)...");
         try {
             WorkflowManager manager = getManager();
-            WorkflowManager metaNode = (WorkflowManager)nodeParts[0].getNodeContainer();
-            if (!metaNode.unlock(new GUIWorkflowCipherPrompt())) {
+            SubNodeContainer subNode = (SubNodeContainer)nodeParts[0].getNodeContainer();
+            if (!subNode.getWorkflowManager().unlock(new GUIWorkflowCipherPrompt())) {
                 return;
             }
-            // before we do anything, let's see if the convert will reset the meta node
-            if (manager.canResetNode(metaNode.getID())) {
+            // before we do anything, let's see if an expand will
+            // reset the metanode
+            if (manager.canResetNode(subNode.getID())) {
                 // yes: ask if we can reset, otherwise bail
                 MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.OK | SWT.CANCEL);
-                mb.setMessage("Executed Nodes inside Meta Node will be reset - are you sure?");
+                mb.setMessage("Executed Nodes inside Sub Node will be reset" + " - are you sure?");
                 mb.setText("Reset Executed Nodes");
                 int dialogreturn = mb.open();
                 if (dialogreturn == SWT.CANCEL) {
                     return;
                 }
                 // perform reset
-                if (manager.canResetNode(metaNode.getID())) {
-                    manager.resetAndConfigureNode(metaNode.getID());
+                if (manager.canResetNode(subNode.getID())) {
+                    manager.resetAndConfigureNode(subNode.getID());
                 }
             }
-            ConvertMetaNodeToSubNodeCommand cmnc = new ConvertMetaNodeToSubNodeCommand(manager, metaNode.getID());
-            execute(cmnc);
+            String res = manager.canExpandSubNode(subNode.getID());
+            if (res != null) {
+                throw new IllegalArgumentException(res);
+            }
+            ExpandSubNodeCommand emnc = new ExpandSubNodeCommand(manager, subNode.getID());
+            execute(emnc);
         } catch (IllegalArgumentException e) {
             MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.ERROR);
-            mb.setMessage("Sorry, converting Meta Node failed: " + e.getMessage());
-            mb.setText("Convert failed");
+            mb.setMessage("Sorry, expanding Sub Node failed: " + e.getMessage());
+            mb.setText("Expand failed");
             mb.open();
         }
         try {
@@ -182,4 +185,5 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
             // ignore
         }
     }
+
 }

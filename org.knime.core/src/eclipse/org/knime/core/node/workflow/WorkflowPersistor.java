@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -66,7 +66,6 @@ import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  *
@@ -390,6 +389,11 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         /** @return the name */
         String getPortName() {
             return m_portName;
+        }
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return String.format("%d: %s", getPortIndex(), getPortType());
         }
     }
 

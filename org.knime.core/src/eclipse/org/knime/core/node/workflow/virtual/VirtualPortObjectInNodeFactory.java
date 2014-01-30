@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,37 +44,54 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 30, 2011 (wiswedel): created
  */
 package org.knime.core.node.workflow.virtual;
 
+import java.util.Arrays;
+import java.util.Set;
+
+import org.knime.core.node.DynamicNodeFactory;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.CheckUtils;
 
 /**
- * 
+ * Node used for parallelization loops and sub nodes.
  * @author wiswedel, University of Konstanz
  */
-public class VirtualPortObjectInNodeFactory extends
-		NodeFactory<VirtualPortObjectInNodeModel> {
+public class VirtualPortObjectInNodeFactory extends DynamicNodeFactory<VirtualPortObjectInNodeModel> {
 
-	private final PortType[] m_outTypes;
+	private PortType[] m_outTypes;
 
-	/**
-	 * 
-	 */
+	/** Persistor used by constructor.
+	 * @since 2.10 */
+    public VirtualPortObjectInNodeFactory() {
+    }
+
+	/** Client side constructor. */
 	public VirtualPortObjectInNodeFactory(final PortType[] outTypes) {
 		if (outTypes == null) {
 			throw new NullPointerException(
 					"Port type array argument must not be null");
 		}
 		m_outTypes = outTypes;
+		init();
 	}
 
+    /** {@inheritDoc} */
+    @Override
+    protected NodeDescription createNodeDescription() {
+        return super.parseNodeDescriptionFromFile();
+    }
 	/**
 	 * {@inheritDoc}
 	 */
@@ -88,7 +105,6 @@ public class VirtualPortObjectInNodeFactory extends
 	 */
 	@Override
 	protected int getNrNodeViews() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
@@ -116,5 +132,60 @@ public class VirtualPortObjectInNodeFactory extends
 	protected NodeDialogPane createNodeDialogPane() {
 		return null;
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void saveAdditionalFactorySettings(final ConfigWO config) {
+	    super.saveAdditionalFactorySettings(config);
+        savePortTypeList(m_outTypes, config);
+	}
+
+    /**
+     * @param portTypes
+     * @param config
+     */
+    static void savePortTypeList(final PortType[] portTypes, final ConfigWO config) {
+        for (int i = 0; i < portTypes.length; i++) {
+            ConfigWO portSetting = config.addConfig("port_" + i);
+            portSetting.addInt("index", i);
+            ConfigWO portTypeConfig = portSetting.addConfig("type");
+            portTypes[i].save(portTypeConfig);
+        }
+    }
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void loadAdditionalFactorySettings(final ConfigRO config) throws InvalidSettingsException {
+	    super.loadAdditionalFactorySettings(config);
+	    m_outTypes = loadPortTypeList(config);
+	}
+
+    /**
+     * @param config
+     * @return TODO
+     * @throws InvalidSettingsException
+     */
+    static PortType[] loadPortTypeList(final ConfigRO config) throws InvalidSettingsException {
+        Set<String> keySet = config.keySet();
+	    PortType[] outTypes = new PortType[keySet.size()];
+	    for (String s : keySet) {
+	        ConfigRO portConfig = config.getConfig(s);
+	        int index = portConfig.getInt("index");
+	        CheckUtils.checkSetting(index >= 0 && index < outTypes.length,
+	                "Invalid port index must be in [0, %d]: %d", keySet.size() - 1, index);
+	        Config portTypeConfig = portConfig.getConfig("type");
+            PortType type = PortType.load(portTypeConfig);
+            outTypes[index] = type;
+	    }
+	    int invalidIndex = Arrays.asList(outTypes).indexOf(null);
+	    if (invalidIndex >= 0) {
+	        throw new InvalidSettingsException("Unassigned port type at index " + invalidIndex);
+	    }
+	    return outTypes;
+    }
 
 }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -45,31 +45,83 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Oct 5, 2013 by wiswedel
+ * History
+ *   10.06.2008 (Fabian Dill): created
  */
-package org.knime.core.node.workflow;
+package org.knime.workbench.editor2.actions;
 
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Describes persistor for {@link SubNodeContainer}.
+ * Action to open the editor to the selected sub node.
  *
- * <p>Not to be extended or used by clients.
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @noimplement This interface is not intended to be implemented by clients.
- * @noextend This interface is not intended to be extended by clients.
- * @since 2.9
+ * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
  */
-public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor {
+public class OpenSubNodeEditorAction extends Action {
 
-    /** @return the wrapped workflow manager's persistor. */
-    WorkflowPersistor getWorkflowPersistor();
+    private static final String ID = "knime.open.subnode.editor";
 
-    WorkflowPortTemplate[] getInPortTemplates();
+    private final NodeContainerEditPart m_nodeContainer;
 
-    WorkflowPortTemplate[] getOutPortTemplates();
+    /**
+     * @param node container edit part
+     */
+    public OpenSubNodeEditorAction(final NodeContainerEditPart node) {
+        m_nodeContainer = node;
+    }
 
-    int getVirtualInNodeIDSuffix();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getId() {
+        return ID;
+    }
 
-    int getVirtualOutNodeIDSuffix();
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getText() {
+        return "Open Sub Node";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getToolTipText() {
+        return "Opens editor for this Sub Node";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ImageDescriptor getImageDescriptor() {
+        return ImageRepository.getImageDescriptor("icons/meta/metanode.png");
+    }
+
+    /**
+     * @return true, if underlying model instance of <code>WorkflowManager</code>, otherwise false
+     */
+    protected boolean calculateEnabled() {
+        if (m_nodeContainer.getModel() instanceof WorkflowManager) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void run() {
+        m_nodeContainer.openSubWorkflowEditor();
+    }
+
 }

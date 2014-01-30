@@ -181,6 +181,7 @@ import org.knime.workbench.editor2.actions.CancelAllAction;
 import org.knime.workbench.editor2.actions.ChangeMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
+import org.knime.workbench.editor2.actions.CollapseSubNodeAction;
 import org.knime.workbench.editor2.actions.ConvertMetaNodeToSubNodeAction;
 import org.knime.workbench.editor2.actions.CopyAction;
 import org.knime.workbench.editor2.actions.CutAction;
@@ -190,6 +191,7 @@ import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAllAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.ExpandMetaNodeAction;
+import org.knime.workbench.editor2.actions.ExpandSubNodeAction;
 import org.knime.workbench.editor2.actions.HideNodeNamesAction;
 import org.knime.workbench.editor2.actions.LockMetaNodeAction;
 import org.knime.workbench.editor2.actions.MetaNodeReconfigureAction;
@@ -550,7 +552,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         PasteAction paste = new PasteAction(this);
         PasteActionContextMenu pasteContext = new PasteActionContextMenu(this);
         CollapseMetaNodeAction collapse = new CollapseMetaNodeAction(this);
+        CollapseSubNodeAction collapseSub = new CollapseSubNodeAction(this);
         ExpandMetaNodeAction expand = new ExpandMetaNodeAction(this);
+        ExpandSubNodeAction expandSub = new ExpandSubNodeAction(this);
         ConvertMetaNodeToSubNodeAction convert = new ConvertMetaNodeToSubNodeAction(this);
 
         // register the actions
@@ -582,7 +586,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(pasteContext);
         m_actionRegistry.registerAction(hideNodeName);
         m_actionRegistry.registerAction(collapse);
+        m_actionRegistry.registerAction(collapseSub);
         m_actionRegistry.registerAction(expand);
+        m_actionRegistry.registerAction(expandSub);
         m_actionRegistry.registerAction(convert);
 
         m_actionRegistry.registerAction(metaNodeReConfigure);
