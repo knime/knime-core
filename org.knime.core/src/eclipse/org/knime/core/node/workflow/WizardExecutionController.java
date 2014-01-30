@@ -55,6 +55,7 @@ package org.knime.core.node.workflow;
  * <p>Do not use, no public API.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @author Christian Albrecht, KNIME.com, Zurich, Switzerland
+ * @since 2.10
  */
 public final class WizardExecutionController {
 
