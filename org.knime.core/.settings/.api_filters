@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
     <resource path="META-INF/MANIFEST.MF">
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="2.10.0"/>
+                <message_argument value="2.9.0"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="923795461">
             <message_arguments>
                 <message_argument value="2.9.0"/>
@@ -684,6 +690,12 @@
                 <message_argument value="VAL"/>
             </message_arguments>
         </filter>
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNodeView"/>
+                <message_argument value="WizardNodeView(T, WebTemplate)"/>
+            </message_arguments>
+        </filter>
         <filter id="437350426">
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.WizardNodeView"/>
@@ -878,11 +890,25 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NativeNodeContainer.java" type="org.knime.core.node.workflow.NativeNodeContainer">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NativeNodeContainer"/>
+                <message_argument value="getWebTemplate()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainer.java" type="org.knime.core.node.workflow.NodeContainer">
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.NodeContainer"/>
                 <message_argument value="getInteractiveWebViewTemplate()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainer"/>
+                <message_argument value="getWebTemplate()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1119,6 +1145,12 @@
                 <message_argument value="SubNodeContainer(WorkflowManager, NodeID, WorkflowManager)"/>
             </message_arguments>
         </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SubNodeContainer"/>
+                <message_argument value="getWebTemplate()"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor save/load" id="1143996420">
             <message_arguments>
                 <message_argument value="SubNodeContainer(WorkflowManager, NodeID, WorkflowManager, String)"/>
@@ -1200,6 +1232,12 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
                 <message_argument value="getInteractiveWebViewTemplate()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="getWebTemplate()"/>
             </message_arguments>
         </filter>
         <filter comment="renaming persistor classes - no API anyway" id="338792546">

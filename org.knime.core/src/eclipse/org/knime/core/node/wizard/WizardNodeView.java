@@ -86,6 +86,7 @@ import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WizardExecutionController;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /** Standard implementation for interactive views which are launched on the client side via
@@ -109,12 +110,11 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
 
     /**
      * @param nodeModel the underlying model
-     * @param wvt the template to be used for the web view
-     * @since 2.9
+     * @since 2.10
      */
-    public WizardNodeView(final T nodeModel, final WebTemplate wvt) {
+    public WizardNodeView(final T nodeModel) {
         super(nodeModel);
-        m_template = wvt;
+        m_template = WizardExecutionController.getWebTemplateFromJSObjectID(getNodeModel().getJavascriptObjectID());
         m_delegate = new InteractiveViewDelegate<REP>();
     }
 
@@ -292,13 +292,14 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         String setIEVersion = "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">";
         String debugScript = "<script type=\"text/javascript\" "
                 + "src=\"https://getfirebug.com/firebug-lite.js#startOpened=true\"></script>";
-        String scriptString = "<script type=\"text/javascript\" src=\"%s\"></script>";
+        String scriptString = "<script type=\"text/javascript\" src=\"%s\" charset=\"UTF-8\"></script>";
         String cssString = "<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">";
 
         StringBuilder pageBuilder = new StringBuilder();
         pageBuilder.append("<!doctype html><html><head>");
         pageBuilder.append(setIEVersion);
-        pageBuilder.append(debugScript);
+        pageBuilder.append("<meta charset=\"UTF-8\">");
+        //pageBuilder.append(debugScript);
 
         for (WebResourceLocator resFile : getResourceFileList()) {
             switch (resFile.getType()) {

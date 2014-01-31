@@ -49,14 +49,100 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
+import org.knime.core.node.web.DefaultWebTemplate;
+import org.knime.core.node.web.WebResourceLocator;
+import org.knime.core.node.web.WebResourceLocator.WebResourceType;
+import org.knime.core.node.web.WebTemplate;
+
 /**
  * A utility class received from the workflow manager that allows to step back and forth in a wizard execution.
  *
- * <p>Do not use, no public API.
+ * <p>
+ * Do not use, no public API.
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @author Christian Albrecht, KNIME.com, Zurich, Switzerland
  * @since 2.10
  */
 public final class WizardExecutionController {
+
+    // hide constructor
+    private WizardExecutionController() { }
+
+    private static final String ID_WEB_RES = "org.knime.js.core.webResources";
+
+    private static final String ID_JS_COMP = "org.knime.js.core.javascriptComponents";
+
+    private static final String ID_IMPL_BUNDLE = "implementationBundleID";
+
+    private static final String ID_IMPORT_RES = "importResource";
+
+    private static final String ID_DEPENDENCY = "webDependency";
+
+    private static final String ATTR_JS_ID = "jsObjectID";
+
+    private static final String ATTR_RES_BUNDLE_ID = "webResourceBundleID";
+
+    private static final String ATTR_PATH = "relativePath";
+
+    private static final String ATTR_TYPE = "type";
+
+    /**
+     * @param jsObjectID The JavaScript object ID used for locating the extension point.
+     * @return A template object, being used to assamble views.
+     */
+    public static WebTemplate getWebTemplateFromJSObjectID(final String jsObjectID) {
+        List<WebResourceLocator> webResList = new ArrayList<WebResourceLocator>();
+        IConfigurationElement jsComponentExtension = getConfigurationFromID(ID_JS_COMP, ATTR_JS_ID, jsObjectID);
+        String bundleID = jsComponentExtension.getAttribute(ID_IMPL_BUNDLE);
+        IConfigurationElement implementationExtension =
+            getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, bundleID);
+        List<WebResourceLocator> implementationRes = getResourcesFromExtension(implementationExtension);
+        for (IConfigurationElement dependencyConf : jsComponentExtension.getChildren(ID_DEPENDENCY)) {
+            String dependencyID = dependencyConf.getAttribute(ATTR_RES_BUNDLE_ID);
+            IConfigurationElement dependencyExtension = getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, dependencyID);
+            List<WebResourceLocator> dependencyRes = getResourcesFromExtension(dependencyExtension);
+            webResList.addAll(dependencyRes);
+        }
+        webResList.addAll(implementationRes);
+        return new DefaultWebTemplate(webResList.toArray(new WebResourceLocator[0]), null, jsObjectID);
+    }
+
+    private static IConfigurationElement getConfigurationFromID(final String extensionPointId,
+        final String configurationID, final String jsObjectID) {
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        IConfigurationElement[] configurationElements = registry.getConfigurationElementsFor(extensionPointId);
+        for (IConfigurationElement element : configurationElements) {
+            if (jsObjectID.equals(element.getAttribute(configurationID))) {
+                return element;
+            }
+        }
+        return null;
+    }
+
+    private static List<WebResourceLocator> getResourcesFromExtension(final IConfigurationElement resConfig) {
+        String pluginName = resConfig.getContributor().getName();
+        List<WebResourceLocator> locators = new ArrayList<WebResourceLocator>();
+        for (IConfigurationElement resElement : resConfig.getChildren(ID_IMPORT_RES)) {
+            String path = resElement.getAttribute(ATTR_PATH);
+            String type = resElement.getAttribute(ATTR_TYPE);
+            if (path != null && type != null) {
+                WebResourceType resType = WebResourceType.FILE;
+                if (type.equalsIgnoreCase("javascript")) {
+                    resType = WebResourceType.JAVASCRIPT;
+                } else if (type.equalsIgnoreCase("css")) {
+                    resType = WebResourceType.CSS;
+                }
+                locators.add(new WebResourceLocator(pluginName, path, resType));
+            }
+        }
+        return locators;
+    }
 
 }

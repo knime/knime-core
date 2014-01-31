@@ -1153,12 +1153,6 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     public abstract <V extends AbstractNodeView<?> & InteractiveView<?,? extends ViewContent, ? extends ViewContent>> V getInteractiveView();
 
-    /**
-     * @return interactive web view template.
-     * @since 2.9
-     */
-    public abstract WebTemplate getWebTemplate();
-
     /* ------------- Misc node info -------------- */
 
     public abstract URL getIcon();
