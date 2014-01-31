@@ -2067,6 +2067,27 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    private WizardExecutionController m_wizardExecutionController;
+
+    /** Creates lazy and returns an instance that controls the wizard execution of this workflow. These controller
+     * are not meant to be used by multiple clients (only one steps back/forth in the workflow), though this is not
+     * asserted by the returned controller object.
+     * @return A controller for the wizard execution (a new or a previously created and modified instance).
+     * @throws IllegalStateException If this workflow is not a project.
+     * @since 2.10
+     */
+    public WizardExecutionController getWizardExecutionController() {
+        if (!isProject()) {
+            throw new IllegalStateException(String.format("Workflow '%s' is not a project", getNameWithID()));
+        }
+        synchronized (m_workflowMutex) {
+            if (m_wizardExecutionController == null) {
+                m_wizardExecutionController = new WizardExecutionController(this);
+            }
+            return m_wizardExecutionController;
+        }
+    }
+
     /** Execute workflow until nodes of the given class - those will
      * usually be QuickForm or view nodes requiring user interaction.
      *
