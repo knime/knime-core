@@ -50,30 +50,123 @@
 package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.web.DefaultWebTemplate;
+import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
+import org.knime.core.node.web.WebViewContent;
+import org.knime.core.node.wizard.WizardNode;
 
 /**
  * A utility class received from the workflow manager that allows to step back and forth in a wizard execution.
  *
- * <p>
- * Do not use, no public API.
- *
+ * <p>Do not use, no public API.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @author Christian Albrecht, KNIME.com, Zurich, Switzerland
  * @since 2.10
  */
 public final class WizardExecutionController {
 
-    // hide constructor
-    private WizardExecutionController() { }
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WizardExecutionController.class);
+
+    /** Host WFM */
+    private final WorkflowManager m_manager;
+    /** Lazy initialized breadth first sorted list of subnodes containing wizard nodes. */
+    private List<NodeID> m_subNodesWithWizardNodesList;
+    /**  The pointer in the subnode list representing the subnode to show next. */
+    private int m_levelIndex;
+
+    /** Created from workflow.
+     * @param manager ...
+     */
+    WizardExecutionController(final WorkflowManager manager) {
+        CheckUtils.checkArgumentNotNull(manager, "Argument must not be null");
+        m_manager = manager;
+    }
+
+
+    private void lazyInit() {
+        assert Thread.holdsLock(m_manager.getWorkflowMutex());
+        if (m_subNodesWithWizardNodesList == null) {
+            LOGGER.debugWithFormat("Indexing wizard nodes for workflow %s", m_manager.getNameWithID());
+            m_subNodesWithWizardNodesList = new ArrayList<NodeID>();
+            m_levelIndex = 0;
+            final Workflow workflow = m_manager.getWorkflow();
+            LinkedHashMap<NodeID, Set<Integer>> breadthFirstSortedList =
+                    workflow.createBreadthFirstSortedList(workflow.getNodeIDs(), true);
+            for (Map.Entry<NodeID, Set<Integer>> entry : breadthFirstSortedList.entrySet()) {
+                NodeContainer nc = workflow.getNode(entry.getKey());
+                if (nc instanceof SubNodeContainer) {
+                    SubNodeContainer subnodeNC = (SubNodeContainer)nc;
+                    WorkflowManager subnodeMgr = subnodeNC.getWorkflowManager();
+                    @SuppressWarnings("rawtypes")
+                    final Map<NodeID, WizardNode> wizardNodes = subnodeMgr.findNodes(WizardNode.class, false);
+                    if (!wizardNodes.isEmpty()) {
+                        m_subNodesWithWizardNodesList.add(entry.getKey());
+                    }
+                }
+            }
+            LOGGER.debugWithFormat("Indexing for worklow %s complete, found wizard sub node(s) %s",
+                m_manager.getNameWithID(), ConvenienceMethods.getShortStringFrom(m_subNodesWithWizardNodesList, 8));
+        }
+    }
+
+    public Map<String, ValidationError> loadValuesIntoCurrentPage(final Map<String, WebViewContent> viewContentMap) {
+        return Collections.emptyMap();
+    }
+
+    public void stepNext() {
+        synchronized (m_manager.getWorkflowMutex()) {
+            NodeContext.pushContext(m_manager);
+            try {
+                stepNextInternal();
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        }
+    }
+
+    public void stepBack() {
+
+    }
+
+    public boolean hasNextWizardPage() {
+        return false;
+    }
+
+    public boolean hasPreviousWizardPage() {
+        return false;
+    }
+
+    private void stepNextInternal() {
+        assert Thread.holdsLock(m_manager.getWorkflowMutex());
+        lazyInit();
+        if (m_levelIndex < m_subNodesWithWizardNodesList.size()) {
+            LOGGER.debugWithFormat("Stepping wizard execution to sub node %s (step %d/%d)",
+                m_subNodesWithWizardNodesList.get(m_levelIndex), m_levelIndex, m_subNodesWithWizardNodesList.size());
+            m_manager.executeUpToHere(m_subNodesWithWizardNodesList.get(m_levelIndex++));
+        }
+    }
+
+    public Map<String, WizardNode> getCurrentWizardPage() {
+        return null;
+    }
 
     private static final String ID_WEB_RES = "org.knime.js.core.webResources";
 
@@ -143,6 +236,106 @@ public final class WizardExecutionController {
             }
         }
         return locators;
+    }
+
+
+    /** Utility class that only stores the workflow relative NodeID path. If the NodeID of the workflow is
+     * 0:3 and the quickforms in there are 0:3:1:1 and 0:3:1:2 then it only saves {1,1} and {1,2}. We must not
+     * save the wfm ID with the NodeIDs as those may change when the workflow is swapped out/read back in.
+     * See also bug 4478.
+     */
+    static final class NodeIDSuffix {
+        /* This class makes com.knime.enterprise.server.WorkflowInstance.NodeIDSuffix obsolete. */
+
+        private final int[] m_suffixes;
+
+        /** @param suffixes ... */
+        NodeIDSuffix(final int[] suffixes) {
+            m_suffixes = suffixes;
+        }
+
+        /** Create the suffix object by cutting the parentID from the argument nodeID.
+         * @param parentID ...
+         * @param nodeID ..
+         * @return The extracted suffix object
+         * @throws IllegalArgumentException If the parentID is not a prefix of the nodeID.
+         *
+         */
+        static NodeIDSuffix create(final NodeID parentID, final NodeID nodeID) {
+            if (!nodeID.hasPrefix(parentID)) {
+                throw new IllegalArgumentException("The argument node ID \"" + nodeID
+                    + "\" does not have the expected parent prefix \"" + parentID + "\"");
+            }
+            List<Integer> suffixList = new ArrayList<Integer>();
+            NodeID traverse = nodeID;
+            do {
+                suffixList.add(traverse.getIndex());
+                traverse = traverse.getPrefix();
+            } while (!parentID.equals(traverse));
+            Collections.reverse(suffixList);
+            return new NodeIDSuffix(ArrayUtils.toPrimitive(suffixList.toArray(new Integer[suffixList.size()])));
+        }
+
+        /** Reverse operation to {@link #create(NodeID, NodeID)}. Prepends the parentID to this suffix and
+         * returns a valid (new) NodeID.
+         * @param parentID ...
+         * @return ...
+         */
+        NodeID prependParent(final NodeID parentID) {
+            NodeID result = parentID;
+            for (int i : m_suffixes) {
+                result = new NodeID(result, i);
+            }
+            return result;
+        }
+
+        /** Utility function to convert a set of suffixes into a set of IDs. */
+        static Set<NodeID> toNodeIDSet(final NodeID parentID, final Set<NodeIDSuffix> suffixSet) {
+            LinkedHashSet<NodeID> resultSet = new LinkedHashSet<NodeID>();
+            for (NodeIDSuffix sID: suffixSet) {
+                resultSet.add(sID.prependParent(parentID));
+            }
+            return resultSet;
+        }
+
+        /** Utility function to convert a set of IDs into a set of suffixes. */
+        static Set<NodeIDSuffix> fromNodeIDSet(final NodeID parentID, final Set<NodeID> idSet) {
+            LinkedHashSet<NodeIDSuffix> resultSet = new LinkedHashSet<NodeIDSuffix>();
+            for (NodeID id: idSet) {
+                resultSet.add(NodeIDSuffix.create(parentID, id));
+            }
+            return resultSet;
+        }
+
+        /** @return the stored indices - used by the persistor. */
+        int[] getSuffixes() {
+            return m_suffixes;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return Arrays.toString(m_suffixes);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(m_suffixes);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (!(obj instanceof NodeIDSuffix)) {
+                return false;
+            }
+            return Arrays.equals(m_suffixes, ((NodeIDSuffix)obj).m_suffixes);
+        }
+
     }
 
 }

@@ -71,6 +71,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.defaultnodesettings.SettingsModelStringArray;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.wizard.WizardNode;
 
 /**
@@ -226,6 +227,14 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Wizard
     public void loadViewValue(final InteractiveValueSelectViewContent viewContent) {
         // TODO Auto-generated method stub
 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ValidationError validateViewValue(final InteractiveValueSelectViewContent viewContent) {
+        return null;
     }
 
     /**

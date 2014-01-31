@@ -45,50 +45,46 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
+ * Created on Jan 31, 2014 by wiswedel
  */
-package org.knime.core.node.interactive;
+package org.knime.core.node.web;
 
-import org.knime.core.node.web.ValidationError;
-import org.knime.core.node.web.WebViewContent;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-
-
-
-/** Interface for NodeModels that support interactive views and repeated
- * execution when the view has been modified by the user.
+/**
+ * ViewContent that creates and reads from a JSON string.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
- * @param <REP> The concrete class of the {@link WebViewContent} acting as representation of the view.
- * @param <VAL> The concrete class of the {@link WebViewContent} acting as value of the view.
- * @since 2.8
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @since 2.10
  */
-public interface InteractiveNode<REP extends ViewContent, VAL extends ViewContent> {
+@JsonAutoDetect
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
+public final class ValidationError {
 
-    /**
-     * Create content which can be used by the interactive view implementation.
-     * @return View representation implementation required for the interactive view.
-     * @since 2.10
-     */
-    REP getViewRepresentation();
+    private String m_error;
 
-    /**
-     * @return View value implementation required for the interactive view.
-     * @since 2.10
-     */
-    VAL getViewValue();
+    /** Constructor with error.
+     * @param error ... */
+    public ValidationError(final String error) {
+        m_error = error;
+    }
 
-    /**
-     * @param viewContent The view content to load.
-     * @return error or null if OK.
-     * @since 2.10
-     */
-    ValidationError validateViewValue(VAL viewContent);
+    /** Serialization constructor, not to be used by clients. */
+    public ValidationError() {
+    }
 
-    /**
-     * @param viewContent The view content to load.
-     * @since 2.10
-     */
-    void loadViewValue(VAL viewContent);
+    /** @return the error */
+    @JsonProperty("error")
+    public String getError() {
+        return m_error;
+    }
+
+    /** @param error the error to set */
+    @JsonProperty("error")
+    public void setError(final String error) {
+        m_error = error;
+    }
 
 }

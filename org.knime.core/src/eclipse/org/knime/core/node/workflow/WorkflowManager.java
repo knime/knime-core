@@ -424,6 +424,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return m_workflow;
     }
 
+    /** @return the workflowMutex */
+    Object getWorkflowMutex() {
+        return m_workflowMutex;
+    }
+
     ///////////////////////////////////////
     // Node / Project / Metanode operations
     ///////////////////////////////////////

@@ -458,6 +458,12 @@
                 <message_argument value="loadViewValue(VAL)"/>
             </message_arguments>
         </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
+                <message_argument value="validateViewValue(VAL)"/>
+            </message_arguments>
+        </filter>
         <filter id="403902496">
             <message_arguments>
                 <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
