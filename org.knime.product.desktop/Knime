@@ -32,6 +32,10 @@ readArguments() {
         elif [[ "$arg" == "-startup" ]]; then
             CLASSPATH="${params[i+1]}"
             ((i++))
+        elif [[ "$arg" == "--launcher.library" ]] || [[ "$arg" == "--launcher.ini" ]] || \ 
+        	 [[ "$arg" == "--launcher.timeout" ]] || [[ "$arg" == "--launcher.XXMaxPermSize" ]]; then
+        	echo "Launcher argument '$arg' ignored"
+        	((i++)) # ...and its argument
         elif [[ "$arg" == --launcher.* ]]; then
         	echo "Launcher argument '$arg' ignored"
         else
