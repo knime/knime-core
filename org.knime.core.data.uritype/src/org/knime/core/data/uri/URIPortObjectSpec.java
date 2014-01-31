@@ -64,7 +64,7 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.AbstractSimplePortObjectSpec;
 
 /**
- * Spec to {@link URIPortObject}. It represents a {@linkplain URIPortObjectSpec#getFileExtensions() list of extensions}.  
+ * Spec to {@link IURIPortObject}. It represents a {@linkplain URIPortObjectSpec#getFileExtensions() list of extensions}.  
  * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
@@ -96,7 +96,7 @@ public class URIPortObjectSpec extends AbstractSimplePortObjectSpec {
     }
     
     /** It contains a list of file extensions ("csv", "xml", ...). The corresponding
-     * {@link URIPortObject} contains at least one for each of these extensions.
+     * {@link IURIPortObject} contains at least one for each of these extensions.
      * @return The list of extensions, not null.
      */
     public List<String> getFileExtensions() {
