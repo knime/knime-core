@@ -164,7 +164,7 @@ public final class WizardExecutionController {
         }
     }
 
-    public Map<String, WizardNode> getCurrentWizardPage() {
+    public WizardPageContent getCurrentWizardPage() {
         return null;
     }
 
@@ -238,6 +238,29 @@ public final class WizardExecutionController {
         return locators;
     }
 
+    /** Result value of {@link WizardExecutionController#getCurrentWizardPage()}. */
+    public static final class WizardPageContent {
+
+        @SuppressWarnings("rawtypes")
+        private final Map<String, WizardNode> m_pageMap;
+
+        /**
+         * @param pageMap
+         */
+        @SuppressWarnings("rawtypes")
+        WizardPageContent(final Map<String, WizardNode> pageMap) {
+            m_pageMap = pageMap;
+        }
+
+        /**
+         * @return the pageMap
+         */
+        @SuppressWarnings("rawtypes")
+        public Map<String, WizardNode> getPageMap() {
+            return m_pageMap;
+        }
+
+    }
 
     /** Utility class that only stores the workflow relative NodeID path. If the NodeID of the workflow is
      * 0:3 and the quickforms in there are 0:3:1:1 and 0:3:1:2 then it only saves {1,1} and {1,2}. We must not
