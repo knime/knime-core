@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.model;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
@@ -83,7 +82,7 @@ public abstract class TreeNodeCondition {
         dataOutput.writeByte(type);
     }
 
-    public static TreeNodeCondition load(final DataInputStream input,
+    public static TreeNodeCondition load(final TreeModelDataInputStream input,
             final TreeMetaData metaData)
         throws IOException {
         byte type = input.readByte();

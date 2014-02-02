@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.model;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
@@ -84,7 +83,7 @@ public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
 
     /**
      *  */
-    TreeNodeNominalCondition(final DataInputStream input,
+    TreeNodeNominalCondition(final TreeModelDataInputStream input,
             final TreeMetaData metaData) throws IOException {
         super(input, metaData);
         TreeColumnMetaData columnMetaData = super.getColumnMetaData();

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.model;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -87,7 +86,7 @@ public abstract class AbstractTreeNode {
 
     /**
      *  */
-    AbstractTreeNode(final DataInputStream in, final TreeMetaData metaData) throws IOException {
+    AbstractTreeNode(final TreeModelDataInputStream in, final TreeMetaData metaData) throws IOException {
         m_signature = TreeNodeSignature.load(in);
         m_condition = TreeNodeCondition.load(in, metaData);
         m_targetMetaData = metaData.getTargetMetaData();
@@ -183,6 +182,6 @@ public abstract class AbstractTreeNode {
 
     abstract void saveInSubclass(final DataOutputStream out) throws IOException;
 
-    abstract AbstractTreeNode loadChild(final DataInputStream in, final TreeMetaData metaData) throws IOException;
+    abstract AbstractTreeNode loadChild(final TreeModelDataInputStream in, final TreeMetaData metaData) throws IOException;
 
 }

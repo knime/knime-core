@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.model;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
@@ -77,8 +76,7 @@ public class TreeModelClassification extends AbstractTreeModel<TreeNodeClassific
                 metaData.getTargetMetaData().getAttributeName());
     }
 
-    public static TreeModelClassification load(final DataInputStream in,
-            final TreeMetaData metaData) throws IOException {
+    public static TreeModelClassification load(final TreeModelDataInputStream in, final TreeMetaData metaData) throws IOException {
         return new TreeModelClassification(TreeNodeClassification.load(in, metaData));
     }
 

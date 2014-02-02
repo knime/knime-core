@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.model;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
@@ -70,7 +69,7 @@ public class TreeModelRegression extends AbstractTreeModel<TreeNodeRegression> {
         super(rootNode);
     }
 
-    public static TreeModelRegression load(final DataInputStream in,
+    public static TreeModelRegression load(final TreeModelDataInputStream in,
             final TreeMetaData metaData) throws IOException {
         return new TreeModelRegression(TreeNodeRegression.load(in, metaData));
     }

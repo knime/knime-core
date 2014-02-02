@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,95 +40,49 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   Jan 5, 2012 (wiswedel): created
+ * Created on Feb 2, 2014 by wiswedel
  */
 package org.knime.base.node.mine.treeensemble.model;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
+import java.io.DataInputStream;
+import java.io.InputStream;
 
 /**
+ * An input stream that carries additional information used during loading.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class TreeNodeSignature {
+final class TreeModelDataInputStream extends DataInputStream {
 
-    public static final TreeNodeSignature ROOT_SIGNATURE =
-        new TreeNodeSignature();
+    private boolean m_containsClassDistribution;
 
-    private final short[] m_signature;
+    /** ...
+     * @param in passed on to super.
+     */
+    TreeModelDataInputStream(final InputStream in) {
+        super(in);
+    }
 
     /**
-     *  */
-    private TreeNodeSignature() {
-        this(new short[] {0});
+     * @return the containsClassDistribution
+     */
+    boolean isContainsClassDistribution() {
+        return m_containsClassDistribution;
     }
 
-    private TreeNodeSignature(final short[] signature) {
-        m_signature = signature;
+    /**
+     * @param value the containsClassDistribution to set
+     */
+    void setContainsClassDistribution(final boolean value) {
+        m_containsClassDistribution = value;
     }
 
-    public short[] getSignaturePath() {
-        return m_signature;
-    }
 
-    public TreeNodeSignature createChildSignature(final short childIndex) {
-        short[] newArray = Arrays.copyOf(m_signature, m_signature.length + 1);
-        newArray[m_signature.length] = childIndex;
-        return new TreeNodeSignature(newArray);
-    }
 
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        StringBuilder b = new StringBuilder();
-        for (int i = 0; i < m_signature.length; i++) {
-            b.append(i == 0 ? "" : "-").append(m_signature[i]);
-        }
-        return b.toString();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(m_signature);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean equals(final Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj instanceof TreeNodeSignature) {
-            short[] oSignature = ((TreeNodeSignature)obj).m_signature;
-            return Arrays.equals(oSignature, m_signature);
-        }
-        return false;
-    }
-
-    public void save(final DataOutputStream out) throws IOException {
-        out.writeInt(m_signature.length);
-        for (int i = 0; i < m_signature.length; i++) {
-            out.writeShort(m_signature[i]);
-        }
-    }
-
-    public static TreeNodeSignature load(final TreeModelDataInputStream in)
-        throws IOException {
-        final int length = in.readInt();
-        short[] signature = new short[length];
-        for (int i = 0; i < length; i++) {
-            signature[i] = in.readShort();
-        }
-        return new TreeNodeSignature(signature);
-    }
 
 }

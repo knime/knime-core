@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -165,8 +165,7 @@ public class TreeEnsembleLearner {
             m_rowSamples[i] = modelResults[i].m_rowSample;
             m_columnSampleStrategies[i] = modelResults[i].m_rootColumnSampleStrategy;
         }
-        m_ensembleModel = new TreeEnsembleModel(m_data.getMetaData(), models,
-                m_data.getTreeType());
+        m_ensembleModel = new TreeEnsembleModel(m_config, m_data.getMetaData(), models, m_data.getTreeType());
         return m_ensembleModel;
     }
 

@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.model;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -98,7 +97,7 @@ public final class TreeNodeRegression extends AbstractTreeNode {
      * @param in
      * @param metaData
      * @throws IOException */
-    public TreeNodeRegression(final DataInputStream in, final TreeMetaData metaData) throws IOException {
+    public TreeNodeRegression(final TreeModelDataInputStream in, final TreeMetaData metaData) throws IOException {
         super(in, metaData);
         m_mean = in.readDouble();
         m_totalSum = in.readDouble();
@@ -189,14 +188,14 @@ public final class TreeNodeRegression extends AbstractTreeNode {
         out.writeDouble(m_sumSquaredDeviation);
     }
 
-    public static TreeNodeRegression load(final DataInputStream in,
+    public static TreeNodeRegression load(final TreeModelDataInputStream in,
             final TreeMetaData metaData) throws IOException {
         return new TreeNodeRegression(in, metaData);
     }
 
     /** {@inheritDoc} */
     @Override
-    TreeNodeRegression loadChild(final DataInputStream in, final TreeMetaData metaData) throws IOException {
+    TreeNodeRegression loadChild(final TreeModelDataInputStream in, final TreeMetaData metaData) throws IOException {
         return TreeNodeRegression.load(in, metaData);
     }
 

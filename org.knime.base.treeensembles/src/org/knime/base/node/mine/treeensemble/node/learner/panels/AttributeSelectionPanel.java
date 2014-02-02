@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -113,6 +113,7 @@ public final class AttributeSelectionPanel extends JPanel {
     private final ColumnFilterPanel m_includeColumnsFilterPanel;
     private final JCheckBox m_ignoreColumnsWithoutDomainChecker;
     private final JCheckBox m_enableHiliteChecker;
+    private final JCheckBox m_saveTargetDistributionInNodesChecker;
     private final JSpinner m_hiliteCountSpinner;
 
     private DataTableSpec m_lastTableSpec;
@@ -175,6 +176,8 @@ public final class AttributeSelectionPanel extends JPanel {
             }
         });
         m_enableHiliteChecker.doClick();
+        m_saveTargetDistributionInNodesChecker = new JCheckBox(
+            "Save target distribution in tree nodes (memory expensive - only important for tree view and PMML export)");
 
         m_changeListenerList = new ArrayList<ChangeListener>();
         m_isRegression = isRegression;
@@ -249,6 +252,13 @@ public final class AttributeSelectionPanel extends JPanel {
         gbc.gridx += 1;
         gbc.weightx = 1.0;
         add(m_hiliteCountSpinner, gbc);
+
+        if (!isRegression()) {
+            gbc.gridy += 1;
+            gbc.gridx = 0;
+            gbc.gridwidth = 2;
+            add(m_saveTargetDistributionInNodesChecker, gbc);
+        }
     }
 
     void addChangeListener(final ChangeListener listener) {
@@ -323,6 +333,7 @@ public final class AttributeSelectionPanel extends JPanel {
             m_enableHiliteChecker.setSelected(false);
             m_hiliteCountSpinner.setValue(2000);
         }
+        m_saveTargetDistributionInNodesChecker.setSelected(cfg.isSaveTargetDistributionInNodes());
         m_lastTableSpec = inSpec;
     }
 
@@ -356,6 +367,7 @@ public final class AttributeSelectionPanel extends JPanel {
         cfg.setNrHilitePatterns(hiliteCount);
         cfg.setIgnoreColumnsWithoutDomain(
                 m_ignoreColumnsWithoutDomainChecker.isSelected());
+        cfg.setSaveTargetDistributionInNodes(m_saveTargetDistributionInNodesChecker.isSelected());
     }
 
 

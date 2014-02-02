@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.model;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
@@ -80,7 +79,7 @@ public final class TreeNodeBitCondition extends TreeNodeColumnCondition {
 
     /**
      *  */
-    TreeNodeBitCondition(final DataInputStream in, final TreeMetaData metaData)
+    TreeNodeBitCondition(final TreeModelDataInputStream in, final TreeMetaData metaData)
     throws IOException {
         super(in, metaData);
         checkTypeCorrectness(super.getColumnMetaData(),

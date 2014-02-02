@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -178,7 +178,7 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
                 rowSampleWeights, treeNodeSignature, targetPriors,
                 forbiddenColumnSet);
         if (bestSplit == null) {
-            return new TreeNodeClassification(treeNodeSignature, targetPriors);
+            return new TreeNodeClassification(treeNodeSignature, targetPriors, getConfig());
         }
         TreeAttributeColumnData splitColumn = bestSplit.getColumnData();
         final int attributeIndex =
@@ -211,7 +211,7 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
         if (markAttributeAsForbidden) {
             forbiddenColumnSet.set(attributeIndex, false);
         }
-        return new TreeNodeClassification(treeNodeSignature, targetPriors, childNodes);
+        return new TreeNodeClassification(treeNodeSignature, targetPriors, childNodes, getConfig());
     }
 
 

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -142,6 +142,8 @@ public class TreeEnsembleLearnerConfiguration {
 
     private static final String KEY_COLUMN_SAMPLING_MODE = "columnSamplingMode";
 
+    private static final String KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES = "saveTargetDistributionInNodes";
+
     public enum SplitCriterion {
         InformationGain("Information Gain"),
         InformationGainRatio("Information Gain Ratio"),
@@ -187,6 +189,8 @@ public class TreeEnsembleLearnerConfiguration {
 
     public static final boolean DEF_AVERAGE_SPLIT_POINTS = true;
 
+    public static final boolean DEF_SAVE_TARGET_DISTRIBUTION_IN_NODES = false;
+
     private String m_targetColumn;
 
     private Long m_seed = System.currentTimeMillis();
@@ -227,6 +231,8 @@ public class TreeEnsembleLearnerConfiguration {
     private boolean m_ignoreColumnsWithoutDomain;
 
     private int m_nrHilitePatterns;
+
+    private boolean m_saveTargetDistributionInNodes = DEF_SAVE_TARGET_DISTRIBUTION_IN_NODES;
 
     private final boolean m_isRegression;
 
@@ -585,6 +591,23 @@ public class TreeEnsembleLearnerConfiguration {
         m_nrHilitePatterns = nrHilitePatterns;
     }
 
+    /** Whether the model should save the target distribution in each tree node (when classification). This is
+     * very memory consuming and only useful when exporting to PMML or when viewing at distributions in the tree view.
+     *
+     * <p>Only applies for classification.
+     * @return that property.
+     */
+    public boolean isSaveTargetDistributionInNodes() {
+        return m_saveTargetDistributionInNodes;
+    }
+
+    /** Setter for {@link #isSaveTargetDistributionInNodes()}.
+     * @param value The value
+     */
+    public void setSaveTargetDistributionInNodes(final boolean value) {
+        m_saveTargetDistributionInNodes = value;
+    }
+
     /** @return the ignoreColumnsWithoutDomain */
     public boolean isIgnoreColumnsWithoutDomain() {
         return m_ignoreColumnsWithoutDomain;
@@ -617,6 +640,7 @@ public class TreeEnsembleLearnerConfiguration {
         settings.addBoolean(KEY_INCLUDE_ALL_COLUMNS, m_includeAllColumns);
         settings.addBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, m_ignoreColumnsWithoutDomain);
         settings.addInt(KEY_NR_HILITE_PATTERNS, m_nrHilitePatterns);
+        settings.addBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, m_saveTargetDistributionInNodes);
     }
 
     public void loadInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
@@ -686,6 +710,8 @@ public class TreeEnsembleLearnerConfiguration {
         setIgnoreColumnsWithoutDomain(settings.getBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, true));
         // added after first preview, be backward compatible (none as default)
         setNrHilitePatterns(settings.getInt(KEY_NR_HILITE_PATTERNS, -1));
+        // added in 2.10
+        setSaveTargetDistributionInNodes(settings.getBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, true));
     }
 
     public void loadInDialog(final NodeSettingsRO settings,
@@ -854,6 +880,8 @@ public class TreeEnsembleLearnerConfiguration {
         }
         m_ignoreColumnsWithoutDomain = settings.getBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, true);
         m_nrHilitePatterns = settings.getInt(KEY_NR_HILITE_PATTERNS, -1);
+        m_saveTargetDistributionInNodes =
+                settings.getBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, DEF_SAVE_TARGET_DISTRIBUTION_IN_NODES);
     }
 
     public FilterLearnColumnRearranger filterLearnColumns(final DataTableSpec spec)

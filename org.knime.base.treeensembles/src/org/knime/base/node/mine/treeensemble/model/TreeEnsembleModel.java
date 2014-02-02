@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,7 +52,6 @@ package org.knime.base.node.mine.treeensemble.model;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -64,6 +63,7 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.treeensemble.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble.data.TreeBitColumnMetaData;
 import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
+import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -107,7 +107,7 @@ public final class TreeEnsembleModel {
         private void save(final DataOutputStream out) throws IOException {
             out.writeByte(m_persistByte);
         }
-        private static TreeType load(final DataInputStream in)
+        private static TreeType load(final TreeModelDataInputStream in)
             throws IOException {
             byte persistByte = in.readByte();
             for (TreeType t : values()) {
@@ -123,15 +123,28 @@ public final class TreeEnsembleModel {
     private final TreeMetaData m_metaData;
     private final TreeType m_type;
     private final AbstractTreeModel[] m_models;
+    /** For classification models if each tree node/leaf contains an array with the target class distribution.
+     * It consumes a lot of memory and is only relevant for the view or when exporting individual trees to PMML.
+     * Only useful when tree type is classification. */
+    private final boolean m_containsClassDistribution;
 
     /**
      * @param models
      */
-    public TreeEnsembleModel(final TreeMetaData metaData, final AbstractTreeModel[] models,
-            final TreeType treeType) {
+    public TreeEnsembleModel(final TreeEnsembleLearnerConfiguration configuration, final TreeMetaData metaData,
+            final AbstractTreeModel[] models, final TreeType treeType) {
+        this(metaData, models, treeType, configuration.isSaveTargetDistributionInNodes());
+    }
+
+    /**
+     * @param models
+     */
+    private TreeEnsembleModel(final TreeMetaData metaData, final AbstractTreeModel[] models,
+        final TreeType treeType, final boolean containsClassDistribution) {
         m_metaData = metaData;
         m_models = models;
         m_type = treeType;
+        m_containsClassDistribution = containsClassDistribution;
     }
 
     /** @return the models */
@@ -323,10 +336,14 @@ public final class TreeEnsembleModel {
         // the write operation from, e.g. 63s to 8s
         DataOutputStream dataOutput = new DataOutputStream(
                 new BufferedOutputStream(new NonClosableOutputStream(out)));
-        dataOutput.writeInt(20121019); // version number
+        // previous version numbers:
+        // 20121019 - first public release
+        // 20140201 - omit target distribution in each tree node
+        dataOutput.writeInt(20140201); // version number
         m_type.save(dataOutput);
         m_metaData.save(dataOutput);
         dataOutput.writeInt(m_models.length);
+        dataOutput.writeBoolean(m_containsClassDistribution);
         for (int i = 0; i < m_models.length; i++) {
             AbstractTreeModel singleModel = m_models[i];
             try {
@@ -350,15 +367,22 @@ public final class TreeEnsembleModel {
     throws IOException, CanceledExecutionException {
         // wrapping the argument (zip input) stream in a buffered stream
         // reduces read operation from, e.g. 42s to 2s
-        DataInputStream input = new DataInputStream(
+        TreeModelDataInputStream input = new TreeModelDataInputStream(
                 new BufferedInputStream(new NonClosableInputStream(in)));
         int version = input.readInt();
-        if (version != 20121019) {
+        if (version > 20140201) {
             throw new IOException("Tree Ensemble version " + version + " not supported");
         }
         TreeType type = TreeType.load(input);
         TreeMetaData metaData = TreeMetaData.load(input);
         int nrModels = input.readInt();
+        boolean containsClassDistribution;
+        if (version == 20121019) {
+            containsClassDistribution = true;
+        } else {
+            containsClassDistribution = input.readBoolean();
+        }
+        input.setContainsClassDistribution(containsClassDistribution);
         AbstractTreeModel[] models = new AbstractTreeModel[nrModels];
         boolean isRegression = metaData.isRegression();
         for (int i = 0; i < nrModels; i++) {
@@ -376,7 +400,7 @@ public final class TreeEnsembleModel {
             models[i] = singleModel;
         }
         input.close(); // does not close the method argument stream!!
-        return new TreeEnsembleModel(metaData, models, type);
+        return new TreeEnsembleModel(metaData, models, type, containsClassDistribution);
     }
 
 }
