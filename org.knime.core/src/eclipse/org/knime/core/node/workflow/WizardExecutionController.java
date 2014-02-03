@@ -51,6 +51,7 @@ package org.knime.core.node.workflow;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -164,6 +165,23 @@ public final class WizardExecutionController {
             }
         }
         return locators;
+    }
+
+    /** Temporary workaround to check if the argument workflow contains sub nodes and hence can be used
+     * with the {@link WizardNode} execution.
+     * @param manager To check, not null.
+     * @return That property.
+     */
+    public static boolean hasWizardExecution(final WorkflowManager manager) {
+        synchronized (manager.getWorkflowMutex()) {
+            Collection<NodeContainer> nodes = manager.getWorkflow().getNodeValues();
+            for (NodeContainer nc : nodes) {
+                if (nc instanceof SubNodeContainer) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     /** Created from workflow.
