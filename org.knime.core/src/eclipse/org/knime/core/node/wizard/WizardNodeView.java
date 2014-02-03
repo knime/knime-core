@@ -57,6 +57,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.swt.SWT;
@@ -81,7 +82,6 @@ import org.knime.core.node.interactive.DefaultReexecutionCallback;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.InteractiveViewDelegate;
 import org.knime.core.node.interactive.ReexecutionCallback;
-import org.knime.core.node.web.WebDependency;
 import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
@@ -325,21 +325,11 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
      */
     private ArrayList<WebResourceLocator> getResourceFileList() {
         ArrayList<WebResourceLocator> resourceFiles = new ArrayList<WebResourceLocator>();
-        if (m_template.getDependencies() != null) {
-            for (WebDependency dependency : m_template.getDependencies()) {
-                if (dependency.getResourceLocators() != null) {
-                    for (WebResourceLocator resFile : dependency.getResourceLocators()) {
-                        resourceFiles.add(resFile);
-                    }
-                }
-            }
-        }
 
         if (m_template.getWebResources() != null) {
-            for (WebResourceLocator resFile : m_template.getWebResources()) {
-                resourceFiles.add(resFile);
-            }
+            resourceFiles.addAll(Arrays.asList(m_template.getWebResources()));
         }
+
         return resourceFiles;
     }
 

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -85,17 +85,18 @@ public final class WebResourceLocator {
     }
 
     private final String m_pluginName;
-    private final String m_relativePath;
+    private final String m_relativePathTarget;
     private final WebResourceType m_type;
 
     /**
      * @param pluginName
-     * @param relativePath
+     * @param relativePathSource
+     * @since 2.10
      *
      */
-    public WebResourceLocator(final String pluginName, final String relativePath, final WebResourceType type) {
+    public WebResourceLocator(final String pluginName, final String relativePathTarget, final WebResourceType type) {
         m_pluginName = pluginName;
-        m_relativePath = relativePath.startsWith("/") ? relativePath : "/" + relativePath;
+        m_relativePathTarget = relativePathTarget.startsWith("/") ? relativePathTarget : "/" + relativePathTarget;
         m_type = type;
     }
 
@@ -107,10 +108,11 @@ public final class WebResourceLocator {
     }
 
     /**
-     * @return the m_relativePath
+     * @return the relativePathTarget
+     * @since 2.10
      */
-    public String getRelativePath() {
-        return m_relativePath;
+    public String getRelativePathTarget() {
+        return m_relativePathTarget;
     }
 
     /**
@@ -128,6 +130,6 @@ public final class WebResourceLocator {
     public File getResource() throws IOException {
         URL url = new URL("platform:/plugin/" + m_pluginName);
         File dir = new File(FileLocator.resolve(url).getFile());
-        return new File(dir, m_relativePath);
+        return new File(dir, m_relativePathTarget);
     }
 }

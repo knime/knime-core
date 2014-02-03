@@ -595,10 +595,40 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/web/DefaultWebTemplate.java" type="org.knime.core.node.web.DefaultWebTemplate">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.web.DefaultWebTemplate"/>
+                <message_argument value="DefaultWebTemplate(WebResourceLocator[], WebDependency[], String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.web.DefaultWebTemplate"/>
+                <message_argument value="getDependencies()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/web/JSONViewContent.java" type="org.knime.core.node.web.JSONViewContent">
         <filter id="338849923">
             <message_arguments>
                 <message_argument value="org.knime.core.node.web.JSONViewContent"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/web/WebResourceLocator.java" type="org.knime.core.node.web.WebResourceLocator">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.web.WebResourceLocator"/>
+                <message_argument value="getRelativePath()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/web/WebTemplate.java" type="org.knime.core.node.web.WebTemplate">
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.web.WebTemplate"/>
+                <message_argument value="getDependencies()"/>
             </message_arguments>
         </filter>
     </resource>

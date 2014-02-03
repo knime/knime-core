@@ -105,6 +105,8 @@ public final class WizardExecutionController {
 
     private static final String ATTR_JS_ID = "jsObjectID";
 
+    private static final String ATTR_NAMESPACE = "namespace";
+
     private static final String ATTR_RES_BUNDLE_ID = "webResourceBundleID";
 
     private static final String ATTR_PATH = "relativePath";
@@ -124,15 +126,14 @@ public final class WizardExecutionController {
         List<WebResourceLocator> implementationRes = getResourcesFromExtension(implementationExtension);
         for (IConfigurationElement dependencyConf : jsComponentExtension.getChildren(ID_DEPENDENCY)) {
             String dependencyID = dependencyConf.getAttribute(ATTR_RES_BUNDLE_ID);
-            IConfigurationElement dependencyExtension =
-                    getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, dependencyID);
+            IConfigurationElement dependencyExtension = getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, dependencyID);
             List<WebResourceLocator> dependencyRes = getResourcesFromExtension(dependencyExtension);
             webResList.addAll(dependencyRes);
         }
         webResList.addAll(implementationRes);
-        return new DefaultWebTemplate(webResList.toArray(new WebResourceLocator[0]), null, jsObjectID);
+        String namespace = jsComponentExtension.getAttribute(ATTR_NAMESPACE);
+        return new DefaultWebTemplate(webResList.toArray(new WebResourceLocator[0]), namespace);
     }
-
 
     private static IConfigurationElement getConfigurationFromID(final String extensionPointId,
         final String configurationID, final String jsObjectID) {
@@ -145,7 +146,6 @@ public final class WizardExecutionController {
         }
         return null;
     }
-
 
     private static List<WebResourceLocator> getResourcesFromExtension(final IConfigurationElement resConfig) {
         String pluginName = resConfig.getContributor().getName();

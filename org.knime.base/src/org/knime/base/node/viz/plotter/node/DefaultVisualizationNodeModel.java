@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   20.09.2006 (Fabian Dill): created
  */
@@ -79,82 +79,85 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 /**
  * Implementation of a {@link org.knime.core.node.NodeModel} which provides all
  * functionality that is needed for a default plotter implementation. That is:
- * converting the incoming data of inport 0 into a 
- * {@link org.knime.base.node.util.DataArray} with the maximum number of rows 
- * specified in the {@link DefaultVisualizationNodeDialog}, loading and saving 
+ * converting the incoming data of inport 0 into a
+ * {@link org.knime.base.node.util.DataArray} with the maximum number of rows
+ * specified in the {@link DefaultVisualizationNodeDialog}, loading and saving
  * this {@link org.knime.base.node.util.DataArray} in the <code>load</code>- and
  * <code>saveInternals</code> and providing it via the
- * {@link #getDataArray(int)} method of the 
+ * {@link #getDataArray(int)} method of the
  * {@link org.knime.base.node.viz.plotter.DataProvider} interface.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public class DefaultVisualizationNodeModel extends NodeModel implements 
+public class DefaultVisualizationNodeModel extends NodeModel implements
     DataProvider {
-    
+
     private DataArray m_input;
-    
+
     /** Config key for the last displayed row. */
     public static final String CFG_END = "end";
-    
+
     /** Config key for dis- or enabling antialiasing. */
     public static final String CFG_ANTIALIAS = "antialias";
-    
-    private static final String FILE_NAME = "internals";
-    
+
+    /**
+     * @since 2.10
+     */
+    protected static final String FILE_NAME = "internals";
+
     /** Config key for the maximal number of nominal values. */
     // bugfix 1299
     public static final String CFG_MAX_NOMINAL = "max_nominal_values";
-    
-    /** Per default columns with nominal values more than this value are 
-     * ignored. 
+
+    /** Per default columns with nominal values more than this value are
+     * ignored.
      */
     // bugfix 1299
     static final int DEFAULT_NR_NOMINAL_VALUES = 60;
-    
+
     private int[] m_excludedColumns;
-    
-    private final SettingsModelIntegerBounded m_maxNominalValues 
+
+    private final SettingsModelIntegerBounded m_maxNominalValues
         = createMaxNominalValuesModel();
-    
-    private final SettingsModelIntegerBounded m_maxRows 
+
+    private final SettingsModelIntegerBounded m_maxRows
         = createLastDisplayedRowModel(END);
     /**
-     * 
+     *
      * @return the settings model for max nominal values
      */
     // bugfix 1299
     static SettingsModelIntegerBounded createMaxNominalValuesModel() {
         return new SettingsModelIntegerBounded(
-                CFG_MAX_NOMINAL, DEFAULT_NR_NOMINAL_VALUES, 
+                CFG_MAX_NOMINAL, DEFAULT_NR_NOMINAL_VALUES,
                 1, Integer.MAX_VALUE);
     }
-    
+
     /** @param end The last row index to display.
-     * @return settings model for the max row count property. 
+     * @return settings model for the max row count property.
      * */
     static SettingsModelIntegerBounded createLastDisplayedRowModel(
             final int end) {
         return new SettingsModelIntegerBounded(
                 CFG_END, end, 1, Integer.MAX_VALUE);
     }
-    
+
     /**
-     * Creates a {@link org.knime.core.node.NodeModel} with one data inport and 
+     * Creates a {@link org.knime.core.node.NodeModel} with one data inport and
      * no outport.
      */
     public DefaultVisualizationNodeModel() {
         super(1, 0);
     }
-    
+
     /**
      * Constructor for extending classes to define an arbitrary number of
      * in- and outports.
-     * 
+     *
      * @param nrInports number of data inports
      * @param nrOutports number of data outports
      */
-    public DefaultVisualizationNodeModel(final int nrInports, 
+    public DefaultVisualizationNodeModel(final int nrInports,
             final int nrOutports) {
         super(nrInports, nrOutports);
     }
@@ -172,7 +175,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     /**
      * All nominal columns without possible values or with more than 60
      * possible values are ignored. A warning is set if so.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -183,7 +186,13 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         return new DataTableSpec[0];
     }
 
-    private void findCompatibleColumns(final DataTableSpec inSpec, 
+    /**
+     * @param inSpec
+     * @param warn
+     * @throws InvalidSettingsException
+     * @since 2.10
+     */
+    protected void findCompatibleColumns(final DataTableSpec inSpec,
             final boolean warn) throws InvalidSettingsException {
         // list of excluded columns for visualization
         final List<Integer>excludedCols = new ArrayList<Integer>();
@@ -196,15 +205,15 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         for (int currCol = 0; currCol < inSpec.getNumColumns(); currCol++) {
             final DataColumnSpec colSpec = inSpec.getColumnSpec(currCol);
             // neither nominal nor numeric column
-            if (!colSpec.getType().isCompatible(NominalValue.class) 
+            if (!colSpec.getType().isCompatible(NominalValue.class)
                     && !colSpec.getType().isCompatible(DoubleValue.class)) {
                 excludedCols.add(currCol);
             }
-            // for nominal columns check number of nominal values 
+            // for nominal columns check number of nominal values
             if (colSpec.getType().isCompatible(NominalValue.class)) {
-                if (colSpec.getDomain().hasValues() 
+                if (colSpec.getDomain().hasValues()
                         // bugfix 1299: made the "60" adjustable via the dialog
-                        && colSpec.getDomain().getValues().size() 
+                        && colSpec.getDomain().getValues().size()
                             > m_maxNominalValues.getIntValue()) {
                     excludedCols.add(currCol);
                     nominalWarning = true;
@@ -229,20 +238,20 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
                 propMgrWarning = true;
             }
         }
-        
+
         // format exclusion list indices to int[]
         m_excludedColumns = new int[excludedCols.size()];
         for (int i = 0; i < excludedCols.size(); i++) {
             m_excludedColumns[i] = excludedCols.get(i);
         }
-        
+
         // check is all columns are excluded
         if (warn && inSpec.getNumColumns() <= excludedCols.size()) {
             throw new InvalidSettingsException(
                 "No columns to visualize are available!"
                 + " Please refer to the NodeDescription to find out why!");
         }
-        
+
         // report detailed warning
     if (warn && excludedCols.size() > 0) {
         final StringBuilder warning = new StringBuilder();
@@ -266,13 +275,13 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         setWarningMessage(warning.toString());
     }
     }
-    
+
     /**
-     * Converts the input data at inport 0 into a 
+     * Converts the input data at inport 0 into a
      * {@link org.knime.base.node.util.DataArray} with maximum number of rows as
-     * defined in the {@link DefaultVisualizationNodeDialog}. Thereby nominal 
+     * defined in the {@link DefaultVisualizationNodeDialog}. Thereby nominal
      * columns are irgnored whose possible values are null or more than 60.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -280,12 +289,12 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
             final ExecutionContext exec) throws Exception {
         // generate list of excluded columns, suppressing warning
         findCompatibleColumns(inData[0].getDataTableSpec(), false);
-        DataTable filter = new FilterColumnTable(inData[0], false, 
+        DataTable filter = new FilterColumnTable(inData[0], false,
                 getExcludedColumns());
         m_input = new DefaultDataArray(
                 filter, 1, m_maxRows.getIntValue(), exec);
         if (m_maxRows.getIntValue() < inData[0].getRowCount()) {
-            setWarningMessage("Only the first " 
+            setWarningMessage("Only the first "
                     + m_maxRows.getIntValue() + " rows are displayed.");
         }
         return new BufferedDataTable[0];
@@ -293,11 +302,11 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
 
     /**
      * Loads the converted {@link org.knime.base.node.util.DataArray}.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         File f = new File(nodeInternDir, FILE_NAME);
@@ -307,7 +316,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
 
     /**
      * Loads the maximum number of rows.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -324,7 +333,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
 
     /**
      * Sets the input data <code>null</code>.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -335,11 +344,11 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
 
     /**
      * Saves the converted {@link org.knime.base.node.util.DataArray}.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         File f = new File(nodeInternDir, FILE_NAME);
@@ -348,7 +357,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
 
     /**
      * Saves the maximum number of rows.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

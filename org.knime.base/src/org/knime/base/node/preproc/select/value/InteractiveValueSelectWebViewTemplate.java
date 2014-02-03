@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -49,7 +49,6 @@
  */
 package org.knime.base.node.preproc.select.value;
 
-import org.knime.core.node.web.WebDependency;
 import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
@@ -61,14 +60,6 @@ import org.knime.core.node.web.WebTemplate;
 public class InteractiveValueSelectWebViewTemplate implements WebTemplate {
 
 
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WebDependency[] getDependencies() {
-        return null;
-    }
 
     /**
      * {@inheritDoc}
@@ -101,5 +92,12 @@ public class InteractiveValueSelectWebViewTemplate implements WebTemplate {
     @Override
     public String getInitMethodName() {
         return "init";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getValidateMethodName() {
+        return "validate";
     }
 }
