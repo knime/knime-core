@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -57,7 +57,6 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.wizard.WizardNodeView;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -120,11 +119,10 @@ public class OpenInteractiveViewAction extends Action {
             if (m_nodeContainer.hasInteractiveView()) {
                 view = m_nodeContainer.getInteractiveView();
             } else if (m_nodeContainer.hasInteractiveWebView()) {
-                WebTemplate template = m_nodeContainer.getWebTemplate();
                 NodeContext.pushContext(m_nodeContainer);
                 try {
                     // TODO: this needs to be changed to also work for SubNodeContainers
-                    view = new WizardNodeView(((NativeNodeContainer)m_nodeContainer).getNodeModel(), template);
+                    view = new WizardNodeView(((NativeNodeContainer)m_nodeContainer).getNodeModel());
                 } finally {
                     NodeContext.removeLastContext();
                 }
