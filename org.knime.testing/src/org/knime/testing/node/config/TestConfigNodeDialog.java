@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -124,6 +124,8 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
     private final JSpinner m_timeout = new JSpinner(new SpinnerNumberModel(30, 0, 3600, 10));
 
+    private final JSpinner m_maxHiliteRows = new JSpinner(new SpinnerNumberModel(2500, 0, Integer.MAX_VALUE, 10));
+
     private int m_lastSelectedIndex = -1;
 
     /**
@@ -179,6 +181,15 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         c.weightx = 1;
         p.add(m_timeout, c);
 
+        c.gridx = 0;
+        c.gridy++;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0;
+        p.add(new JLabel("Maximum number of hilited rows:   "), c);
+        c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+        p.add(m_maxHiliteRows, c);
 
         c.gridx = 0;
         c.gridy++;
@@ -401,6 +412,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
             throws InvalidSettingsException {
         m_settings.owner(m_owner.getText());
         m_settings.timeout((Integer) m_timeout.getValue());
+        m_settings.maxHiliteRows((Integer) m_maxHiliteRows.getValue());
 
         List<String> temp = new ArrayList<String>();
         for (int i = 0; i < m_logErrorsModel.getSize(); i++) {
@@ -432,6 +444,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         m_settings.loadSettingsForDialog(settings);
         m_owner.setText(m_settings.owner());
         m_timeout.setValue(m_settings.timeout());
+        m_maxHiliteRows.setValue(m_settings.maxHiliteRows());
 
         m_logErrorsModel.removeAllElements();
         for (String l : m_settings.requiredLogErrors()) {

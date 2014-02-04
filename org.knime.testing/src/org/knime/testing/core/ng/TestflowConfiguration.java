@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -83,6 +83,11 @@ import org.knime.testing.node.config.TestConfigSettings;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class TestflowConfiguration {
+    /**
+     * The default maximum number of rows (currently {@value}) that are hilited during a workflow test.
+     */
+    public static final int DEFAULT_MAX_HILITE_ROWS = 2500;
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(TestflowConfiguration.class);
 
     private static final String REGEX_PATTERN = "_!_";
@@ -106,6 +111,8 @@ class TestflowConfiguration {
     private final Map<NodeID, Pattern> m_nodeErrorMessages = new HashMap<NodeID, Pattern>();
 
     private final Collection<Pattern> m_requiredDebugs = new ArrayList<Pattern>();
+
+    private int m_maxHiliteRows = DEFAULT_MAX_HILITE_ROWS;
 
     /**
      * Creates a new testflow configuration. The configuration is read from the testflow configuration node inside the
@@ -199,6 +206,7 @@ class TestflowConfiguration {
         }
 
         m_timeout = settings.timeout();
+        m_maxHiliteRows = settings.maxHiliteRows();
     }
 
     /**
@@ -482,6 +490,16 @@ class TestflowConfiguration {
     public Collection<Pattern> getRequiredDebugs() {
         return m_requiredDebugs;
     }
+
+    /**
+     * Returns the maximum number of rows that are hilit during the hilite test.
+     *
+     * @return the maximum number of rows
+     */
+    public int getMaxHiliteRows() {
+        return m_maxHiliteRows;
+    }
+
 
     private static Pattern createPatternFromMessage(String message) {
         int index = message.indexOf(REGEX_PATTERN);

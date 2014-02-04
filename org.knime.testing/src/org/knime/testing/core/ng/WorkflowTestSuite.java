@@ -136,6 +136,8 @@ public class WorkflowTestSuite extends WorkflowTest {
             m_allTests.add(new WorkflowDialogsTest(m_workflowName, m_progressMonitor, m_context));
         }
 
+        m_allTests.add(new WorkflowHiliteTest(m_workflowName, m_progressMonitor, m_context));
+
         if (runConfig.isTestViews()) {
             m_allTests.add(new WorkflowCloseViewsTest(m_workflowName, m_progressMonitor, m_context));
         }

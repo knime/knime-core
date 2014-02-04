@@ -28,6 +28,10 @@
                 Set a timeout after which execution of the workflow is canceled and an error
                 is reported.
             </option>
+            <option name="Maximum number of hilited rows">
+                Sets the maximum number of rows that are hilited per data table. This limit is only for preventing
+                excessive memory usage in case of very large tables because the hilited row keys are all kept in memory.
+            </option>
             <option name="Log Errors, Warnings, Infos">
                 These lists contains error, warning, or info messages that must be present
                 in the log file after the workflows has been fully executed. Usually these

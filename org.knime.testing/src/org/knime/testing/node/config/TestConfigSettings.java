@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -65,6 +65,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.testing.core.FullWorkflowTest;
+import org.knime.testing.core.ng.TestrunConfiguration;
 
 /**
  * This class holds the settings for the testflow configuration node.
@@ -88,7 +89,9 @@ public class TestConfigSettings {
 
     private Set<String> m_failingNodes = new HashSet<String>();
 
-    private int m_timeout = FullWorkflowTest.TIMEOUT;
+    private int m_timeout = TestrunConfiguration.DEFAULT_TIMEOUT;
+
+    private int m_maxHiliteRows = 2500;
 
     private static final String[] EMPTY = new String[0];
 
@@ -272,6 +275,24 @@ public class TestConfigSettings {
 
 
     /**
+     * Returns the maximum number of rows per table that are hilited during a workflow test.
+     *
+     * @return the maximum number of rows
+     */
+    public int maxHiliteRows() {
+        return m_maxHiliteRows;
+    }
+
+    /**
+     * Sets the maximum number of rows per table that are hilited during a workflow test.
+     *
+     * @param count the maximum number of rows
+     */
+    public void maxHiliteRows(final int count) {
+        m_maxHiliteRows = count;
+    }
+
+    /**
      * Loads the settings from the given settings object.
      *
      * @param settings a node settings object
@@ -328,7 +349,10 @@ public class TestConfigSettings {
         }
 
         // since 2.8
-        m_timeout = settings.getInt("timeout", FullWorkflowTest.TIMEOUT);
+        m_timeout = settings.getInt("timeout", TestrunConfiguration.DEFAULT_TIMEOUT);
+
+        // since 2.10
+        m_maxHiliteRows = settings.getInt("maxHilitedRows", 2500);
     }
 
     /**
@@ -399,7 +423,8 @@ public class TestConfigSettings {
             // ignore it
         }
 
-        m_timeout = settings.getInt("timeout", FullWorkflowTest.TIMEOUT);
+        m_timeout = settings.getInt("timeout", TestrunConfiguration.DEFAULT_TIMEOUT);
+        m_maxHiliteRows = settings.getInt("maxHilitedRows", 2500);
     }
 
     /**
@@ -436,6 +461,7 @@ public class TestConfigSettings {
         subs.addInt("count", i);
 
         settings.addInt("timeout", m_timeout);
+        settings.addInt("maxHilitedRows", m_maxHiliteRows);
     }
 
     /**
