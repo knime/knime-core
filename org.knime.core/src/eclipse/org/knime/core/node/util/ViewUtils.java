@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -73,11 +73,14 @@ import org.knime.core.node.workflow.NodeContext;
  * {@link #invokeLaterInEDT(Runnable)} are quite useful because they take care of
  * retaining the {@link NodeContext} if the calling thread.
  *
- * @author ohl, University of Konstanz
+ * @author Peter Ohl, University of Konstanz
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 public final class ViewUtils {
     private static final boolean disableSWTEventLoopWorkaround = Boolean
         .getBoolean("knime.swt.disableEventLoopWorkaround");
+
+    private static final boolean DISPLAY_AVAILABLE;
 
     private static final Runnable EMPTY_RUNNABLE = new Runnable() {
         @Override
@@ -85,6 +88,22 @@ public final class ViewUtils {
         }
     };
 
+
+    static {
+        boolean available;
+        try {
+            // This call is to initialize the SWT class. The class initialization will throw an error in case
+            // no X libraries are available under Linux. In this case we shouldn't try to access the SWT display.
+            // See also bug #4465.
+            Display.getAppName();
+            available = true;
+        } catch (UnsatisfiedLinkError err) {
+            NodeLogger.getLogger(ViewUtils.class).info("Could not intitialize SWT display, probably because X11 or GTK "
+                    + " libraries are missing. Assuming we are running headless.", err);
+            available = false;
+        }
+        DISPLAY_AVAILABLE = available;
+    }
 
     private ViewUtils() {
 
@@ -111,7 +130,7 @@ public final class ViewUtils {
             runMe.run();
         } else {
             try {
-                if (!disableSWTEventLoopWorkaround) {
+                if (!disableSWTEventLoopWorkaround && DISPLAY_AVAILABLE) {
                     final Runnable nodeContextRunnable = getNodeContextWrapper(runMe);
                     final Display display = Display.getCurrent();
                     if (display == null) {
