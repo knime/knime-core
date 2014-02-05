@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -153,6 +153,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.EditorUIInformation;
+import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
@@ -169,7 +170,6 @@ import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.core.util.Pointer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
@@ -2344,6 +2344,10 @@ public class WorkflowEditor extends GraphicalEditor implements
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
             @Override
             public void run() {
+                if (WorkflowEditor.this.isClosed()) {
+                    return;
+                }
+
                 switch (event.getType()) {
                 case NODE_REMOVED:
                     Object oldValue = event.getOldValue();
@@ -2425,7 +2429,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             SyncExecQueueDispatcher.asyncExec(new Runnable() {
                 @Override
                 public void run() {
-                    firePropertyChange(IEditorPart.PROP_DIRTY);
+                    if (!WorkflowEditor.this.isClosed()) {
+                        firePropertyChange(IEditorPart.PROP_DIRTY);
+                    }
                 }
             });
             if (m_parentEditor != null) {
