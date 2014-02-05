@@ -114,6 +114,12 @@ public final class WizardExecutionController {
 
     private static final String ATTR_TYPE = "type";
 
+    private static final String ATTR_INIT_METHOD_NAME = "init-method-name";
+
+    private static final String ATTR_VALIDATE_METHOD_NAME = "validate-method-name";
+
+    private static final String ATTR_GETCOMPONENTVALUE_METHOD_NAME = "getComponentValue-method-name";
+
     /**
      * @param jsObjectID The JavaScript object ID used for locating the extension point.
      * @return A template object, being used to assamble views.
@@ -133,7 +139,10 @@ public final class WizardExecutionController {
         }
         webResList.addAll(implementationRes);
         String namespace = jsComponentExtension.getAttribute(ATTR_NAMESPACE);
-        return new DefaultWebTemplate(webResList.toArray(new WebResourceLocator[0]), namespace);
+        String initMethodName = jsComponentExtension.getAttribute(ATTR_INIT_METHOD_NAME);
+        String validateMethodName = jsComponentExtension.getAttribute(ATTR_VALIDATE_METHOD_NAME);
+        String valueMethodName = jsComponentExtension.getAttribute(ATTR_GETCOMPONENTVALUE_METHOD_NAME);
+        return new DefaultWebTemplate(webResList.toArray(new WebResourceLocator[0]), namespace, initMethodName, validateMethodName, valueMethodName);
     }
 
     private static IConfigurationElement getConfigurationFromID(final String extensionPointId,

@@ -60,6 +60,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -83,6 +84,7 @@ public abstract class JSONViewContent implements WebViewContent {
     @JsonIgnore
     public final void loadFromStream(final InputStream viewContentStream) throws JsonProcessingException, IOException {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         ObjectReader reader = mapper.readerForUpdating(this);
         reader.readValue(viewContentStream);
     }

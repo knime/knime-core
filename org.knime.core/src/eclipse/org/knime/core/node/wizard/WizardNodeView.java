@@ -62,8 +62,8 @@ import java.util.Arrays;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.browser.ProgressAdapter;
 import org.eclipse.swt.browser.ProgressEvent;
-import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -78,6 +78,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.interactive.ConfigureCallback;
+import org.knime.core.node.interactive.DefaultConfigureCallback;
 import org.knime.core.node.interactive.DefaultReexecutionCallback;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.InteractiveViewDelegate;
@@ -100,11 +101,10 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @param <VAL>
  * @since 2.9
  */
-public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, REP extends WebViewContent, VAL extends WebViewContent>
-                extends AbstractNodeView<T> implements InteractiveView<T, REP, VAL> {
+public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, REP extends WebViewContent,
+        VAL extends WebViewContent> extends AbstractNodeView<T> implements InteractiveView<T, REP, VAL> {
 
-    private static final String CONTAINER_ID = "view";
-    private final InteractiveViewDelegate<REP> m_delegate;
+    private final InteractiveViewDelegate<VAL> m_delegate;
     private final WebTemplate m_template;
     private File m_tempFolder;
 
@@ -115,7 +115,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     public WizardNodeView(final T nodeModel) {
         super(nodeModel);
         m_template = WizardExecutionController.getWebTemplateFromJSObjectID(getNodeModel().getJavascriptObjectID());
-        m_delegate = new InteractiveViewDelegate<REP>();
+        m_delegate = new InteractiveViewDelegate<VAL>();
     }
 
     @Override
@@ -129,8 +129,8 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     }
 
     @Override
-    public void triggerReExecution(final REP vc, final ReexecutionCallback callback) {
-        m_delegate.triggerReExecution(vc, callback);
+    public void triggerReExecution(final VAL value, final ReexecutionCallback callback) {
+        m_delegate.triggerReExecution(value, callback);
     }
 
     @Override
@@ -139,25 +139,18 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     }
 
     /**
-     * Load a new ViewContent into the underlying NodeModel.
+     * Load a new ViewValue into the underlying NodeModel.
      *
-     * @param vc the new content of the view.
+     * @param value the new value of the view.
      */
-    protected final void loadViewContentIntoNode(final REP vc) {
-        triggerReExecution(vc, new DefaultReexecutionCallback());
-    }
-
-    /**
-     * @return ViewContent of the underlying NodeModel.
-     */
-    protected final REP getViewContentFromNode() {
-        return getNodeModel().getViewRepresentation();
+    protected final void loadViewValueIntoNode(final VAL value) {
+        triggerReExecution(value, new DefaultReexecutionCallback());
     }
 
     /** Set current ViewContent as new default settings of the underlying NodeModel.
      */
     protected final void makeViewContentNewDefault() {
-        // TODO
+        m_delegate.setNewDefaultConfiguration(new DefaultConfigureCallback());
     }
 
     /**
@@ -173,10 +166,21 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
      */
     @Override
     public final void callOpenView(final String title) {
-        final String jsonViewContent;
+        final String jsonViewRepresentation;
+        final String jsonViewValue;
         try {
-            REP vc = getViewContentFromNode();
-            jsonViewContent = ((ByteArrayOutputStream)vc.saveToStream()).toString("UTF-8");
+            REP rep = getNodeModel().getViewRepresentation();
+            if (rep != null) {
+                jsonViewRepresentation = ((ByteArrayOutputStream)rep.saveToStream()).toString("UTF-8");
+            } else {
+                jsonViewRepresentation = "null";
+            }
+            VAL val = getNodeModel().getViewValue();
+            if (val != null) {
+                jsonViewValue = ((ByteArrayOutputStream)val.saveToStream()).toString("UTF-8");
+            } else {
+                jsonViewValue = "null";
+            }
         } catch (Exception e) {
             throw new IllegalArgumentException("No view content available!");
         }
@@ -210,6 +214,13 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
             }
         });
 
+        newDefaultButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                makeViewContentNewDefault();
+            }
+        });
+
         closeButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
@@ -217,18 +228,10 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
             }
         });
 
-        browser.addProgressListener(new ProgressListener() {
-
+        browser.addProgressListener(new ProgressAdapter() {
             @Override
             public void completed(final ProgressEvent event) {
-                browser.evaluate(wrapInTryCatch(initJSView(jsonViewContent)));
-            }
-
-
-
-            @Override
-            public void changed(final ProgressEvent event) {
-                // do nothing
+                browser.evaluate(wrapInTryCatch(initJSView(jsonViewRepresentation, jsonViewValue)));
             }
         });
 
@@ -262,11 +265,9 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         pageBuilder.append("<!doctype html><html><head>");
         pageBuilder.append(setIEVersion);
         pageBuilder.append("</head><body>");
-        pageBuilder.append("<div id=\"" + CONTAINER_ID + "\" class=\"container\">");
         // content
         pageBuilder.append(e.getMessage());
         // content end
-        pageBuilder.append("</div>");
         pageBuilder.append("</body></html>");
 
         return pageBuilder.toString();
@@ -290,8 +291,8 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     private String buildHTMLResource() throws IOException {
 
         String setIEVersion = "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">";
-        String debugScript = "<script type=\"text/javascript\" "
-                + "src=\"https://getfirebug.com/firebug-lite.js#startOpened=true\"></script>";
+        //String debugScript = "<script type=\"text/javascript\" "
+        //        + "src=\"https://getfirebug.com/firebug-lite.js#startOpened=true\"></script>";
         String scriptString = "<script type=\"text/javascript\" src=\"%s\" charset=\"UTF-8\"></script>";
         String cssString = "<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">";
 
@@ -313,9 +314,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
                     throw new IOException("Unrecognized resource type " + resFile.getType());
             }
         }
-        pageBuilder.append("</head><body>");
-        pageBuilder.append("<div id=\"view\" class=\"container\"></div>");
-        pageBuilder.append("</body></html>");
+        pageBuilder.append("</head><body></body></html>");
         return pageBuilder.toString();
     }
 
@@ -373,38 +372,20 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         tempFolder.delete();
     }
 
-    private String initJSView(final String jsonViewContent) {
-        //String rootCall = getJSMethodCall(null);
+    private String initJSView(final String jsonViewRepresentation, final String jsonViewValue) {
         String initMethod = m_template.getInitMethodName();
-        String initCall = getJSMethodCall(initMethod, jsonViewContent, CONTAINER_ID);
-        return /*rootCall +*/ initCall;
+        return getNamespacePrefix() + initMethod + "(JSON.parse('" + jsonViewRepresentation + "'), JSON.parse('"
+            + jsonViewValue + "'));";
     }
 
-    private String getJSMethodCall(final String method, final String... parameters) {
+    private String getNamespacePrefix() {
         String namespace = m_template.getNamespace();
-        StringBuilder methodCallBuilder = new StringBuilder();
-
         if (namespace != null && !namespace.isEmpty()) {
-            methodCallBuilder.append(namespace);
-
-            if (method != null) {
-                methodCallBuilder.append(".");
-                methodCallBuilder.append(method);
-            }
+            namespace += ".";
+        } else {
+            namespace = "";
         }
-
-        methodCallBuilder.append("(");
-        if (parameters != null && parameters.length > 0) {
-            for (String parameter : parameters) {
-                methodCallBuilder.append("'");
-                methodCallBuilder.append(parameter);
-                methodCallBuilder.append("', ");
-            }
-            methodCallBuilder.delete(methodCallBuilder.length() - 2, methodCallBuilder.length());
-        }
-        methodCallBuilder.append(");");
-
-        return methodCallBuilder.toString();
+        return namespace;
     }
 
     /**
@@ -415,19 +396,18 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         StringBuilder builder = new StringBuilder();
         builder.append("try {");
         builder.append(jsCode);
-        builder.append("} catch(err) {console.error(err);}");
+        builder.append("} catch(err) {}");
         return builder.toString();
     }
 
-
     private void applyTriggered(final Browser browser) {
         String pullMethod = m_template.getPullViewContentMethodName();
-        String evalCode = wrapInTryCatch("return " + getJSMethodCall(pullMethod, CONTAINER_ID));
+        String evalCode = wrapInTryCatch("return JSON.stringify(" + getNamespacePrefix() + pullMethod + "());");
         String jsonString = (String)browser.evaluate(evalCode);
         try {
-            REP viewContent = getNodeModel().createEmptyViewRepresentation();
-            viewContent.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
-            loadViewContentIntoNode(viewContent);
+            VAL viewValue = getNodeModel().createEmptyViewValue();
+            viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
+            loadViewValueIntoNode(viewValue);
         } catch (Exception e) {
             //TODO error message
         }

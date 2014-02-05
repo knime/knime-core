@@ -61,6 +61,9 @@ public class DefaultWebTemplate implements WebTemplate {
 
     private final WebResourceLocator[] m_webResources;
     private final String m_namespace;
+    private final String m_initMethod;
+    private final String m_validateMethod;
+    private final String m_valueMethod;
 
     /**
      * @param jsResources An array of {@link WebResourceLocator}, which is the actual
@@ -69,10 +72,12 @@ public class DefaultWebTemplate implements WebTemplate {
      * @since 2.10
      *
      */
-    public DefaultWebTemplate(final WebResourceLocator[] jsResources, final String namespace) {
+    public DefaultWebTemplate(final WebResourceLocator[] jsResources, final String namespace, final String initMethod, final String validateMethod, final String valueMethod) {
         this.m_webResources = jsResources;
         this.m_namespace = namespace;
-
+        this.m_initMethod = initMethod;
+        this.m_validateMethod = validateMethod;
+        this.m_valueMethod = valueMethod;
     }
 
     /**
@@ -98,7 +103,7 @@ public class DefaultWebTemplate implements WebTemplate {
      */
     @Override
     public final String getInitMethodName() {
-        return "init";
+        return m_initMethod;
     }
 
     /**
@@ -107,7 +112,7 @@ public class DefaultWebTemplate implements WebTemplate {
      */
     @Override
     public final String getPullViewContentMethodName() {
-        return "pullViewContent";
+        return m_valueMethod;
     }
 
     /**
@@ -116,7 +121,7 @@ public class DefaultWebTemplate implements WebTemplate {
      */
     @Override
     public String getValidateMethodName() {
-        return "validate";
+        return m_validateMethod;
     }
 
 }

@@ -88,7 +88,7 @@ public interface InteractiveView<T extends NodeModel & InteractiveNode<REP, VAL>
      * @param vc
      * @param callback Callback for confirm messages and progress information.
      */
-    public void triggerReExecution(final REP vc, final ReexecutionCallback callback);
+    public void triggerReExecution(final VAL vc, final ReexecutionCallback callback);
 
     /**
      * Make sure current node internals are used as new default NodeSettings.<br>

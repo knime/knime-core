@@ -45,67 +45,34 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 07.05.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * Created on Apr 22, 2013 by Berthold
  */
 package org.knime.core.node.interactive;
 
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
+import javax.swing.JOptionPane;
 
 /**
- * Abstract base class for interactive views which are launched on the client side and
- * have direct access to the NodeModel itself. Uses Swing to display content.
  *
- * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
- * @param <T> the underlying node model
- * @param <REP>
- * @param <VAL>
- * @since 2.8
+ * @author B. Wiswedel, M. Berthold, Th. Gabriel
+ * @since 2.10
  */
-public abstract class InteractiveClientNodeView<T extends NodeModel & InteractiveNode<REP, VAL>, REP extends ViewContent, VAL extends ViewContent>
-extends NodeView<T> implements InteractiveView<T, REP, VAL> {
-
-    private final InteractiveViewDelegate<VAL> m_delegate;
+public class DefaultConfigureCallback extends ConfigureCallback {
 
     /**
-     * @param nodeModel The underlying node model.
+     * {@inheritDoc}
      */
-    protected InteractiveClientNodeView(final T nodeModel) {
-        super(nodeModel);
-        m_delegate = new InteractiveViewDelegate<VAL>();
+    @Override
+    public boolean confirmResetDownstreamNodes(final String message) {
+        int answer = JOptionPane.showConfirmDialog(null, message, "Confirm Reset", JOptionPane.OK_CANCEL_OPTION);
+        return answer == JOptionPane.OK_OPTION;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void setWorkflowManagerAndNodeID(final WorkflowManager wfm, final NodeID id) {
-        m_delegate.setWorkflowManagerAndNodeID(wfm, id);
+    public void onError(final String errorMessage) {
+        JOptionPane.showMessageDialog(null, errorMessage, "Reset failed", JOptionPane.ERROR_MESSAGE);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean canReExecute() {
-        return m_delegate.canReExecute();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void triggerReExecution(final VAL val, final ReexecutionCallback callback) {
-        m_delegate.triggerReExecution(val, callback);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setNewDefaultConfiguration(final ConfigureCallback callback) {
-        m_delegate.setNewDefaultConfiguration(callback);
-    }
 }
