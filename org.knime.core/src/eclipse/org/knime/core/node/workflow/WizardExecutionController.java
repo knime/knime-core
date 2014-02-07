@@ -49,6 +49,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -68,12 +70,13 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.web.DefaultWebTemplate;
+import org.knime.core.node.web.JSONViewContent;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
-import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 
 /**
  * A utility class received from the workflow manager that allows to step back and forth in a wizard execution.
@@ -206,7 +209,7 @@ public final class WizardExecutionController {
         if (m_subNodesWithWizardNodesList == null) {
             LOGGER.debugWithFormat("Indexing wizard nodes for workflow %s", m_manager.getNameWithID());
             m_subNodesWithWizardNodesList = new ArrayList<NodeID>();
-            m_levelIndex = 0;
+            m_levelIndex = -1;
             final Workflow workflow = m_manager.getWorkflow();
             LinkedHashMap<NodeID, Set<Integer>> breadthFirstSortedList =
                     workflow.createBreadthFirstSortedList(workflow.getNodeIDs(), true);
@@ -245,7 +248,7 @@ public final class WizardExecutionController {
         final NodeID subNodeID = m_subNodesWithWizardNodesList.get(m_levelIndex);
         SubNodeContainer subNC = (SubNodeContainer)m_manager.getNodeContainer(subNodeID);
         WorkflowManager subWFM = subNC.getWorkflowManager();
-        Map<NodeID, WizardNode> executedWizareNodeMap = subWFM.findExecutedNodes(WizardNode.class, null);
+        Map<NodeID, WizardNode> executedWizareNodeMap = subWFM.findExecutedNodes(WizardNode.class, NOT_HIDDEN_FILTER);
         LinkedHashMap<String, WizardNode> resultMap = new LinkedHashMap<String, WizardNode>();
         for (Map.Entry<NodeID, WizardNode> entry : executedWizareNodeMap.entrySet()) {
             NodeIDSuffix idSuffix = NodeIDSuffix.create(m_manager.getID(), entry.getKey());
@@ -253,6 +256,14 @@ public final class WizardExecutionController {
         }
         return new WizardPageContent(resultMap);
     }
+
+    public static final NodeModelFilter<WizardNode> NOT_HIDDEN_FILTER = new NodeModelFilter<WizardNode>() {
+
+        @Override
+        public boolean include(final WizardNode nodeModel) {
+            return true;
+        }
+    };
 
     public boolean hasNextWizardPage() {
         synchronized (m_manager.getWorkflowMutex()) {
@@ -286,15 +297,15 @@ public final class WizardExecutionController {
     private void stepNextInternal() {
         assert Thread.holdsLock(m_manager.getWorkflowMutex());
         lazyInit();
-        if (m_levelIndex < m_subNodesWithWizardNodesList.size()) {
+        if (++m_levelIndex < m_subNodesWithWizardNodesList.size()) {
             LOGGER.debugWithFormat("Stepping wizard execution to sub node %s (step %d/%d)",
                 m_subNodesWithWizardNodesList.get(m_levelIndex), m_levelIndex, m_subNodesWithWizardNodesList.size());
-            m_manager.executeUpToHere(m_subNodesWithWizardNodesList.get(m_levelIndex++));
+            m_manager.executeUpToHere(m_subNodesWithWizardNodesList.get(m_levelIndex));
         }
     }
 
 
-    public Map<String, ValidationError> loadValuesIntoCurrentPage(final Map<String, WebViewContent> viewContentMap) {
+    public Map<String, ValidationError> loadValuesIntoCurrentPage(final Map<String, String> viewContentMap) {
         synchronized (m_manager.getWorkflowMutex()) {
             NodeContext.pushContext(m_manager);
             try {
@@ -307,7 +318,7 @@ public final class WizardExecutionController {
 
     @SuppressWarnings({"rawtypes", "unchecked" })
     private Map<String, ValidationError> loadValuesIntoCurrentPageInternal(
-        final Map<String, WebViewContent> viewContentMap) {
+        final Map<String, String> viewContentMap) {
         assert Thread.holdsLock(m_manager.getWorkflowMutex());
         lazyInit();
         LOGGER.debugWithFormat("Loading view content into wizard nodes (%d)", viewContentMap.size());
@@ -316,7 +327,7 @@ public final class WizardExecutionController {
         WorkflowManager subNodeWFM = subNodeNC.getWorkflowManager();
         Map<NodeID, WizardNode> wizardNodeSet = subNodeWFM.findNodes(WizardNode.class, false);
         Map<String, ValidationError> resultMap = new LinkedHashMap<String, ValidationError>();
-        for (Map.Entry<String, WebViewContent> entry : viewContentMap.entrySet()) {
+        for (Map.Entry<String, String> entry : viewContentMap.entrySet()) {
             NodeIDSuffix suffix = NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(m_manager.getID());
             if (!id.hasPrefix(currentID)) {
@@ -328,7 +339,18 @@ public final class WizardExecutionController {
                 throw new IllegalStateException(String.format("No wizard node with ID %s in sub node, valid IDs are: "
                         + "%s", id, ConvenienceMethods.getShortStringFrom(wizardNodeSet.entrySet(), 10)));
             }
-            ValidationError validationError = wizardNode.validateViewValue(entry.getValue());
+            JSONViewContent newViewValue = (JSONViewContent)wizardNode.createEmptyViewValue();
+            if (newViewValue == null) {
+                // node has no view value
+                continue;
+            }
+            ValidationError validationError = null;
+            try {
+                newViewValue.loadFromStream(new ByteArrayInputStream(entry.getValue().getBytes()));
+                validationError = wizardNode.validateViewValue(newViewValue);
+            } catch (IOException e) {
+                resultMap.put(entry.getKey(), new ValidationError("Could not deserialize JSON value: " + entry.getValue()));
+            }
             if (validationError != null) {
                 resultMap.put(entry.getKey(), validationError);
             }
@@ -338,11 +360,21 @@ public final class WizardExecutionController {
         }
         // validation succeeded, reset subnode and apply
         m_manager.resetAndConfigureNode(currentID);
-        for (Map.Entry<String, WebViewContent> entry : viewContentMap.entrySet()) {
+        for (Map.Entry<String, String> entry : viewContentMap.entrySet()) {
             NodeIDSuffix suffix = NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(m_manager.getID());
             WizardNode wizardNode = wizardNodeSet.get(id);
-            wizardNode.loadViewValue(entry.getValue());
+            JSONViewContent newViewValue = (JSONViewContent)wizardNode.createEmptyViewValue();
+            if (newViewValue == null) {
+                // node has no view value
+                continue;
+            }
+            try {
+                newViewValue.loadFromStream(new ByteArrayInputStream(entry.getValue().getBytes()));
+                wizardNode.loadViewValue(newViewValue);
+            } catch (IOException e) {
+                // do nothing, exception not possible
+            }
         }
         m_manager.executeUpToHere(currentID);
         return Collections.emptyMap();
