@@ -59,6 +59,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.image.png.PNGImageValue;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -80,6 +81,10 @@ public class JSONDataTableSpec {
         BOOLEAN("boolean"),
         NUMBER("number"),
         STRING("string"),
+        /**
+         * @since 2.10
+         */
+        PNG("png"),
         UNDEFINED("undefined");
 
         private String name;
@@ -106,7 +111,9 @@ public class JSONDataTableSpec {
 
     static JSTypes getJSONType(final DataType colType) {
         JSTypes type;
-        if (colType.isCompatible(BooleanValue.class)) {
+        if (colType.isCompatible(PNGImageValue.class)) {
+            type = JSTypes.PNG;
+        } else if (colType.isCompatible(BooleanValue.class)) {
             type = JSTypes.BOOLEAN;
         } else if (colType.isCompatible(DoubleValue.class)) {
             type = JSTypes.NUMBER;

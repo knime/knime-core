@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Vector;
 
+import org.apache.commons.codec.binary.Base64;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -63,6 +64,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.image.png.PNGImageValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.web.JSONDataTableSpec.JSTypes;
@@ -222,6 +224,8 @@ public class JSONDataTable {
                 return ((DoubleValue)cell).getDoubleValue();
             case STRING:
                 return ((StringValue)cell).getStringValue();
+            case PNG:
+                return new String(Base64.encodeBase64(((PNGImageValue)cell).getImageContent().getByteArray()));
             default:
                 return null;
         }
