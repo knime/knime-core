@@ -80,4 +80,8 @@ fi
 LAST_PWD="$PWD"
 cd "$APP_DIR"
 "$JAVA" "${VM_ARGS[@]}" -classpath "$CLASSPATH" org.eclipse.equinox.launcher.Main "${APP_ARGS[@]}"
+RET=$?
 cd "$LAST_PWD"
+if [[ $RET -eq 23 ]]; then
+	exec $0 "$@"
+fi
