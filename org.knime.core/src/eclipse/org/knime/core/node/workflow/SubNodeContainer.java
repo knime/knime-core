@@ -311,7 +311,7 @@ public final class SubNodeContainer extends SingleNodeContainer {
     @Override
     public URL getIcon() {
         // TODO return useful Icons
-        return null;
+        return SubNodeContainer.class.getResource("subnode.png");
     }
 
     /**
@@ -320,7 +320,7 @@ public final class SubNodeContainer extends SingleNodeContainer {
     @Override
     public NodeType getType() {
         // TODO create and return matching icon
-        return NodeType.Other;
+        return NodeType.Subnode;
     }
 
     /**
