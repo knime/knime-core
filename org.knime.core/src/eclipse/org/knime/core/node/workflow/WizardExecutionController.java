@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -123,6 +124,12 @@ public final class WizardExecutionController {
 
     private static final String ATTR_GETCOMPONENTVALUE_METHOD_NAME = "getComponentValue-method-name";
 
+    private static final String ID_WEB_RESOURCE = "webResource";
+
+    private static final String ATTR_RELATIVE_PATH_SOURCE = "relativePathSource";
+
+    private static final String ATTR_RELATIVE_PATH_TARGET = "relativePathTarget";
+
     /**
      * @param jsObjectID The JavaScript object ID used for locating the extension point.
      * @return A template object, being used to assamble views.
@@ -160,9 +167,18 @@ public final class WizardExecutionController {
         return null;
     }
 
+    private static Map<String, String> getWebResources(final IConfigurationElement resConfig) {
+        Map<String, String> resMap = new HashMap<String, String>();
+        for (IConfigurationElement resElement: resConfig.getChildren(ID_WEB_RESOURCE)) {
+            resMap.put(resElement.getAttribute(ATTR_RELATIVE_PATH_TARGET), resElement.getAttribute(ATTR_RELATIVE_PATH_SOURCE));
+        }
+        return resMap;
+    }
+
     private static List<WebResourceLocator> getResourcesFromExtension(final IConfigurationElement resConfig) {
         String pluginName = resConfig.getContributor().getName();
         List<WebResourceLocator> locators = new ArrayList<WebResourceLocator>();
+        Map<String, String> resMap = getWebResources(resConfig);
         for (IConfigurationElement resElement : resConfig.getChildren(ID_IMPORT_RES)) {
             String path = resElement.getAttribute(ATTR_PATH);
             String type = resElement.getAttribute(ATTR_TYPE);
@@ -173,7 +189,15 @@ public final class WizardExecutionController {
                 } else if (type.equalsIgnoreCase("css")) {
                     resType = WebResourceType.CSS;
                 }
-                locators.add(new WebResourceLocator(pluginName, path, resType));
+                String parent = path.substring(0, path.lastIndexOf('/') + 1);
+                String newParent = resMap.get(parent);
+                String sourcePath;
+                if (newParent != null) {
+                    sourcePath = path.replace(parent, newParent);
+                } else {
+                    sourcePath = path;
+                }
+                locators.add(new WebResourceLocator(pluginName, sourcePath, path, resType));
             }
         }
         return locators;
