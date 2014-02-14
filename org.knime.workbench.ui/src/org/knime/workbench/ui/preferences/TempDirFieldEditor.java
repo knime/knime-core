@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,6 +50,8 @@
  */
 package org.knime.workbench.ui.preferences;
 
+import java.io.File;
+
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -76,6 +78,7 @@ public class TempDirFieldEditor extends DirectoryFieldEditor {
     public TempDirFieldEditor(final String name, final String labelText,
             final Composite parent) {
         super(name, labelText, parent);
+        setErrorMessage("Value must be a writable directory");
 
         // registers a key listener
         getTextControl(parent).addKeyListener(new KeyListener() {
@@ -93,4 +96,20 @@ public class TempDirFieldEditor extends DirectoryFieldEditor {
             }
         });
     }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean doCheckState() {
+        if (!super.doCheckState()) {
+            return false;
+        }
+        String fileName = getTextControl().getText();
+        fileName = fileName.trim();
+        if (fileName.length() == 0 && isEmptyStringAllowed()) {
+            return true;
+        }
+        File file = new File(fileName);
+        return file.isDirectory() && file.canWrite();
+    }
+
 }
