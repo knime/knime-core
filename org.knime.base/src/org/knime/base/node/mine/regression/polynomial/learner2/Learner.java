@@ -48,13 +48,12 @@
  * History
  *   22.01.2010 (hofer): created
  */
-package org.knime.base.node.mine.regression.linear2.learner;
+package org.knime.base.node.mine.regression.polynomial.learner2;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.apache.commons.math3.stat.regression.ModelSpecificationException;
 import org.apache.commons.math3.stat.regression.RegressionResults;
 import org.apache.commons.math3.stat.regression.UpdatingMultipleLinearRegression;
 import org.knime.base.node.mine.regression.RegressionStatisticsLearner;
@@ -70,106 +69,115 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import Jama.Matrix;
 
 /**
- * A Linear Regression Learner.
+ * A Polynomial Regression Learner.
  *
  * @author Heiko Hofer
  */
 final class Learner extends RegressionStatisticsLearner {
-    /**
-     * @param spec The {@link PMMLPortObjectSpec} of the output table.
-     */
-    Learner(final PMMLPortObjectSpec spec) {
-        this(spec, true, 0.0, true);
-    }
+    /** The maximal exponent in the model, at least {@code 1}. */
+    private int m_maxExponent;
+
 
     /**
      * @param spec The {@link PMMLPortObjectSpec} of the output table.
-     * @param includeConstant include a constant automatically
+     * @param maxExponent The maximal exponent in the model.
+     * @throws IllegalArgumentException If the {@code maxExponent} is less than {@code 1}.
+     */
+    Learner(final PMMLPortObjectSpec spec, final int maxExponent) {
+        this(spec, 0.0, true, maxExponent);
+    }
+
+
+    /**
+     * @param spec The {@link PMMLPortObjectSpec} of the output table.
      * @param offsetValue offset value (a user defined intercept)
      * @param failOnMissing when true an exception is thrown when a missing cell is observed
+     * @param maxExponent The maximal exponent in the model.
+     * @throws IllegalArgumentException If the {@code maxExponent} is less than {@code 1}.
      */
-    Learner(final PMMLPortObjectSpec spec, final boolean includeConstant, final double offsetValue,
-        final boolean failOnMissing) {
-        super(spec, failOnMissing, includeConstant);
+    Learner(final PMMLPortObjectSpec spec, final double offsetValue, final boolean failOnMissing,
+        final int maxExponent) {
+        super(spec, failOnMissing, true);
         m_offsetValue = offsetValue;
+        if (maxExponent < 1) {
+            throw new IllegalArgumentException("Wrong maximal exponent, it should be at least 1: " + maxExponent);
+        }
+        m_maxExponent = maxExponent;
     }
 
     /**
      * @param data The data table.
-     * @param rowCount the number of rows in the input table, used for reporting progress. Set to -1 if progress should
-     *            not be reported.
+     * @param rowCount the number of rows in the input table, used for reporting progress.
+     *      Set to -1 if progress should not be reported.
      * @param exec The execution context used for reporting progress.
      * @return An object which holds the results.
      * @throws CanceledExecutionException When method is cancelled
      * @throws InvalidSettingsException When settings are inconsistent with the data
      */
     @Override
-    public LinearRegressionContent perform(final DataTable data, final int rowCount, final ExecutionContext exec)
-        throws CanceledExecutionException, InvalidSettingsException {
+    public PolyRegContent perform(final DataTable data,
+            final int rowCount, final ExecutionContext exec)
+                    throws CanceledExecutionException, InvalidSettingsException {
         exec.checkCanceled();
 
-        RegressionTrainingData trainingData = new RegressionTrainingData(data, m_outSpec, m_failOnMissing);
+        RegressionTrainingData trainingData = new RegressionTrainingData(data, m_outSpec,
+            m_failOnMissing);
 
-        final int regressorCount = trainingData.getRegressorCount();
+        int regressorCount = trainingData.getRegressorCount() * m_maxExponent;
         SummaryStatistics[] stats = new SummaryStatistics[regressorCount];
         UpdatingMultipleLinearRegression regr = initStatistics(regressorCount, stats);
 
-        exec.setProgress(0, "Estimating linear regression model.");
+
+        exec.setProgress(0, "Estimating polynomial regression model.");
         processTable(rowCount, exec, trainingData, stats, regr);
+
+        RegressionResults result = regr.regress();
+
+        Matrix beta = new Matrix(result.getParameterEstimates(), 1);
 
         List<String> factorList = new ArrayList<String>();
         List<String> covariateList = createCovariateListAndFillFactors(data, trainingData, factorList);
-        try {
-            RegressionResults result = regr.regress();
 
-            Matrix beta = new Matrix(result.getParameterEstimates(), 1);
+        // The covariance matrix
+        Matrix covMat = createCovarianceMatrix(result);
 
-            // The covariance matrix
-            Matrix covMat = createCovarianceMatrix(result);
+        PolyRegContent content = new PolyRegContent(m_outSpec,
+            (int)stats[0].getN(), factorList, covariateList, beta,
+            m_offsetValue, covMat, result.getRSquared(),
+            result.getAdjustedRSquared(), stats, m_maxExponent);
 
-            LinearRegressionContent content =
-                new LinearRegressionContent(m_outSpec, (int)stats[0].getN(), factorList, covariateList, beta,
-                    m_includeConstant, m_offsetValue, covMat, result.getRSquared(), result.getAdjustedRSquared(), stats);
-
-            return content;
-        } catch (ModelSpecificationException e) {
-            Matrix beta = new Matrix(1, (m_includeConstant ? 1 : 0) + trainingData.getRegressorCount() + 1);
-            Matrix covMat = new Matrix(trainingData.getRegressorCount() + 1, trainingData.getRegressorCount() + 1);
-            //fillWithNaNs(beta);
-            fillWithNaNs(covMat);
-            return new LinearRegressionContent(m_outSpec, (int)stats[0].getN(), factorList, covariateList, beta,
-                m_includeConstant, m_offsetValue, covMat, Double.NaN, Double.NaN, stats);
-        }
+        return content;
     }
 
-    /**
-     * @param matrix
-     */
-    private void fillWithNaNs(final Matrix matrix) {
-        for (int i = matrix.getRowDimension(); i-- > 0;) {
-            for (int j = matrix.getColumnDimension(); j-- > 0;) {
-                matrix.set(i, j, Double.NaN);
-            }
-        }
-    }
 
     /**
-     * {@inheritDoc}
+     * @param rowCount
+     * @param exec
+     * @param trainingData
+     * @param stats
+     * @param regr
+     * @throws CanceledExecutionException
      */
     @Override
-    protected void processTable(final int rowCount, final ExecutionMonitor exec,
-        final RegressionTrainingData trainingData, final SummaryStatistics[] stats,
-        final UpdatingMultipleLinearRegression regr) throws CanceledExecutionException {
+    protected void processTable(final int rowCount, final ExecutionMonitor exec, final RegressionTrainingData trainingData,
+        final SummaryStatistics[] stats, final UpdatingMultipleLinearRegression regr) throws CanceledExecutionException {
         int r = 1;
         double progress = 0;
         for (RegressionTrainingRow row : trainingData) {
             exec.checkCanceled();
             if (!row.hasMissingCells()) {
                 double[] parameter = row.getParameter().getArray()[0];
+                double[] params = new double[trainingData.getRegressorCount() * m_maxExponent];
                 for (int i = 0; i < trainingData.getRegressorCount(); i++) {
-                    stats[i].addValue(parameter[i]);
+                    double v = parameter[i];
+                    for (int n = 0; n < m_maxExponent; ++n) {
+                        int index = i + n * trainingData.getRegressorCount();
+                        stats[index].addValue(v);
+                        params[index] = v;
+                        v *= v;
+                    }
                 }
-                regr.addObservation(parameter, row.getTarget() - m_offsetValue);
+                regr.addObservation(params, row.getTarget() - m_offsetValue);
             }
             if (rowCount > 0) {
                 double progressUpdate = r / (double)rowCount;

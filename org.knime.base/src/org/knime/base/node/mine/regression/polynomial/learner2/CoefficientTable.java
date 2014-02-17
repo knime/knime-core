@@ -1,4 +1,4 @@
-/*
+/* Created on 22.01.2007 10:04:59 by thor
  * ------------------------------------------------------------------------
  *
  *  Copyright by
@@ -43,56 +43,50 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- *
- * History
- *   21.01.2010 (hofer): created
+ * ------------------------------------------------------------------- *
  */
-package org.knime.base.node.mine.regression.linear2.learner;
+package org.knime.base.node.mine.regression.polynomial.learner2;
 
+import java.awt.BorderLayout;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JEditorPane;
-import javax.swing.JScrollPane;
+import javax.swing.JPanel;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.knime.base.node.mine.regression.RegressionContent;
 import org.knime.base.node.util.DoubleFormat;
-import org.knime.core.node.NodeView;
-import org.knime.core.util.Pair;
 
 /**
- * View on the linear regression learner node. It only has a text pane where
- * some statistics are displayed.
+ * This is the view that shows the coefficients in a table and the squared
+ * error per row in a line below the table.
  *
- * @author Heiko Hofer
+ * @author Thorsten Meinl, University of Konstanz
+ * @since 2.10
  */
-class LinReg2LearnerNodeView extends NodeView<LinReg2LearnerNodeModel> {
-
+@SuppressWarnings("serial")
+public class CoefficientTable extends JPanel {
+    private PolyRegViewData m_viewData;
     /** The text pane that holds the information. */
     private final JEditorPane m_pane;
 
     /**
-     * New instance.
+     * Creates a new coefficient table.
      *
-     * @param model the model to look at
+     * @param nodeModel the node model
      */
-    public LinReg2LearnerNodeView(final LinReg2LearnerNodeModel model) {
-        super(model);
+    public CoefficientTable(final PolyRegLearnerNodeModel nodeModel) {
+        super(new BorderLayout());
         m_pane = new JEditorPane("text/html", "");
         m_pane.setEditable(false);
-        JScrollPane scroller = new JScrollPane(m_pane);
-        setComponent(scroller);
+        add(m_pane);
+        m_viewData = nodeModel.getViewData();
     }
 
     /**
-     * {@inheritDoc}
+     * Updates the table.
      */
-    @Override
-    protected void modelChanged() {
-        LinReg2LearnerNodeModel model = getNodeModel();
-
+    public void update() {
         StringBuilder buffer = new StringBuilder();
         buffer.append("<html>\n");
         buffer.append("<head>\n");
@@ -107,11 +101,11 @@ class LinReg2LearnerNodeView extends NodeView<LinReg2LearnerNodeModel> {
         buffer.append("</style>\n");
         buffer.append("</head>\n");
         buffer.append("<body>\n");
-        buffer.append("<h2>Statistics on Linear Regression</h2>");
+        buffer.append("<h2>Statistics on Polynomial Regression</h2>");
 
-        if (model.isDataAvailable()) {
-            RegressionContent content = model.getRegressionContent();
-            List<String> parameters = content.getParameters();
+        if (m_viewData.betas.length != 0) {
+            //LinearRegressionContent content = model.getRegressionContent();
+            List<String> parameters = Arrays.asList(m_viewData.columnNames);
             buffer.append("<table>\n");
             buffer.append("<tr>");
             buffer.append("<th>Variable</th>");
@@ -120,77 +114,69 @@ class LinReg2LearnerNodeView extends NodeView<LinReg2LearnerNodeModel> {
             buffer.append("<th>t-value</th>");
             buffer.append("<th>P&gt;|t|</th>");
             buffer.append("</tr>");
-            Map<Pair<String, Integer>, Double> coefficients = content.getCoefficients();
-            Map<Pair<String, Integer>, Double> stdErrs = content.getStandardErrors();
-            Map<Pair<String, Integer>, Double> tValues = content.getTValues();
-            Map<Pair<String, Integer>, Double> pValues = content.getPValues();
+            double[] coefficients = m_viewData.betas;
+            double[] stdErrs = m_viewData.m_stdErrs;
+            double[] tValues = m_viewData.m_tValues;
+            double[] pValues = m_viewData.m_pValues;
 
             boolean odd = true;
-            for (String parameter : parameters) {
-                if (odd) {
-                    buffer.append("<tr class=\"odd\">\n");
-                } else {
-                    buffer.append("<tr class=\"even\">\n");
-                }
-                odd = !odd;
+            for (int d = 1; d <= m_viewData.degree; ++d) {
+                for (int c = 0; c < parameters.size(); ++c) {
+                    String parameter = parameters.get(c);
+                    if (odd) {
+                        buffer.append("<tr class=\"odd\">\n");
+                    } else {
+                        buffer.append("<tr class=\"even\">\n");
+                    }
+                    odd = !odd;
 
-                buffer.append("<td>");
-                buffer.append(StringEscapeUtils.escapeHtml(parameter));
-                buffer.append("</td>\n<td class=\"numeric\">");
-                Pair<String, Integer> pair = Pair.create(parameter, 1);
-                String coeff = DoubleFormat.formatDouble(coefficients.get(pair));
-                buffer.append(coeff);
-                buffer.append("</td>\n<td class=\"numeric\">");
-                String stdErr = DoubleFormat.formatDouble(stdErrs.get(pair));
-                buffer.append(stdErr);
-                buffer.append("</td>\n<td class=\"numeric\">");
-                String zScore = DoubleFormat.formatDouble(tValues.get(pair));
-                buffer.append(zScore);
-                buffer.append("</td>\n<td class=\"numeric\">");
-                String pValue = DoubleFormat.formatDouble(pValues.get(pair));
-                buffer.append(pValue);
-                buffer.append("</td>\n");
-                buffer.append("</tr>\n");
+                    buffer.append("<td>");
+                    buffer.append(StringEscapeUtils.escapeHtml(parameter) + (d > 1 ? "^" + d : ""));
+                    buffer.append("</td>\n<td class=\"numeric\">");
+                    String coeff = DoubleFormat.formatDouble(coefficients[(d - 1) + m_viewData.degree * c + 1]);
+                    buffer.append(coeff);
+                    buffer.append("</td>\n<td class=\"numeric\">");
+                    int index = (d-1) * parameters.size() + c;
+                    String stdErr = DoubleFormat.formatDouble(stdErrs[index]);
+                    buffer.append(stdErr);
+                    buffer.append("</td>\n<td class=\"numeric\">");
+                    String zScore = DoubleFormat.formatDouble(tValues[index]);
+                    buffer.append(zScore);
+                    buffer.append("</td>\n<td class=\"numeric\">");
+                    String pValue = DoubleFormat.formatDouble(pValues[index]);
+                    buffer.append(pValue);
+                    buffer.append("</td>\n");
+                    buffer.append("</tr>\n");
+                }
             }
-            if (content.getIncludeConstant()) {
                 if (odd) {
                     buffer.append("<tr class=\"odd\">\n");
                 } else {
                     buffer.append("<tr class=\"even\">\n");
                 }
 
-                buffer.append("<td>");
-                buffer.append("Intercept");
-                buffer.append("</td>\n<td class=\"numeric\">");
-                String intercept = DoubleFormat.formatDouble(content.getIntercept());
+                buffer.append("<td>Intercept</td>\n<td class=\"numeric\">");
+                String intercept = DoubleFormat.formatDouble(coefficients[0]);
                 buffer.append(intercept);
                 buffer.append("</td>\n<td class=\"numeric\">");
-                String stdErr = DoubleFormat.formatDouble(content.getInterceptStdErr());
+                String stdErr = DoubleFormat.formatDouble(stdErrs[stdErrs.length - 1]);
                 buffer.append(stdErr);
                 buffer.append("</td>\n<td class=\"numeric\">");
-                String tValue = DoubleFormat.formatDouble(content.getInterceptTValue());
+                String tValue = DoubleFormat.formatDouble(tValues[tValues.length - 1]);
                 buffer.append(tValue);
                 buffer.append("</td>\n<td class=\"numeric\">");
-                String pValue = DoubleFormat.formatDouble(content.getInterceptPValue());
+                String pValue = DoubleFormat.formatDouble(pValues[pValues.length - 1]);
                 buffer.append(pValue);
                 buffer.append("</td>\n");
                 buffer.append("</tr>\n");
                 buffer.append("</tr>\n");
-            }
             buffer.append("</table>\n");
-
-            if (!content.getIncludeConstant()) {
-                buffer.append("Offset Value: ");
-                String offsetValue = DoubleFormat.formatDouble(content.getOffsetValue());
-                buffer.append(offsetValue);
-                buffer.append("<br/>");
-            }
             buffer.append("Multiple R-Squared: ");
-            String rSquared = DoubleFormat.formatDouble(content.getRSquared());
+            String rSquared = DoubleFormat.formatDouble(m_viewData.squaredError);
             buffer.append(rSquared);
             buffer.append("<br/>");
             buffer.append("Adjusted R-Squared: ");
-            String adjustedRSquared = DoubleFormat.formatDouble(content.getAdjustedRSquared());
+            String adjustedRSquared = DoubleFormat.formatDouble(m_viewData.m_adjustedR2);
             buffer.append(adjustedRSquared);
             buffer.append("<br/>");
         } else {
@@ -201,21 +187,5 @@ class LinReg2LearnerNodeView extends NodeView<LinReg2LearnerNodeModel> {
         buffer.append("</html>\n");
         m_pane.setText(buffer.toString());
         m_pane.revalidate();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void onClose() {
-        // do nothing.
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void onOpen() {
-        // do nothing.
     }
 }

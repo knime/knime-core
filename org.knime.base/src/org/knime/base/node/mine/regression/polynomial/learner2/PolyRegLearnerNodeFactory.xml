@@ -36,11 +36,14 @@
              The input must not contain missing values, you have to fix them by e.g. using the Missing Values node.
         </inPort>
         <inPort index="1" name="PMML Preprocessing">Optional PMML port object containing preprocessing operations.</inPort>
-        <outPort name="Data with training error" index="0">
+        <outPort name="Regression Coefficients" index="0">
+            The computed regression coefficients as a PMML model for use in the Regression Predictor.
+        </outPort>
+        <outPort name="Data with training error" index="1">
             Training data classified with the learned model and the corresponding errors.
         </outPort>
-        <outPort name="Regression Coefficients" index="1">
-            The computed regression coefficients as a model for use in the Polynomial Regression Predictor.
+        <outPort name="Coefficients and Statistics" index="2">
+            The computed regression coefficients as a table with statistics related to the training data.
         </outPort>
     </ports>
 

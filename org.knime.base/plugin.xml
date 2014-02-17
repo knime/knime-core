@@ -663,8 +663,8 @@
              id="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
        <node
             category-path="/statistics/regression"
-            factory-class="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"
-            id="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"
+            factory-class="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"
+            id="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"
             after="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
        <node
              category-path="/statistics/regression"
