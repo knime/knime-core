@@ -581,10 +581,19 @@ public abstract class NodeDialogPane {
 
     /**
      * This method calls {@link #onCancel()} after having set a {@link NodeContext} if none exists yet.
+     * @since 2.10
      */
-    final void callOnCancel() {
+    public final void callOnCancel() {
         NodeContext.pushContext(m_nodeContext);
         try {
+            // Editor values have to be committed, otherwise they will keep their data after reopening of the dialog
+            // Bug 5031
+            ViewUtils.invokeAndWaitInEDT(new Runnable() {
+                @Override
+                public void run() {
+                    commitComponentsRecursively(getPanel());
+                }
+            });
             onCancel();
         } finally {
             NodeContext.removeLastContext();
