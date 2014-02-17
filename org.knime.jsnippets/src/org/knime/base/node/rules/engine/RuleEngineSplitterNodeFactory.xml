@@ -111,11 +111,10 @@ $Col0$ MATCHES $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$ =>
             with Ctrl+Space. Each row represents a rule. A red background of the
             line signals an error and the left side of the editor then shows an error icon.
 		</option>
-		<option
-			name="TRUE to first, FALSE to second output table">
-			A row will be included in the first output table if the first
-			rule that matches has TRUE outcome. If the first matching rule yields FALSE the row will go to the second
-            output table. If unchecked, the roles of the first and second output table will be switched.
+		<option name="TRUE matches go to">
+			A row will be included in the top/bottom output table if the first
+			rule that matches has TRUE outcome depending on the selection. If the first matching rule yields FALSE 
+            or no rule matches the row will go to the other output table.
 		</option>
 
 	</fullDescription>

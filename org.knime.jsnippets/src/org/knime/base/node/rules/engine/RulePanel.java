@@ -71,7 +71,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -114,7 +113,9 @@ import org.knime.core.util.ThreadUtils;
  */
 @SuppressWarnings({"serial"})
 public class RulePanel extends JPanel {
-    private JCheckBox m_inclusionBox;
+    private JRadioButton m_top, m_bottom;
+
+    private ButtonGroup m_includeButtons = new ButtonGroup();
 
     private JLabel m_outputType;
 
@@ -241,13 +242,23 @@ public class RulePanel extends JPanel {
             String watermark = "prediction";
             int colWidth = 35;
             ret.add(
-                m_nodeType.allowColumns() ? createNewColumnTextFieldWithReplace(watermark, colWidth,
-                "Append Column: ") : createNewColumnTextFieldWithLabel(watermark, colWidth,
-                    "New flow variable name"), constraints);
+                m_nodeType.allowColumns() ? createNewColumnTextFieldWithReplace(watermark, colWidth, "Append Column: ")
+                    : createNewColumnTextFieldWithLabel(watermark, colWidth, "New flow variable name"), constraints);
 
         } else {
-            m_inclusionBox = new JCheckBox(m_nodeType.inclusionText());
-            ret.add(m_inclusionBox, constraints);
+            JLabel label = new JLabel(m_nodeType.selectionText());
+            constraints.gridx = 0;
+            constraints.gridy = 0;
+
+            ret.add(label, constraints);
+            constraints.gridx++;
+            m_top = new JRadioButton(m_nodeType.topText());
+            ret.add(m_top, constraints);
+            constraints.gridx++;
+            m_bottom = new JRadioButton(m_nodeType.bottomText());
+            ret.add(m_bottom, constraints);
+            m_includeButtons.add(m_top);
+            m_includeButtons.add(m_bottom);
         }
         return ret;
     }
@@ -270,7 +281,9 @@ public class RulePanel extends JPanel {
         ret.add(m_outputType);
         return ret;
     }
-    private Component createNewColumnTextFieldWithReplace(final String watermark, final int colWidth, final String label) {
+
+    private Component
+        createNewColumnTextFieldWithReplace(final String watermark, final int colWidth, final String label) {
         Box ret = Box.createVerticalBox();
         JPanel addColumnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JPanel replaceColumnPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -287,13 +300,16 @@ public class RulePanel extends JPanel {
                 m_newColumnName.setEnabled(newColumn.isSelected());
                 m_replaceColumn.setEnabled(m_replaceColRadio.isSelected());
                 m_replaceColumn.setRequired(m_replaceColRadio.isSelected());
-            }};
+            }
+        };
         newColumn.addActionListener(actionListener);
         m_replaceColRadio.addActionListener(actionListener);
         m_outputGroup.add(newColumn);
         m_outputGroup.add(m_replaceColRadio);
         @SuppressWarnings("unchecked")
-        ColumnSelectionPanel colSelectionPanel = new ColumnSelectionPanel((Border)null, DoubleValue.class, IntValue.class, StringValue.class, BooleanValue.class);
+        ColumnSelectionPanel colSelectionPanel =
+            new ColumnSelectionPanel((Border)null, DoubleValue.class, IntValue.class, StringValue.class,
+                BooleanValue.class);
         m_replaceColumn = colSelectionPanel;
         m_outputType = new JLabel(DataValue.UTILITY.getIcon());
         addColumnPanel.add(m_outputType);
@@ -561,7 +577,7 @@ public class RulePanel extends JPanel {
             final SettingsModelBoolean settingsModelBoolean =
                 new SettingsModelBoolean(RuleEngineFilterNodeModel.CFGKEY_INCLUDE_ON_MATCH,
                     RuleEngineFilterNodeModel.DEFAULT_INCLUDE_ON_MATCH);
-            settingsModelBoolean.setBooleanValue(m_inclusionBox.isSelected());
+            settingsModelBoolean.setBooleanValue(m_top.isSelected());
             settingsModelBoolean.saveSettingsTo(settings);
         }
     }
@@ -588,7 +604,8 @@ public class RulePanel extends JPanel {
             String newColName = ruleSettings.getNewColName();
             m_newColumnName.setText(newColName);
             if (m_replaceColumn != null) {
-                m_outputGroup.setSelected(m_outputGroup.getElements().nextElement().getModel(), ruleSettings.isAppendColumn());
+                m_outputGroup.setSelected(m_outputGroup.getElements().nextElement().getModel(),
+                    ruleSettings.isAppendColumn());
                 m_outputGroup.setSelected(m_replaceColRadio.getModel(), !ruleSettings.isAppendColumn());
                 for (ActionListener listener : m_replaceColRadio.getActionListeners()) {
                     listener.actionPerformed(null);
@@ -619,9 +636,12 @@ public class RulePanel extends JPanel {
                     new SettingsModelBoolean(RuleEngineFilterNodeModel.CFGKEY_INCLUDE_ON_MATCH,
                         RuleEngineFilterNodeModel.DEFAULT_INCLUDE_ON_MATCH);
                 includeOnMatch.loadSettingsFrom(settings);
-                m_inclusionBox.setSelected(includeOnMatch.getBooleanValue());
+                m_top.setSelected(includeOnMatch.getBooleanValue());
+                m_bottom.setSelected(!includeOnMatch.getBooleanValue());
             } catch (InvalidSettingsException e) {
-                m_inclusionBox.setSelected(true);
+                boolean defaultTop = true;
+                m_top.setSelected(defaultTop);
+                m_bottom.setSelected(!defaultTop);
             }
         }
         updateText(text.toString());

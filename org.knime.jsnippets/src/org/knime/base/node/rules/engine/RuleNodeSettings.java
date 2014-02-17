@@ -219,7 +219,12 @@ public enum RuleNodeSettings {
 
     /**
      * @return The label of the checkbox.
+     * @deprecated No longer used.
+     * @see #topText()
+     * @see #bottomText()
+     * @see #selectionText()
      */
+    @Deprecated
     public String inclusionText() {
         if (this == RuleFilter) {
             return "include if first matching rule is TRUE";
@@ -227,6 +232,38 @@ public enum RuleNodeSettings {
         if (this == RuleSplitter) {
             return "TRUE to first, FALSE to second output table";
         }
+        return null;
+    }
+
+    /**
+     * @return The text for the option moving the TRUE matches to the top (or single) outport.
+     */
+    public String topText() {
+        return textForFilters("Include TRUE matches", "first output table");
+    }
+
+    /**
+     * @return The text for the option moving the TRUE matches to the bottom (or non-existing) outport.
+     */
+    public String bottomText() {
+        return textForFilters("Exclude TRUE matches", "second output table");
+    }
+
+    /**
+     * @return For filters, splitters the text before the options.
+     */
+    public String selectionText() {
+        return textForFilters("", "TRUE matches go to ");
+    }
+
+    private String textForFilters(final String filter, final String splitter) {
+        if (this == RuleFilter) {
+            return filter;
+        }
+        if (this == RuleSplitter) {
+            return splitter;
+        }
+        assert false;
         return null;
     }
 
