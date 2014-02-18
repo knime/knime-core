@@ -213,11 +213,18 @@ public final class DataColumnProperties implements Cloneable {
             return false;
         }
 
+        int h1 = System.identityHashCode(m_props);
+        int h2 = System.identityHashCode(((DataColumnProperties)obj).m_props);
+
         // avoid a deadlock, see bug #4444
-        if (System.identityHashCode(m_props) < System.identityHashCode(((DataColumnProperties)obj).m_props)) {
+        if (h1 < h2) {
             return m_props.equals(((DataColumnProperties)obj).m_props);
-        } else {
+        } else if (h2 < h1) {
             return ((DataColumnProperties)obj).m_props.equals(m_props);
+        } else {
+            synchronized(DataColumnProperties.class) {
+                return m_props.equals(((DataColumnProperties)obj).m_props);
+            }
         }
     }
 
