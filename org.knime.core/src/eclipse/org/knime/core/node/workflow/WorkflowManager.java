@@ -2545,7 +2545,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (success) {
                     Node node = nnc.getNode();
                     // process start of bundle of parallel chunks
-                    if (node.getNodeModel() instanceof LoopStartParallelizeNode) {
+                    if (node.getNodeModel() instanceof LoopStartParallelizeNode && !node.isInactive()) {
                         try {
                             parallelizeLoop(nc.getID());
                         } catch (Exception e) {
