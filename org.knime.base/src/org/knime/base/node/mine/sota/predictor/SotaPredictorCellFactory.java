@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,14 +44,17 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   30.03.2007 (thiel): created
  */
 package org.knime.base.node.mine.sota.predictor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.knime.base.data.filter.column.FilterColumnRow;
 import org.knime.base.node.mine.sota.distances.DistanceManager;
@@ -59,61 +62,107 @@ import org.knime.base.node.mine.sota.distances.DistanceManagerFactory;
 import org.knime.base.node.mine.sota.logic.SotaCellFactory;
 import org.knime.base.node.mine.sota.logic.SotaManager;
 import org.knime.base.node.mine.sota.logic.SotaTreeCell;
+import org.knime.base.node.mine.util.PredictorHelper;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
 public class SotaPredictorCellFactory implements CellFactory {
 
+    /**
+     *
+     */
+    private static final double EPSILON = 1E-9;
+
     private int[] m_includedColsIndices;
-    
+
     private DistanceManager m_distanceManager;
-    
+
     private SotaTreeCell m_root;
-    
+
+    private boolean m_appendProbs;
+
+    private DataTableSpec m_newColumns;
+
+    private ArrayList<SotaTreeCell> m_cells = new ArrayList<SotaTreeCell>();
+
+    private final DataColumnSpec m_targetColumn;
+
+    private final String m_suffix;
+
+    /**
+     * Creates new instance of <code>SotaPredictorCellFactory</code> with given <code>SotaManager</code>, array of
+     * indices of columns to use for prediction and the distance metric to use.
+     *
+     * @param root The <code>SotaManager</code> to set.
+     * @param indicesOfIncludedColumns The array of indices of columns to use for prediction.
+     * @param distance The distance to use.
+     * @deprecated Use the other constructor,
+     *             {@link #SotaPredictorCellFactory(SotaTreeCell, int[], String, boolean, DataColumnSpec, String, DataColumnSpec[])}
+     */
+    @Deprecated
+    public SotaPredictorCellFactory(final SotaTreeCell root,
+            final int[] indicesOfIncludedColumns, final String distance) {
+        this(root, indicesOfIncludedColumns, distance, false, null, "", new DataColumnSpec[] {new DataColumnSpecCreator("Predicted class", StringCell.TYPE).createSpec()});
+    }
+
     /**
      * Creates new instance of <code>SotaPredictorCellFactory</code> with given
      * <code>SotaManager</code>, array of indices of columns to use for
      * prediction and the distance metric to use.
-     * 
-     * @param root The <code>SotaManager</code> to set. 
-     * @param indicesOfIncludedColumns The array of indices of columns to use 
+     *
+     * @param root The <code>SotaManager</code> to set.
+     * @param indicesOfIncludedColumns The array of indices of columns to use
      * for prediction.
      * @param distance The distance to use.
+     * @param appendProbabilities Add the probability columns.
+     * @param targetColumn The target column spec from the learned model.
+     * @param suffix The suffix for the probability columns (not {@code null}).
+     * @param newColumns The specs for the new columns.
+     * @since 2.10
      */
-    public SotaPredictorCellFactory(final SotaTreeCell root, 
-            final int[] indicesOfIncludedColumns, final String distance) {
+    public SotaPredictorCellFactory(final SotaTreeCell root, final int[] indicesOfIncludedColumns,
+        final String distance, final boolean appendProbabilities, final DataColumnSpec targetColumn,
+        final String suffix, final DataColumnSpec[] newColumns) {
         m_includedColsIndices = indicesOfIncludedColumns;
         m_root = root;
-        
+        this.m_targetColumn = targetColumn;
+        this.m_suffix = suffix;
+        SotaManager.getCells(m_cells, m_root);
+
         boolean fuzzy = false;
         if (m_root != null) {
             if (m_root.getCellType().equals(SotaCellFactory.FUZZY_TYPE)) {
                 fuzzy = true;
             }
         }
-        m_distanceManager = 
+        m_distanceManager =
             DistanceManagerFactory.createDistanceManager(distance, fuzzy, 1);
         //m_distanceManager = new EuclideanDistanceManager(fuzzy);
+        m_appendProbs = appendProbabilities && targetColumn != null;
+        m_newColumns = new DataTableSpec(newColumns);
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell[] getCells(final DataRow row) {
         if (row != null) {
 
-            DataRow filteredRow = 
+            DataRow filteredRow =
                 new FilterColumnRow(row, m_includedColsIndices);
 
             Iterator<DataCell> it = filteredRow.iterator();
@@ -123,18 +172,25 @@ public class SotaPredictorCellFactory implements CellFactory {
                 }
             }
 
-            ArrayList<SotaTreeCell> cells = new ArrayList<SotaTreeCell>();
-            SotaManager.getCells(cells, m_root);
-
             SotaTreeCell winner = null;
             double minDist = Double.MAX_VALUE;
 
-            for (int j = 0; j < cells.size(); j++) {
+            Map<String, Double> minDists = new HashMap<String, Double>();
+            for (int j = 0; j < m_cells.size(); j++) {
                 double dist = m_distanceManager.getDistance(
-                        filteredRow, cells.get(j));
-                
+                        filteredRow, m_cells.get(j));
+
+                String treeCellClass = m_cells.get(j).getTreeCellClass();
+                if (minDists.containsKey(treeCellClass)) {
+                    Double old = minDists.get(treeCellClass);
+                    if (old.doubleValue() > dist) {
+                        minDists.put(treeCellClass, dist);
+                    }
+                } else {
+                    minDists.put(treeCellClass, dist);
+                }
                 if (dist < minDist) {
-                    winner = cells.get(j);
+                    winner = m_cells.get(j);
                     minDist = dist;
                 }
             }
@@ -142,8 +198,31 @@ public class SotaPredictorCellFactory implements CellFactory {
             if (winner != null) {
                 predClass = winner.getTreeCellClass();
             }
-
-            return new DataCell[]{new StringCell(predClass)};
+            DataCell[] ret;
+            ret = new DataCell[m_newColumns.getNumColumns()];
+            if (m_appendProbs) {
+                double sumDists = 0d;
+                for (Double d : minDists.values()) {
+                    sumDists += 1d / Math.max(EPSILON, d.doubleValue());
+                }
+                for (int i = ret.length; i-->0;) {
+                    ret[i] = DataType.getMissingCell();
+                }
+                for (Entry<String, Double> entry : minDists.entrySet()) {
+                    final String target = entry.getKey();
+                    final String colName =
+                        PredictorHelper.getInstance().probabilityColumnName(m_targetColumn.getName(), target, m_suffix);
+                    int colIndex = m_newColumns.findColumnIndex(colName);
+                    if (colIndex >= 0) {
+                        ret[colIndex] =
+                            new DoubleCell(1d / Math.max(EPSILON, entry.getValue().doubleValue()) / sumDists);
+                    }
+                }
+                ret[ret.length - 1] = new StringCell(predClass);
+            } else {
+                ret = new DataCell[]{new StringCell(predClass)};
+            }
+            return ret;
         }
         return null;
     }
@@ -151,16 +230,20 @@ public class SotaPredictorCellFactory implements CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataColumnSpec[] getColumnSpecs() {
-        DataColumnSpecCreator creator = 
-            new DataColumnSpecCreator("Predicted class", StringCell.TYPE);
-        return new DataColumnSpec[]{creator.createSpec()};
+        final DataColumnSpec[] ret = new DataColumnSpec[m_newColumns.getNumColumns()];
+        for (int i = ret.length; i-->0;) {
+            ret[i] = m_newColumns.getColumnSpec(i);
+        }
+        return ret;
     }
 
     /**
      * {@inheritDoc}
      */
-    public void setProgress(final int curRowNr, final int rowCount, 
+    @Override
+    public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress("predicting classes ...");
     }

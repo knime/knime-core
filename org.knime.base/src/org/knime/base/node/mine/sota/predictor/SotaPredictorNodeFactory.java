@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,21 +44,27 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   30.03.2007 (thiel): created
  */
 package org.knime.base.node.mine.sota.predictor;
 
+import org.knime.base.node.mine.sota.SotaPortObjectSpec;
+import org.knime.base.node.mine.util.PredictorNodeDialog;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
-public class SotaPredictorNodeFactory 
+public class SotaPredictorNodeFactory
 extends NodeFactory<SotaPredictorNodeModel> {
 
     /**
@@ -66,7 +72,22 @@ extends NodeFactory<SotaPredictorNodeModel> {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return null;
+        return new PredictorNodeDialog(SotaPredictorNodeModel.createAppendProbabilities()) {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            protected void extractTargetColumn(final PortObjectSpec[] specs) {
+                if (specs[0] instanceof SotaPortObjectSpec) {
+                    final SotaPortObjectSpec sotaSpec = (SotaPortObjectSpec)specs[0];
+                    final DataColumnSpec classColumnSpec = sotaSpec.getClassColumnSpec();
+                    setLastTargetColumn(classColumnSpec == null ? new DataColumnSpecCreator("No class", StringCell.TYPE)
+                        .createSpec() : classColumnSpec);
+                } else {
+                    throw new IllegalArgumentException("Wrong input: " + specs[0].getClass());
+                }
+            }
+        };
     }
 
     /**
@@ -99,7 +120,7 @@ extends NodeFactory<SotaPredictorNodeModel> {
      */
     @Override
     protected boolean hasDialog() {
-        return false;
+        return true;
     }
 
 }

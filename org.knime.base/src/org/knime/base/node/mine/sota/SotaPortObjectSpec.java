@@ -44,12 +44,13 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   16.09.2008 (thiel): created
  */
 package org.knime.base.node.mine.sota;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -58,27 +59,29 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.AbstractSimplePortObjectSpec;
 
 /**
- * Provides the spec of the sota port model and a validation method, to 
+ * Provides the spec of the sota port model and a validation method, to
  * validate if a certain data table spec is compatible to the model spec.
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
-public class SotaPortObjectSpec extends AbstractSimplePortObjectSpec {    
-    
+public class SotaPortObjectSpec extends AbstractSimplePortObjectSpec {
+
     private DataTableSpec m_spec;
-    
+
     private int m_indexOfClassCol;
-    
+
     /**
-     * 
+     * This seems to be unused, please use {@link #SotaPortObjectSpec(DataTableSpec, int)} instead.
+     * @deprecated Use {@link #SotaPortObjectSpec(DataTableSpec, int)}.
      */
+    @Deprecated
     public SotaPortObjectSpec() { }
-    
+
     /**
      * Creates a new instance of <code>SotaPortObjectSpec</code> with the given
      * data table spec, as the main part of the model spec and the index of the
      * class column.
-     * 
+     *
      * @param spec The data table spec to store.
      * @param indexOfClassCol The index of the class column.
      */
@@ -92,7 +95,7 @@ public class SotaPortObjectSpec extends AbstractSimplePortObjectSpec {
      * {@inheritDoc}
      */
     @Override
-    protected void load(final ModelContentRO model) 
+    protected void load(final ModelContentRO model)
     throws InvalidSettingsException {
         ModelContentRO subContent = model.getModelContent(
                 SotaPortObject.CFG_KEY_SPEC);
@@ -109,7 +112,7 @@ public class SotaPortObjectSpec extends AbstractSimplePortObjectSpec {
             ModelContentWO subContent = model.addModelContent(
                     SotaPortObject.CFG_KEY_SPEC);
             m_spec.save(subContent);
-            model.addInt(SotaPortObject.CFG_KEY_CLASSCOL_INDEX, 
+            model.addInt(SotaPortObject.CFG_KEY_CLASSCOL_INDEX,
                     m_indexOfClassCol);
         }
     }
@@ -120,13 +123,13 @@ public class SotaPortObjectSpec extends AbstractSimplePortObjectSpec {
     public DataTableSpec getSpec() {
         return m_spec;
     }
-    
+
     /**
-     * Validates if the given data table spec is compatible to the model port 
+     * Validates if the given data table spec is compatible to the model port
      * spec and returns <code>true</code> if so, otherwise <code>false</code>.
-     * 
+     *
      * @param spec The data table spec to validate.
-     * @return <code>true</code> if given spec is compatible to the model port 
+     * @return <code>true</code> if given spec is compatible to the model port
      * spec, otherwise <code>false</code>.
      */
     public boolean validateSpec(final DataTableSpec spec) {
@@ -149,13 +152,13 @@ public class SotaPortObjectSpec extends AbstractSimplePortObjectSpec {
                             spec.getColumnSpec(i).getType())) {
                         return false;
                     }
-                }                
+                }
             }
         }
-        
+
         return true;
     }
-    
+
     /**
      * @return <code>true</code> if internal data table spec contains a column
      * which is compatible to string value.
@@ -171,5 +174,13 @@ public class SotaPortObjectSpec extends AbstractSimplePortObjectSpec {
             }
         }
         return false;
+    }
+
+    /**
+     * @return The class column spec if available, else {@code null}.
+     * @since 2.10
+     */
+    public DataColumnSpec getClassColumnSpec() {
+        return m_indexOfClassCol < 0 ? null : m_spec.getColumnSpec(m_indexOfClassCol);
     }
 }
