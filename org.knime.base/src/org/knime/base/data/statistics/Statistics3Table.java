@@ -347,6 +347,9 @@ public class Statistics3Table {
             DataRow row = rowIt.next();
             exec.setProgress(rowIdx / diffProgress, "Calculating statistics, processing row " + (rowIdx + 1) + " (\""
                 + row.getKey() + "\")");
+
+            onStatisticComputation(row);
+
             for (int c : colIndices) {
                 exec.checkCanceled();
                 DataColumnSpec cspec = m_spec.getColumnSpec(c);
@@ -475,6 +478,15 @@ public class Statistics3Table {
         }
     }
 
+    /**
+     * Hook for subclasses to perform additional computations.
+     *
+     * @param row current row for computation
+     */
+    protected void onStatisticComputation(final DataRow row) {
+        //NOOP
+    }
+    
     /**
      * Filters out those indices that are not compatible with {@link DoubleValue}s.
      *

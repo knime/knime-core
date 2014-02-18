@@ -19,6 +19,12 @@
                 <message_argument value="2.8.0"/>
             </message_arguments>
         </filter>
+        <filter id="924844039">
+            <message_arguments>
+                <message_argument value="2.9.1"/>
+                <message_argument value="2.9.0"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.base.node.mine.regression.logistic.predict.LogRegPredictor">
         <filter id="305324134">
@@ -165,6 +171,13 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowPersistorVersion200"/>
                 <message_argument value="org.knime.base_2.8.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/data/statistics/Statistics3Table.java" type="org.knime.base.data.statistics.Statistics3Table">
+        <filter comment="added for bug 5012" id="1143996420">
+            <message_arguments>
+                <message_argument value="onStatisticComputation(DataRow)"/>
             </message_arguments>
         </filter>
     </resource>
