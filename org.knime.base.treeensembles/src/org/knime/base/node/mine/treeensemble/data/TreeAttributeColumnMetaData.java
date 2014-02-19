@@ -55,7 +55,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeAttributeColumnMetaData extends TreeColumnMetaData {
@@ -63,7 +63,8 @@ public abstract class TreeAttributeColumnMetaData extends TreeColumnMetaData {
     private int m_attributeIndex;
 
     /**
-     * @param attributeName */
+     * @param attributeName
+     */
     TreeAttributeColumnMetaData(final String attributeName) {
         super(attributeName);
         m_attributeIndex = -1; // invalid
@@ -71,9 +72,9 @@ public abstract class TreeAttributeColumnMetaData extends TreeColumnMetaData {
 
     /**
      * @param input
-     * @throws IOException */
-    TreeAttributeColumnMetaData(final DataInputStream input)
-            throws IOException {
+     * @throws IOException
+     */
+    TreeAttributeColumnMetaData(final DataInputStream input) throws IOException {
         super(input);
         m_attributeIndex = input.readInt();
     }
@@ -99,8 +100,7 @@ public abstract class TreeAttributeColumnMetaData extends TreeColumnMetaData {
         } else if (this instanceof TreeNumericColumnMetaData) {
             colTypeByte = 'f';
         } else {
-            throw new IOException("Unsupported column type (not implemented): "
-                    + getClass().getSimpleName());
+            throw new IOException("Unsupported column type (not implemented): " + getClass().getSimpleName());
         }
         output.writeByte(colTypeByte);
         super.save(output);
@@ -108,24 +108,21 @@ public abstract class TreeAttributeColumnMetaData extends TreeColumnMetaData {
         saveContent(output);
     }
 
-    abstract void saveContent(
-            final DataOutputStream output) throws IOException;
+    abstract void saveContent(final DataOutputStream output) throws IOException;
 
     /**
      *  */
-    static TreeAttributeColumnMetaData load(final DataInputStream input)
-        throws IOException {
+    static TreeAttributeColumnMetaData load(final DataInputStream input) throws IOException {
         byte colTypeByte = input.readByte();
         switch (colTypeByte) {
-        case 'b':
-            return new TreeBitColumnMetaData(input);
-        case 'c':
-            return new TreeNominalColumnMetaData(input);
-        case 'f':
-            return new TreeNumericColumnMetaData(input);
-        default:
-            throw new IOException("Unknown column type identifier '"
-                    + (char)colTypeByte + "'");
+            case 'b':
+                return new TreeBitColumnMetaData(input);
+            case 'c':
+                return new TreeNominalColumnMetaData(input);
+            case 'f':
+                return new TreeNumericColumnMetaData(input);
+            default:
+                throw new IOException("Unknown column type identifier '" + (char)colTypeByte + "'");
         }
     }
 

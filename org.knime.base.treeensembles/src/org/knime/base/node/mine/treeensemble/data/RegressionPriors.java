@@ -53,20 +53,21 @@ package org.knime.base.node.mine.treeensemble.data;
 import org.knime.base.node.util.DoubleFormat;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class RegressionPriors extends AbstractPriors {
 
     private final double m_mean;
+
     private final double m_ySumSquareDeviation;
+
     private final double m_ySum;
 
     /**
      */
-    RegressionPriors(final TreeTargetNumericColumnMetaData targetMetaData,
-            final double totalSum, final double mean,
-            final double ySumSquareDeviation, final double ySum) {
+    RegressionPriors(final TreeTargetNumericColumnMetaData targetMetaData, final double totalSum, final double mean,
+        final double ySumSquareDeviation, final double ySum) {
         super(targetMetaData, totalSum);
         m_mean = mean;
         m_ySumSquareDeviation = ySumSquareDeviation;
@@ -107,8 +108,7 @@ public final class RegressionPriors extends AbstractPriors {
         b.append(" - total weight: ");
         b.append(DoubleFormat.formatDouble(totalSum));
         b.append(" (average squared deviation: ");
-        b.append(DoubleFormat.formatDouble(
-                totalSquaredDeviation / totalSum)).append(")");
+        b.append(DoubleFormat.formatDouble(totalSquaredDeviation / totalSum)).append(")");
         return b.toString();
     }
 

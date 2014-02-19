@@ -58,7 +58,7 @@ import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
 import org.knime.core.util.MutableInteger;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeModelClassification extends AbstractTreeModel<TreeNodeClassification> {
@@ -70,13 +70,12 @@ public class TreeModelClassification extends AbstractTreeModel<TreeNodeClassific
     }
 
     public DecisionTree createDecisionTree(final TreeMetaData metaData) {
-        DecisionTreeNode decTreeRoot =
-            getRootNode().createDecisionTreeNode(new MutableInteger(0), metaData);
-        return new DecisionTree(decTreeRoot,
-                metaData.getTargetMetaData().getAttributeName());
+        DecisionTreeNode decTreeRoot = getRootNode().createDecisionTreeNode(new MutableInteger(0), metaData);
+        return new DecisionTree(decTreeRoot, metaData.getTargetMetaData().getAttributeName());
     }
 
-    public static TreeModelClassification load(final TreeModelDataInputStream in, final TreeMetaData metaData) throws IOException {
+    public static TreeModelClassification load(final TreeModelDataInputStream in, final TreeMetaData metaData)
+        throws IOException {
         return new TreeModelClassification(TreeNodeClassification.load(in, metaData));
     }
 

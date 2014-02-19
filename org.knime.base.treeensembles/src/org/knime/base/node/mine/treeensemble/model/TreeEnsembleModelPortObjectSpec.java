@@ -68,11 +68,10 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.AbstractSimplePortObjectSpec;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class TreeEnsembleModelPortObjectSpec
-    extends AbstractSimplePortObjectSpec {
+public final class TreeEnsembleModelPortObjectSpec extends AbstractSimplePortObjectSpec {
 
     private DataTableSpec m_learnSpec;
 
@@ -81,9 +80,10 @@ public final class TreeEnsembleModelPortObjectSpec
         // needed for loading
     }
 
-    /**Constructor for class TreeEnsembleModelPortObjectSpec.
-     * @param learnSpec the {@link DataTableSpec} of the training data
-     * table
+    /**
+     * Constructor for class TreeEnsembleModelPortObjectSpec.
+     * 
+     * @param learnSpec the {@link DataTableSpec} of the training data table
      */
     public TreeEnsembleModelPortObjectSpec(final DataTableSpec learnSpec) {
         if (learnSpec == null) {
@@ -96,8 +96,7 @@ public final class TreeEnsembleModelPortObjectSpec
      * {@inheritDoc}
      */
     @Override
-    protected void load(final ModelContentRO model)
-    throws InvalidSettingsException {
+    protected void load(final ModelContentRO model) throws InvalidSettingsException {
         m_learnSpec = DataTableSpec.load(model.getModelContent("learnSpec"));
     }
 
@@ -109,12 +108,12 @@ public final class TreeEnsembleModelPortObjectSpec
         m_learnSpec.save(model.addModelContent("learnSpec"));
     }
 
-
-    /** Get the spec of the training data. The last column is nominal
-     * and represent the target column (does not need to be present in the
-     * test set)
-     * @return the learn spec, rearranged such that it only contains the
-     * relevant columns and the target column at the last column index.
+    /**
+     * Get the spec of the training data. The last column is nominal and represent the target column (does not need to
+     * be present in the test set)
+     * 
+     * @return the learn spec, rearranged such that it only contains the relevant columns and the target column at the
+     *         last column index.
      */
     public DataTableSpec getTableSpec() {
         return m_learnSpec;
@@ -124,19 +123,18 @@ public final class TreeEnsembleModelPortObjectSpec
         return m_learnSpec.getColumnSpec(m_learnSpec.getNumColumns() - 1);
     }
 
-    /** A map containing the possible values of the target column (training
-     * set), whereby the map key is the toString() representation of the value.
-     *
+    /**
+     * A map containing the possible values of the target column (training set), whereby the map key is the toString()
+     * representation of the value.
+     * 
      * <p>
-     * Used in the learner to ensure there are no duplicates in the target
-     * column (learner is using plain strings, not DataCell) and in the
-     * predictor to return DataCells of the correct type.
+     * Used in the learner to ensure there are no duplicates in the target column (learner is using plain strings, not
+     * DataCell) and in the predictor to return DataCells of the correct type.
+     * 
      * @return Such a map or null if there are no possible values.
-     * @throws InvalidSettingsException If duplicates in the toString
-     * representation are encountered.
+     * @throws InvalidSettingsException If duplicates in the toString representation are encountered.
      */
-    public Map<String, DataCell> getTargetColumnPossibleValueMap()
-        throws InvalidSettingsException {
+    public Map<String, DataCell> getTargetColumnPossibleValueMap() throws InvalidSettingsException {
         DataColumnSpec targetCol = getTargetColumn();
         Set<DataCell> values = targetCol.getDomain().getValues();
         if (values == null) {
@@ -148,10 +146,9 @@ public final class TreeEnsembleModelPortObjectSpec
             DataCell old = result.put(toString, v);
             if (old != null) {
                 throw new InvalidSettingsException("The target column contains "
-                        + "distinct values whose string representations are "
-                        + "identical and therefore not unique; convert the "
-                        + "target column to a plain string first. "
-                        + "(Problematic value: \"" + toString + "\")");
+                    + "distinct values whose string representations are "
+                    + "identical and therefore not unique; convert the " + "target column to a plain string first. "
+                    + "(Problematic value: \"" + toString + "\")");
             }
         }
         return result;
@@ -159,8 +156,7 @@ public final class TreeEnsembleModelPortObjectSpec
 
     public DataTableSpec getLearnTableSpec() {
         // remove all but last column
-        return FilterColumnTable.createFilterTableSpec(
-                m_learnSpec, false, m_learnSpec.getNumColumns() - 1);
+        return FilterColumnTable.createFilterTableSpec(m_learnSpec, false, m_learnSpec.getNumColumns() - 1);
     }
 
     public void assertTargetTypeMatches(final boolean isRegression) throws InvalidSettingsException {
@@ -175,8 +171,7 @@ public final class TreeEnsembleModelPortObjectSpec
         }
     }
 
-    public int[] calculateFilterIndices(final DataTableSpec testTableInput)
-        throws InvalidSettingsException {
+    public int[] calculateFilterIndices(final DataTableSpec testTableInput) throws InvalidSettingsException {
         DataTableSpec learnSpec = getLearnTableSpec();
         // check existence and types of columns, create reordering
         int[] result = new int[learnSpec.getNumColumns()];
@@ -185,29 +180,24 @@ public final class TreeEnsembleModelPortObjectSpec
             final String colName = learnCol.getName();
             int dataColIndex = testTableInput.findColumnIndex(colName);
             if (dataColIndex < 0) {
-                throw new InvalidSettingsException("Required data column \""
-                        + colName + "\" does not exist in table");
+                throw new InvalidSettingsException("Required data column \"" + colName + "\" does not exist in table");
             }
             DataColumnSpec dataCol = testTableInput.getColumnSpec(dataColIndex);
             DataType eType = learnCol.getType(); // expected type
-            DataType aType = dataCol.getType();  // actual type
+            DataType aType = dataCol.getType(); // actual type
             String errorType = null;
-            if (eType.isCompatible(NominalValue.class)
-                    && !aType.isCompatible(NominalValue.class)) {
+            if (eType.isCompatible(NominalValue.class) && !aType.isCompatible(NominalValue.class)) {
                 errorType = "nominal";
             }
-            if (eType.isCompatible(DoubleValue.class)
-                    && !aType.isCompatible(DoubleValue.class)) {
+            if (eType.isCompatible(DoubleValue.class) && !aType.isCompatible(DoubleValue.class)) {
                 errorType = "numeric";
             }
-            if (eType.isCompatible(BitVectorValue.class)
-                    && !aType.isCompatible(BitVectorValue.class)) {
+            if (eType.isCompatible(BitVectorValue.class) && !aType.isCompatible(BitVectorValue.class)) {
                 errorType = "fingerprint/bitvector";
             }
             if (errorType != null) {
-                throw new InvalidSettingsException("Column \""
-                        + colName + "\" does exist in the data but"
-                        + "is not of the expected " + errorType + " type");
+                throw new InvalidSettingsException("Column \"" + colName + "\" does exist in the data but"
+                    + "is not of the expected " + errorType + " type");
             }
             result[i] = dataColIndex;
         }

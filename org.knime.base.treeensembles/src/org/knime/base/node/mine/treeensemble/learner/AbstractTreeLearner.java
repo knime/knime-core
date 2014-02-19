@@ -60,20 +60,23 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class AbstractTreeLearner {
 
     private final TreeEnsembleLearnerConfiguration m_config;
+
     private final TreeData m_data;
+
     private final RowSample m_rowSampling;
+
     private final ColumnSampleStrategy m_colSamplingStrategy;
 
     /**
      *  */
-    public AbstractTreeLearner(final TreeEnsembleLearnerConfiguration config,
-            final TreeData data, final RandomData randomData) {
+    public AbstractTreeLearner(final TreeEnsembleLearnerConfiguration config, final TreeData data,
+        final RandomData randomData) {
         m_config = config;
         m_data = data;
         m_rowSampling = m_config.createRowSample(m_data.getNrRows(), randomData);

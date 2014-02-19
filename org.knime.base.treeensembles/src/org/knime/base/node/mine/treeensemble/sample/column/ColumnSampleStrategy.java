@@ -53,12 +53,11 @@ package org.knime.base.node.mine.treeensemble.sample.column;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeSignature;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class ColumnSampleStrategy {
 
-    public abstract ColumnSample getColumnSampleForTreeNode(
-            final TreeNodeSignature treeNodeSignature);
+    public abstract ColumnSample getColumnSampleForTreeNode(final TreeNodeSignature treeNodeSignature);
 
 }

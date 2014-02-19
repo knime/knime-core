@@ -58,7 +58,7 @@ import org.knime.base.node.mine.treeensemble.data.TreeColumnMetaData;
 import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeNodeColumnCondition extends TreeNodeCondition {
@@ -73,8 +73,8 @@ public abstract class TreeNodeColumnCondition extends TreeNodeCondition {
 
     /**
      *  */
-    public TreeNodeColumnCondition(final TreeModelDataInputStream input,
-            final TreeMetaData treeMetaData) throws IOException {
+    public TreeNodeColumnCondition(final TreeModelDataInputStream input, final TreeMetaData treeMetaData)
+        throws IOException {
         int index = input.readInt();
         if (index < 0 || index >= treeMetaData.getNrAttributes()) {
             throw new IOException("Invalid attribute index " + index);
@@ -84,13 +84,11 @@ public abstract class TreeNodeColumnCondition extends TreeNodeCondition {
     }
 
     protected final void checkTypeCorrectness(final TreeColumnMetaData instance,
-            final Class<? extends TreeColumnMetaData> expectedClass)
-        throws IOException {
+        final Class<? extends TreeColumnMetaData> expectedClass) throws IOException {
         if (!expectedClass.isInstance(instance)) {
-            throw new IOException("Column meta information associated with "
-                    + "condition \"" + getClass().getSimpleName() + "\" is not "
-                    + "of expected type \"" + expectedClass.getSimpleName()
-                    + "\" but \"" + instance.getClass().getSimpleName() + "\"");
+            throw new IOException("Column meta information associated with " + "condition \""
+                + getClass().getSimpleName() + "\" is not " + "of expected type \"" + expectedClass.getSimpleName()
+                + "\" but \"" + instance.getClass().getSimpleName() + "\"");
         }
     }
 

@@ -54,14 +54,16 @@ import java.io.InputStream;
 
 /**
  * An input stream that carries additional information used during loading.
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class TreeModelDataInputStream extends DataInputStream {
 
     private boolean m_containsClassDistribution;
 
-    /** ...
+    /**
+     * ...
+     * 
      * @param in passed on to super.
      */
     TreeModelDataInputStream(final InputStream in) {
@@ -81,8 +83,5 @@ final class TreeModelDataInputStream extends DataInputStream {
     void setContainsClassDistribution(final boolean value) {
         m_containsClassDistribution = value;
     }
-
-
-
 
 }

@@ -53,7 +53,7 @@ package org.knime.base.node.mine.treeensemble.learner;
 import org.knime.base.node.mine.treeensemble.data.TreeColumnData;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class GiniImpurity implements IImpurity {
@@ -66,8 +66,7 @@ public final class GiniImpurity implements IImpurity {
 
     /** {@inheritDoc} */
     @Override
-    public double getPartitionImpurity(final double[] targetCounts,
-            final double partitionWeight) {
+    public double getPartitionImpurity(final double[] targetCounts, final double partitionWeight) {
         if (partitionWeight < TreeColumnData.EPSILON) {
             return 0.0;
         }
@@ -81,8 +80,8 @@ public final class GiniImpurity implements IImpurity {
 
     /** {@inheritDoc} */
     @Override
-    public double getPostSplitImpurity(final double[] partitionValues,
-            final double[] partitionWeights, final double totalWeight) {
+    public double getPostSplitImpurity(final double[] partitionValues, final double[] partitionWeights,
+        final double totalWeight) {
         if (totalWeight < TreeColumnData.EPSILON) {
             return 0.0;
         }
@@ -95,8 +94,8 @@ public final class GiniImpurity implements IImpurity {
 
     /** {@inheritDoc} */
     @Override
-    public double getGain(final double priorImpurity, final double postSplitImpurity,
-            final double[] partitionWeights, final double totalWeight) {
+    public double getGain(final double priorImpurity, final double postSplitImpurity, final double[] partitionWeights,
+        final double totalWeight) {
         return priorImpurity - postSplitImpurity;
     }
 

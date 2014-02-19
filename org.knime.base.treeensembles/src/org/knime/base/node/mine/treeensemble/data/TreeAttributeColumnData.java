@@ -55,7 +55,7 @@ import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeAttributeColumnData extends TreeColumnData {
@@ -63,10 +63,10 @@ public abstract class TreeAttributeColumnData extends TreeColumnData {
     private final TreeEnsembleLearnerConfiguration m_configuration;
 
     /**
-     * @param metaData */
-    protected TreeAttributeColumnData(
-            final TreeAttributeColumnMetaData metaData,
-            final TreeEnsembleLearnerConfiguration configuration) {
+     * @param metaData
+     */
+    protected TreeAttributeColumnData(final TreeAttributeColumnMetaData metaData,
+        final TreeEnsembleLearnerConfiguration configuration) {
         super(metaData);
         m_configuration = configuration;
     }
@@ -82,19 +82,13 @@ public abstract class TreeAttributeColumnData extends TreeColumnData {
         return m_configuration;
     }
 
-    public abstract SplitCandidate calcBestSplitClassification(
-            final double[] rowWeights,
-            final ClassificationPriors targetPriors,
-            final TreeTargetNominalColumnData targetColumn);
+    public abstract SplitCandidate calcBestSplitClassification(final double[] rowWeights,
+        final ClassificationPriors targetPriors, final TreeTargetNominalColumnData targetColumn);
 
-    public abstract SplitCandidate calcBestSplitRegression(
-            final double[] rowWeights,
-            final RegressionPriors targetPriors,
-            final TreeTargetNumericColumnData targetColumn);
+    public abstract SplitCandidate calcBestSplitRegression(final double[] rowWeights,
+        final RegressionPriors targetPriors, final TreeTargetNumericColumnData targetColumn);
 
-    public abstract void updateChildMemberships(
-            final TreeNodeCondition childCondition,
-            final double[] parentMemberships,
-            final double[] childMembershipsToUpdate);
+    public abstract void updateChildMemberships(final TreeNodeCondition childCondition,
+        final double[] parentMemberships, final double[] childMembershipsToUpdate);
 
 }

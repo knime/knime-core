@@ -70,28 +70,26 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeEnsembleModelPortObject extends AbstractPortObject {
 
-    public static final PortType TYPE =
-        new PortType(TreeEnsembleModelPortObject.class);
+    public static final PortType TYPE = new PortType(TreeEnsembleModelPortObject.class);
 
     private TreeEnsembleModelPortObjectSpec m_spec;
 
     private TreeEnsembleModel m_ensembleModel;
 
     /**
-     * @param models */
-    public TreeEnsembleModelPortObject(
-            final TreeEnsembleModelPortObjectSpec spec,
-            final TreeEnsembleModel ensembleModel) {
+     * @param models
+     */
+    public TreeEnsembleModelPortObject(final TreeEnsembleModelPortObjectSpec spec, final TreeEnsembleModel ensembleModel) {
         m_spec = spec;
         m_ensembleModel = ensembleModel;
     }
 
-    /** Framework constructor, not to be used by node code.  */
+    /** Framework constructor, not to be used by node code. */
     public TreeEnsembleModelPortObject() {
         // no op, load method to be called by framework
     }
@@ -118,14 +116,11 @@ public class TreeEnsembleModelPortObject extends AbstractPortObject {
         return m_spec;
     }
 
-    public PMMLPortObject createDecisionTreePMMLPortObject(
-            final int modelIndex) {
-        DataTableSpec attributeLearnSpec =
-            m_ensembleModel.getLearnAttributeSpec(m_spec.getLearnTableSpec());
+    public PMMLPortObject createDecisionTreePMMLPortObject(final int modelIndex) {
+        DataTableSpec attributeLearnSpec = m_ensembleModel.getLearnAttributeSpec(m_spec.getLearnTableSpec());
         DataColumnSpec targetSpec = m_spec.getTargetColumn();
         PMMLPortObjectSpecCreator pmmlSpecCreator =
-            new PMMLPortObjectSpecCreator(new DataTableSpec(
-                    attributeLearnSpec, new DataTableSpec(targetSpec)));
+            new PMMLPortObjectSpecCreator(new DataTableSpec(attributeLearnSpec, new DataTableSpec(targetSpec)));
 
         try {
             pmmlSpecCreator.setLearningCols(attributeLearnSpec);
@@ -144,9 +139,8 @@ public class TreeEnsembleModelPortObject extends AbstractPortObject {
 
     /** {@inheritDoc} */
     @Override
-    protected void save(
-            final PortObjectZipOutputStream out, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
+    protected void save(final PortObjectZipOutputStream out, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
         out.putNextEntry(new ZipEntry("treeensemble.bin"));
         m_ensembleModel.save(out, exec);
         out.closeEntry();
@@ -154,10 +148,8 @@ public class TreeEnsembleModelPortObject extends AbstractPortObject {
 
     /** {@inheritDoc} */
     @Override
-    protected void load(final PortObjectZipInputStream in,
-            final PortObjectSpec spec,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void load(final PortObjectZipInputStream in, final PortObjectSpec spec, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException {
         in.getNextEntry();
         m_ensembleModel = TreeEnsembleModel.load(in, exec);
         in.closeEntry();

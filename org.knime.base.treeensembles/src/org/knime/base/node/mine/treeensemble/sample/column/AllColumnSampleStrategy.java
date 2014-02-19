@@ -54,7 +54,7 @@ import org.knime.base.node.mine.treeensemble.data.TreeData;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeSignature;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class AllColumnSampleStrategy extends ColumnSampleStrategy {
@@ -69,8 +69,7 @@ public class AllColumnSampleStrategy extends ColumnSampleStrategy {
 
     /** {@inheritDoc} */
     @Override
-    public ColumnSample getColumnSampleForTreeNode(
-            final TreeNodeSignature ignored) {
+    public ColumnSample getColumnSampleForTreeNode(final TreeNodeSignature ignored) {
         return m_allColumnSample;
     }
 

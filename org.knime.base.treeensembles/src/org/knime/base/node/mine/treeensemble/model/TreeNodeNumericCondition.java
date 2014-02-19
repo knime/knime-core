@@ -63,22 +63,24 @@ import org.knime.base.node.mine.treeensemble.data.TreeNumericColumnMetaData;
 import org.knime.base.node.util.DoubleFormat;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
 
     public enum NumericOperator {
-        LessThanOrEqual("<=", (byte)'s', PMMLOperator.LESS_OR_EQUAL),
-        LargerThan(">", (byte)'l', PMMLOperator.GREATER_THAN);
+        LessThanOrEqual("<=", (byte)'s', PMMLOperator.LESS_OR_EQUAL), LargerThan(">", (byte)'l',
+            PMMLOperator.GREATER_THAN);
 
         private final String m_sign;
+
         private final byte m_persistByte;
+
         private PMMLOperator m_pmmlOperator;
+
         /**
          *  */
-        private NumericOperator(final String sign, final byte persistByte,
-                final PMMLOperator pmmlOperator) {
+        private NumericOperator(final String sign, final byte persistByte, final PMMLOperator pmmlOperator) {
             m_sign = sign;
             m_persistByte = persistByte;
             m_pmmlOperator = pmmlOperator;
@@ -93,8 +95,7 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
             output.writeByte(m_persistByte);
         }
 
-        public static final NumericOperator load(final TreeModelDataInputStream input)
-            throws IOException {
+        public static final NumericOperator load(final TreeModelDataInputStream input) throws IOException {
             byte b = input.readByte();
             for (NumericOperator op : NumericOperator.values()) {
                 if (op.m_persistByte == b) {
@@ -106,13 +107,15 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
     };
 
     private final double m_splitValue;
+
     private final NumericOperator m_numericOperator;
+
     /**
      * @param columnMetaData
-     * @param splitValue */
-    public TreeNodeNumericCondition(
-            final TreeNumericColumnMetaData columnMetaData,
-            final double splitValue, final NumericOperator operator) {
+     * @param splitValue
+     */
+    public TreeNodeNumericCondition(final TreeNumericColumnMetaData columnMetaData, final double splitValue,
+        final NumericOperator operator) {
         super(columnMetaData);
         m_numericOperator = operator;
         m_splitValue = splitValue;
@@ -120,8 +123,7 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
 
     /**
      *  */
-    TreeNodeNumericCondition(final TreeModelDataInputStream input,
-            final TreeMetaData metaData) throws IOException {
+    TreeNodeNumericCondition(final TreeModelDataInputStream input, final TreeMetaData metaData) throws IOException {
         super(input, metaData);
         TreeColumnMetaData columnMetaData = super.getColumnMetaData();
         checkTypeCorrectness(columnMetaData, TreeNumericColumnMetaData.class);
@@ -150,23 +152,20 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
     public boolean testCondition(final PredictorRecord record) {
         Object value = record.getValue(getColumnMetaData().getAttributeName());
         if (value == null) {
-            throw new UnsupportedOperationException(
-                    "Missing values currently not supported");
+            throw new UnsupportedOperationException("Missing values currently not supported");
         }
         if (!(value instanceof Double)) {
-            throw new IllegalArgumentException("Can't test numeric condition ("
-                    + toString() + ") -- expected query object of type Double "
-                    + "but got " + value.getClass().getSimpleName());
+            throw new IllegalArgumentException("Can't test numeric condition (" + toString()
+                + ") -- expected query object of type Double " + "but got " + value.getClass().getSimpleName());
         }
         double v = (Double)value;
         switch (m_numericOperator) {
-        case LargerThan:
-            return v > m_splitValue;
-        case LessThanOrEqual:
-            return v <= m_splitValue;
-        default:
-            throw new UnsupportedOperationException("Unsupported operator: "
-                    + m_numericOperator);
+            case LargerThan:
+                return v > m_splitValue;
+            case LessThanOrEqual:
+                return v <= m_splitValue;
+            default:
+                throw new UnsupportedOperationException("Unsupported operator: " + m_numericOperator);
         }
     }
 
@@ -174,8 +173,7 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
     @Override
     public PMMLPredicate toPMMLPredicate() {
         final PMMLOperator pmmlOperator = m_numericOperator.m_pmmlOperator;
-        return new PMMLSimplePredicate(getAttributeName(),
-                pmmlOperator, Double.toString(m_splitValue));
+        return new PMMLSimplePredicate(getAttributeName(), pmmlOperator, Double.toString(m_splitValue));
     }
 
     /** {@inheritDoc} */
@@ -189,7 +187,7 @@ public final class TreeNodeNumericCondition extends TreeNodeColumnCondition {
     @Override
     public String toString() {
         String splitVal = DoubleFormat.formatDouble(m_splitValue);
-        return getColumnMetaData() + " " + m_numericOperator + " " +  splitVal;
+        return getColumnMetaData() + " " + m_numericOperator + " " + splitVal;
     }
 
 }

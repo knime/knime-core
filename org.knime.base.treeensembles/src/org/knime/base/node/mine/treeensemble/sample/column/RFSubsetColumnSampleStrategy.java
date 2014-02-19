@@ -59,34 +59,33 @@ import org.knime.base.node.mine.treeensemble.data.TreeData;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeSignature;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class RFSubsetColumnSampleStrategy extends ColumnSampleStrategy {
 
     private final long m_seed;
+
     private final TreeData m_data;
+
     private final int m_subsetSize;
 
     /**
      *  */
-    public RFSubsetColumnSampleStrategy(final TreeData data,
-            final RandomData random, final int subsetSize) {
+    public RFSubsetColumnSampleStrategy(final TreeData data, final RandomData random, final int subsetSize) {
         m_seed = random.nextLong(Long.MIN_VALUE, Long.MAX_VALUE);
         m_data = data;
         int totalColCount = data.getColumns().length;
         if (subsetSize <= 0 || subsetSize > totalColCount) {
-            throw new IllegalArgumentException(String.format(
-                    "column subset size out of bounds (0, %d]: %d",
-                    totalColCount, subsetSize));
+            throw new IllegalArgumentException(String.format("column subset size out of bounds (0, %d]: %d",
+                totalColCount, subsetSize));
         }
         m_subsetSize = subsetSize;
     }
 
     /** {@inheritDoc} */
     @Override
-    public ColumnSample getColumnSampleForTreeNode(
-            final TreeNodeSignature treeNodeSignature) {
+    public ColumnSample getColumnSampleForTreeNode(final TreeNodeSignature treeNodeSignature) {
         short[] signature = treeNodeSignature.getSignaturePath();
         JDKRandomGenerator generator = new JDKRandomGenerator();
         generator.setSeed(m_seed);

@@ -90,30 +90,35 @@ import org.knime.core.node.util.ColumnFilterPanel;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class AttributeSelectionPanel extends JPanel {
 
-    private static final NodeLogger LOGGER = NodeLogger
-        .getLogger(AttributeSelectionPanel.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(AttributeSelectionPanel.class);
 
-    static final DataTableSpec NO_VALID_INPUT_SPEC =
-        new DataTableSpec(new DataColumnSpecCreator("<no valid input>",
-                StringCell.TYPE).createSpec(),
-                new DataColumnSpecCreator("<no valid fingerprint input>",
-                        DenseBitVectorCell.TYPE).createSpec());
+    static final DataTableSpec NO_VALID_INPUT_SPEC = new DataTableSpec(new DataColumnSpecCreator("<no valid input>",
+        StringCell.TYPE).createSpec(), new DataColumnSpecCreator("<no valid fingerprint input>",
+        DenseBitVectorCell.TYPE).createSpec());
 
     private final ArrayList<ChangeListener> m_changeListenerList;
 
     private final ColumnSelectionComboxBox m_targetColumnBox;
+
     private final JRadioButton m_useFingerprintColumnRadio;
+
     private final JRadioButton m_useOrdinaryColumnsRadio;
+
     private final ColumnSelectionComboxBox m_fingerprintColumnBox;
+
     private final ColumnFilterPanel m_includeColumnsFilterPanel;
+
     private final JCheckBox m_ignoreColumnsWithoutDomainChecker;
+
     private final JCheckBox m_enableHiliteChecker;
+
     private final JCheckBox m_saveTargetDistributionInNodesChecker;
+
     private final JSpinner m_hiliteCountSpinner;
 
     private DataTableSpec m_lastTableSpec;
@@ -125,10 +130,8 @@ public final class AttributeSelectionPanel extends JPanel {
     @SuppressWarnings("unchecked")
     public AttributeSelectionPanel(final boolean isRegression) {
         super(new GridBagLayout());
-        Class<? extends DataValue> targetClass = isRegression
-            ? DoubleValue.class : NominalValue.class;
-        m_targetColumnBox =
-            new ColumnSelectionComboxBox((Border)null, targetClass);
+        Class<? extends DataValue> targetClass = isRegression ? DoubleValue.class : NominalValue.class;
+        m_targetColumnBox = new ColumnSelectionComboxBox((Border)null, targetClass);
         m_targetColumnBox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
@@ -137,14 +140,10 @@ public final class AttributeSelectionPanel extends JPanel {
                 }
             }
         });
-        m_fingerprintColumnBox =
-            new ColumnSelectionComboxBox((Border)null, BitVectorValue.class);
-        m_includeColumnsFilterPanel =
-            new ColumnFilterPanel(true, NominalValue.class,
-                    DoubleValue.class);
+        m_fingerprintColumnBox = new ColumnSelectionComboxBox((Border)null, BitVectorValue.class);
+        m_includeColumnsFilterPanel = new ColumnFilterPanel(true, NominalValue.class, DoubleValue.class);
 
-        m_useFingerprintColumnRadio =
-            new JRadioButton("Use fingerprint attribute");
+        m_useFingerprintColumnRadio = new JRadioButton("Use fingerprint attribute");
         m_useOrdinaryColumnsRadio = new JRadioButton("Use column attributes");
         final ButtonGroup bg = new ButtonGroup();
         bg.add(m_useFingerprintColumnRadio);
@@ -152,9 +151,7 @@ public final class AttributeSelectionPanel extends JPanel {
         ActionListener actListener = new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
-                boolean isFP =
-                    bg.getSelection() == m_useFingerprintColumnRadio
-                    .getModel();
+                boolean isFP = bg.getSelection() == m_useFingerprintColumnRadio.getModel();
                 m_fingerprintColumnBox.setEnabled(isFP);
                 m_includeColumnsFilterPanel.setEnabled(!isFP);
             }
@@ -162,22 +159,19 @@ public final class AttributeSelectionPanel extends JPanel {
         m_useFingerprintColumnRadio.addActionListener(actListener);
         m_useOrdinaryColumnsRadio.addActionListener(actListener);
         m_useFingerprintColumnRadio.doClick();
-        m_ignoreColumnsWithoutDomainChecker =
-            new JCheckBox("Ignore columns without domain information");
-        m_hiliteCountSpinner = new JSpinner(new SpinnerNumberModel(2000, 1,
-                Integer.MAX_VALUE, 100));
-        m_enableHiliteChecker = new JCheckBox(
-                "Enable Hilighting (#patterns to store)", true);
+        m_ignoreColumnsWithoutDomainChecker = new JCheckBox("Ignore columns without domain information");
+        m_hiliteCountSpinner = new JSpinner(new SpinnerNumberModel(2000, 1, Integer.MAX_VALUE, 100));
+        m_enableHiliteChecker = new JCheckBox("Enable Hilighting (#patterns to store)", true);
         m_enableHiliteChecker.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
-                m_hiliteCountSpinner.setEnabled(
-                        m_enableHiliteChecker.isSelected());
+                m_hiliteCountSpinner.setEnabled(m_enableHiliteChecker.isSelected());
             }
         });
         m_enableHiliteChecker.doClick();
-        m_saveTargetDistributionInNodesChecker = new JCheckBox(
-            "Save target distribution in tree nodes (memory expensive - only important for tree view and PMML export)");
+        m_saveTargetDistributionInNodesChecker =
+            new JCheckBox(
+                "Save target distribution in tree nodes (memory expensive - only important for tree view and PMML export)");
 
         m_changeListenerList = new ArrayList<ChangeListener>();
         m_isRegression = isRegression;
@@ -269,8 +263,7 @@ public final class AttributeSelectionPanel extends JPanel {
         m_changeListenerList.remove(listener);
     }
 
-    public void loadSettingsFrom(final DataTableSpec inSpec,
-            final TreeEnsembleLearnerConfiguration cfg)
+    public void loadSettingsFrom(final DataTableSpec inSpec, final TreeEnsembleLearnerConfiguration cfg)
         throws NotConfigurableException {
         m_lastTableSpec = null; // disabled automatic propagation of table specs
         int nrNominalCols = 0;
@@ -283,13 +276,10 @@ public final class AttributeSelectionPanel extends JPanel {
                 nrNumericCols += 1;
             }
         }
-        boolean hasOrdinaryColumnsInInput =
-                nrNominalCols > 1 || nrNumericCols > 0;
-        boolean hasFPColumnInInput =
-                inSpec.containsCompatibleType(BitVectorValue.class);
+        boolean hasOrdinaryColumnsInInput = nrNominalCols > 1 || nrNumericCols > 0;
+        boolean hasFPColumnInInput = inSpec.containsCompatibleType(BitVectorValue.class);
         m_targetColumnBox.update(inSpec, cfg.getTargetColumn());
-        DataTableSpec attSpec =
-                removeColumn(inSpec, m_targetColumnBox.getSelectedColumn());
+        DataTableSpec attSpec = removeColumn(inSpec, m_targetColumnBox.getSelectedColumn());
         String fpColumn = cfg.getFingerprintColumn();
         boolean includeAll = cfg.isIncludeAllColumns();
         String[] includeCols = cfg.getIncludeColumns();
@@ -337,8 +327,7 @@ public final class AttributeSelectionPanel extends JPanel {
         m_lastTableSpec = inSpec;
     }
 
-    public void saveSettings(final TreeEnsembleLearnerConfiguration cfg)
-        throws InvalidSettingsException {
+    public void saveSettings(final TreeEnsembleLearnerConfiguration cfg) throws InvalidSettingsException {
         cfg.setTargetColumn(m_targetColumnBox.getSelectedColumn());
         if (m_useFingerprintColumnRadio.isSelected()) {
             String fpColumn = m_fingerprintColumnBox.getSelectedColumn();
@@ -352,38 +341,33 @@ public final class AttributeSelectionPanel extends JPanel {
                 cfg.setIncludeAllColumns(true);
             } else {
                 cfg.setIncludeAllColumns(false);
-                Set<String> incls =
-                        m_includeColumnsFilterPanel.getIncludedColumnSet();
+                Set<String> incls = m_includeColumnsFilterPanel.getIncludedColumnSet();
                 if (incls.size() == 0) {
-                    throw new InvalidSettingsException(
-                            "No learn columns selected");
+                    throw new InvalidSettingsException("No learn columns selected");
                 }
                 String[] includeCols = incls.toArray(new String[incls.size()]);
                 cfg.setIncludeColumns(includeCols);
             }
         }
-        int hiliteCount = m_enableHiliteChecker.isSelected()
-            ? (Integer)m_hiliteCountSpinner.getValue() : -1;
+        int hiliteCount = m_enableHiliteChecker.isSelected() ? (Integer)m_hiliteCountSpinner.getValue() : -1;
         cfg.setNrHilitePatterns(hiliteCount);
-        cfg.setIgnoreColumnsWithoutDomain(
-                m_ignoreColumnsWithoutDomainChecker.isSelected());
+        cfg.setIgnoreColumnsWithoutDomain(m_ignoreColumnsWithoutDomainChecker.isSelected());
         cfg.setSaveTargetDistributionInNodes(m_saveTargetDistributionInNodesChecker.isSelected());
     }
 
-
-    /** Get table spec excluding the currently selected target column.
+    /**
+     * Get table spec excluding the currently selected target column.
+     * 
      * @return table spec with learn attributes
      */
     DataTableSpec getCurrentAttributeSpec() {
         if (m_lastTableSpec == null) {
             throw new IllegalStateException("Not to be called during load");
         }
-        return removeColumn(m_lastTableSpec,
-                m_targetColumnBox.getSelectedColumn());
+        return removeColumn(m_lastTableSpec, m_targetColumnBox.getSelectedColumn());
     }
 
-    private static DataTableSpec removeColumn(final DataTableSpec spec,
-            final String col) {
+    private static DataTableSpec removeColumn(final DataTableSpec spec, final String col) {
         ColumnRearranger r = new ColumnRearranger(spec);
         r.remove(col);
         return r.createSpec();

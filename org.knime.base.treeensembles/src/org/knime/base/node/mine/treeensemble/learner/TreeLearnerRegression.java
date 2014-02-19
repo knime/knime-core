@@ -71,16 +71,17 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeLearnerRegression extends AbstractTreeLearner {
 
     /**
      * @param config
-     * @param data */
-    public TreeLearnerRegression(final TreeEnsembleLearnerConfiguration config,
-            final TreeData data, final RandomData randomData) {
+     * @param data
+     */
+    public TreeLearnerRegression(final TreeEnsembleLearnerConfiguration config, final TreeData data,
+        final RandomData randomData) {
         super(config, data, randomData);
         if (!config.isRegression()) {
             throw new IllegalStateException("Can't learn regression model on categorical target");
@@ -93,8 +94,8 @@ public class TreeLearnerRegression extends AbstractTreeLearner {
 
     /** {@inheritDoc} */
     @Override
-    public TreeModelRegression learnSingleTree(final ExecutionMonitor exec,
-            final RandomData rd) throws CanceledExecutionException {
+    public TreeModelRegression learnSingleTree(final ExecutionMonitor exec, final RandomData rd)
+        throws CanceledExecutionException {
         final TreeTargetNumericColumnData targetColumn = getTargetData();
         final TreeData data = getData();
         final RowSample rowSampling = getRowSampling();
@@ -105,17 +106,16 @@ public class TreeLearnerRegression extends AbstractTreeLearner {
         }
         RegressionPriors targetPriors = targetColumn.getPriors(dataMemberships, config);
         BitSet forbiddenColumnSet = new BitSet(data.getNrAttributes());
-        TreeNodeRegression rootNode = buildTreeNode(exec, 0, dataMemberships,
-                TreeNodeSignature.ROOT_SIGNATURE, targetPriors, forbiddenColumnSet);
+        TreeNodeRegression rootNode =
+            buildTreeNode(exec, 0, dataMemberships, TreeNodeSignature.ROOT_SIGNATURE, targetPriors, forbiddenColumnSet);
         assert forbiddenColumnSet.cardinality() == 0;
         rootNode.setTreeNodeCondition(TreeNodeTrueCondition.INSTANCE);
         return new TreeModelRegression(rootNode);
     }
 
-    private SplitCandidate findBestSplitRegression(final int currentDepth,
-            final double[] rowSampleWeights,
-            final TreeNodeSignature treeNodeSignature,
-            final RegressionPriors targetPriors,
+    private SplitCandidate
+        findBestSplitRegression(final int currentDepth, final double[] rowSampleWeights,
+            final TreeNodeSignature treeNodeSignature, final RegressionPriors targetPriors,
             final BitSet forbiddenColumnSet) {
         final TreeData data = getData();
         final ColumnSampleStrategy colSamplingStrategy = getColSamplingStrategy();
@@ -146,11 +146,10 @@ public class TreeLearnerRegression extends AbstractTreeLearner {
                 if (forbiddenColumnSet.get(col.getMetaData().getAttributeIndex())) {
                     continue;
                 }
-                SplitCandidate currentColSplit = col.calcBestSplitRegression(
-                     rowSampleWeights, targetPriors, targetColumn);
+                SplitCandidate currentColSplit =
+                    col.calcBestSplitRegression(rowSampleWeights, targetPriors, targetColumn);
                 if (currentColSplit != null) {
-                    double gainValue =
-                        currentColSplit.getGainValue();
+                    double gainValue = currentColSplit.getGainValue();
                     if (gainValue > bestGainValue) {
                         bestGainValue = gainValue;
                         splitCandidate = currentColSplit;
@@ -162,13 +161,13 @@ public class TreeLearnerRegression extends AbstractTreeLearner {
     }
 
     private TreeNodeRegression buildTreeNode(final ExecutionMonitor exec, final int currentDepth,
-            final double[] rowSampleWeights, final TreeNodeSignature treeNodeSignature,
-            final RegressionPriors targetPriors, final BitSet forbiddenColumnSet) throws CanceledExecutionException {
+        final double[] rowSampleWeights, final TreeNodeSignature treeNodeSignature,
+        final RegressionPriors targetPriors, final BitSet forbiddenColumnSet) throws CanceledExecutionException {
         final TreeData data = getData();
         final TreeEnsembleLearnerConfiguration config = getConfig();
         exec.checkCanceled();
-        SplitCandidate bestSplit = findBestSplitRegression(currentDepth,
-                rowSampleWeights, treeNodeSignature, targetPriors, forbiddenColumnSet);
+        SplitCandidate bestSplit =
+            findBestSplitRegression(currentDepth, rowSampleWeights, treeNodeSignature, targetPriors, forbiddenColumnSet);
         if (bestSplit == null) {
             return new TreeNodeRegression(treeNodeSignature, targetPriors);
         }
@@ -179,10 +178,8 @@ public class TreeLearnerRegression extends AbstractTreeLearner {
 
         TreeNodeCondition[] childConditions = bestSplit.getChildConditions();
         if (childConditions.length > Short.MAX_VALUE) {
-            throw new RuntimeException("Too many children when splitting "
-                    + "attribute " + bestSplit.getColumnData()
-                    + " (maximum supported: " + Short.MAX_VALUE + "): "
-                    + childConditions.length);
+            throw new RuntimeException("Too many children when splitting " + "attribute " + bestSplit.getColumnData()
+                + " (maximum supported: " + Short.MAX_VALUE + "): " + childConditions.length);
         }
         TreeNodeRegression[] childNodes = new TreeNodeRegression[childConditions.length];
         final double[] dataMemberships = rowSampleWeights;
@@ -194,8 +191,9 @@ public class TreeLearnerRegression extends AbstractTreeLearner {
             splitColumn.updateChildMemberships(cond, dataMemberships, childMemberships);
             RegressionPriors childTargetPriors = targetColumn.getPriors(childMemberships, config);
             TreeNodeSignature childSignature = treeNodeSignature.createChildSignature((short)i);
-            childNodes[i] = buildTreeNode(exec, currentDepth + 1, childMemberships,
-                    childSignature, childTargetPriors, forbiddenColumnSet);
+            childNodes[i] =
+                buildTreeNode(exec, currentDepth + 1, childMemberships, childSignature, childTargetPriors,
+                    forbiddenColumnSet);
             childNodes[i].setTreeNodeCondition(cond);
         }
         if (markAttributeAsForbidden) {
@@ -203,7 +201,5 @@ public class TreeLearnerRegression extends AbstractTreeLearner {
         }
         return new TreeNodeRegression(treeNodeSignature, targetPriors, childNodes);
     }
-
-
 
 }

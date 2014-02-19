@@ -70,17 +70,18 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLTranslator;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeModelPMMLTranslator implements PMMLTranslator {
 
     private final TreeModelClassification m_treeModel;
-    /** enumeration of the tree nodes. KNIME does not support node ids of type
-     * string (if it did we were using the TreeSignature instead of this int).
+
+    /**
+     * enumeration of the tree nodes. KNIME does not support node ids of type string (if it did we were using the
+     * TreeSignature instead of this int).
      */
     private int m_nodeIndex;
-
 
     /**
      *  */
@@ -96,8 +97,7 @@ public class TreeModelPMMLTranslator implements PMMLTranslator {
 
     /** {@inheritDoc} */
     @Override
-    public SchemaType exportTo(
-            final PMMLDocument pmmlDoc, final PMMLPortObjectSpec spec) {
+    public SchemaType exportTo(final PMMLDocument pmmlDoc, final PMMLPortObjectSpec spec) {
 
         PMML pmml = pmmlDoc.getPMML();
         TreeModelDocument.TreeModel treeModel = pmml.addNewTreeModel();
@@ -121,8 +121,7 @@ public class TreeModelPMMLTranslator implements PMMLTranslator {
 
         // -------------------------------------------------
         // set up no true child strategy
-        treeModel.setNoTrueChildStrategy(
-                NOTRUECHILDSTRATEGY.RETURN_LAST_PREDICTION);
+        treeModel.setNoTrueChildStrategy(NOTRUECHILDSTRATEGY.RETURN_LAST_PREDICTION);
 
         // --------------------------------------------------
         // set up tree node
@@ -133,15 +132,14 @@ public class TreeModelPMMLTranslator implements PMMLTranslator {
 
     /**
      * @param pmmlNode
-     * @param node */
-    private void addTreeNode(final Node pmmlNode,
-            final TreeNodeClassification node) {
+     * @param node
+     */
+    private void addTreeNode(final Node pmmlNode, final TreeNodeClassification node) {
         int index = m_nodeIndex++;
         pmmlNode.setId(Integer.toString(index));
         pmmlNode.setScore(node.getMajorityClassName());
         double[] targetDistribution = node.getTargetDistribution();
-        NominalValueRepresentation[] targetVals =
-            node.getTargetMetaData().getValues();
+        NominalValueRepresentation[] targetVals = node.getTargetMetaData().getValues();
         double sum = 0.0;
         for (Double v : targetDistribution) {
             sum += v;
@@ -152,61 +150,50 @@ public class TreeModelPMMLTranslator implements PMMLTranslator {
         if (condition instanceof TreeNodeTrueCondition) {
             pmmlNode.addNewTrue();
         } else if (condition instanceof TreeNodeColumnCondition) {
-            final TreeNodeColumnCondition colCondition =
-                (TreeNodeColumnCondition)condition;
-            final String colName =
-                colCondition.getColumnMetaData().getAttributeName();
+            final TreeNodeColumnCondition colCondition = (TreeNodeColumnCondition)condition;
+            final String colName = colCondition.getColumnMetaData().getAttributeName();
             final Operator.Enum operator;
             final String value;
             if (condition instanceof TreeNodeNominalCondition) {
-                final TreeNodeNominalCondition nominalCondition =
-                    (TreeNodeNominalCondition)condition;
+                final TreeNodeNominalCondition nominalCondition = (TreeNodeNominalCondition)condition;
                 operator = Operator.EQUAL;
                 value = nominalCondition.getValue();
             } else if (condition instanceof TreeNodeBitCondition) {
-                final TreeNodeBitCondition bitCondition =
-                    (TreeNodeBitCondition)condition;
+                final TreeNodeBitCondition bitCondition = (TreeNodeBitCondition)condition;
                 operator = Operator.EQUAL;
                 value = bitCondition.getValue() ? "1" : "0";
             } else if (condition instanceof TreeNodeNumericCondition) {
-                final TreeNodeNumericCondition numCondition =
-                    (TreeNodeNumericCondition)condition;
+                final TreeNodeNumericCondition numCondition = (TreeNodeNumericCondition)condition;
                 NumericOperator numOperator = numCondition.getNumericOperator();
                 switch (numOperator) {
-                case LargerThan:
-                    operator = Operator.GREATER_THAN;
-                    break;
-                case LessThanOrEqual:
-                    operator = Operator.LESS_OR_EQUAL;
-                    break;
-                default:
-                    throw new IllegalStateException("Unsupported operator (not "
-                            + "implemented): " + numOperator);
+                    case LargerThan:
+                        operator = Operator.GREATER_THAN;
+                        break;
+                    case LessThanOrEqual:
+                        operator = Operator.LESS_OR_EQUAL;
+                        break;
+                    default:
+                        throw new IllegalStateException("Unsupported operator (not " + "implemented): " + numOperator);
                 }
                 value = Double.toString(numCondition.getSplitValue());
             } else {
-                throw new IllegalStateException("Unsupported condition (not "
-                        + "implemented): "
-                        + condition.getClass().getSimpleName());
+                throw new IllegalStateException("Unsupported condition (not " + "implemented): "
+                    + condition.getClass().getSimpleName());
             }
-            SimplePredicate pmmlSimplePredicate =
-                pmmlNode.addNewSimplePredicate();
+            SimplePredicate pmmlSimplePredicate = pmmlNode.addNewSimplePredicate();
             pmmlSimplePredicate.setField(colName);
             pmmlSimplePredicate.setOperator(operator);
             pmmlSimplePredicate.setValue(value);
         } else {
-            throw new IllegalStateException("Unsupported condition (not "
-                    + "implemented): "
-                    + condition.getClass().getSimpleName());
+            throw new IllegalStateException("Unsupported condition (not " + "implemented): "
+                + condition.getClass().getSimpleName());
         }
-
 
         // adding score distribution (class counts)
         for (int i = 0; i < targetDistribution.length; i++) {
             String className = targetVals[i].getNominalValue();
             double freq = targetDistribution[i];
-            ScoreDistribution pmmlScoreDist =
-                pmmlNode.addNewScoreDistribution();
+            ScoreDistribution pmmlScoreDist = pmmlNode.addNewScoreDistribution();
             pmmlScoreDist.setValue(className);
             pmmlScoreDist.setRecordCount(freq);
         }

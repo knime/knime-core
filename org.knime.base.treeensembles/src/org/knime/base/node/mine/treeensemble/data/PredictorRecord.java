@@ -53,12 +53,13 @@ package org.knime.base.node.mine.treeensemble.data;
 import java.util.Map;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class PredictorRecord {
 
     public static final Object NULL = new Object();
+
     private final Map<String, Object> m_valueMap;
 
     /**
@@ -70,8 +71,7 @@ public class PredictorRecord {
     public Object getValue(final String attributeIdentifier) {
         Object result = m_valueMap.get(attributeIdentifier);
         if (result == null) {
-            throw new IllegalArgumentException("Unknown attribute identifier \""
-                    + attributeIdentifier + "\"");
+            throw new IllegalArgumentException("Unknown attribute identifier \"" + attributeIdentifier + "\"");
         }
         if (result == NULL) {
             return null;

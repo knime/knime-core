@@ -60,17 +60,18 @@ import org.knime.base.node.mine.treeensemble.model.TreeNodeNominalCondition;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
     private final int[] m_nominalValueCounts;
+
     private final int[] m_orginalIndexInColumnList;
 
     TreeNominalColumnData(final TreeNominalColumnMetaData metaData,
-            final TreeEnsembleLearnerConfiguration configuration,
-            final int[] nominalValueCounts, final int[] originalIndexInColumnList) {
+        final TreeEnsembleLearnerConfiguration configuration, final int[] nominalValueCounts,
+        final int[] originalIndexInColumnList) {
         super(metaData, configuration);
         m_nominalValueCounts = nominalValueCounts;
         m_orginalIndexInColumnList = originalIndexInColumnList;
@@ -84,11 +85,9 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
     /** {@inheritDoc} */
     @Override
-    public NominalSplitCandidate calcBestSplitClassification(final double[]
-            rowWeights, final ClassificationPriors targetPriors,
-            final TreeTargetNominalColumnData targetColumn) {
-        final NominalValueRepresentation[] targetVals =
-            targetColumn.getMetaData().getValues();
+    public NominalSplitCandidate calcBestSplitClassification(final double[] rowWeights,
+        final ClassificationPriors targetPriors, final TreeTargetNominalColumnData targetColumn) {
+        final NominalValueRepresentation[] targetVals = targetColumn.getMetaData().getValues();
         IImpurity impCriterion = targetPriors.getImpurityCriterion();
         // distribution of target for each attribute value
         final double[] targetCountsSplit = new double[targetVals.length];
@@ -118,23 +117,18 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             }
             totalWeight += currentAttValWeight;
             attWeights[att] = currentAttValWeight;
-            attEntropys[att] = impCriterion.getPartitionImpurity(
-                    targetCountsSplit, currentAttValWeight);
+            attEntropys[att] = impCriterion.getPartitionImpurity(targetCountsSplit, currentAttValWeight);
             start = end;
         }
-        double postSplitImpurity = impCriterion.getPostSplitImpurity(
-                attEntropys, attWeights, totalWeight);
-        double gain = impCriterion.getGain(targetPriors.getPriorImpurity(),
-                postSplitImpurity, attWeights, totalWeight);
+        double postSplitImpurity = impCriterion.getPostSplitImpurity(attEntropys, attWeights, totalWeight);
+        double gain = impCriterion.getGain(targetPriors.getPriorImpurity(), postSplitImpurity, attWeights, totalWeight);
         return new NominalSplitCandidate(this, gain, attWeights);
     }
 
-
     /** {@inheritDoc} */
     @Override
-    public SplitCandidate calcBestSplitRegression(final double[] rowWeights,
-            final RegressionPriors targetPriors,
-            final TreeTargetNumericColumnData targetColumn) {
+    public SplitCandidate calcBestSplitRegression(final double[] rowWeights, final RegressionPriors targetPriors,
+        final TreeTargetNumericColumnData targetColumn) {
         final NominalValueRepresentation[] nomVals = getMetaData().getValues();
         final double ySumTotal = targetPriors.getYSum();
         final double nrRecordsTotal = targetPriors.getNrRecords();
@@ -166,8 +160,8 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
             start = end;
         }
 
-//        assert Math.abs((ySumTotal - totalWeight) / ySumTotal) < EPSILON
-//            : "Expected similar values: " + ySumTotal + " vs. " + totalWeight;
+        //        assert Math.abs((ySumTotal - totalWeight) / ySumTotal) < EPSILON
+        //            : "Expected similar values: " + ySumTotal + " vs. " + totalWeight;
         final double gain = criterionAfterSplit - criterionTotal;
         if (gain > 0.0) {
             return new NominalSplitCandidate(this, gain, sumWeightsAttributes);
@@ -177,11 +171,9 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
     /** {@inheritDoc} */
     @Override
-    public void updateChildMemberships(final TreeNodeCondition childCondition,
-            final double[] parentMemberships,
-            final double[] childMembershipsToUpdate) {
-        TreeNodeNominalCondition nomCondition =
-            (TreeNodeNominalCondition)childCondition;
+    public void updateChildMemberships(final TreeNodeCondition childCondition, final double[] parentMemberships,
+        final double[] childMembershipsToUpdate) {
+        TreeNodeNominalCondition nomCondition = (TreeNodeNominalCondition)childCondition;
         String value = nomCondition.getValue();
         int att = -1;
         for (NominalValueRepresentation rep : getMetaData().getValues()) {

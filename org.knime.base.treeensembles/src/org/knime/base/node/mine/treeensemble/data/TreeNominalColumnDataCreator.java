@@ -62,19 +62,20 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.RowKey;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeNominalColumnDataCreator implements TreeAttributeColumnDataCreator {
 
     private final DataColumnSpec m_columnSpec;
+
     private Map<String, NominalValueRepresentation> m_string2NomValRepMap;
+
     private List<NominalTuple> m_tuples;
 
     TreeNominalColumnDataCreator(final DataColumnSpec colSpec) {
         m_columnSpec = colSpec;
-        m_string2NomValRepMap =
-            new HashMap<String, NominalValueRepresentation>();
+        m_string2NomValRepMap = new HashMap<String, NominalValueRepresentation>();
         m_tuples = new ArrayList<NominalTuple>();
     }
 
@@ -95,8 +96,7 @@ public class TreeNominalColumnDataCreator implements TreeAttributeColumnDataCrea
         NominalValueRepresentation rep = m_string2NomValRepMap.get(str);
         if (rep == null) {
             assignedValue = m_string2NomValRepMap.size();
-            m_string2NomValRepMap.put(str,
-                    new NominalValueRepresentation(str, assignedValue, 1.0));
+            m_string2NomValRepMap.put(str, new NominalValueRepresentation(str, assignedValue, 1.0));
         } else {
             assignedValue = rep.getAssignedInteger();
             rep.addToFrequency(1.0);
@@ -116,13 +116,11 @@ public class TreeNominalColumnDataCreator implements TreeAttributeColumnDataCrea
     /** {@inheritDoc} */
     @Override
     public TreeNominalColumnData createColumnData(final int attributeIndex,
-            final TreeEnsembleLearnerConfiguration configuration) {
+        final TreeEnsembleLearnerConfiguration configuration) {
         assert attributeIndex == 0;
-        final NominalTuple[] tuples =
-            m_tuples.toArray(new NominalTuple[m_tuples.size()]);
+        final NominalTuple[] tuples = m_tuples.toArray(new NominalTuple[m_tuples.size()]);
         Arrays.sort(tuples);
-        NominalValueRepresentation[] nominalValueList =
-            new NominalValueRepresentation[m_string2NomValRepMap.size()];
+        NominalValueRepresentation[] nominalValueList = new NominalValueRepresentation[m_string2NomValRepMap.size()];
         for (NominalValueRepresentation e : m_string2NomValRepMap.values()) {
             int assignedInteger = e.getAssignedInteger();
             nominalValueList[assignedInteger] = e;
@@ -135,14 +133,13 @@ public class TreeNominalColumnDataCreator implements TreeAttributeColumnDataCrea
             valueCounts[t.m_value] += 1;
             originalIndexInColumnList[i] = t.m_indexInColumn;
         }
-        TreeNominalColumnMetaData metaData = new TreeNominalColumnMetaData(
-                m_columnSpec.getName(), nominalValueList);
-        return new TreeNominalColumnData(metaData, configuration, valueCounts,
-                originalIndexInColumnList);
+        TreeNominalColumnMetaData metaData = new TreeNominalColumnMetaData(m_columnSpec.getName(), nominalValueList);
+        return new TreeNominalColumnData(metaData, configuration, valueCounts, originalIndexInColumnList);
     }
 
     private static class NominalTuple implements Comparable<NominalTuple> {
         private int m_value;
+
         private int m_indexInColumn;
 
         /** {@inheritDoc} */

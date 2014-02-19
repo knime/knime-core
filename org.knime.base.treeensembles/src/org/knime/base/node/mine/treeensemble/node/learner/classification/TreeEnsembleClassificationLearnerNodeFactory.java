@@ -55,11 +55,11 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeEnsembleClassificationLearnerNodeFactory extends
-        NodeFactory<TreeEnsembleClassificationLearnerNodeModel> {
+    NodeFactory<TreeEnsembleClassificationLearnerNodeModel> {
 
     /** {@inheritDoc} */
     @Override
@@ -76,7 +76,7 @@ public class TreeEnsembleClassificationLearnerNodeFactory extends
     /** {@inheritDoc} */
     @Override
     public NodeView<TreeEnsembleClassificationLearnerNodeModel> createNodeView(final int viewIndex,
-            final TreeEnsembleClassificationLearnerNodeModel nodeModel) {
+        final TreeEnsembleClassificationLearnerNodeModel nodeModel) {
         return new TreeEnsembleClassificationLearnerNodeView(nodeModel);
     }
 

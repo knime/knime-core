@@ -55,21 +55,21 @@ import java.util.BitSet;
 import org.apache.commons.math.random.RandomData;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class SubsetNoReplacementRowSample implements RowSample {
 
     private final BitSet m_includeBitSet;
+
     private final int m_nrRows;
+
     private final double m_fraction;
 
     /**
      *  */
-    public SubsetNoReplacementRowSample(final int nrRows, final double fraction,
-            final RandomData rd) {
-        int[] includes = rd.nextPermutation(nrRows,
-                Math.min(nrRows, (int)Math.round(fraction * nrRows)));
+    public SubsetNoReplacementRowSample(final int nrRows, final double fraction, final RandomData rd) {
+        int[] includes = rd.nextPermutation(nrRows, Math.min(nrRows, (int)Math.round(fraction * nrRows)));
         m_includeBitSet = new BitSet(nrRows);
         for (int i : includes) {
             m_includeBitSet.set(i);
@@ -93,8 +93,8 @@ public final class SubsetNoReplacementRowSample implements RowSample {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return "Subset w/o repl; fraction: " + m_fraction + ", nrRows: "
-            + m_nrRows + ", nrBitsSet: " + m_includeBitSet.cardinality();
+        return "Subset w/o repl; fraction: " + m_fraction + ", nrRows: " + m_nrRows + ", nrBitsSet: "
+            + m_includeBitSet.cardinality();
     }
 
 }

@@ -53,7 +53,7 @@ package org.knime.base.node.mine.treeensemble.sample.column;
 import org.knime.base.node.mine.treeensemble.data.TreeAttributeColumnData;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class ColumnSample implements Iterable<TreeAttributeColumnData> {

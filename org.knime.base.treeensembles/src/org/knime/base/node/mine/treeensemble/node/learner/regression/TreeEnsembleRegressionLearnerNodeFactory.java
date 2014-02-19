@@ -55,11 +55,10 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class TreeEnsembleRegressionLearnerNodeFactory extends
-        NodeFactory<TreeEnsembleRegressionLearnerNodeModel> {
+public final class TreeEnsembleRegressionLearnerNodeFactory extends NodeFactory<TreeEnsembleRegressionLearnerNodeModel> {
 
     /** {@inheritDoc} */
     @Override
@@ -75,8 +74,8 @@ public final class TreeEnsembleRegressionLearnerNodeFactory extends
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<TreeEnsembleRegressionLearnerNodeModel> createNodeView(
-            final int viewIndex, final TreeEnsembleRegressionLearnerNodeModel nodeModel) {
+    public NodeView<TreeEnsembleRegressionLearnerNodeModel> createNodeView(final int viewIndex,
+        final TreeEnsembleRegressionLearnerNodeModel nodeModel) {
         return new TreeEnsembleRegressionLearnerNodeView(nodeModel);
     }
 

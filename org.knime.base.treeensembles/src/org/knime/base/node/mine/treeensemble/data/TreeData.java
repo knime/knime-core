@@ -53,27 +53,28 @@ package org.knime.base.node.mine.treeensemble.data;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModel.TreeType;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeData {
 
     private final TreeMetaData m_metaData;
+
     private final TreeAttributeColumnData[] m_columns;
+
     private final TreeTargetColumnData m_targetColumn;
+
     private final TreeType m_treeType;
 
     /**
      * @param columns
-     * @param targetColumn */
-    TreeData(final TreeAttributeColumnData[] columns,
-            final TreeTargetColumnData targetColumn,
-            final TreeType treeType) {
+     * @param targetColumn
+     */
+    TreeData(final TreeAttributeColumnData[] columns, final TreeTargetColumnData targetColumn, final TreeType treeType) {
         m_columns = columns;
         m_targetColumn = targetColumn;
         m_treeType = treeType;
-        TreeAttributeColumnMetaData[] attMetaData =
-            new TreeAttributeColumnMetaData[columns.length];
+        TreeAttributeColumnMetaData[] attMetaData = new TreeAttributeColumnMetaData[columns.length];
         for (int i = 0; i < columns.length; i++) {
             attMetaData[i] = columns[i].getMetaData();
         }

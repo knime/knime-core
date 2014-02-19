@@ -82,57 +82,55 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.ThreadPool;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeEnsembleLearner {
 
     private static final int REPORT_LEVEL = 3;
+
     private final TreeEnsembleLearnerConfiguration m_config;
+
     private final TreeData m_data;
 
     private RowSample[] m_rowSamples;
+
     private ColumnSampleStrategy[] m_columnSampleStrategies;
+
     private TreeEnsembleModel m_ensembleModel;
 
     /**
      * @param config
      * @param data
-     *  */
-    public TreeEnsembleLearner(final TreeEnsembleLearnerConfiguration config,
-            final TreeData data) {
+     * */
+    public TreeEnsembleLearner(final TreeEnsembleLearnerConfiguration config, final TreeData data) {
         m_config = config;
         m_data = data;
     }
 
-    public TreeEnsembleModel learnEnsemble(final ExecutionMonitor exec)
-        throws CanceledExecutionException, ExecutionException {
+    public TreeEnsembleModel learnEnsemble(final ExecutionMonitor exec) throws CanceledExecutionException,
+        ExecutionException {
         final int nrModels = m_config.getNrModels();
         final RandomData rd = m_config.createRandomData();
         final ThreadPool tp = KNIMEConstants.GLOBAL_THREAD_POOL;
-        final AtomicReference<Throwable> learnThrowableRef =
-            new AtomicReference<Throwable>();
+        final AtomicReference<Throwable> learnThrowableRef = new AtomicReference<Throwable>();
         @SuppressWarnings("unchecked")
         final Future<TreeLearnerResult>[] modelFutures = new Future[nrModels];
-        final int procCount =
-            3 * Runtime.getRuntime().availableProcessors() / 2;
+        final int procCount = 3 * Runtime.getRuntime().availableProcessors() / 2;
         final Semaphore semaphore = new Semaphore(procCount);
-        Callable<TreeLearnerResult[]> learnCallable =
-            new Callable<TreeLearnerResult[]>() {
+        Callable<TreeLearnerResult[]> learnCallable = new Callable<TreeLearnerResult[]>() {
             @Override
             public TreeLearnerResult[] call() throws Exception {
-                final TreeLearnerResult[] results =
-                    new TreeLearnerResult[nrModels];
+                final TreeLearnerResult[] results = new TreeLearnerResult[nrModels];
                 for (int i = 0; i < nrModels; i++) {
                     semaphore.acquire();
                     finishedTree(i - procCount, exec);
                     checkThrowable(learnThrowableRef);
                     RandomData rdSingle =
-                        TreeEnsembleLearnerConfiguration.createRandomData(
-                                rd.nextLong(Long.MIN_VALUE, Long.MAX_VALUE));
+                        TreeEnsembleLearnerConfiguration.createRandomData(rd.nextLong(Long.MIN_VALUE, Long.MAX_VALUE));
                     ExecutionMonitor subExec = exec.createSubProgress(0.0);
-                    modelFutures[i] = tp.enqueue(new TreeLearnerCallable(
-                            subExec, rdSingle, learnThrowableRef, semaphore));
+                    modelFutures[i] =
+                        tp.enqueue(new TreeLearnerCallable(subExec, rdSingle, learnThrowableRef, semaphore));
                 }
                 for (int i = 0; i < procCount; i++) {
                     semaphore.acquire();
@@ -147,11 +145,10 @@ public class TreeEnsembleLearner {
                 }
                 return results;
             }
-            private void finishedTree(final int treeIndex,
-                    final ExecutionMonitor progMon) {
+
+            private void finishedTree(final int treeIndex, final ExecutionMonitor progMon) {
                 if (treeIndex > 0) {
-                    progMon.setProgress(treeIndex / (double)nrModels,
-                            "Tree " + treeIndex + "/" + nrModels);
+                    progMon.setProgress(treeIndex / (double)nrModels, "Tree " + treeIndex + "/" + nrModels);
                 }
             }
         };
@@ -174,8 +171,7 @@ public class TreeEnsembleLearner {
         return m_rowSamples;
     }
 
-    public BufferedDataTable createColumnStatisticTable(
-            final ExecutionContext exec) throws CanceledExecutionException {
+    public BufferedDataTable createColumnStatisticTable(final ExecutionContext exec) throws CanceledExecutionException {
         BufferedDataContainer c = exec.createDataContainer(getColumnStatisticTableSpec());
         final int nrModels = m_ensembleModel.getNrModels();
         final TreeAttributeColumnData[] columns = m_data.getColumns();
@@ -202,14 +198,12 @@ public class TreeEnsembleLearner {
             }
         }
 
-
         for (int i = 0; i < nrAttributes; i++) {
             String name = columns[i].getMetaData().getAttributeName();
             int[] counts = new int[2 * REPORT_LEVEL];
             for (int level = 0; level < REPORT_LEVEL; level++) {
                 counts[level] = columnOnLevelCounts[level][i];
-                counts[REPORT_LEVEL + level] =
-                    columnInLevelSampleCounts[level][i];
+                counts[REPORT_LEVEL + level] = columnInLevelSampleCounts[level][i];
             }
             DataRow row = new DefaultRow(name, counts);
             c.addRowToTable(row);
@@ -220,26 +214,22 @@ public class TreeEnsembleLearner {
     }
 
     private static DataTableSpec COLUMN_STAT_TABLE_SPEC;
+
     public synchronized static DataTableSpec getColumnStatisticTableSpec() {
         if (COLUMN_STAT_TABLE_SPEC == null) {
             DataColumnSpec[] cols = new DataColumnSpec[2 * REPORT_LEVEL];
             for (int level = 0; level < REPORT_LEVEL; level++) {
                 String splitName = "#splits (level " + level + ")";
                 String candidateName = "#candidates (level " + level + ")";
-                cols[level] = new DataColumnSpecCreator(
-                        splitName, IntCell.TYPE).createSpec();
-                cols[REPORT_LEVEL + level] = new DataColumnSpecCreator(
-                        candidateName, IntCell.TYPE).createSpec();
+                cols[level] = new DataColumnSpecCreator(splitName, IntCell.TYPE).createSpec();
+                cols[REPORT_LEVEL + level] = new DataColumnSpecCreator(candidateName, IntCell.TYPE).createSpec();
             }
-            COLUMN_STAT_TABLE_SPEC = new DataTableSpec(
-                    "Tree Ensemble Column Statistic", cols);
+            COLUMN_STAT_TABLE_SPEC = new DataTableSpec("Tree Ensemble Column Statistic", cols);
         }
         return COLUMN_STAT_TABLE_SPEC;
     }
 
-    private void checkThrowable(
-            final AtomicReference<Throwable> learnThrowableRef)
-        throws CanceledExecutionException {
+    private void checkThrowable(final AtomicReference<Throwable> learnThrowableRef) throws CanceledExecutionException {
         Throwable th = learnThrowableRef.get();
         if (th != null) {
             if (th instanceof CanceledExecutionException) {
@@ -255,15 +245,17 @@ public class TreeEnsembleLearner {
     private final class TreeLearnerCallable implements Callable<TreeLearnerResult> {
 
         private final ExecutionMonitor m_exec;
+
         private final RandomData m_rd;
+
         private final Semaphore m_releaseSemaphore;
+
         private final AtomicReference<Throwable> m_throwableReference;
 
         /**
          *  */
-        public TreeLearnerCallable(final ExecutionMonitor exec,
-                final RandomData rd, final AtomicReference<Throwable> th,
-                final Semaphore semaphore) {
+        public TreeLearnerCallable(final ExecutionMonitor exec, final RandomData rd,
+            final AtomicReference<Throwable> th, final Semaphore semaphore) {
             m_exec = exec;
             m_rd = rd;
             m_throwableReference = th;
@@ -297,22 +289,23 @@ public class TreeEnsembleLearner {
 
     private final static class TreeLearnerResult {
         private final AbstractTreeModel m_treeModel;
+
         private final RowSample m_rowSample;
+
         private final ColumnSampleStrategy m_rootColumnSampleStrategy;
+
         /**
          * @param treeModel
          * @param rowSample
-         * @param columnSampleStrategy */
-        private TreeLearnerResult(final AbstractTreeModel treeModel,
-                final RowSample rowSample,
-                final ColumnSampleStrategy columnSampleStrategy) {
+         * @param columnSampleStrategy
+         */
+        private TreeLearnerResult(final AbstractTreeModel treeModel, final RowSample rowSample,
+            final ColumnSampleStrategy columnSampleStrategy) {
             m_treeModel = treeModel;
             m_rowSample = rowSample;
             m_rootColumnSampleStrategy = columnSampleStrategy;
         }
 
-
     }
-
 
 }

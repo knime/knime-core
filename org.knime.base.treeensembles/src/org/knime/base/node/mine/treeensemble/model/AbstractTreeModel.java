@@ -59,7 +59,7 @@ import java.util.List;
 import org.knime.base.node.mine.treeensemble.data.PredictorRecord;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class AbstractTreeModel<N extends AbstractTreeNode> {
@@ -67,7 +67,8 @@ public abstract class AbstractTreeModel<N extends AbstractTreeNode> {
     private final N m_rootNode;
 
     /**
-     * @param rootNode */
+     * @param rootNode
+     */
     AbstractTreeModel(final N rootNode) {
         m_rootNode = rootNode;
     }

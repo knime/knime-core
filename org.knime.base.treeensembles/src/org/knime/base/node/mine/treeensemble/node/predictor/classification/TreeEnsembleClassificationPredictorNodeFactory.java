@@ -55,7 +55,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeEnsembleClassificationPredictorNodeFactory extends
@@ -75,8 +75,8 @@ public class TreeEnsembleClassificationPredictorNodeFactory extends
 
     /** {@inheritDoc} */
     @Override
-    public final NodeView<TreeEnsembleClassificationPredictorNodeModel> createNodeView(
-            final int viewIndex, final TreeEnsembleClassificationPredictorNodeModel nodeModel) {
+    public final NodeView<TreeEnsembleClassificationPredictorNodeModel> createNodeView(final int viewIndex,
+        final TreeEnsembleClassificationPredictorNodeModel nodeModel) {
         throw new IndexOutOfBoundsException();
     }
 

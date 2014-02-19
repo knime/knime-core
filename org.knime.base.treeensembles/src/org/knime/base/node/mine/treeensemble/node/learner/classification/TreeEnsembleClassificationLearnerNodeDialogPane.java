@@ -64,37 +64,35 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class TreeEnsembleClassificationLearnerNodeDialogPane extends NodeDialogPane {
 
     private final AttributeSelectionPanel m_attributeSelectionPanel;
+
     private final TreeOptionsPanel m_treeOptionsPanel;
+
     private final EnsembleOptionsPanel m_ensembleOptionsPanel;
 
     /**
      *  */
     public TreeEnsembleClassificationLearnerNodeDialogPane() {
         m_attributeSelectionPanel = new AttributeSelectionPanel(false);
-        addTab("Attribute Selection",
-                new JScrollPane(m_attributeSelectionPanel));
+        addTab("Attribute Selection", new JScrollPane(m_attributeSelectionPanel));
 
         m_treeOptionsPanel = new TreeOptionsPanel(m_attributeSelectionPanel);
         addTab("Tree Options", new JScrollPane(m_treeOptionsPanel));
 
         m_ensembleOptionsPanel = new EnsembleOptionsPanel();
-        addTab("Ensemble Configuration",
-                new JScrollPane(m_ensembleOptionsPanel));
+        addTab("Ensemble Configuration", new JScrollPane(m_ensembleOptionsPanel));
 
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
-        TreeEnsembleLearnerConfiguration cfg =
-                new TreeEnsembleLearnerConfiguration(false);
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        TreeEnsembleLearnerConfiguration cfg = new TreeEnsembleLearnerConfiguration(false);
         m_attributeSelectionPanel.saveSettings(cfg);
         m_treeOptionsPanel.saveSettings(cfg);
         m_ensembleOptionsPanel.saveSettings(cfg);
@@ -103,16 +101,14 @@ final class TreeEnsembleClassificationLearnerNodeDialogPane extends NodeDialogPa
 
     /** {@inheritDoc} */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+        throws NotConfigurableException {
         final DataTableSpec inSpec = specs[0];
-        TreeEnsembleLearnerConfiguration cfg =
-                new TreeEnsembleLearnerConfiguration(false);
+        TreeEnsembleLearnerConfiguration cfg = new TreeEnsembleLearnerConfiguration(false);
         cfg.loadInDialog(settings, inSpec);
         m_attributeSelectionPanel.loadSettingsFrom(inSpec, cfg);
         m_treeOptionsPanel.loadSettingsFrom(inSpec, cfg);
         m_ensembleOptionsPanel.loadSettings(cfg);
     }
-
 
 }

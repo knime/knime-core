@@ -55,14 +55,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeTargetNumericColumnMetaData extends TreeTargetColumnMetaData {
 
-
     /**
-     * @param attributeName */
+     * @param attributeName
+     */
     TreeTargetNumericColumnMetaData(final String attributeName) {
         super(attributeName);
     }

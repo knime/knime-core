@@ -72,7 +72,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class TreeEnsembleClassificationPredictorNodeModel extends NodeModel {
@@ -83,7 +83,7 @@ final class TreeEnsembleClassificationPredictorNodeModel extends NodeModel {
      *  */
     TreeEnsembleClassificationPredictorNodeModel() {
         super(new PortType[]{TreeEnsembleModelPortObject.TYPE, BufferedDataTable.TYPE},
-              new PortType[]{BufferedDataTable.TYPE});
+            new PortType[]{BufferedDataTable.TYPE});
     }
 
     /** {@inheritDoc} */
@@ -148,14 +148,14 @@ final class TreeEnsembleClassificationPredictorNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+        CanceledExecutionException {
         // no internals
     }
 
     /** {@inheritDoc} */
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+        CanceledExecutionException {
         // no internals
     }
 

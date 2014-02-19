@@ -68,21 +68,27 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeDataCreator {
 
     private final TreeEnsembleLearnerConfiguration m_configuration;
+
     private final TreeAttributeColumnDataCreator[] m_attrColCreators;
+
     private final TreeTargetColumnDataCreator m_targetColCreator;
+
     private final DataContainer m_dataRowsForHiliteContainer;
+
     private final TreeType m_treeType;
+
     private String m_warningMessage;
+
     private String m_viewMessage;
 
-    public TreeDataCreator(final TreeEnsembleLearnerConfiguration configuration,
-            final DataTableSpec learnSpec, final int nrRows) {
+    public TreeDataCreator(final TreeEnsembleLearnerConfiguration configuration, final DataTableSpec learnSpec,
+        final int nrRows) {
         m_configuration = configuration;
         final boolean isRegression = configuration.isRegression();
         final int nrLearnCols = learnSpec.getNumColumns() - 1;
@@ -109,14 +115,12 @@ public class TreeDataCreator {
             } else if (colType.isCompatible(BitVectorValue.class)) {
                 m_attrColCreators[i] = new TreeBitVectorColumnDataCreator(col);
                 if (nrLearnCols > 1) {
-                    throw new IllegalStateException("Can't use multiple "
-                            + "columns for bit vector based tree");
+                    throw new IllegalStateException("Can't use multiple " + "columns for bit vector based tree");
                 }
                 treeType = TreeType.BitVector;
             } else {
-                throw new IllegalStateException("Unsupported column at index "
-                        + i + " (column \"" + col.getName() + "\"): "
-                        + colType);
+                throw new IllegalStateException("Unsupported column at index " + i + " (column \"" + col.getName()
+                    + "\"): " + colType);
             }
         }
         final int nrHilitePatterns = configuration.getNrHilitePatterns();
@@ -129,9 +133,8 @@ public class TreeDataCreator {
         m_treeType = treeType;
     }
 
-    public TreeData readData(final BufferedDataTable learnData,
-            final TreeEnsembleLearnerConfiguration configuration,
-            final ExecutionMonitor exec) throws CanceledExecutionException {
+    public TreeData readData(final BufferedDataTable learnData, final TreeEnsembleLearnerConfiguration configuration,
+        final ExecutionMonitor exec) throws CanceledExecutionException {
         int index = 0;
         final int nrRows = learnData.getRowCount();
         final int nrLearnCols = m_attrColCreators.length;
@@ -143,8 +146,7 @@ public class TreeDataCreator {
         final int nrHilitePatterns = m_configuration.getNrHilitePatterns();
         for (DataRow r : learnData) {
             double progress = index / (double)nrRows;
-            exec.setProgress(progress, "Row " + index + " of " + nrRows
-                    + " (\"" + r.getKey() + "\")");
+            exec.setProgress(progress, "Row " + index + " of " + nrRows + " (\"" + r.getKey() + "\")");
             exec.checkCanceled();
             boolean shouldReject = false;
             for (int i = 0; i < nrLearnCols; i++) {
@@ -174,8 +176,9 @@ public class TreeDataCreator {
             index++;
         }
         if (nrHilitePatterns > 0 && index > nrHilitePatterns) {
-            m_viewMessage = "Hilite (& color graphs) are based on a subset of "
-                + "the data (" + nrHilitePatterns + "/" + index + ")";
+            m_viewMessage =
+                "Hilite (& color graphs) are based on a subset of " + "the data (" + nrHilitePatterns + "/" + index
+                    + ")";
         }
         if (rejectedMissings > 0) {
             StringBuffer warnMsgBuilder = new StringBuffer();
@@ -189,25 +192,23 @@ public class TreeDataCreator {
         for (int i = 0; i < m_attrColCreators.length; i++) {
             nrLearnAttributes += m_attrColCreators[i].getNrAttributes();
         }
-        TreeAttributeColumnData[] columns =
-            new TreeAttributeColumnData[nrLearnAttributes];
+        TreeAttributeColumnData[] columns = new TreeAttributeColumnData[nrLearnAttributes];
         int learnAttributeIndex = 0;
         for (int i = 0; i < m_attrColCreators.length; i++) {
             TreeAttributeColumnDataCreator creator = m_attrColCreators[i];
             for (int a = 0; a < creator.getNrAttributes(); a++) {
-                final TreeAttributeColumnData columnData =
-                    creator.createColumnData(a, configuration);
+                final TreeAttributeColumnData columnData = creator.createColumnData(a, configuration);
                 columnData.getMetaData().setAttributeIndex(learnAttributeIndex);
                 columns[learnAttributeIndex++] = columnData;
             }
         }
-        TreeTargetColumnData targetCol =
-            m_targetColCreator.createColumnData();
+        TreeTargetColumnData targetCol = m_targetColCreator.createColumnData();
         return new TreeData(columns, targetCol, m_treeType);
     }
 
     /**
-     * @return */
+     * @return
+     */
     public String getAndClearWarningMessage() {
         String result = m_warningMessage;
         m_warningMessage = null;

@@ -54,22 +54,20 @@ import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerCon
 import org.knime.core.data.RowKey;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeTargetNominalColumnData extends TreeTargetColumnData {
 
     final int[] m_data;
 
-    TreeTargetNominalColumnData(final TreeTargetColumnMetaData metaData,
-            final RowKey[] rowKeysAsArray, final int[] data) {
+    TreeTargetNominalColumnData(final TreeTargetColumnMetaData metaData, final RowKey[] rowKeysAsArray, final int[] data) {
         super(metaData, rowKeysAsArray);
         m_data = data;
     }
 
-    public ClassificationPriors getDistribution(
-            final double[] rowWeights,
-            final TreeEnsembleLearnerConfiguration config) {
+    public ClassificationPriors
+        getDistribution(final double[] rowWeights, final TreeEnsembleLearnerConfiguration config) {
         NominalValueRepresentation[] nominalValues = getMetaData().getValues();
         double[] result = new double[nominalValues.length];
         for (int i = 0; i < m_data.length; i++) {
@@ -91,14 +89,13 @@ public final class TreeTargetNominalColumnData extends TreeTargetColumnData {
             }
             totalSum += d;
         }
-        return new ClassificationPriors(getMetaData(), result, totalSum,
-                majorityIndex, config.createImpurityCriterion());
+        return new ClassificationPriors(getMetaData(), result, totalSum, majorityIndex,
+            config.createImpurityCriterion());
     }
 
     public int getValueFor(final int row) {
         return m_data[row];
     }
-
 
     /** {@inheritDoc} */
     @Override

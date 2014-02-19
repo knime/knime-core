@@ -51,19 +51,16 @@
 package org.knime.base.node.mine.treeensemble.learner;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public interface IImpurity {
 
-    public double getPartitionImpurity(final double[] targetCounts,
-            final double partitionWeight);
+    public double getPartitionImpurity(final double[] targetCounts, final double partitionWeight);
 
-    public double getPostSplitImpurity(final double[] partitionValues,
-            final double[] partitionWeights, final double totalWeight);
+    public double getPostSplitImpurity(final double[] partitionValues, final double[] partitionWeights,
+        final double totalWeight);
 
-    public double getGain(final double priorImpurity,
-            final double postSplitImpurity,
-            final double[] partitionWeights,
-            final double totalWeight);
+    public double getGain(final double priorImpurity, final double postSplitImpurity, final double[] partitionWeights,
+        final double totalWeight);
 }

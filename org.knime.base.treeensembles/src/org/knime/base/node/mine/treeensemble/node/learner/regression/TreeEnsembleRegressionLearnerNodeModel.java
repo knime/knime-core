@@ -88,7 +88,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel {
@@ -114,7 +114,7 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel {
      *  */
     public TreeEnsembleRegressionLearnerNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE,
-                TreeEnsembleModelPortObject.TYPE});
+            TreeEnsembleModelPortObject.TYPE});
     }
 
     /** {@inheritDoc} */
@@ -148,8 +148,7 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel {
      * @throws InvalidSettingsException
      */
     private TreeEnsemblePredictor createOutOfBagPredictor(final TreeEnsembleModelPortObjectSpec ensembleSpec,
-                                                          final TreeEnsembleModelPortObject ensembleModel,
-                                                          final DataTableSpec inSpec) throws InvalidSettingsException {
+        final TreeEnsembleModelPortObject ensembleModel, final DataTableSpec inSpec) throws InvalidSettingsException {
         TreeEnsemblePredictorConfiguration ooBConfig = new TreeEnsemblePredictorConfiguration(true);
         String targetColumn = m_configuration.getTargetColumn();
         String append = targetColumn + " (Out-of-bag)";
@@ -248,7 +247,7 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+        CanceledExecutionException {
         File file = new File(nodeInternDir, INTERNAL_TREES_FILE);
         InputStream in = new GZIPInputStream(new FileInputStream(file));
         m_ensembleModel = TreeEnsembleModel.load(in, exec);
@@ -268,7 +267,7 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+        CanceledExecutionException {
         File file = new File(nodeInternDir, INTERNAL_TREES_FILE);
         OutputStream out = new GZIPOutputStream(new FileOutputStream(file));
         ExecutionMonitor sub = exec.createSubProgress(0.2);

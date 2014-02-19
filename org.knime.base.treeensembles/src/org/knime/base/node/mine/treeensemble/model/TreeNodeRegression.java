@@ -67,7 +67,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.util.MutableInteger;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNodeRegression extends AbstractTreeNode {
@@ -75,18 +75,17 @@ public final class TreeNodeRegression extends AbstractTreeNode {
     private static final TreeNodeRegression[] EMPTY_CHILD_ARRAY = new TreeNodeRegression[0];
 
     private final double m_mean;
+
     private final double m_sumSquaredDeviation;
+
     private final double m_totalSum;
 
-
-    public TreeNodeRegression(final TreeNodeSignature signature,
-            final RegressionPriors targetPriors) {
+    public TreeNodeRegression(final TreeNodeSignature signature, final RegressionPriors targetPriors) {
         this(signature, targetPriors, EMPTY_CHILD_ARRAY);
     }
 
-    public TreeNodeRegression(final TreeNodeSignature signature,
-            final RegressionPriors targetPriors,
-            final TreeNodeRegression[] childNodes) {
+    public TreeNodeRegression(final TreeNodeSignature signature, final RegressionPriors targetPriors,
+        final TreeNodeRegression[] childNodes) {
         super(signature, targetPriors.getTargetMetaData(), childNodes);
         m_mean = targetPriors.getMean();
         m_totalSum = targetPriors.getNrRecords();
@@ -96,7 +95,8 @@ public final class TreeNodeRegression extends AbstractTreeNode {
     /**
      * @param in
      * @param metaData
-     * @throws IOException */
+     * @throws IOException
+     */
     public TreeNodeRegression(final TreeModelDataInputStream in, final TreeMetaData metaData) throws IOException {
         super(in, metaData);
         m_mean = in.readDouble();
@@ -150,9 +150,9 @@ public final class TreeNodeRegression extends AbstractTreeNode {
 
     /**
      * @param metaData
-     * @return */
-    public DecisionTreeNode createDecisionTreeNode(
-            final MutableInteger idGenerator, final TreeMetaData metaData) {
+     * @return
+     */
+    public DecisionTreeNode createDecisionTreeNode(final MutableInteger idGenerator, final TreeMetaData metaData) {
         DataCell majorityCell = new StringCell(DoubleFormat.formatDouble(m_mean));
         final int nrChildren = getNrChildren();
         LinkedHashMap<DataCell, Double> distributionMap = new LinkedHashMap<DataCell, Double>();
@@ -164,19 +164,16 @@ public final class TreeNodeRegression extends AbstractTreeNode {
             DecisionTreeNode[] childNodes = new DecisionTreeNode[nrChildren];
             int splitAttributeIndex = getSplitAttributeIndex();
             assert splitAttributeIndex >= 0 : "non-leaf node has no split";
-            String splitAttribute = metaData.getAttributeMetaData(
-                    splitAttributeIndex).getAttributeName();
+            String splitAttribute = metaData.getAttributeMetaData(splitAttributeIndex).getAttributeName();
             PMMLPredicate[] childPredicates = new PMMLPredicate[nrChildren];
             for (int i = 0; i < nrChildren; i++) {
                 final TreeNodeRegression treeNode = getChild(i);
                 TreeNodeCondition cond = treeNode.getCondition();
                 childPredicates[i] = cond.toPMMLPredicate();
-                childNodes[i] = treeNode.createDecisionTreeNode(
-                        idGenerator, metaData);
+                childNodes[i] = treeNode.createDecisionTreeNode(idGenerator, metaData);
             }
-            return new DecisionTreeNodeSplitPMML(id,
-                    majorityCell, distributionMap, splitAttribute,
-                    childPredicates, childNodes);
+            return new DecisionTreeNodeSplitPMML(id, majorityCell, distributionMap, splitAttribute, childPredicates,
+                childNodes);
         }
     }
 
@@ -188,8 +185,8 @@ public final class TreeNodeRegression extends AbstractTreeNode {
         out.writeDouble(m_sumSquaredDeviation);
     }
 
-    public static TreeNodeRegression load(final TreeModelDataInputStream in,
-            final TreeMetaData metaData) throws IOException {
+    public static TreeNodeRegression load(final TreeModelDataInputStream in, final TreeMetaData metaData)
+        throws IOException {
         return new TreeNodeRegression(in, metaData);
     }
 
@@ -207,13 +204,12 @@ public final class TreeNodeRegression extends AbstractTreeNode {
             final TreeNodeRegression treeNode = getChild(i);
             TreeNodeCondition cond = treeNode.getCondition();
             if (cond instanceof TreeNodeColumnCondition) {
-                int s = ((TreeNodeColumnCondition)cond)
-                    .getColumnMetaData().getAttributeIndex();
+                int s = ((TreeNodeColumnCondition)cond).getColumnMetaData().getAttributeIndex();
                 if (splitAttributeIndex == -1) {
                     splitAttributeIndex = s;
                 } else if (splitAttributeIndex != s) {
-                    assert false : "Confusing split column in node's childrin: "
-                        + "\"" + splitAttributeIndex + "\" vs. \"" + s + "\"";
+                    assert false : "Confusing split column in node's childrin: " + "\"" + splitAttributeIndex
+                        + "\" vs. \"" + s + "\"";
                 }
             }
         }

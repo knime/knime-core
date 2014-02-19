@@ -77,29 +77,30 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.util.UniqueNameGenerator;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeEnsembleRegressionPredictorCellFactory extends AbstractCellFactory {
 
     private final TreeEnsemblePredictor m_predictor;
+
     private final DataTableSpec m_learnSpec;
+
     private final int[] m_learnColumnInRealDataIndices;
 
-    private TreeEnsembleRegressionPredictorCellFactory(
-            final TreeEnsemblePredictor predictor,
-            final DataColumnSpec[] appendSpecs,
-            final int[] learnColumnInRealDataIndices) {
+    private TreeEnsembleRegressionPredictorCellFactory(final TreeEnsemblePredictor predictor,
+        final DataColumnSpec[] appendSpecs, final int[] learnColumnInRealDataIndices) {
         super(appendSpecs);
         setParallelProcessing(true);
         m_predictor = predictor;
         m_learnSpec = predictor.getModelSpec().getLearnTableSpec();
         m_learnColumnInRealDataIndices = learnColumnInRealDataIndices;
     }
+
     /**
      *  */
     public static TreeEnsembleRegressionPredictorCellFactory createFactory(final TreeEnsemblePredictor predictor)
-    throws InvalidSettingsException {
+        throws InvalidSettingsException {
         DataTableSpec testDataSpec = predictor.getDataSpec();
         TreeEnsembleModelPortObjectSpec modelSpec = predictor.getModelSpec();
         TreeEnsembleModelPortObject modelObject = predictor.getModelObject();

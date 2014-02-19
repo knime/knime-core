@@ -61,7 +61,7 @@ import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeNominalCondition;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class NominalSplitCandidate extends SplitCandidate {
@@ -69,13 +69,12 @@ public final class NominalSplitCandidate extends SplitCandidate {
     private final double[] m_sumWeightsAttributes;
 
     /**
-     * @param gainValue */
-    public NominalSplitCandidate(final TreeNominalColumnData nominalColumn,
-            final double gainValue,
-            final double[] sumWeightsAttributes) {
+     * @param gainValue
+     */
+    public NominalSplitCandidate(final TreeNominalColumnData nominalColumn, final double gainValue,
+        final double[] sumWeightsAttributes) {
         super(nominalColumn, gainValue);
-        assert sumWeightsAttributes.length
-            == nominalColumn.getMetaData().getValues().length;
+        assert sumWeightsAttributes.length == nominalColumn.getMetaData().getValues().length;
         m_sumWeightsAttributes = sumWeightsAttributes;
     }
 
@@ -96,8 +95,7 @@ public final class NominalSplitCandidate extends SplitCandidate {
     public TreeNodeCondition[] getChildConditions() {
         TreeNominalColumnMetaData columnMeta = getColumnData().getMetaData();
         NominalValueRepresentation[] values = columnMeta.getValues();
-        List<TreeNodeCondition> resultList =
-            new ArrayList<TreeNodeCondition>(values.length);
+        List<TreeNodeCondition> resultList = new ArrayList<TreeNodeCondition>(values.length);
         for (int i = 0; i < values.length; i++) {
             if (m_sumWeightsAttributes[i] >= TreeColumnData.EPSILON) {
                 resultList.add(new TreeNodeNominalCondition(columnMeta, i));

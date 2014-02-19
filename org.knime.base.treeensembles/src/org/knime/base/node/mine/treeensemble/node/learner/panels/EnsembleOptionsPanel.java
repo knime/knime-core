@@ -77,7 +77,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.ViewUtils;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class EnsembleOptionsPanel extends JPanel {
@@ -114,26 +114,20 @@ public class EnsembleOptionsPanel extends JPanel {
 
     private final JTextField m_seedTextField;
 
-
     /**
      *  */
     public EnsembleOptionsPanel() {
         super(new GridBagLayout());
-        m_dataSamplingWithOutReplacementChecker =
-            new JRadioButton("Without replacement");
-        m_dataSamplingWithReplacementChecker =
-            new JRadioButton("With replacement");
+        m_dataSamplingWithOutReplacementChecker = new JRadioButton("Without replacement");
+        m_dataSamplingWithReplacementChecker = new JRadioButton("With replacement");
         ButtonGroup samplingButtonGroup = new ButtonGroup();
         samplingButtonGroup.add(m_dataSamplingWithOutReplacementChecker);
         samplingButtonGroup.add(m_dataSamplingWithReplacementChecker);
         m_dataSamplingWithOutReplacementChecker.doClick();
 
         m_dataFractionPerTreeSpinner =
-                new JSpinner(new SpinnerNumberModel(
-                        TreeEnsembleLearnerConfiguration.DEF_DATA_FRACTION,
-                        0.001, 1.0, 0.1));
-        m_dataFractionPerTreeChecker =
-            new JCheckBox("Fraction of data to learn single model");
+            new JSpinner(new SpinnerNumberModel(TreeEnsembleLearnerConfiguration.DEF_DATA_FRACTION, 0.001, 1.0, 0.1));
+        m_dataFractionPerTreeChecker = new JCheckBox("Fraction of data to learn single model");
         m_dataFractionPerTreeChecker.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
@@ -148,14 +142,10 @@ public class EnsembleOptionsPanel extends JPanel {
         });
         m_dataFractionPerTreeChecker.doClick();
 
-        m_columnFractionNoneButton =
-            new JRadioButton("All columns (no sampling)");
-        m_columnFractionSqrtButton =
-            new JRadioButton("Sample (square root)");
-        m_columnFractionLinearButton =
-            new JRadioButton("Sample (linear fraction)  ");
-        m_columnFractionAbsoluteButton =
-            new JRadioButton("Sample (absolute value)  ");
+        m_columnFractionNoneButton = new JRadioButton("All columns (no sampling)");
+        m_columnFractionSqrtButton = new JRadioButton("Sample (square root)");
+        m_columnFractionLinearButton = new JRadioButton("Sample (linear fraction)  ");
+        m_columnFractionAbsoluteButton = new JRadioButton("Sample (absolute value)  ");
 
         ButtonGroup columnFractionButtonGroup = new ButtonGroup();
         columnFractionButtonGroup.add(m_columnFractionNoneButton);
@@ -163,9 +153,7 @@ public class EnsembleOptionsPanel extends JPanel {
         columnFractionButtonGroup.add(m_columnFractionLinearButton);
         columnFractionButtonGroup.add(m_columnFractionAbsoluteButton);
         m_columnFractionLinearTreeSpinner =
-                new JSpinner(new SpinnerNumberModel(
-                        TreeEnsembleLearnerConfiguration.DEF_COLUMN_FRACTION,
-                        0.001, 1.0, 0.1));
+            new JSpinner(new SpinnerNumberModel(TreeEnsembleLearnerConfiguration.DEF_COLUMN_FRACTION, 0.001, 1.0, 0.1));
         m_columnFractionLinearButton.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
@@ -178,11 +166,9 @@ public class EnsembleOptionsPanel extends JPanel {
         });
         m_columnFractionLinearButton.doClick();
         m_columnFractionAbsoluteTreeSpinner =
-            new JSpinner(new SpinnerNumberModel(
-                    TreeEnsembleLearnerConfiguration.DEF_COLUMN_ABSOLUTE,
-                    1, Integer.MAX_VALUE, 1));
-        m_columnFractionAbsoluteButton.addItemListener(
-                new ItemListener() {
+            new JSpinner(new SpinnerNumberModel(TreeEnsembleLearnerConfiguration.DEF_COLUMN_ABSOLUTE, 1,
+                Integer.MAX_VALUE, 1));
+        m_columnFractionAbsoluteButton.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
                 final boolean s = m_columnFractionAbsoluteButton.isSelected();
@@ -194,17 +180,15 @@ public class EnsembleOptionsPanel extends JPanel {
         });
         m_columnFractionAbsoluteButton.doClick();
 
-        m_columnUseSameSetOfAttributesForNodes = new JRadioButton(
-                "Use same set of attributes for entire tree");
-        m_columnUseDifferentSetOfAttributesForNodes = new JRadioButton(
-                "Use different set of attributes for each tree node");
+        m_columnUseSameSetOfAttributesForNodes = new JRadioButton("Use same set of attributes for entire tree");
+        m_columnUseDifferentSetOfAttributesForNodes =
+            new JRadioButton("Use different set of attributes for each tree node");
         ButtonGroup attrSelectButtonGroup = new ButtonGroup();
         attrSelectButtonGroup.add(m_columnUseSameSetOfAttributesForNodes);
         attrSelectButtonGroup.add(m_columnUseDifferentSetOfAttributesForNodes);
         m_columnUseSameSetOfAttributesForNodes.doClick();
 
-        m_nrModelsSpinner = new JSpinner(
-                new SpinnerNumberModel(20, 1, Integer.MAX_VALUE, 2));
+        m_nrModelsSpinner = new JSpinner(new SpinnerNumberModel(20, 1, Integer.MAX_VALUE, 2));
 
         m_seedTextField = new JTextField(20);
         m_newSeedButton = new JButton("New");
@@ -338,8 +322,7 @@ public class EnsembleOptionsPanel extends JPanel {
         gbc.gridx += 1;
         gbc.gridwidth = 2;
         gbc.weightx = 1.0;
-        add(ViewUtils.getInFlowLayout(FlowLayout.LEFT,
-                m_seedTextField, m_newSeedButton), gbc);
+        add(ViewUtils.getInFlowLayout(FlowLayout.LEFT, m_seedTextField, m_newSeedButton), gbc);
     }
 
     public void loadSettings(final TreeEnsembleLearnerConfiguration cfg) {
@@ -360,25 +343,24 @@ public class EnsembleOptionsPanel extends JPanel {
 
         double colFrac = cfg.getColumnFractionLinearValue();
         int colAbsolute = cfg.getColumnAbsoluteValue();
-        boolean useDifferentAttributesAtEachNode =
-            cfg.isUseDifferentAttributesAtEachNode();
+        boolean useDifferentAttributesAtEachNode = cfg.isUseDifferentAttributesAtEachNode();
         ColumnSamplingMode columnFraction = cfg.getColumnSamplingMode();
         switch (columnFraction) {
-        case None:
-            m_columnFractionNoneButton.doClick();
-            useDifferentAttributesAtEachNode = false;
-            colFrac = 1.0;
-            break;
-        case Linear:
-            m_columnFractionLinearButton.doClick();
-            break;
-        case Absolute:
-            m_columnFractionAbsoluteButton.doClick();
-            break;
-        case SquareRoot:
-            m_columnFractionSqrtButton.doClick();
-            colFrac = 1.0;
-            break;
+            case None:
+                m_columnFractionNoneButton.doClick();
+                useDifferentAttributesAtEachNode = false;
+                colFrac = 1.0;
+                break;
+            case Linear:
+                m_columnFractionLinearButton.doClick();
+                break;
+            case Absolute:
+                m_columnFractionAbsoluteButton.doClick();
+                break;
+            case SquareRoot:
+                m_columnFractionSqrtButton.doClick();
+                colFrac = 1.0;
+                break;
         }
         m_columnFractionLinearTreeSpinner.setValue(colFrac);
         m_columnFractionAbsoluteTreeSpinner.setValue(colAbsolute);
@@ -392,8 +374,7 @@ public class EnsembleOptionsPanel extends JPanel {
         if (m_seedChecker.isSelected() != (seed != null)) {
             m_seedChecker.doClick();
         }
-        m_seedTextField.setText(Long.toString(seed != null ? seed : System
-                .currentTimeMillis()));
+        m_seedTextField.setText(Long.toString(seed != null ? seed : System.currentTimeMillis()));
     }
 
     public void saveSettings(final TreeEnsembleLearnerConfiguration cfg) throws InvalidSettingsException {
@@ -402,8 +383,7 @@ public class EnsembleOptionsPanel extends JPanel {
         boolean isSamplingWithReplacement;
         if (m_dataFractionPerTreeChecker.isSelected()) {
             dataFrac = (Double)m_dataFractionPerTreeSpinner.getValue();
-            isSamplingWithReplacement =
-                m_dataSamplingWithReplacementChecker.isSelected();
+            isSamplingWithReplacement = m_dataSamplingWithReplacementChecker.isSelected();
         } else {
             dataFrac = 1.0;
             isSamplingWithReplacement = false;
@@ -413,10 +393,8 @@ public class EnsembleOptionsPanel extends JPanel {
 
         ColumnSamplingMode cf;
         double columnFrac = 1.0;
-        int columnAbsolute =
-            TreeEnsembleLearnerConfiguration.DEF_COLUMN_ABSOLUTE;
-        boolean isUseDifferentAttributesAtEachNode =
-            m_columnUseDifferentSetOfAttributesForNodes.isSelected();
+        int columnAbsolute = TreeEnsembleLearnerConfiguration.DEF_COLUMN_ABSOLUTE;
+        boolean isUseDifferentAttributesAtEachNode = m_columnUseDifferentSetOfAttributesForNodes.isSelected();
         if (m_columnFractionNoneButton.isSelected()) {
             cf = ColumnSamplingMode.None;
             isUseDifferentAttributesAtEachNode = false;
@@ -425,19 +403,16 @@ public class EnsembleOptionsPanel extends JPanel {
             columnFrac = (Double)m_columnFractionLinearTreeSpinner.getValue();
         } else if (m_columnFractionAbsoluteButton.isSelected()) {
             cf = ColumnSamplingMode.Absolute;
-            columnAbsolute =
-                (Integer)m_columnFractionAbsoluteTreeSpinner.getValue();
+            columnAbsolute = (Integer)m_columnFractionAbsoluteTreeSpinner.getValue();
         } else if (m_columnFractionSqrtButton.isSelected()) {
             cf = ColumnSamplingMode.SquareRoot;
         } else {
-            throw new InvalidSettingsException(
-                    "No column selection policy selected");
+            throw new InvalidSettingsException("No column selection policy selected");
         }
         cfg.setColumnSamplingMode(cf);
         cfg.setColumnFractionLinearValue(columnFrac);
         cfg.setColumnAbsoluteValue(columnAbsolute);
-        cfg.setUseDifferentAttributesAtEachNode(
-                isUseDifferentAttributesAtEachNode);
+        cfg.setUseDifferentAttributesAtEachNode(isUseDifferentAttributesAtEachNode);
 
         Long seed;
         if (m_seedChecker.isSelected()) {
@@ -445,8 +420,7 @@ public class EnsembleOptionsPanel extends JPanel {
             try {
                 seed = Long.valueOf(seedText);
             } catch (Exception e) {
-                throw new InvalidSettingsException("Unable to parse seed \""
-                        + seedText + "\"", e);
+                throw new InvalidSettingsException("Unable to parse seed \"" + seedText + "\"", e);
             }
         } else {
             seed = null;

@@ -61,11 +61,12 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeNumericColumnDataCreator implements TreeAttributeColumnDataCreator {
     private final DataColumnSpec m_column;
+
     private final List<Tuple> m_tuples;
 
     TreeNumericColumnDataCreator(final DataColumnSpec column) {
@@ -83,8 +84,7 @@ public class TreeNumericColumnDataCreator implements TreeAttributeColumnDataCrea
     @Override
     public void add(final RowKey rowKey, final DataCell cell) {
         if (cell.isMissing()) {
-            throw new UnsupportedOperationException(
-                    "missing vals not supported");
+            throw new UnsupportedOperationException("missing vals not supported");
         }
         Tuple t = new Tuple();
         t.m_value = ((DoubleValue)cell).getDoubleValue();
@@ -101,7 +101,7 @@ public class TreeNumericColumnDataCreator implements TreeAttributeColumnDataCrea
     /** {@inheritDoc} */
     @Override
     public TreeNumericColumnData createColumnData(final int attributeIndex,
-            final TreeEnsembleLearnerConfiguration configuration) {
+        final TreeEnsembleLearnerConfiguration configuration) {
         assert attributeIndex == 0;
         Tuple[] tuples = m_tuples.toArray(new Tuple[m_tuples.size()]);
         Arrays.sort(tuples);
@@ -114,13 +114,14 @@ public class TreeNumericColumnDataCreator implements TreeAttributeColumnDataCrea
         }
         final String n = m_column.getName();
         TreeNumericColumnMetaData metaData = new TreeNumericColumnMetaData(n);
-        return new TreeNumericColumnData(metaData,
-                configuration, sortedData, sortIndex);
+        return new TreeNumericColumnData(metaData, configuration, sortedData, sortIndex);
     }
 
     private static class Tuple implements Comparable<Tuple> {
         private double m_value;
+
         private int m_indexInColumn;
+
         /** {@inheritDoc} */
         @Override
         public int compareTo(final Tuple o) {
@@ -131,6 +132,5 @@ public class TreeNumericColumnDataCreator implements TreeAttributeColumnDataCrea
             return comp;
         }
     };
-
 
 }

@@ -55,27 +55,27 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeMetaData {
 
     private final TreeAttributeColumnMetaData[] m_attributesMetaData;
+
     private final TreeTargetColumnMetaData m_targetMetaData;
+
     /**
      * @param attributesMetaData
-     * @param targetMetaData */
-    TreeMetaData(final TreeAttributeColumnMetaData[] attributesMetaData,
-            final TreeTargetColumnMetaData targetMetaData) {
+     * @param targetMetaData
+     */
+    TreeMetaData(final TreeAttributeColumnMetaData[] attributesMetaData, final TreeTargetColumnMetaData targetMetaData) {
         m_attributesMetaData = attributesMetaData;
         for (int i = 0; i < attributesMetaData.length; i++) {
             final TreeAttributeColumnMetaData t = attributesMetaData[i];
             final int tIndex = t.getAttributeIndex();
             if (tIndex != i) {
-                throw new IllegalArgumentException("Attribute \""
-                        + t.getAttributeName()
-                        + "\" does not have correct index " + i
-                        + " but " + tIndex);
+                throw new IllegalArgumentException("Attribute \"" + t.getAttributeName()
+                    + "\" does not have correct index " + i + " but " + tIndex);
             }
         }
         m_targetMetaData = targetMetaData;
@@ -105,45 +105,37 @@ public final class TreeMetaData {
             try {
                 a.save(output);
             } catch (IOException ioe) {
-                throw new IOException("Failed saving meta data to column \""
-                        + a.getAttributeName() + "\": "
-                        + ioe.getMessage(), ioe);
+                throw new IOException("Failed saving meta data to column \"" + a.getAttributeName() + "\": "
+                    + ioe.getMessage(), ioe);
             }
         }
         try {
             m_targetMetaData.save(output);
         } catch (IOException ioe) {
-            throw new IOException("Failed saving meta data to target column \""
-                    + m_targetMetaData.getAttributeName() + "\": "
-                    + ioe.getMessage(), ioe);
+            throw new IOException("Failed saving meta data to target column \"" + m_targetMetaData.getAttributeName()
+                + "\": " + ioe.getMessage(), ioe);
         }
     }
 
     /**
      *  */
-    public static TreeMetaData load(final DataInputStream input)
-    throws IOException {
+    public static TreeMetaData load(final DataInputStream input) throws IOException {
         int length = input.readInt();
-        TreeAttributeColumnMetaData[] attributesMetaData =
-            new TreeAttributeColumnMetaData[length];
+        TreeAttributeColumnMetaData[] attributesMetaData = new TreeAttributeColumnMetaData[length];
         for (int i = 0; i < length; i++) {
             try {
-                attributesMetaData[i] =
-                    TreeAttributeColumnMetaData.load(input);
+                attributesMetaData[i] = TreeAttributeColumnMetaData.load(input);
             } catch (IOException ioe) {
-                throw new IOException("Failed to load attribute meta data "
-                        + i + ": " + ioe.getMessage(), ioe);
+                throw new IOException("Failed to load attribute meta data " + i + ": " + ioe.getMessage(), ioe);
             }
         }
         TreeTargetColumnMetaData targetMetaData;
         try {
             targetMetaData = TreeTargetColumnMetaData.load(input);
         } catch (IOException ioe) {
-            throw new IOException("Faild to load target attribute: "
-                    + ioe.getMessage(), ioe);
+            throw new IOException("Faild to load target attribute: " + ioe.getMessage(), ioe);
         }
         return new TreeMetaData(attributesMetaData, targetMetaData);
     }
-
 
 }

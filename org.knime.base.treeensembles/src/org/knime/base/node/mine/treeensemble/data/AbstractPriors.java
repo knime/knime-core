@@ -51,19 +51,20 @@
 package org.knime.base.node.mine.treeensemble.data;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class AbstractPriors {
 
     private final double m_nrRecords;
+
     private final TreeTargetColumnMetaData m_targetMetaData;
 
     /**
      * @param nrRecords
-     * @param targetMetaData */
-    AbstractPriors(final TreeTargetColumnMetaData targetMetaData,
-            final double nrRecords) {
+     * @param targetMetaData
+     */
+    AbstractPriors(final TreeTargetColumnMetaData targetMetaData, final double nrRecords) {
         m_targetMetaData = targetMetaData;
         m_nrRecords = nrRecords;
     }

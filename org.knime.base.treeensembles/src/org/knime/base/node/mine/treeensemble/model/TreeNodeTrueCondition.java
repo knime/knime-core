@@ -55,13 +55,12 @@ import org.knime.base.node.mine.decisiontree2.PMMLTruePredicate;
 import org.knime.base.node.mine.treeensemble.data.PredictorRecord;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNodeTrueCondition extends TreeNodeCondition {
 
-    public static final TreeNodeTrueCondition INSTANCE =
-        new TreeNodeTrueCondition();
+    public static final TreeNodeTrueCondition INSTANCE = new TreeNodeTrueCondition();
 
     /**
      *  */

@@ -57,7 +57,7 @@ import org.knime.base.node.mine.treeensemble.data.TreeData;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeSignature;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class SubsetColumnSampleStrategy extends ColumnSampleStrategy {
@@ -66,13 +66,11 @@ public class SubsetColumnSampleStrategy extends ColumnSampleStrategy {
 
     /**
      *  */
-    public SubsetColumnSampleStrategy(final TreeData data,
-            final RandomData random, final int subsetSize) {
+    public SubsetColumnSampleStrategy(final TreeData data, final RandomData random, final int subsetSize) {
         int totalColCount = data.getColumns().length;
         if (subsetSize <= 0 || subsetSize > totalColCount) {
-            throw new IllegalArgumentException(String.format(
-                    "column subset size out of bounds (0, %d]: %d",
-                    totalColCount, subsetSize));
+            throw new IllegalArgumentException(String.format("column subset size out of bounds (0, %d]: %d",
+                totalColCount, subsetSize));
         }
         int[] includes = random.nextPermutation(totalColCount, subsetSize);
         Arrays.sort(includes);
@@ -81,8 +79,7 @@ public class SubsetColumnSampleStrategy extends ColumnSampleStrategy {
 
     /** {@inheritDoc} */
     @Override
-    public ColumnSample getColumnSampleForTreeNode(
-            final TreeNodeSignature ignored) {
+    public ColumnSample getColumnSampleForTreeNode(final TreeNodeSignature ignored) {
         return m_columnSample;
     }
 

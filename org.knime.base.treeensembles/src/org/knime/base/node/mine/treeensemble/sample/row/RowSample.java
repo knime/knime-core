@@ -51,12 +51,13 @@
 package org.knime.base.node.mine.treeensemble.sample.row;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public interface RowSample {
 
     public int getNrRows();
+
     public int getCountFor(final int rowIndex);
 
 }

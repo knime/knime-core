@@ -69,7 +69,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.util.MutableInteger;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNodeClassification extends AbstractTreeNode {
@@ -77,16 +77,16 @@ public final class TreeNodeClassification extends AbstractTreeNode {
     private static final TreeNodeClassification[] EMPTY_CHILD_ARRAY = new TreeNodeClassification[0];
 
     private final int m_majorityIndex;
+
     private final double[] m_targetDistribution;
 
-    public TreeNodeClassification(final TreeNodeSignature signature,
-            final ClassificationPriors targetPriors, final TreeEnsembleLearnerConfiguration configuration) {
+    public TreeNodeClassification(final TreeNodeSignature signature, final ClassificationPriors targetPriors,
+        final TreeEnsembleLearnerConfiguration configuration) {
         this(signature, targetPriors, EMPTY_CHILD_ARRAY, configuration);
     }
 
-    public TreeNodeClassification(final TreeNodeSignature signature,
-            final ClassificationPriors targetPriors,
-            final TreeNodeClassification[] childNodes, final TreeEnsembleLearnerConfiguration configuration) {
+    public TreeNodeClassification(final TreeNodeSignature signature, final ClassificationPriors targetPriors,
+        final TreeNodeClassification[] childNodes, final TreeEnsembleLearnerConfiguration configuration) {
         super(signature, targetPriors.getTargetMetaData(), childNodes);
         if (configuration.isSaveTargetDistributionInNodes()) {
             m_targetDistribution = targetPriors.getDistribution();
@@ -96,8 +96,7 @@ public final class TreeNodeClassification extends AbstractTreeNode {
         m_majorityIndex = targetPriors.getMajorityIndex();
     }
 
-    private TreeNodeClassification(final TreeModelDataInputStream in, final TreeMetaData metaData)
-        throws IOException {
+    private TreeNodeClassification(final TreeModelDataInputStream in, final TreeMetaData metaData) throws IOException {
         super(in, metaData);
         TreeTargetNominalColumnMetaData targetMetaData = (TreeTargetNominalColumnMetaData)metaData.getTargetMetaData();
         int targetLength = targetMetaData.getValues().length;
@@ -195,8 +194,8 @@ public final class TreeNodeClassification extends AbstractTreeNode {
         }
     }
 
-    public static TreeNodeClassification load(final TreeModelDataInputStream in,
-            final TreeMetaData metaData) throws IOException {
+    public static TreeNodeClassification load(final TreeModelDataInputStream in, final TreeMetaData metaData)
+        throws IOException {
         return new TreeNodeClassification(in, metaData);
     }
 
@@ -208,14 +207,13 @@ public final class TreeNodeClassification extends AbstractTreeNode {
 
     /**
      * @param metaData
-     * @return */
-    public DecisionTreeNode createDecisionTreeNode(
-            final MutableInteger idGenerator, final TreeMetaData metaData) {
+     * @return
+     */
+    public DecisionTreeNode createDecisionTreeNode(final MutableInteger idGenerator, final TreeMetaData metaData) {
         DataCell majorityCell = new StringCell(getMajorityClassName());
         double[] targetDistribution = getTargetDistribution();
         int initSize = (int)(targetDistribution.length / 0.75 + 1.0);
-        LinkedHashMap<DataCell, Double> scoreDistributionMap =
-            new LinkedHashMap<DataCell, Double>(initSize);
+        LinkedHashMap<DataCell, Double> scoreDistributionMap = new LinkedHashMap<DataCell, Double>(initSize);
         NominalValueRepresentation[] targets = getTargetMetaData().getValues();
         for (int i = 0; i < targetDistribution.length; i++) {
             String cl = targets[i].getNominalValue();
@@ -224,28 +222,23 @@ public final class TreeNodeClassification extends AbstractTreeNode {
         }
         final int nrChildren = getNrChildren();
         if (nrChildren == 0) {
-            return new DecisionTreeNodeLeaf(idGenerator.inc(),
-                    majorityCell, scoreDistributionMap);
+            return new DecisionTreeNodeLeaf(idGenerator.inc(), majorityCell, scoreDistributionMap);
         } else {
             int id = idGenerator.inc();
             DecisionTreeNode[] childNodes = new DecisionTreeNode[nrChildren];
             int splitAttributeIndex = getSplitAttributeIndex();
             assert splitAttributeIndex >= 0 : "non-leaf node has no split";
-            String splitAttribute = metaData.getAttributeMetaData(
-                    splitAttributeIndex).getAttributeName();
+            String splitAttribute = metaData.getAttributeMetaData(splitAttributeIndex).getAttributeName();
             PMMLPredicate[] childPredicates = new PMMLPredicate[nrChildren];
             for (int i = 0; i < nrChildren; i++) {
                 final TreeNodeClassification treeNode = getChild(i);
                 TreeNodeCondition cond = treeNode.getCondition();
                 childPredicates[i] = cond.toPMMLPredicate();
-                childNodes[i] = treeNode.createDecisionTreeNode(
-                        idGenerator, metaData);
+                childNodes[i] = treeNode.createDecisionTreeNode(idGenerator, metaData);
             }
-            return new DecisionTreeNodeSplitPMML(id,
-                    majorityCell, scoreDistributionMap, splitAttribute,
-                    childPredicates, childNodes);
+            return new DecisionTreeNodeSplitPMML(id, majorityCell, scoreDistributionMap, splitAttribute,
+                childPredicates, childNodes);
         }
     }
-
 
 }

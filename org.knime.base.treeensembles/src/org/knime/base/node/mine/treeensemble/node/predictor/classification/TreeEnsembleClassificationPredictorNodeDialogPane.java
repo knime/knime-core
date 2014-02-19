@@ -59,7 +59,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeEnsembleClassificationPredictorNodeDialogPane extends NodeDialogPane {
@@ -76,7 +76,7 @@ public final class TreeEnsembleClassificationPredictorNodeDialogPane extends Nod
     /** {@inheritDoc} */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-            throws NotConfigurableException {
+        throws NotConfigurableException {
         m_predictorPanel.loadSettingsFrom(settings, specs);
     }
 

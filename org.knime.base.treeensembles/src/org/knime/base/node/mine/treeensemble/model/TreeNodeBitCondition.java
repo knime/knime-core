@@ -61,7 +61,7 @@ import org.knime.base.node.mine.treeensemble.data.TreeBitColumnMetaData;
 import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNodeBitCondition extends TreeNodeColumnCondition {
@@ -70,20 +70,18 @@ public final class TreeNodeBitCondition extends TreeNodeColumnCondition {
 
     /**
      * @param columnMetaData
-     * @param value */
-    public TreeNodeBitCondition(final TreeBitColumnMetaData columnMetaData,
-            final boolean value) {
+     * @param value
+     */
+    public TreeNodeBitCondition(final TreeBitColumnMetaData columnMetaData, final boolean value) {
         super(columnMetaData);
         m_value = value;
     }
 
     /**
      *  */
-    TreeNodeBitCondition(final TreeModelDataInputStream in, final TreeMetaData metaData)
-    throws IOException {
+    TreeNodeBitCondition(final TreeModelDataInputStream in, final TreeMetaData metaData) throws IOException {
         super(in, metaData);
-        checkTypeCorrectness(super.getColumnMetaData(),
-                TreeBitColumnMetaData.class);
+        checkTypeCorrectness(super.getColumnMetaData(), TreeBitColumnMetaData.class);
         m_value = in.readBoolean();
     }
 
@@ -98,20 +96,16 @@ public final class TreeNodeBitCondition extends TreeNodeColumnCondition {
         return m_value;
     }
 
-
     /** {@inheritDoc} */
     @Override
     public boolean testCondition(final PredictorRecord record) {
         Object value = record.getValue(getColumnMetaData().getAttributeName());
         if (value == null) {
-            throw new UnsupportedOperationException(
-                    "Missing values currently not supported");
+            throw new UnsupportedOperationException("Missing values currently not supported");
         }
         if (!(value instanceof Boolean)) {
-            throw new IllegalArgumentException("Can't test bitvector "
-                    + "condition (" + toString() + ") -- expected query object "
-                    + "of type Boolean but got "
-                    + value.getClass().getSimpleName());
+            throw new IllegalArgumentException("Can't test bitvector " + "condition (" + toString()
+                + ") -- expected query object " + "of type Boolean but got " + value.getClass().getSimpleName());
         }
         return ((Boolean)value).booleanValue() == m_value;
     }
@@ -119,8 +113,7 @@ public final class TreeNodeBitCondition extends TreeNodeColumnCondition {
     /** {@inheritDoc} */
     @Override
     public PMMLPredicate toPMMLPredicate() {
-        return new PMMLSimplePredicate(getAttributeName(),
-                PMMLOperator.EQUAL, getValue() ? "1" : "0");
+        return new PMMLSimplePredicate(getAttributeName(), PMMLOperator.EQUAL, getValue() ? "1" : "0");
     }
 
     /** {@inheritDoc} */

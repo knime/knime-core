@@ -55,7 +55,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.RowKey;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public interface TreeAttributeColumnDataCreator {
@@ -64,12 +64,14 @@ public interface TreeAttributeColumnDataCreator {
 
     public void add(RowKey rowKey, final DataCell cell);
 
-    public TreeAttributeColumnData createColumnData(
-            int attributeIndex, TreeEnsembleLearnerConfiguration configuration);
+    public TreeAttributeColumnData createColumnData(int attributeIndex, TreeEnsembleLearnerConfiguration configuration);
 
-    /** The number of attributes represented by this creators. For numeric
-     * and nominal this will be one, for bit vectors it will be number of bits.
-     * @return Number attributes. */
+    /**
+     * The number of attributes represented by this creators. For numeric and nominal this will be one, for bit vectors
+     * it will be number of bits.
+     * 
+     * @return Number attributes.
+     */
     public int getNrAttributes();
 
 }

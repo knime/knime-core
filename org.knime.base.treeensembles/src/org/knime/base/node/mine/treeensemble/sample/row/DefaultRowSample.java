@@ -50,8 +50,9 @@
  */
 package org.knime.base.node.mine.treeensemble.sample.row;
 
-/** Default sampling, each row is included once.
- *
+/**
+ * Default sampling, each row is included once.
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class DefaultRowSample implements RowSample {

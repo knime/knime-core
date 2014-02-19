@@ -58,7 +58,7 @@ import org.knime.base.node.mine.treeensemble.data.TreeAttributeColumnData;
 import org.knime.base.node.mine.treeensemble.data.TreeData;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class AllColumnSample extends ColumnSample {
@@ -71,12 +71,10 @@ public final class AllColumnSample extends ColumnSample {
         m_data = data;
     }
 
-
     /** {@inheritDoc} */
     @Override
     public Iterator<TreeAttributeColumnData> iterator() {
-        return Collections.unmodifiableList(
-                Arrays.asList(m_data.getColumns())).iterator();
+        return Collections.unmodifiableList(Arrays.asList(m_data.getColumns())).iterator();
     }
 
 }

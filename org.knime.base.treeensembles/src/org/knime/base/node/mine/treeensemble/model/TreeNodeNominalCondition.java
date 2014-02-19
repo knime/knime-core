@@ -63,7 +63,7 @@ import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
 import org.knime.base.node.mine.treeensemble.data.TreeNominalColumnMetaData;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
@@ -72,10 +72,9 @@ public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
 
     /**
      * @param nomColumnMetaData
-     * @param valueIndex */
-    public TreeNodeNominalCondition(
-            final TreeNominalColumnMetaData nomColumnMetaData,
-            final int valueIndex) {
+     * @param valueIndex
+     */
+    public TreeNodeNominalCondition(final TreeNominalColumnMetaData nomColumnMetaData, final int valueIndex) {
         super(nomColumnMetaData);
         assert valueIndex < nomColumnMetaData.getValues().length;
         m_valueIndex = valueIndex;
@@ -83,8 +82,7 @@ public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
 
     /**
      *  */
-    TreeNodeNominalCondition(final TreeModelDataInputStream input,
-            final TreeMetaData metaData) throws IOException {
+    TreeNodeNominalCondition(final TreeModelDataInputStream input, final TreeMetaData metaData) throws IOException {
         super(input, metaData);
         TreeColumnMetaData columnMetaData = super.getColumnMetaData();
         checkTypeCorrectness(columnMetaData, TreeNominalColumnMetaData.class);
@@ -116,13 +114,11 @@ public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
     public boolean testCondition(final PredictorRecord record) {
         Object value = record.getValue(getColumnMetaData().getAttributeName());
         if (value == null) {
-            throw new UnsupportedOperationException(
-                    "Missing values currently not supported");
+            throw new UnsupportedOperationException("Missing values currently not supported");
         }
         if (!(value instanceof String)) {
-            throw new IllegalArgumentException("Can't test nominal condition ("
-                    + toString() + ") -- expected query object of type String "
-                    + "but got " + value.getClass().getSimpleName());
+            throw new IllegalArgumentException("Can't test nominal condition (" + toString()
+                + ") -- expected query object of type String " + "but got " + value.getClass().getSimpleName());
         }
         return value.equals(getValue());
     }
@@ -142,8 +138,7 @@ public class TreeNodeNominalCondition extends TreeNodeColumnCondition {
     /** {@inheritDoc} */
     @Override
     public PMMLPredicate toPMMLPredicate() {
-        return new PMMLSimplePredicate(getAttributeName(),
-                PMMLOperator.EQUAL, getValue());
+        return new PMMLSimplePredicate(getAttributeName(), PMMLOperator.EQUAL, getValue());
     }
 
 }

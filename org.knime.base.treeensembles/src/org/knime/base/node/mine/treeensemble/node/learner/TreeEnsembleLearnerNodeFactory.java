@@ -52,13 +52,12 @@ package org.knime.base.node.mine.treeensemble.node.learner;
 
 import org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory;
 
-/** Deprecated. The new implementation is in
- * {@link TreeEnsembleClassificationLearnerNodeFactory}.
- * (This node definition became deprecated before the node was released.)
- *
+/**
+ * Deprecated. The new implementation is in {@link TreeEnsembleClassificationLearnerNodeFactory}. (This node definition
+ * became deprecated before the node was released.)
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class TreeEnsembleLearnerNodeFactory extends
-        TreeEnsembleClassificationLearnerNodeFactory {
+public final class TreeEnsembleLearnerNodeFactory extends TreeEnsembleClassificationLearnerNodeFactory {
     // extend new impl.
 }

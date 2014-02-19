@@ -78,21 +78,22 @@ import org.knime.core.util.MutableInteger;
 import org.knime.core.util.UniqueNameGenerator;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeEnsembleClassificationPredictorCellFactory extends AbstractCellFactory {
 
     private final TreeEnsemblePredictor m_predictor;
+
     private final DataTableSpec m_learnSpec;
+
     private final int[] m_learnColumnInRealDataIndices;
+
     private final Map<String, DataCell> m_targetValueMap;
 
-    private TreeEnsembleClassificationPredictorCellFactory(
-            final TreeEnsemblePredictor predictor,
-            final Map<String, DataCell> targetValueMap,
-            final DataColumnSpec[] appendSpecs,
-            final int[] learnColumnInRealDataIndices) {
+    private TreeEnsembleClassificationPredictorCellFactory(final TreeEnsemblePredictor predictor,
+        final Map<String, DataCell> targetValueMap, final DataColumnSpec[] appendSpecs,
+        final int[] learnColumnInRealDataIndices) {
         super(appendSpecs);
         setParallelProcessing(true);
         m_targetValueMap = targetValueMap;
@@ -100,15 +101,15 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
         m_learnSpec = predictor.getModelSpec().getLearnTableSpec();
         m_learnColumnInRealDataIndices = learnColumnInRealDataIndices;
     }
+
     /**
      *  */
     public static TreeEnsembleClassificationPredictorCellFactory createFactory(final TreeEnsemblePredictor predictor)
-    throws InvalidSettingsException {
+        throws InvalidSettingsException {
         DataTableSpec testDataSpec = predictor.getDataSpec();
         TreeEnsembleModelPortObjectSpec modelSpec = predictor.getModelSpec();
         TreeEnsembleModelPortObject modelObject = predictor.getModelObject();
-        TreeEnsemblePredictorConfiguration configuration =
-            predictor.getConfiguration();
+        TreeEnsemblePredictorConfiguration configuration = predictor.getConfiguration();
         UniqueNameGenerator nameGen = new UniqueNameGenerator(testDataSpec);
         Map<String, DataCell> targetValueMap = modelSpec.getTargetColumnPossibleValueMap();
         List<DataColumnSpec> newColsList = new ArrayList<DataColumnSpec>();
@@ -136,8 +137,8 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
         assert modelObject == null || targetValueMap != null : "Target values must be known during execution";
         DataColumnSpec[] newCols = newColsList.toArray(new DataColumnSpec[newColsList.size()]);
         int[] learnColumnInRealDataIndices = modelSpec.calculateFilterIndices(testDataSpec);
-        return new TreeEnsembleClassificationPredictorCellFactory(
-                predictor, targetValueMap, newCols, learnColumnInRealDataIndices);
+        return new TreeEnsembleClassificationPredictorCellFactory(predictor, targetValueMap, newCols,
+            learnColumnInRealDataIndices);
     }
 
     /** {@inheritDoc} */
@@ -161,10 +162,8 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
         }
         final boolean hasOutOfBagFilter = m_predictor.hasOutOfBagFilter();
         DataCell[] result = new DataCell[size];
-        DataRow filterRow = new FilterColumnRow(
-                row, m_learnColumnInRealDataIndices);
-        PredictorRecord record = ensembleModel.createPredictorRecord(
-                filterRow, m_learnSpec);
+        DataRow filterRow = new FilterColumnRow(row, m_learnColumnInRealDataIndices);
+        PredictorRecord record = ensembleModel.createPredictorRecord(filterRow, m_learnSpec);
         if (record == null) { // missing value
             Arrays.fill(result, DataType.getMissingCell());
             return result;
@@ -193,8 +192,7 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
             result[index++] = m_targetValueMap.get(bestValue);
             if (appendConfidence) {
                 final int freqValue = counter.getFrequency(bestValue);
-                result[index++] = new DoubleCell(
-                        freqValue / (double)nrValidModels);
+                result[index++] = new DoubleCell(freqValue / (double)nrValidModels);
             }
             if (appendClassConfidences) {
                 for (String key : m_targetValueMap.keySet()) {
@@ -210,8 +208,7 @@ public final class TreeEnsembleClassificationPredictorCellFactory extends Abstra
         return result;
     }
 
-    private static final class OccurrenceCounter<T>
-        extends HashMap<T, MutableInteger> {
+    private static final class OccurrenceCounter<T> extends HashMap<T, MutableInteger> {
 
         public int add(final T object) {
             MutableInteger count = get(object);

@@ -55,11 +55,10 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class TreeEnsembleModelExtractorNodeFactory extends
-        NodeFactory<TreeEnsembleModelExtractorNodeModel> {
+public final class TreeEnsembleModelExtractorNodeFactory extends NodeFactory<TreeEnsembleModelExtractorNodeModel> {
 
     /** {@inheritDoc} */
     @Override
@@ -75,9 +74,8 @@ public final class TreeEnsembleModelExtractorNodeFactory extends
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<TreeEnsembleModelExtractorNodeModel> createNodeView(
-            final int viewIndex,
-            final TreeEnsembleModelExtractorNodeModel nodeModel) {
+    public NodeView<TreeEnsembleModelExtractorNodeModel> createNodeView(final int viewIndex,
+        final TreeEnsembleModelExtractorNodeModel nodeModel) {
         return null;
     }
 
