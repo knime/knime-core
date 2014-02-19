@@ -482,11 +482,12 @@ public class Statistics3Table {
      * Hook for subclasses to perform additional computations.
      *
      * @param row current row for computation
+     * @since 2.9
      */
     protected void onStatisticComputation(final DataRow row) {
         //NOOP
     }
-    
+
     /**
      * Filters out those indices that are not compatible with {@link DoubleValue}s.
      *
