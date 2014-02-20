@@ -268,7 +268,6 @@ public class TestflowRunnerApplication implements IApplication {
                 // requires another argument
                 if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
                     System.err.println("Missing pattern for tests to run.");
-                    printUsage();
                     return false;
                 }
                 m_testNamePattern = stringArgs[i++];
@@ -281,7 +280,6 @@ public class TestflowRunnerApplication implements IApplication {
                 // requires another argument
                 if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
                     System.err.println("Missing <dir_name> for option -root.");
-                    printUsage();
                     return false;
                 }
                 m_rootDirs.add(new File(stringArgs[i++]));
@@ -299,7 +297,6 @@ public class TestflowRunnerApplication implements IApplication {
                 // requires another argument
                 if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
                     System.err.println("Missing <url> for option -server.");
-                    printUsage();
                     return false;
                 }
                 m_serverUri = stringArgs[i++];
@@ -317,7 +314,6 @@ public class TestflowRunnerApplication implements IApplication {
                 // requires another argument
                 if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
                     System.err.println("Missing <file_name> for option -xmlResult.");
-                    printUsage();
                     return false;
                 }
                 m_xmlResultFile = stringArgs[i++];
@@ -335,7 +331,6 @@ public class TestflowRunnerApplication implements IApplication {
                 // requires another argument
                 if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
                     System.err.println("Missing <directory_name> for option -xmlResultDir.");
-                    printUsage();
                     return false;
                 }
                 m_xmlResultDir = stringArgs[i++];
@@ -353,7 +348,6 @@ public class TestflowRunnerApplication implements IApplication {
                 // requires another argument
                 if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
                     System.err.println("Missing <directory_name> for option -save.");
-                    printUsage();
                     return false;
                 }
                 m_runConfiguration.setSaveLocation(new File(stringArgs[i++]));
@@ -365,7 +359,6 @@ public class TestflowRunnerApplication implements IApplication {
                 // requires another argument
                 if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
                     System.err.println("Missing <seconds> for option -timeout.");
-                    printUsage();
                     return false;
                 }
                 m_runConfiguration.setTimeout(Integer.parseInt(stringArgs[i++]));
@@ -383,7 +376,6 @@ public class TestflowRunnerApplication implements IApplication {
                 // requires another argument
                 if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
                     System.err.println("Missing <regex> for option -untestedNodes.");
-                    printUsage();
                     return false;
                 }
                 m_untestedNodesTest = new UntestedNodesTest(Pattern.compile(stringArgs[i++]));
@@ -395,7 +387,6 @@ public class TestflowRunnerApplication implements IApplication {
                 // requires another argument
                 if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
                     System.err.println("Missing <bytes> for option -memLeaks.");
-                    printUsage();
                     return false;
                 }
                 m_runConfiguration.setAllowedMemoryIncrease(Integer.parseInt(stringArgs[i++]));
@@ -442,7 +433,6 @@ public class TestflowRunnerApplication implements IApplication {
 
 
             System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
-            printUsage();
             return false;
         }
 

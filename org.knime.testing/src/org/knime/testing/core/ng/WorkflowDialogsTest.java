@@ -106,7 +106,7 @@ class WorkflowDialogsTest extends WorkflowTest {
     private void checkDialogs(final TestResult result, final WorkflowManager wfm) throws InterruptedException,
             InvocationTargetException {
         for (final NodeContainer node : wfm.getNodeContainers()) {
-            if (m_context.isPreExecutedNode(node)) {
+            if (m_context.isPreExecutedNode(node) || node.getNodeContainerState().isIdle()) {
                 continue;
             }
 
