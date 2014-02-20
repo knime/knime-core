@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -51,7 +51,6 @@ package org.knime.base.node.preproc.missingval;
 import static org.knime.core.node.util.DataColumnSpecListCellRenderer.createInvalidSpec;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -66,22 +65,17 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 
-import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
 import javax.swing.Scrollable;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
@@ -92,14 +86,18 @@ import org.knime.core.data.MissingCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.util.ListModelFilterUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.DataColumnSpecListCellRenderer;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel.ConfigurationRequestEvent;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel.ConfigurationRequestListener;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel.ConfiguredColumnDeterminer;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel.ListModifier;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel.SearchedItemsSelectionMode;
 
 /**
  * Dialog to the missing value handling node.
@@ -112,17 +110,10 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
      */
     private static final String INCOMPATIBLE_COLUMN = "!---INCOMPATIBLE_COLUMN---!";
 
-    /**
-     * Dummy panel for computing the default width of the individual panel.
-     */
     private static final MissingValueHandling2Panel DUMMY_PANEL = new MissingValueHandling2Panel(
         new MissingValueHandling2ColSetting(MissingValueHandling2ColSetting.TYPE_INT));
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(MissingValueHandling2NodeDialogPane.class);
-
-    private final JList m_colList;
-
-    private final DefaultListModel m_colListModel;
 
     private final JPanel m_defaultsPanel;
 
@@ -130,10 +121,13 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
 
     private final JButton m_addButton;
 
+    private final ColumnSelectionSearchableListPanel m_searchableListPanel;
+
+    private ListModifier m_searchableListModifier;
+
     /**
      * Constructs new dialog with an appropriate dialog title.
      */
-    @SuppressWarnings("serial")
     public MissingValueHandling2NodeDialogPane() {
         super();
         // Default handling, first tab
@@ -141,109 +135,45 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
         addTab("Default", new JScrollPane(m_defaultsPanel));
 
         // Individual Handling, second tab
-        m_colListModel = new DefaultListModel();
-        m_colList = new JList(m_colListModel);
-        m_colList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        m_colList.addListSelectionListener(new ListSelectionListener() {
-            /** {@inheritDoc} */
+        m_searchableListPanel =
+            new ColumnSelectionSearchableListPanel(SearchedItemsSelectionMode.SELECT_ALL,
+                new ConfiguredColumnDeterminer() {
+
+                    @Override
+                    public boolean isConfiguredColumn(final DataColumnSpec cspec) {
+
+                        final Component[] c = m_individualsPanel.getComponents();
+                        for (int j = 0; j < c.length; j++) {
+                            final MissingValueHandling2Panel p = (MissingValueHandling2Panel)c[j];
+                            if (p.getSettings().isMetaConfig()) {
+                                continue;
+                            }
+                            final List<String> names = Arrays.asList(p.getSettings().getNames());
+
+                            if (names.contains(cspec.getName())) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                });
+
+        m_searchableListPanel.addConfigurationRequestListener(new ConfigurationRequestListener() {
+
             @Override
-            public void valueChanged(final ListSelectionEvent e) {
+            public void configurationRequested(final ConfigurationRequestEvent event) {
                 checkButtonStatus();
-            }
-        });
-        m_colList.addMouseListener(new MouseAdapter() {
-            /** {@inheritDoc} */
-            @Override
-            public void mouseClicked(final MouseEvent e) {
-                if (e.getClickCount() == 2) {
+                if (event.getType().equals(ConfigurationRequestEvent.Type.CREATION)) {
                     if (!m_addButton.isEnabled()) {
                         return;
                     }
-                    DataColumnSpec selected = (DataColumnSpec)m_colList.getSelectedValue();
-                    onAdd(selected);
+                    onAdd(m_searchableListPanel.getSelectedColumns());
                 }
             }
         });
-        m_colList.setCellRenderer(new DataColumnSpecListCellRenderer() {
-            /** {@inheritDoc} */
-            @Override
-            public Component getListCellRendererComponent(final JList list, final Object value, final int index,
-                final boolean isSelected, final boolean cellHasFocus) {
-                final Component comp = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (isSelected) {
-                    return comp;
-                }
-                final DataColumnSpec cspec = (DataColumnSpec)value;
-                if (isInvalid(cspec)) {
-                    setBorder(BorderFactory.createLineBorder(Color.RED, 2));
-                }
-                final Component[] c = m_individualsPanel.getComponents();
-                for (int i = 0; i < c.length; i++) {
-                    MissingValueHandling2Panel p = (MissingValueHandling2Panel)c[i];
-                    if (p.getSettings().isMetaConfig()) {
-                        continue;
-                    }
-                    final List<String> names = Arrays.asList(p.getSettings().getNames());
-                    if (names.contains(cspec.getName())) {
-                        comp.setEnabled(false);
-                    }
-                }
-                return comp;
-            }
-        });
 
-        final JTextField searchField = new JTextField(8);
-        final ActionListener actionListener = new ActionListener() {
-            /** {@inheritDoc} */
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                int[] searchHits = ListModelFilterUtils.getAllSearchHits(m_colList, searchField.getText());
-                m_colList.clearSelection();
-                if (searchHits.length == 0) {
-                    // nothing to select
-                    return;
-                }
-                final ArrayList<Integer> hitList = new ArrayList<Integer>();
-                for (int i = 0; i < searchHits.length; i++) {
-                    int hit = searchHits[i];
-                    DataColumnSpec cspec = (DataColumnSpec)m_colListModel.getElementAt(hit);
-                    final Component[] c = m_individualsPanel.getComponents();
-                    for (int j = 0; j < c.length; j++) {
-                        final MissingValueHandling2Panel p = (MissingValueHandling2Panel)c[j];
-                        if (p.getSettings().isMetaConfig()) {
-                            continue;
-                        }
-                        final List<String> names = Arrays.asList(p.getSettings().getNames());
-                        if (names.contains(cspec.getName())) {
-                            // no hit: item is already in use
-                            hit = -1;
-                            break;
-                        }
-                    }
-                    if (hit >= 0) { // only add element here when enabled
-                        hitList.add(hit);
-                    }
-                }
-                if (hitList.size() > 0) {
-                    final int[] hits = new int[hitList.size()];
-                    for (int i = 0; i < hits.length; i++) {
-                        hits[i] = hitList.get(i);
-                    }
-                    m_colList.setSelectedIndices(hits);
-                    m_colList.scrollRectToVisible(m_colList.getCellBounds(hits[0], hits[0]));
-                }
-            }
-        };
-        searchField.addActionListener(actionListener);
-        final JPanel searchPanel = new JPanel(new BorderLayout());
-        searchPanel.setBorder(BorderFactory.createTitledBorder(" Column Search "));
-        searchPanel.add(searchField, BorderLayout.CENTER);
-
-        final JPanel colPanel = new JPanel(new BorderLayout());
-        colPanel.add(searchPanel, BorderLayout.NORTH);
-        colPanel.add(new JScrollPane(m_colList), BorderLayout.CENTER);
         final JPanel tabPanel = new JPanel(new BorderLayout());
-        tabPanel.add(colPanel, BorderLayout.CENTER);
+        tabPanel.add(m_searchableListPanel, BorderLayout.CENTER);
 
         m_individualsPanel = new IndividualsPanel();
         JScrollPane scroller = new JScrollPane(m_individualsPanel);
@@ -254,13 +184,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
             /** {@inheritDoc} */
             @Override
             public void actionPerformed(final ActionEvent e) {
-                final Object[] selectedCols = m_colList.getSelectedValues();
-                final List<DataColumnSpec> selectList = new ArrayList<DataColumnSpec>();
-                for (Object o : selectedCols) {
-                    final DataColumnSpec dcs = (DataColumnSpec)o;
-                    selectList.add(dcs);
-                }
-                onAdd(selectList);
+                onAdd(m_searchableListPanel.getSelectedColumns());
             }
         });
         buttonPanel.add(m_addButton);
@@ -270,15 +194,14 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
 
     /** Enables/disables the button according to list selection. */
     private void checkButtonStatus() {
-        if (m_colList.isSelectionEmpty()) {
+        List<DataColumnSpec> selectedColumns = m_searchableListPanel.getSelectedColumns();
+        if (selectedColumns.isEmpty()) {
             m_addButton.setEnabled(false);
         } else {
-            final Object[] selectedCols = m_colList.getSelectedValues();
             // at least one item is selected, get its type and compare it
             // with all the other selected elements
-            final DataType type = ((DataColumnSpec)selectedCols[0]).getType();
-            for (Object o : selectedCols) {
-                final DataColumnSpec dcs = (DataColumnSpec)o;
+            final DataType type = selectedColumns.get(0).getType();
+            for (DataColumnSpec dcs : selectedColumns) {
                 if (!type.equals(dcs.getType())) {
                     m_addButton.setEnabled(false);
                     return;
@@ -291,8 +214,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
                     continue;
                 }
                 final List<String> names = Arrays.asList(p.getSettings().getNames());
-                for (Object o : selectedCols) {
-                    final DataColumnSpec dcs = (DataColumnSpec)o;
+                for (DataColumnSpec dcs : selectedColumns) {
                     if (names.contains(dcs.getName())) {
                         m_addButton.setEnabled(false);
                         return;
@@ -309,11 +231,9 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
         throws NotConfigurableException {
-        m_colListModel.removeAllElements();
-        for (int i = 0; i < specs[0].getNumColumns(); i++) {
-            DataColumnSpec spec = specs[0].getColumnSpec(i);
-            m_colListModel.addElement(spec);
-        }
+
+        m_searchableListModifier = m_searchableListPanel.update(specs[0]);
+
         MissingValueHandling2ColSetting[] defaults =
             MissingValueHandling2ColSetting.loadMetaColSettings(settings, specs[0]);
         MissingValueHandling2ColSetting[] individuals =
@@ -325,6 +245,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
             m_defaultsPanel.add(p);
         }
         m_individualsPanel.removeAll();
+        Set<String> invalidColumns = new LinkedHashSet<String>();
         for (int i = 0; i < individuals.length; i++) {
             String[] names = individuals[i].getNames();
             ArrayList<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>();
@@ -334,6 +255,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
                     LOGGER.debug("No such column in spec: " + names[j]);
                     DataColumnSpec createUnkownSpec = createUnkownSpec(names[j], individuals[i]);
                     colSpecs.add(createUnkownSpec);
+                    invalidColumns.add(names[j]);
                 } else {
                     colSpecs.add(cspec);
                 }
@@ -360,6 +282,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
                 addToIndividualPanel(p);
             }
         }
+        m_searchableListModifier.addInvalidColumns(invalidColumns.toArray(new String[invalidColumns.size()]));
         m_individualsPanel.setPreferredSize(m_defaultsPanel.getPreferredSize());
         checkButtonStatus();
     }
@@ -478,22 +401,6 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
         MissingValueHandling2ColSetting.saveIndividualsColSettings(individuals, settings);
     }
 
-    private void onAdd(final DataColumnSpec spec) {
-        if (spec == null) {
-            return;
-        }
-        final MissingValueHandling2Panel p = new MissingValueHandling2Panel(spec);
-        p.registerMouseListener(new MouseAdapter() {
-            /** {@inheritDoc} */
-            @Override
-            public void mouseClicked(final MouseEvent me) {
-                selectColumns(p.getSettings());
-            }
-        });
-        addToIndividualPanel(p);
-        checkButtonStatus();
-    }
-
     private void onAdd(final List<DataColumnSpec> specs) {
         if (specs == null || specs.isEmpty()) {
             return;
@@ -511,11 +418,16 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
     }
 
     private void removeFromIndividualPanel(final MissingValueHandling2Panel panel) {
+        for (String name : panel.getSettings().getNames()) {
+            if (m_searchableListPanel.isAdditionalColumn(name)) {
+                m_searchableListModifier.removeAdditionalColumn(name);
+            }
+        }
         m_individualsPanel.remove(panel);
         m_individualsPanel.revalidate();
         m_individualsPanel.repaint();
-        m_colList.revalidate();
-        m_colList.repaint();
+        m_searchableListPanel.revalidate();
+        m_searchableListPanel.repaint();
         checkButtonStatus();
     }
 
@@ -532,31 +444,30 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
                 /** {@inheritDoc} */
                 @Override
                 public void propertyChange(final PropertyChangeEvent evt) {
+                    DataColumnSpec[] removedSpecs = (DataColumnSpec[])evt.getNewValue();
+                    if (removedSpecs != null) {
+                        for (DataColumnSpec spec : removedSpecs) {
+                            if (m_searchableListPanel.isAdditionalColumn(spec.getName())) {
+                                m_searchableListModifier.removeAdditionalColumn(spec.getName());
+                            }
+                        }
+                    }
                     checkButtonStatus();
-                    m_colList.repaint();
+                    m_searchableListPanel.repaint();
                 }
             });
         m_individualsPanel.add(panel);
         m_individualsPanel.revalidate();
+        //        // force the outer parent to render out first individual if there does none exist previously
+        //        getPanel().repaint();
     }
 
     private void selectColumns(final MissingValueHandling2ColSetting setting) {
         if (setting.isMetaConfig()) {
             return;
         }
-        final List<String> names = Arrays.asList(setting.getNames());
-        final int[] hits = new int[names.size()];
-        int j = 0;
-        m_colList.clearSelection();
-        for (int i = 0; i < m_colListModel.getSize(); i++) {
-            DataColumnSpec cspec = (DataColumnSpec)m_colListModel.getElementAt(i);
-            if (names.contains(cspec.getName())) {
-                hits[j++] = i;
-            }
-        }
-        m_colList.setSelectedIndices(hits);
-        m_colList.scrollRectToVisible(m_colList.getCellBounds(hits[0], hits[0]));
-
+        m_searchableListPanel.setSelectedColumns(setting.getNames());
+        m_searchableListPanel.ensureSelectedColumnsVisible();
     }
 
     /**

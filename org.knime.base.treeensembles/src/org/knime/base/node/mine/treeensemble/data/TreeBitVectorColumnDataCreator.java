@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -59,20 +59,19 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class TreeBitVectorColumnDataCreator implements
-        TreeAttributeColumnDataCreator {
+public class TreeBitVectorColumnDataCreator implements TreeAttributeColumnDataCreator {
 
     private int m_index = 0;
+
     private BitSet[] m_bitSets;
 
     /** */
     public TreeBitVectorColumnDataCreator(final DataColumnSpec column) {
         if (!column.getType().isCompatible(BitVectorValue.class)) {
-            throw new IllegalStateException("Can't derive bit vector data "
-                    + "from non-bitvector column: " + column);
+            throw new IllegalStateException("Can't derive bit vector data " + "from non-bitvector column: " + column);
         }
     }
 
@@ -100,10 +99,8 @@ public class TreeBitVectorColumnDataCreator implements
                 m_bitSets[i] = new BitSet();
             }
         } else if (m_bitSets.length != length) {
-            throw new IllegalArgumentException(
-                    "Bit vectors in table have different length, expected "
-                            + m_bitSets.length + " bits but got " + length
-                            + " bits in row \"" + rowKey + "\"");
+            throw new IllegalArgumentException("Bit vectors in table have different length, expected "
+                + m_bitSets.length + " bits but got " + length + " bits in row \"" + rowKey + "\"");
         }
         for (int attrIndex = 0; attrIndex < length; attrIndex++) {
             m_bitSets[attrIndex].set(m_index, v.get(attrIndex));
@@ -114,20 +111,18 @@ public class TreeBitVectorColumnDataCreator implements
     /** {@inheritDoc} */
     @Override
     public TreeAttributeColumnData createColumnData(final int attributeIndex,
-            final TreeEnsembleLearnerConfiguration configuration) {
+        final TreeEnsembleLearnerConfiguration configuration) {
         BitSet columnBitSet = m_bitSets[attributeIndex];
         String attName = TreeBitColumnMetaData.getAttributeName(attributeIndex);
         TreeBitColumnMetaData metaData = new TreeBitColumnMetaData(attName);
-        return new TreeBitVectorColumnData(
-                metaData, configuration, columnBitSet, m_index);
+        return new TreeBitVectorColumnData(metaData, configuration, columnBitSet, m_index);
     }
 
     /** {@inheritDoc} */
     @Override
     public int getNrAttributes() {
         if (m_bitSets == null) {
-            throw new IllegalStateException("No rows have been added or "
-                    + "all were rejected due to missing values");
+            throw new IllegalStateException("No rows have been added or " + "all were rejected due to missing values");
         }
         return m_bitSets.length;
     }

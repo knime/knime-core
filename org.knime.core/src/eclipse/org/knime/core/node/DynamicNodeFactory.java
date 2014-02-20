@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -112,5 +112,20 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends NodeFactor
         KnimeNodeDocument doc = KnimeNodeDocument.Factory.newInstance();
         addNodeDescription(doc);
         return new NodeDescription27Proxy(doc);
+    }
+
+    /** Calls {@link NodeFactory#createNodeDescription()}, which parses the corresponding xml file named after
+     * this factory class (same package). If that fails it logs it to the NodeLogger and returns an empty
+     * {@link NoDescriptionProxy}.
+     * @return The result of that call.
+     * @since 2.10
+     */
+    protected NodeDescription parseNodeDescriptionFromFile() {
+        try {
+            return super.createNodeDescription();
+        } catch (Exception e) {
+            NodeLogger.getLogger(getClass()).error(e);
+            return new NoDescriptionProxy(getClass());
+        }
     }
 }

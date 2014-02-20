@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -208,7 +208,7 @@ public class ColumnAggregatorNodeModel extends NodeModel {
                 origSpec, selectedCols, new GlobalSettings(
                         FileStoreFactory.createWorkflowFileStoreFactory(exec), selectedCols,
                         m_maxUniqueValues.getIntValue(),
-                        m_valueDelimiter.getStringValue(), origSpec,
+                        m_valueDelimiter.getJavaUnescapedStringValue(), origSpec,
                         table.getRowCount()), m_methods);
         final ColumnRearranger cr =
             createRearranger(origSpec, cellFactory);

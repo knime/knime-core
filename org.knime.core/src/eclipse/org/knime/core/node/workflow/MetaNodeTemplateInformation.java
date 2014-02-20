@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -312,7 +312,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      * @throws InvalidSettingsException If that fails.
      */
     public static MetaNodeTemplateInformation load(
-            final NodeSettingsRO settings, final WorkflowPersistorVersion1xx.LoadVersion version)
+            final NodeSettingsRO settings, final FileWorkflowPersistor.LoadVersion version)
         throws InvalidSettingsException {
         String roleS = settings.getString("role");
         Role role;

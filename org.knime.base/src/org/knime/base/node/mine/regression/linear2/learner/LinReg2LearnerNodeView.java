@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -57,8 +57,10 @@ import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.knime.base.node.mine.regression.RegressionContent;
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.node.NodeView;
+import org.knime.core.util.Pair;
 
 /**
  * View on the linear regression learner node. It only has a text pane where
@@ -108,7 +110,7 @@ class LinReg2LearnerNodeView extends NodeView<LinReg2LearnerNodeModel> {
         buffer.append("<h2>Statistics on Linear Regression</h2>");
 
         if (model.isDataAvailable()) {
-            LinearRegressionContent content = model.getRegressionContent();
+            RegressionContent content = model.getRegressionContent();
             List<String> parameters = content.getParameters();
             buffer.append("<table>\n");
             buffer.append("<tr>");
@@ -118,10 +120,10 @@ class LinReg2LearnerNodeView extends NodeView<LinReg2LearnerNodeModel> {
             buffer.append("<th>t-value</th>");
             buffer.append("<th>P&gt;|t|</th>");
             buffer.append("</tr>");
-            Map<String, Double> coefficients = content.getCoefficients();
-            Map<String, Double> stdErrs = content.getStandardErrors();
-            Map<String, Double> tValues = content.getTValues();
-            Map<String, Double> pValues = content.getPValues();
+            Map<Pair<String, Integer>, Double> coefficients = content.getCoefficients();
+            Map<Pair<String, Integer>, Double> stdErrs = content.getStandardErrors();
+            Map<Pair<String, Integer>, Double> tValues = content.getTValues();
+            Map<Pair<String, Integer>, Double> pValues = content.getPValues();
 
             boolean odd = true;
             for (String parameter : parameters) {
@@ -135,16 +137,17 @@ class LinReg2LearnerNodeView extends NodeView<LinReg2LearnerNodeModel> {
                 buffer.append("<td>");
                 buffer.append(StringEscapeUtils.escapeHtml(parameter));
                 buffer.append("</td>\n<td class=\"numeric\">");
-                String coeff = DoubleFormat.formatDouble(coefficients.get(parameter));
+                Pair<String, Integer> pair = Pair.create(parameter, 1);
+                String coeff = DoubleFormat.formatDouble(coefficients.get(pair));
                 buffer.append(coeff);
                 buffer.append("</td>\n<td class=\"numeric\">");
-                String stdErr = DoubleFormat.formatDouble(stdErrs.get(parameter));
+                String stdErr = DoubleFormat.formatDouble(stdErrs.get(pair));
                 buffer.append(stdErr);
                 buffer.append("</td>\n<td class=\"numeric\">");
-                String zScore = DoubleFormat.formatDouble(tValues.get(parameter));
+                String zScore = DoubleFormat.formatDouble(tValues.get(pair));
                 buffer.append(zScore);
                 buffer.append("</td>\n<td class=\"numeric\">");
-                String pValue = DoubleFormat.formatDouble(pValues.get(parameter));
+                String pValue = DoubleFormat.formatDouble(pValues.get(pair));
                 buffer.append(pValue);
                 buffer.append("</td>\n");
                 buffer.append("</tr>\n");

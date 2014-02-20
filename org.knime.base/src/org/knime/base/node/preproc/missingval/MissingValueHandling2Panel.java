@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -235,7 +235,7 @@ final class MissingValueHandling2Panel extends JPanel {
             final List<DataColumnSpec> incompatibleColumns = getIncompatibleTypedColumns(setting.getType(), spec);
 
             if (!notExistingColumns.isEmpty()) {
-                warningMessages.add("Some columns do not longer exist (red borderd)");
+                warningMessages.add("Some columns no longer exist (red bordered)");
             }
 
             if (!incompatibleColumns.isEmpty()) {
@@ -266,7 +266,8 @@ final class MissingValueHandling2Panel extends JPanel {
 
                         // recreate the content, based on the new settings with removed invalid columns
                         createContent(diff(m_setting, invalidColumns), diff(spec, invalidColumns));
-                        firePropertyChange(REMOVED_INVALID_COLUMNS, null, null);
+                        firePropertyChange(REMOVED_INVALID_COLUMNS, null,
+                            invalidColumns.toArray(new DataColumnSpec[invalidColumns.size()]));
                     }
 
                 });
@@ -463,7 +464,7 @@ final class MissingValueHandling2Panel extends JPanel {
                         && MissingValueHandling2NodeDialogPane.isIncompatible((DataColumnSpec)value)) {
                         setBorder(BorderFactory.createLineBorder(Color.YELLOW));
                     }
-                    list.setToolTipText(text);
+                    setToolTipText(text);
                     return this;
                 }
             });

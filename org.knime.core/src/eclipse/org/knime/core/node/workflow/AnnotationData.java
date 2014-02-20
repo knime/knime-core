@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -57,7 +57,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.ConvenienceMethods;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  * @author  Bernd Wiswedel, KNIME.com, Zurich, Switzerland
@@ -343,7 +343,7 @@ public class AnnotationData implements Cloneable {
      * @param config To load from
      * @param loadVersion Version to load
      * @throws InvalidSettingsException If fails*/
-    public void load(final NodeSettingsRO config, final WorkflowPersistorVersion1xx.LoadVersion loadVersion)
+    public void load(final NodeSettingsRO config, final FileWorkflowPersistor.LoadVersion loadVersion)
             throws InvalidSettingsException {
         setText(config.getString("text"));
         setBgColor(config.getInt("bgcolor"));
@@ -352,7 +352,7 @@ public class AnnotationData implements Cloneable {
         int width = config.getInt("width");
         int height = config.getInt("height");
         TextAlignment alignment = TextAlignment.LEFT;
-        if (loadVersion.ordinal() >= WorkflowPersistorVersion1xx.LoadVersion.V250.ordinal()) {
+        if (loadVersion.ordinal() >= FileWorkflowPersistor.LoadVersion.V250.ordinal()) {
             String alignmentS = config.getString("alignment");
             try {
                 alignment = TextAlignment.valueOf(alignmentS);

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,11 +55,10 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class TreeEnsembleRegressionPredictorNodeFactory extends
-    NodeFactory<TreeEnsembleRegressionPredictorNodeModel> {
+public class TreeEnsembleRegressionPredictorNodeFactory extends NodeFactory<TreeEnsembleRegressionPredictorNodeModel> {
 
     /** {@inheritDoc} */
     @Override
@@ -75,8 +74,8 @@ public class TreeEnsembleRegressionPredictorNodeFactory extends
 
     /** {@inheritDoc} */
     @Override
-    public final NodeView<TreeEnsembleRegressionPredictorNodeModel> createNodeView(
-            final int viewIndex, final TreeEnsembleRegressionPredictorNodeModel nodeModel) {
+    public final NodeView<TreeEnsembleRegressionPredictorNodeModel> createNodeView(final int viewIndex,
+        final TreeEnsembleRegressionPredictorNodeModel nodeModel) {
         throw new IndexOutOfBoundsException();
     }
 

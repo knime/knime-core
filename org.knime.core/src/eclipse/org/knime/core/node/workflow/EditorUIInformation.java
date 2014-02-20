@@ -97,8 +97,8 @@ public class EditorUIInformation implements UIInformation {
      * {@inheritDoc}
      */
     @Override
-    public void load(final NodeSettingsRO config, final WorkflowPersistorVersion1xx.LoadVersion loadVersion) throws InvalidSettingsException {
-        if (loadVersion.ordinal() < WorkflowPersistorVersion1xx.LoadVersion.V260.ordinal()) {
+    public void load(final NodeSettingsRO config, final FileWorkflowPersistor.LoadVersion loadVersion) throws InvalidSettingsException {
+        if (loadVersion.ordinal() < FileWorkflowPersistor.LoadVersion.V260.ordinal()) {
             m_snapToGrid = false;
             m_showGrid = false;
             m_gridX = -1;

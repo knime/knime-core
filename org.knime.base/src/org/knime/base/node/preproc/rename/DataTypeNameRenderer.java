@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 2, 2006 (wiswedel): created
  */
@@ -61,24 +61,22 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValue.UtilityFactory;
 
-
 /**
- * Renderer used in the combo box where the user can pick different
- * {@link org.knime.core.data.DataValue} class. This renderer will show the
- * name of the {@link org.knime.core.data.DataValue} class along with the
- * icon assigned to the value class as defined by the
- * {@link DataType#getUtilityFor(Class)} method.
- * 
+ * Renderer used in the combo box where the user can pick different {@link org.knime.core.data.DataValue} class. This
+ * renderer will show the name of the {@link org.knime.core.data.DataValue} class along with the icon assigned to the
+ * value class as defined by the {@link DataType#getUtilityFor(Class)} method.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("serial")
 public class DataTypeNameRenderer extends DefaultListCellRenderer {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings({"rawtypes", "unchecked" })
     @Override
-    public Component getListCellRendererComponent(final JList list,
-            final Object value, final int index, final boolean isSelected,
-            final boolean cellHasFocus) {
+    public Component getListCellRendererComponent(final JList list, final Object value, final int index,
+        final boolean isSelected, final boolean cellHasFocus) {
         /* Almost all has been copied from the super implementation */
         setComponentOrientation(list.getComponentOrientation());
         if (isSelected) {
@@ -89,8 +87,8 @@ public class DataTypeNameRenderer extends DefaultListCellRenderer {
             setForeground(list.getForeground());
         }
 
-        if (value instanceof Class
-                && DataValue.class.isAssignableFrom((Class)value)) {
+        if (value instanceof Class && DataValue.class.isAssignableFrom((Class)value)) {
+
             Class<? extends DataValue> type = (Class<? extends DataValue>)value;
             String s = type.getName();
             int dot = s.lastIndexOf('.');
@@ -114,8 +112,7 @@ public class DataTypeNameRenderer extends DefaultListCellRenderer {
 
         setEnabled(list.isEnabled());
         setFont(list.getFont());
-        setBorder((cellHasFocus) ? UIManager
-                .getBorder("List.focusCellHighlightBorder") : noFocusBorder);
+        setBorder((cellHasFocus) ? UIManager.getBorder("List.focusCellHighlightBorder") : noFocusBorder);
         return this;
     }
 }

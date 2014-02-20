@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,15 +55,15 @@ import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.RowKey;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeTargetNumericColumnData extends TreeTargetColumnData {
 
     private final double[] m_data;
 
-    TreeTargetNumericColumnData(final TreeTargetNumericColumnMetaData metaData,
-            final RowKey[] rowKeysAsArray, final double[] data) {
+    TreeTargetNumericColumnData(final TreeTargetNumericColumnMetaData metaData, final RowKey[] rowKeysAsArray,
+        final double[] data) {
         super(metaData, rowKeysAsArray);
         m_data = data;
     }
@@ -78,8 +78,7 @@ public final class TreeTargetNumericColumnData extends TreeTargetColumnData {
         return m_data[row];
     }
 
-    public RegressionPriors getPriors(final double[] rowWeights,
-            final TreeEnsembleLearnerConfiguration config) {
+    public RegressionPriors getPriors(final double[] rowWeights, final TreeEnsembleLearnerConfiguration config) {
         double mean = 0.0;
         // sum of squares of differences from the (current) mean
         // final (population) variance will be this value divided by #records
@@ -100,7 +99,7 @@ public final class TreeTargetNumericColumnData extends TreeTargetColumnData {
             final double d = m_data[i];
             final double newTotalSum = totalSum + weight;
             final double delta = d - mean;
-            final double r = delta  * weight / newTotalSum;
+            final double r = delta * weight / newTotalSum;
             mean += r;
             sumSquareDeviation += totalSum * delta * r;
             totalSum += weight;

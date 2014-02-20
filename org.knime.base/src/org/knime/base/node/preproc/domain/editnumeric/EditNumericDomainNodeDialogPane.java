@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -74,6 +74,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
@@ -218,7 +219,7 @@ final class EditNumericDomainNodeDialogPane extends NodeDialogPane {
         try {
             return Double.valueOf(inputField.getText());
         } catch (Exception e) {
-            checkSetting(false, "%s must be a valid double value", name);
+            CheckUtils.checkSetting(false, "%s must be a valid double value", name);
             return 0;
         }
     }
@@ -233,7 +234,7 @@ final class EditNumericDomainNodeDialogPane extends NodeDialogPane {
         double max = getDouble(UPPER_B, m_upperBField);
         double min = getDouble(LOWER_B, m_lowerBField);
 
-        checkSetting(max >= min, "%s must be >= %s", UPPER_B, LOWER_B);
+        CheckUtils.checkSetting(max >= min, "%s must be >= %s", UPPER_B, LOWER_B);
 
         configuration.setMax(max);
         configuration.setMin(min);
@@ -241,20 +242,5 @@ final class EditNumericDomainNodeDialogPane extends NodeDialogPane {
         configuration.setDomainOverflowPolicy(m_handler);
 
         configuration.saveSettings(settings);
-    }
-
-    /**
-     * Throws an {@link InvalidSettingsException} with the given string template, if the given predicate is
-     * <code>false</code>.
-     *
-     * @param predicate the predicate
-     * @param template the template
-     * @throws InvalidSettingsException
-     */
-    private static void checkSetting(final boolean predicate, final String template, final Object... args)
-        throws InvalidSettingsException {
-        if (!predicate) {
-            throw new InvalidSettingsException(String.format(template, args));
-        }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -75,6 +75,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
@@ -102,9 +103,28 @@ public class Statistics3NodeModel extends NodeModel {
     private final SettingsModelFilterString m_nominalFilter =
         Statistics3NodeDialogPane.createNominalFilterModel();
 
-    /** One input and one output. */
+    /**
+     * This constructor is only for extension.
+     * @param inports The input port types.
+     * @param outports The output port types.
+     * @since 2.10
+     */
+    protected Statistics3NodeModel(final PortType[] inports, final PortType[] outports) {
+        super(inports, outports);
+    }
+
+    /**
+     * This constructor is only for extension.
+     * @param inPortCount The number of input tables.
+     * @param outPortCount The number of output tables.
+     * @since 2.10
+     */
+    protected Statistics3NodeModel(final int inPortCount, final int outPortCount) {
+        super(inPortCount, outPortCount);
+    }
+    /** One input and two output. */
     protected Statistics3NodeModel() {
-        super(1, 2);
+        this(1, 2);
     }
 
     /**
@@ -218,7 +238,7 @@ public class Statistics3NodeModel extends NodeModel {
     }
 
     /** @return number of nominal values computed */
-    int numOfNominalValues() {
+    protected int numOfNominalValues() {
         return m_nominalValues.getIntValue();
     }
 

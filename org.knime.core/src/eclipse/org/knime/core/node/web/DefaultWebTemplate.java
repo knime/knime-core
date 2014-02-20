@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -60,38 +60,33 @@ package org.knime.core.node.web;
 public class DefaultWebTemplate implements WebTemplate {
 
     private final WebResourceLocator[] m_webResources;
-    private final WebDependency[] m_dependencies;
     private final String m_namespace;
+    private final String m_initMethod;
+    private final String m_validateMethod;
+    private final String m_valueMethod;
 
     /**
-     * @param webResources An array of {@link WebResourceLocator}, which is the actual implementation of the view.
-     * These can be Javascript, CSS or other files.
-     * @param dependencies An array of {@link WebDependency}, which are the Javascript dependencies the view uses.
+     * @param jsResources An array of {@link WebResourceLocator}, which is the actual
+     * implementation and the dependencies of the view.
      * @param namespace An optional namespace, which is prepended to all method calls of the view implementation.
+     * @since 2.10
      *
      */
-    public DefaultWebTemplate(final WebResourceLocator[] webResources,
-                                  final WebDependency[] dependencies, final String namespace) {
-        this.m_webResources = webResources;
-        this.m_dependencies = dependencies;
+    public DefaultWebTemplate(final WebResourceLocator[] jsResources, final String namespace, final String initMethod, final String validateMethod, final String valueMethod) {
+        this.m_webResources = jsResources;
         this.m_namespace = namespace;
-
+        this.m_initMethod = initMethod;
+        this.m_validateMethod = validateMethod;
+        this.m_valueMethod = valueMethod;
     }
 
     /**
      * {@inheritDoc}
+     * @since 2.10
      */
     @Override
     public WebResourceLocator[] getWebResources() {
         return m_webResources;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WebDependency[] getDependencies() {
-        return m_dependencies;
     }
 
     /**
@@ -108,7 +103,7 @@ public class DefaultWebTemplate implements WebTemplate {
      */
     @Override
     public final String getInitMethodName() {
-        return "init";
+        return m_initMethod;
     }
 
     /**
@@ -117,7 +112,16 @@ public class DefaultWebTemplate implements WebTemplate {
      */
     @Override
     public final String getPullViewContentMethodName() {
-        return "pullViewContent";
+        return m_valueMethod;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public String getValidateMethodName() {
+        return m_validateMethod;
     }
 
 }

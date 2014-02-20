@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -105,33 +105,37 @@ import org.knime.core.util.SwingWorkerWithContext;
 
 /**
  * The view of the Decision Tree to Image node.
- *
+ * 
  * @author Heiko Hofer
  */
-final class TreeEnsembleClassificationLearnerNodeView extends
-        NodeView<TreeEnsembleClassificationLearnerNodeModel> implements HiLiteListener {
+final class TreeEnsembleClassificationLearnerNodeView extends NodeView<TreeEnsembleClassificationLearnerNodeModel>
+    implements HiLiteListener {
 
     /** The node logger for this class. */
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(TreeEnsembleClassificationLearnerNodeView.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(TreeEnsembleClassificationLearnerNodeView.class);
 
     private HiLiteHandler m_hiLiteHdl;
+
     private JMenu m_hiLiteMenu;
 
     private AtomicReference<UpdateTreeWorker> m_updateWorkerRef;
-    private final ChangeListener m_spinnerChangeListener;
-    private final JSpinner m_modelSpinner;
-    private final JLabel m_nrModelLabel;
-    private final JLabel m_warningLabel;
-    private DecTreeGraphView m_graph;
-    private JPopupMenu m_popup;
 
+    private final ChangeListener m_spinnerChangeListener;
+
+    private final JSpinner m_modelSpinner;
+
+    private final JLabel m_nrModelLabel;
+
+    private final JLabel m_warningLabel;
+
+    private DecTreeGraphView m_graph;
+
+    private JPopupMenu m_popup;
 
     /**
      * Default constructor, taking the model as argument.
-     *
-     * @param model
-     *            the underlying NodeModel
+     * 
+     * @param model the underlying NodeModel
      */
     public TreeEnsembleClassificationLearnerNodeView(final TreeEnsembleClassificationLearnerNodeModel model) {
         super(model);
@@ -148,24 +152,21 @@ final class TreeEnsembleClassificationLearnerNodeView extends
         m_nrModelLabel = new JLabel("number of models");
 
         m_warningLabel = new JLabel("  ");
-        m_warningLabel.setIcon(ViewUtils.loadIcon(
-                NodeView.class, "/icon/warning.png"));
+        m_warningLabel.setIcon(ViewUtils.loadIcon(NodeView.class, "/icon/warning.png"));
         m_warningLabel.setBackground(Color.WHITE);
         m_warningLabel.setVisible(false);
         m_warningLabel.setOpaque(true);
 
         m_graph = new DecTreeGraphView(null, null);
         JPanel outerPanel = new JPanel(new BorderLayout());
-        outerPanel.add(ViewUtils.getInFlowLayout(
-                m_modelSpinner, m_nrModelLabel), BorderLayout.NORTH);
+        outerPanel.add(ViewUtils.getInFlowLayout(m_modelSpinner, m_nrModelLabel), BorderLayout.NORTH);
         JPanel p = new JPanel(new GridLayout());
         p.setBackground(ColorAttr.BACKGROUND);
         p.add(m_graph.getView());
         p.setBorder(new EmptyBorder(5, 5, 5, 5));
         JScrollPane treeView = new JScrollPane(p);
         Dimension prefSize = treeView.getPreferredSize();
-        treeView.setPreferredSize(new Dimension(Math.min(prefSize.width, 800),
-                prefSize.height));
+        treeView.setPreferredSize(new Dimension(Math.min(prefSize.width, 800), prefSize.height));
 
         JSplitPane splitPane = new JSplitPane();
         splitPane.setResizeWeight(1.0);
@@ -262,8 +263,7 @@ final class TreeEnsembleClassificationLearnerNodeView extends
         scaleFactors.put("80.0%", 80f);
         scaleFactors.put("60.0%", 60f);
 
-        final JComboBox scaleFactorComboBox = new JComboBox(scaleFactors
-                .keySet().toArray());
+        final JComboBox scaleFactorComboBox = new JComboBox(scaleFactors.keySet().toArray());
         scaleFactorComboBox.setEditable(true);
         scaleFactorComboBox.setSelectedItem("100.0%");
         scaleFactorComboBox.addActionListener(new ActionListener() {
@@ -275,20 +275,17 @@ final class TreeEnsembleClassificationLearnerNodeView extends
                 if (null == scaleFactor) {
                     String str = ((String)selected).trim();
                     if (str.endsWith("%")) {
-                        scaleFactor = Float.parseFloat(
-                                str.substring(0, str.length() - 1));
+                        scaleFactor = Float.parseFloat(str.substring(0, str.length() - 1));
                     } else {
                         scaleFactor = Float.parseFloat(str);
                     }
                 }
                 if (scaleFactor < 10) {
-                    LOGGER.error("A zoom which is lower than 10% "
-                            + "is not supported");
+                    LOGGER.error("A zoom which is lower than 10% " + "is not supported");
                     scaleFactor = 10f;
                 }
                 if (scaleFactor > 500) {
-                    LOGGER.error("A zoom which is greater than 500% "
-                            + "is not supported");
+                    LOGGER.error("A zoom which is greater than 500% " + "is not supported");
                     scaleFactor = 500f;
                 }
 
@@ -377,8 +374,7 @@ final class TreeEnsembleClassificationLearnerNodeView extends
         final TreeEnsembleClassificationLearnerNodeModel nodeModel = getNodeModel();
         TreeEnsembleModel model = nodeModel.getEnsembleModel();
         DataTable hiliteRowSample = nodeModel.getHiliteRowSample();
-        UpdateTreeWorker updateWorker =
-            new UpdateTreeWorker(hiliteRowSample, model, index);
+        UpdateTreeWorker updateWorker = new UpdateTreeWorker(hiliteRowSample, model, index);
         UpdateTreeWorker old = m_updateWorkerRef.getAndSet(updateWorker);
         if (old != null) {
             old.cancel(true);
@@ -403,7 +399,7 @@ final class TreeEnsembleClassificationLearnerNodeView extends
 
     /**
      * Create menu to control hiliting.
-     *
+     * 
      * @return A new JMenu with hiliting buttons
      */
     private JMenu createHiLiteMenu() {
@@ -419,7 +415,7 @@ final class TreeEnsembleClassificationLearnerNodeView extends
 
     /**
      * Create menu to control tree.
-     *
+     * 
      * @return A new JMenu with tree operation buttons
      */
     private JMenu createTreeMenu() {
@@ -437,8 +433,7 @@ final class TreeEnsembleClassificationLearnerNodeView extends
     }
 
     private JMenuItem createHiliteItem() {
-        JMenuItem item =
-            new JMenuItem(HiLiteHandler.HILITE_SELECTED + " Branch");
+        JMenuItem item = new JMenuItem(HiLiteHandler.HILITE_SELECTED + " Branch");
         item.setMnemonic('S');
         item.addActionListener(new ActionListener() {
             @Override
@@ -451,8 +446,7 @@ final class TreeEnsembleClassificationLearnerNodeView extends
     }
 
     private JMenuItem createUnHiliteItem() {
-        JMenuItem item = new JMenuItem(
-                HiLiteHandler.UNHILITE_SELECTED + " Branch");
+        JMenuItem item = new JMenuItem(HiLiteHandler.UNHILITE_SELECTED + " Branch");
         item.setMnemonic('U');
         item.addActionListener(new ActionListener() {
             @Override
@@ -550,18 +544,20 @@ final class TreeEnsembleClassificationLearnerNodeView extends
     public void unHiLiteAll(final KeyEvent event) {
         m_graph.clearHilite();
     }
+
     /////////////////////////////////////////////////////
 
     private final class UpdateTreeWorker extends SwingWorkerWithContext<DecisionTreeNode, Void> {
 
         private final TreeEnsembleModel m_model;
+
         private final int m_index;
+
         private final DataTable m_hiliteRowSample;
 
         /**
          *  */
-        public UpdateTreeWorker(final DataTable hiliteRowSample,
-                final TreeEnsembleModel model, final int index) {
+        public UpdateTreeWorker(final DataTable hiliteRowSample, final TreeEnsembleModel model, final int index) {
             m_hiliteRowSample = hiliteRowSample;
             m_model = model;
             m_index = index;
@@ -570,12 +566,10 @@ final class TreeEnsembleClassificationLearnerNodeView extends
         /** {@inheritDoc} */
         @Override
         protected DecisionTreeNode doInBackgroundWithContext() throws Exception {
-            if (m_model == null || m_index < 0
-                    || m_index >= m_model.getNrModels()) {
+            if (m_model == null || m_index < 0 || m_index >= m_model.getNrModels()) {
                 return null;
             }
-            final DecisionTree tree = m_model.createDecisionTree(
-                    m_index, m_hiliteRowSample);
+            final DecisionTree tree = m_model.createDecisionTree(m_index, m_hiliteRowSample);
             return tree.getRootNode();
         }
 

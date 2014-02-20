@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -56,12 +56,13 @@ import org.knime.base.node.mine.treeensemble.data.TreeAttributeColumnData;
 import org.knime.base.node.mine.treeensemble.data.TreeData;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class SubsetColumnSample extends ColumnSample {
 
     private final TreeData m_data;
+
     private final int[] m_columnIndices;
 
     /**

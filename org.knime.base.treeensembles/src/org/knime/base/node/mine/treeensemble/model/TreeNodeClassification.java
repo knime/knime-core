@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.model;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.text.NumberFormat;
@@ -64,12 +63,13 @@ import org.knime.base.node.mine.treeensemble.data.ClassificationPriors;
 import org.knime.base.node.mine.treeensemble.data.NominalValueRepresentation;
 import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
 import org.knime.base.node.mine.treeensemble.data.TreeTargetNominalColumnMetaData;
+import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.util.MutableInteger;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNodeClassification extends AbstractTreeNode {
@@ -77,39 +77,47 @@ public final class TreeNodeClassification extends AbstractTreeNode {
     private static final TreeNodeClassification[] EMPTY_CHILD_ARRAY = new TreeNodeClassification[0];
 
     private final int m_majorityIndex;
+
     private final double[] m_targetDistribution;
 
-    public TreeNodeClassification(final TreeNodeSignature signature,
-            final ClassificationPriors targetPriors) {
-        this(signature, targetPriors, EMPTY_CHILD_ARRAY);
+    public TreeNodeClassification(final TreeNodeSignature signature, final ClassificationPriors targetPriors,
+        final TreeEnsembleLearnerConfiguration configuration) {
+        this(signature, targetPriors, EMPTY_CHILD_ARRAY, configuration);
     }
 
-    public TreeNodeClassification(final TreeNodeSignature signature,
-            final ClassificationPriors targetPriors,
-            final TreeNodeClassification[] childNodes) {
+    public TreeNodeClassification(final TreeNodeSignature signature, final ClassificationPriors targetPriors,
+        final TreeNodeClassification[] childNodes, final TreeEnsembleLearnerConfiguration configuration) {
         super(signature, targetPriors.getTargetMetaData(), childNodes);
-        m_targetDistribution = targetPriors.getDistribution();
+        if (configuration.isSaveTargetDistributionInNodes()) {
+            m_targetDistribution = targetPriors.getDistribution();
+        } else {
+            m_targetDistribution = null;
+        }
         m_majorityIndex = targetPriors.getMajorityIndex();
     }
 
-    private TreeNodeClassification(final DataInputStream in, final TreeMetaData metaData)
-        throws IOException {
+    private TreeNodeClassification(final TreeModelDataInputStream in, final TreeMetaData metaData) throws IOException {
         super(in, metaData);
         TreeTargetNominalColumnMetaData targetMetaData = (TreeTargetNominalColumnMetaData)metaData.getTargetMetaData();
         int targetLength = targetMetaData.getValues().length;
-        double[] targetDistribution = new double[targetLength];
-        int majorityIndex = -1;
-        double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < targetLength; i++) {
-            final double d = in.readDouble();
-            if (d > max) { // strictly larger, see also PriorDistribution
-                majorityIndex = i;
-                max = d;
+        if (in.isContainsClassDistribution()) {
+            double[] targetDistribution = new double[targetLength];
+            int majorityIndex = -1;
+            double max = Double.NEGATIVE_INFINITY;
+            for (int i = 0; i < targetLength; i++) {
+                final double d = in.readDouble();
+                if (d > max) { // strictly larger, see also PriorDistribution
+                    majorityIndex = i;
+                    max = d;
+                }
+                targetDistribution[i] = d;
             }
-            targetDistribution[i] = d;
+            m_targetDistribution = targetDistribution;
+            m_majorityIndex = majorityIndex;
+        } else {
+            m_targetDistribution = null;
+            m_majorityIndex = in.readInt();
         }
-        m_majorityIndex = majorityIndex;
-        m_targetDistribution = targetDistribution;
     }
 
     /** {@inheritDoc} */
@@ -131,7 +139,13 @@ public final class TreeNodeClassification extends AbstractTreeNode {
 
     /** @return the targetDistribution */
     public double[] getTargetDistribution() {
-        return m_targetDistribution;
+        if (m_targetDistribution == null) {
+            double[] result = new double[getTargetMetaData().getValues().length];
+            result[m_majorityIndex] = 1.0;
+            return result;
+        } else {
+            return m_targetDistribution;
+        }
     }
 
     /** {@inheritDoc} */
@@ -149,9 +163,10 @@ public final class TreeNodeClassification extends AbstractTreeNode {
             b.append(indent);
         }
         // e.g. "Iris-Setosa (50/150)"
-        double majorityWeight = m_targetDistribution[m_majorityIndex];
+        double[] targetDistribution = getTargetDistribution();
+        double majorityWeight = targetDistribution[m_majorityIndex];
         double weightSum = 0.0;
-        for (double v : m_targetDistribution) {
+        for (double v : targetDistribution) {
             weightSum += v;
         }
         b.append("\"").append(getMajorityClassName()).append("\" (");
@@ -169,33 +184,36 @@ public final class TreeNodeClassification extends AbstractTreeNode {
     /** {@inheritDoc} */
     @Override
     public void saveInSubclass(final DataOutputStream out) throws IOException {
-        // length is equally to target value list length (no need to store)
-        for (int i = 0; i < m_targetDistribution.length; i++) {
-            out.writeDouble(m_targetDistribution[i]);
+        if (m_targetDistribution != null) {
+            // length is equally to target value list length (no need to store)
+            for (int i = 0; i < m_targetDistribution.length; i++) {
+                out.writeDouble(m_targetDistribution[i]);
+            }
+        } else {
+            out.writeInt(m_majorityIndex);
         }
     }
 
-    public static TreeNodeClassification load(final DataInputStream in,
-            final TreeMetaData metaData) throws IOException {
+    public static TreeNodeClassification load(final TreeModelDataInputStream in, final TreeMetaData metaData)
+        throws IOException {
         return new TreeNodeClassification(in, metaData);
     }
 
     /** {@inheritDoc} */
     @Override
-    TreeNodeClassification loadChild(final DataInputStream in, final TreeMetaData metaData) throws IOException {
+    TreeNodeClassification loadChild(final TreeModelDataInputStream in, final TreeMetaData metaData) throws IOException {
         return TreeNodeClassification.load(in, metaData);
     }
 
     /**
      * @param metaData
-     * @return */
-    public DecisionTreeNode createDecisionTreeNode(
-            final MutableInteger idGenerator, final TreeMetaData metaData) {
+     * @return
+     */
+    public DecisionTreeNode createDecisionTreeNode(final MutableInteger idGenerator, final TreeMetaData metaData) {
         DataCell majorityCell = new StringCell(getMajorityClassName());
         double[] targetDistribution = getTargetDistribution();
         int initSize = (int)(targetDistribution.length / 0.75 + 1.0);
-        LinkedHashMap<DataCell, Double> scoreDistributionMap =
-            new LinkedHashMap<DataCell, Double>(initSize);
+        LinkedHashMap<DataCell, Double> scoreDistributionMap = new LinkedHashMap<DataCell, Double>(initSize);
         NominalValueRepresentation[] targets = getTargetMetaData().getValues();
         for (int i = 0; i < targetDistribution.length; i++) {
             String cl = targets[i].getNominalValue();
@@ -204,28 +222,23 @@ public final class TreeNodeClassification extends AbstractTreeNode {
         }
         final int nrChildren = getNrChildren();
         if (nrChildren == 0) {
-            return new DecisionTreeNodeLeaf(idGenerator.inc(),
-                    majorityCell, scoreDistributionMap);
+            return new DecisionTreeNodeLeaf(idGenerator.inc(), majorityCell, scoreDistributionMap);
         } else {
             int id = idGenerator.inc();
             DecisionTreeNode[] childNodes = new DecisionTreeNode[nrChildren];
             int splitAttributeIndex = getSplitAttributeIndex();
             assert splitAttributeIndex >= 0 : "non-leaf node has no split";
-            String splitAttribute = metaData.getAttributeMetaData(
-                    splitAttributeIndex).getAttributeName();
+            String splitAttribute = metaData.getAttributeMetaData(splitAttributeIndex).getAttributeName();
             PMMLPredicate[] childPredicates = new PMMLPredicate[nrChildren];
             for (int i = 0; i < nrChildren; i++) {
                 final TreeNodeClassification treeNode = getChild(i);
                 TreeNodeCondition cond = treeNode.getCondition();
                 childPredicates[i] = cond.toPMMLPredicate();
-                childNodes[i] = treeNode.createDecisionTreeNode(
-                        idGenerator, metaData);
+                childNodes[i] = treeNode.createDecisionTreeNode(idGenerator, metaData);
             }
-            return new DecisionTreeNodeSplitPMML(id,
-                    majorityCell, scoreDistributionMap, splitAttribute,
-                    childPredicates, childNodes);
+            return new DecisionTreeNodeSplitPMML(id, majorityCell, scoreDistributionMap, splitAttribute,
+                childPredicates, childNodes);
         }
     }
-
 
 }

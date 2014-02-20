@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,7 +55,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeColumnMetaData {
@@ -63,7 +63,8 @@ public abstract class TreeColumnMetaData {
     private final String m_attributeName;
 
     /**
-     * @param attributeName */
+     * @param attributeName
+     */
     TreeColumnMetaData(final String attributeName) {
         if (attributeName == null) {
             throw new NullPointerException("Argument must not be null.");

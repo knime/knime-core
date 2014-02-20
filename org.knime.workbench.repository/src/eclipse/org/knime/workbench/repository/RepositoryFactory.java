@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -72,7 +72,7 @@ import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
+import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.repository.model.Category;
@@ -236,7 +236,7 @@ public final class RepositoryFactory {
                     }
                 };
                 // don't lock workflow dir
-                WorkflowPersistorVersion1xx persistor =
+                FileWorkflowPersistor persistor =
                         WorkflowManager.createLoadPersistor(f, loadHelper);
 
                 WorkflowManager metaNode =

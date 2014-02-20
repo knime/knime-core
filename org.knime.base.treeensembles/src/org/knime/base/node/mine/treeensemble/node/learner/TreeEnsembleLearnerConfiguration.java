@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -88,7 +88,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeEnsembleLearnerConfiguration {
@@ -97,15 +97,12 @@ public class TreeEnsembleLearnerConfiguration {
     private static final String KEY_NR_HILITE_PATTERNS = "nrHilitePatterns";
 
     /**  */
-    private static final String KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN =
-        "ignoreColumnsWithoutDomain";
+    private static final String KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN = "ignoreColumnsWithoutDomain";
 
     /**  */
-    private static final String KEY_IS_DATA_SELECTION_WITH_REPLACEMENT =
-            "isDataSelectionWithReplacement";
+    private static final String KEY_IS_DATA_SELECTION_WITH_REPLACEMENT = "isDataSelectionWithReplacement";
 
-    private static final String KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE =
-            "isUseDifferentAttributesAtEachNode";
+    private static final String KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE = "isUseDifferentAttributesAtEachNode";
 
     private static final String KEY_INCLUDE_ALL_COLUMNS = "includeAllColumns";
 
@@ -113,18 +110,15 @@ public class TreeEnsembleLearnerConfiguration {
 
     private static final String KEY_FINGERPRINT_COLUMN = "fingerprintColumn";
 
-    private static final String KEY_USE_AVERAGE_SPLIT_POINTS =
-            "useAverageSplitPoints";
+    private static final String KEY_USE_AVERAGE_SPLIT_POINTS = "useAverageSplitPoints";
 
     private static final String KEY_SPLIT_CRITERION = "splitCriterion";
 
     private static final String KEY_NR_MODELS = "nrModels";
 
-    private static final String KEY_COLUMN_FRACTION_LINEAR =
-            "columnFractionPerTree";
+    private static final String KEY_COLUMN_FRACTION_LINEAR = "columnFractionPerTree";
 
-    private static final String KEY_COLUMN_ABSOLUTE =
-        "columnAbsolutePerTree";
+    private static final String KEY_COLUMN_ABSOLUTE = "columnAbsolutePerTree";
 
     private static final String KEY_ROOT_COLUMN = "hardCodedRootColumn";
 
@@ -142,10 +136,10 @@ public class TreeEnsembleLearnerConfiguration {
 
     private static final String KEY_COLUMN_SAMPLING_MODE = "columnSamplingMode";
 
+    private static final String KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES = "saveTargetDistributionInNodes";
+
     public enum SplitCriterion {
-        InformationGain("Information Gain"),
-        InformationGainRatio("Information Gain Ratio"),
-        Gini("Gini Index");
+        InformationGain("Information Gain"), InformationGainRatio("Information Gain Ratio"), Gini("Gini Index");
 
         private final String m_string;
 
@@ -173,17 +167,21 @@ public class TreeEnsembleLearnerConfiguration {
     /** indicates minimum leaf size parameter is not defined. */
     public static final int MIN_CHILD_SIZE_UNDEFINED = -1;
 
-    static final int DEF_MAX_LEVEL = 5;
+    static final int DEF_MAX_LEVEL = MAX_LEVEL_INFINITE;
 
-    public static final double DEF_DATA_FRACTION = 0.7;
+    public static final double DEF_DATA_FRACTION = 1.0;
 
     public static final double DEF_COLUMN_FRACTION = 1.0;
 
+    public static final ColumnSamplingMode DEF_COLUMN_SAMPLING_MODE = ColumnSamplingMode.SquareRoot;
+
     public static final int DEF_COLUMN_ABSOLUTE = 10;
 
-    public static final int DEF_NR_MODELS = 50;
+    public static final int DEF_NR_MODELS = 100;
 
     public static final boolean DEF_AVERAGE_SPLIT_POINTS = true;
+
+    public static final boolean DEF_SAVE_TARGET_DISTRIBUTION_IN_NODES = false;
 
     private String m_targetColumn;
 
@@ -204,7 +202,7 @@ public class TreeEnsembleLearnerConfiguration {
 
     private int m_columnAbsoluteValue = DEF_COLUMN_ABSOLUTE;
 
-    private ColumnSamplingMode m_columnSamplingMode = ColumnSamplingMode.None;
+    private ColumnSamplingMode m_columnSamplingMode = ColumnSamplingMode.SquareRoot;
 
     private boolean m_isUseDifferentAttributesAtEachNode;
 
@@ -226,6 +224,8 @@ public class TreeEnsembleLearnerConfiguration {
 
     private int m_nrHilitePatterns;
 
+    private boolean m_saveTargetDistributionInNodes = DEF_SAVE_TARGET_DISTRIBUTION_IN_NODES;
+
     private final boolean m_isRegression;
 
     /**
@@ -243,18 +243,16 @@ public class TreeEnsembleLearnerConfiguration {
      * @param targetColumn the targetColumn to set.
      * @throws InvalidSettingsException If arg is null or empty.
      */
-    public void setTargetColumn(final String targetColumn)
-            throws InvalidSettingsException {
+    public void setTargetColumn(final String targetColumn) throws InvalidSettingsException {
         if (targetColumn == null || targetColumn.isEmpty()) {
-            throw new InvalidSettingsException("Target attribute name "
-                    + "is null or empty");
+            throw new InvalidSettingsException("Target attribute name " + "is null or empty");
         }
         m_targetColumn = targetColumn;
     }
 
     /**
-     * @return the random seed to be used for deterministic behavior or null to
-     *         have another random initialization with each run.
+     * @return the random seed to be used for deterministic behavior or null to have another random initialization with
+     *         each run.
      */
     public Long getSeed() {
         return m_seed;
@@ -266,26 +264,24 @@ public class TreeEnsembleLearnerConfiguration {
     }
 
     /**
-     * @return name of the fixed root attribute or null (which should be the
-     *         default unless the user knows what attribute is supposedly best).
+     * @return name of the fixed root attribute or null (which should be the default unless the user knows what
+     *         attribute is supposedly best).
      */
     public String getHardCodedRootColumn() {
         return m_hardCodedRootColumn;
     }
 
     /**
-     * @param hardCodedRootColumn the hardCodedRootColumn to set, see
-     *            {@link #getHardCodedRootColumn()}.
+     * @param hardCodedRootColumn the hardCodedRootColumn to set, see {@link #getHardCodedRootColumn()}.
      */
     public void setHardCodedRootColumn(final String hardCodedRootColumn) {
         m_hardCodedRootColumn = hardCodedRootColumn;
     }
 
     /**
-     * The maximum tree depth (root has level 1) or {@link #MAX_LEVEL_INFINITE}
-     * if complete tree is to be built. Value is strictly larger than 0 (or
-     * {@link #MAX_LEVEL_INFINITE}).
-     *
+     * The maximum tree depth (root has level 1) or {@link #MAX_LEVEL_INFINITE} if complete tree is to be built. Value
+     * is strictly larger than 0 (or {@link #MAX_LEVEL_INFINITE}).
+     * 
      * @return tree depth as described above
      */
     public int getMaxLevels() {
@@ -293,38 +289,42 @@ public class TreeEnsembleLearnerConfiguration {
     }
 
     /**
-     * @param maxLevels the maxLevels to set, see {@link #getMaxLevels()} for
-     *            details.
-     * @throws InvalidSettingsException if bounds are violated, see get method
-     *             for details.
+     * @param maxLevels the maxLevels to set, see {@link #getMaxLevels()} for details.
+     * @throws InvalidSettingsException if bounds are violated, see get method for details.
      */
-    public void setMaxLevels(final int maxLevels)
-            throws InvalidSettingsException {
+    public void setMaxLevels(final int maxLevels) throws InvalidSettingsException {
         if (maxLevels == MAX_LEVEL_INFINITE) {
             // ok
         } else if (maxLevels <= 0) {
-            throw new InvalidSettingsException("Invalid value for number of "
-                    + "maximum tree depth (#level): " + m_maxLevels);
+            throw new InvalidSettingsException("Invalid value for number of " + "maximum tree depth (#level): "
+                + m_maxLevels);
         }
         m_maxLevels = maxLevels;
     }
 
-    /** The minimum number of objects in a node so that a split is attempted. Not evaluated if
-     * value is {@link #MIN_NODE_SIZE_UNDEFINED} AND {@link #getMinChildSize()} is unset;
-     * otherwise it needs to be twice as large.
-     * @return the minNodeSize */
+    /**
+     * The minimum number of objects in a node so that a split is attempted. Not evaluated if value is
+     * {@link #MIN_NODE_SIZE_UNDEFINED} AND {@link #getMinChildSize()} is unset; otherwise it needs to be twice as
+     * large.
+     * 
+     * @return the minNodeSize
+     */
     public int getMinNodeSize() {
         return m_minNodeSize;
     }
 
-    /** The minimum objects in either child node, at most 1/2 {@link #getMinNodeSize()}.
+    /**
+     * The minimum objects in either child node, at most 1/2 {@link #getMinNodeSize()}.
+     * 
      * @return the minChildSize value or {@link #MIN_CHILD_SIZE_UNDEFINED}.
      */
     public int getMinChildSize() {
         return m_minChildSize;
     }
 
-    /** See size values for minimum split and child node.
+    /**
+     * See size values for minimum split and child node.
+     * 
      * @param minNodeSize the minChildSize to set (or {@link #MIN_CHILD_SIZE_UNDEFINED}).
      * @param minChildSize the minChildSize to set (or {@link #MIN_CHILD_SIZE_UNDEFINED}).
      * @throws InvalidSettingsException if either value is invalid or min child size is larger than minnodesize/2
@@ -342,7 +342,7 @@ public class TreeEnsembleLearnerConfiguration {
             throw new InvalidSettingsException("Invalid minimum child size: " + minChildSize);
         } else if (minNodeSize > 0 && minChildSize > minNodeSize / 2) {
             throw new InvalidSettingsException("Invalid minimum child size (" + minChildSize
-                       + "); must be at most 2 x minimum node size (" + minNodeSize +")");
+                + "); must be at most 2 x minimum node size (" + minNodeSize + ")");
         }
 
         if (minChildSize > 0 && minNodeSize == MIN_NODE_SIZE_UNDEFINED) {
@@ -354,9 +354,9 @@ public class TreeEnsembleLearnerConfiguration {
     }
 
     /**
-     * The fraction of data that is used to train a model (each model in the bag
-     * gets a different (overlapping) portion of the data).
-     *
+     * The fraction of data that is used to train a model (each model in the bag gets a different (overlapping) portion
+     * of the data).
+     * 
      * @return The above value. It must be 0 &lt; value &lt;= 1.
      */
     public double getDataFractionPerTree() {
@@ -367,13 +367,11 @@ public class TreeEnsembleLearnerConfiguration {
      * @param value described in {@link #getDataFractionPerTree()}.
      * @throws InvalidSettingsException If value is invalid, see get method.
      */
-    public void setDataFractionPerTree(final double value)
-            throws InvalidSettingsException {
+    public void setDataFractionPerTree(final double value) throws InvalidSettingsException {
         if (0.0 < value && value <= 1.0) {
             m_dataFractionPerTree = value;
         } else {
-            throw new InvalidSettingsException("Invalid value for \"fraction "
-                    + "of data\", must be (0, 1]: " + value);
+            throw new InvalidSettingsException("Invalid value for \"fraction " + "of data\", must be (0, 1]: " + value);
         }
     }
 
@@ -383,8 +381,7 @@ public class TreeEnsembleLearnerConfiguration {
     }
 
     /** @param isDataSelectionWithReplacement the value to set */
-    public void setDataSelectionWithReplacement(
-            final boolean isDataSelectionWithReplacement) {
+    public void setDataSelectionWithReplacement(final boolean isDataSelectionWithReplacement) {
         m_isDataSelectionWithReplacement = isDataSelectionWithReplacement;
     }
 
@@ -399,19 +396,15 @@ public class TreeEnsembleLearnerConfiguration {
     }
 
     /** @param isUseDifferentAttributesAtEachNode the value to set */
-    public void setUseDifferentAttributesAtEachNode(
-            final boolean isUseDifferentAttributesAtEachNode) {
-        m_isUseDifferentAttributesAtEachNode =
-                isUseDifferentAttributesAtEachNode;
+    public void setUseDifferentAttributesAtEachNode(final boolean isUseDifferentAttributesAtEachNode) {
+        m_isUseDifferentAttributesAtEachNode = isUseDifferentAttributesAtEachNode;
     }
 
     /**
      * @param columnSamplingMode the columnSamplingMode to set
      * @throws InvalidSettingsException If arg is null
      */
-    public void setColumnSamplingMode(
-            final ColumnSamplingMode columnSamplingMode)
-            throws InvalidSettingsException {
+    public void setColumnSamplingMode(final ColumnSamplingMode columnSamplingMode) throws InvalidSettingsException {
         if (columnSamplingMode == null) {
             throw new InvalidSettingsException("No column sampling mode set");
         }
@@ -419,11 +412,10 @@ public class TreeEnsembleLearnerConfiguration {
     }
 
     /**
-     * The fraction of number of columns/attributes that is used to train a
-     * model (each model in the bag learns on a different (overlapping) portion
-     * of the attributes). This value is only of relevance if
+     * The fraction of number of columns/attributes that is used to train a model (each model in the bag learns on a
+     * different (overlapping) portion of the attributes). This value is only of relevance if
      * {@link #getColumnSamplingMode()} is {@link ColumnSamplingMode#Linear}.
-     *
+     * 
      * @return The above value. It must be 0 &lt; value &lt;= 1.
      */
     public double getColumnFractionLinearValue() {
@@ -434,35 +426,36 @@ public class TreeEnsembleLearnerConfiguration {
      * @param value see {@link #getColumnFractionLinearValue()}.
      * @throws InvalidSettingsException If out of bounds, see get method.
      */
-    public void setColumnFractionLinearValue(final double value)
-            throws InvalidSettingsException {
+    public void setColumnFractionLinearValue(final double value) throws InvalidSettingsException {
         if (0.0 < value && value <= 1.0) {
             m_columnFractionLinearValue = value;
         } else {
-            throw new InvalidSettingsException("Invalid value for \"fraction "
-                    + "of columns\", must be (0, 1]: " + value);
+            throw new InvalidSettingsException("Invalid value for \"fraction " + "of columns\", must be (0, 1]: "
+                + value);
         }
     }
 
-    /** Similar to {@link #getColumnFractionLinearValue()} but with a fixed
-     * number of attributes (e.g. controlled by a variable). If this number is
-     * larger than the number of appropriate columns/attributes, all atts will
-     * be used.
-     * <p>Only relevant if {@link #getColumnSamplingMode()} is
-     * {@link ColumnSamplingMode#Absolute}.
-     * @return number of columns (strictly larger 0) */
+    /**
+     * Similar to {@link #getColumnFractionLinearValue()} but with a fixed number of attributes (e.g. controlled by a
+     * variable). If this number is larger than the number of appropriate columns/attributes, all atts will be used.
+     * <p>
+     * Only relevant if {@link #getColumnSamplingMode()} is {@link ColumnSamplingMode#Absolute}.
+     * 
+     * @return number of columns (strictly larger 0)
+     */
     public int getColumnAbsoluteValue() {
         return m_columnAbsoluteValue;
     }
 
-    /** See {@link #getColumnAbsoluteValue()}.
+    /**
+     * See {@link #getColumnAbsoluteValue()}.
+     * 
      * @param columnAbsoluteValue the value
-     * @throws InvalidSettingsException If out of bounds (see get method). */
-    public void setColumnAbsoluteValue(final int columnAbsoluteValue)
-    throws InvalidSettingsException {
+     * @throws InvalidSettingsException If out of bounds (see get method).
+     */
+    public void setColumnAbsoluteValue(final int columnAbsoluteValue) throws InvalidSettingsException {
         if (columnAbsoluteValue < 0) {
-            throw new InvalidSettingsException("Invalid number of attributes: "
-                    + columnAbsoluteValue);
+            throw new InvalidSettingsException("Invalid number of attributes: " + columnAbsoluteValue);
         }
         m_columnAbsoluteValue = columnAbsoluteValue;
     }
@@ -490,24 +483,21 @@ public class TreeEnsembleLearnerConfiguration {
 
     public IImpurity createImpurityCriterion() {
         switch (m_splitCriterion) {
-        case InformationGain:
-            return GainImpurity.INSTANCE;
-        case InformationGainRatio:
-            return GainRatioImpurity.INSTANCE;
-        case Gini:
-            return GiniImpurity.INSTANCE;
-        default:
-            throw new IllegalStateException("Unsupport split criterion: "
-                    + m_splitCriterion);
+            case InformationGain:
+                return GainImpurity.INSTANCE;
+            case InformationGainRatio:
+                return GainRatioImpurity.INSTANCE;
+            case Gini:
+                return GiniImpurity.INSTANCE;
+            default:
+                throw new IllegalStateException("Unsupport split criterion: " + m_splitCriterion);
         }
     }
 
     /** @param splitCriterion the splitCriterion to set */
-    public void setSplitCriterion(final SplitCriterion splitCriterion)
-            throws InvalidSettingsException {
+    public void setSplitCriterion(final SplitCriterion splitCriterion) throws InvalidSettingsException {
         if (splitCriterion == null) {
-            throw new InvalidSettingsException(
-                    "Split Criterion must not be null");
+            throw new InvalidSettingsException("Split Criterion must not be null");
         }
         m_splitCriterion = splitCriterion;
     }
@@ -523,50 +513,44 @@ public class TreeEnsembleLearnerConfiguration {
     }
 
     /**
-     * @return the name of the fingerprint column to learn from (each bit
-     *         position is an binary attribute) or null if to learn from a set
-     *         of columns.
+     * @return the name of the fingerprint column to learn from (each bit position is an binary attribute) or null if to
+     *         learn from a set of columns.
      */
     public String getFingerprintColumn() {
         return m_fingerprintColumn;
     }
 
     /**
-     * @param fingerprintColumn the fingerprintColumn to set, see
-     *            {@link #getFingerprintColumn()}.
+     * @param fingerprintColumn the fingerprintColumn to set, see {@link #getFingerprintColumn()}.
      */
     public void setFingerprintColumn(final String fingerprintColumn) {
         m_fingerprintColumn = fingerprintColumn;
     }
 
     /**
-     * @return The names of the columns in the input table to use as attributes,
-     *         null when learning from fingerprint data. It might contain the
-     *         target column, which will be ignored as learning column.
+     * @return The names of the columns in the input table to use as attributes, null when learning from fingerprint
+     *         data. It might contain the target column, which will be ignored as learning column.
      */
     public String[] getIncludeColumns() {
         return m_includeColumns;
     }
 
     /**
-     * @param includeColumns the includeColumns to set, see
-     *            {@link #isIncludeAllColumns()}.
+     * @param includeColumns the includeColumns to set, see {@link #isIncludeAllColumns()}.
      */
     public void setIncludeColumns(final String[] includeColumns) {
         m_includeColumns = includeColumns;
     }
 
     /**
-     * @return the includeAllColumns flag. If true all appropriate columns will
-     *         be used as attributes.
+     * @return the includeAllColumns flag. If true all appropriate columns will be used as attributes.
      */
     public boolean isIncludeAllColumns() {
         return m_includeAllColumns;
     }
 
     /**
-     * @param includeAllColumns the flag as described in
-     *            {@link #isIncludeAllColumns()}.
+     * @param includeAllColumns the flag as described in {@link #isIncludeAllColumns()}.
      */
     public void setIncludeAllColumns(final boolean includeAllColumns) {
         m_includeAllColumns = includeAllColumns;
@@ -577,10 +561,34 @@ public class TreeEnsembleLearnerConfiguration {
         return m_nrHilitePatterns;
     }
 
-    /** @param nrHilitePatterns the nrHilitePatterns to set
-     * @see #getNrHilitePatterns() */
+    /**
+     * @param nrHilitePatterns the nrHilitePatterns to set
+     * @see #getNrHilitePatterns()
+     */
     public void setNrHilitePatterns(final int nrHilitePatterns) {
         m_nrHilitePatterns = nrHilitePatterns;
+    }
+
+    /**
+     * Whether the model should save the target distribution in each tree node (when classification). This is very
+     * memory consuming and only useful when exporting to PMML or when viewing at distributions in the tree view.
+     * 
+     * <p>
+     * Only applies for classification.
+     * 
+     * @return that property.
+     */
+    public boolean isSaveTargetDistributionInNodes() {
+        return m_saveTargetDistributionInNodes;
+    }
+
+    /**
+     * Setter for {@link #isSaveTargetDistributionInNodes()}.
+     * 
+     * @param value The value
+     */
+    public void setSaveTargetDistributionInNodes(final boolean value) {
+        m_saveTargetDistributionInNodes = value;
     }
 
     /** @return the ignoreColumnsWithoutDomain */
@@ -615,6 +623,7 @@ public class TreeEnsembleLearnerConfiguration {
         settings.addBoolean(KEY_INCLUDE_ALL_COLUMNS, m_includeAllColumns);
         settings.addBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, m_ignoreColumnsWithoutDomain);
         settings.addInt(KEY_NR_HILITE_PATTERNS, m_nrHilitePatterns);
+        settings.addBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, m_saveTargetDistributionInNodes);
     }
 
     public void loadInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
@@ -634,7 +643,7 @@ public class TreeEnsembleLearnerConfiguration {
         setMaxLevels(settings.getInt(KEY_MAX_LEVELS));
         // added after given to first prototype to users but before first public release
         setMinSizes(settings.getInt(KEY_MIN_NODE_SIZE, MIN_NODE_SIZE_UNDEFINED),
-                     settings.getInt(KEY_MIN_CHILD_SIZE, MIN_CHILD_SIZE_UNDEFINED));
+            settings.getInt(KEY_MIN_CHILD_SIZE, MIN_CHILD_SIZE_UNDEFINED));
         setHardCodedRootColumn(settings.getString(KEY_ROOT_COLUMN));
         setDataFractionPerTree(settings.getDouble(KEY_DATA_FRACTION));
         setDataSelectionWithReplacement(settings.getBoolean(KEY_IS_DATA_SELECTION_WITH_REPLACEMENT));
@@ -684,10 +693,11 @@ public class TreeEnsembleLearnerConfiguration {
         setIgnoreColumnsWithoutDomain(settings.getBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, true));
         // added after first preview, be backward compatible (none as default)
         setNrHilitePatterns(settings.getInt(KEY_NR_HILITE_PATTERNS, -1));
+        // added in 2.10
+        setSaveTargetDistributionInNodes(settings.getBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, true));
     }
 
-    public void loadInDialog(final NodeSettingsRO settings,
-                             final DataTableSpec inSpec) throws NotConfigurableException {
+    public void loadInDialog(final NodeSettingsRO settings, final DataTableSpec inSpec) throws NotConfigurableException {
         String defTargetColumn = null;
         String defFingerprintColumn = null;
         boolean hasAttributeColumns = false;
@@ -716,12 +726,11 @@ public class TreeEnsembleLearnerConfiguration {
         }
         if (defTargetColumn == null) {
             throw new NotConfigurableException("No categorical data in input "
-                    + "(node not connected?) -- unable to configure.");
+                + "(node not connected?) -- unable to configure.");
         }
         if (!hasAttributeColumns && defFingerprintColumn == null) {
             throw new NotConfigurableException("No appropriate learning column "
-                    + "in input (need to have at least one additional "
-                    + "numeric/categorical column or fingerprint data)");
+                + "in input (need to have at least one additional " + "numeric/categorical column or fingerprint data)");
         }
 
         // assign fields:
@@ -789,9 +798,9 @@ public class TreeEnsembleLearnerConfiguration {
             m_columnAbsoluteValue = DEF_COLUMN_ABSOLUTE;
         }
 
-        m_isDataSelectionWithReplacement = settings.getBoolean(KEY_IS_DATA_SELECTION_WITH_REPLACEMENT, false);
+        m_isDataSelectionWithReplacement = settings.getBoolean(KEY_IS_DATA_SELECTION_WITH_REPLACEMENT, true);
 
-        ColumnSamplingMode defColSamplingMode = ColumnSamplingMode.None;
+        ColumnSamplingMode defColSamplingMode = DEF_COLUMN_SAMPLING_MODE;
         ColumnSamplingMode colSamplingMode = defColSamplingMode;
         String colSamplingModeS = settings.getString(KEY_COLUMN_SAMPLING_MODE, null);
         if (colSamplingModeS == null) {
@@ -816,7 +825,7 @@ public class TreeEnsembleLearnerConfiguration {
         }
         m_columnSamplingMode = colSamplingMode;
         m_columnFractionLinearValue = colFracLinValue;
-        m_isUseDifferentAttributesAtEachNode = settings.getBoolean(KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE, false);
+        m_isUseDifferentAttributesAtEachNode = settings.getBoolean(KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE, true);
 
         m_nrModels = settings.getInt(KEY_NR_MODELS, DEF_NR_MODELS);
         if (m_nrModels <= 0) {
@@ -852,10 +861,11 @@ public class TreeEnsembleLearnerConfiguration {
         }
         m_ignoreColumnsWithoutDomain = settings.getBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, true);
         m_nrHilitePatterns = settings.getInt(KEY_NR_HILITE_PATTERNS, -1);
+        m_saveTargetDistributionInNodes =
+            settings.getBoolean(KEY_SAVE_TARGET_DISTRIBUTION_IN_NODES, DEF_SAVE_TARGET_DISTRIBUTION_IN_NODES);
     }
 
-    public FilterLearnColumnRearranger filterLearnColumns(final DataTableSpec spec)
-            throws InvalidSettingsException {
+    public FilterLearnColumnRearranger filterLearnColumns(final DataTableSpec spec) throws InvalidSettingsException {
         // TODO return type should be a derived class of ColumnRearranger
         // (ColumnRearranger is a final class in v2.5)
         if (m_targetColumn == null) {
@@ -864,14 +874,12 @@ public class TreeEnsembleLearnerConfiguration {
         DataColumnSpec targetCol = spec.getColumnSpec(m_targetColumn);
         if (targetCol == null || !targetCol.getType().isCompatible(getRequiredTargetClass())) {
             throw new InvalidSettingsException("Target column \"" + m_targetColumn
-                       + "\" does not exist or is not of the " + "correct type");
+                + "\" does not exist or is not of the " + "correct type");
         }
         List<String> noDomainColumns = new ArrayList<String>();
         FilterLearnColumnRearranger rearranger = new FilterLearnColumnRearranger(spec);
         if (m_fingerprintColumn == null) { // use ordinary data
-            Set<String> incl =
-                    m_includeAllColumns ? null : new HashSet<String>(
-                            Arrays.asList(m_includeColumns));
+            Set<String> incl = m_includeAllColumns ? null : new HashSet<String>(Arrays.asList(m_includeColumns));
             for (DataColumnSpec col : spec) {
                 String colName = col.getName();
                 if (colName.equals(m_targetColumn)) {
@@ -879,8 +887,8 @@ public class TreeEnsembleLearnerConfiguration {
                 }
                 DataType type = col.getType();
                 boolean ignoreColumn = false;
-                boolean isAppropriateType = type.isCompatible(DoubleValue.class)
-                || type.isCompatible(NominalValue.class);
+                boolean isAppropriateType =
+                    type.isCompatible(DoubleValue.class) || type.isCompatible(NominalValue.class);
                 if (m_includeAllColumns) {
                     if (isAppropriateType) {
                         if (shouldIgnoreLearnColumn(col)) {
@@ -896,10 +904,8 @@ public class TreeEnsembleLearnerConfiguration {
                     if (incl.remove(colName)) { // is attribute in selection set
                         // accept unless type mismatch
                         if (!isAppropriateType) {
-                            throw new InvalidSettingsException(
-                                    "Attribute column \"" + colName + "\" is "
-                                    + "not of the expected type (must be "
-                                    + "numeric or nominal).");
+                            throw new InvalidSettingsException("Attribute column \"" + colName + "\" is "
+                                + "not of the expected type (must be " + "numeric or nominal).");
                         } else if (shouldIgnoreLearnColumn(col)) {
                             ignoreColumn = true;
                             noDomainColumns.add(colName);
@@ -916,8 +922,8 @@ public class TreeEnsembleLearnerConfiguration {
 
             }
             if (rearranger.getColumnCount() <= 1) {
-                StringBuilder b = new StringBuilder("Input table has no valid "
-                        + "learning columns (need one additional numeric or "
+                StringBuilder b =
+                    new StringBuilder("Input table has no valid " + "learning columns (need one additional numeric or "
                         + "nominal column).");
                 if (!noDomainColumns.isEmpty()) {
                     b.append(" ").append(noDomainColumns.size());
@@ -930,8 +936,7 @@ public class TreeEnsembleLearnerConfiguration {
             if (!m_includeAllColumns && !incl.isEmpty()) {
                 StringBuilder missings = new StringBuilder();
                 int i = 0;
-                for (Iterator<String> it = incl.iterator(); it.hasNext()
-                        && i < 4; i++) {
+                for (Iterator<String> it = incl.iterator(); it.hasNext() && i < 4; i++) {
                     String s = it.next();
                     missings.append(i > 0 ? ", " : "").append(s);
                     it.remove();
@@ -939,16 +944,14 @@ public class TreeEnsembleLearnerConfiguration {
                 if (!incl.isEmpty()) {
                     missings.append(",...").append(incl.size()).append(" more");
                 }
-                throw new InvalidSettingsException("Some selected attributes "
-                        + "are not present in the input table: " + missings);
+                throw new InvalidSettingsException("Some selected attributes " + "are not present in the input table: "
+                    + missings);
             }
         } else { // use fingerprint data
             DataColumnSpec fpCol = spec.getColumnSpec(m_fingerprintColumn);
-            if (fpCol == null
-                    || !fpCol.getType().isCompatible(BitVectorValue.class)) {
-                throw new InvalidSettingsException("Fingerprint columnn \""
-                        + m_fingerprintColumn + "\" does not exist or is not "
-                        + "of correct type.");
+            if (fpCol == null || !fpCol.getType().isCompatible(BitVectorValue.class)) {
+                throw new InvalidSettingsException("Fingerprint columnn \"" + m_fingerprintColumn
+                    + "\" does not exist or is not " + "of correct type.");
             }
             rearranger.keepOnly(m_targetColumn, m_fingerprintColumn);
         }
@@ -990,8 +993,7 @@ public class TreeEnsembleLearnerConfiguration {
         return false;
     }
 
-    public TreeEnsembleModelPortObjectSpec createPortObjectSpec(
-            final DataTableSpec learnSpec) {
+    public TreeEnsembleModelPortObjectSpec createPortObjectSpec(final DataTableSpec learnSpec) {
         return new TreeEnsembleModelPortObjectSpec(learnSpec);
     }
 
@@ -1008,37 +1010,32 @@ public class TreeEnsembleLearnerConfiguration {
 
     public RowSample createRowSample(final int nrRows, final RandomData rd) {
         if (m_isDataSelectionWithReplacement) {
-            return new SubsetWithReplacementRowSample(nrRows,
-                    m_dataFractionPerTree, rd);
+            return new SubsetWithReplacementRowSample(nrRows, m_dataFractionPerTree, rd);
         } else if (m_dataFractionPerTree >= 1.0) {
             return new DefaultRowSample(nrRows);
         } else {
-            return new SubsetNoReplacementRowSample(nrRows,
-                    m_dataFractionPerTree, rd);
+            return new SubsetNoReplacementRowSample(nrRows, m_dataFractionPerTree, rd);
         }
     }
 
-    public ColumnSampleStrategy createColumnSampleStrategy(final TreeData data,
-            final RandomData rd) {
+    public ColumnSampleStrategy createColumnSampleStrategy(final TreeData data, final RandomData rd) {
         final int totalColCount = data.getNrAttributes();
         int subsetSize;
         switch (m_columnSamplingMode) {
-        case None:
-            return new AllColumnSampleStrategy(data);
-        case Linear:
-            subsetSize =
-                (int)Math.round(m_columnFractionLinearValue * totalColCount);
-            break;
-        case Absolute:
-            subsetSize = m_columnAbsoluteValue;
-            break;
-        case SquareRoot:
-            // default in R is "floor(sqrt(ncol(x)))"
-            subsetSize = (int)Math.floor(Math.sqrt(totalColCount));
-            break;
-        default:
-            throw new IllegalStateException(
-                    "Sampling not implemented: " + m_columnSamplingMode);
+            case None:
+                return new AllColumnSampleStrategy(data);
+            case Linear:
+                subsetSize = (int)Math.round(m_columnFractionLinearValue * totalColCount);
+                break;
+            case Absolute:
+                subsetSize = m_columnAbsoluteValue;
+                break;
+            case SquareRoot:
+                // default in R is "floor(sqrt(ncol(x)))"
+                subsetSize = (int)Math.floor(Math.sqrt(totalColCount));
+                break;
+            default:
+                throw new IllegalStateException("Sampling not implemented: " + m_columnSamplingMode);
         }
         subsetSize = Math.max(1, Math.min(subsetSize, totalColCount));
         if (m_isUseDifferentAttributesAtEachNode) {
@@ -1061,7 +1058,7 @@ public class TreeEnsembleLearnerConfiguration {
 
         private String m_warning;
 
-        /** @param original ...*/
+        /** @param original ... */
         public FilterLearnColumnRearranger(final DataTableSpec original) {
             super(original);
         }

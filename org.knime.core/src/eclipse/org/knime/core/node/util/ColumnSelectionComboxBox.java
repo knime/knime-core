@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -47,11 +47,6 @@
  */
 package org.knime.core.node.util;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataValue;
-import org.knime.core.node.NotConfigurableException;
-
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
@@ -60,9 +55,17 @@ import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.border.Border;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
+import org.knime.core.node.NotConfigurableException;
+
 /**
  * Class extends a JComboxBox to choose a column of a certain type retrieved
  * from the <code>DataTableSpec</code>.
+ *
+ * <p>Note, consider to use {@link ColumnSelectionPanel} to have more options like ability to select
+ * row ID column or "&lt;none>", show error marker for non-existing columns etc.
  *
  * @author Bernd Wiswedel, University of Konstanz
  * @author Thorsten Meinl, University of Konstanz

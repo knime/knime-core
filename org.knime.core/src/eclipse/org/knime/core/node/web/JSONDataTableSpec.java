@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -59,12 +59,18 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.image.png.PNGImageValue;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @since 2.9
  */
+@JsonAutoDetect
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public class JSONDataTableSpec {
 
     /**
@@ -75,6 +81,10 @@ public class JSONDataTableSpec {
         BOOLEAN("boolean"),
         NUMBER("number"),
         STRING("string"),
+        /**
+         * @since 2.10
+         */
+        PNG("png"),
         UNDEFINED("undefined");
 
         private String name;
@@ -101,7 +111,9 @@ public class JSONDataTableSpec {
 
     static JSTypes getJSONType(final DataType colType) {
         JSTypes type;
-        if (colType.isCompatible(BooleanValue.class)) {
+        if (colType.isCompatible(PNGImageValue.class)) {
+            type = JSTypes.PNG;
+        } else if (colType.isCompatible(BooleanValue.class)) {
             type = JSTypes.BOOLEAN;
         } else if (colType.isCompatible(DoubleValue.class)) {
             type = JSTypes.NUMBER;

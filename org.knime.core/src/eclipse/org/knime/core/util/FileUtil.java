@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -1014,9 +1014,24 @@ public final class FileUtil {
      */
     public static InputStream openStreamWithTimeout(final URL url)
             throws IOException {
+      return openStreamWithTimeout(url, urlTimeout);
+    }
+
+    /**
+     * Open an input stream on the given URL using the given timeout for
+     * connecting and reading.
+     *
+     * @param url any URL
+     * @param timeout the read/connection timeout
+     * @return an input stream
+     * @throws IOException if an I/O error occurs
+     * @since 2.10
+     */
+    public static InputStream openStreamWithTimeout(final URL url, final int timeout)
+            throws IOException {
         URLConnection conn = url.openConnection();
-        conn.setConnectTimeout(urlTimeout);
-        conn.setReadTimeout(urlTimeout);
+        conn.setConnectTimeout(timeout);
+        conn.setReadTimeout(timeout);
         return conn.getInputStream();
     }
 

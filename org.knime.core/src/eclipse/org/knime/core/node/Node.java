@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -1753,7 +1753,7 @@ public final class Node implements NodeModelWarningListener {
         if (!(m_factory instanceof WizardNodeFactoryExtension)) {
             return false;
         }
-        if (!(m_model instanceof WizardNode<?>)) {
+        if (!(m_model instanceof WizardNode<?, ?>)) {
             return false;
         }
         return true;
@@ -1778,7 +1778,7 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.8
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView(final String title) {
+    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V getInteractiveView(final String title) {
         m_logger.assertLog(NodeContext.getContext() != null,
             "No node context available, please check call hierarchy and fix it");
 

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,12 +52,13 @@ package org.knime.base.node.mine.regression.linear2.view;
 
 import java.util.List;
 
-import org.knime.base.node.mine.regression.linear2.learner.LinearRegressionContent;
+import org.knime.base.node.mine.regression.RegressionContent;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 import org.knime.base.util.coordinate.NumericCoordinate;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.util.Pair;
 
 /**
  * A scatter plot with a regression line. The
@@ -90,7 +91,7 @@ public class LinReg2LinePlotter extends ScatterPlotter {
                 || getDataProvider().getDataArray(0) == null) {
             return;
         }
-        LinearRegressionContent content = ((LinReg2DataProvider)getDataProvider()).getLinRegContent();
+        RegressionContent content = ((LinReg2DataProvider)getDataProvider()).getLinRegContent();
         if (content == null) {
             return;
         }
@@ -140,7 +141,7 @@ public class LinReg2LinePlotter extends ScatterPlotter {
             || getDataProvider().getDataArray(0) == null) {
             return;
         }
-        LinearRegressionContent content = ((LinReg2DataProvider)getDataProvider()).getLinRegContent();
+        RegressionContent content = ((LinReg2DataProvider)getDataProvider()).getLinRegContent();
         if (content == null) {
             return;
         }
@@ -174,7 +175,7 @@ public class LinReg2LinePlotter extends ScatterPlotter {
      * @return the value of the linear regression line
      */
     public double getApproximationFor(final String variable, final double v) {
-        LinearRegressionContent content = ((LinReg2DataProvider)getDataProvider()).getLinRegContent();
+        RegressionContent content = ((LinReg2DataProvider)getDataProvider()).getLinRegContent();
         double approx = content.getIntercept();
         double[] means = content.getMeans();
 
@@ -182,7 +183,7 @@ public class LinReg2LinePlotter extends ScatterPlotter {
         int varIndex = parameters.indexOf(variable);
         for (int i = 0; i < parameters.size(); i++) {
             double val = i == varIndex ? v : means[i];
-            approx += content.getCoefficients().get(parameters.get(i)) * val;
+            approx += content.getCoefficients().get(Pair.create(parameters.get(i), 1)) * val;
         }
         return approx;
     }

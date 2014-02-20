@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -56,7 +56,7 @@ import org.knime.base.node.mine.treeensemble.model.TreeNodeBitCondition;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class BitSplitCandidate extends SplitCandidate {
@@ -64,9 +64,7 @@ public final class BitSplitCandidate extends SplitCandidate {
     /**
      * @param gainValue
      */
-    public BitSplitCandidate(
-            final TreeBitVectorColumnData bitColumnData,
-            final double gainValue) {
+    public BitSplitCandidate(final TreeBitVectorColumnData bitColumnData, final double gainValue) {
         super(bitColumnData, gainValue);
     }
 

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -51,19 +51,20 @@
 package org.knime.base.node.mine.treeensemble.data;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class AbstractPriors {
 
     private final double m_nrRecords;
+
     private final TreeTargetColumnMetaData m_targetMetaData;
 
     /**
      * @param nrRecords
-     * @param targetMetaData */
-    AbstractPriors(final TreeTargetColumnMetaData targetMetaData,
-            final double nrRecords) {
+     * @param targetMetaData
+     */
+    AbstractPriors(final TreeTargetColumnMetaData targetMetaData, final double nrRecords) {
         m_targetMetaData = targetMetaData;
         m_nrRecords = nrRecords;
     }

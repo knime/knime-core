@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,24 +55,28 @@ import java.text.NumberFormat;
 import org.knime.base.node.mine.treeensemble.learner.IImpurity;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class PriorDistribution {
 
     private final double[] m_distribution;
+
     private final double m_totalSum;
+
     private final double m_priorImpurity;
+
     private final int m_majorityIndex;
+
     private final TreeTargetNominalColumnMetaData m_targetMetaData;
+
     private final IImpurity m_impurityCriterion;
 
     /**
      * @param impurityCriterion TODO
-     *  */
-    PriorDistribution(final double[] distribution,
-            final TreeTargetNominalColumnMetaData targetMetaData,
-            final IImpurity impurityCriterion) {
+     * */
+    PriorDistribution(final double[] distribution, final TreeTargetNominalColumnMetaData targetMetaData,
+        final IImpurity impurityCriterion) {
         m_distribution = distribution;
         m_targetMetaData = targetMetaData;
         m_impurityCriterion = impurityCriterion;
@@ -90,8 +94,7 @@ public class PriorDistribution {
         }
         m_totalSum = totalSum;
         m_majorityIndex = majorityIndex;
-        m_priorImpurity =
-            impurityCriterion.getPartitionImpurity(distribution, totalSum);
+        m_priorImpurity = impurityCriterion.getPartitionImpurity(distribution, totalSum);
     }
 
     /** @return the distribution */

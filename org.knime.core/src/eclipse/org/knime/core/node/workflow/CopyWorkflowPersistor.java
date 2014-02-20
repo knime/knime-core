@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -67,7 +67,7 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  * @author Bernd Wiswedel, University of Konstanz
@@ -293,8 +293,8 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public WorkflowPersistorVersion1xx.LoadVersion getLoadVersion() {
-        return WorkflowPersistorVersion1xx.LoadVersion.UNKNOWN;
+    public FileWorkflowPersistor.LoadVersion getLoadVersion() {
+        return FileWorkflowPersistor.LoadVersion.UNKNOWN;
     }
 
     /** {@inheritDoc} */

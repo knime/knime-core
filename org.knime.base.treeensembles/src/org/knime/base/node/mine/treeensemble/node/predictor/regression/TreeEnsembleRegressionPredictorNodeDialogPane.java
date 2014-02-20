@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -59,7 +59,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeEnsembleRegressionPredictorNodeDialogPane extends NodeDialogPane {
@@ -76,7 +76,7 @@ public final class TreeEnsembleRegressionPredictorNodeDialogPane extends NodeDia
     /** {@inheritDoc} */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-            throws NotConfigurableException {
+        throws NotConfigurableException {
         m_predictorPanel.loadSettingsFrom(settings, specs);
     }
 

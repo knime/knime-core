@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,28 +44,35 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 30, 2011 (wiswedel): created
  */
 package org.knime.core.node.workflow.virtual;
 
+import org.knime.core.node.DynamicNodeFactory;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
-public class VirtualPortObjectOutNodeFactory extends
-		NodeFactory<VirtualPortObjectOutNodeModel> {
+public class VirtualPortObjectOutNodeFactory extends DynamicNodeFactory<VirtualPortObjectOutNodeModel> {
 
-	private final PortType[] m_inTypes;
+	private PortType[] m_inTypes;
+
+	/** Serialization constructor.
+	 * @since 2.10 */
+    public VirtualPortObjectOutNodeFactory() {
+    }
 
 	/**
-	 * 
 	 */
 	public VirtualPortObjectOutNodeFactory(final PortType[] inTypes) {
 		if (inTypes == null) {
@@ -73,49 +80,58 @@ public class VirtualPortObjectOutNodeFactory extends
 					"Port type array argument must not be null");
 		}
 		m_inTypes = inTypes;
+		init();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	/** {@inheritDoc} */
+	@Override
+	protected NodeDescription createNodeDescription() {
+	    return super.parseNodeDescriptionFromFile();
+	}
+
+	/** {@inheritDoc} */
 	@Override
 	public VirtualPortObjectOutNodeModel createNodeModel() {
 		return new VirtualPortObjectOutNodeModel(m_inTypes);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	/** {@inheritDoc} */
 	@Override
 	protected int getNrNodeViews() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	/** {@inheritDoc} */
 	@Override
 	public NodeView<VirtualPortObjectOutNodeModel> createNodeView(
-			final int viewIndex, 
+			final int viewIndex,
 			final VirtualPortObjectOutNodeModel nodeModel) {
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	/** {@inheritDoc} */
 	@Override
 	protected boolean hasDialog() {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	/** {@inheritDoc} */
 	@Override
 	protected NodeDialogPane createNodeDialogPane() {
 		return null;
 	}
 
+	/** {@inheritDoc} */
+	@Override
+	public void loadAdditionalFactorySettings(final ConfigRO config) throws InvalidSettingsException {
+	    super.loadAdditionalFactorySettings(config);
+	    m_inTypes = VirtualPortObjectInNodeFactory.loadPortTypeList(config);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void saveAdditionalFactorySettings(final ConfigWO config) {
+	    super.saveAdditionalFactorySettings(config);
+	    VirtualPortObjectInNodeFactory.savePortTypeList(m_inTypes, config);
+	}
 }

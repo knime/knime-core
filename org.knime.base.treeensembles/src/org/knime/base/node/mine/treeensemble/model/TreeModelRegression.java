@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.model;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
@@ -59,7 +58,7 @@ import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
 import org.knime.core.util.MutableInteger;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeModelRegression extends AbstractTreeModel<TreeNodeRegression> {
@@ -70,17 +69,14 @@ public class TreeModelRegression extends AbstractTreeModel<TreeNodeRegression> {
         super(rootNode);
     }
 
-    public static TreeModelRegression load(final DataInputStream in,
-            final TreeMetaData metaData) throws IOException {
+    public static TreeModelRegression load(final TreeModelDataInputStream in, final TreeMetaData metaData)
+        throws IOException {
         return new TreeModelRegression(TreeNodeRegression.load(in, metaData));
     }
 
-
     public DecisionTree createDecisionTree(final TreeMetaData metaData) {
-        DecisionTreeNode decTreeRoot =
-            getRootNode().createDecisionTreeNode(new MutableInteger(0), metaData);
-        return new DecisionTree(decTreeRoot,
-                metaData.getTargetMetaData().getAttributeName());
+        DecisionTreeNode decTreeRoot = getRootNode().createDecisionTreeNode(new MutableInteger(0), metaData);
+        return new DecisionTree(decTreeRoot, metaData.getTargetMetaData().getAttributeName());
     }
 
 }

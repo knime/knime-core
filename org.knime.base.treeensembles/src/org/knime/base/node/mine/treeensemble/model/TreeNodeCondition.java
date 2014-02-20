@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.model;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
@@ -59,7 +58,7 @@ import org.knime.base.node.mine.treeensemble.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeNodeCondition {
@@ -77,28 +76,26 @@ public abstract class TreeNodeCondition {
         } else if (this instanceof TreeNodeBitCondition) {
             type = 'b';
         } else {
-            throw new IllegalStateException("Unknown condition type "
-                    + this.getClass().getName() + " (not implemented)");
+            throw new IllegalStateException("Unknown condition type " + this.getClass().getName()
+                + " (not implemented)");
         }
         dataOutput.writeByte(type);
     }
 
-    public static TreeNodeCondition load(final DataInputStream input,
-            final TreeMetaData metaData)
+    public static TreeNodeCondition load(final TreeModelDataInputStream input, final TreeMetaData metaData)
         throws IOException {
         byte type = input.readByte();
         switch (type) {
-        case 't':
-            return TreeNodeTrueCondition.INSTANCE;
-        case 'c':
-            return new TreeNodeNominalCondition(input, metaData);
-        case 'f':
-            return new TreeNodeNumericCondition(input, metaData);
-        case 'b':
-            return new TreeNodeBitCondition(input, metaData);
+            case 't':
+                return TreeNodeTrueCondition.INSTANCE;
+            case 'c':
+                return new TreeNodeNominalCondition(input, metaData);
+            case 'f':
+                return new TreeNodeNumericCondition(input, metaData);
+            case 'b':
+                return new TreeNodeBitCondition(input, metaData);
         }
-        throw new IOException("Unknown tree node condition type identifier: '"
-                + (char)type + "'");
+        throw new IOException("Unknown tree node condition type identifier: '" + (char)type + "'");
     }
 
     public abstract PMMLPredicate toPMMLPredicate();

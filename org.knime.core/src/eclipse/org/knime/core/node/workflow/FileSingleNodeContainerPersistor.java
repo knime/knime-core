@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -70,20 +70,19 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
-import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
-import org.knime.core.node.FileNodePersistor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.LockFailedException;
 
 /**
  *
@@ -103,7 +102,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
     private final FileNodeContainerMetaPersistor m_metaPersistor;
 
     /** WFM persistor, only set when used to load a workflow. */
-    private final WorkflowPersistorVersion1xx m_wfmPersistor;
+    private final FileWorkflowPersistor m_wfmPersistor;
 
     private WorkflowPersistor m_parentPersistor;
 
@@ -121,7 +120,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
 
 
     /** Load persistor. */
-    FileSingleNodeContainerPersistor(final WorkflowPersistorVersion1xx workflowPersistor,
+    FileSingleNodeContainerPersistor(final FileWorkflowPersistor workflowPersistor,
         final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper, final LoadVersion version) {
         this(workflowPersistor, new FileNodeContainerMetaPersistor(nodeSettingsFile, loadHelper, version),
             version);
@@ -134,7 +133,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
      * @param metaPersistor
      * @param wfmPersistor
      */
-    FileSingleNodeContainerPersistor(final WorkflowPersistorVersion1xx wfmPersistor,
+    FileSingleNodeContainerPersistor(final FileWorkflowPersistor wfmPersistor,
         final FileNodeContainerMetaPersistor metaPersistor, final LoadVersion version) {
         if (version == null || wfmPersistor == null) {
             throw new NullPointerException();
@@ -509,7 +508,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         return getLoadVersion().isOlderThan(LoadVersion.V200);
     }
 
-    WorkflowPersistorVersion1xx getWorkflowManagerPersistor() {
+    FileWorkflowPersistor getWorkflowManagerPersistor() {
         return m_wfmPersistor;
     }
 
@@ -535,11 +534,12 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         }
     }
 
-    protected static String save(final NativeNodeContainer nnc, final ReferencedFile nodeDirRef,
-        final ExecutionMonitor exec, final boolean isSaveData) throws CanceledExecutionException, IOException {
-        String settingsDotXML = nnc.getParent().getCipherFileName(SETTINGS_FILE_NAME);
-        ReferencedFile sncWorkingDirRef = nnc.getNodeContainerDirectory();
-        if (nodeDirRef.equals(sncWorkingDirRef) && !nnc.isDirty()) {
+    protected static String save(final SingleNodeContainer singleNC, final ReferencedFile nodeDirRef,
+        final ExecutionMonitor exec, final boolean isSaveData)
+                throws CanceledExecutionException, IOException, LockFailedException {
+        String settingsDotXML = singleNC.getParent().getCipherFileName(SETTINGS_FILE_NAME);
+        ReferencedFile sncWorkingDirRef = singleNC.getNodeContainerDirectory();
+        if (nodeDirRef.equals(sncWorkingDirRef) && !singleNC.isDirty()) {
             return settingsDotXML;
         }
         File nodeDir = nodeDirRef.getFile();
@@ -582,41 +582,35 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
             }
         }
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
-        saveNodeFactory(settings, nnc);
-        saveNodeFileName(nnc, settings, nodeDirRef); // only to allow 2.7- clients to load 2.8+ workflows
-        saveFlowObjectStack(settings, nnc);
-        saveSNCSettings(settings, nnc);
-        FileNodeContainerMetaPersistor.save(settings, nnc, nodeDirRef);
-        FileNodePersistor.save(nnc, settings, exec, nodeDirRef,
-            isSaveData && nnc.getInternalState().equals(InternalNodeContainerState.EXECUTED));
+        saveNodeFileName(singleNC, settings, nodeDirRef); // only to allow 2.7- clients to load 2.8+ workflows
+        saveFlowObjectStack(settings, singleNC);
+        saveSNCSettings(settings, singleNC);
+        FileNodeContainerMetaPersistor.save(settings, singleNC, nodeDirRef);
+        if (singleNC instanceof NativeNodeContainer) {
+            NativeNodeContainer nativeNC = (NativeNodeContainer)singleNC;
+            FileNativeNodeContainerPersistor.save(nativeNC, settings, exec, nodeDirRef,
+                isSaveData && singleNC.getInternalState().equals(InternalNodeContainerState.EXECUTED));
+        } else {
+            SubNodeContainer subnodeNC = (SubNodeContainer)singleNC;
+            FileSubNodeContainerPersistor.save(subnodeNC, settings, exec, nodeDirRef,
+                isSaveData && singleNC.getInternalState().equals(InternalNodeContainerState.EXECUTED));
+        }
         File nodeSettingsXMLFile = new File(nodeDir, settingsDotXML);
         OutputStream os = new FileOutputStream(nodeSettingsXMLFile);
-        os = nnc.getParent().cipherOutput(os);
+        os = singleNC.getParent().cipherOutput(os);
         settings.saveToXML(os);
         if (sncWorkingDirRef == null) {
             // set working dir so that we can unset the dirty flag
             sncWorkingDirRef = nodeDirRef;
-            nnc.setNodeContainerDirectory(sncWorkingDirRef);
+            singleNC.setNodeContainerDirectory(sncWorkingDirRef);
         }
         if (nodeDirRef.equals(sncWorkingDirRef)) {
-            nnc.unsetDirty();
+            singleNC.unsetDirty();
         }
         exec.setProgress(1.0);
         return settingsDotXML;
     }
 
-    /**
-     * @noreference This method is not intended to be referenced by clients.
-     */
-    protected static void saveNodeFactory(final NodeSettingsWO settings, final NativeNodeContainer nnc) {
-        final Node node = nnc.getNode();
-        // node info to missing node is the info to the actual instance, not MissingNodeFactory
-        NodeAndBundleInformation nodeInfo = node.getNodeAndBundleInformation();
-        nodeInfo.save(settings);
-
-        NodeSettingsWO subSets = settings.addNodeSettings("factory_settings");
-        node.getFactory().saveAdditionalFactorySettings(subSets);
-    }
 
     protected static ReferencedFile saveNodeFileName(final SingleNodeContainer snc, final NodeSettingsWO settings,
         final ReferencedFile nodeDirectoryRef) {

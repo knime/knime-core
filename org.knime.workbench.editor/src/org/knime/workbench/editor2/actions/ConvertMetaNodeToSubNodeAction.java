@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -61,7 +61,7 @@ import org.knime.workbench.editor2.commands.ConvertMetaNodeToSubNodeCommand;
 import org.knime.workbench.editor2.editparts.GUIWorkflowCipherPrompt;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
-/** Convert Metanode to a Subnode.
+/** Convert meta node to a sub node.
  *
  * @author M. Berthold
  */
@@ -96,7 +96,7 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Convert MetaNode to SubNode";
+        return "Convert Meta Node to Sub Node";
     }
 
     /**
@@ -113,7 +113,7 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Convert MetaNode into a SubNode";
+        return "Convert Meta Node into a Sub Node";
     }
 
     /**
@@ -138,24 +138,24 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
     }
 
     /**
-     * Expand metanode!
+     * Expand meta node!
      *
      * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        LOGGER.debug("Creating 'Convert Meta to SubNode' job for " + nodeParts.length + " node(s)...");
+        LOGGER.debug("Creating 'Convert Meta Node to Sub Node' job for " + nodeParts.length + " node(s)...");
         try {
             WorkflowManager manager = getManager();
             WorkflowManager metaNode = (WorkflowManager)nodeParts[0].getNodeContainer();
             if (!metaNode.unlock(new GUIWorkflowCipherPrompt())) {
                 return;
             }
-            // before we do anything, let's see if the convert will reset the metanode
+            // before we do anything, let's see if the convert will reset the meta node
             if (manager.canResetNode(metaNode.getID())) {
                 // yes: ask if we can reset, otherwise bail
                 MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.OK | SWT.CANCEL);
-                mb.setMessage("Executed Nodes inside Metanode will be reset - are you sure?");
+                mb.setMessage("Executed Nodes inside Meta Node will be reset - are you sure?");
                 mb.setText("Reset Executed Nodes");
                 int dialogreturn = mb.open();
                 if (dialogreturn == SWT.CANCEL) {
@@ -166,15 +166,11 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
                     manager.resetAndConfigureNode(metaNode.getID());
                 }
             }
-//            String res = manager.canExpandMetaNode(metaNode.getID());
-//            if (res != null) {
-//                throw new IllegalArgumentException(res);
-//            }
             ConvertMetaNodeToSubNodeCommand cmnc = new ConvertMetaNodeToSubNodeCommand(manager, metaNode.getID());
             execute(cmnc);
         } catch (IllegalArgumentException e) {
             MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.ERROR);
-            mb.setMessage("Sorry, converting Metanode failed: " + e.getMessage());
+            mb.setMessage("Sorry, converting Meta Node failed: " + e.getMessage());
             mb.setText("Convert failed");
             mb.open();
         }

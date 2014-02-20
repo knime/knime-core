@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -76,8 +76,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.streamable.InputPortRole;
-import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
@@ -86,12 +85,6 @@ import org.knime.core.node.util.ConvenienceMethods;
  * @author Marcel Hanser
  */
 final class EditNominalDomainNodeModel extends NodeModel {
-
-    /**
-     *
-     */
-    private static final int MAX_WRITTEN_COLS = 5;
-
     private static final NodeLogger LOGGER = NodeLogger.getLogger(EditNominalDomainNodeModel.class);
 
     private EditNominalDomainConfiguration m_configuration;
@@ -105,22 +98,6 @@ final class EditNominalDomainNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         return new DataTableSpec[]{sortPossibleValues(inSpecs[0])};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public InputPortRole[] getInputPortRoles() {
-        return new InputPortRole[]{InputPortRole.NONDISTRIBUTED_STREAMABLE};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public OutputPortRole[] getOutputPortRoles() {
-        return new OutputPortRole[]{OutputPortRole.NONDISTRIBUTED};
     }
 
     /** {@inheritDoc} */
@@ -148,7 +125,7 @@ final class EditNominalDomainNodeModel extends NodeModel {
                 DataColumnSpec orgDataSpec = orgSpec.getColumnSpec(i);
                 if (!StringCell.TYPE.equals(orgDataSpec.getType())) {
 
-                    EditNominalDomainConfiguration.checkSetting(m_configuration.isIgnoreWrongTypes(),
+                    CheckUtils.checkSetting(m_configuration.isIgnoreWrongTypes(),
                         "Column '%s' must be of type '%s' \nbut was of type: '%s'", name, StringCell.TYPE,
                         orgDataSpec.getType());
 
@@ -176,9 +153,13 @@ final class EditNominalDomainNodeModel extends NodeModel {
         }
 
         if (!configuredColumns.isEmpty()) {
-            EditNominalDomainConfiguration.checkSetting(m_configuration.isIgnoreNotExistingColumns(),
-                "Following columns do not longer exist in input table: \n%s",
-                ConvenienceMethods.getShortStringFrom(configuredColumns, MAX_WRITTEN_COLS));
+            String missingColumnsString =
+                "Following columns are configured but no longer exist: \n"
+                    + ConvenienceMethods.getShortStringFrom(configuredColumns, 5);
+
+            CheckUtils.checkSetting(m_configuration.isIgnoreNotExistingColumns(), missingColumnsString);
+
+            setWarningMessage(missingColumnsString);
         }
 
         return creator.createSpec();

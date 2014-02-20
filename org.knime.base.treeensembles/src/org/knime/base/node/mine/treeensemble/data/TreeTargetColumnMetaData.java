@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,22 +55,23 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeTargetColumnMetaData extends TreeColumnMetaData {
 
     /**
-     * @param attributeName */
+     * @param attributeName
+     */
     public TreeTargetColumnMetaData(final String attributeName) {
         super(attributeName);
     }
 
     /**
      * @param input
-     * @throws IOException */
-    public TreeTargetColumnMetaData(
-            final DataInputStream input) throws IOException {
+     * @throws IOException
+     */
+    public TreeTargetColumnMetaData(final DataInputStream input) throws IOException {
         super(input);
     }
 
@@ -83,8 +84,7 @@ public abstract class TreeTargetColumnMetaData extends TreeColumnMetaData {
         } else if (this instanceof TreeTargetNumericColumnMetaData) {
             colTypeByte = 'n';
         } else {
-            throw new IOException("Unsupported column type (not implemented): "
-                    + getClass().getSimpleName());
+            throw new IOException("Unsupported column type (not implemented): " + getClass().getSimpleName());
         }
         output.writeByte(colTypeByte);
         super.save(output);
@@ -93,24 +93,22 @@ public abstract class TreeTargetColumnMetaData extends TreeColumnMetaData {
 
     /**
      *  */
-    static TreeTargetColumnMetaData load(final DataInputStream input)
-        throws IOException {
+    static TreeTargetColumnMetaData load(final DataInputStream input) throws IOException {
         byte colTypeByte = input.readByte();
         switch (colTypeByte) {
-        case 'c':
-            return new TreeTargetNominalColumnMetaData(input);
-        case 'n':
-            return new TreeTargetNumericColumnMetaData(input);
-        default:
-            throw new IOException("Unknown column type identifier '"
-                    + (char)colTypeByte + "'");
+            case 'c':
+                return new TreeTargetNominalColumnMetaData(input);
+            case 'n':
+                return new TreeTargetNumericColumnMetaData(input);
+            default:
+                throw new IOException("Unknown column type identifier '" + (char)colTypeByte + "'");
         }
     }
 
-
     /**
      * @param output
-     * @throws IOException */
+     * @throws IOException
+     */
     abstract void saveContent(DataOutputStream output) throws IOException;
 
 }

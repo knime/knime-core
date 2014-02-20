@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,11 +55,10 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class TreeEnsembleRegressionLearnerNodeFactory extends
-        NodeFactory<TreeEnsembleRegressionLearnerNodeModel> {
+public final class TreeEnsembleRegressionLearnerNodeFactory extends NodeFactory<TreeEnsembleRegressionLearnerNodeModel> {
 
     /** {@inheritDoc} */
     @Override
@@ -75,8 +74,8 @@ public final class TreeEnsembleRegressionLearnerNodeFactory extends
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<TreeEnsembleRegressionLearnerNodeModel> createNodeView(
-            final int viewIndex, final TreeEnsembleRegressionLearnerNodeModel nodeModel) {
+    public NodeView<TreeEnsembleRegressionLearnerNodeModel> createNodeView(final int viewIndex,
+        final TreeEnsembleRegressionLearnerNodeModel nodeModel) {
         return new TreeEnsembleRegressionLearnerNodeView(nodeModel);
     }
 
