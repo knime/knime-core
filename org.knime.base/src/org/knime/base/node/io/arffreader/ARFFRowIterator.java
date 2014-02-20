@@ -77,8 +77,7 @@ import org.knime.core.util.tokenizer.TokenizerSettings;
  */
 public class ARFFRowIterator extends RowIterator {
     /** The node logger fot this class. */
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(ARFFRowIterator.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ARFFRowIterator.class);
 
     private final DataTableSpec m_tSpec;
 
@@ -101,19 +100,17 @@ public class ARFFRowIterator extends RowIterator {
     private static final int MAX_ERR_MSG = 10;
 
     /**
-     * Create a new row iterator reading the rows from an ARFF file at the
-     * specified location.
+     * Create a new row iterator reading the rows from an ARFF file at the specified location.
      *
      * @param fileLocation valid URL of the file to read
      * @param tSpec the structure of the table to create
      * @param rowKeyPrefix row keys are constructed like rowKeyPrefix + lineNo
      * @throws IOException if the ARFF file location couldn't be opened
      */
-    public ARFFRowIterator(final URL fileLocation, final DataTableSpec tSpec,
-            final String rowKeyPrefix) throws IOException {
+    public ARFFRowIterator(final URL fileLocation, final DataTableSpec tSpec, final String rowKeyPrefix)
+        throws IOException {
         if (fileLocation == null) {
-            throw new NullPointerException("Can't pass null ARFF file "
-                    + "location");
+            throw new NullPointerException("Can't pass null ARFF file location");
         }
         m_file = fileLocation;
         m_tSpec = tSpec;
@@ -130,8 +127,7 @@ public class ARFFRowIterator extends RowIterator {
         m_numMsgMissVal = 0;
 
         InputStream inStream = FileUtil.openStreamWithTimeout(m_file);
-        BufferedReader fReader =
-                new BufferedReader(new InputStreamReader(inStream));
+        BufferedReader fReader = new BufferedReader(new InputStreamReader(inStream));
 
         // eat the ARFF header
         String line;
@@ -172,9 +168,7 @@ public class ARFFRowIterator extends RowIterator {
         try {
             token = m_tokenizer.nextToken();
             // skip empty lines.
-            while ((token != null)
-                    && (token.equals("\n") || (!m_tokenizer
-                            .lastTokenWasQuoted() && token.isEmpty()))) {
+            while ((token != null) && (token.equals("\n") || (!m_tokenizer.lastTokenWasQuoted() && token.isEmpty()))) {
                 token = m_tokenizer.nextToken();
             }
             m_tokenizer.pushBack();
@@ -192,28 +186,46 @@ public class ARFFRowIterator extends RowIterator {
         // before anything else: check if there is more in the stream
         // skips empty lines!
         if (!hasNext()) {
-            throw new NoSuchElementException(
-                    "The row iterator proceeded beyond the last line of '"
-                            + m_file + "'.");
+            throw new NoSuchElementException("The row iterator proceeded beyond the last line of '" + m_file + "'.");
         }
 
         // create a row ID cell
         String rowID = m_rowPrefix + (m_rowNo - 1);
 
         // Now, read the columns until we have enough or see a row delimiter
-        DataCell[] rowCells = new DataCell[m_tSpec.getNumColumns()];
         String token;
+        token = m_tokenizer.nextToken();
+        m_tokenizer.pushBack(); // peek at the token
+
+        //Check if format of row is sparse
+        DataCell[] rowCells;
+        if (!token.isEmpty() && token.charAt(0) == '{' && !m_tokenizer.lastTokenWasQuoted()) {
+            rowCells = readSparseRow();
+        } else {
+            rowCells = readDataRow();
+        }
+
+        m_rowNo++;
+
+        return new DefaultRow(rowID, rowCells);
+
+    }
+
+    /**
+     * @param rowCells
+     * @param noOfCols
+     */
+    private DataCell[] readDataRow() {
         int noOfCols = m_tSpec.getNumColumns();
+        DataCell[] rowCells = new DataCell[noOfCols];
+        String token;
         int createdCols = 0;
         while (createdCols < noOfCols) {
-
             token = m_tokenizer.nextToken();
-
             if (token == null) {
                 // file ended early.
                 break;
             }
-
             // EOL is returned as token
             if (token.equals("\n")) {
                 if (createdCols == 0) {
@@ -229,16 +241,6 @@ public class ARFFRowIterator extends RowIterator {
                 m_tokenizer.pushBack();
                 // we need the row delim in the file, for after the loop
                 break;
-            }
-
-            if (createdCols == 0) {
-                // if the token in the first column starts with a '{' then
-                // this is a sparce ARFF file. We are not supporting this. Yet.
-                if (!token.isEmpty() && (token.charAt(0) == '{')
-                        && (!m_tokenizer.lastTokenWasQuoted())) {
-                    throw new IllegalStateException("ARFF Reader: Sparce ARFF "
-                            + "files not supported yet.");
-                }
             }
 
             // figure out if its a missing value
@@ -267,7 +269,6 @@ public class ARFFRowIterator extends RowIterator {
             rowCells[createdCols] =
                     createNewDataCellOfType(m_tSpec.getColumnSpec(createdCols)
                             .getType(), token, isMissingCell);
-
             createdCols++;
 
         } // end of while(createdCols < noOfCols)
@@ -296,11 +297,60 @@ public class ARFFRowIterator extends RowIterator {
         // now read the row delimiter from the file - and ignore whatever is
         // before it.
         readUntilEOL();
+        return rowCells;
+    }
 
-        m_rowNo++;
+    /**
+     * @param rowCells
+     * @param noOfCols
+     */
+    private DataCell[] readSparseRow() {
+        DataCell[] rowCells = new DataCell[m_tSpec.getNumColumns()];
+        String token;
+        token = m_tokenizer.nextToken().substring(1);
+        boolean foundending = false;
+        //while not at the end parse entries of the type: col val,
+        while ((token != null) && !token.isEmpty() && (!token.equals("\n"))) {
+            if (token.charAt(token.length() - 1) == '}') {
+                foundending = true;
+                token = token.substring(0, token.length() - 1);
+            }
+            String[] fields = token.split(" ");
+            if (fields.length != 2) {
+                throw new IllegalStateException("Malformatted sparse data entry: '" + token + "'");
 
-        return new DefaultRow(rowID, rowCells);
+            }
+            int col;
+            try {
+                col = Integer.parseInt(fields[0].trim());
+            } catch (NumberFormatException e) {
+                throw new IllegalStateException("Malformatted column index in sparse data entry: '"
+                        + fields[0].trim() + "'");
+            }
+            String data = fields[1];
+            if (!m_tokenizer.lastTokenWasQuoted()) {
+                data = data.trim();
+            }
+            boolean missCell = data.equals("?") && !m_tokenizer.lastTokenWasQuoted();
+            rowCells[col] = createNewDataCellOfType(m_tSpec.getColumnSpec(col).getType(), data, missCell);
 
+            token = m_tokenizer.nextToken();
+        }
+        if (!foundending) {
+            int line = m_tokenizer.getLineNumber();
+            if (token != null && token.equals("\n")) {
+                line--;
+            }
+            LOGGER.error("Malformatted sparse row in line " + line + " (closing bracket not found).");
+        }
+
+        //now go through the row and fill the nulls with 0s
+        for (int c = 0; c < rowCells.length; c++) {
+            if (rowCells[c] == null) {
+                rowCells[c] = createNewDataCellOfType(m_tSpec.getColumnSpec(c).getType(), "0", false);
+            }
+        }
+        return rowCells;
     }
 
     /*
@@ -313,9 +363,8 @@ public class ARFFRowIterator extends RowIterator {
 
         while ((token != null) && !token.equals("\n")) { // EOF is also EOL
             if (!msgPrinted && (m_numMsgExtraCol < MAX_ERR_MSG)) {
-                LOGGER.warn("ARFF reader WARNING: Ignoring extra "
-                        + "columns in the data section of file '" + m_file
-                        + "' line " + m_tokenizer.getLineNumber() + ".");
+                LOGGER.warn("ARFF reader WARNING: Ignoring extra " + "columns in the data section of file '" + m_file
+                    + "' line " + m_tokenizer.getLineNumber() + ".");
                 m_numMsgExtraCol++;
             }
             if (m_numMsgExtraCol == MAX_ERR_MSG) {
@@ -346,8 +395,7 @@ public class ARFFRowIterator extends RowIterator {
      * @return <code> DataCell </code> of the type specified in <code> type
      * </code> .
      */
-    private DataCell createNewDataCellOfType(final DataType type,
-            final String data, final boolean createMissingCell) {
+    private DataCell createNewDataCellOfType(final DataType type, final String data, final boolean createMissingCell) {
 
         if (type.equals(StringCell.TYPE)) {
             if (createMissingCell) {
@@ -364,10 +412,8 @@ public class ARFFRowIterator extends RowIterator {
                     return new IntCell(val);
                 } catch (NumberFormatException nfe) {
                     if (m_numMsgWrongFormat < MAX_ERR_MSG) {
-                        LOGGER.warn("ARFF reader WARNING: Wrong data "
-                                + "format. In line "
-                                + m_tokenizer.getLineNumber() + " read '"
-                                + data + "' for an integer.");
+                        LOGGER.warn("ARFF reader WARNING: Wrong data " + "format. In line "
+                            + m_tokenizer.getLineNumber() + " read '" + data + "' for an integer.");
                         LOGGER.warn("    Creating missing cell for it.");
                         m_numMsgWrongFormat++;
                     }
@@ -387,10 +433,8 @@ public class ARFFRowIterator extends RowIterator {
                     return new DoubleCell(val);
                 } catch (NumberFormatException nfe) {
                     if (m_numMsgWrongFormat < MAX_ERR_MSG) {
-                        LOGGER.warn("ARFF reader WARNING: Wrong data "
-                                + "format. In line "
-                                + m_tokenizer.getLineNumber() + " read '"
-                                + data + "' for a floating point.");
+                        LOGGER.warn("ARFF reader WARNING: Wrong data " + "format. In line "
+                            + m_tokenizer.getLineNumber() + " read '" + data + "' for a floating point.");
                         LOGGER.warn("    Creating missing cell for it.");
                         m_numMsgWrongFormat++;
                     }
@@ -402,8 +446,7 @@ public class ARFFRowIterator extends RowIterator {
                 }
             }
         } else {
-            throw new IllegalStateException("Cannot create DataCell of type"
-                    + type.toString());
+            throw new IllegalStateException("Cannot create DataCell of type" + type.toString());
         }
     }
 }
