@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -101,7 +101,7 @@ public class HiLiteHandler {
     private final CopyOnWriteArrayList<HiLiteListener> m_listenerList;
 
     /** Set of non-<code>null</code> hilit items. */
-    private final Set<RowKey> m_hiLitKeys;
+    private Set<RowKey> m_hiLitKeys;
 
     /**
      * Creates a new default hilite handler with an empty set of registered
@@ -258,6 +258,9 @@ public class HiLiteHandler {
         if (event == null) {
             throw new NullPointerException("KeyEvent must not be null");
         }
+
+        Set<RowKey> newHilitKeys = new LinkedHashSet<RowKey>(m_hiLitKeys);
+
         /*
          * Do not change this implementation, unless you are aware of the
          * following problem:
@@ -284,12 +287,14 @@ public class HiLiteHandler {
                         "Key array must not contains null elements.");
             }
             // if the key is already hilit, do not add it
-            if (m_hiLitKeys.add(id)) {
+            if (newHilitKeys.add(id)) {
                 changedIDs.add(id);
             }
         }
+
         // if at least on key changed
-        if (changedIDs.size() > 0) {
+        if (!changedIDs.isEmpty()) {
+            m_hiLitKeys = newHilitKeys;
             final KeyEvent fireEvent =
                 new KeyEvent(event.getSource(), changedIDs);
             final Runnable r = new Runnable() {
@@ -341,6 +346,9 @@ public class HiLiteHandler {
         if (ids.isEmpty()) {
             return;
         }
+
+        Set<RowKey> newHilitKeys = new LinkedHashSet<RowKey>(m_hiLitKeys);
+
         // create list of row keys from input key array
         final Set<RowKey> changedIDs = new LinkedHashSet<RowKey>();
         // iterate over all keys and removes all not hilit ones
@@ -349,12 +357,13 @@ public class HiLiteHandler {
                 throw new IllegalArgumentException(
                         "Key array must not contains null elements.");
             }
-            if (m_hiLitKeys.remove(id)) {
+            if (newHilitKeys.remove(id)) {
                 changedIDs.add(id);
             }
         }
         // if at least on key changed
-        if (changedIDs.size() > 0) {
+        if (!changedIDs.isEmpty()) {
+            m_hiLitKeys = newHilitKeys;
             // throw unhilite event
             final KeyEvent fireEvent = new KeyEvent(
                     event.getSource(), changedIDs);
@@ -398,8 +407,8 @@ public class HiLiteHandler {
          * Do not change this implementation, see #fireHiLiteEvent for
          * more details.
          */
-        if (m_hiLitKeys.size() > 0) {
-            m_hiLitKeys.clear();
+        if (!m_hiLitKeys.isEmpty()) {
+            m_hiLitKeys = new LinkedHashSet<RowKey>();
             final Runnable r = new Runnable() {
                 @Override
                 public void run() {
