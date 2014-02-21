@@ -139,9 +139,8 @@ public class SettingsModelFilterString extends SettingsModel {
             for (String e : defaultExclList) {
                 // entries can't be in the include and exclude list!
                 if (m_inclList.contains(e)) {
-                    throw new IllegalArgumentException(
-                            "The include and exclude "
-                                    + "lists contain the same object.");
+                    throw new IllegalArgumentException("Config \"" + m_configName
+                        + "\": include and exclude lists contain the same object: " +  e);
                 }
                 if (!m_exclList.contains(e)) {
                     m_exclList.add(e);
@@ -417,10 +416,8 @@ public class SettingsModelFilterString extends SettingsModel {
     @Override
     protected void saveSettingsForModel(final NodeSettingsWO settings) {
         Config lists = settings.addConfig(m_configName);
-        lists.addStringArray(CFGKEY_INCL, getIncludeList().toArray(
-                new String[0]));
-        lists.addStringArray(CFGKEY_EXCL, getExcludeList().toArray(
-                new String[0]));
+        lists.addStringArray(CFGKEY_INCL, getIncludeList().toArray(new String[0]));
+        lists.addStringArray(CFGKEY_EXCL, getExcludeList().toArray(new String[0]));
         lists.addBoolean(CFGKEY_KEEPALL, m_keepAll);
     }
 

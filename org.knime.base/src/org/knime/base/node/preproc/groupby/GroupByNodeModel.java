@@ -293,9 +293,10 @@ public class GroupByNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_groupByCols.validateSettings(settings);
-        final List<String> groupByCols =
-            ((SettingsModelFilterString) m_groupByCols
-                .createCloneWithValidatedValue(settings)).getIncludeList();
+        // FIX bug 5040: potential problem with clone settings method when in-/exclude list contain same elements
+        final SettingsModelFilterString tmpSett = new SettingsModelFilterString(CFG_GROUP_BY_COLUMNS);
+        tmpSett.loadSettingsFrom(settings);
+        final List<String> groupByCols = tmpSett.getIncludeList();
         m_maxUniqueValues.validateSettings(settings);
         m_enableHilite.validateSettings(settings);
 
@@ -502,10 +503,8 @@ public class GroupByNodeModel extends NodeModel {
             final DataTableSpec origSpec, final List<String> groupByCols)
             throws InvalidSettingsException {
         // remove all column aggregator
-        m_columnAggregators2Use = new ArrayList<ColumnAggregator>(
-                m_columnAggregators.size());
-        final ArrayList<ColumnAggregator> invalidColAggrs =
-            new ArrayList<ColumnAggregator>(1);
+        m_columnAggregators2Use = new ArrayList<ColumnAggregator>(m_columnAggregators.size());
+        final ArrayList<ColumnAggregator> invalidColAggrs = new ArrayList<ColumnAggregator>(1);
         for (final ColumnAggregator colAggr : m_columnAggregators) {
             final DataColumnSpec colSpec = origSpec.getColumnSpec(colAggr
                     .getOriginalColName());

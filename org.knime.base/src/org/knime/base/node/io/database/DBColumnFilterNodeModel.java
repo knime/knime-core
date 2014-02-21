@@ -98,12 +98,11 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         super.validateSettings(settings);
-        SettingsModelFilterString filter = 
-            m_filter.createCloneWithValidatedValue(settings);
-        if (filter.getIncludeList().isEmpty()
-                && !filter.getExcludeList().isEmpty()) {
-            throw new InvalidSettingsException(
-                    "No columns included in output table.");
+        // FIX bug 5040: potential problem with clone settings method when in-/exclude list contain same elements
+        SettingsModelFilterString filter = DBColumnFilterNodeDialogPane.createColumnFilterModel();
+        filter.loadSettingsFrom(settings);
+        if (filter.getIncludeList().isEmpty() && !filter.getExcludeList().isEmpty()) {
+            throw new InvalidSettingsException("No columns included in output table.");
         }
     }
 
@@ -198,7 +197,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
             }
         }
         final String selectQuery = queries[queries.length - 1];
-        buf.append(" FROM (" + selectQuery + ") table_" 
+        buf.append(" FROM (" + selectQuery + ") table_"
                 + System.identityHashCode(this));
         return buf.toString();
     }
