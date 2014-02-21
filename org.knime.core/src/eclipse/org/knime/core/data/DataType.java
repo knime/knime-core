@@ -653,12 +653,14 @@ public final class DataType {
             collectionElementType =
                 load(config.getConfig(CFG_COLL_ELEMENT_TYPE));
         }
+        String[] adapterClassNames = config.getStringArray(CFG_ADAPTER_CLASSES, new String[0]);
+        List<Class<? extends DataValue>> adapterClasses = getClasses(adapterClassNames);
         // if it has a class name it is a native type
         if (cellClassName != null) {
             try {
                 Class<? extends DataCell> cellClass =
                         (Class<? extends DataCell>)GlobalClassCreator.createClass(cellClassName);
-                return getType(cellClass, collectionElementType);
+                return getType(cellClass, collectionElementType, adapterClasses);
             } catch (ClassCastException cce) {
                 throw new InvalidSettingsException(cellClassName
                     + " Class not derived from DataCell: " + cce.getMessage());
@@ -672,8 +674,6 @@ public final class DataType {
         boolean hasPrefValueClass = config.getBoolean(CFG_HAS_PREF_VALUE);
         String[] valueClassNames = config.getStringArray(CFG_VALUE_CLASSES);
         List<Class<? extends DataValue>> valueClasses = getClasses(valueClassNames);
-        String[] adapterClassNames = config.getStringArray(CFG_ADAPTER_CLASSES, new String[0]);
-        List<Class<? extends DataValue>> adapterClasses = getClasses(adapterClassNames);
         try {
             return new DataType(hasPrefValueClass, valueClasses, collectionElementType, adapterClasses);
         } catch (IllegalArgumentException iae) {
