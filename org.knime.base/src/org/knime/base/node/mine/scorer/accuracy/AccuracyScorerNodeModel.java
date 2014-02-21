@@ -160,7 +160,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
 
     private boolean m_sortingReversed;
 
-    private SortingStrategy m_sortingStrategy;
+    private SortingStrategy m_sortingStrategy =  SortingStrategy.InsertionOrder;
 
     /** Counter for correct classification, set in execute. */
     private int m_correctCount;
