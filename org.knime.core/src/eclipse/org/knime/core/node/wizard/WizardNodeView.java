@@ -396,7 +396,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         StringBuilder builder = new StringBuilder();
         builder.append("try {");
         builder.append(jsCode);
-        builder.append("} catch(err) {}");
+        builder.append("} catch(err) {alert(err);}");
         return builder.toString();
     }
 
