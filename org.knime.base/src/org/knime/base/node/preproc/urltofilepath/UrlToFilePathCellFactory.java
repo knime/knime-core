@@ -128,15 +128,19 @@ class UrlToFilePathCellFactory extends AbstractCellFactory {
                     throw new IllegalArgumentException("URL "
                             + cell.toString() + " is not valid!");
 
-                // or insert missing value
                 } else {
-                    // if fail on file does not exist is check, throw exception
-                    if (m_failOnNonExistsingFile) {
-                        throw new IllegalArgumentException("File at URL "
-                                + cell.toString() + " does not exist!");
+                    try {
+                        url = new URL("file", null, cell.toString());
+                    } catch (MalformedURLException e2) {
+                        // if fail on file does not exist is check, throw exception
+                        if (m_failOnNonExistsingFile) {
+                            throw new IllegalArgumentException("File at URL "
+                                    + cell.toString() + " does not exist!");
+                        }
+                        // or insert missing value
+                        newCells = getMissingCells();
+                        return newCells;
                     }
-                    newCells = getMissingCells();
-                    return newCells;
                 }
             }
 

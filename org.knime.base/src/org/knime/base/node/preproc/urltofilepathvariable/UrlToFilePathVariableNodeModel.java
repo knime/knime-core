@@ -220,14 +220,18 @@ class UrlToFilePathVariableNodeModel extends NodeModel {
                 if (m_failOnInvalidUrlModel.getBooleanValue()) {
                     throw new InvalidSettingsException("URL " + urlStr
                             + " is not valid!");
+                } else {
+                    try {
+                        url = new URL("file", null, urlStr);
+                    } catch (MalformedURLException e2) {
+                        // file can not exist since url is invalid
+                        // => throw exception if fail is specified
+                        if (m_failOnInvalidLocationModel.getBooleanValue()) {
+                            throw new InvalidSettingsException("File at " + urlStr + " does not exist!");
+                        }
+                        error = true;
+                    }
                 }
-                // file can not exist since url is invalid
-                // => throw exception if fail is specified
-                if (m_failOnInvalidLocationModel.getBooleanValue()) {
-                    throw new InvalidSettingsException("File at " + urlStr
-                            + " does not exist!");
-                }
-                error = true;
             }
             if (!error) {
                 File file = FileUtil.getFileFromURL(url);
