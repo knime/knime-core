@@ -231,14 +231,14 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         m_falseCount = 0;
 
         // the key store remembers the row key for later hiliting
-        m_keyStore = new List[values.length][values.length];
+        List<RowKey>[][] localKeystore = new List[values.length][values.length];
         // the scorerCount counts the confusions
         m_scorerCount = new int[values.length][values.length];
 
         // init the matrix
-        for (int i = 0; i < m_keyStore.length; i++) {
-            for (int j = 0; j < m_keyStore[i].length; j++) {
-                m_keyStore[i][j] = new ArrayList<RowKey>();
+        for (int i = 0; i < localKeystore.length; i++) {
+            for (int j = 0; j < localKeystore[i].length; j++) {
+                localKeystore[i][j] = new ArrayList<RowKey>();
             }
         }
 
@@ -269,7 +269,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             assert i2 >= 0 : "column spec lacks possible value " + cell2;
             // i2 must be equal to i1 if cells are equal (implication)
             assert (!areEqual || i1 == valuesList.indexOf(cell2));
-            m_keyStore[i1][i2].add(row.getKey());
+            localKeystore[i1][i2].add(row.getKey());
             m_scorerCount[i1][i2]++;
 
             if (areEqual) {
@@ -401,6 +401,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
 
         pushFlowVars(false);
 
+        m_keyStore = localKeystore;
         return new BufferedDataTable[]{result, accTable.getTable()};
     }
 
@@ -443,7 +444,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         m_scorerCount = null;
         m_correctCount = -1;
         m_falseCount = -1;
-        m_keyStore = null;
+        m_keyStore = new List[0][0];
     }
 
     /**
