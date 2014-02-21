@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -131,19 +131,42 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         }
     }
 
+    /** Used to initialize the empty outgoing stack for a node and in case the
+     * merging of stacks fails (as part of a catch-block).
+     * @param id ...
+     */
+    FlowObjectStack(final NodeID id) {
+       this(id, new FlowObjectStack[] {}, /* ignored */ true);
+    }
+
+    /** Used for source nodes (or unconnected nodes) that are initialized with the workflow variable stack.
+     * @param id Id of node
+     * @param workflowVariableStack workflow variables.
+     */
+    FlowObjectStack(final NodeID id, final FlowObjectStack workflowVariableStack) {
+        this(id, new FlowObjectStack[] {workflowVariableStack}, /* ignored */ true);
+    }
+
+    /** Used to initialize input stack for a node that has predecessor nodes (merge).
+     * @param id ...
+     * @param upstreamStacks ...
+     */
+    FlowObjectStack(final NodeID id, final FlowObjectStack[] upstreamStacks) {
+        this(id, upstreamStacks, /* ignored */ true);
+    }
+
     /**
      * Creates new stack based. If the argument stack is empty, null or
      * contains only null elements, an empty stack is created. If there is
      * more than one argument stack available, the stacks will be merged.
      * @param id The Node's ID, must not be null.
-     * @param predStacks The stacks from the predecessor nodes, may be null or
-     * empty.
+     * @param predStacks The stacks from the predecessor nodes, may be null or empty.
+     * @param ignoredFlag A flag to make the method signature unique
      * @throws NullPointerException If <code>id</code> is <code>null</code>.
      * @throws IllegalFlowObjectStackException If the stacks can't be merged.
      */
     @SuppressWarnings("unchecked")
-    FlowObjectStack(final NodeID id,
-            final FlowObjectStack... predStacks) {
+    private FlowObjectStack(final NodeID id, final FlowObjectStack[] predStacks, final boolean ignoredFlag) {
         if (id == null) {
             throw new NullPointerException("NodeID argument must not be null.");
         }
