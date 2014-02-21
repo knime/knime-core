@@ -56,9 +56,14 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import junit.framework.Assert;
 
 import org.junit.Test;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.NodeSettings;
 
 /**
  * Testcases for {@link AdapterCell}.
@@ -66,7 +71,7 @@ import org.knime.core.data.def.StringCell;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 public class AdapterCellTest {
-    private static class MyAdapterCell extends AdapterCell {
+    public static class MyAdapterCell extends AdapterCell {
         public MyAdapterCell(final DataCell valueCell, final AdapterValue predefinedAdapters,
                              final Class<? extends DataValue>... valueClasses) {
             super(valueCell, predefinedAdapters, valueClasses);
@@ -111,6 +116,19 @@ public class AdapterCellTest {
         MissingValue m2 = c2.getAdapterError(DoubleValue.class);
         assertThat("No missing value found for StringValue", m2, is(not(nullValue())));
         assertThat("Unexpected error message in missing value", m2.getError(), is("Something went wrong"));
+    }
+    
+    /** Test for bug 5061. */
+    @Test
+    public void testAdapterTypeSaveLoad_Bug5061() throws Exception {
+        List<Class<? extends DataValue>> adapterList = new ArrayList<Class<? extends DataValue>>();
+        adapterList.add(StringValue.class);
+        DataType type = DataType.getType(MyAdapterCell.class, null, adapterList);
+        final NodeSettings config = new NodeSettings("temp");
+        type.save(config);
+        DataType loadType = DataType.load(config);
+        Assert.assertEquals(type, loadType);
+        Assert.assertTrue(loadType.isAdaptable(StringValue.class));
     }
 
 }
