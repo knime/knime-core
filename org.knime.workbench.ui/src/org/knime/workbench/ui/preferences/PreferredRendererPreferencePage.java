@@ -56,6 +56,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.runtime.preferences.DefaultScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -79,7 +82,8 @@ import org.osgi.framework.FrameworkUtil;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-public class PreferredRendererPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+public class PreferredRendererPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage,
+    IPreferenceChangeListener {
     static final ScopedPreferenceStore CORE_STORE = new ScopedPreferenceStore(InstanceScope.INSTANCE,
         FrameworkUtil.getBundle(DataValueRendererFactory.class).getSymbolicName());
 
@@ -109,6 +113,8 @@ public class PreferredRendererPreferencePage extends FieldEditorPreferencePage i
                 return o1.getDescription().compareTo(o2.getDescription());
             }
         };
+
+   private final Map<String, ComboFieldEditor> m_fieldEditors = new HashMap<String, ComboFieldEditor>();
 
     /**
      * Creates a new preference page.
@@ -182,11 +188,15 @@ public class PreferredRendererPreferencePage extends FieldEditorPreferencePage i
                     new ComboFieldEditor(utilFac.getPreferenceKey(), utilFac.getName(), comboEntries, section);
                 c.setEnabled(comboEntries.length > 1, section);
                 addField(c);
+                m_fieldEditors.put(utilFac.getPreferenceKey(), c);
             }
 
             // add a dummy control which occupies the second column so that the next expander is in a new row
             new Label(getFieldEditorParent(), SWT.NONE);
         }
+
+        DefaultScope.INSTANCE.getNode(FrameworkUtil.getBundle(DataValueRendererFactory.class).getSymbolicName())
+            .addPreferenceChangeListener(this);
     }
 
     /**
@@ -195,5 +205,31 @@ public class PreferredRendererPreferencePage extends FieldEditorPreferencePage i
     @Override
     public void init(final IWorkbench workbench) {
         setPreferenceStore(CORE_STORE);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void dispose() {
+        DefaultScope.INSTANCE.getNode(FrameworkUtil.getBundle(DataValueRendererFactory.class).getSymbolicName())
+            .removePreferenceChangeListener(this);
+        m_fieldEditors.clear();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void preferenceChange(final PreferenceChangeEvent event) {
+        // The default preferences may change while this page is open (e.g. by an action on other preference page, e.g.
+        // Novartis). If this editor is showing only default preference it will not upated its contents with the new
+        // default preference and then store the old default preference as user settings once the preference dialog is
+        // closed with OK. This listener updates the components when the default preferences change.
+
+        ComboFieldEditor editor = m_fieldEditors.get(event.getKey());
+        if (editor != null) {
+            editor.load();
+        }
     }
 }
