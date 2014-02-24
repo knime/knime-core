@@ -50,20 +50,26 @@
 package org.knime.core.node.workflow;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
@@ -179,6 +185,7 @@ public final class WizardExecutionController {
         String pluginName = resConfig.getContributor().getName();
         List<WebResourceLocator> locators = new ArrayList<WebResourceLocator>();
         Map<String, String> resMap = getWebResources(resConfig);
+        Set<String> imports = new HashSet<String>();
         for (IConfigurationElement resElement : resConfig.getChildren(ID_IMPORT_RES)) {
             String path = resElement.getAttribute(ATTR_PATH);
             String type = resElement.getAttribute(ATTR_TYPE);
@@ -198,9 +205,51 @@ public final class WizardExecutionController {
                     sourcePath = path;
                 }
                 locators.add(new WebResourceLocator(pluginName, sourcePath, path, resType));
+                imports.add(sourcePath);
+            }
+        }
+        for (Entry<String, String> entry :resMap.entrySet()) {
+            String targetPath = entry.getKey();
+            String sourcePath = entry.getValue();
+            try {
+                URL url = new URL("platform:/plugin/" + pluginName);
+                File dir = new File(FileLocator.resolve(url).getFile());
+                File file = new File(dir, sourcePath);
+                if (file.exists()) {
+                    addLocators(pluginName, locators, imports, file, sourcePath, targetPath);
+                }
+            } catch (MalformedURLException e) {
+                LOGGER.warn("", e);
+            } catch (IOException e) {
+                LOGGER.warn("Could not resolve web resource " + sourcePath, e);
             }
         }
         return locators;
+    }
+
+    /**
+     * Adds locators to all files contained in the given file.
+     *
+     * @param pluginName Plugin of the web resource
+     * @param locators The list of locators to add to
+     * @param imports Set of files that have already been added as import resource
+     * @param file The file that will be added (if it is a directory contained files will be added recursively)
+     * @param sourcePath The source path of the locator
+     * @param targetPath The target path of the locator
+     */
+    private static void addLocators(final String pluginName, final List<WebResourceLocator> locators,
+        final Set<String> imports, final File file, final String sourcePath, final String targetPath) {
+        if (file.isDirectory()) {
+            for (File innerFile : file.listFiles()) {
+                String innerSource = (sourcePath + "/" + innerFile.getName()).replace("//", "/");
+                String innerTarget = (targetPath + "/" + innerFile.getName()).replace("//", "/");
+                addLocators(pluginName, locators, imports, innerFile, innerSource, innerTarget);
+            }
+        } else {
+            if (!imports.contains(sourcePath)) {
+                locators.add(new WebResourceLocator(pluginName, sourcePath, targetPath, WebResourceType.FILE));
+            }
+        }
     }
 
     /** Temporary workaround to check if the argument workflow contains sub nodes and hence can be used

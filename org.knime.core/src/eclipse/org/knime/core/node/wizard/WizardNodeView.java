@@ -60,6 +60,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.ProgressAdapter;
@@ -303,12 +304,23 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         //pageBuilder.append(debugScript);
 
         for (WebResourceLocator resFile : getResourceFileList()) {
+            String path;
             switch (resFile.getType()) {
                 case CSS:
-                    pageBuilder.append(String.format(cssString, resFile.getResource().getName()));
+                    path = resFile.getRelativePathTarget();
+                    if (path.startsWith("/")) {
+                        path = path.substring(1);
+                    }
+                    pageBuilder.append(String.format(cssString, path));
                     break;
-                case JAVASCRIPT :
-                    pageBuilder.append(String.format(scriptString, resFile.getResource().getName()));
+                case JAVASCRIPT:
+                    path = resFile.getRelativePathTarget();
+                    if (path.startsWith("/")) {
+                        path = path.substring(1);
+                    }
+                    pageBuilder.append(String.format(scriptString, path));
+                    break;
+                case FILE:
                     break;
                 default:
                     throw new IOException("Unrecognized resource type " + resFile.getType());
@@ -334,7 +346,9 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
 
     private void copyWebResources() throws IOException {
         for (WebResourceLocator resFile : getResourceFileList()) {
-            FileUtils.copyFileToDirectory(resFile.getResource(), m_tempFolder);
+            FileUtils.copyFileToDirectory(resFile.getResource(),
+                new File(m_tempFolder, FilenameUtils.separatorsToSystem(resFile.getRelativePathTarget()))
+                    .getParentFile());
         }
     }
 
