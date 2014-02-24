@@ -137,8 +137,7 @@ public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
                 exec.setProgress("Caching intermediate results (iteration "
                         + m_iteration + ")");
                 ExecutionContext ctx = exec.createSubExecutionContext(amount);
-                m_currentAppendTable =
-                    exec.createBufferedDataTable(m_currentAppendTable, ctx);
+                m_currentAppendTable = copy(m_currentAppendTable, ctx);
                 ctx.setProgress(1.0);
             }
         } else {
