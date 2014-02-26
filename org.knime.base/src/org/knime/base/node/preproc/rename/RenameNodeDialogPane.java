@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -161,7 +161,7 @@ public class RenameNodeDialogPane extends NodeDialogPane {
         m_individualsScrollPanel = new JScrollPane(m_individualsPanel);
         tabPanel.add(m_individualsScrollPanel, BorderLayout.EAST);
 
-        addTab("Change columnssss", tabPanel);
+        addTab("Change columns", tabPanel);
     }
 
     /**
