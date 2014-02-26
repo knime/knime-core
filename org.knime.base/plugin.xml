@@ -1554,6 +1554,12 @@
             factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopEnd2NodeFactory"
             id="org.knime.base.node.meta.looper.recursive.RecursiveLoopEnd2NodeFactory">
       </node>
+      <node
+            category-path="/manipulation/pmml"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.pmml.xml2pmml.XML2PMMLNodeFactory"
+            id="org.knime.base.node.preproc.pmml.xml2pmml.XML2PMMLNodeFactory">
+      </node>
 
    </extension>
    

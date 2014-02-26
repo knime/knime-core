@@ -259,6 +259,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/xml/PMMLValue.java" type="org.knime.core.data.xml.PMMLValue">
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.xml.PMMLValue"/>
+                <message_argument value="UTILITY"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/CopyNodePersistor.java" type="org.knime.core.node.CopyNodePersistor">
         <filter id="643842064">
             <message_arguments>

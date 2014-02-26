@@ -188,5 +188,12 @@
                suggestAsDefault="true">
          </renderer>
       </dataValue>
+      <dataValue
+            valueClass="org.knime.core.data.xml.PMMLValue">
+         <renderer
+               rendererFactoryClass="org.knime.core.data.xml.XMLValueRenderer$Factory"
+               suggestAsDefault="true">
+         </renderer>
+      </dataValue>
    </extension>
 </plugin>
