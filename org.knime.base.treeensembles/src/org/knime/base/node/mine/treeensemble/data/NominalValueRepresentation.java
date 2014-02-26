@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,22 +55,22 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class NominalValueRepresentation {
 
     private String m_nominalValue;
+
     private int m_assignedInteger;
+
     private double m_totalFrequency;
 
     /**
      * @param nominalValue
      * @param assignedInteger
      */
-    NominalValueRepresentation(final String nominalValue,
-            final int assignedInteger,
-            final double initialFreqency) {
+    NominalValueRepresentation(final String nominalValue, final int assignedInteger, final double initialFreqency) {
         m_nominalValue = nominalValue;
         m_assignedInteger = assignedInteger;
         m_totalFrequency = initialFreqency;
@@ -102,7 +102,8 @@ public final class NominalValueRepresentation {
     }
 
     /**
-     * @param output */
+     * @param output
+     */
     public void save(final DataOutputStream output) throws IOException {
         output.writeUTF(m_nominalValue);
         output.writeInt(m_assignedInteger);
@@ -111,12 +112,10 @@ public final class NominalValueRepresentation {
 
     /**
      *  */
-    static NominalValueRepresentation load(
-            final DataInputStream input) throws IOException {
+    static NominalValueRepresentation load(final DataInputStream input) throws IOException {
         String nominalValue = input.readUTF();
         int assignedInteger = input.readInt();
         double totalFrequency = input.readDouble();
-        return new NominalValueRepresentation(nominalValue,
-                assignedInteger, totalFrequency);
+        return new NominalValueRepresentation(nominalValue, assignedInteger, totalFrequency);
     }
 }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -53,7 +53,7 @@ package org.knime.core.node.workflow;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  * Basic interface for extra information.
@@ -81,7 +81,7 @@ public interface UIInformation extends Cloneable {
      *
      * @see #save
      */
-    void load(final NodeSettingsRO config, final WorkflowPersistorVersion1xx.LoadVersion loadVersion)
+    void load(final NodeSettingsRO config, final FileWorkflowPersistor.LoadVersion loadVersion)
         throws InvalidSettingsException;
 
     /** UIInformation objects are cloneable without further restriction.

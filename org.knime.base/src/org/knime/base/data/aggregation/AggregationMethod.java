@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,6 +50,7 @@ package org.knime.base.data.aggregation;
 
 import java.awt.Component;
 import java.util.Collection;
+import java.util.Comparator;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -76,6 +77,30 @@ import org.knime.core.node.NotConfigurableException;
  * @author Tobias Koetter, University of Konstanz
  */
 public interface AggregationMethod extends Comparable<AggregationMethod> {
+
+    /**
+     * Comparator that sorts {@link AggregationMethod}s based on their label that is displayed to the
+     * user in ascending order.
+     * @see #getLabel()
+     * @since 2.10
+     */
+    public static final Comparator<AggregationMethod> ASC_NAME_COMPARATOR = new Comparator<AggregationMethod>() {
+
+        /**{@inheritDoc}*/
+        @Override
+        public int compare(final AggregationMethod o1, final AggregationMethod o2) {
+            if (o1 == o2) {
+                return 0;
+            }
+            if (o1 == null) {
+                return -1;
+            }
+            if (o2 == null) {
+                return 1;
+            }
+            return o1.getLabel().compareTo(o2.getLabel());
+        }
+    };
 
     /**
      * The unique identifier of the method that is used for registration and

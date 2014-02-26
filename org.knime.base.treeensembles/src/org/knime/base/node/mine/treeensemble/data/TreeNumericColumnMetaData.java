@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,21 +55,22 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class TreeNumericColumnMetaData
-    extends TreeAttributeColumnMetaData {
+public final class TreeNumericColumnMetaData extends TreeAttributeColumnMetaData {
 
     /**
-     * @param attributeName */
+     * @param attributeName
+     */
     TreeNumericColumnMetaData(final String attributeName) {
         super(attributeName);
     }
 
     /**
      * @param input
-     * @throws IOException */
+     * @throws IOException
+     */
     TreeNumericColumnMetaData(final DataInputStream input) throws IOException {
         super(input);
     }

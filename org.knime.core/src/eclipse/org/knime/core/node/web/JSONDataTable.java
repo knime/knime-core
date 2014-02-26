@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Vector;
 
+import org.apache.commons.codec.binary.Base64;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -63,9 +64,13 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.image.png.PNGImageValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.web.JSONDataTableSpec.JSTypes;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
 /**
@@ -73,6 +78,8 @@ import org.knime.core.node.web.JSONDataTableSpec.JSTypes;
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @since 2.9
  */
+@JsonAutoDetect
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public class JSONDataTable {
 
     /* serialized members */
@@ -217,6 +224,8 @@ public class JSONDataTable {
                 return ((DoubleValue)cell).getDoubleValue();
             case STRING:
                 return ((StringValue)cell).getStringValue();
+            case PNG:
+                return new String(Base64.encodeBase64(((PNGImageValue)cell).getImageContent().getByteArray()));
             default:
                 return null;
         }

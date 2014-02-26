@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -53,7 +53,7 @@ package org.knime.base.node.mine.treeensemble.learner;
 import org.knime.base.node.mine.treeensemble.data.TreeNumericColumnData;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class GainRatioImpurity extends GainImpurity {
@@ -66,10 +66,9 @@ public final class GainRatioImpurity extends GainImpurity {
 
     /** {@inheritDoc} */
     @Override
-    public double getGain(final double priorImpurity, final double postSplitImpurity,
-            final double[] partitionWeights, final double totalWeight) {
-        double attributeEntropy =
-            TreeNumericColumnData.entropy(partitionWeights, totalWeight);
+    public double getGain(final double priorImpurity, final double postSplitImpurity, final double[] partitionWeights,
+        final double totalWeight) {
+        double attributeEntropy = TreeNumericColumnData.entropy(partitionWeights, totalWeight);
         if (attributeEntropy < TreeNumericColumnData.EPSILON) {
             // all elements in one partition
             return Double.NEGATIVE_INFINITY;

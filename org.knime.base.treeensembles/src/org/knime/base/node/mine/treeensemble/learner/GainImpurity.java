@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -53,7 +53,7 @@ package org.knime.base.node.mine.treeensemble.learner;
 import org.knime.base.node.mine.treeensemble.data.TreeNumericColumnData;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class GainImpurity implements IImpurity {
@@ -65,15 +65,14 @@ public class GainImpurity implements IImpurity {
 
     /** {@inheritDoc} */
     @Override
-    public final double getPartitionImpurity(final double[] targetCounts,
-            final double partitionWeight) {
+    public final double getPartitionImpurity(final double[] targetCounts, final double partitionWeight) {
         return TreeNumericColumnData.entropy(targetCounts, partitionWeight);
     }
 
     /** {@inheritDoc} */
     @Override
-    public final double getPostSplitImpurity(final double[] partitionValues,
-            final double[] partitionWeights, final double totalWeight) {
+    public final double getPostSplitImpurity(final double[] partitionValues, final double[] partitionWeights,
+        final double totalWeight) {
         double v = 0.0;
         for (int i = 0; i < partitionValues.length; i++) {
             v += partitionWeights[i] * partitionValues[i];
@@ -83,9 +82,8 @@ public class GainImpurity implements IImpurity {
 
     /** {@inheritDoc} */
     @Override
-    public double getGain(final double priorImpurity,
-            final double postSplitImpurity,
-            final double[] partitionWeights, final double totalWeight) {
+    public double getGain(final double priorImpurity, final double postSplitImpurity, final double[] partitionWeights,
+        final double totalWeight) {
         return priorImpurity - postSplitImpurity;
     }
 

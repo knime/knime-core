@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -125,8 +125,8 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
-import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
@@ -142,7 +142,6 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResult
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -423,6 +422,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     Workflow getWorkflow() {
         return m_workflow;
+    }
+
+    /** @return the workflowMutex */
+    Object getWorkflowMutex() {
+        return m_workflowMutex;
     }
 
     ///////////////////////////////////////
@@ -2063,6 +2067,27 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    private WizardExecutionController m_wizardExecutionController;
+
+    /** Creates lazy and returns an instance that controls the wizard execution of this workflow. These controller
+     * are not meant to be used by multiple clients (only one steps back/forth in the workflow), though this is not
+     * asserted by the returned controller object.
+     * @return A controller for the wizard execution (a new or a previously created and modified instance).
+     * @throws IllegalStateException If this workflow is not a project.
+     * @since 2.10
+     */
+    public WizardExecutionController getWizardExecutionController() {
+        if (!isProject()) {
+            throw new IllegalStateException(String.format("Workflow '%s' is not a project", getNameWithID()));
+        }
+        synchronized (m_workflowMutex) {
+            if (m_wizardExecutionController == null) {
+                m_wizardExecutionController = new WizardExecutionController(this);
+            }
+            return m_wizardExecutionController;
+        }
+    }
+
     /** Execute workflow until nodes of the given class - those will
      * usually be QuickForm or view nodes requiring user interaction.
      *
@@ -3105,6 +3130,35 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * This essentially checks if the nodes can be moved (=deleted from
      * the original WFM) or if they are executed
      *
+     * @param subNodeID the id of the metanode to be expanded
+     * @return null of ok otherwise reason (String) why not
+     * @since 2.10
+     */
+    public String canExpandSubNode(final NodeID subNodeID) {
+        synchronized (m_workflowMutex) {
+            if (!(getNodeContainer(subNodeID) instanceof SubNodeContainer)) {
+                // wrong type of node!
+                return "Can not expand "
+                        + "selected node (not a subnode).";
+            }
+            if (!canRemoveNode(subNodeID)) {
+                // we can not - bail!
+                    return "Can not move subnode or nodes inside subnode "
+                            + "(node(s) or successor still executing?).";
+                }
+                WorkflowManager wfm = ((SubNodeContainer)getNodeContainer(subNodeID)).getWorkflowManager();
+                if (wfm.containsExecutedNode()) {
+                    return "Can not expand executed sub node (reset first).";
+            }
+            return null;
+        }
+    }
+
+    /** Check if we can expand the selected metanode into a set of nodes in
+     * this WFM.
+     * This essentially checks if the nodes can be moved (=deleted from
+     * the original WFM) or if they are executed
+     *
      * @param orgID the id of the metanode to be expanded
      * @return null of ok otherwise reason (String) why not
      */
@@ -3139,14 +3193,39 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalArgumentException if expand can not be done
      */
     public WorkflowCopyContent expandMetaNode(final NodeID wfmID) throws IllegalArgumentException {
+        return expandSubWorkflow(wfmID, (WorkflowManager)getNodeContainer(wfmID));
+    }
+
+    /** Expand the selected metanode into a set of nodes in
+     * this WFM and remove the old metanode.
+     *
+     * @param nodeID ID of the node containing the sub workflow
+     * @param subWFM The sub workflow
+     * @return copied content containing nodes and annotations
+     * @throws IllegalArgumentException if expand can not be done
+     * @since 2.10
+     */
+    public WorkflowCopyContent expandSubWorkflow(final NodeID nodeID, final WorkflowManager subWFM)
+            throws IllegalArgumentException {
         synchronized (m_workflowMutex) {
-            // check again, to be sure...
-            String res = canExpandMetaNode(wfmID);
-            if (res != null) {
-                throw new IllegalArgumentException(res);
+            NodeContainer node = getNodeContainer(nodeID);
+            HashSet<NodeID> virtualNodes = new HashSet<NodeID>();
+            if (node instanceof WorkflowManager) {
+                // check again, to be sure...
+                String res = canExpandMetaNode(nodeID);
+                if (res != null) {
+                    throw new IllegalArgumentException(res);
+                }
+            } else if (node instanceof SubNodeContainer) {
+                // check again, to be sure...
+                String res = canExpandSubNode(nodeID);
+                if (res != null) {
+                    throw new IllegalArgumentException(res);
+                }
+                SubNodeContainer snc = (SubNodeContainer)node;
+                virtualNodes.add(snc.getVirtualInNodeID());
+                virtualNodes.add(snc.getVirtualOutNodeID());
             }
-            //
-            WorkflowManager subWFM = (WorkflowManager)getNodeContainer(wfmID);
             // retrieve all nodes from metanode
             Collection<NodeContainer> ncs = subWFM.getNodeContainers();
             NodeID[] orgIDs = new NodeID[ncs.size()];
@@ -3174,40 +3253,63 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 oldIDsHash.put(orgIDs[i], newIDs[i]);
                 newIDsHashSet.add(newIDs[i]);
             }
-            // connect connections TO the sub workflow:
-            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(subWFM.getID())) {
-                int destPortIndex = cc.getDestPort();
-                for (ConnectionContainer subCC : subWFM.m_workflow.getConnectionsBySource(subWFM.getID())) {
-                    if (subCC.getSourcePort() == destPortIndex) {
-                        if (subCC.getDest().equals(subWFM.getID())) {
-                            // THROUGH connection - skip here, handled below!
-                        } else {
-                        // reconnect
-                        NodeID newID = oldIDsHash.get(subCC.getDest());
-                        this.addConnection(cc.getSource(), cc.getSourcePort(), newID, subCC.getDestPort());
+            if (node instanceof WorkflowManager) {
+                // connect connections TO the sub workflow:
+                for (ConnectionContainer cc : m_workflow.getConnectionsByDest(subWFM.getID())) {
+                    int destPortIndex = cc.getDestPort();
+                    for (ConnectionContainer subCC : subWFM.m_workflow.getConnectionsBySource(subWFM.getID())) {
+                        if (subCC.getSourcePort() == destPortIndex) {
+                            if (subCC.getDest().equals(subWFM.getID())) {
+                                // THROUGH connection - skip here, handled below!
+                            } else {
+                                // reconnect
+                                NodeID newID = oldIDsHash.get(subCC.getDest());
+                                this.addConnection(cc.getSource(), cc.getSourcePort(), newID, subCC.getDestPort());
+                            }
+                        }
                     }
                 }
-            }
-            }
-            // connect connection FROM the sub workflow
-            for (ConnectionContainer cc : getOutgoingConnectionsFor(subWFM.getID())) {
-                int sourcePortIndex = cc.getSourcePort();
-                ConnectionContainer subCC = subWFM.getIncomingConnectionFor(subWFM.getID(), sourcePortIndex);
-                if (subCC != null) {
-                    if (subCC.getSource().equals(subWFM.getID())) {
-                        // THROUGH connection
-                        ConnectionContainer incomingCC
-                                        = this.getIncomingConnectionFor(subWFM.getID(), subCC.getSourcePort());
-                        // delete existing connection from Metanode to
-                        // Node (done automatically) and reconnect
-                        this.addConnection(incomingCC.getSource(), incomingCC.getSourcePort(),
-                                cc.getDest(), cc.getDestPort());
-                    } else {
-                    // delete existing connection from Metanode to Node (automatically) and reconnect
-                    NodeID newID = oldIDsHash.get(subCC.getSource());
-                    this.addConnection(newID, subCC.getSourcePort(), cc.getDest(), cc.getDestPort());
+                // connect connection FROM the sub workflow
+                for (ConnectionContainer cc : getOutgoingConnectionsFor(subWFM.getID())) {
+                    int sourcePortIndex = cc.getSourcePort();
+                    ConnectionContainer subCC = subWFM.getIncomingConnectionFor(subWFM.getID(), sourcePortIndex);
+                    if (subCC != null) {
+                        if (subCC.getSource().equals(subWFM.getID())) {
+                            // THROUGH connection
+                            ConnectionContainer incomingCC
+                                            = this.getIncomingConnectionFor(subWFM.getID(), subCC.getSourcePort());
+                            // delete existing connection from Metanode to
+                            // Node (done automatically) and reconnect
+                            this.addConnection(incomingCC.getSource(), incomingCC.getSourcePort(),
+                                    cc.getDest(), cc.getDestPort());
+                        } else {
+                            // delete existing connection from Metanode to Node (automatically) and reconnect
+                            NodeID newID = oldIDsHash.get(subCC.getSource());
+                            this.addConnection(newID, subCC.getSourcePort(), cc.getDest(), cc.getDestPort());
+                        }
+                    }
                 }
-            }
+            } else if (node instanceof SubNodeContainer) {
+                // connect connections TO the sub workflow:
+                for (ConnectionContainer outerConnection : m_workflow.getConnectionsByDest(nodeID)) {
+                    for (ConnectionContainer innerConnection : subWFM.m_workflow.getConnectionsBySource(
+                        ((SubNodeContainer)node).getVirtualInNodeID())) {
+                        if (outerConnection.getDestPort() == innerConnection.getSourcePort()) {
+                            addConnection(outerConnection.getSource(), outerConnection.getSourcePort(),
+                                oldIDsHash.get(innerConnection.getDest()), innerConnection.getDestPort());
+                        }
+                    }
+                }
+                // connect connections FROM the sub workflow:
+                for (ConnectionContainer outerConnection : m_workflow.getConnectionsBySource(nodeID)) {
+                    for (ConnectionContainer innerConnection : subWFM.m_workflow.getConnectionsByDest(
+                        ((SubNodeContainer)node).getVirtualOutNodeID())) {
+                        if (outerConnection.getSourcePort() == innerConnection.getDestPort()) {
+                            addConnection(oldIDsHash.get(innerConnection.getSource()), innerConnection.getSourcePort(),
+                                outerConnection.getDest(), outerConnection.getDestPort());
+                        }
+                    }
+                }
             }
             // move nodes so that their center lies on the position of
             // the old metanode!
@@ -3230,7 +3332,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
             }
-            NodeUIInformation uii = subWFM.getUIInformation();
+            NodeUIInformation uii = node.getUIInformation();
             if (uii != null) {
                 int[] metaBounds = uii.getBounds();
                 int xShift = metaBounds[0] - (xmin + xmax) / 2;
@@ -3250,8 +3352,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 // move bendpoints of connections between moved nodes
                 for (ConnectionContainer cc : this.getConnectionContainers()) {
-                    if (       (newIDsHashSet.contains(cc.getSource()))
-                            && (newIDsHashSet.contains(cc.getDest())) ) {
+                    if ((newIDsHashSet.contains(cc.getSource()))
+                            && (newIDsHashSet.contains(cc.getDest()))) {
                         ConnectionUIInformation cuii = cc.getUIInfo();
                         if (cuii != null) {
                             ConnectionUIInformation newUI =
@@ -3263,8 +3365,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
                 }
             }
+            // remove virtual nodes
+            for (NodeID id : virtualNodes) {
+                for (ConnectionContainer cc : m_workflow.getConnectionsByDest(oldIDsHash.get(id))) {
+                    m_workflow.removeConnection(cc);
+                }
+                m_workflow.removeNode(oldIDsHash.get(id));
+            }
             // and finally remove old sub workflow
-            this.removeNode(wfmID);
+            this.removeNode(nodeID);
             return newContent;
         }
     }
@@ -3272,20 +3381,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Convert the selected metanode into a subnode.
      *
      * @param wfmID the id of the metanode to be converted.
-//     * @throws IllegalArgumentException if expand can not be done
-     * @since 2.9
+     * @return ID to the created sub node.
+     * @since 2.10
      */
-    public void convertMetaNodeToSubNode(final NodeID wfmID) {
-// throws IllegalArgumentException {
+    public NodeID convertMetaNodeToSubNode(final NodeID wfmID) {
         synchronized (m_workflowMutex) {
-            // check again, to be sure...
-//            String res = canExpandMetaNode(wfmID);
-//            if (res != null) {
-//                throw new IllegalArgumentException(res);
-//            }
             //
             WorkflowManager subWFM = (WorkflowManager)getNodeContainer(wfmID);
-            SubNodeContainer subNC = new SubNodeContainer(this, m_workflow.createUniqueID(), subWFM);
+            SubNodeContainer subNC = new SubNodeContainer(this, m_workflow.createUniqueID(), subWFM, subWFM.getName());
             this.addNodeContainer(subNC, /*propagateChanges=*/true);
             // rewire connections TO the old metanode:
             for (ConnectionContainer cc : m_workflow.getConnectionsByDest(subWFM.getID())) {
@@ -3308,6 +3411,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             subNC.setUIInformation(uii);
             this.removeNode(subWFM.getID());
             configureNodeAndSuccessors(subNC.getID(), /*configureMyself=*/true);
+            return subNC.getID();
         }
     }
 
@@ -4364,7 +4468,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 job.cancel();
             } else {
                 for (NodeContainer nc : m_workflow.getNodeValues()) {
-                    nc.cancelExecution();
+                    if (nc.getInternalState().isExecutionInProgress()) {
+                        nc.cancelExecution();
+                    }
                 }
                 checkForNodeStateChanges(true);
             }
@@ -5828,7 +5934,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeContext.pushContext(meta);
         try {
             File localDir = ResolverUtil.resolveURItoLocalOrTempFile(sourceURI);
-            WorkflowPersistorVersion1xx loadPersistor = WorkflowManager.createLoadPersistor(localDir, loadHelper);
+            FileWorkflowPersistor loadPersistor = WorkflowManager.createLoadPersistor(localDir, loadHelper);
             loadPersistor.setNameOverwrite(localDir.getName()); // used in preLoadNodeContainer
             loadPersistor.setTemplateInformationLinkURI(sourceURI);
             loadResultChild = tempParent.load(loadPersistor, new ExecutionMonitor(), false);
@@ -6393,7 +6499,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
-    protected NodeContainerPersistor getCopyPersistor(
+    protected CopyWorkflowPersistor getCopyPersistor(
             final HashMap<Integer, ContainerTable> tableRep,
             final FileStoreHandlerRepository fileStoreHandlerRepository,
             final boolean preserveDeletableFlags,
@@ -6668,7 +6774,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @noreference Clients should only be required to load projects using
      * {@link #loadProject(File, ExecutionMonitor, WorkflowLoadHelper)}
      */
-    public static WorkflowPersistorVersion1xx createLoadPersistor(
+    public static FileWorkflowPersistor createLoadPersistor(
             final File directory, final WorkflowLoadHelper loadHelper)
             throws IOException, UnsupportedWorkflowVersionException {
         if (directory == null) {
@@ -6703,12 +6809,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             versionString = "0.9.0";
         }
         boolean isProject = !loadHelper.isTemplateFlow();
-        WorkflowPersistorVersion1xx persistor;
+        FileWorkflowPersistor persistor;
         // TODO only create new hash map if workflow is a project?
         HashMap<Integer, ContainerTable> tableRep = new GlobalTableRepository();
         WorkflowFileStoreHandlerRepository fileStoreHandlerRepository =
             new WorkflowFileStoreHandlerRepository();
-        LoadVersion version = WorkflowPersistorVersion1xx.parseVersion(versionString);
+        LoadVersion version = FileWorkflowPersistor.parseVersion(versionString);
         if (version == null) { // future version
             StringBuilder versionDetails = new StringBuilder(versionString);
             String createdBy = settings.getString(CFG_CREATED_BY, null);
@@ -6723,7 +6829,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         "Unable to load workflow, version string \"" + v + "\" is unknown");
             default:
                 version = LoadVersion.FUTURE;
-                persistor = new WorkflowPersistorVersion1xx(tableRep, fileStoreHandlerRepository, workflowknimeRef,
+                persistor = new FileWorkflowPersistor(tableRep, fileStoreHandlerRepository, workflowknimeRef,
                         loadHelper, version, isProject);
                 persistor.setDirtyAfterLoad();
             }
@@ -6734,7 +6840,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         + "might not be possible to load all data or some nodes can't be configured. "
                         + "Please re-configure and/or re-execute these nodes.");
             }
-            persistor = new WorkflowPersistorVersion1xx(tableRep, fileStoreHandlerRepository, workflowknimeRef,
+            persistor = new FileWorkflowPersistor(tableRep, fileStoreHandlerRepository, workflowknimeRef,
                 loadHelper, version, isProject);
         }
         return persistor;
@@ -6785,7 +6891,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         try {
-            WorkflowPersistorVersion1xx persistor = createLoadPersistor(directory, loadHelper);
+            FileWorkflowPersistor persistor = createLoadPersistor(directory, loadHelper);
             return load(persistor, exec, keepNodeMessages);
         } finally {
             if (!isTemplate) {
@@ -6811,7 +6917,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws UnsupportedWorkflowVersionException If the version of the
      *             workflow is unknown (future version)
      */
-    public WorkflowLoadResult load(final WorkflowPersistorVersion1xx persistor,
+    public WorkflowLoadResult load(final FileWorkflowPersistor persistor,
             final ExecutionMonitor exec, final boolean keepNodeMessages)
     throws IOException, InvalidSettingsException, CanceledExecutionException,
             UnsupportedWorkflowVersionException {
@@ -7339,7 +7445,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             try {
                 final boolean isWorkingDirectory =
                         workflowDirRef.equals(getNodeContainerDirectory());
-                final LoadVersion saveVersion = WorkflowPersistorVersion1xx.VERSION_LATEST;
+                final LoadVersion saveVersion = FileWorkflowPersistor.VERSION_LATEST;
                 if (m_loadVersion != null
                         && !m_loadVersion.equals(saveVersion)) {
                     LOGGER.info("Workflow was created with another version "
@@ -7357,7 +7463,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     m_authorInformation = new AuthorInformation(m_authorInformation);
                 }
                 workflowDirRef.getFile().mkdirs();
-                WorkflowPersistorVersion1xx.save(
+                FileWorkflowPersistor.save(
                     this, workflowDirRef, exec, isSaveData);
             } finally {
                 workflowDirRef.writeUnlock();
@@ -7686,13 +7792,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
-    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView() {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public WebTemplate getWebTemplate() {
+    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V getInteractiveView() {
         return null;
     }
 

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,6 +52,7 @@ package org.knime.base.node.mine.neural.mlp2;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -211,6 +212,7 @@ public class MLPPredictorNodeModel extends NodeModel {
             indices[counter] = pos;
             counter++;
         }
+        Arrays.sort(indices);
         return indices;
     }
 

@@ -1,7 +1,7 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Dec 19, 2005 (Kilian Thiel): created
  */
@@ -65,6 +65,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.mine.sota.logic.SotaManager;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.StringValue;
@@ -80,7 +81,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.ColumnSelectionPanel;
 
 /**
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
 public class SotaHierarchicalFuzzySettings extends JPanel {
@@ -91,16 +92,18 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
     private ColumnSelectionPanel m_columnSelectionPanel;
 
     private NodeLogger m_logger;
-    
+
     private DialogComponentColumnNameSelection m_classColumn;
     private SettingsModelString m_classColumnModel;
-    
+
     private DialogComponentBoolean m_useOutData;
     private SettingsModelBoolean m_useOutDataModel;
 
+    private JPanel m_classColumnBorderPanel;
+
     /**
      * Constructor.
-     * 
+     *
      * @param logger logger object
      */
     @SuppressWarnings("unchecked")
@@ -110,7 +113,7 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
         GridBagConstraints gbc = new GridBagConstraints();
         m_logger = logger;
 
-        
+
         m_jchbUseHierarchicalFuzzyData = new JCheckBox();
         m_jchbUseHierarchicalFuzzyData.setText("Use hierarchical fuzzy data");
         m_jchbUseHierarchicalFuzzyData
@@ -124,7 +127,7 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.insets = new Insets(5, 5, 5, 5);
         add(m_jchbUseHierarchicalFuzzyData, gbc);
-        
+
 
         m_columnSelectionPanel = new ColumnSelectionPanel("Hierarchical level",
                 IntValue.class);
@@ -136,24 +139,24 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.insets = new Insets(5, 5, 20, 5);
         add(m_columnSelectionPanel, gbc);
-        
-        
+
+
         m_useOutDataModel = new SettingsModelBoolean(
-                SotaConfigKeys.CFGKEY_USE_CLASS_DATA, 
+                SotaConfigKeys.CFGKEY_USE_CLASS_DATA,
                 SotaNodeModel.DEFAULT_USE_OUTDATA);
         m_useOutDataModel.addChangeListener(new UseOutDataChangeListener());
-        m_useOutData = new DialogComponentBoolean(m_useOutDataModel, 
+        m_useOutData = new DialogComponentBoolean(m_useOutDataModel,
                 "Use class column");
         gbc = new GridBagConstraints();
         gbc.gridy = 2;
         gbc.gridx = 0;
         this.add(m_useOutData.getComponentPanel(), gbc);
-        
-        
-        JPanel borderPanel = new JPanel();
+
+
+        m_classColumnBorderPanel = new JPanel();
         TitledBorder border = BorderFactory.createTitledBorder(
                 new EtchedBorder(), "Class column");
-        borderPanel.setBorder(border);
+        m_classColumnBorderPanel.setBorder(border);
         m_classColumnModel = new SettingsModelString(
                 SotaConfigKeys.CFGKEY_CLASSCOL, "");
         m_classColumn = new DialogComponentColumnNameSelection(
@@ -161,8 +164,8 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
         gbc = new GridBagConstraints();
         gbc.gridy = 3;
         gbc.gridx = 0;
-        borderPanel.add(m_classColumn.getComponentPanel());
-        this.add(borderPanel, gbc);
+        m_classColumnBorderPanel.add(m_classColumn.getComponentPanel());
+        this.add(m_classColumnBorderPanel, gbc);
     }
 
     private boolean isHierarchicalFuzzyData() {
@@ -175,13 +178,13 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
 
     /**
      * Saves all settings to settings object.
-     * 
+     *
      * @param settings object to store settings in
-     * 
+     *
      * @throws InvalidSettingsException If components could not save settings
      * to given settings instance.
      */
-    public void saveSettingsTo(final NodeSettingsWO settings) 
+    public void saveSettingsTo(final NodeSettingsWO settings)
     throws InvalidSettingsException {
         assert (settings != null);
 
@@ -189,20 +192,20 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
                 isHierarchicalFuzzyData());
         settings.addString(SotaConfigKeys.CFGKEY_HIERARCHICAL_FUZZY_LEVEL,
                 getHierarchicalFuzzyLevelCell());
-        
-        
+
+
         m_classColumn.saveSettingsTo(settings);
-        m_useOutData.saveSettingsTo(settings);        
+        m_useOutData.saveSettingsTo(settings);
     }
 
     /**
      * Method loadSettingsFrom.
-     * 
+     *
      * @param settings the NodeSettings object of the containing NodeDialogPane
      * @param specs the DataTableSpec[] of the containing NodeDialogPane
-     * 
-     * @throws NotConfigurableException If components could not load the 
-     * settings from the given settings instance. 
+     *
+     * @throws NotConfigurableException If components could not load the
+     * settings from the given settings instance.
      */
     public void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException  {
@@ -215,24 +218,57 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
             m_logger.debug("Invalid Settings", e7);
         }
 
-        try {
-            m_columnSelectionPanel.update(specs[SotaNodeModel.INPORT], settings
-                    .getString(SotaConfigKeys.CFGKEY_HIERARCHICAL_FUZZY_LEVEL));
-        } catch (InvalidSettingsException e) {
-            m_logger.debug("Invalid Settings", e);
-        } catch (NotConfigurableException e) {
-            m_logger.debug("No IntVal in DataTableSpec");
+        boolean containsPotentialFuzzyLevelColumn = false;
+        for (DataColumnSpec cs : specs[0]) {
+            if (cs.getType().isCompatible(IntValue.class)) {
+                containsPotentialFuzzyLevelColumn = true;
+                break;
+            }
         }
 
+        if (containsPotentialFuzzyLevelColumn) {
+            try {
+                m_columnSelectionPanel.update(specs[SotaNodeModel.INPORT], settings
+                    .getString(SotaConfigKeys.CFGKEY_HIERARCHICAL_FUZZY_LEVEL));
+            } catch (InvalidSettingsException e) {
+                m_logger.debug("Invalid Settings", e);
+            } catch (NotConfigurableException e) {
+                m_logger.debug("No IntVal in DataTableSpec");
+            }
+            m_jchbUseHierarchicalFuzzyData.setEnabled(true);
+            m_columnSelectionPanel.setVisible(true);
+        } else {
+            m_jchbUseHierarchicalFuzzyData.setSelected(false);
+            m_jchbUseHierarchicalFuzzyData.setEnabled(false);
+            m_columnSelectionPanel.setVisible(false);
+        }
+
+
         enableComboBox();
-        
-        m_classColumn.loadSettingsFrom(settings, specs);
-        m_useOutData.loadSettingsFrom(settings, specs);
+
+        boolean containsPotentialClassColumn = false;
+        for (DataColumnSpec cs : specs[0]) {
+            if (cs.getType().isCompatible(StringValue.class)) {
+                containsPotentialClassColumn = true;
+                break;
+            }
+        }
+
+        if (containsPotentialClassColumn) {
+            m_classColumn.loadSettingsFrom(settings, specs);
+            m_useOutData.loadSettingsFrom(settings, specs);
+            m_classColumnBorderPanel.setVisible(true);
+        } else {
+            m_useOutDataModel.setBooleanValue(false);
+            m_useOutDataModel.setEnabled(false);
+            m_classColumnModel.setEnabled(false);
+            m_classColumnBorderPanel.setVisible(false);
+        }
     }
 
     /**
      * Controller of SotaHierarchicalFuzzySettings.
-     * 
+     *
      * @author Kilian Thiel, University of Konstanz
      */
     class SotaHierarchicalFuzzySettingsController implements ActionListener {
@@ -252,7 +288,7 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
             m_columnSelectionPanel.setEnabled(false);
         }
     }
-    
+
     private class UseOutDataChangeListener implements ChangeListener {
         /**
          * {@inheritDoc}
@@ -260,5 +296,5 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
         public void stateChanged(final ChangeEvent e) {
             m_classColumnModel.setEnabled(m_useOutDataModel.getBooleanValue());
         }
-    }      
+    }
 }

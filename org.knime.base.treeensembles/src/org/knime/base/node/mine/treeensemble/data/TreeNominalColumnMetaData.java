@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,25 +55,25 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class TreeNominalColumnMetaData
-    extends TreeAttributeColumnMetaData {
+public final class TreeNominalColumnMetaData extends TreeAttributeColumnMetaData {
 
     private final NominalValueRepresentation[] m_values;
 
     /**
-     * @param attributeName */
-    TreeNominalColumnMetaData(final String attributeName,
-            final NominalValueRepresentation[] values) {
+     * @param attributeName
+     */
+    TreeNominalColumnMetaData(final String attributeName, final NominalValueRepresentation[] values) {
         super(attributeName);
         m_values = values;
     }
 
     /**
      * @param input
-     * @throws IOException */
+     * @throws IOException
+     */
     TreeNominalColumnMetaData(final DataInputStream input) throws IOException {
         super(input);
         int length = input.readInt();
@@ -84,16 +84,16 @@ public final class TreeNominalColumnMetaData
     }
 
     /**
-     * The list of different nominal values (length = #distinct values in the
-     * column). The index in the array corresponds to the assigned integer,
-     * i.e.
-     *
+     * The list of different nominal values (length = #distinct values in the column). The index in the array
+     * corresponds to the assigned integer, i.e.
+     * 
      * <pre>
      * NominalValueRepresentation[] list = getNominalValueList();
      * for (int i = 0; i &lt; list.length; i++) {
      *     assert list[i].getAssignedInteger() == i;
      * }
      * </pre>
+     * 
      * @return the sorted list nominal values
      */
     public NominalValueRepresentation[] getValues() {

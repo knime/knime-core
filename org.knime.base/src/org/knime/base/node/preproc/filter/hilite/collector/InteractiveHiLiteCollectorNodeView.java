@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -75,7 +75,7 @@ import org.knime.core.node.tableview.TableView;
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @since 2.8
  */
-public class InteractiveHiLiteCollectorNodeView extends InteractiveClientNodeView<InteractiveHiLiteCollectorNodeModel, InteractiveHiLiteCollectorViewContent> {
+public class InteractiveHiLiteCollectorNodeView extends InteractiveClientNodeView<InteractiveHiLiteCollectorNodeModel, InteractiveHiLiteCollectorViewContent, InteractiveHiLiteCollectorViewContent> {
 
     private final TableView m_table;
 

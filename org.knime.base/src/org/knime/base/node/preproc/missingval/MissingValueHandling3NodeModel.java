@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -114,7 +114,7 @@ public class MissingValueHandling3NodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws CanceledExecutionException {
-        StringBuffer warningMessageBuffer = new StringBuffer();
+        StringBuilder warningMessageBuffer = new StringBuilder();
         BufferedDataTable out = MissingValueHandling3Table.
             createMissingValueHandlingTable(
                     inData[0], m_colSettings, exec, warningMessageBuffer);
@@ -160,8 +160,12 @@ public class MissingValueHandling3NodeModel extends NodeModel {
             throws InvalidSettingsException {
         DataTableSpec in = inSpecs[0];
         // column domain may changed when using fixed replacement
+        StringBuilder warningMessageBuffer = new StringBuilder();
         DataTableSpec out = MissingValueHandling3Table.createTableSpec(in,
-                m_colSettings);
+                m_colSettings, warningMessageBuffer);
+        if (warningMessageBuffer.length() > 0) {
+            setWarningMessage(warningMessageBuffer.toString());
+        }
         return new DataTableSpec[]{out};
     }
 }

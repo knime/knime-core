@@ -79,18 +79,18 @@
 	<option name="Use hierarchical fuzzy data">
 		Check to cluster hierarchical fuzzy rules hierarchically. The column
 		with the fuzzy rule level has to be selected in the drop down menu on 
-		the right. The drop down menu will be enabled when the checkbox is
-		checked.
+		the right. The input table needs at least one integer column for this option being enabled.
+        The drop down menu will be enabled when the checkbox is checked.
 	</option>
 	<option name="Hierarchical level">
 		If the checkbox on the left is checked, to cluster hierarchical fuzzy
 		rules, the column with the fuzzy rule level must be chosen by 
-		selecting it in the drop down menu.
+		selecting it in the drop down menu. Only integer columns can be chosen for the level.
 	</option>
 	<option name="Use class column">
 		Check to use the class data specified by the drop down box below.
 		The class data will be trained too for the use of class prediction by the
-		SOTA Predictor node.
+		SOTA Predictor node. The input table needs at least one string column for this option being enabled.
 	</option>	
 	<option name="Class column">
 		Specifies the column containing the class data. Only string columns can

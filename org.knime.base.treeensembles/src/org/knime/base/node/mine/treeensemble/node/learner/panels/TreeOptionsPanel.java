@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -79,13 +79,12 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeOptionsPanel extends JPanel {
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(TreeOptionsPanel.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(TreeOptionsPanel.class);
 
     private final JComboBox m_splitCriterionsBox;
 
@@ -122,13 +121,9 @@ public final class TreeOptionsPanel extends JPanel {
             }
         });
         m_splitCriterionsBox = new JComboBox(SplitCriterion.values());
-        m_useAverageSplitPointsChecker =
-            new JCheckBox(
-            "Use mid point splits (only for numeric attributes)");
-        m_maxLevelSpinner = new JSpinner(
-                new SpinnerNumberModel(3, 1, Integer.MAX_VALUE, 1));
-        m_maxLevelChecker =
-            new JCheckBox("Limit number of levels (tree depth)");
+        m_useAverageSplitPointsChecker = new JCheckBox("Use mid point splits (only for numeric attributes)");
+        m_maxLevelSpinner = new JSpinner(new SpinnerNumberModel(3, 1, Integer.MAX_VALUE, 1));
+        m_maxLevelChecker = new JCheckBox("Limit number of levels (tree depth)");
         m_maxLevelChecker.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
@@ -157,16 +152,12 @@ public final class TreeOptionsPanel extends JPanel {
             }
         });
         m_minChildNodeSizeChecker.doClick();
-        m_hardCodedRootColumnBox =
-            new ColumnSelectionComboxBox((Border)null, NominalValue.class,
-                    DoubleValue.class);
-        m_hardCodedRootColumnChecker =
-            new JCheckBox("Use fixed root attribute");
+        m_hardCodedRootColumnBox = new ColumnSelectionComboxBox((Border)null, NominalValue.class, DoubleValue.class);
+        m_hardCodedRootColumnChecker = new JCheckBox("Use fixed root attribute");
         m_hardCodedRootColumnChecker.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
-                m_hardCodedRootColumnBox
-                .setEnabled(m_hardCodedRootColumnChecker.isSelected());
+                m_hardCodedRootColumnBox.setEnabled(m_hardCodedRootColumnChecker.isSelected());
             }
         });
         m_hardCodedRootColumnChecker.doClick();
@@ -234,9 +225,8 @@ public final class TreeOptionsPanel extends JPanel {
 
     }
 
-    public void loadSettingsFrom(final DataTableSpec inSpec,
-            final TreeEnsembleLearnerConfiguration cfg)
-    throws NotConfigurableException {
+    public void loadSettingsFrom(final DataTableSpec inSpec, final TreeEnsembleLearnerConfiguration cfg)
+        throws NotConfigurableException {
         int nrNominalCols = 0;
         int nrNumericCols = 0;
         for (DataColumnSpec col : inSpec) {
@@ -249,11 +239,9 @@ public final class TreeOptionsPanel extends JPanel {
         }
         boolean hasOrdinaryColumnsInInput = nrNominalCols > 1 || nrNumericCols > 0;
         m_splitCriterionsBox.setSelectedItem(cfg.getSplitCriterion());
-        m_useAverageSplitPointsChecker.setSelected(
-                cfg.isUseAverageSplitPoints());
+        m_useAverageSplitPointsChecker.setSelected(cfg.isUseAverageSplitPoints());
         int maxLevel = cfg.getMaxLevels();
-        if ((maxLevel != TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE)
-                != m_maxLevelChecker.isSelected()) {
+        if ((maxLevel != TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE) != m_maxLevelChecker.isSelected()) {
             m_maxLevelChecker.doClick();
         }
         if (maxLevel == TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE) {
@@ -263,8 +251,8 @@ public final class TreeOptionsPanel extends JPanel {
         }
 
         int minNodeSize = cfg.getMinNodeSize();
-        if ((minNodeSize != TreeEnsembleLearnerConfiguration.MIN_NODE_SIZE_UNDEFINED)
-                != m_minNodeSizeChecker.isSelected()) {
+        if ((minNodeSize != TreeEnsembleLearnerConfiguration.MIN_NODE_SIZE_UNDEFINED) != m_minNodeSizeChecker
+            .isSelected()) {
             m_minNodeSizeChecker.doClick();
         }
         if (minNodeSize == TreeEnsembleLearnerConfiguration.MIN_NODE_SIZE_UNDEFINED) {
@@ -273,8 +261,8 @@ public final class TreeOptionsPanel extends JPanel {
             m_minNodeSizeSpinner.setValue(minNodeSize);
         }
         int minChildNodeSize = cfg.getMinChildSize();
-        if ((minChildNodeSize != TreeEnsembleLearnerConfiguration.MIN_CHILD_SIZE_UNDEFINED)
-                != m_minChildNodeSizeChecker.isSelected()) {
+        if ((minChildNodeSize != TreeEnsembleLearnerConfiguration.MIN_CHILD_SIZE_UNDEFINED) != m_minChildNodeSizeChecker
+            .isSelected()) {
             m_minChildNodeSizeChecker.doClick();
         }
         if (minChildNodeSize == TreeEnsembleLearnerConfiguration.MIN_CHILD_SIZE_UNDEFINED) {
@@ -296,8 +284,7 @@ public final class TreeOptionsPanel extends JPanel {
         } else {
             // no appropriate root attribute
             // --> clear checkbox, disable selection
-            m_hardCodedRootColumnBox.update(
-                    AttributeSelectionPanel.NO_VALID_INPUT_SPEC, "");
+            m_hardCodedRootColumnBox.update(AttributeSelectionPanel.NO_VALID_INPUT_SPEC, "");
             if (m_hardCodedRootColumnChecker.isSelected()) {
                 m_hardCodedRootColumnChecker.doClick();
             }
@@ -314,33 +301,29 @@ public final class TreeOptionsPanel extends JPanel {
         try {
             m_hardCodedRootColumnBox.update(filtered, prevSelected);
         } catch (NotConfigurableException nfe) {
-            LOGGER.coding("Unable to update column list upon target "
-                    + "selection change", nfe);
+            LOGGER.coding("Unable to update column list upon target " + "selection change", nfe);
         }
     }
 
-    public void saveSettings(final TreeEnsembleLearnerConfiguration cfg)
-    throws InvalidSettingsException {
-        cfg.setSplitCriterion((SplitCriterion)m_splitCriterionsBox
-                .getSelectedItem());
-        cfg.setUseAverageSplitPoints(m_useAverageSplitPointsChecker
-                .isSelected());
-        int maxLevel = m_maxLevelChecker.isSelected()
-        ? (Integer)m_maxLevelSpinner.getValue()
+    public void saveSettings(final TreeEnsembleLearnerConfiguration cfg) throws InvalidSettingsException {
+        cfg.setSplitCriterion((SplitCriterion)m_splitCriterionsBox.getSelectedItem());
+        cfg.setUseAverageSplitPoints(m_useAverageSplitPointsChecker.isSelected());
+        int maxLevel =
+            m_maxLevelChecker.isSelected() ? (Integer)m_maxLevelSpinner.getValue()
                 : TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE;
         cfg.setMaxLevels(maxLevel);
 
-        int minNodeSize = m_minNodeSizeChecker.isSelected()
-        ? (Integer)m_minNodeSizeSpinner.getValue()
+        int minNodeSize =
+            m_minNodeSizeChecker.isSelected() ? (Integer)m_minNodeSizeSpinner.getValue()
                 : TreeEnsembleLearnerConfiguration.MIN_NODE_SIZE_UNDEFINED;
 
-        int minChildNodeSize = m_minChildNodeSizeChecker.isSelected()
-                ? (Integer)m_minChildNodeSizeSpinner.getValue()
-                        : TreeEnsembleLearnerConfiguration.MIN_CHILD_SIZE_UNDEFINED;
+        int minChildNodeSize =
+            m_minChildNodeSizeChecker.isSelected() ? (Integer)m_minChildNodeSizeSpinner.getValue()
+                : TreeEnsembleLearnerConfiguration.MIN_CHILD_SIZE_UNDEFINED;
         cfg.setMinSizes(minNodeSize, minChildNodeSize);
 
-        String hardCodedRootCol = m_hardCodedRootColumnChecker.isSelected()
-        ? m_hardCodedRootColumnBox.getSelectedColumn() : null;
+        String hardCodedRootCol =
+            m_hardCodedRootColumnChecker.isSelected() ? m_hardCodedRootColumnBox.getSelectedColumn() : null;
         cfg.setHardCodedRootColumn(hardCodedRootCol);
     }
 

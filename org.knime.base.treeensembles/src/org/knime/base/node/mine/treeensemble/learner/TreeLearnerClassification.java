@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -71,16 +71,17 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class TreeLearnerClassification extends AbstractTreeLearner {
 
     /**
      * @param config
-     * @param data */
-    TreeLearnerClassification(final TreeEnsembleLearnerConfiguration config,
-            final TreeData data, final RandomData randomData) {
+     * @param data
+     */
+    TreeLearnerClassification(final TreeEnsembleLearnerConfiguration config, final TreeData data,
+        final RandomData randomData) {
         super(config, data, randomData);
         if (config.isRegression()) {
             throw new IllegalStateException("Can't learn classification model on numeric target");
@@ -89,44 +90,38 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
 
     /** {@inheritDoc} */
     @Override
-    public TreeModelClassification learnSingleTree(final ExecutionMonitor exec,
-            final RandomData rd) throws CanceledExecutionException {
+    public TreeModelClassification learnSingleTree(final ExecutionMonitor exec, final RandomData rd)
+        throws CanceledExecutionException {
         final TreeData data = getData();
         final RowSample rowSampling = getRowSampling();
         final TreeEnsembleLearnerConfiguration config = getConfig();
         final TreeTargetNominalColumnData targetColumn = (TreeTargetNominalColumnData)data.getTargetColumn();
         double[] dataMemberships = new double[data.getNrRows()];
         for (int i = 0; i < dataMemberships.length; i++) {
-//            dataMemberships[i] = m_rowSampling.getCountFor(i) > 0 ? 1.0 : 0.0;
+            //            dataMemberships[i] = m_rowSampling.getCountFor(i) > 0 ? 1.0 : 0.0;
             dataMemberships[i] = rowSampling.getCountFor(i);
         }
-        ClassificationPriors targetPriors =
-            targetColumn.getDistribution(dataMemberships, config);
+        ClassificationPriors targetPriors = targetColumn.getDistribution(dataMemberships, config);
         BitSet forbiddenColumnSet = new BitSet(data.getNrAttributes());
-        TreeNodeClassification rootNode = buildTreeNode(exec, 0, dataMemberships,
-                TreeNodeSignature.ROOT_SIGNATURE,
-                targetPriors, forbiddenColumnSet);
+        TreeNodeClassification rootNode =
+            buildTreeNode(exec, 0, dataMemberships, TreeNodeSignature.ROOT_SIGNATURE, targetPriors, forbiddenColumnSet);
         assert forbiddenColumnSet.cardinality() == 0;
         rootNode.setTreeNodeCondition(TreeNodeTrueCondition.INSTANCE);
         return new TreeModelClassification(rootNode);
     }
 
-    private SplitCandidate findBestSplitClassification(final int currentDepth,
-            final double[] rowSampleWeights,
-            final TreeNodeSignature treeNodeSignature,
-            final ClassificationPriors targetPriors,
-            final BitSet forbiddenColumnSet) {
+    private SplitCandidate findBestSplitClassification(final int currentDepth, final double[] rowSampleWeights,
+        final TreeNodeSignature treeNodeSignature, final ClassificationPriors targetPriors,
+        final BitSet forbiddenColumnSet) {
         final TreeData data = getData();
         final ColumnSampleStrategy colSamplingStrategy = getColSamplingStrategy();
         final TreeEnsembleLearnerConfiguration config = getConfig();
         final int maxLevels = config.getMaxLevels();
-        if (maxLevels != TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE
-                && currentDepth >= maxLevels) {
+        if (maxLevels != TreeEnsembleLearnerConfiguration.MAX_LEVEL_INFINITE && currentDepth >= maxLevels) {
             return null;
         }
         final int minNodeSize = config.getMinNodeSize();
-        if (minNodeSize
-                != TreeEnsembleLearnerConfiguration.MIN_NODE_SIZE_UNDEFINED) {
+        if (minNodeSize != TreeEnsembleLearnerConfiguration.MIN_NODE_SIZE_UNDEFINED) {
             if (targetPriors.getNrRecords() < minNodeSize) {
                 return null;
             }
@@ -135,28 +130,22 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
         if (priorImpurity < TreeColumnData.EPSILON) {
             return null;
         }
-        final TreeTargetNominalColumnData targetColumn =
-            (TreeTargetNominalColumnData)data.getTargetColumn();
+        final TreeTargetNominalColumnData targetColumn = (TreeTargetNominalColumnData)data.getTargetColumn();
         SplitCandidate splitCandidate = null;
         if (currentDepth == 0 && config.getHardCodedRootColumn() != null) {
-            final TreeAttributeColumnData rootColumn = data.getColumn(
-                    config.getHardCodedRootColumn());
-            return rootColumn.calcBestSplitClassification(
-                    rowSampleWeights, targetPriors, targetColumn);
+            final TreeAttributeColumnData rootColumn = data.getColumn(config.getHardCodedRootColumn());
+            return rootColumn.calcBestSplitClassification(rowSampleWeights, targetPriors, targetColumn);
         } else {
             double bestGainValue = 0.0;
-            final ColumnSample columnSample = colSamplingStrategy
-                .getColumnSampleForTreeNode(treeNodeSignature);
+            final ColumnSample columnSample = colSamplingStrategy.getColumnSampleForTreeNode(treeNodeSignature);
             for (TreeAttributeColumnData col : columnSample) {
-                if (forbiddenColumnSet.get(
-                        col.getMetaData().getAttributeIndex())) {
+                if (forbiddenColumnSet.get(col.getMetaData().getAttributeIndex())) {
                     continue;
                 }
-                SplitCandidate currentColSplit = col.calcBestSplitClassification(
-                        rowSampleWeights, targetPriors, targetColumn);
+                SplitCandidate currentColSplit =
+                    col.calcBestSplitClassification(rowSampleWeights, targetPriors, targetColumn);
                 if (currentColSplit != null) {
-                    double gainValue =
-                        currentColSplit.getGainValue();
+                    double gainValue = currentColSplit.getGainValue();
                     if (gainValue > bestGainValue) {
                         bestGainValue = gainValue;
                         splitCandidate = currentColSplit;
@@ -168,34 +157,30 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
     }
 
     private TreeNodeClassification buildTreeNode(final ExecutionMonitor exec, final int currentDepth,
-            final double[] rowSampleWeights, final TreeNodeSignature treeNodeSignature,
-            final ClassificationPriors targetPriors, final BitSet forbiddenColumnSet)
-    throws CanceledExecutionException {
+        final double[] rowSampleWeights, final TreeNodeSignature treeNodeSignature,
+        final ClassificationPriors targetPriors, final BitSet forbiddenColumnSet) throws CanceledExecutionException {
         final TreeData data = getData();
         final TreeEnsembleLearnerConfiguration config = getConfig();
         exec.checkCanceled();
-        SplitCandidate bestSplit = findBestSplitClassification(currentDepth,
-                rowSampleWeights, treeNodeSignature, targetPriors,
+        SplitCandidate bestSplit =
+            findBestSplitClassification(currentDepth, rowSampleWeights, treeNodeSignature, targetPriors,
                 forbiddenColumnSet);
         if (bestSplit == null) {
-            return new TreeNodeClassification(treeNodeSignature, targetPriors);
+            return new TreeNodeClassification(treeNodeSignature, targetPriors, getConfig());
         }
         TreeAttributeColumnData splitColumn = bestSplit.getColumnData();
-        final int attributeIndex =
-            splitColumn.getMetaData().getAttributeIndex();
+        final int attributeIndex = splitColumn.getMetaData().getAttributeIndex();
         boolean markAttributeAsForbidden = !bestSplit.canColumnBeSplitFurther();
         forbiddenColumnSet.set(attributeIndex, markAttributeAsForbidden);
 
         TreeNodeCondition[] childConditions = bestSplit.getChildConditions();
         if (childConditions.length > Short.MAX_VALUE) {
-            throw new RuntimeException("Too many children when splitting "
-                    + "attribute " + bestSplit.getColumnData()
-                    + " (maximum supported: " + Short.MAX_VALUE + "): "
-                    + childConditions.length);
+            throw new RuntimeException("Too many children when splitting " + "attribute " + bestSplit.getColumnData()
+                + " (maximum supported: " + Short.MAX_VALUE + "): " + childConditions.length);
         }
         TreeNodeClassification[] childNodes = new TreeNodeClassification[childConditions.length];
         final double[] dataMemberships = rowSampleWeights;
-//        final double[] dataMemberships = rowSampleWeights.getMemberships();
+        //        final double[] dataMemberships = rowSampleWeights.getMemberships();
         final double[] childMemberships = new double[dataMemberships.length];
         final TreeTargetNominalColumnData targetColumn = (TreeTargetNominalColumnData)data.getTargetColumn();
         for (int i = 0; i < childConditions.length; i++) {
@@ -204,16 +189,15 @@ final class TreeLearnerClassification extends AbstractTreeLearner {
             splitColumn.updateChildMemberships(cond, dataMemberships, childMemberships);
             ClassificationPriors childTargetPriors = targetColumn.getDistribution(childMemberships, config);
             TreeNodeSignature childSignature = treeNodeSignature.createChildSignature((short)i);
-            childNodes[i] = buildTreeNode(exec, currentDepth + 1, childMemberships, childSignature, childTargetPriors,
+            childNodes[i] =
+                buildTreeNode(exec, currentDepth + 1, childMemberships, childSignature, childTargetPriors,
                     forbiddenColumnSet);
             childNodes[i].setTreeNodeCondition(cond);
         }
         if (markAttributeAsForbidden) {
             forbiddenColumnSet.set(attributeIndex, false);
         }
-        return new TreeNodeClassification(treeNodeSignature, targetPriors, childNodes);
+        return new TreeNodeClassification(treeNodeSignature, targetPriors, childNodes, getConfig());
     }
-
-
 
 }

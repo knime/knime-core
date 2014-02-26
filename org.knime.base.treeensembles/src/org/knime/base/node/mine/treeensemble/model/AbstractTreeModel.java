@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -59,7 +59,7 @@ import java.util.List;
 import org.knime.base.node.mine.treeensemble.data.PredictorRecord;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class AbstractTreeModel<N extends AbstractTreeNode> {
@@ -67,7 +67,8 @@ public abstract class AbstractTreeModel<N extends AbstractTreeNode> {
     private final N m_rootNode;
 
     /**
-     * @param rootNode */
+     * @param rootNode
+     */
     AbstractTreeModel(final N rootNode) {
         m_rootNode = rootNode;
     }

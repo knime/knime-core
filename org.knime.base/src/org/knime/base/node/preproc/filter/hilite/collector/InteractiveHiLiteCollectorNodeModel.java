@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -82,6 +82,7 @@ import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.web.ValidationError;
 
 /**
  *
@@ -89,7 +90,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @since 2.8
  */
 public class InteractiveHiLiteCollectorNodeModel extends NodeModel
-        implements InteractiveNode<InteractiveHiLiteCollectorViewContent> {
+        implements InteractiveNode<InteractiveHiLiteCollectorViewContent, InteractiveHiLiteCollectorViewContent> {
 
     private final Map<RowKey, Map<Integer, String>> m_annotationMap =
             new LinkedHashMap<RowKey, Map<Integer, String>>();
@@ -369,21 +370,38 @@ public class InteractiveHiLiteCollectorNodeModel extends NodeModel
 
     /**
      * {@inheritDoc}
+     * @since 2.10
      */
     @Override
-    public InteractiveHiLiteCollectorViewContent createViewContent() {
+    public InteractiveHiLiteCollectorViewContent getViewRepresentation() {
         // TODO Auto-generated method stub
+        return null;
+    }
+
+    /** {@inheritDoc}
+     * @since 2.10*/
+    @Override
+    public ValidationError validateViewValue(final InteractiveHiLiteCollectorViewContent viewContent) {
         return null;
     }
 
     /**
      * {@inheritDoc}
-     * @since 2.9
+     * @since 2.10
      */
     @Override
-    public void loadViewContent(final InteractiveHiLiteCollectorViewContent viewContent) {
+    public void loadViewValue(final InteractiveHiLiteCollectorViewContent viewContent) {
         // TODO Auto-generated method stub
 
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    public InteractiveHiLiteCollectorViewContent getViewValue() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

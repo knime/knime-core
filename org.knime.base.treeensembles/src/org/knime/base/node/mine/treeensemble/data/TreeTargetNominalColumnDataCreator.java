@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -62,22 +62,21 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowKey;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeTargetNominalColumnDataCreator extends TreeTargetColumnDataCreator {
 
     private final Map<String, NominalValueRepresentation> m_string2NomValRepMap;
+
     private final List<Integer> m_data;
 
     TreeTargetNominalColumnDataCreator(final DataColumnSpec colSpec) {
         super(colSpec);
         if (!colSpec.getType().isCompatible(NominalValue.class)) {
-            throw new IllegalStateException("Type not nominal: "
-                    + colSpec.getName());
+            throw new IllegalStateException("Type not nominal: " + colSpec.getName());
         }
-        m_string2NomValRepMap =
-            new HashMap<String, NominalValueRepresentation>();
+        m_string2NomValRepMap = new HashMap<String, NominalValueRepresentation>();
         m_data = new ArrayList<Integer>();
     }
 
@@ -89,8 +88,7 @@ public class TreeTargetNominalColumnDataCreator extends TreeTargetColumnDataCrea
         NominalValueRepresentation rep = m_string2NomValRepMap.get(str);
         if (rep == null) {
             assignedValue = m_string2NomValRepMap.size();
-            m_string2NomValRepMap.put(str,
-                    new NominalValueRepresentation(str, assignedValue, 1.0));
+            m_string2NomValRepMap.put(str, new NominalValueRepresentation(str, assignedValue, 1.0));
         } else {
             assignedValue = rep.getAssignedInteger();
             rep.addToFrequency(1.0);
@@ -100,8 +98,7 @@ public class TreeTargetNominalColumnDataCreator extends TreeTargetColumnDataCrea
 
     @Override
     public TreeTargetNominalColumnData createColumnData() {
-        NominalValueRepresentation[] nominalValueReps =
-            new NominalValueRepresentation[m_string2NomValRepMap.size()];
+        NominalValueRepresentation[] nominalValueReps = new NominalValueRepresentation[m_string2NomValRepMap.size()];
         for (NominalValueRepresentation v : m_string2NomValRepMap.values()) {
             int index = v.getAssignedInteger();
             nominalValueReps[index] = v;
@@ -112,8 +109,8 @@ public class TreeTargetNominalColumnDataCreator extends TreeTargetColumnDataCrea
         for (int i = 0; i < dataAsArray.length; i++) {
             dataAsArray[i] = m_data.get(i);
         }
-        TreeTargetColumnMetaData metaData = new TreeTargetNominalColumnMetaData(
-                getColumnSpec().getName(), nominalValueReps);
+        TreeTargetColumnMetaData metaData =
+            new TreeTargetNominalColumnMetaData(getColumnSpec().getName(), nominalValueReps);
         return new TreeTargetNominalColumnData(metaData, rowKeysAsArray, dataAsArray);
     }
 

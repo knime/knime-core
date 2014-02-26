@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,26 +50,24 @@
  */
 package org.knime.base.node.mine.treeensemble.model;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNodeSignature {
 
-    public static final TreeNodeSignature ROOT_SIGNATURE =
-        new TreeNodeSignature();
+    public static final TreeNodeSignature ROOT_SIGNATURE = new TreeNodeSignature();
 
     private final short[] m_signature;
 
     /**
      *  */
     private TreeNodeSignature() {
-        this(new short[] {0});
+        this(new short[]{0});
     }
 
     private TreeNodeSignature(final short[] signature) {
@@ -122,8 +120,7 @@ public final class TreeNodeSignature {
         }
     }
 
-    public static TreeNodeSignature load(final DataInputStream in)
-        throws IOException {
+    public static TreeNodeSignature load(final TreeModelDataInputStream in) throws IOException {
         final int length = in.readInt();
         short[] signature = new short[length];
         for (int i = 0; i < length; i++) {

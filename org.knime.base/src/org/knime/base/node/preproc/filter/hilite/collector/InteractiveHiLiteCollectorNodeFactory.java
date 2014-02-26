@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -60,7 +60,7 @@ import org.knime.core.node.interactive.InteractiveNodeFactoryExtension;
  * @since 2.8
  */
 public class InteractiveHiLiteCollectorNodeFactory extends NodeFactory<InteractiveHiLiteCollectorNodeModel> implements
-        InteractiveNodeFactoryExtension<InteractiveHiLiteCollectorNodeModel, InteractiveHiLiteCollectorViewContent> {
+        InteractiveNodeFactoryExtension<InteractiveHiLiteCollectorNodeModel, InteractiveHiLiteCollectorViewContent, InteractiveHiLiteCollectorViewContent> {
 
     /**
      * {@inheritDoc}

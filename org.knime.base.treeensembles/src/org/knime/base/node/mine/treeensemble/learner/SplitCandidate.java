@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -54,18 +54,18 @@ import org.knime.base.node.mine.treeensemble.data.TreeAttributeColumnData;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class SplitCandidate {
 
     private final TreeAttributeColumnData m_columnData;
+
     private final double m_gainValue;
 
     /**
      *  */
-    protected SplitCandidate(final TreeAttributeColumnData columnData,
-            final double gainValue) {
+    protected SplitCandidate(final TreeAttributeColumnData columnData, final double gainValue) {
         m_columnData = columnData;
         m_gainValue = gainValue;
     }
@@ -86,8 +86,7 @@ public abstract class SplitCandidate {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return "Split on \"" + getColumnData().getMetaData() + "\" "
-            + "- post split impurity " + getGainValue();
+        return "Split on \"" + getColumnData().getMetaData() + "\" " + "- post split impurity " + getGainValue();
     }
 
 }

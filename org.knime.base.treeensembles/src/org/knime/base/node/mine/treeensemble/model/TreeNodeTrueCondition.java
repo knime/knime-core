@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,13 +55,12 @@ import org.knime.base.node.mine.decisiontree2.PMMLTruePredicate;
 import org.knime.base.node.mine.treeensemble.data.PredictorRecord;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeNodeTrueCondition extends TreeNodeCondition {
 
-    public static final TreeNodeTrueCondition INSTANCE =
-        new TreeNodeTrueCondition();
+    public static final TreeNodeTrueCondition INSTANCE = new TreeNodeTrueCondition();
 
     /**
      *  */

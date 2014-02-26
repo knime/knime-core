@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -53,7 +53,7 @@ package org.knime.base.node.mine.treeensemble.sample.row;
 import org.apache.commons.math.random.RandomData;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class SubsetWithReplacementRowSample implements RowSample {
@@ -62,11 +62,9 @@ public class SubsetWithReplacementRowSample implements RowSample {
 
     /**
      *  */
-    public SubsetWithReplacementRowSample(final int nrRows,
-            final double fraction, final RandomData rd) {
+    public SubsetWithReplacementRowSample(final int nrRows, final double fraction, final RandomData rd) {
         m_perRowCounts = new int[nrRows];
-        int subsetSize = fraction >= 1.0 ? nrRows
-                : (int)Math.round(fraction * nrRows);
+        int subsetSize = fraction >= 1.0 ? nrRows : (int)Math.round(fraction * nrRows);
         for (int i = 0; i < subsetSize; i++) {
             int next = rd.nextInt(0, nrRows - 1);
             m_perRowCounts[next] += 1;

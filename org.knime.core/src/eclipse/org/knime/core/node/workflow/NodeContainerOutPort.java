@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -58,6 +58,7 @@ import javax.swing.SwingUtilities;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ViewUtils;
@@ -81,15 +82,27 @@ public class NodeContainerOutPort extends NodePortAdaptor implements NodeOutPort
      */
     private OutPortView m_portView;
 
-    /**
-     * Creates a new output port with a fixed and ID (should unique to all other
-     * output ports of this node) for the given node.
-     *
-     * @param snc the underlying SingleNodeContainer.
+    /** Create output for {@link NativeNodeContainer}.
+     * @param nnc the underlying NativeNodeContainer.
      * @param portIndex the (output) port index.
+     * @noreference This constructor is not intended to be referenced by clients.
      */
-    public NodeContainerOutPort(final SingleNodeContainer snc, final int portIndex) {
-        super(portIndex, snc.getOutputType(portIndex));
+    public NodeContainerOutPort(final NativeNodeContainer nnc, final int portIndex) {
+        this(nnc, nnc.getOutputType(portIndex), portIndex);
+    }
+
+    /** Create output for {@link SubNodeContainer}.
+     * @param snc the underlying SubNodeContainer.
+     * @param type the port type of the output.
+     * @param portIndex the (output) port index.
+     * @noreference This constructor is not intended to be referenced by clients.
+     */
+    public NodeContainerOutPort(final SubNodeContainer snc, final PortType type, final int portIndex) {
+        this((SingleNodeContainer)snc, type, portIndex);
+    }
+
+    private NodeContainerOutPort(final SingleNodeContainer snc, final PortType type, final int portIndex) {
+        super(portIndex, type);
         m_snc = snc;
         m_portView = null;
         // TODO register this object as listener to spec/object... changes with Node!!

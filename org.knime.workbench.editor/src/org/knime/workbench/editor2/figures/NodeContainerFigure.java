@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -805,6 +805,9 @@ public class NodeContainerFigure extends RectangleFigure {
         private static final String BACKGROUND_QUICKFORM =
             "icons/node/background_quickform.png";
 
+        private static final String BACKGROUND_SUBNODE =
+            "icons/node/background_subnode.png";
+
         private final Label m_backgroundIcon;
 
         /**
@@ -950,6 +953,8 @@ public class NodeContainerFigure extends RectangleFigure {
                 str = BACKGROUND_SCOPE_END;
             } else if (type.equals(NodeType.QuickForm)) {
                 str = BACKGROUND_QUICKFORM;
+            } else if (type.equals(NodeType.Subnode)) {
+                str = BACKGROUND_SUBNODE;
             } else {
                 str = BACKGROUND_UNKNOWN;
             }

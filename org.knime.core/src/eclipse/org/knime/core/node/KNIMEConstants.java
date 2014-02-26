@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -309,30 +309,18 @@ public final class KNIMEConstants {
         REV = Integer.parseInt(parts[2]);
         BUILD = parts[3];
 
+        String stars = "**********************************************************************************************";
+        String spaces = "                                    ";
 
-        String line1 =
-                "***  Welcome to KNIME v" + VERSION
-                        + " - the Konstanz Information Miner  ***";
-        String line2 =
-                "Copyright, 2003 - 2014, Uni Konstanz and "
-                        + "KNIME GmbH, Germany";
+        String line1 = "***  Welcome to KNIME v" + VERSION + " - the Konstanz Information Miner  ***";
+        String line2 = "Copyright by Uni Konstanz and KNIME GmbH, Germany";
         line2 =
-                "***"
-                        + "        ".substring(0, (line1.length()
-                                - line2.length() - 6) / 2)
-                        + line2
-                        + "        ".substring(0, (int)Math.ceil((line1
-                                .length()
-                                - line2.length() - 6) / 2.0)) + "***";
-
-        String stars =
-                "***************************************************"
-                        + "*******************************************";
+            "***" + spaces.substring(0, (line1.length() - line2.length() - 6) / 2) + line2
+                + spaces.substring(0, (int)Math.ceil((line1.length() - line2.length() - 6) / 2.0)) + "***";
 
         String s =
-                stars.substring(0, line1.length()) + "\n" + line1 + "\n"
-                        + line2 + "\n" + stars.substring(0, line1.length())
-                        + "\n";
+            stars.substring(0, line1.length()) + "\n" + line1 + "\n" + line2 + "\n"
+                + stars.substring(0, line1.length()) + "\n";
         WELCOME_MESSAGE = s;
     }
 

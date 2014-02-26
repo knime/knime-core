@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -60,20 +60,21 @@ import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeBitVectorColumnData extends TreeAttributeColumnData {
 
     private final BitSet m_columnBitSet;
+
     private final int m_length;
 
     /**
      * @param metaData
-     * @param columnBitSet */
-    TreeBitVectorColumnData(final TreeBitColumnMetaData metaData,
-            final TreeEnsembleLearnerConfiguration configuration,
-            final BitSet columnBitSet, final int length) {
+     * @param columnBitSet
+     */
+    TreeBitVectorColumnData(final TreeBitColumnMetaData metaData, final TreeEnsembleLearnerConfiguration configuration,
+        final BitSet columnBitSet, final int length) {
         super(metaData, configuration);
         m_columnBitSet = columnBitSet;
         m_length = length;
@@ -88,8 +89,7 @@ public final class TreeBitVectorColumnData extends TreeAttributeColumnData {
     /** {@inheritDoc} */
     @Override
     public SplitCandidate calcBestSplitClassification(final double[] rowWeights,
-            final ClassificationPriors targetPriors,
-            final TreeTargetNominalColumnData targetColumn) {
+        final ClassificationPriors targetPriors, final TreeTargetNominalColumnData targetColumn) {
         final NominalValueRepresentation[] targetVals = targetColumn.getMetaData().getValues();
         final IImpurity impurityCriterion = targetPriors.getImpurityCriterion();
         final int minChildSize = getConfiguration().getMinChildSize();
@@ -120,19 +120,18 @@ public final class TreeBitVectorColumnData extends TreeAttributeColumnData {
         final double weightSum = onWeights + offWeights;
         final double onImpurity = impurityCriterion.getPartitionImpurity(onTargetWeights, onWeights);
         final double offImpurity = impurityCriterion.getPartitionImpurity(offTargetWeights, offWeights);
-        final double[] partitionWeights = new double[] {onWeights, offWeights};
-        final double postSplitImpurity = impurityCriterion.getPostSplitImpurity(new double[] {onImpurity, offImpurity},
-                partitionWeights, weightSum);
-        final double gainValue = impurityCriterion.getGain(targetPriors.getPriorImpurity(), postSplitImpurity,
-                partitionWeights, weightSum);
+        final double[] partitionWeights = new double[]{onWeights, offWeights};
+        final double postSplitImpurity =
+            impurityCriterion.getPostSplitImpurity(new double[]{onImpurity, offImpurity}, partitionWeights, weightSum);
+        final double gainValue =
+            impurityCriterion.getGain(targetPriors.getPriorImpurity(), postSplitImpurity, partitionWeights, weightSum);
         return new BitSplitCandidate(this, gainValue);
     }
 
     /** {@inheritDoc} */
     @Override
-    public SplitCandidate calcBestSplitRegression(final double[] rowWeights,
-            final RegressionPriors targetPriors,
-            final TreeTargetNumericColumnData targetColumn) {
+    public SplitCandidate calcBestSplitRegression(final double[] rowWeights, final RegressionPriors targetPriors,
+        final TreeTargetNumericColumnData targetColumn) {
         final double ySumTotal = targetPriors.getYSum();
         final double nrRecordsTotal = targetPriors.getNrRecords();
         final double criterionTotal = ySumTotal * ySumTotal / nrRecordsTotal;
@@ -173,20 +172,16 @@ public final class TreeBitVectorColumnData extends TreeAttributeColumnData {
 
     /** {@inheritDoc} */
     @Override
-    public void updateChildMemberships(final TreeNodeCondition childCondition,
-            final double[] parentMemberships,
-            final double[] childMembershipsToUpdate) {
-        TreeNodeBitCondition bitCondition =
-            (TreeNodeBitCondition)childCondition;
-        assert getMetaData().getAttributeName().equals(
-                bitCondition.getColumnMetaData().getAttributeName());
+    public void updateChildMemberships(final TreeNodeCondition childCondition, final double[] parentMemberships,
+        final double[] childMembershipsToUpdate) {
+        TreeNodeBitCondition bitCondition = (TreeNodeBitCondition)childCondition;
+        assert getMetaData().getAttributeName().equals(bitCondition.getColumnMetaData().getAttributeName());
         final boolean value = bitCondition.getValue();
         for (int i = 0; i < m_length; i++) {
             if (m_columnBitSet.get(i) != value) {
                 childMembershipsToUpdate[i] = 0.0;
             } else {
-                assert childMembershipsToUpdate[i]
-                    == parentMemberships[i];
+                assert childMembershipsToUpdate[i] == parentMemberships[i];
             }
         }
     }

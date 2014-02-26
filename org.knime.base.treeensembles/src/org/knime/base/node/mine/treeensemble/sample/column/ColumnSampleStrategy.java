@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -53,12 +53,11 @@ package org.knime.base.node.mine.treeensemble.sample.column;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeSignature;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class ColumnSampleStrategy {
 
-    public abstract ColumnSample getColumnSampleForTreeNode(
-            final TreeNodeSignature treeNodeSignature);
+    public abstract ColumnSample getColumnSampleForTreeNode(final TreeNodeSignature treeNodeSignature);
 
 }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,7 +55,7 @@ import java.util.ArrayList;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  * Default implementation of a connection extra info.
@@ -134,7 +134,7 @@ public class ConnectionUIInformation implements UIInformation {
 
     /** {@inheritDoc} */
     @Override
-    public void load(final NodeSettingsRO config, final WorkflowPersistorVersion1xx.LoadVersion loadVersion)
+    public void load(final NodeSettingsRO config, final FileWorkflowPersistor.LoadVersion loadVersion)
             throws InvalidSettingsException {
         int size = config.getInt(KEY_BENDPOINTS + "_size");
         for (int i = 0; i < size; i++) {
