@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -64,8 +64,8 @@ import org.w3c.dom.Document;
  */
 public interface XMLValue extends DataValue {
     /**
-     * Returns the parsed XML document.
-     *
+     * Returns the parsed XML document. Note, as per definition of {@link org.knime.core.data.DataCell}
+     * the returned document must not be modified by clients as data cells are read-only.
      * @return the DOM
      */
     Document getDocument();
