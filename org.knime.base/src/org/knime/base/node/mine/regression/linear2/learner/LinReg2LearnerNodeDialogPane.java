@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -70,7 +70,7 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
 
-import org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerSettings.MissingValueHandling;
+import org.knime.base.node.mine.regression.MissingValueHandling;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -295,9 +295,9 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
         m_scatterPlotRowCount.setValue(settings.getScatterPlotRowCount());
 
         m_missingValueHandlingIgnore.setSelected(
-            settings.getMissingValueHandling().equals(MissingValueHandling.ignore));
+            settings.getMissingValueHandling2().equals(MissingValueHandling.ignore));
         m_missingValueHandlingFail.setSelected(
-            settings.getMissingValueHandling().equals(MissingValueHandling.fail));
+            settings.getMissingValueHandling2().equals(MissingValueHandling.fail));
     }
 
     /**

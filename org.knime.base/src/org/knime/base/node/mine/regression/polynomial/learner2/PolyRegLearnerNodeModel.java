@@ -63,6 +63,7 @@ import java.util.Set;
 import org.apache.commons.math3.stat.regression.ModelSpecificationException;
 import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.base.data.filter.column.FilterColumnTable;
+import org.knime.base.node.mine.regression.MissingValueHandling;
 import org.knime.base.node.mine.regression.PMMLRegressionTranslator;
 import org.knime.base.node.mine.regression.PMMLRegressionTranslator.NumericPredictor;
 import org.knime.base.node.mine.regression.PMMLRegressionTranslator.RegressionTable;
@@ -236,14 +237,21 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         double[][] yMat = new double[rowCount][1];
 
         int rowIndex = 0;
-        for (DataRow row : inTable) {
+        nextRow: for (DataRow row : inTable) {
             exec.checkCanceled();
             exec.setProgress(0.2 * rowIndex / rowCount);
             xMat[rowIndex][0] = 1;
             int colIndex = 1;
             for (int i = 0; i < row.getNumCells(); i++) {
                 if ((m_colSelected[i] || (i == dependentIndex)) && row.getCell(i).isMissing()) {
-                    throw new IllegalArgumentException("Missing values are not supported by this node.");
+                    switch (m_settings.getMissingValueHandling()) {
+                        case fail:
+                        throw new IllegalArgumentException("Missing values are not supported by this node.");
+                        case ignore:
+                        continue nextRow;
+                        default:
+                            throw new UnsupportedOperationException("Not supported strategy: " + m_settings.getMissingValueHandling());
+                    }
                 }
 
                 if (m_colSelected[i]) {
@@ -263,6 +271,14 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
                 }
             }
             rowIndex++;
+        }
+        if (rowIndex < rowCount) {
+            double[][] newXMat = new double[rowIndex][1 + independentVariables * degree];
+            System.arraycopy(xMat, 0, newXMat, 0, rowIndex);
+            xMat = newXMat;
+            double[][] newYMat = new double[rowIndex][1];
+            System.arraycopy(yMat, 0, newYMat, 0, rowIndex);
+            yMat = newYMat;
         }
 
         // compute X'
@@ -307,8 +323,24 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         int ignore = m_rowContainer.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn());
 
         m_meanValues = new double[independentVariables];
-        for (DataRow row : m_rowContainer) {
+        rows: for (DataRow row : m_rowContainer) {
+            exec.checkCanceled();
             int k = 0;
+            switch (m_settings.getMissingValueHandling()) {
+                case ignore:
+                    for (int i = 0; i < row.getNumCells(); i++) {
+                        if (i != ignore) {
+                            if (row.getCell(i).isMissing()) {
+                                continue rows;
+                            }
+                        }
+                    }
+                    break;
+                case fail:
+                    throw new IllegalStateException("Execution should stopped earlier!");
+                    default:
+                        throw new UnsupportedOperationException("Not supported missing value strategy: " + m_settings.getMissingValueHandling().name());
+            }
             for (int i = 0; i < row.getNumCells(); i++) {
                 if (i != ignore) {
                     m_meanValues[k++] += ((DoubleValue)row.getCell(i)).getDoubleValue();
@@ -316,7 +348,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             }
         }
         for (int i = 0; i < m_meanValues.length; i++) {
-            m_meanValues[i] /= m_rowContainer.size();
+            m_meanValues[i] /= rowIndex;
         }
 
         ColumnRearranger crea = new ColumnRearranger(inTable.getDataTableSpec());
@@ -328,7 +360,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         BufferedDataTable rearrangerTable = exec.createColumnRearrangeTable(inTable, crea, exec.createSubProgress(0.6));
         PMMLPortObject model = createPMMLModel(inPMMLPort, inTable.getDataTableSpec());
 
-        Learner learner = new Learner(model.getSpec(), 0d, true, m_settings.getDegree());
+        Learner learner = new Learner(model.getSpec(), 0d, m_settings.getMissingValueHandling() == MissingValueHandling.fail, m_settings.getDegree());
         try {
             PolyRegContent polyRegContent = learner.perform(inTable, inTable.getRowCount(), exec);
             PortObject[] bdt =
@@ -354,12 +386,12 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             for (final String column : m_columnNames) {
                 for (int d = 1; d <= m_settings.getDegree(); ++d) {
                     empty.addRowToTable(new DefaultRow("Row" + rowIdx++, new StringCell(column), new IntCell(d),
-                        DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(), DataType
+                        new DoubleCell(0.0d), DataType.getMissingCell(), DataType.getMissingCell(), DataType
                             .getMissingCell()));
                 }
             }
-            empty.addRowToTable(new DefaultRow("Row" + rowIdx, new StringCell("Intercept"), new IntCell(0), DataType
-                .getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell()));
+            empty.addRowToTable(new DefaultRow("Row" + rowIdx, new StringCell("Intercept"), new IntCell(0),
+                new DoubleCell(0.0d), DataType.getMissingCell(), DataType.getMissingCell(), DataType.getMissingCell()));
             double[] nans = new double[m_columnNames.length * m_settings.getDegree() + 1];
             Arrays.fill(nans, Double.NaN);
             m_viewData =
@@ -416,6 +448,16 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
                 int betaCount = 1;
                 double y = 0;
                 for (int col = 0; col < row.getNumCells(); col++) {
+                    if ((col == dependentIndex || m_colSelected[col]) && row.getCell(col).isMissing()) {
+                        switch (m_settings.getMissingValueHandling()) {
+                            case ignore:
+                                return new DataCell[] {DataType.getMissingCell(), DataType.getMissingCell()};
+                            case fail:
+                                throw new IllegalStateException("Should failed earlier!");
+                                default:
+                                    throw new UnsupportedOperationException("Not supported missing handling strategy: " + m_settings.getMissingValueHandling());
+                        }
+                    }
                     if ((col != dependentIndex) && m_colSelected[col]) {
                         final double value = ((DoubleValue)row.getCell(col)).getDoubleValue();
                         double poly = 1;

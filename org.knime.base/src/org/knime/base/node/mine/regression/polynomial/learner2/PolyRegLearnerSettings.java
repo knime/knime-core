@@ -51,6 +51,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.knime.base.node.mine.regression.MissingValueHandling;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -73,8 +74,12 @@ public class PolyRegLearnerSettings {
 
     private boolean m_includeAll = false;
 
+    private MissingValueHandling m_missingValueHandling = MissingValueHandling.fail;
+
     private final Set<String> m_unmodSelectedColumnNames = Collections
             .unmodifiableSet(m_selectedColumnNames);
+
+    private static final String CFG_MISSING_VALUE_HANDLING = "missing_value_handling";
 
     /**
      * Returns the maximum degree that polynomial used for regression should
@@ -108,6 +113,10 @@ public class PolyRegLearnerSettings {
         m_targetColumn = settings.getString("targetColumn");
         m_maxRowsForView = settings.getInt("maxViewRows");
         m_includeAll = settings.getBoolean("includeAll", false); // added v2.1
+        // added in 2.10
+        m_missingValueHandling = MissingValueHandling.valueOf(
+            settings.getString(CFG_MISSING_VALUE_HANDLING, MissingValueHandling.ignore.name()));
+
         m_selectedColumnNames.clear();
         if (!m_includeAll) {
             for (String s : settings.getStringArray("selectedColumns")) {
@@ -126,6 +135,7 @@ public class PolyRegLearnerSettings {
             settings.addInt("degree", m_degree);
             settings.addString("targetColumn", m_targetColumn);
             settings.addInt("maxViewRows", m_maxRowsForView);
+            settings.addString(CFG_MISSING_VALUE_HANDLING, m_missingValueHandling.name());
             settings.addBoolean("includeAll", m_includeAll);
             if (!m_includeAll) {
                 settings.addStringArray("selectedColumns", m_selectedColumnNames
@@ -204,5 +214,19 @@ public class PolyRegLearnerSettings {
      */
     public void setIncludeAll(final boolean includeAll) {
         m_includeAll = includeAll;
+    }
+
+    /**
+     * @return the missingValueHandling
+     */
+    public MissingValueHandling getMissingValueHandling() {
+        return m_missingValueHandling;
+    }
+
+    /**
+     * @param missingValueHandling the missingValueHandling to set
+     */
+    public void setMissingValueHandling(final MissingValueHandling missingValueHandling) {
+        this.m_missingValueHandling = missingValueHandling;
     }
 }

@@ -47,6 +47,7 @@
  */
 package org.knime.base.node.mine.regression.polynomial.learner2;
 
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -54,14 +55,18 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.LinkedHashSet;
 
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 
+import org.knime.base.node.mine.regression.MissingValueHandling;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -96,8 +101,12 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
     private final JSpinner m_viewRows = new JSpinner(new SpinnerNumberModel(
             10000, 1, Integer.MAX_VALUE, 10));
 
+    @SuppressWarnings("unchecked")
     private final ColumnFilterPanel m_colSelectionPanel = new ColumnFilterPanel(
             true, DoubleValue.class);
+
+    private JRadioButton m_missingValueHandlingIgnore;
+    private JRadioButton m_missingValueHandlingFail;
 
     /**
      * Creates a new dialog for the polynomial regression learner node.
@@ -142,6 +151,13 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
         c.gridy++;
         p.add(m_colSelectionPanel, c);
 
+        c.gridy++;
+        JPanel missingValueHandlingPanel = new JPanel(new FlowLayout());
+        missingValueHandlingPanel.setBorder(BorderFactory.createTitledBorder("Missing Values in Input Data"));
+
+        missingValueHandlingPanel.add(createMissingValueHandlingPanel());
+        p.add(missingValueHandlingPanel, c);
+
         addTab("Regression settings", p);
 
         p = new JPanel(new GridBagLayout());
@@ -153,6 +169,31 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
         p.add(m_viewRows, c);
 
         addTab("View settings", p);
+    }
+
+    private JPanel createMissingValueHandlingPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.BASELINE;
+        c.insets = new Insets(5, 5, 0, 0);
+
+        m_missingValueHandlingIgnore = new JRadioButton("Ignore rows with missing values.");
+        panel.add(m_missingValueHandlingIgnore, c);
+
+        c.gridy++;
+        m_missingValueHandlingFail = new JRadioButton("Fail on observing missing values.");
+        panel.add(m_missingValueHandlingFail, c);
+
+        ButtonGroup missingValueHandling = new ButtonGroup();
+        missingValueHandling.add(m_missingValueHandlingIgnore);
+        missingValueHandling.add(m_missingValueHandlingFail);
+
+        return panel;
     }
 
     /**
@@ -182,6 +223,11 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
         m_colSelectionPanel.hideColumns((DataColumnSpec)m_targetColumn
                 .getSelectedItem());
         m_colSelectionPanel.setKeepAllSelected(m_settings.isIncludeAll());
+        m_missingValueHandlingIgnore.setSelected(
+            m_settings.getMissingValueHandling().equals(MissingValueHandling.ignore));
+        m_missingValueHandlingFail.setSelected(
+            m_settings.getMissingValueHandling().equals(MissingValueHandling.fail));
+
     }
 
     /**
@@ -196,6 +242,11 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
         m_settings.setIncludeAll(m_colSelectionPanel.isKeepAllSelected());
         m_settings.setSelectedColumns(
                 m_colSelectionPanel.getIncludedColumnSet());
+        if (m_missingValueHandlingFail.isSelected()) {
+            m_settings.setMissingValueHandling(MissingValueHandling.fail);
+        } else {
+            m_settings.setMissingValueHandling(MissingValueHandling.ignore);
+        }
         m_settings.saveSettingsTo(settings);
     }
 }
