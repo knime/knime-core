@@ -67,7 +67,7 @@ import org.knime.testing.core.DifferenceChecker;
 import org.knime.testing.core.DifferenceCheckerFactory;
 
 /**
- * Image checker that computes color historgrams for two images and compares the normalized historgrams.
+ * Image checker that computes color histograms for two images and compares the normalized histograms.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
