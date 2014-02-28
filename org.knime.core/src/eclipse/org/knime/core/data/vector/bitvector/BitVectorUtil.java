@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,44 +50,39 @@
  */
 package org.knime.core.data.vector.bitvector;
 
+import org.knime.core.node.util.CheckUtils;
+
 /**
- * A utility class providing methods to apply set operations like "AND", "OR",
- * and "XOR" on different kind of {@link BitVectorValue}s, such as
- * {@link SparseBitVectorCell}s or {@link DenseBitVectorCell}s in a convenient
- * way.
+ * A utility class providing methods to apply set operations like "AND", "OR", and "XOR" on different kind of
+ * {@link BitVectorValue}s, such as {@link SparseBitVectorCell}s or {@link DenseBitVectorCell}s in a convenient way.
  *
  * @author Kilian Thiel, University of Konstanz
+ * @author Marcel Hanser, University of Konstanz
  */
 public final class BitVectorUtil {
 
-    private BitVectorUtil() { /*empty*/ }
+    private BitVectorUtil() { /*empty*/
+    }
 
     /**
-     * Creates a sparse bit vector cell, in case that one or both given values
-     * are sparse bit vector cells (otherwise a dense bit vector cell).
-     * The returned cell contains the result of the AND operation on the passed
-     * operands. The length of the result vector is the maximum of the lengths
-     * of the operands.<br />
-     * NOTE: This method performs best if the two arguments are both
-     * {@link SparseBitVectorCell}s or {@link DenseBitVectorCell}s.
-     * All other implementations need to access the bits through get/set
-     * methods which probably performs very poorly.<br />
+     * Creates a sparse bit vector cell, in case that one or both given values are sparse bit vector cells (otherwise a
+     * dense bit vector cell). The returned cell contains the result of the AND operation on the passed operands. The
+     * length of the result vector is the maximum of the lengths of the operands.<br />
+     * NOTE: This method performs best if the two arguments are both {@link SparseBitVectorCell}s or
+     * {@link DenseBitVectorCell}s. All other implementations need to access the bits through get/set methods which
+     * probably performs very poorly.<br />
      *
      * To perform the AND operation the sparse implementation
-     * {@link SparseBitVectorCellFactory#and(BitVectorValue, BitVectorValue)},
-     * or the dense implementation
-     * {@link DenseBitVectorCellFactory#and(BitVectorValue, BitVectorValue)}
-     * is called.
+     * {@link SparseBitVectorCellFactory#and(BitVectorValue, BitVectorValue)}, or the dense implementation
+     * {@link DenseBitVectorCellFactory#and(BitVectorValue, BitVectorValue)} is called.
      *
      * @param bv1 the first operand to AND with the other
      * @param bv2 the other operand to AND with the first one
      * @return the result of the AND operation
      */
-    public static BitVectorValue and(final BitVectorValue bv1,
-            final BitVectorValue bv2) {
+    public static BitVectorValue and(final BitVectorValue bv1, final BitVectorValue bv2) {
         if (bv1 == null || bv2 == null) {
-            throw new NullPointerException(
-                    "Given BitVectorValues may not be null!");
+            throw new NullPointerException("Given BitVectorValues may not be null!");
         }
 
         int noSparseBVC = sparseBitVectorCellCount(bv1, bv2);
@@ -98,31 +93,24 @@ public final class BitVectorUtil {
     }
 
     /**
-     * Creates a sparse bit vector cell, in case that both given values
-     * are sparse bit vector cells (otherwise a dense bit vector cell).
-     * The returned cell contains the result of the OR operation on the passed
-     * operands. The length of the result vector is the maximum of the lengths
-     * of the operands.<br />
-     * NOTE: This method performs best if the two arguments are both
-     * {@link SparseBitVectorCell}s or {@link DenseBitVectorCell}s.
-     * All other implementations need to access the bits through get/set
-     * methods which probably performs very poorly.<br />
+     * Creates a sparse bit vector cell, in case that both given values are sparse bit vector cells (otherwise a dense
+     * bit vector cell). The returned cell contains the result of the OR operation on the passed operands. The length of
+     * the result vector is the maximum of the lengths of the operands.<br />
+     * NOTE: This method performs best if the two arguments are both {@link SparseBitVectorCell}s or
+     * {@link DenseBitVectorCell}s. All other implementations need to access the bits through get/set methods which
+     * probably performs very poorly.<br />
      *
      * To perform the OR operation the sparse implementation
-     * {@link SparseBitVectorCellFactory#or(BitVectorValue, BitVectorValue)},
-     * or the dense implementation
-     * {@link DenseBitVectorCellFactory#or(BitVectorValue, BitVectorValue)}
-     * is called.
+     * {@link SparseBitVectorCellFactory#or(BitVectorValue, BitVectorValue)}, or the dense implementation
+     * {@link DenseBitVectorCellFactory#or(BitVectorValue, BitVectorValue)} is called.
      *
      * @param bv1 the first operand to OR with the other
      * @param bv2 the other operand to OR with the first one
      * @return the result of the OR operation
      */
-    public static BitVectorValue or(final BitVectorValue bv1,
-            final BitVectorValue bv2) {
+    public static BitVectorValue or(final BitVectorValue bv1, final BitVectorValue bv2) {
         if (bv1 == null || bv2 == null) {
-            throw new NullPointerException(
-                    "Given BitVectorValues may not be null!");
+            throw new NullPointerException("Given BitVectorValues may not be null!");
         }
 
         int noSparseBVC = sparseBitVectorCellCount(bv1, bv2);
@@ -133,31 +121,24 @@ public final class BitVectorUtil {
     }
 
     /**
-     * Creates a sparse bit vector cell, in case that both given values
-     * are sparse bit vector cells (otherwise a dense bit vector cell).
-     * The returned cell contains the result of the XOR operation on the passed
-     * operands. The length of the result vector is the maximum of the lengths
-     * of the operands.<br />
-     * NOTE: This method performs best if the two arguments are both
-     * {@link SparseBitVectorCell}s or {@link DenseBitVectorCell}s.
-     * All other implementations need to access the bits through get/set
-     * methods which probably performs very poorly.<br />
+     * Creates a sparse bit vector cell, in case that both given values are sparse bit vector cells (otherwise a dense
+     * bit vector cell). The returned cell contains the result of the XOR operation on the passed operands. The length
+     * of the result vector is the maximum of the lengths of the operands.<br />
+     * NOTE: This method performs best if the two arguments are both {@link SparseBitVectorCell}s or
+     * {@link DenseBitVectorCell}s. All other implementations need to access the bits through get/set methods which
+     * probably performs very poorly.<br />
      *
      * To perform the XOR operation the sparse implementation
-     * {@link SparseBitVectorCellFactory#xor(BitVectorValue, BitVectorValue)},
-     * or the dense implementation
-     * {@link DenseBitVectorCellFactory#xor(BitVectorValue, BitVectorValue)}
-     * is called.
+     * {@link SparseBitVectorCellFactory#xor(BitVectorValue, BitVectorValue)}, or the dense implementation
+     * {@link DenseBitVectorCellFactory#xor(BitVectorValue, BitVectorValue)} is called.
      *
      * @param bv1 the first operand to XOR with the other
      * @param bv2 the other operand to XOR with the first one
      * @return the result of the XOR operation
      */
-    public static BitVectorValue xor(final BitVectorValue bv1,
-            final BitVectorValue bv2) {
+    public static BitVectorValue xor(final BitVectorValue bv1, final BitVectorValue bv2) {
         if (bv1 == null || bv2 == null) {
-            throw new NullPointerException(
-                    "Given BitVectorValues may not be null!");
+            throw new NullPointerException("Given BitVectorValues may not be null!");
         }
 
         int noSparseBVC = sparseBitVectorCellCount(bv1, bv2);
@@ -167,8 +148,67 @@ public final class BitVectorUtil {
         return DenseBitVectorCellFactory.xor(bv1, bv2);
     }
 
-    private static int sparseBitVectorCellCount(final BitVectorValue bv1,
-            final BitVectorValue bv2) {
+    /**
+     * Computes the cardinality of the bitwise AND of the given vectors. This method is significantly faster than using:
+     *
+     * <pre>
+     * long cardOfIntersection = BitVectorUtil.and(bv1, bv2).cardinality();
+     * </pre>
+     *
+     * @param bv1 first vector
+     * @param bv2 second vector
+     * @return cardinality of the bitwise AND operator of the given bit vectors
+     * @throws NullPointerException if any argument is <code>null</code>
+     * @since 2.10
+     */
+    public static long cardinalityOfIntersection(final BitVectorValue bv1, final BitVectorValue bv2) {
+        CheckUtils.checkNotNull(bv1, "Given BitVectorValues may not be null!");
+        CheckUtils.checkNotNull(bv2, "Given BitVectorValues may not be null!");
+        long bv1Idx = bv1.nextSetBit(0);
+        long bv2Idx = bv2.nextSetBit(0);
+
+        long toReturn = 0;
+        while (bv1Idx >= 0 && bv2Idx >= 0) {
+            if (bv1Idx == bv2Idx) {
+                // both vectors have a 1 at the same index - so increase the result
+                toReturn++;
+            }
+            if (bv1Idx <= bv2Idx) {
+                bv1Idx = bv1.nextSetBit(bv1Idx + 1);
+            } else if (bv1Idx >= bv2Idx) {
+                bv2Idx = bv2.nextSetBit(bv2Idx + 1);
+            }
+        }
+        return toReturn;
+    }
+
+    /**
+     * Computes the cardinality of the relative complement of the given vectors, i.e. the number of ones contained in
+     * bv1 but not in bv2.
+     *
+     * @param bv1 first vector
+     * @param bv2 second vector
+     * @return cardinality of the relative complement
+     * @throws NullPointerException if any argument is <code>null</code>
+     * @since 2.10
+     */
+    public static long cardinalityOfRelativeComplement(final BitVectorValue bv1, final BitVectorValue bv2) {
+        CheckUtils.checkNotNull(bv1, "Given BitVectorValues may not be null!");
+        CheckUtils.checkNotNull(bv2, "Given BitVectorValues may not be null!");
+        long bv1Idx = bv1.nextSetBit(0);
+
+        long toReturn = 0;
+        while (bv1Idx >= 0) {
+            // we looking for bv1 \ bv2, so bv2 should not be set on a valid bv1Idx
+            if (bv1Idx >= bv2.length() || !bv2.get(bv1Idx)) {
+                toReturn++;
+            }
+            bv1Idx = bv1.nextSetBit(bv1Idx + 1);
+        }
+        return toReturn;
+    }
+
+    private static int sparseBitVectorCellCount(final BitVectorValue bv1, final BitVectorValue bv2) {
         int count = 0;
         if (bv1 instanceof SparseBitVectorCell) {
             count++;
