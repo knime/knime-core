@@ -387,9 +387,11 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     }
 
     private String initJSView(final String jsonViewRepresentation, final String jsonViewValue) {
+        String escapedRepresentation = jsonViewRepresentation.replace("\\", "\\\\").replace("'", "\\'");
+        String escapedValue = jsonViewValue.replace("\\", "\\\\").replace("'", "\\'");
         String initMethod = m_template.getInitMethodName();
-        return getNamespacePrefix() + initMethod + "(JSON.parse('" + jsonViewRepresentation + "'), JSON.parse('"
-            + jsonViewValue + "'));";
+        return getNamespacePrefix() + initMethod + "(JSON.parse('" + escapedRepresentation + "'), JSON.parse('"
+            + escapedValue + "'));";
     }
 
     private String getNamespacePrefix() {
@@ -415,15 +417,24 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     }
 
     private void applyTriggered(final Browser browser) {
-        String pullMethod = m_template.getPullViewContentMethodName();
-        String evalCode = wrapInTryCatch("return JSON.stringify(" + getNamespacePrefix() + pullMethod + "());");
-        String jsonString = (String)browser.evaluate(evalCode);
-        try {
-            VAL viewValue = getNodeModel().createEmptyViewValue();
-            viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
-            loadViewValueIntoNode(viewValue);
-        } catch (Exception e) {
-            //TODO error message
+        boolean valid = true;
+        String validateMethod = m_template.getValidateMethodName();
+        if (validateMethod != null && !validateMethod.isEmpty()) {
+            String evalCode = wrapInTryCatch("return JSON.stringify(" + getNamespacePrefix() + validateMethod + "());");
+            String jsonString = (String)browser.evaluate(evalCode);
+            valid = Boolean.parseBoolean(jsonString);
+        }
+        if (valid) {
+            String pullMethod = m_template.getPullViewContentMethodName();
+            String evalCode = wrapInTryCatch("return JSON.stringify(" + getNamespacePrefix() + pullMethod + "());");
+            String jsonString = (String)browser.evaluate(evalCode);
+            try {
+                VAL viewValue = getNodeModel().createEmptyViewValue();
+                viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
+                loadViewValueIntoNode(viewValue);
+            } catch (Exception e) {
+                //TODO error message
+            }
         }
     }
 }
