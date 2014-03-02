@@ -102,21 +102,25 @@ public abstract class WorkflowTestCase extends TestCase {
      * @throws Exception
      * @throws IOException */
     protected File getDefaultWorkflowDirectory() throws Exception {
+        String classSimpleName = getClass().getSimpleName();
+        classSimpleName = classSimpleName.substring(0, 1).toLowerCase() + classSimpleName.substring(1);
+        return getWorkflowDirectory(classSimpleName);
+    }
+    
+    protected File getWorkflowDirectory(final String pathRelativeToTestClass) throws Exception {
         ClassLoader l = getClass().getClassLoader();
         String workflowDirString = getClass().getPackage().getName();
         String workflowDirPath = workflowDirString.replace('.', '/');
-        String classSimpleName = getClass().getSimpleName();
-        classSimpleName = classSimpleName.substring(0, 1).toLowerCase() + classSimpleName.substring(1);
-        workflowDirPath = workflowDirPath.concat("/" + classSimpleName);
+        workflowDirPath = workflowDirPath.concat("/" + pathRelativeToTestClass);
         URL workflowURL = l.getResource(workflowDirPath);
         if (workflowURL == null) {
             throw new Exception("Can't load workflow that's expected to be in directory " + workflowDirPath);
         }
-
+        
         if (!"file".equals(workflowURL.getProtocol())) {
             workflowURL = FileLocator.resolve(workflowURL);
         }
-
+        
         File workflowDir = new File(workflowURL.getFile());
         if (!workflowDir.isDirectory()) {
             throw new Exception("Can't load workflow directory: "
@@ -144,7 +148,13 @@ public abstract class WorkflowTestCase extends TestCase {
         NodeContainer nc = findNodeContainer(id);
         checkState(nc, expected);
     }
-
+    
+    protected void checkStateOfMany(final InternalNodeContainerState state, final NodeID... ids) throws Exception {
+        for (NodeID id : ids) {
+            checkState(id, state);
+        }
+    }
+    
     protected void checkState(final NodeContainer nc,
             final InternalNodeContainerState... expected) throws Exception {
         InternalNodeContainerState actual = nc.getInternalState();
