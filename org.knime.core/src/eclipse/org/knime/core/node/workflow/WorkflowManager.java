@@ -6129,7 +6129,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 exec.checkCanceled();
                 LoadResult checkTemplateResult = new LoadResult("update check");
                 final boolean updatesAvail = parent.checkUpdateMetaNodeLinkWithCache(
-                    wm.getID(), lH, checkTemplateResult, visitedTemplateMap, false);
+                    wm.getID(), lH, checkTemplateResult, visitedTemplateMap, true);
                 if (failOnLoadError && checkTemplateResult.hasErrors()) {
                     LOGGER.error(checkTemplateResult.getFilteredError("", LoadResultEntryType.Error));
                     throw new IOException("Error(s) while updating meta node links");
