@@ -228,7 +228,8 @@ public class CustomRepositoryManager {
      */
     public void serializeRepository(final File destination) throws IOException {
         RootDocument doc = RootDocument.Factory.newInstance();
-        AbstractCategory root = doc.addNewRoot();
+        org.knime.workbench.repository.model.customNodeRepository.Root root = doc.addNewRoot();
+        root.setName("Node Repository");
         serializeCustomCategory(m_root, root);
 
         doc.save(destination);
