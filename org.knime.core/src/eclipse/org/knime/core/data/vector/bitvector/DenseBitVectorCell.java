@@ -138,7 +138,7 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
      */
     @Override
     public String toString() {
-        return m_bitVector.toString();
+        return m_bitVector.toBinaryString();
     }
 
     /**

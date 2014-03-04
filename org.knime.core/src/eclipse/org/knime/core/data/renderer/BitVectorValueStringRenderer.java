@@ -179,7 +179,25 @@ public class BitVectorValueStringRenderer extends DefaultDataValueRenderer {
         @Override
         protected void setValue(final Object value) {
             if (value instanceof BitVectorValue) {
-                super.setValue(((BitVectorValue)value).toString());
+                BitVectorValue bv = (BitVectorValue)value;
+
+                StringBuilder result = new StringBuilder(BitVectorValue.MAX_DISPLAY_BITS * 5);
+                long length = bv.length();
+                result.append("{length=").append(length).append(", set bits=");
+                int setBits = 0;
+                for (long i = 0; (i < length) && (setBits < BitVectorValue.MAX_DISPLAY_BITS); i++) {
+                    if (bv.get(i)) {
+                        result.append(i).append(", ");
+                        setBits++;
+                    }
+                }
+                if (setBits < bv.cardinality()) {
+                    result.append("... ");
+                } else if (result.length() > 2) {
+                    result.delete(result.length() - 2, result.length());
+                }
+                result.append('}');
+                super.setValue(result.toString());
             } else {
                 super.setValue(value);
             }
