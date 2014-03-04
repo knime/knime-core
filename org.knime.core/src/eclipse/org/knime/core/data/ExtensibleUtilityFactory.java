@@ -95,7 +95,7 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      */
     protected final Class<? extends DataValue> m_valueClass;
 
-    private final Map<String, DataValueRendererFactory> m_renderers = new HashMap<String, DataValueRendererFactory>();
+    private Map<String, DataValueRendererFactory> m_renderers;
 
     private static final Map<Class<? extends DataValue>, ExtensibleUtilityFactory> ALL_FACTORIES =
         new HashMap<Class<? extends DataValue>, ExtensibleUtilityFactory>();
@@ -107,7 +107,6 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      */
     public ExtensibleUtilityFactory(final Class<? extends DataValue> valueClass) {
         m_valueClass = valueClass;
-        readRenderersFromExtensionPoint();
 
         synchronized (ALL_FACTORIES) {
             if (ALL_FACTORIES.containsKey(valueClass)) {
@@ -129,6 +128,7 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      */
     @Deprecated
     protected void readPreferredRendererFromPreferences() {
+        readRenderersFromExtensionPoint();
         // nothing to do here any more
     }
 
@@ -139,6 +139,8 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      * @param rendererId the factory's ID name or <code>null</code> if the preferred renderer should be unset
      */
     public final void setPreferredRenderer(final String rendererId) {
+        readRenderersFromExtensionPoint();
+
         if (rendererId == null) {
             CORE_PREFS.put(getPreferenceKey(), null);
         } else {
@@ -160,6 +162,8 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      * @since 2.9
      */
     public final void setDefaultRenderer(final String rendererId) {
+        readRenderersFromExtensionPoint();
+
         if (rendererId == null) {
             throw new IllegalArgumentException("Default renderer ID must not be null");
         } else {
@@ -175,6 +179,11 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
 
 
     private void readRenderersFromExtensionPoint() {
+        if (m_renderers != null) {
+            return;
+        }
+        m_renderers = new HashMap<String, DataValueRendererFactory>();
+
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
         assert point != null : "Invalid extension point id: " + EXT_POINT_ID;
@@ -224,6 +233,8 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      *            otherwise. This will override any existing default renderer.
      */
     protected final void addRendererFactory(final DataValueRendererFactory fac, final boolean suggestAsDefault) {
+        readRenderersFromExtensionPoint();
+
         m_renderers.put(fac.getId(), fac);
         if (suggestAsDefault) {
             CORE_DEFAULT_PREFS.put(getPreferenceKey(), fac.getId());
@@ -237,6 +248,8 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      * @return a set of renderer factories
      */
     public Collection<DataValueRendererFactory> getAvailableRenderers() {
+        readRenderersFromExtensionPoint();
+
         if (m_renderers.isEmpty()) {
             return Collections.emptySet();
         } else {
@@ -251,6 +264,8 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      * @return a renderer factory or <code>null</code>
      */
     public DataValueRendererFactory getDefaultRenderer() {
+        readRenderersFromExtensionPoint();
+
         String defaultId = CORE_DEFAULT_PREFS.get(getPreferenceKey(), null);
 
         DataValueRendererFactory matchedFactory = m_renderers.get(defaultId);
@@ -268,6 +283,8 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      * @return a renderer factory or <code>null</code>
      */
     public DataValueRendererFactory getPreferredRenderer() {
+        readRenderersFromExtensionPoint();
+
         String prefId = CORE_PREFS.get(getPreferenceKey(), null);
 
         DataValueRendererFactory matchedFactory = m_renderers.get(prefId);
@@ -290,6 +307,8 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
      */
     @Override
     protected final DataValueRendererFamily getRendererFamily(final DataColumnSpec spec) {
+        readRenderersFromExtensionPoint();
+
         DataValueRenderer[] renderers = new DataValueRenderer[m_renderers.size()];
         int i = 0;
         readPreferredRendererFromPreferences();
@@ -366,6 +385,7 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
             }
         }
     }
+
 
     /**
      * Returns the name of a group the data value belongs to. This group name is used e.g. in the preferences in order

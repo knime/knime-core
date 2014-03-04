@@ -116,6 +116,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         // TODO retrieve the utility factories from the data type extension point once we have it
         // this loads all registered renderers and initializes the default value
-        ExtensibleUtilityFactory.getAllFactories();
+        for (ExtensibleUtilityFactory fac : ExtensibleUtilityFactory.getAllFactories()) {
+            fac.getDefaultRenderer(); // this sets the default preference for the renderer for this data type
+        }
     }
 }
