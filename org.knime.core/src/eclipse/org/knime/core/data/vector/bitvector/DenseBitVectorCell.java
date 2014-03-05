@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -60,30 +60,25 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 
 /**
- * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has
- * a fixed length. <br />
- * Implementation stores the bits in a collection of longs (64 bit words). Thus
- * it can be used for well populated vectors. Its length is restricted to ({@link Integer#MAX_VALUE} -
- * 1) * 64 (i.e. 137438953344, in which case it uses around 16GigaByte of
- * memory).<br />
+ * Stores Zeros and Ones in a vector, i.e. with fixed positions. The vector has a fixed length. <br />
+ * Implementation stores the bits in a collection of longs (64 bit words). Thus it can be used for well populated
+ * vectors. Its length is restricted to ({@link Integer#MAX_VALUE} - 1) * 64 (i.e. 137438953344, in which case it uses
+ * around 16GigaByte of memory).<br />
  *
  * @author ohl, University of Konstanz
  */
 public class DenseBitVectorCell extends DataCell implements BitVectorValue {
 
     /**
-     * Convenience access member for
-     * <code>DataType.getType(DenseBitVectorCell.class)</code>.
+     * Convenience access member for <code>DataType.getType(DenseBitVectorCell.class)</code>.
      *
      * @see DataType#getType(Class)
      */
-    public static final DataType TYPE =
-            DataType.getType(DenseBitVectorCell.class);
+    public static final DataType TYPE = DataType.getType(DenseBitVectorCell.class);
 
     /**
-     * Returns the preferred value class of this cell implementation. This
-     * method is called per reflection to determine which is the preferred
-     * renderer, comparator, etc.
+     * Returns the preferred value class of this cell implementation. This method is called per reflection to determine
+     * which is the preferred renderer, comparator, etc.
      *
      * @return BitVectorValue.class;
      */
@@ -91,12 +86,11 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
         return BitVectorValue.class;
     }
 
-    private static final DataCellSerializer<DenseBitVectorCell> SERIALIZER =
-            new DenseBitVectorSerializer();
+    private static final DataCellSerializer<DenseBitVectorCell> SERIALIZER = new DenseBitVectorSerializer();
 
     /**
-     * Returns the factory to read/write DataCells of this class from/to a
-     * DataInput/DataOutput. This method is called via reflection.
+     * Returns the factory to read/write DataCells of this class from/to a DataInput/DataOutput. This method is called
+     * via reflection.
      *
      * @return A serializer for reading/writing cells of this kind.
      * @see DataCell
@@ -108,8 +102,7 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
     private final DenseBitVector m_bitVector;
 
     /**
-     * Use the {@link DenseBitVectorCellFactory} to create instances of this
-     * cell.
+     * Use the {@link DenseBitVectorCellFactory} to create instances of this cell.
      *
      * @param bitVector the bit vector to store in this cell.
      */
@@ -214,15 +207,32 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
         return m_bitVector.nextSetBit(startIdx);
     }
 
+
+    /**
+     * @see BitVectorUtil#cardinalityOfIntersection(BitVectorValue, BitVectorValue)
+     * @param bitVectorCell the other cell containing the operand
+     * @return the cardinality of intersection
+     */
+    long cardinalityOfIntersection(final DenseBitVectorCell bitVectorCell) {
+        return m_bitVector.cardinalityOfIntersection(bitVectorCell.m_bitVector);
+    }
+
+    /**
+     * @see BitVectorUtil#cardinalityOfRelativeComplement(BitVectorValue, BitVectorValue)
+     * @param bitVectorCell the other cell containing the operand
+     * @return the cardinality of intersection
+     */
+    long cardinalityOfRelativeComplement(final DenseBitVectorCell bitVectorCell) {
+        return m_bitVector.cardinalityOfRelativeComplement(bitVectorCell.m_bitVector);
+    }
+
     /** Factory for (de-)serializing a DenseBitVectorCell. */
-    private static class DenseBitVectorSerializer implements
-            DataCellSerializer<DenseBitVectorCell> {
+    private static class DenseBitVectorSerializer implements DataCellSerializer<DenseBitVectorCell> {
 
         /**
          * {@inheritDoc}
          */
-        public void serialize(final DenseBitVectorCell cell,
-                final DataCellDataOutput out) throws IOException {
+        public void serialize(final DenseBitVectorCell cell, final DataCellDataOutput out) throws IOException {
             long[] bits = cell.m_bitVector.getAllBits();
             long length = cell.length();
             out.writeLong(length);
@@ -235,8 +245,7 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
         /**
          * {@inheritDoc}
          */
-        public DenseBitVectorCell deserialize(final DataCellDataInput input)
-                throws IOException {
+        public DenseBitVectorCell deserialize(final DataCellDataInput input) throws IOException {
             long length = input.readLong();
             int arrayLength = input.readInt();
             long[] bits = new long[arrayLength];

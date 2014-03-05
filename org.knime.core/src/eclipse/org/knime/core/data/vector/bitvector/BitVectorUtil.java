@@ -149,7 +149,8 @@ public final class BitVectorUtil {
     }
 
     /**
-     * Computes the cardinality of the bitwise AND of the given vectors. This method is significantly faster than using:
+     * Computes the cardinality of the bitwise AND of the given vectors. This method is significantly faster than using
+     * if both BitVectorValues are from the same type:
      *
      * <pre>
      * long cardOfIntersection = BitVectorUtil.and(bv1, bv2).cardinality();
@@ -164,20 +165,23 @@ public final class BitVectorUtil {
     public static long cardinalityOfIntersection(final BitVectorValue bv1, final BitVectorValue bv2) {
         CheckUtils.checkNotNull(bv1, "Given BitVectorValues may not be null!");
         CheckUtils.checkNotNull(bv2, "Given BitVectorValues may not be null!");
+
+        if (bv1 instanceof DenseBitVectorCell && bv2 instanceof DenseBitVectorCell) {
+            return ((DenseBitVectorCell)bv1).cardinalityOfIntersection((DenseBitVectorCell)bv2);
+        } else if (bv1 instanceof SparseBitVectorCell && bv2 instanceof SparseBitVectorCell) {
+            return ((SparseBitVectorCell)bv1).cardinalityOfIntersection((SparseBitVectorCell)bv2);
+        }
+
+        // we have to go into the loop
         long bv1Idx = bv1.nextSetBit(0);
-        long bv2Idx = bv2.nextSetBit(0);
 
         long toReturn = 0;
-        while (bv1Idx >= 0 && bv2Idx >= 0) {
-            if (bv1Idx == bv2Idx) {
-                // both vectors have a 1 at the same index - so increase the result
+        while (bv1Idx >= 0 && bv1Idx < bv2.length()) {
+            if (bv2.get(bv1Idx)) {
+                // both vectors have 1 at the index.
                 toReturn++;
             }
-            if (bv1Idx <= bv2Idx) {
-                bv1Idx = bv1.nextSetBit(bv1Idx + 1);
-            } else if (bv1Idx >= bv2Idx) {
-                bv2Idx = bv2.nextSetBit(bv2Idx + 1);
-            }
+            bv1Idx = bv1.nextSetBit(bv1Idx + 1);
         }
         return toReturn;
     }
@@ -195,6 +199,13 @@ public final class BitVectorUtil {
     public static long cardinalityOfRelativeComplement(final BitVectorValue bv1, final BitVectorValue bv2) {
         CheckUtils.checkNotNull(bv1, "Given BitVectorValues may not be null!");
         CheckUtils.checkNotNull(bv2, "Given BitVectorValues may not be null!");
+
+        if (bv1 instanceof DenseBitVectorCell && bv2 instanceof DenseBitVectorCell) {
+            return ((DenseBitVectorCell)bv1).cardinalityOfRelativeComplement((DenseBitVectorCell)bv2);
+        } else if (bv1 instanceof SparseBitVectorCell && bv2 instanceof SparseBitVectorCell) {
+            return ((SparseBitVectorCell)bv1).cardinalityOfRelativeComplement((SparseBitVectorCell)bv2);
+        }
+
         long bv1Idx = bv1.nextSetBit(0);
 
         long toReturn = 0;

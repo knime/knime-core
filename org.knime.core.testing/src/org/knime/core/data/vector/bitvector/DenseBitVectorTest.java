@@ -751,7 +751,6 @@ public class DenseBitVectorTest extends TestCase {
         result = a.or(b);
         assertTrue(result.getAllBits()[0] == 0xFFFF);
         assertTrue(result.length() == 16);
-
     }
 
     /**
@@ -962,6 +961,53 @@ public class DenseBitVectorTest extends TestCase {
         bv.set(381966);
         assertEquals("{length=" + length + ", set bits=18, 700, 7645, 381966}", bv.toString());
 
+    }
+    
+    public void testSubsequence(){
+    	try {
+    		new DenseBitVector("10f0").subSequence(-1, 0);
+    		fail("Exception Expected");			
+		} catch (IllegalArgumentException e) {
+		}
+    	
+    	try {
+    		new DenseBitVector("10f0").subSequence(0, -2);
+    		fail("Exception Expected");			
+		} catch (IllegalArgumentException e) {
+		}
+    	
+       	try {
+    		new DenseBitVector("10f0").subSequence(0, 17);
+    		fail("Exception Expected");			
+		} catch (IllegalArgumentException e) {
+		}
+       	
+       	try {
+    		new DenseBitVector("10f0").subSequence(5, 4);
+    		fail("Exception Expected");			
+		} catch (IllegalArgumentException e) {
+		}
+    	
+      	assertEquals("", new DenseBitVector("").subSequence(0, 0).toHexString());
+      	assertEquals("", new DenseBitVector("10f0").subSequence(0, 0).toHexString());
+       	assertEquals("F0", new DenseBitVector("10f0").subSequence(0, 8).toHexString());
+       	assertEquals("0F0", new DenseBitVector("10f0").subSequence(0, 12).toHexString());
+       	assertEquals("043", new DenseBitVector("10f0").subSequence(6, 16).toHexString());
+       	assertEquals("3", new DenseBitVector("10f0").subSequence(4, 6).toHexString());
+    }
+    
+    public void testBug5077(){
+    	DenseBitVector denseBit = new DenseBitVector("1000000000000000001");
+		DenseBitVector denseBit2 = new DenseBitVector("101");
+		
+		assertEquals("1000000000000000101", denseBit.or(denseBit2).toHexString());
+		assertEquals("1000000000000000101", denseBit2.or(denseBit).toHexString());
+		
+		assertEquals("0000000000000000001", denseBit.and(denseBit2).toHexString());
+		assertEquals("0000000000000000001", denseBit2.and(denseBit).toHexString());
+		
+		assertEquals("1000000000000000100", denseBit.xor(denseBit2).toHexString());
+		assertEquals("1000000000000000100", denseBit2.xor(denseBit).toHexString());
     }
 
     public void testToBinaryString() {
