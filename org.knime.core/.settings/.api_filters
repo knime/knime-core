@@ -259,6 +259,19 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/vector/bitvector/DenseBitVectorCellFactory.java" type="org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory">
+        <filter comment="changed return type from sparse -&gt; dense --- old standing problem" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory"/>
+                <message_argument value="xor(BitVectorValue, BitVectorValue)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changed return type from sparse -&gt; dense --- old standing problem" id="1143996420">
+            <message_arguments>
+                <message_argument value="xor(BitVectorValue, BitVectorValue)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/xml/PMMLValue.java" type="org.knime.core.data.xml.PMMLValue">
         <filter id="403767336">
             <message_arguments>
