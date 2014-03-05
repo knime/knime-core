@@ -10,12 +10,19 @@
     <fullDescription>
         <intro>Performs a cross join of two tables. Each row of the first table is joined with 
         each row of the second table. Note, this is an extremely expensive operation as the number of rows in the
-        output is the product of both input table row counts. </intro>
+        output is the product of both input table row counts, by increasing the chunk size there will be a speed up. </intro>
         <option name="Second table column suffix">
         The suffix attached to a column's name if the second table contains a column with the same name.
         The column names of the first inport are always retained. If there are duplicates found in the second table
         the suffix is added once or multiple times to ensure uniqueness. 
         </option>
+        <option name="Separator for new RowIds"> This string will separate the rowids in the new data table. E.g. RowID1 + sep + RowID2</option>
+        <option name="Chunk size: ">Number of rows read at once, increasing this
+		      value yields faster execution time but also increases memory consumption.</option>
+        <option name="Append left data tables RowIds"> If selected a new column will be attached to the output, containing the rowids of the left data table. </option>
+        <option name="Column name(left): ">The name of the newly generated rowkey column.</option>
+        <option name="Append right data tables RowIds ">If selected a new column will be attached to the output, containing the rowids of the right data table.</option>
+        <option name="Column name(right): ">The name of the newly generated rowkey column.</option>
     </fullDescription>
     
     <ports>

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,17 +50,22 @@ package org.knime.base.node.preproc.crossjoin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowKey;
+import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -69,6 +74,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -78,17 +85,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author Alexander Fillbrunn, Universit�t Konstanz
  * @author  Iris Adae, Universit�t Konstanz
  */
-public class CrossJoinerNodeModel extends NodeModel {
-
-    /**
-     * Configuration key for the right table's duplicate column name suffix.
-     */
-    static final String CFG_RIGHT_SUFFIX = "rigthSuffix";
-
-    /**
-     * Default value for the right table's duplicate column name suffix.
-     */
-    static final String DEFAULT_RIGHT_SUFFIX = " (#1)";
+final class CrossJoinerNodeModel extends NodeModel {
 
     /**
      * Constructor for the node model.
@@ -97,15 +94,13 @@ public class CrossJoinerNodeModel extends NodeModel {
         super(2, 1);
     }
 
-    /**
-     * Creates a settings model for the suffix of duplicate column names in the right table.
-     * @return the settings model
-     */
-    static SettingsModelString createRightColumnNameSuffixSettingsModel() {
-        return new SettingsModelString(CFG_RIGHT_SUFFIX, DEFAULT_RIGHT_SUFFIX);
-    }
-
     private SettingsModelString m_rightColumnNameSuffix = createRightColumnNameSuffixSettingsModel();
+    private SettingsModelIntegerBounded m_cacheSize = createCacheSizeSettingsModel();
+    private SettingsModelString m_rkseparator = createRowKeySeparatorSettingsModel();
+    private SettingsModelBoolean m_showLeft = createshowFirstRowIdsSettingsModel();
+    private SettingsModelString m_nameLeft = createFirstRowIdsNameSettingsModel(m_showLeft);
+    private SettingsModelBoolean m_showRight = createshowSecondRowIdsSettingsModel();
+    private SettingsModelString m_nameRight = createSecondRowIdsNameSettingsModel(m_showRight);
 
     /**
      * {@inheritDoc}
@@ -113,34 +108,91 @@ public class CrossJoinerNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        DataContainer dc = exec.createDataContainer(createSpec(inData[0].getDataTableSpec(),
-                           inData[1].getDataTableSpec()));
-        int numCols = inData[0].getDataTableSpec().getNumColumns() + inData[1].getDataTableSpec().getNumColumns();
+        boolean showLeft = m_showLeft.getBooleanValue();
+        boolean showRight = m_showRight.getBooleanValue();
+        int chunksize = m_cacheSize.getIntValue();
+        String sep = m_rkseparator.getStringValue();
+
+        DataContainer dc = exec.createDataContainer(
+            createSpec(inData[0].getDataTableSpec(), inData[1].getDataTableSpec(), showLeft, showRight));
 
         int numOutRows = inData[0].getRowCount() * inData[1].getRowCount();
         int rowcounter = 0;
-        for (DataRow left : inData[0]) {
-            for (DataRow right : inData[1]) {
-                DataCell[] cells = new DataCell[numCols];
 
-                for (int i = 0; i < left.getNumCells(); i++) {
-                    cells[i] = left.getCell(i);
-                }
-                for (int i = 0; i < right.getNumCells(); i++) {
-                    cells[i + left.getNumCells()] = right.getCell(i);
-                }
-                String newrowkey = left.getKey().getString() + "_" + right.getKey().getString();
-                dc.addRowToTable(new DefaultRow(new RowKey(newrowkey), cells));
+        CloseableRowIterator leftit = inData[0].iterator();
+        // iterate over all possible chunks of left table
+        for (int chunkcount = 0; chunkcount < Math.ceil(inData[0].getRowCount() * 1.0 / chunksize); chunkcount++) {
+            // read one chunk of left table
+            List<DataRow> rowsleft = new LinkedList<DataRow>();
+            for (int i = 0; i < chunksize && leftit.hasNext(); i++) {
+                rowsleft.add(leftit.next());
                 exec.checkCanceled();
-                exec.setProgress(1d * rowcounter++ / numOutRows, "Generating Row " + newrowkey);
+            }
+            // iterate over all possible chunks of right table
+            CloseableRowIterator rightit = inData[1].iterator();
+            for (int chunkcount2 = 0; chunkcount2 < Math.ceil(inData[1].getRowCount() * 1.0 / chunksize);
+                                            chunkcount2++) {
+                // read  one chunk of right table
+                List<DataRow> rowsright = new LinkedList<DataRow>();
+                for (int i = 0; i < chunksize && rightit.hasNext(); i++) {
+                    rowsright.add(rightit.next());
+                }
+
+                for (DataRow left : rowsleft) {
+                    for (DataRow right : rowsright) {
+                        DataRow newRow = joinRow(left, right, showLeft, showRight, sep);
+                        dc.addRowToTable(newRow);
+                        exec.checkCanceled();
+                        exec.setProgress(1d * rowcounter++ / numOutRows, "Generating Row "
+                                                    + newRow.getKey().toString());
+                    }
+                }
             }
         }
         dc.close();
         return new BufferedDataTable[]{(BufferedDataTable)dc.getTable()};
     }
 
-    private DataTableSpec createSpec(final DataTableSpec left, final DataTableSpec right) {
-        DataColumnSpec[] colSpecs = new DataColumnSpec[left.getNumColumns() + right.getNumColumns()];
+    /**
+     * Joins the two rows into one.
+     * @param left the first data row (put at the beginning of the new one)
+     * @param right the second data row (at the end of the new one)
+     * @param showLeft if true there will be new column containing the rowid of the left column
+     * @param showRight if true there will be new column containing the rowid of the left column
+     * @param seperator String which will be put between the two rowkeys to generate the new one.
+     * @return a DataRow, containing the cells of both rows and if selected the rowkeys in new columns
+     * @since 2.9.1
+     */
+    private DataRow joinRow(final DataRow left, final DataRow right, final boolean showLeft,
+        final boolean showRight, final String seperator) {
+
+        int numCols = left.getNumCells() + right.getNumCells() + (showLeft ? 1 : 0) + (showRight ? 1 : 0);
+        DataCell[] cells = new DataCell[numCols];
+
+        for (int i = 0; i < left.getNumCells(); i++) {
+            cells[i] = left.getCell(i);
+        }
+        for (int i = 0; i < right.getNumCells(); i++) {
+            cells[i + left.getNumCells()] = right.getCell(i);
+        }
+
+        if (showLeft) {
+            cells[left.getNumCells() + right.getNumCells()] = new StringCell(left.getKey().toString());
+        }
+
+        if (showRight) {
+            cells[left.getNumCells() + right.getNumCells() + (showLeft ? 1 : 0)]
+                    = new StringCell(right.getKey().toString());
+        }
+
+        String newrowkey = left.getKey().getString() + seperator + right.getKey().getString();
+        return new DefaultRow(newrowkey, cells);
+    }
+
+    private DataTableSpec createSpec(final DataTableSpec left, final DataTableSpec right, final boolean showLeft,
+        final boolean showRight) {
+        int numCols = left.getNumColumns() + right.getNumColumns() + (showLeft ? 1 : 0) + (showRight ? 1 : 0);
+        DataColumnSpec[] colSpecs = new DataColumnSpec[numCols];
 
         final List<String> newcolumns = new LinkedList<String>();
         for (int i = 0; i < left.getNumColumns(); i++) {
@@ -164,7 +216,26 @@ public class CrossJoinerNodeModel extends NodeModel {
             }
             colSpecs[i + left.getNumColumns()] = c.createSpec();
         }
+
+        if (showLeft || showRight) {
+            DataTableSpec onlyData = new DataTableSpec(
+                Arrays.copyOf(colSpecs, left.getNumColumns() + right.getNumColumns()));
+            if (showLeft) {
+                String colName = DataTableSpec.getUniqueColumnName(onlyData, m_nameLeft.getStringValue());
+                DataColumnSpecCreator c = new DataColumnSpecCreator(colName, StringCell.TYPE);
+                colSpecs[left.getNumColumns() + right.getNumColumns()] = c.createSpec();
+                onlyData = new DataTableSpec(
+                    Arrays.copyOf(colSpecs, left.getNumColumns() + right.getNumColumns() + 1));
+            }
+            if (showRight) {
+                String colName = DataTableSpec.getUniqueColumnName(onlyData, m_nameRight.getStringValue());
+                DataColumnSpecCreator c = new DataColumnSpecCreator(colName, StringCell.TYPE);
+                colSpecs[left.getNumColumns() + right.getNumColumns()  + (showLeft ? 1 : 0)]
+                                    = c.createSpec();
+            }
+        }
         return new DataTableSpec(colSpecs);
+
     }
 
     /**
@@ -180,7 +251,8 @@ public class CrossJoinerNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        return new DataTableSpec[]{createSpec(inSpecs[0], inSpecs[1])};
+        return new DataTableSpec[]{createSpec(inSpecs[0], inSpecs[1],
+            m_showLeft.getBooleanValue(), m_showRight.getBooleanValue())};
     }
 
     /**
@@ -188,7 +260,14 @@ public class CrossJoinerNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-         m_rightColumnNameSuffix.saveSettingsTo(settings);
+        m_rightColumnNameSuffix.saveSettingsTo(settings);
+        // new since 2.9.1
+        m_cacheSize.saveSettingsTo(settings);
+        m_rkseparator.saveSettingsTo(settings);
+        m_showLeft.saveSettingsTo(settings);
+        m_showRight.saveSettingsTo(settings);
+        m_nameLeft.saveSettingsTo(settings);
+        m_nameRight.saveSettingsTo(settings);
     }
 
     /**
@@ -198,6 +277,16 @@ public class CrossJoinerNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_rightColumnNameSuffix.loadSettingsFrom(settings);
+        // new since 2.9.1
+        if (settings.containsKey(createCacheSizeSettingsModel().getKey())) {
+            // one in, all in
+            m_cacheSize.loadSettingsFrom(settings);
+            m_rkseparator.loadSettingsFrom(settings);
+            m_showLeft.loadSettingsFrom(settings);
+            m_showRight.loadSettingsFrom(settings);
+            m_nameLeft.loadSettingsFrom(settings);
+            m_nameRight.loadSettingsFrom(settings);
+        }
     }
 
     /**
@@ -207,6 +296,16 @@ public class CrossJoinerNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_rightColumnNameSuffix.validateSettings(settings);
+        // new since 2.9.1
+        if (settings.containsKey(createCacheSizeSettingsModel().getKey())) {
+            // one in, all in
+            m_cacheSize.validateSettings(settings);
+            m_rkseparator.validateSettings(settings);
+            m_showLeft.validateSettings(settings);
+            m_showRight.validateSettings(settings);
+            m_nameLeft.validateSettings(settings);
+            m_nameRight.validateSettings(settings);
+        }
     }
 
     /**
@@ -227,5 +326,76 @@ public class CrossJoinerNodeModel extends NodeModel {
             CanceledExecutionException {
     }
 
+    /**
+     * @return the settings model for the cache size
+     */
+    static SettingsModelIntegerBounded createCacheSizeSettingsModel() {
+        return new SettingsModelIntegerBounded("CFG_CACHE", 1, 1, Integer.MAX_VALUE);
+    }
+
+    /**
+     * @return the SM for the string separating the two rowkeys
+     */
+    static SettingsModelString createRowKeySeparatorSettingsModel() {
+        return new SettingsModelString("CFG_SEPARATOR", "_");
+    }
+
+    /**
+     * @return the SM for showing the first tables rowids.
+     */
+    static SettingsModelBoolean createshowFirstRowIdsSettingsModel() {
+        return new SettingsModelBoolean("CFG_SHOW_FIRST", false);
+    }
+    /**
+     * @return the SM for showing the second tables rowids.
+     */
+    static SettingsModelBoolean createshowSecondRowIdsSettingsModel() {
+        return new SettingsModelBoolean("CFG_SHOW_SECOND", false);
+    }
+
+    /**
+     * @param showFirstRowIdsSettingsModel the enable checker model.
+     * @return the column name for the first tables rowids
+     */
+    static SettingsModelString createFirstRowIdsNameSettingsModel(
+        final SettingsModelBoolean showFirstRowIdsSettingsModel) {
+        final SettingsModelString settingsModel = new SettingsModelString("CFG_FIRST_COLUMNNAME", "FirstRowIDs");
+        showFirstRowIdsSettingsModel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                settingsModel.setEnabled(showFirstRowIdsSettingsModel.getBooleanValue());
+            }
+        });
+        settingsModel.setEnabled(showFirstRowIdsSettingsModel.getBooleanValue());
+        return settingsModel;
+    }
+
+
+    /**
+     * @param showSecondRowIdsSettingsModel the enable checker model.
+     * @return the column name for the second tables rowids
+     */
+    static SettingsModelString createSecondRowIdsNameSettingsModel(
+        final SettingsModelBoolean showSecondRowIdsSettingsModel) {
+        final SettingsModelString settingsModel = new SettingsModelString("CFG_SECOND_COLUMNNAME", "SecondRowIDs");
+        showSecondRowIdsSettingsModel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                settingsModel.setEnabled(showSecondRowIdsSettingsModel.getBooleanValue());
+            }
+        });
+        settingsModel.setEnabled(showSecondRowIdsSettingsModel.getBooleanValue());
+        return settingsModel;
+    }
+
+
+
+    /**
+     * Creates a settings model for the suffix of duplicate column names in the right table.
+     * @return the settings model
+     */
+    static SettingsModelString createRightColumnNameSuffixSettingsModel() {
+        return new SettingsModelString("rigthSuffix", " (#1)");
+    }
 }
 
