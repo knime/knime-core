@@ -771,11 +771,9 @@ public class HistogramColumn implements Cloneable {
     private void paint(final HistogramModel<?> histogramData, final Graphics2D g) {
         double binWidth = binWidth(histogramData);
         //g.setFont(Font.getFont("Arial").deriveFont((float)(binWidth * .8d)));
+        g.setColor(new Color(0, 0, 0, 0));
+        g.drawRect(0, 0, m_width, m_height);
         g.setColor(m_fillColor);
-        if (histogramData.getBins().isEmpty()) {
-            g.setColor(new Color(0, 0, 0, 0));
-            g.drawRect(0, 0, m_width, m_height);
-        }
         for (int i = histogramData.getBins().size(); i-- > 0;) {
             HistogramModel.Bin<?> bin = histogramData.getBins().get(i);
             int upperPosition = upperPosition(histogramData, bin);
@@ -968,7 +966,7 @@ public class HistogramColumn implements Cloneable {
         final DataColumnSpecCreator columnSpecCreator = new DataColumnSpecCreator(m_colName, m_format.getDataType());
         if (m_format == ImageFormats.SVG) {
             final Map<String, String> widthAndHeight = new LinkedHashMap<String, String>();
-            widthAndHeight.put(SvgValueRenderer.OPTION_KEEP_ASPECT_RATIO, Boolean.toString(false));
+            widthAndHeight.put(SvgValueRenderer.OPTION_KEEP_ASPECT_RATIO, Boolean.toString(true));
             widthAndHeight.put(SvgValueRenderer.OPTION_PREFERRED_WIDTH, Integer.toString(m_width));
             widthAndHeight.put(SvgValueRenderer.OPTION_PREFERRED_HEIGHT, Integer.toString(m_height));
             final DataColumnProperties props = new DataColumnProperties(widthAndHeight);
