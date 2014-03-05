@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,8 +50,10 @@ package org.knime.core.node.util;
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -202,6 +204,7 @@ public class ColumnSelectionPanel extends JPanel {
     public ColumnSelectionPanel(final Border border,
             final ColumnFilter columnFilter, final boolean addNoneCol,
             final boolean addRowID) {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         if (columnFilter == null) {
             throw new NullPointerException("ColumnFilter must not be null");
         }
@@ -617,6 +620,18 @@ public class ColumnSelectionPanel extends JPanel {
      */
     public void removeActionListener(final ActionListener l) {
         m_chooser.removeActionListener(l);
+    }
+
+    /**
+     * @return The columns that are available for selection.
+     * @since 2.10
+     */
+    public List<DataColumnSpec> getAvailableColumns() {
+        List<DataColumnSpec> columns = new ArrayList<DataColumnSpec>();
+        for (int i = 0; i < m_chooser.getModel().getSize(); i++) {
+            columns.add((DataColumnSpec)m_chooser.getModel().getElementAt(i));
+        }
+        return columns;
     }
 
 

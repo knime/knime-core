@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,6 +52,7 @@ package org.knime.core.node.util;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
@@ -157,6 +158,17 @@ public final class StringHistoryPanel extends JPanel {
     public void setEnabled(final boolean enabled) {
         super.setEnabled(enabled);
         m_textBox.setEnabled(enabled);
+    }
+
+    /**
+     * @param bold true if the font should be bold, false if not
+     * @since 2.10
+     */
+    public void setBold(final boolean bold) {
+        String name = m_textBox.getFont().getName();
+        int size = m_textBox.getFont().getSize();
+        int style = bold ? Font.BOLD : Font.PLAIN;
+        m_textBox.setFont(new Font(name, style, size));
     }
 
     /** renderer that also supports to show customized tooltip. */
