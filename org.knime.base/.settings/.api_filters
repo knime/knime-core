@@ -151,6 +151,12 @@
                 <message_argument value="org.knime.base_2.9.0"/>
             </message_arguments>
         </filter>
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ObsoleteMetaNodeWorkflowPersistorVersion1xx"/>
+                <message_argument value="org.knime.base_2.9.2"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx">
         <filter comment="changes to non-api persistor code" id="305422471">
@@ -173,6 +179,12 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowPersistorVersion1xx"/>
                 <message_argument value="org.knime.base_2.9.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistorVersion1xx"/>
+                <message_argument value="org.knime.base_2.9.2"/>
             </message_arguments>
         </filter>
     </resource>
