@@ -22,7 +22,7 @@
                 specifying a certain allowed percentage of difference.
             </p>
             <p>
-            Currently there are three different image checker available:
+            Currently there are four different image checker available:
             <ul>
                 <li><a href="http://www.hackerfactor.com/blog/index.php?/archives/432-Looks-Like-It.html">pHash</a>, 
                 which first downscales the image to the given size, converts it to grayscale, computes a discrete cosinus
@@ -33,6 +33,9 @@
                 which works similar to the above, but skips the DCT step and compares difference between neighbouring pixels
                 in the downscaled images.
                 </li>
+                <li>A histogram-based comparison. It computes histograms for each of the three color channels with a 
+                configurable number of equal-sized bins. Then the difference between all pairs of bins between the
+                two images are summed up and normalized for a percentage value.</li>
                 <li>Full difference compares the complete images. For each pixel and each color channel (excluding the
                 alpha channel for now) the differences between reference and test image are summed up and then divided
                 by the maximum possible differences.
