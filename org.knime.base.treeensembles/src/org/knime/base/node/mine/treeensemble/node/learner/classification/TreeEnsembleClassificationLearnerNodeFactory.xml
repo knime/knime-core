@@ -71,6 +71,12 @@
       <option name="Enable Hightlighting (#patterns to store)">
         If selected, the node stores the selected number of rows and allows highlighting them in the node view.
       </option>
+      <option name="Save target distribution in tree nodes (memory expensive - 
+                    only important for tree view and PMML export)">
+        If selected, the model will store the distribution of the target category values in each tree node. This
+        information is not relevant for the prediction but is accessible via the tree view or when exporting 
+        individual models to PMML. Enabling this option may increase memory consumption considerably.  
+      </option>
     </tab>
     <tab name="Tree Options">
       <option name="Split Criterion">Choose the <a href="http://en.wikipedia.org/wiki/Decision_tree_learning#Formulae">

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -267,10 +267,8 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
     /** {@inheritDoc} */
     @Override
     final void callModelChanged() {
-        synchronized (getNodeModel()) {
-            super.callModelChanged();
-            setComponent(m_comp);
-        }
+        super.callModelChanged();
+        setComponent(m_comp);
     }
 
     /**

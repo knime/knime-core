@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -96,7 +96,6 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
@@ -311,7 +310,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView() {
+    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V getInteractiveView() {
         NodeContext.pushContext(this);
         try {
             V ainv = m_node.getNodeModel().getInteractiveNodeView();
@@ -334,7 +333,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         }
     }
 
-    
+
     /* ------------------ Job Handling ---------------- */
 
     /** {@inheritDoc} */
@@ -1010,15 +1009,4 @@ public class NativeNodeContainer extends SingleNodeContainer {
     public HiLiteHandler getOutputHiLiteHandler(final int portIndex) {
         return getNode().getOutputHiLiteHandler(portIndex);
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WebTemplate getWebTemplate() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-
 }

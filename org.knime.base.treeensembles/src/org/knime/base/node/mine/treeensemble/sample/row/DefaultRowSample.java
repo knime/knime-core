@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,8 +50,9 @@
  */
 package org.knime.base.node.mine.treeensemble.sample.row;
 
-/** Default sampling, each row is included once.
- *
+/**
+ * Default sampling, each row is included once.
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class DefaultRowSample implements RowSample {

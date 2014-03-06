@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2013
+ * Copyright by 
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -26,11 +26,11 @@ package org.knime.base.data.bitvector;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Random;
 
 import org.junit.Test;
+import org.knime.core.data.vector.bitvector.BitVectorUtil;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
 import org.knime.core.node.NodeLogger;
@@ -65,46 +65,6 @@ public class BitVectorPerformanceComparisonBug1532 {
     }
 
     @Test
-    public void testCompareTanimotoResult() throws Throwable {
-        final long seed = System.currentTimeMillis();
-        int size = 5000;
-        // NOTE (BW), 22 Oct 2008:
-        // If you set the length to 2048 the test case seems to succeed
-        // more often than with a random length (as below)
-        int length = 1000 + new Random(seed).nextInt(2000);
-        NodeLogger.getLogger(BitVectorPerformanceComparisonBug1532.class).info("Using seed " + seed);
-        DenseBitVectorCell[] newCells = createNewDenseBitVectorCells(
-                size, length, seed);
-        BitVectorCell[] oldCells = createOldBitVectorCells(size, length, seed);
-        double[] newValues = new double[size * (size - 1) / 2];
-        double[] oldValues = new double[size * (size - 1) / 2];
-        long time = System.currentTimeMillis();
-        int point = 0;
-        for (int i = 0; i < size; i++) {
-            for (int j = i + 1; j < size; j++) {
-                newValues[point++] = getNewTanimoto(newCells[i], newCells[j]);
-            }
-        }
-        long timeForNew = System.currentTimeMillis() - time;
-        time = System.currentTimeMillis();
-        point = 0;
-        for (int i = 0; i < size; i++) {
-            for (int j = i + 1; j < size; j++) {
-                oldValues[point++] = getOldTanimoto(oldCells[i], oldCells[j]);
-            }
-        }
-        long timeForOld = System.currentTimeMillis() - time;
-        NodeLogger.getLogger(BitVectorPerformanceComparisonBug1532.class).info(
-            "tanimoto calculation old: " + timeForOld);
-        NodeLogger.getLogger(BitVectorPerformanceComparisonBug1532.class).info(
-            "tanimoto calculation new: " + timeForNew);
-        assertTrue(Arrays.equals(newValues, oldValues));
-    }
-
-    // @Test
-    // This is not a real bug and do not have an idea how to resolve
-    // this issue. It is recorded in Bugzilla, thus this test is currently
-    // disabled.
     public void testCompareTanimotoTime() throws Throwable {
         final long seed = System.currentTimeMillis();
         int size = 5000;
@@ -162,7 +122,7 @@ public class BitVectorPerformanceComparisonBug1532 {
 
     private double getNewTanimoto(final DenseBitVectorCell b1,
             final DenseBitVectorCell b2) {
-        long nominator = DenseBitVectorCellFactory.and(b1, b2).cardinality();
+        long nominator = BitVectorUtil.cardinalityOfIntersection(b1, b2);
         long denominator  = b1.cardinality() + b2.cardinality() - nominator;
         if (denominator > 0) {
             return 1.0 - nominator / (double)denominator;

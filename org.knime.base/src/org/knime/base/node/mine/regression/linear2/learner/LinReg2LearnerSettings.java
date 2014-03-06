@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -79,13 +79,15 @@ final class LinReg2LearnerSettings {
     private int m_scatterPlotRowCount;
 
     /** method how to deal with missing values in the input data. */
-    private MissingValueHandling m_missingValueHandling;
+    private org.knime.base.node.mine.regression.MissingValueHandling m_missingValueHandling;
 
     /**
      * This enum holds all ways of handling missing values in the input table.
      *
      * @author Heiko Hofer
+     * @deprecated Use {@link org.knime.base.node.mine.regression.MissingValueHandling} instead.
      */
+    @Deprecated
     public enum MissingValueHandling {
         /** Ignore rows with missing values. */
         ignore,
@@ -102,7 +104,7 @@ final class LinReg2LearnerSettings {
         m_offsetValue = 0;
         m_scatterPlotFirstRow = 1;
         m_scatterPlotRowCount = 20000;
-        m_missingValueHandling = MissingValueHandling.ignore;
+        m_missingValueHandling = org.knime.base.node.mine.regression.MissingValueHandling.ignore;
     }
 
     private static final String CFG_TARGET = "target";
@@ -124,7 +126,7 @@ final class LinReg2LearnerSettings {
         m_columnFilter.loadConfigurationInModel(settings);
         m_includeConstant = settings.getBoolean(CFG_INCLUDE_CONSTANT);
         m_offsetValue = settings.getDouble(CFG_OFFSET_VALUE);
-        m_missingValueHandling = MissingValueHandling.valueOf(settings.getString(CFG_MISSING_VALUE_HANDLING));
+        m_missingValueHandling = org.knime.base.node.mine.regression.MissingValueHandling.valueOf(settings.getString(CFG_MISSING_VALUE_HANDLING));
         // use default if not present (settings are only used in the scatter plot view).
         m_scatterPlotFirstRow = settings.getInt(CFG_SCATTER_PLOT_FIRST_ROW, 1);
         m_scatterPlotRowCount = settings.getInt(CFG_SCATTER_PLOT_ROW_COUNT, 20000);
@@ -141,8 +143,8 @@ final class LinReg2LearnerSettings {
         m_columnFilter.loadConfigurationInDialog(settings, spec);
         m_includeConstant = settings.getBoolean(CFG_INCLUDE_CONSTANT, true);
         m_offsetValue = settings.getDouble(CFG_OFFSET_VALUE, 0.0);
-        m_missingValueHandling = MissingValueHandling.valueOf(
-            settings.getString(CFG_MISSING_VALUE_HANDLING, MissingValueHandling.ignore.toString()));
+        m_missingValueHandling = org.knime.base.node.mine.regression.MissingValueHandling.valueOf(
+            settings.getString(CFG_MISSING_VALUE_HANDLING, org.knime.base.node.mine.regression.MissingValueHandling.ignore.toString()));
         m_scatterPlotFirstRow = settings.getInt(CFG_SCATTER_PLOT_FIRST_ROW, 1);
         m_scatterPlotRowCount = settings.getInt(CFG_SCATTER_PLOT_ROW_COUNT, 20000);
     }
@@ -257,14 +259,30 @@ final class LinReg2LearnerSettings {
     /**
      * @return the missingValueHandling
      */
+    @Deprecated
     public MissingValueHandling getMissingValueHandling() {
+        return MissingValueHandling.values()[m_missingValueHandling.ordinal()];
+    }
+
+    /**
+     * @param missingValueHandling the missingValueHandling to set
+     */
+    @Deprecated
+    public void setMissingValueHandling(final MissingValueHandling missingValueHandling) {
+        this.m_missingValueHandling = org.knime.base.node.mine.regression.MissingValueHandling.values()[missingValueHandling.ordinal()];
+    }
+
+    /**
+     * @return the missingValueHandling
+     */
+    public org.knime.base.node.mine.regression.MissingValueHandling getMissingValueHandling2() {
         return m_missingValueHandling;
     }
 
     /**
      * @param missingValueHandling the missingValueHandling to set
      */
-    public void setMissingValueHandling(final MissingValueHandling missingValueHandling) {
+    public void setMissingValueHandling(final org.knime.base.node.mine.regression.MissingValueHandling missingValueHandling) {
         this.m_missingValueHandling = missingValueHandling;
     }
 

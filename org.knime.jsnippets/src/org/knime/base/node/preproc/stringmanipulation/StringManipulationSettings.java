@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -63,6 +63,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
+import org.knime.base.node.util.ManipulatorProvider;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -354,7 +355,7 @@ public class StringManipulationSettings {
             StringManipulatorProvider.getDefault();
         // Add StringManipulators to the imports
         Collection<Manipulator> manipulators =
-            provider.getManipulators(StringManipulatorProvider.ALL_CATEGORY);
+            provider.getManipulators(ManipulatorProvider.ALL_CATEGORY);
         Class<?> returnType = null;
         for (Manipulator manipulator : manipulators) {
             if (function.equals(manipulator.getName())) {
@@ -413,10 +414,11 @@ public class StringManipulationSettings {
             StringManipulatorProvider provider =
                 StringManipulatorProvider.getDefault();
             includes.add(provider.getJarFile().getAbsolutePath());
+            includes.add(FileLocator.getBundleFile(FrameworkUtil.getBundle(StringUtils.class)).getAbsolutePath());
             s.setJarFiles(includes.toArray(new String[includes.size()]));
         } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Cannot locate necessary libraries.", e);
+            throw new IllegalStateException("Cannot locate necessary libraries due to I/O problem: " + e.getMessage(),
+                e);
         }
         s.setReplace(this.isReplace());
         s.setReturnType(m_returnType.getName());
@@ -429,7 +431,7 @@ public class StringManipulationSettings {
             StringManipulatorProvider.getDefault();
         // Add StringManipulators to the imports
         Collection<Manipulator> manipulators =
-            provider.getManipulators(StringManipulatorProvider.ALL_CATEGORY);
+            provider.getManipulators(ManipulatorProvider.ALL_CATEGORY);
         for (Manipulator manipulator : manipulators) {
             String toImport = manipulator.getClass().getName();
             imports.add("static " + toImport + ".*");

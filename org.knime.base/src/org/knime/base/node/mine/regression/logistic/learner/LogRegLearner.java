@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -179,7 +179,7 @@ public final class LogRegLearner {
         int rowIndex = 0;
         final int rowCount = data.getRowCount();
         for (DataRow row : data) {
-            exec.setMessage("Determining possible values " + (rowIndex + 1)
+            exec.setMessage("Determining possible values " + ((rowIndex++) + 1)
                 + "/" + rowCount + " (\"" + row.getKey() + "\")");
             exec.checkCanceled();
             for (int i = 0; i < valuesI.length; i++) {

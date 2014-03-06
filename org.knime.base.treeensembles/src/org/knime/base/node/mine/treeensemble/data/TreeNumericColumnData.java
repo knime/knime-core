@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -60,17 +60,18 @@ import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerCon
 import org.knime.base.node.util.DoubleFormat;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeNumericColumnData extends TreeAttributeColumnData {
 
     private final double[] m_sortedData;
+
     private final int[] m_originalIndexInColumnList;
 
     TreeNumericColumnData(final TreeNumericColumnMetaData metaData,
-            final TreeEnsembleLearnerConfiguration configuration,
-            final double[] sortedData, final int[] orginalIndexInColumnList) {
+        final TreeEnsembleLearnerConfiguration configuration, final double[] sortedData,
+        final int[] orginalIndexInColumnList) {
         super(metaData, configuration);
         m_sortedData = sortedData;
         m_originalIndexInColumnList = orginalIndexInColumnList;
@@ -85,8 +86,7 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
     /** {@inheritDoc} */
     @Override
     public NumericSplitCandidate calcBestSplitClassification(final double[] rowWeights,
-            final ClassificationPriors targetPriors,
-            final TreeTargetNominalColumnData targetColumn) {
+        final ClassificationPriors targetPriors, final TreeTargetNominalColumnData targetColumn) {
         final NominalValueRepresentation[] targetVals = targetColumn.getMetaData().getValues();
         final int[] originalIndexInColumnList = m_originalIndexInColumnList;
         final boolean useAverageSplitPoints = getConfiguration().isUseAverageSplitPoints();
@@ -133,15 +133,15 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
             if (hasTargetChanged) {
                 mustTestOnNextValueChange = true;
             }
-            if (hasValueChanged && mustTestOnNextValueChange
-                    && sumWeightsLeftOfSplit >= minChildNodeSize && sumWeightsRightOfSplit >= minChildNodeSize) {
+            if (hasValueChanged && mustTestOnNextValueChange && sumWeightsLeftOfSplit >= minChildNodeSize
+                && sumWeightsRightOfSplit >= minChildNodeSize) {
                 tempArray1[0] = impurityCriterion.getPartitionImpurity(targetCountsLeftOfSplit, sumWeightsLeftOfSplit);
-                tempArray1[1] = impurityCriterion.getPartitionImpurity(
-                           targetCountsRightOfSplit, sumWeightsRightOfSplit);
+                tempArray1[1] =
+                    impurityCriterion.getPartitionImpurity(targetCountsRightOfSplit, sumWeightsRightOfSplit);
                 tempArray2[0] = sumWeightsLeftOfSplit;
                 tempArray2[1] = sumWeightsRightOfSplit;
-                double postSplitImpurity = impurityCriterion.getPostSplitImpurity(
-                              tempArray1, tempArray2, totalSumWeight);
+                double postSplitImpurity =
+                    impurityCriterion.getPostSplitImpurity(tempArray1, tempArray2, totalSumWeight);
                 if (postSplitImpurity < priorImpurity) {
                     // Use absolute gain (IG) for split calculation even
                     // if the split criterion is information gain ratio (IGR).
@@ -152,8 +152,8 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
                     // which is ~0.00148
                     double gain = (priorImpurity - postSplitImpurity);
                     if (gain > bestGain) {
-                        bestGainValueForSplit = impurityCriterion.getGain(priorImpurity, postSplitImpurity,
-                                tempArray2, totalSumWeight);
+                        bestGainValueForSplit =
+                            impurityCriterion.getGain(priorImpurity, postSplitImpurity, tempArray2, totalSumWeight);
                         bestGain = gain;
                         bestSplit = useAverageSplitPoints ? getCenter(lastSeenValue, value) : lastSeenValue;
                     }
@@ -183,9 +183,8 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
 
     /** {@inheritDoc} */
     @Override
-    public SplitCandidate calcBestSplitRegression(final double[] rowWeights,
-            final RegressionPriors targetPriors,
-            final TreeTargetNumericColumnData targetColumn) {
+    public SplitCandidate calcBestSplitRegression(final double[] rowWeights, final RegressionPriors targetPriors,
+        final TreeTargetNumericColumnData targetColumn) {
         final int[] originalIndexInColumnList = m_originalIndexInColumnList;
         final boolean useAverageSplitPoints = getConfiguration().isUseAverageSplitPoints();
         final int minChildNodeSize = getConfiguration().getMinChildSize();
@@ -217,7 +216,7 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
                 continue;
             } else if (Math.floor(weight) != weight) {
                 throw new UnsupportedOperationException("weighted records (missing values?) not supported, "
-                        + "weight is " + weight);
+                    + "weight is " + weight);
             }
 
             final double value = m_sortedData[i];
@@ -230,8 +229,9 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
                 nrRecordsRight -= lastSeenWeight;
 
                 if (nrRecordsLeft >= minChildNodeSize && nrRecordsRight >= minChildNodeSize && lastSeenValue < value) {
-                    double criterion = (ySumLeft * ySumLeft / nrRecordsLeft)
-                        + (ySumRight * ySumRight / nrRecordsRight) - criterionTotal;
+                    double criterion =
+                        (ySumLeft * ySumLeft / nrRecordsLeft) + (ySumRight * ySumRight / nrRecordsRight)
+                            - criterionTotal;
                     if (criterion > bestImprovement) {
                         bestImprovement = criterion;
                         bestSplit = useAverageSplitPoints ? getCenter(lastSeenValue, value) : lastSeenValue;
@@ -242,11 +242,11 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
             lastSeenValue = value;
             lastSeenWeight = weight;
         }
-        assert areApproximatelyEqual(lastSeenWeight, nrRecordsRight) :
-            "Expected left weight of " + nrRecordsRight + ", was " + lastSeenWeight;
+        assert areApproximatelyEqual(lastSeenWeight, nrRecordsRight) : "Expected left weight of " + nrRecordsRight
+            + ", was " + lastSeenWeight;
 
-        assert areApproximatelyEqual(lastSeenWeight * lastSeenY, ySumRight) :
-            "Expected y sum of " + ySumRight + " but was " + lastSeenY * lastSeenWeight;
+        assert areApproximatelyEqual(lastSeenWeight * lastSeenY, ySumRight) : "Expected y sum of " + ySumRight
+            + " but was " + lastSeenY * lastSeenWeight;
         if (bestImprovement > 0.0) {
             return new NumericSplitCandidate(this, bestSplit, bestImprovement);
         } else {
@@ -265,10 +265,9 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
 
     /** {@inheritDoc} */
     @Override
-    public void updateChildMemberships(final TreeNodeCondition childCondition,
-            final double[] parentMemberships, final double[] childMembershipsToUpdate) {
-        final TreeNodeNumericCondition numCondition =
-            (TreeNodeNumericCondition)childCondition;
+    public void updateChildMemberships(final TreeNodeCondition childCondition, final double[] parentMemberships,
+        final double[] childMembershipsToUpdate) {
+        final TreeNodeNumericCondition numCondition = (TreeNodeNumericCondition)childCondition;
         final NumericOperator numOperator = numCondition.getNumericOperator();
         final double splitValue = numCondition.getSplitValue();
         for (int i = 0; i < m_sortedData.length; i++) {
@@ -276,20 +275,19 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
             final int originalColIndex = m_originalIndexInColumnList[i];
             boolean matches;
             switch (numOperator) {
-            case LessThanOrEqual:
-                matches = value <= splitValue;
-                break;
-            case LargerThan:
-                matches = value > splitValue;
-                break;
-            default: throw new IllegalStateException(
-                    "Unknown operator " + numOperator);
+                case LessThanOrEqual:
+                    matches = value <= splitValue;
+                    break;
+                case LargerThan:
+                    matches = value > splitValue;
+                    break;
+                default:
+                    throw new IllegalStateException("Unknown operator " + numOperator);
             }
             if (!matches) {
                 childMembershipsToUpdate[originalColIndex] = 0.0;
             } else {
-                assert childMembershipsToUpdate[originalColIndex]
-                    == parentMemberships[originalColIndex];
+                assert childMembershipsToUpdate[originalColIndex] == parentMemberships[originalColIndex];
             }
         }
     }

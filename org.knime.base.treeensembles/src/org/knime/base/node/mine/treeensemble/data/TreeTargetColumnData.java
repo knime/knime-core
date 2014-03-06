@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -53,7 +53,7 @@ package org.knime.base.node.mine.treeensemble.data;
 import org.knime.core.data.RowKey;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeTargetColumnData extends TreeColumnData {
@@ -61,9 +61,9 @@ public abstract class TreeTargetColumnData extends TreeColumnData {
     protected final RowKey[] m_rowKeysAsArray;
 
     /**
-     * @param metaData */
-    TreeTargetColumnData(final TreeTargetColumnMetaData metaData,
-            final RowKey[] rowKeysAsArray) {
+     * @param metaData
+     */
+    TreeTargetColumnData(final TreeTargetColumnMetaData metaData, final RowKey[] rowKeysAsArray) {
         super(metaData);
         m_rowKeysAsArray = rowKeysAsArray;
     }

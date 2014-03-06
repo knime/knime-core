@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -59,7 +59,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeTargetNumericColumnDataCreator extends TreeTargetColumnDataCreator {
@@ -69,8 +69,7 @@ public class TreeTargetNumericColumnDataCreator extends TreeTargetColumnDataCrea
     TreeTargetNumericColumnDataCreator(final DataColumnSpec colSpec) {
         super(colSpec);
         if (!colSpec.getType().isCompatible(DoubleValue.class)) {
-            throw new IllegalStateException("Type not double compatible: "
-                    + colSpec.getName());
+            throw new IllegalStateException("Type not double compatible: " + colSpec.getName());
         }
         m_data = new ArrayList<Double>();
     }
@@ -90,10 +89,8 @@ public class TreeTargetNumericColumnDataCreator extends TreeTargetColumnDataCrea
         for (int i = 0; i < dataAsArray.length; i++) {
             dataAsArray[i] = m_data.get(i);
         }
-        TreeTargetNumericColumnMetaData metaData =
-            new TreeTargetNumericColumnMetaData(getColumnSpec().getName());
-        return new TreeTargetNumericColumnData(
-                metaData, rowKeysAsArray, dataAsArray);
+        TreeTargetNumericColumnMetaData metaData = new TreeTargetNumericColumnMetaData(getColumnSpec().getName());
+        return new TreeTargetNumericColumnData(metaData, rowKeysAsArray, dataAsArray);
     }
 
 }

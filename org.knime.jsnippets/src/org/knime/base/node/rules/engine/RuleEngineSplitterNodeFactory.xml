@@ -120,7 +120,7 @@ $Col0$ MATCHES $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$ =>
 	</fullDescription>
 
 	<ports>
-		<inPort index="0" name="Input table">Any data table that should be splitted</inPort>
+		<inPort index="0" name="Input table">Any data table that should be split</inPort>
 		<outPort index="0" name="First output">First output table with rows that are evaluated to TRUE</outPort>
 		<outPort index="1" name="Second output">Second output table with rows that are evaluated to FALSE</outPort>
 	</ports>

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -128,19 +128,17 @@ public abstract class AbstractNodeView<T extends NodeModel> {
      * highlight handler has changed.
      */
     void callModelChanged() {
-        synchronized (m_nodeModel) {
-            try {
-                // CALL abstract model changed
-                modelChanged();
-            } catch (NullPointerException npe) {
-                m_logger.coding("NodeView.modelChanged() causes "
-                       + "NullPointerException during notification of a "
-                       + "changed model, reason: " + npe.getMessage(), npe);
-            } catch (Throwable t) {
-                m_logger.error("NodeView.modelChanged() causes an error "
-                       + "during notification of a changed model, reason: "
-                       + t.getMessage(), t);
-            }
+        try {
+            // CALL abstract model changed
+            modelChanged();
+        } catch (NullPointerException npe) {
+            m_logger.coding("NodeView.modelChanged() causes "
+                   + "NullPointerException during notification of a "
+                   + "changed model, reason: " + npe.getMessage(), npe);
+        } catch (Throwable t) {
+            m_logger.error("NodeView.modelChanged() causes an error "
+                   + "during notification of a changed model, reason: "
+                   + t.getMessage(), t);
         }
     }
 
@@ -173,11 +171,9 @@ public abstract class AbstractNodeView<T extends NodeModel> {
      * @param title The view title.
      * @see #closeView() */
     final void openView(final String title) {
-        synchronized (m_nodeModel) {
-            m_nodeModel.registerView(this);
-            m_viewName = title;
-            callOpenView(title);
-        }
+        m_nodeModel.registerView(this);
+        m_viewName = title;
+        callOpenView(title);
     }
 
     /** Direct(!) subclasses override this method and open the view or frame.
@@ -194,10 +190,8 @@ public abstract class AbstractNodeView<T extends NodeModel> {
      * {@link #openView(String)}. (Core) Sub-classes may widen the scope of this
      * method. */
     void closeView() {
-        synchronized (m_nodeModel) {
-            m_nodeModel.unregisterView(this);
-            callCloseView();
-        }
+        m_nodeModel.unregisterView(this);
+        callCloseView();
     }
 
     /** Called from {@link #closeView()} to close the view and release all

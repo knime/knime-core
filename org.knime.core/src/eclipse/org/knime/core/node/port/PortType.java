@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -56,6 +56,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * Holds type information about node port types.
@@ -138,7 +140,8 @@ public final class PortType {
         return m_objectClass.hashCode();
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 2.10*/
     @Override
     public boolean equals(final Object obj) {
         if (obj == this) {
@@ -151,7 +154,20 @@ public final class PortType {
         return m_objectClass.equals(other.m_objectClass);
     }
 
+    /** Saves to settings object. This method only calls {@link #save(ConfigWO)} and is kept for backward
+     * compatibility reasons.
+     * @param settings ...
+     */
     public void save(final NodeSettingsWO settings) {
+        save((ConfigWO)settings);
+    }
+
+    /** Saves this port type to a config object. It only saves the port object class.
+     * @param settings to save to
+     * @see #load(ConfigRO)
+     * @since 2.10
+     */
+    public void save(final ConfigWO settings) {
         settings.addString("object_class", m_objectClass.getName());
     }
 
@@ -163,9 +179,23 @@ public final class PortType {
         return obj == null || m_objectClass.isAssignableFrom(obj.getClass());
     }
 
-    @SuppressWarnings("unchecked")
-    public static PortType load(final NodeSettingsRO settings)
-        throws InvalidSettingsException {
+    /** Loads from settings object. This method only calls {@link #load(ConfigRO)} and is kept for backward
+     * compatibility reasons.
+     * @param settings ...
+     * @return ...
+     * @throws InvalidSettingsException ...
+     */
+    public static PortType load(final NodeSettingsRO settings) throws InvalidSettingsException {
+        return load((ConfigRO)settings);
+    }
+
+    /** Loads from a config object, counterpart to {@link #save(ConfigWO)}.
+     * @param settings ...
+     * @return ...
+     * @throws InvalidSettingsException ...
+     * @since 2.10
+     */
+    public static PortType load(final ConfigRO settings) throws InvalidSettingsException {
         String objectClassString = settings.getString("object_class");
         if (objectClassString == null) {
             throw new InvalidSettingsException(

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -214,6 +214,24 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
     @Override
     public long nextSetBit(final long startIdx) {
         return m_bitVector.nextSetBit(startIdx);
+    }
+
+    /**
+     * @see BitVectorUtil#cardinalityOfIntersection(BitVectorValue, BitVectorValue)
+     * @param bitVectorCell the other cell containing the operand
+     * @return the cardinality of intersection
+     */
+    long cardinalityOfIntersection(final SparseBitVectorCell bitVectorCell) {
+        return m_bitVector.cardinalityOfIntersection(bitVectorCell.m_bitVector);
+    }
+
+    /**
+     * @see BitVectorUtil#cardinalityOfRelativeComplement(BitVectorValue, BitVectorValue)
+     * @param bitVectorCell the other cell containing the operand
+     * @return the cardinality of intersection
+     */
+    long cardinalityOfRelativeComplement(final SparseBitVectorCell bitVectorCell) {
+        return m_bitVector.cardinalityOfRelativeComplement(bitVectorCell.m_bitVector);
     }
 
     /** Factory for (de-)serializing a DenseBitVectorCell. */

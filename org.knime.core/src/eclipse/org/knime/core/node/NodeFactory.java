@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -119,7 +119,9 @@ public abstract class NodeFactory<T extends NodeModel> {
          * @since 2.7 */
         Missing,
         /** If not specified. */
-        Unknown
+        Unknown,
+        /** @since 2.10 */
+        Subnode
     }
 
     private static final Pattern ICON_PATH_PATTERN = Pattern.compile("[^\\./]+/\\.\\./");

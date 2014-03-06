@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2013
+ * Copyright by 
  * University of Konstanz, Germany
  * and KNIME GmbH, Konstanz, Germany
  *
@@ -928,6 +928,54 @@ public class SparseBitVectorTest extends TestCase {
                 "502004031204000812483400000898010";
         bv = new SparseBitVector(hex);
         assertEquals(hex, bv.toHexString());
+    }
+    
+    public void testSubsequence(){
+    	try {
+    		new SparseBitVector("10f0").subSequence(-1, 0);
+    		fail("Exception Expected");			
+		} catch (IllegalArgumentException e) {
+		}
+    	
+    	try {
+    		new SparseBitVector("10f0").subSequence(0, -2);
+    		fail("Exception Expected");			
+		} catch (IllegalArgumentException e) {
+		}
+    	
+       	try {
+    		new SparseBitVector("10f0").subSequence(0, 17);
+    		fail("Exception Expected");			
+		} catch (IllegalArgumentException e) {
+		}
+       	
+       	try {
+    		new SparseBitVector("10f0").subSequence(5, 4);
+    		fail("Exception Expected");			
+		} catch (IllegalArgumentException e) {
+		}
+      	assertEquals("", new SparseBitVector("").subSequence(0, 0).toHexString());
+      	assertEquals("", new SparseBitVector("10f0").subSequence(0, 0).toHexString());
+       	assertEquals("F0", new SparseBitVector("10f0").subSequence(0, 8).toHexString());
+       	assertEquals("0F0", new SparseBitVector("10f0").subSequence(0, 12).toHexString());
+       	assertEquals("043", new SparseBitVector("10f0").subSequence(6, 16).toHexString());
+       	assertEquals("3", new SparseBitVector("10f0").subSequence(4, 6).toHexString());
+    }
+    
+    public void testBug5077(){
+    	SparseBitVector sparseBit = new SparseBitVector("1000000000000000001");
+    	SparseBitVector sparseBit2 = new SparseBitVector("101");
+    	
+    	SparseBitVector next = new SparseBitVector("1000000000000000101");
+		
+    	assertEquals(next.toHexString(), sparseBit2.or(sparseBit).toHexString());
+    	assertEquals(next.toHexString(), sparseBit.or(sparseBit2).toHexString());
+		
+		assertEquals("0000000000000000001", sparseBit.and(sparseBit2).toHexString());
+		assertEquals("0000000000000000001", sparseBit2.and(sparseBit).toHexString());
+		
+		assertEquals("1000000000000000100", sparseBit.xor(sparseBit2).toHexString());
+		assertEquals("1000000000000000100", sparseBit2.xor(sparseBit).toHexString());
     }
 
 

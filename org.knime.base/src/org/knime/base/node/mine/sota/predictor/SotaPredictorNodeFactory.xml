@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./sota_predictor.png" type="Predictor">
+<knimeNode icon="./sota_predictor.png" type="Predictor" xmlns="http://knime.org/node/v2.8"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
 	<name>SOTA Predictor</name>
 	
 	<shortDescription>
@@ -14,8 +15,23 @@
 		values. The SOTA Predictor can only be used with an input SOTA model,
 		that used the class column during the training phase.
 	</intro>
+		<option name="Change prediction column name">
+			When set, you can change the name of the prediction column.
+		</option>
+		<option name="Prediction Column">
+			The possibly overridden column name for the predicted column. (The
+			default is:
+			<tt>Prediction (</tt>trainingColumn<tt>)</tt>.)
+		</option>
+		<option name="Append columns with normalized class distribution">
+			Compute the probabilities for the different classes.
+		</option>
+		<option name="Suffix for probability columns">
+			Suffix for the normalized distribution columns. Their names are like:
+			<tt>P (</tt>trainingColumn<tt>=</tt>value<tt>)</tt>.
+		</option>
 	</fullDescription>
-		
+	
 	<ports>
 		<inPort index="0" name="The model of the trained SOTA">
 			The model of the trained SOTA.

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -53,6 +53,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
@@ -82,9 +83,10 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
-import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
+import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.virtual.VirtualNodeInput;
@@ -97,15 +99,16 @@ import org.w3c.dom.Element;
 /** Implementation of a {@link NodeContainer} holding a set of nodes via a {@link WorkflowManager}
  * and acting like a {@link NativeNodeContainer} to the outside.
  *
+ * @noreference Not to be used by clients.
  * @author M. Berthold & B. Wiswedel
  * @since 2.9
  */
-public class SubNodeContainer extends SingleNodeContainer {
+public final class SubNodeContainer extends SingleNodeContainer {
 
     private WorkflowManager m_wfm;
 
-    private NodeInPort[] m_inports;
-    private NodeContainerOutPort[] m_outports;
+    private final NodeInPort[] m_inports;
+    private final NodeContainerOutPort[] m_outports;
     /** Keeps outgoing information (specs, objects, HiLiteHandlers...). */
     static class Output {
         String name = "none";
@@ -117,8 +120,8 @@ public class SubNodeContainer extends SingleNodeContainer {
     }
     private Output[] m_outputs;
 
-    private VirtualPortObjectInNodeModel m_inportNodeModel;
-    private VirtualPortObjectOutNodeModel m_outportNodeModel;
+    private int m_virtualInNodeIDSuffix;
+    private int m_virtualOutNodeIDSuffix;
 
     private FlowObjectStack m_incomingStack;
     private FlowObjectStack m_outgoingStack;
@@ -129,22 +132,47 @@ public class SubNodeContainer extends SingleNodeContainer {
      * @param id ...
      * @param persistor ...
      */
-    public SubNodeContainer(final WorkflowManager parent, final NodeID id, final NodeContainerMetaPersistor persistor) {
-        super(parent, id, persistor);
-        // TODO load content from persistor
+    SubNodeContainer(final WorkflowManager parent, final NodeID id, final SubNodeContainerPersistor persistor) {
+        super(parent, id, persistor.getMetaPersistor());
+        WorkflowPersistor workflowPersistor = persistor.getWorkflowPersistor();
+        m_wfm = new WorkflowManager(parent, id, workflowPersistor);
+
+        WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
+        WorkflowPortTemplate[] outPortTemplates = persistor.getOutPortTemplates();
+        m_outports = new NodeContainerOutPort[outPortTemplates.length];
+        for (int i = 0; i < outPortTemplates.length; i++) {
+            WorkflowPortTemplate t = outPortTemplates[i];
+            m_outports[i] = new NodeContainerOutPort(this, t.getPortType(), t.getPortIndex());
+            m_outports[i].setPortName(t.getPortName());
+        }
+        m_outputs = new Output[m_outports.length];
+        for (int i = 0; i < m_outputs.length; i++) {
+            m_outputs[i] = new Output();
+        }
+        m_inports = new NodeInPort[inPortTemplates.length];
+        m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
+        m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
+        PortType[] inTypes = new PortType[inPortTemplates.length];
+        for (int i = 0; i < inPortTemplates.length; i++) {
+            inTypes[i] = inPortTemplates[i].getPortType();
+            m_inports[i] = new NodeInPort(i, inTypes[i]);
+        }
     }
 
-    /** Create new SubNode from existing Metanode (=WorkflowManager).
+    /**
+     * Create new SubNode from existing Metanode (=WorkflowManager).
      *
      * @param parent ...
      * @param id ...
      * @param content ...
+     * @param name The name of the sub node
      */
-    public SubNodeContainer(final WorkflowManager parent, final NodeID id, final WorkflowManager content) {
+    public SubNodeContainer(final WorkflowManager parent, final NodeID id, final WorkflowManager content,
+        final String name) {
         super(parent, id);
         // Create new, internal workflow manager:
         m_wfm = new WorkflowManager(parent, id, new PortType[]{}, new PortType[]{},
-                                /*isProject=*/true, parent.getContext(), "This is a SubNode");
+        /*isProject=*/true, parent.getContext(), name);
         // and copy content
         WorkflowCopyContent c = new WorkflowCopyContent();
         c.setAnnotation(content.getWorkflowAnnotations().toArray(new WorkflowAnnotation[0]));
@@ -173,7 +201,7 @@ public class SubNodeContainer extends SingleNodeContainer {
             inTypes[i] = content.getInPort(i).getPortType();
             m_inports[i + 1] = new NodeInPort(i + 1, inTypes[i]);
         }
-        m_inports[0] = new NodeInPort(0, FlowVariablePortObject.TYPE);
+        m_inports[0] = new NodeInPort(0, FlowVariablePortObject.TYPE_OPTIONAL);
         // initialize NodeContainer outports
         // (metanodes don't have hidden variable port 0, SingleNodeContainers do!)
         m_outports = new NodeContainerOutPort[content.getNrOutPorts() + 1];
@@ -183,25 +211,87 @@ public class SubNodeContainer extends SingleNodeContainer {
             outTypes[i] = content.getOutPort(i).getPortType();
             m_outputs[i + 1] = new Output();
             m_outputs[i + 1].type = content.getOutPort(i).getPortType();
-            m_outports[i + 1] = new NodeContainerOutPort(this, i + 1);
+            m_outports[i + 1] = new NodeContainerOutPort(this, m_outputs[i + 1].type, i + 1);
         }
         m_outputs[0] = new Output();
         m_outputs[0].type = FlowVariablePortObject.TYPE;
-        m_outports[0] = new NodeContainerOutPort(this, 0);
+        m_outports[0] = new NodeContainerOutPort(this, FlowVariablePortObject.TYPE, 0);
         // add virtual in/out nodes and connect them
         NodeID inNodeID = m_wfm.addNode(new VirtualPortObjectInNodeFactory(inTypes));
-        m_inportNodeModel = (VirtualPortObjectInNodeModel)
-                                    ((NativeNodeContainer)m_wfm.getNodeContainer(inNodeID)).getNodeModel();
         for (ConnectionContainer cc : content.getWorkflow().getConnectionsBySource(content.getID())) {
             m_wfm.addConnection(inNodeID, cc.getSourcePort() + 1, oldIDsHash.get(cc.getDest()), cc.getDestPort());
         }
+        m_virtualInNodeIDSuffix = inNodeID.getIndex();
         NodeID outNodeID = m_wfm.addNode(new VirtualPortObjectOutNodeFactory(outTypes));
-        m_outportNodeModel = (VirtualPortObjectOutNodeModel)
-                                    ((NativeNodeContainer)m_wfm.getNodeContainer(outNodeID)).getNodeModel();
         for (ConnectionContainer cc : content.getWorkflow().getConnectionsByDest(content.getID())) {
             m_wfm.addConnection(oldIDsHash.get(cc.getSource()), cc.getSourcePort(), outNodeID, cc.getDestPort() + 1);
         }
+        m_virtualOutNodeIDSuffix = outNodeID.getIndex();
+
+
+        int xmin = Integer.MAX_VALUE;
+        int ymin = Integer.MAX_VALUE;
+        int xmax = Integer.MIN_VALUE;
+        int ymax = Integer.MIN_VALUE;
+        for (NodeContainer nc : m_wfm.getNodeContainers()) {
+            NodeUIInformation uii = nc.getUIInformation();
+            if (uii != null) {
+                int[] bounds = uii.getBounds();
+                if (bounds.length >= 2) {
+                    xmin = Math.min(bounds[0], xmin);
+                    ymin = Math.min(bounds[1], ymin);
+                    xmax = Math.max(bounds[0], xmax);
+                    ymax = Math.max(bounds[1], ymax);
+                }
+            }
+        }
+
+        // move virtual in/out nodes
+        NodeContainer inNode = m_wfm.getNodeContainer(getVirtualInNodeID());
+        int x = xmin - 100;
+        int y = (ymin + ymax) / 2;
+        inNode.setUIInformation(new NodeUIInformation(x, y, 0, 0, true));
+        NodeContainer outNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
+        x = xmax + 100;
+        outNode.setUIInformation(new NodeUIInformation(x, y, 0, 0, true));
+
         setInternalState(m_wfm.getInternalState());
+    }
+
+    private void initFrom(final WorkflowManager wfm) {
+
+    }
+
+    /* -------------------- Subnode specific -------------- */
+
+    /** @return the inportNodeModel */
+    NativeNodeContainer getVirtualInNode() {
+        return (NativeNodeContainer)m_wfm.getNodeContainer(getVirtualInNodeID());
+    }
+
+    /** @return the inportNodeModel */
+    VirtualPortObjectInNodeModel getVirtualInNodeModel() {
+        return (VirtualPortObjectInNodeModel)getVirtualInNode().getNodeModel();
+    }
+
+    /** @return the outportNodeModel */
+    NativeNodeContainer getVirtualOutNode() {
+        return (NativeNodeContainer)m_wfm.getNodeContainer(getVirtualOutNodeID());
+    }
+
+    /** @return the outportNodeModel */
+    VirtualPortObjectOutNodeModel getVirtualOutNodeModel() {
+        return (VirtualPortObjectOutNodeModel)getVirtualOutNode().getNodeModel();
+    }
+
+    /** @return the inNodeID */
+    NodeID getVirtualInNodeID() {
+        return new NodeID(m_wfm.getID(), m_virtualInNodeIDSuffix);
+    }
+
+    /** @return the outNodeID */
+    NodeID getVirtualOutNodeID() {
+        return new NodeID(m_wfm.getID(), m_virtualOutNodeIDSuffix);
     }
 
     /* -------------------- NodeContainer info properties -------------- */
@@ -221,7 +311,7 @@ public class SubNodeContainer extends SingleNodeContainer {
     @Override
     public URL getIcon() {
         // TODO return useful Icons
-        return null;
+        return SubNodeContainer.class.getResource("subnode.png");
     }
 
     /**
@@ -230,7 +320,7 @@ public class SubNodeContainer extends SingleNodeContainer {
     @Override
     public NodeType getType() {
         // TODO create and return matching icon
-        return NodeType.Other;
+        return NodeType.Subnode;
     }
 
     /**
@@ -238,8 +328,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public String getName() {
-        // TODO well...
-        return "I am a SubNode";
+        return m_wfm.getName();
     }
 
     /* ------------------- Specific Interna ------------------- */
@@ -370,15 +459,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      * {@inheritDoc}
      */
     @Override
-    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView() {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WebTemplate getWebTemplate() {
+    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V getInteractiveView() {
         return null;
     }
 
@@ -389,6 +470,8 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     void performReset() {
+        setNodeMessage(NodeMessage.NONE);
+        setVirtualOutputIntoOutport();
         m_wfm.resetAllNodesInWFM();
     }
 
@@ -404,14 +487,14 @@ public class SubNodeContainer extends SingleNodeContainer {
         for (int i = 0; i < inSpecs.length; i++) {
             inSpecs[i] = InactiveBranchPortObject.INSTANCE;
         }
-        m_inportNodeModel.setVirtualNodeInput(new VirtualNodeInput(inSpecs, 0));
+        getVirtualInNodeModel().setVirtualNodeInput(new VirtualNodeInput(inSpecs, 0));
         // and launch a configure on entire sub workflow
         // TODO this should more properly call only configure - reset is handled elsewhere!
         m_wfm.resetAndConfigureAll();
         // retrieve results and copy specs to outports
-        if (m_outportNodeModel.getOutSpecs() != null) {
+        if (getVirtualOutNodeModel().getOutSpecs() != null) {
             for (int i = 1; i < m_outputs.length; i++) {
-                m_outputs[i].spec = m_outportNodeModel.getOutSpecs()[i - 1];
+                m_outputs[i].spec = getVirtualOutNodeModel().getOutSpecs()[i - 1];
             }
         }
         m_outputs[0].spec = FlowVariablePortObjectSpec.INSTANCE;
@@ -426,6 +509,7 @@ public class SubNodeContainer extends SingleNodeContainer {
      */
     @Override
     public NodeContainerExecutionStatus performExecuteNode(final PortObject[] rawInObjects) {
+        setNodeMessage(NodeMessage.NONE);
         assert rawInObjects.length == m_inports.length;
         // copy objects into underlying WFM inports
         // (skip port 0 - SingleNodeContains know about the hidden var port, NodeModels don't!)
@@ -433,20 +517,38 @@ public class SubNodeContainer extends SingleNodeContainer {
         for (int i = 0; i < inObjects.length; i++) {
             inObjects[i] = rawInObjects[i + 1 ];
         }
-        m_inportNodeModel.setVirtualNodeInput(new VirtualNodeInput(inObjects, 0));
+        getVirtualInNodeModel().setVirtualNodeInput(new VirtualNodeInput(inObjects, 0));
         // and launch execute on entire sub workflow
         m_wfm.executeAll();
-        // retrieve results and copy to outports
-        PortObject[] internalOutputs = m_outportNodeModel.getOutObjects();
-        for (int i = 1; i < m_outputs.length; i++) {
-            m_outputs[i].spec = internalOutputs[i - 1].getSpec();
-            m_outputs[i].object = internalOutputs[i - 1];
+        boolean isCanceled = false;
+        try {
+            m_wfm.waitWhileInExecution(-1, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            m_wfm.cancelExecution(); // TODO - ideally done via parent but that is orphaned?
+            isCanceled = true;
         }
-        m_outputs[0].spec = FlowVariablePortObjectSpec.INSTANCE;
-        m_outputs[0].object = rawInObjects[0];
-//        setInternalState(m_wfm.getInternalState());
-        // TODO return status - execute may fail ;-)
-        return NodeContainerExecutionStatus.SUCCESS;
+        boolean allExecuted = m_wfm.getInternalState().isExecuted();
+        if (allExecuted) {
+            setVirtualOutputIntoOutport();
+        } else if (isCanceled) {
+            setNodeMessage(new NodeMessage(Type.WARNING, "Execution canceled"));
+        } else {
+            setNodeMessage(new NodeMessage(Type.ERROR, "Not all contained nodes are executed:\n"
+                    + m_wfm.printNodeSummary(m_wfm.getID(), 0)));
+        }
+        return allExecuted ? NodeContainerExecutionStatus.SUCCESS : NodeContainerExecutionStatus.FAILURE;
+    }
+
+    /** */
+    private void setVirtualOutputIntoOutport() {
+        // retrieve results and copy to outports
+        PortObject[] internalOutputs = getVirtualOutNodeModel().getOutObjects();
+        for (int i = 1; i < m_outputs.length; i++) {
+            m_outputs[i].spec = internalOutputs == null ? null : internalOutputs[i - 1].getSpec();
+            m_outputs[i].object = internalOutputs == null ? null : internalOutputs[i - 1];
+        }
+        m_outputs[0].spec = internalOutputs == null ? null : FlowVariablePortObjectSpec.INSTANCE;
+        m_outputs[0].object = internalOutputs == null ? null : FlowVariablePortObject.INSTANCE;
     }
 
     /**
@@ -579,7 +681,7 @@ public class SubNodeContainer extends SingleNodeContainer {
                 try {
                     NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
                     DialogNode node = entry.getValue();
-                    node.getNodeValue().validateSettings(conf);
+                    node.getDialogValue().validateSettings(conf);
                 } catch (InvalidSettingsException e) {
                     return false;
                 }
@@ -602,9 +704,9 @@ public class SubNodeContainer extends SingleNodeContainer {
                 NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
                 NodeSettingsWO oldSettings = new NodeSettings(nodeID);
                 DialogNode node = entry.getValue();
-                node.getNodeValue().saveToNodeSettings(oldSettings);
+                node.getDialogValue().saveToNodeSettings(oldSettings);
                 if (!conf.equals(oldSettings)) {
-                    node.getNodeValue().loadFromNodeSettings(conf);
+                    node.getDialogValue().loadFromNodeSettings(conf);
                 }
             }
         }
@@ -617,7 +719,11 @@ public class SubNodeContainer extends SingleNodeContainer {
     WorkflowCopyContent performLoadContent(final SingleNodeContainerPersistor nodePersistor,
         final Map<Integer, BufferedDataTable> tblRep, final FlowObjectStack inStack, final ExecutionMonitor exec,
         final LoadResult loadResult, final boolean preserveNodeMessage) throws CanceledExecutionException {
-        // TODO needed for load/save...
+        SubNodeContainerPersistor subNodePersistor = (SubNodeContainerPersistor)nodePersistor;
+        WorkflowPersistor workflowPersistor = subNodePersistor.getWorkflowPersistor();
+        // TODO pass in a filter input stack
+        m_wfm.loadContent(workflowPersistor, tblRep, inStack, exec, loadResult, preserveNodeMessage);
+        setVirtualOutputIntoOutport();
         return null;
     }
 
@@ -631,7 +737,7 @@ public class SubNodeContainer extends SingleNodeContainer {
         for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
             String nodeID = Integer.toString(entry.getKey().getIndex());
             NodeSettingsWO subSettings = modelSettings.addNodeSettings(nodeID);
-            entry.getValue().getNodeValue().saveToNodeSettings(subSettings);
+            entry.getValue().getDialogValue().saveToNodeSettings(subSettings);
         }
     }
 
@@ -642,8 +748,8 @@ public class SubNodeContainer extends SingleNodeContainer {
     protected NodeContainerPersistor getCopyPersistor(final HashMap<Integer, ContainerTable> tableRep,
         final FileStoreHandlerRepository fileStoreHandlerRepository, final boolean preserveDeletableFlags,
         final boolean isUndoableDeleteCommand) {
-        // TODO needed for copy...
-        return null;
+        return new CopySubNodeContainerPersistor(this,
+            tableRep, fileStoreHandlerRepository, preserveDeletableFlags, isUndoableDeleteCommand);
     }
 
     /* -------------------- Credentials/Stacks ------------------ */
@@ -715,4 +821,5 @@ public class SubNodeContainer extends SingleNodeContainer {
     public boolean isInactiveBranchConsumer() {
         return false;
     }
+
 }

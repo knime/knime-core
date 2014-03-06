@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -223,8 +223,8 @@ public class SparseBitVectorCellFactory {
             }
             if (bv1Idx <= bv2Idx) {
                 bv1Idx = bv1.nextSetBit(bv1Idx + 1);
-            }
-            if (bv1Idx >= bv2Idx) {
+            } else {
+                //i.e. (bv1Idx > bv2Idx)
                 bv2Idx = bv2.nextSetBit(bv2Idx + 1);
             }
         }
@@ -308,11 +308,11 @@ public class SparseBitVectorCellFactory {
                 bv1Idx = bv1.nextSetBit(bv1Idx + 1);
                 bv2Idx = bv2.nextSetBit(bv2Idx + 1);
             }
-            if (bv1Idx < bv2Idx) {
+            if (bv1Idx < bv2Idx && bv1Idx >= 0) {
                 result.set(bv1Idx);
                 bv1Idx = bv1.nextSetBit(bv1Idx + 1);
             }
-            if (bv1Idx > bv2Idx) {
+            if (bv1Idx > bv2Idx && bv2Idx >= 0) {
                 result.set(bv2Idx);
                 bv2Idx = bv2.nextSetBit(bv2Idx + 1);
             }

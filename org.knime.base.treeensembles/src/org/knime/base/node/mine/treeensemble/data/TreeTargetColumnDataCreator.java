@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -58,12 +58,13 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.RowKey;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 abstract class TreeTargetColumnDataCreator {
 
     private final DataColumnSpec m_columnSpec;
+
     private final List<RowKey> m_rowKeys;
 
     /**

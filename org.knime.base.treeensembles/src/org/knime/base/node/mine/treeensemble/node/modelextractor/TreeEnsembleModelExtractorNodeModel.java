@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -76,7 +76,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class TreeEnsembleModelExtractorNodeModel extends NodeModel {
@@ -84,44 +84,34 @@ final class TreeEnsembleModelExtractorNodeModel extends NodeModel {
     /**
      *  */
     public TreeEnsembleModelExtractorNodeModel() {
-        super(new PortType[]{TreeEnsembleModelPortObject.TYPE},
-                new PortType[]{BufferedDataTable.TYPE});
+        super(new PortType[]{TreeEnsembleModelPortObject.TYPE}, new PortType[]{BufferedDataTable.TYPE});
     }
 
     /** {@inheritDoc} */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         return new DataTableSpec[]{createOutSpec()};
     }
 
     private DataTableSpec createOutSpec() {
-        DataColumnSpecCreator colCreator =
-                new DataColumnSpecCreator("Models", PMMLCell.TYPE);
-        return new DataTableSpec("Tree Ensemble Models",
-                colCreator.createSpec());
+        DataColumnSpecCreator colCreator = new DataColumnSpecCreator("Models", PMMLCell.TYPE);
+        return new DataTableSpec("Tree Ensemble Models", colCreator.createSpec());
     }
 
     /** {@inheritDoc} */
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects,
-            final ExecutionContext exec) throws Exception {
-        TreeEnsembleModelPortObject treeEnsembleModel =
-                (TreeEnsembleModelPortObject)inObjects[0];
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        TreeEnsembleModelPortObject treeEnsembleModel = (TreeEnsembleModelPortObject)inObjects[0];
         DataTableSpec outSpec = createOutSpec();
-        BufferedDataContainer container =
-                exec.createDataContainer(outSpec, false, 0);
+        BufferedDataContainer container = exec.createDataContainer(outSpec, false, 0);
         int nrModels = treeEnsembleModel.getEnsembleModel().getNrModels();
         for (int i = 0; i < nrModels; i++) {
-            PMMLPortObject pmmlObject =
-                    treeEnsembleModel.createDecisionTreePMMLPortObject(i);
-            DataCell cell = PMMLCellFactory.create(
-                    pmmlObject.getPMMLValue().toString());
+            PMMLPortObject pmmlObject = treeEnsembleModel.createDecisionTreePMMLPortObject(i);
+            DataCell cell = PMMLCellFactory.create(pmmlObject.getPMMLValue().toString());
             RowKey key = RowKey.createRowKey(i);
             container.addRowToTable(new DefaultRow(key, cell));
             exec.checkCanceled();
-            exec.setProgress(i / (double)nrModels, "Exported model " + (i + 1)
-                    + "/" + nrModels);
+            exec.setProgress(i / (double)nrModels, "Exported model " + (i + 1) + "/" + nrModels);
         }
         container.close();
         return new BufferedDataTable[]{container.getTable()};
@@ -141,31 +131,27 @@ final class TreeEnsembleModelExtractorNodeModel extends NodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         // no settings
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         // no settings
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
         // no internals
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
         // no internals
     }
 

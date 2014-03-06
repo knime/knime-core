@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -713,7 +713,7 @@ public class GroupByNodeModel extends NodeModel {
             final BufferedDataTable table, final List<String> groupByCols,
             final int maxUniqueVals) {
         return new GlobalSettings(FileStoreFactory.createWorkflowFileStoreFactory(exec), groupByCols,
-                maxUniqueVals, m_valueDelimiter.getStringValue(),
+                maxUniqueVals, m_valueDelimiter.getJavaUnescapedStringValue(),
                 table.getDataTableSpec(), table.getRowCount());
     }
 

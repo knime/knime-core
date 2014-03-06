@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -360,7 +360,7 @@ public abstract class NodeModel {
      * @since 2.8
      */
     @SuppressWarnings("unchecked")
-    public final <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveNodeView() {
+    public final <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V getInteractiveNodeView() {
         for (AbstractNodeView<?> abv : m_views) {
             if (abv instanceof InteractiveView) {
                 return (V)abv;
@@ -559,7 +559,7 @@ public abstract class NodeModel {
             if (this instanceof InteractiveNode) {
                 InteractiveNode iThis = (InteractiveNode)this;
                 ViewContent viewContent = exEnv.getPreExecuteViewContent();
-                iThis.loadViewContent(viewContent);
+                iThis.loadViewValue(viewContent);
                 outData = execute(data, exec);
             } else if (this instanceof LoopStartNode) {
                 outData = execute(data, exec);

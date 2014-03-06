@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -113,13 +113,13 @@ public final class SubNodeDialogPane extends NodeDialogPane {
         // collect panels and weights
         for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
             DialogNodeRepresentation<? extends DialogNodeValue> representation
-                = entry.getValue().getNodeRepresentation();
+                = entry.getValue().getDialogRepresentation();
             if (representation == null) {
                 // no valid representation
                 continue;
             }
             DialogNodePanel dialogPanel = representation.createDialogPanel();
-            dialogPanel.loadNodeValue(entry.getValue().getNodeValue());
+            dialogPanel.loadNodeValue(entry.getValue().getDialogValue());
             m_nodes.put(new Pair<NodeID, DialogNode<? extends DialogNodeRepresentation<?>,
                 ? extends DialogNodeValue>>(entry.getKey(), entry.getValue()), dialogPanel);
             Pair<Integer, DialogNodePanel<? extends DialogNodeValue>> weightedPanelPair = new Pair<Integer,
@@ -164,7 +164,7 @@ public final class SubNodeDialogPane extends NodeDialogPane {
                 ? extends DialogNodeValue>>, DialogNodePanel<? extends DialogNodeValue>> e : m_nodes.entrySet()) {
             Pair<NodeID, DialogNode<? extends DialogNodeRepresentation<?>,
                 ? extends DialogNodeValue>> pair = e.getKey();
-            DialogNodeValue nodeValue = pair.getSecond().getNodeValue();
+            DialogNodeValue nodeValue = pair.getSecond().getDialogValue();
             DialogNodePanel nodePanel = e.getValue();
             nodePanel.saveNodeValue(nodeValue);
             NodeSettingsWO subSettings = settings.addNodeSettings(
@@ -183,7 +183,7 @@ public final class SubNodeDialogPane extends NodeDialogPane {
             ? extends DialogNodeValue>>, DialogNodePanel<? extends DialogNodeValue>> e : m_nodes.entrySet()) {
             Pair<NodeID, DialogNode<? extends DialogNodeRepresentation<?>,
                 ? extends DialogNodeValue>> pair = e.getKey();
-            DialogNodeValue nodeValue = pair.getSecond().getNodeValue();
+            DialogNodeValue nodeValue = pair.getSecond().getDialogValue();
             try {
                 NodeSettingsRO subSettings = settings.getNodeSettings(
                     Integer.toString(pair.getFirst().getIndex()));

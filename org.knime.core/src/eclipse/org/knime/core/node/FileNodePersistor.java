@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -91,12 +91,12 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
+import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -143,7 +143,7 @@ public class FileNodePersistor implements NodePersistor {
     private final NodeSettingsRO m_settings;
 
     /** Load Version, see {@link #getLoadVersion()} for details. */
-    private final WorkflowPersistorVersion1xx.LoadVersion m_loadVersion;
+    private final FileWorkflowPersistor.LoadVersion m_loadVersion;
 
     private boolean m_isExecuted;
 
@@ -192,7 +192,7 @@ public class FileNodePersistor implements NodePersistor {
      * @param settings The settings from the settings file stored in the node folder (not null).
      */
     public FileNodePersistor(final FileNativeNodeContainerPersistor nncPersistor,
-        final WorkflowPersistorVersion1xx.LoadVersion version, final NodeSettingsRO settings) {
+        final FileWorkflowPersistor.LoadVersion version, final NodeSettingsRO settings) {
         if (nncPersistor == null || settings == null) {
             throw new NullPointerException();
         }
@@ -210,12 +210,12 @@ public class FileNodePersistor implements NodePersistor {
      *
      * @return Version being loaded. Can also be null unless enforced in constructor of subclass.
      */
-    public WorkflowPersistorVersion1xx.LoadVersion getLoadVersion() {
+    public FileWorkflowPersistor.LoadVersion getLoadVersion() {
         return m_loadVersion;
     }
 
     boolean loadIsExecuted(final NodeSettingsRO settings) throws InvalidSettingsException {
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V200)) {
+        if (getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V200)) {
             return settings.getBoolean(CFG_ISEXECUTED);
         } else {
             return false; // no longer saved in node itself
@@ -223,7 +223,7 @@ public class FileNodePersistor implements NodePersistor {
     }
 
     boolean loadHasContent(final NodeSettingsRO settings) throws InvalidSettingsException {
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V200)) {
+        if (getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V200)) {
             return settings.getBoolean(CFG_ISEXECUTED);
         } else {
             return settings.getBoolean("hasContent");
@@ -231,7 +231,7 @@ public class FileNodePersistor implements NodePersistor {
     }
 
     boolean loadIsInactive(final NodeSettingsRO settings) throws InvalidSettingsException {
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V230)) {
+        if (getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V230)) {
             return false;
         } else {
             return settings.getBoolean("isInactive", false);
@@ -250,7 +250,7 @@ public class FileNodePersistor implements NodePersistor {
     }
 
     boolean loadIsConfigured(final NodeSettingsRO settings) throws InvalidSettingsException {
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V200)) {
+        if (getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V200)) {
             return settings.getBoolean(CFG_ISCONFIGURED);
         } else {
             return false; // no longer saved
@@ -283,7 +283,7 @@ public class FileNodePersistor implements NodePersistor {
         final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException, InvalidSettingsException,
         CanceledExecutionException {
         final int nrOutPorts = node.getNrOutPorts();
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V200)) {
+        if (getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V200)) {
             // skip flow variables port (introduced in v2.2)
             for (int i = 1; i < nrOutPorts; i++) {
                 int oldIndex = getOldPortIndex(i);
@@ -490,7 +490,7 @@ public class FileNodePersistor implements NodePersistor {
      */
     public final PortType[] guessOutputPortTypes(final WorkflowPersistor parentPersistor, final LoadResult loadResult,
         final String nodeName) throws IOException, InvalidSettingsException {
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V200)) {
+        if (getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V200)) {
             return null;
         } else {
             if (!loadHasContent(m_settings)) {
@@ -542,7 +542,7 @@ public class FileNodePersistor implements NodePersistor {
         int index = singlePortSetting.getInt("index");
         // KNIME v2.1 and before had no optional flow variable input port
         // port 0 in v2.1 is port 1 now.
-        if (getLoadVersion().ordinal() < WorkflowPersistorVersion1xx.LoadVersion.V220.ordinal()) {
+        if (getLoadVersion().ordinal() < FileWorkflowPersistor.LoadVersion.V220.ordinal()) {
             index = index + 1;
         }
         return index;
@@ -559,7 +559,7 @@ public class FileNodePersistor implements NodePersistor {
         /* In versions < V230 different PMMLPortObject classes existed which
          * got all replaced by a general PMMLPortObject. To stay backward
          * compatible we have to load the new object for them. */
-        if (getLoadVersion().ordinal() <= WorkflowPersistorVersion1xx.LoadVersion.V230.ordinal() && PMML_PORTOBJECT_CLASSES.contains(objectClass)) {
+        if (getLoadVersion().ordinal() <= FileWorkflowPersistor.LoadVersion.V230.ordinal() && PMML_PORTOBJECT_CLASSES.contains(objectClass)) {
             objectClass = PMMLPortObject.class.getName();
         }
         return objectClass;
@@ -605,7 +605,7 @@ public class FileNodePersistor implements NodePersistor {
         final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep,
         final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException, InvalidSettingsException,
         CanceledExecutionException {
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V200)) {
+        if (getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V200)) {
             return;
         }
         if (!settings.containsKey("internalTables")) {
@@ -646,7 +646,7 @@ public class FileNodePersistor implements NodePersistor {
     IFileStoreHandler loadFileStoreHandler(final Node node, final ExecutionMonitor execMon,
         final NodeSettingsRO settings, final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository)
         throws InvalidSettingsException {
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V260)) {
+        if (getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V260)) {
             return new EmptyFileStoreHandler(fileStoreHandlerRepository);
         }
         NodeSettingsRO fsSettings = settings.getNodeSettings("filestores");
@@ -1007,7 +1007,7 @@ public class FileNodePersistor implements NodePersistor {
     /** {@inheritDoc} */
     @Override
     public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
-        if (getLoadVersion().isOlderThan(WorkflowPersistorVersion1xx.LoadVersion.V200)) {
+        if (getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V200)) {
             // we explicitly return null here as the node decides on how
             // to behave (in workflows 1.x.x it's not known what is the correct
             // state of the node at this point)

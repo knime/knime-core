@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -62,15 +62,10 @@ public interface WebTemplate {
 
     /**
      * @return An array of {@link WebResourceLocator}, which is the actual
-     * implementation of the view. These can be Javascript, CSS or other files.
+     * implementation and the dependencies of the view.
+     * @since 2.10
      */
     public WebResourceLocator[] getWebResources();
-
-    /**
-     * @return An array of {@link WebDependency}, which are the Javascript dependencies
-     * the view uses.
-     */
-    public WebDependency[] getDependencies();
 
     /**
      * @return An optional namespace, which is prepended to all method calls of the
@@ -87,5 +82,11 @@ public interface WebTemplate {
      * @return The pullViewContent-method's name.
      */
     public String getPullViewContentMethodName();
+
+    /**
+     * @return The validate-method's name.
+     * @since 2.10
+     */
+    public String getValidateMethodName();
 
 }

@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.base"
       label="KNIME Core"
-      version="2.9.2.qualifier"
+      version="2.10.0.qualifier"
       provider-name="KNIME GmbH, Konstanz, Germany"
       plugin="org.knime.product"
       image="icons/knime64.gif">
@@ -12,7 +12,7 @@
    </description>
 
    <copyright>
-      Copyright, 2003 - 2013
+      Copyright by 
       University of Konstanz, Germany
       KNIME GmbH, Konstanz, Germany
    </copyright>
@@ -737,7 +737,7 @@ propagated with or for interoperation with KNIME.
       <import feature="org.eclipse.rcp" version="3.4.200.R342_v20090122-989JESTEbig-SVaL8UJHcYBr4A63" match="compatible"/>
       <import plugin="org.eclipse.jdt.core"/>
       <import plugin="org.apache.log4j"/>
-      <import plugin="org.knime.workbench.explorer.view" version="6.3.1" match="greaterOrEqual"/>
+      <import plugin="org.knime.workbench.explorer.view" version="6.3.0" match="greaterOrEqual"/>
       <import plugin="org.knime.core.util" version="4.5.1" match="greaterOrEqual"/>
    </requires>
 
@@ -778,8 +778,7 @@ propagated with or for interoperation with KNIME.
          id="org.knime.workbench.ui"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="org.knime.workbench.repository"
@@ -905,6 +904,19 @@ propagated with or for interoperation with KNIME.
 
    <plugin
          id="javax.activation"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.knime.js.core"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
+   <plugin
+         id="org.knime.js.base"
          download-size="0"
          install-size="0"
          version="0.0.0"

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -63,10 +63,13 @@ import javax.swing.JApplet;
 import javax.swing.JComponent;
 import javax.swing.Timer;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.awt.SWT_AWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ViewUtils;
 
 /**
@@ -97,8 +100,14 @@ public class Panel2CompositeWrapper extends Composite {
         gridLayout.horizontalSpacing = 0;
         setLayout(gridLayout);
 
-        final Frame awtFrame = SWT_AWT.new_Frame(this);
-        if ("gtk".equals(SWT.getPlatform()) && !x11ErrorHandlerFixInstalled.getAndSet(true)) {
+        if (KNIMEConstants.ASSERTIONS_ENABLED && SWT.getVersion() > 3740) {
+            NodeLogger.getLogger(Panel2CompositeWrapper.class).coding("It seems you are using a version of SWT that "
+                + "is more recent than 3.740. Please check whether the workaround for dialogs on MacOS X is still "
+                + "necessary.");
+        }
+        final Frame awtFrame = Platform.WS_COCOA.equals(Platform.getWS())
+                ? org.knime.workbench.ui.macos.SWT_AWT.new_Frame(this) : SWT_AWT.new_Frame(this);
+        if (Platform.WS_GTK.equals(Platform.getWS()) && !x11ErrorHandlerFixInstalled.getAndSet(true)) {
             EventQueue.invokeLater(new Runnable() {
                 @Override
                 public void run() {

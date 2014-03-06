@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -51,22 +51,20 @@
 package org.knime.base.node.mine.regression.linear2.learner;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.apache.commons.math3.stat.regression.MillerUpdatingRegression;
+import org.apache.commons.math3.stat.regression.ModelSpecificationException;
 import org.apache.commons.math3.stat.regression.RegressionResults;
 import org.apache.commons.math3.stat.regression.UpdatingMultipleLinearRegression;
+import org.knime.base.node.mine.regression.RegressionStatisticsLearner;
 import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.base.node.mine.regression.RegressionTrainingRow;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 import Jama.Matrix;
@@ -76,29 +74,13 @@ import Jama.Matrix;
  *
  * @author Heiko Hofer
  */
-final class Learner {
-    /** Logger to print debug info to. */
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(Learner.class);
-
-    private final PMMLPortObjectSpec m_outSpec;
-
-    /** whether to include the constant term during the estimation process. */
-    private boolean m_includeConstant;
-
-    /** offset value (a user defined intercept). */
-    private double m_offsetValue;
-
-    /** If true an exception is thrown when a missing cell is observed. */
-    private boolean m_failOnMissing;
-
-
+final class Learner extends RegressionStatisticsLearner {
     /**
      * @param spec The {@link PMMLPortObjectSpec} of the output table.
      */
     Learner(final PMMLPortObjectSpec spec) {
         this(spec, true, 0.0, true);
     }
-
 
     /**
      * @param spec The {@link PMMLPortObjectSpec} of the output table.
@@ -108,38 +90,76 @@ final class Learner {
      */
     Learner(final PMMLPortObjectSpec spec, final boolean includeConstant, final double offsetValue,
         final boolean failOnMissing) {
-        m_outSpec = spec;
-        m_includeConstant = includeConstant;
+        super(spec, failOnMissing, includeConstant);
         m_offsetValue = offsetValue;
-        m_failOnMissing = failOnMissing;
     }
 
     /**
      * @param data The data table.
-     * @param rowCount the number of rows in the input table, used for reporting progress.
-     *      Set to -1 if progress should not be reported.
+     * @param rowCount the number of rows in the input table, used for reporting progress. Set to -1 if progress should
+     *            not be reported.
      * @param exec The execution context used for reporting progress.
      * @return An object which holds the results.
      * @throws CanceledExecutionException When method is cancelled
      * @throws InvalidSettingsException When settings are inconsistent with the data
      */
-    public LinearRegressionContent perform(final DataTable data,
-            final int rowCount, final ExecutionContext exec)
-                    throws CanceledExecutionException, InvalidSettingsException {
+    @Override
+    public LinearRegressionContent perform(final DataTable data, final int rowCount, final ExecutionContext exec)
+        throws CanceledExecutionException, InvalidSettingsException {
         exec.checkCanceled();
 
-        RegressionTrainingData trainingData = new RegressionTrainingData(data, m_outSpec,
-            m_failOnMissing);
+        RegressionTrainingData trainingData = new RegressionTrainingData(data, m_outSpec, m_failOnMissing);
 
-        UpdatingMultipleLinearRegression regr = new MillerUpdatingRegression(
-                trainingData.getRegressorCount(), m_includeConstant);
-        SummaryStatistics[] stats = new SummaryStatistics[trainingData.getRegressorCount()];
-        for (int i = 0; i < trainingData.getRegressorCount(); i++) {
-            stats[i] = new SummaryStatistics();
-        }
-
+        final int regressorCount = trainingData.getRegressorCount();
+        SummaryStatistics[] stats = new SummaryStatistics[regressorCount];
+        UpdatingMultipleLinearRegression regr = initStatistics(regressorCount, stats);
 
         exec.setProgress(0, "Estimating linear regression model.");
+        processTable(rowCount, exec, trainingData, stats, regr);
+
+        List<String> factorList = new ArrayList<String>();
+        List<String> covariateList = createCovariateListAndFillFactors(data, trainingData, factorList);
+        try {
+            RegressionResults result = regr.regress();
+
+            Matrix beta = new Matrix(result.getParameterEstimates(), 1);
+
+            // The covariance matrix
+            Matrix covMat = createCovarianceMatrix(result);
+
+            LinearRegressionContent content =
+                new LinearRegressionContent(m_outSpec, (int)stats[0].getN(), factorList, covariateList, beta,
+                    m_includeConstant, m_offsetValue, covMat, result.getRSquared(), result.getAdjustedRSquared(), stats);
+
+            return content;
+        } catch (ModelSpecificationException e) {
+            Matrix beta = new Matrix(1, (m_includeConstant ? 1 : 0) + trainingData.getRegressorCount() + 1);
+            Matrix covMat = new Matrix(trainingData.getRegressorCount() + 1, trainingData.getRegressorCount() + 1);
+            //fillWithNaNs(beta);
+            fillWithNaNs(covMat);
+            return new LinearRegressionContent(m_outSpec, (int)stats[0].getN(), factorList, covariateList, beta,
+                m_includeConstant, m_offsetValue, covMat, Double.NaN, Double.NaN, stats);
+        }
+    }
+
+    /**
+     * @param matrix
+     */
+    private void fillWithNaNs(final Matrix matrix) {
+        for (int i = matrix.getRowDimension(); i-- > 0;) {
+            for (int j = matrix.getColumnDimension(); j-- > 0;) {
+                matrix.set(i, j, Double.NaN);
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void processTable(final int rowCount, final ExecutionMonitor exec,
+        final RegressionTrainingData trainingData, final SummaryStatistics[] stats,
+        final UpdatingMultipleLinearRegression regr) throws CanceledExecutionException {
         int r = 1;
         double progress = 0;
         for (RegressionTrainingRow row : trainingData) {
@@ -161,43 +181,5 @@ final class Learner {
                 r++;
             }
         }
-
-        RegressionResults result = regr.regress();
-
-        Matrix beta = new Matrix(result.getParameterEstimates(), 1);
-
-        List<String> factorList = new ArrayList<String>();
-        List<String> covariateList = new ArrayList<String>();
-        Map<String, List<DataCell>> factorDomainValues =
-            new HashMap<String, List<DataCell>>();
-        for (int i : trainingData.getActiveCols()) {
-            if (trainingData.getIsNominal().get(i)) {
-                String factor =
-                    data.getDataTableSpec().getColumnSpec(i).getName();
-                factorList.add(factor);
-                List<DataCell> values = trainingData.getDomainValues().get(i);
-                factorDomainValues.put(factor, values);
-            } else {
-                covariateList.add(
-                        data.getDataTableSpec().getColumnSpec(i).getName());
-            }
-        }
-
-
-        // The covariance matrix
-        int dim = result.getNumberOfParameters();
-        Matrix covMat = new Matrix(dim, dim);
-        for (int i = 0; i < dim; i++) {
-            for (int k = 0; k < dim; k++) {
-                covMat.set(i, k, result.getCovarianceOfParameters(i, k));
-            }
-        }
-
-        LinearRegressionContent content = new LinearRegressionContent(m_outSpec,
-            (int)stats[0].getN(), factorList, covariateList, beta,
-            m_includeConstant, m_offsetValue, covMat,
-            result.getRSquared(), result.getAdjustedRSquared(), stats);
-
-        return content;
     }
 }

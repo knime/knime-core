@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.model;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -63,20 +62,23 @@ import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
 import org.knime.base.node.mine.treeensemble.data.TreeTargetColumnMetaData;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class AbstractTreeNode {
 
     private final TreeNodeSignature m_signature;
+
     private final TreeTargetColumnMetaData m_targetMetaData;
+
     private final AbstractTreeNode[] m_childNodes;
+
     private TreeNodeCondition m_condition;
 
     /**
      *  */
     public AbstractTreeNode(final TreeNodeSignature signature, final TreeTargetColumnMetaData targetMetaData,
-            final AbstractTreeNode[] childNodes) {
+        final AbstractTreeNode[] childNodes) {
         m_signature = signature;
         if (targetMetaData == null || childNodes == null) {
             throw new NullPointerException("Argument must not be null.");
@@ -87,7 +89,7 @@ public abstract class AbstractTreeNode {
 
     /**
      *  */
-    AbstractTreeNode(final DataInputStream in, final TreeMetaData metaData) throws IOException {
+    AbstractTreeNode(final TreeModelDataInputStream in, final TreeMetaData metaData) throws IOException {
         m_signature = TreeNodeSignature.load(in);
         m_condition = TreeNodeCondition.load(in, metaData);
         m_targetMetaData = metaData.getTargetMetaData();
@@ -118,19 +120,17 @@ public abstract class AbstractTreeNode {
             final AbstractTreeNode treeNode = getChild(i);
             TreeNodeCondition cond = treeNode.getCondition();
             if (cond instanceof TreeNodeColumnCondition) {
-                int s = ((TreeNodeColumnCondition)cond)
-                    .getColumnMetaData().getAttributeIndex();
+                int s = ((TreeNodeColumnCondition)cond).getColumnMetaData().getAttributeIndex();
                 if (splitAttributeIndex == -1) {
                     splitAttributeIndex = s;
                 } else if (splitAttributeIndex != s) {
-                    assert false : "Confusing split column in node's children: "
-                        + "\"" + splitAttributeIndex + "\" vs. \"" + s + "\"";
+                    assert false : "Confusing split column in node's children: " + "\"" + splitAttributeIndex
+                        + "\" vs. \"" + s + "\"";
                 }
             }
         }
         return splitAttributeIndex;
     }
-
 
     public int getNrChildren() {
         return m_childNodes.length;
@@ -167,8 +167,8 @@ public abstract class AbstractTreeNode {
 
     public final void save(final DataOutputStream out) throws IOException {
         if (m_condition == null) {
-            throw new IllegalStateException("Can't save tree, tree node \""
-                    + m_signature + "\" has no condition assigned");
+            throw new IllegalStateException("Can't save tree, tree node \"" + m_signature
+                + "\" has no condition assigned");
         }
         m_signature.save(out);
         m_condition.save(out);
@@ -183,6 +183,7 @@ public abstract class AbstractTreeNode {
 
     abstract void saveInSubclass(final DataOutputStream out) throws IOException;
 
-    abstract AbstractTreeNode loadChild(final DataInputStream in, final TreeMetaData metaData) throws IOException;
+    abstract AbstractTreeNode loadChild(final TreeModelDataInputStream in, final TreeMetaData metaData)
+        throws IOException;
 
 }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -153,6 +153,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.EditorUIInformation;
+import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
@@ -169,7 +170,6 @@ import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
 import org.knime.core.util.Pointer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
@@ -181,6 +181,7 @@ import org.knime.workbench.editor2.actions.CancelAllAction;
 import org.knime.workbench.editor2.actions.ChangeMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
+import org.knime.workbench.editor2.actions.CollapseSubNodeAction;
 import org.knime.workbench.editor2.actions.ConvertMetaNodeToSubNodeAction;
 import org.knime.workbench.editor2.actions.CopyAction;
 import org.knime.workbench.editor2.actions.CutAction;
@@ -190,6 +191,7 @@ import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAllAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.ExpandMetaNodeAction;
+import org.knime.workbench.editor2.actions.ExpandSubNodeAction;
 import org.knime.workbench.editor2.actions.HideNodeNamesAction;
 import org.knime.workbench.editor2.actions.LockMetaNodeAction;
 import org.knime.workbench.editor2.actions.MetaNodeReconfigureAction;
@@ -550,7 +552,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         PasteAction paste = new PasteAction(this);
         PasteActionContextMenu pasteContext = new PasteActionContextMenu(this);
         CollapseMetaNodeAction collapse = new CollapseMetaNodeAction(this);
+        CollapseSubNodeAction collapseSub = new CollapseSubNodeAction(this);
         ExpandMetaNodeAction expand = new ExpandMetaNodeAction(this);
+        ExpandSubNodeAction expandSub = new ExpandSubNodeAction(this);
         ConvertMetaNodeToSubNodeAction convert = new ConvertMetaNodeToSubNodeAction(this);
 
         // register the actions
@@ -582,7 +586,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(pasteContext);
         m_actionRegistry.registerAction(hideNodeName);
         m_actionRegistry.registerAction(collapse);
+        m_actionRegistry.registerAction(collapseSub);
         m_actionRegistry.registerAction(expand);
+        m_actionRegistry.registerAction(expandSub);
         m_actionRegistry.registerAction(convert);
 
         m_actionRegistry.registerAction(metaNodeReConfigure);
@@ -1333,7 +1339,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             try {
                 svgExporter.exportToSVG(this, svgFile);
             } catch (Exception e) {
-                NodeLogger.getLogger(WorkflowPersistorVersion1xx.class).error("Could not save workflow SVG", e);
+                NodeLogger.getLogger(FileWorkflowPersistor.class).error("Could not save workflow SVG", e);
             }
         }
     }
@@ -2338,6 +2344,10 @@ public class WorkflowEditor extends GraphicalEditor implements
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
             @Override
             public void run() {
+                if (WorkflowEditor.this.isClosed()) {
+                    return;
+                }
+
                 switch (event.getType()) {
                 case NODE_REMOVED:
                     Object oldValue = event.getOldValue();
@@ -2419,7 +2429,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             SyncExecQueueDispatcher.asyncExec(new Runnable() {
                 @Override
                 public void run() {
-                    firePropertyChange(IEditorPart.PROP_DIRTY);
+                    if (!WorkflowEditor.this.isClosed()) {
+                        firePropertyChange(IEditorPart.PROP_DIRTY);
+                    }
                 }
             });
             if (m_parentEditor != null) {

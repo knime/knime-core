@@ -1,7 +1,7 @@
 /* Created on Jun 12, 2006 11:03:30 AM by thor
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -135,6 +135,7 @@ public class XValidateDialog extends NodeDialogPane {
                 }
             }
         });
+        m_linearSampling.doClick(); // enablement in sync
 
         c.gridy++;
         c.gridx = 0;
@@ -155,6 +156,7 @@ public class XValidateDialog extends NodeDialogPane {
                 m_classColumn.setEnabled(b);
             }
         });
+        m_stratifiedSampling.doClick(); // enablement in sync
 
         c.gridy++;
         c.gridx = 0;
@@ -172,6 +174,7 @@ public class XValidateDialog extends NodeDialogPane {
                 m_randomSeed.setEnabled(m_useRandomSeed.isSelected());
             }
         });
+        m_useRandomSeed.doClick(); // enablement in sync
         c.gridx = 1;
         p.add(m_randomSeed, c);
 
@@ -186,6 +189,7 @@ public class XValidateDialog extends NodeDialogPane {
                 m_validations.setEnabled(!m_leaveOneOut.isSelected());
             }
         });
+        m_leaveOneOut.doClick(); // enablement in sync
 
         ButtonGroup bg = new ButtonGroup();
         bg.add(m_linearSampling);

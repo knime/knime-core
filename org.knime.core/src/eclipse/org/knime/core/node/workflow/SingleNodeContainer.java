@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -1042,14 +1042,21 @@ public abstract class SingleNodeContainer extends NodeContainer {
         }
     }
 
-    /** Creates a copy of the stack held by the Node and modifies the copy
+    /**
+     * Creates a copy of the stack held by the Node and modifies the copy
      * by pushing all outgoing flow variables onto it. If the node represents
      * a scope end node, it will also pop the corresponding scope context
      * (and thereby all variables added in the scope's body).
      *
+     * <p>If the node is {@link #isInactive()} an empty stack is returned.
+     *
      * @return Such a (new!) stack. */
     public FlowObjectStack createOutFlowObjectStack() {
         synchronized (m_nodeMutex) {
+            if (isInactive()) {
+                // part of fix for bug 4432 - do not propagate variables in inactive branches
+                return new FlowObjectStack(getID());
+            }
             FlowObjectStack st = getFlowObjectStack();
             FlowObjectStack finalStack = new FlowObjectStack(getID(), st);
             if (this.isModelCompatibleTo(ScopeEndNode.class)) {

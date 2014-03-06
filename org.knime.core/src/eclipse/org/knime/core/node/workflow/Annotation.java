@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,7 +55,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.AnnotationData.StyleRange;
 import org.knime.core.node.workflow.AnnotationData.TextAlignment;
-import org.knime.core.node.workflow.WorkflowPersistorVersion1xx.LoadVersion;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  * An annotation on the workflow. It keeps all relevant information, such as
@@ -179,7 +179,7 @@ public abstract class Annotation implements UIInformation {
     /** {@inheritDoc}
     * loads new values and fires change event. */
     @Override
-    public void load(final NodeSettingsRO config, final WorkflowPersistorVersion1xx.LoadVersion loadVersion)
+    public void load(final NodeSettingsRO config, final FileWorkflowPersistor.LoadVersion loadVersion)
             throws InvalidSettingsException {
         m_data.load(config, loadVersion);
         fireChangeEvent();

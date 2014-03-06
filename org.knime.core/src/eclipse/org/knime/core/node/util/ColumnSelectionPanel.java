@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,8 +50,10 @@ package org.knime.core.node.util;
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -202,6 +204,7 @@ public class ColumnSelectionPanel extends JPanel {
     public ColumnSelectionPanel(final Border border,
             final ColumnFilter columnFilter, final boolean addNoneCol,
             final boolean addRowID) {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         if (columnFilter == null) {
             throw new NullPointerException("ColumnFilter must not be null");
         }
@@ -322,11 +325,36 @@ public class ColumnSelectionPanel extends JPanel {
      * @param selColName The column name to be set as chosen.
      * @throws NotConfigurableException If the spec does not contain at least
      * one compatible type.
-     * @see #update(DataTableSpec, String, boolean)
+     * @see #update(DataTableSpec, String, boolean, boolean)
      */
     public final void update(final DataTableSpec spec, final String selColName)
     throws NotConfigurableException {
-        update(spec, selColName, false);
+        update(spec, selColName, false, false);
+    }
+
+    /**
+     * Updates this filter panel by removing all current items and adding the
+     * columns according to the content of the argument <code>spec</code>. If
+     * a column name is provided and it is not filtered out the corresponding
+     * item in the combo box will be selected.
+     *
+     * Use the {@link #update(DataTableSpec, String, boolean)} method instead
+     * if the {@link ColumnSelectionPanel} contains the none and RowID option.
+     *
+     * @param spec To get the column names, types and the current index from.
+     * @param selColName The column name to be set as chosen.
+     * @param useRowID set this parameter to <code>true</code> and the
+     * selColName to <code>null</code> if the the row id option should be
+     * selected
+     * @throws NotConfigurableException If the spec does not contain at least
+     * one compatible type.
+     * @see #update(DataTableSpec, String, boolean, boolean)
+     * @since 2.6
+     */
+    public final void update(final DataTableSpec spec, final String selColName,
+        final boolean useRowID)
+    throws NotConfigurableException {
+        update(spec, selColName, useRowID, false);
     }
 
     /**
@@ -337,15 +365,18 @@ public class ColumnSelectionPanel extends JPanel {
      *
      * @param spec To get the column names, types and the current index from.
      * @param selColName The column name to be set as chosen.
+     * @param addSelColIfInvalid adds the selected column although it does not
+     * not exist in the given spec or is filtered by the filter.
+     * The column is added at the end and rendered with a red border.
      * @param useRowID set this parameter to <code>true</code> and the
      * selColName to <code>null</code> if the the row id option should be
      * selected
      * @throws NotConfigurableException If the spec does not contain at least
      * one compatible type.
-     * @since 2.6
+     * @since 2.10
      */
     public final void update(final DataTableSpec spec, final String selColName,
-            final boolean useRowID)
+         final boolean useRowID, final boolean addSelColIfInvalid)
     throws NotConfigurableException {
         m_spec = spec;
         m_chooser.removeAllItems();
@@ -365,10 +396,9 @@ public class ColumnSelectionPanel extends JPanel {
             m_chooser.addItem(m_rowIDColSpec);
             m_chooser.setToolTipText("Select " + rowIDOption + " for RowID");
         }
+        DataColumnSpec selectMe = null;
         if (spec != null) {
-            DataColumnSpec selectMe = null;
-            for (int c = 0; c < spec.getNumColumns(); c++) {
-                final DataColumnSpec current = spec.getColumnSpec(c);
+            for (DataColumnSpec current: spec) {
                 if (m_columnFilter.includeColumn(current)) {
                     m_chooser.addItem(current);
                     if (current.getName().equals(selColName)) {
@@ -379,6 +409,9 @@ public class ColumnSelectionPanel extends JPanel {
             if (selectMe != null) {
                 m_chooser.setSelectedItem(selectMe);
             } else {
+                if (addSelColIfInvalid && selColName != null) {
+                    m_chooser.addItem(DataColumnSpecListCellRenderer.createInvalidSpec(selColName));
+                }
                 if (m_addNoneColOption && !useRowID) {
                     m_chooser.setSelectedItem(m_noneColSpec);
                 } else if (m_addRowIDOption && useRowID) {
@@ -392,9 +425,16 @@ public class ColumnSelectionPanel extends JPanel {
                 }
             }
         }
-        if (m_chooser.getItemCount() == 0 && m_isRequired) {
+        if ((m_chooser.getItemCount() == 0
+                || containsOnlyTheInvalidColumn(addSelColIfInvalid, selectMe))
+                    && m_isRequired) {
             throw new NotConfigurableException(m_columnFilter.allFilteredMsg());
         }
+    }
+
+    private boolean containsOnlyTheInvalidColumn(final boolean addSelColIfInvalid,
+            final DataColumnSpec selectMe) {
+        return selectMe == null && addSelColIfInvalid && m_chooser.getItemCount() == 1;
     }
 
     /**
@@ -580,6 +620,18 @@ public class ColumnSelectionPanel extends JPanel {
      */
     public void removeActionListener(final ActionListener l) {
         m_chooser.removeActionListener(l);
+    }
+
+    /**
+     * @return The columns that are available for selection.
+     * @since 2.10
+     */
+    public List<DataColumnSpec> getAvailableColumns() {
+        List<DataColumnSpec> columns = new ArrayList<DataColumnSpec>();
+        for (int i = 0; i < m_chooser.getModel().getSize(); i++) {
+            columns.add((DataColumnSpec)m_chooser.getModel().getElementAt(i));
+        }
+        return columns;
     }
 
 

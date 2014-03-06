@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.knime.base.node.mine.regression.MissingValueHandling;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -301,7 +302,7 @@ final class LinReg2Learner {
             creator.setLearningCols(regressorColSpecs);
             m_pmmlOutSpec = creator.createSpec();
             m_learner = new Learner(m_pmmlOutSpec, m_settings.getIncludeConstant(), m_settings.getOffsetValue(),
-                m_settings.getMissingValueHandling().equals(LinReg2LearnerSettings.MissingValueHandling.fail));
+                m_settings.getMissingValueHandling2().equals(MissingValueHandling.fail));
         } else {
             throw new InvalidSettingsException("The target is "
                     + "not in the input.");

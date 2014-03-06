@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -855,7 +855,8 @@ public class DenseBitVector {
         int endAddr = Math.max(m_lastAddr, bv.m_lastAddr);
 
         for (int i = startAddr; i <= endAddr; i++) {
-            result.m_storage[i] = m_storage[i] | bv.m_storage[i];
+            result.m_storage[i] = (i < m_storage.length ?  m_storage[i] : 0)
+                    | (i < bv.m_storage.length ? bv.m_storage[i] : 0);
         }
         result.m_firstAddr = startAddr;
         result.m_lastAddr = endAddr;
@@ -915,7 +916,8 @@ public class DenseBitVector {
         int endAddr = Math.max(m_lastAddr, bv.m_lastAddr);
 
         for (int i = startAddr; i <= endAddr; i++) {
-            result.m_storage[i] = m_storage[i] ^ bv.m_storage[i];
+            result.m_storage[i] = (i < m_storage.length ? m_storage[i] : 0)
+                    ^ (i < bv.m_storage.length ? bv.m_storage[i] : 0);
         }
         result.m_firstAddr = result.findFirstBitAddress();
         result.m_lastAddr = result.findLastBitAddress();
@@ -1301,4 +1303,49 @@ public class DenseBitVector {
         return result.toString();
     }
 
+    /**
+     * Computes the cardinality of the intersection with the given bitVector.
+     *
+     * @see {@link BitVectorUtil#cardinalityOfIntersection(BitVectorValue, BitVectorValue)}
+     * @param bitVector the other operand for the AND operator
+     * @return the cardinality of the intersection
+     */
+    long cardinalityOfIntersection(final DenseBitVector bitVector) {
+        if (isEmpty() || bitVector.isEmpty()) {
+            return 0;
+        }
+
+        int startAddr = Math.max(m_firstAddr, bitVector.m_firstAddr);
+        int endAddr = Math.min(m_lastAddr, bitVector.m_lastAddr);
+
+        long result = 0;
+        long[] otherStorage = bitVector.m_storage;
+        for (int i = startAddr; i <= endAddr; i++) {
+                result += Long.bitCount(m_storage[i] & otherStorage[i]);
+        }
+        return result;
+    }
+
+    /**
+     * Computes the cardinality of the complement relative to the given bitVector.
+     *
+     * @see {@link BitVectorUtil#cardinalityOfRelativeComplement(BitVectorValue, BitVectorValue)}
+     * @param bitVector the other operand
+     * @return the cardinality of the intersection
+     */
+    long cardinalityOfRelativeComplement(final DenseBitVector bitVector) {
+        if (isEmpty()) {
+            return 0;
+        }
+        long result = 0;
+        long[] otherStorage = bitVector.m_storage;
+        for (int i = m_firstAddr; i <= m_lastAddr; i++) {
+            if (i < otherStorage.length) {
+                result += Long.bitCount(m_storage[i] & ~otherStorage[i]);
+            } else {
+                result += Long.bitCount(m_storage[i]);
+            }
+        }
+        return result;
+    }
 }

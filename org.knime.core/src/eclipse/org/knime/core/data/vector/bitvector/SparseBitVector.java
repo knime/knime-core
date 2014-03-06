@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -616,9 +616,12 @@ public class SparseBitVector {
             storageIdx = -(storageIdx + 1);
         }
         // copy the indexes
-        while (storageIdx < m_lastIdx && m_idxStorage[storageIdx] < endIdx) {
-            result.set(m_idxStorage[storageIdx]);
+        int index = 0;
+
+        while (storageIdx <= m_lastIdx && m_idxStorage[storageIdx] < endIdx) {
+            result.m_idxStorage[index++] = m_idxStorage[storageIdx] - startIdx;
             storageIdx++;
+            result.m_lastIdx++;
         }
 
         assert result.checkConsistency() == null;
@@ -670,8 +673,7 @@ public class SparseBitVector {
     public SparseBitVector or(final SparseBitVector bv) {
 
         SparseBitVector result =
-                new SparseBitVector(Math.max(m_length, bv.m_length), Math.max(
-                        cardinality(), bv.cardinality()));
+                new SparseBitVector(Math.max(m_length, bv.m_length), cardinality() + bv.cardinality());
 
         int thisIdx = 0;
         int bvIdx = 0;
@@ -691,12 +693,12 @@ public class SparseBitVector {
             }
         }
         // copy the longer one into the result
-        if (thisIdx < m_lastIdx) {
+        if (thisIdx <= m_lastIdx) {
             System.arraycopy(m_idxStorage, thisIdx, result.m_idxStorage,
                     resultIdx + 1, m_lastIdx - thisIdx + 1);
             resultIdx += m_lastIdx - thisIdx + 1;
         }
-        if (bvIdx < bv.m_lastIdx) {
+        if (bvIdx <= bv.m_lastIdx) {
             System.arraycopy(bv.m_idxStorage, bvIdx, result.m_idxStorage,
                     resultIdx + 1, bv.m_lastIdx - bvIdx + 1);
             resultIdx += bv.m_lastIdx - bvIdx + 1;
@@ -719,8 +721,7 @@ public class SparseBitVector {
     public SparseBitVector xor(final SparseBitVector bv) {
 
         SparseBitVector result =
-                new SparseBitVector(Math.max(m_length, bv.m_length), Math.max(
-                        cardinality(), bv.cardinality()));
+                new SparseBitVector(Math.max(m_length, bv.m_length), cardinality() + bv.cardinality());
 
         int thisIdx = 0;
         int bvIdx = 0;
@@ -739,12 +740,12 @@ public class SparseBitVector {
             }
         }
         // copy the longer one into the result
-        if (thisIdx < m_lastIdx) {
+        if (thisIdx <= m_lastIdx) {
             System.arraycopy(m_idxStorage, thisIdx, result.m_idxStorage,
                     resultIdx + 1, m_lastIdx - thisIdx + 1);
             resultIdx += m_lastIdx - thisIdx + 1;
         }
-        if (bvIdx < bv.m_lastIdx) {
+        if (bvIdx <= bv.m_lastIdx) {
             System.arraycopy(bv.m_idxStorage, bvIdx, result.m_idxStorage,
                     resultIdx + 1, bv.m_lastIdx - bvIdx + 1);
             resultIdx += bv.m_lastIdx - bvIdx + 1;
@@ -1020,4 +1021,55 @@ public class SparseBitVector {
         return Arrays.copyOf(m_idxStorage, m_lastIdx + 1);
     }
 
+    /**
+     * Computes the cardinality of the intersection with the given bitVector.
+     *
+     * @see {@link BitVectorUtil#cardinalityOfIntersection(BitVectorValue, BitVectorValue)}
+     * @param bitVector the other operand for the AND operator
+     * @return the cardinality of the intersection
+     */
+    long cardinalityOfIntersection(final SparseBitVector bitVector) {
+        if (isEmpty() || bitVector.isEmpty()) {
+            return 0;
+        }
+        long result = 0;
+        int thisIdx = 0;
+        int bvIdx = 0;
+        while (thisIdx <= m_lastIdx && bvIdx <= bitVector.m_lastIdx) {
+            if (m_idxStorage[thisIdx] == bitVector.m_idxStorage[bvIdx]) {
+                // index is set in both arguments
+                result++;
+            }
+            if (m_idxStorage[thisIdx] < bitVector.m_idxStorage[bvIdx]) {
+                thisIdx++;
+            } else {
+                bvIdx++;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Computes the cardinality of the complement relative to the given bitVector.
+     *
+     * @see {@link BitVectorUtil#cardinalityOfRelativeComplement(BitVectorValue, BitVectorValue)}
+     * @param bitVector the other operand
+     * @return the cardinality of the intersection
+     */
+    long cardinalityOfRelativeComplement(final SparseBitVector bitVector) {
+        long result = 0;
+        int bvIdx = 0;
+        // the algorithm omits all smaller characters from the given bitvector until one bit index is equal
+        // or greater than the current one.
+        for (int thisIdx = 0; thisIdx <= m_lastIdx; thisIdx++) {
+
+            while (bvIdx < bitVector.m_lastIdx && bitVector.m_idxStorage[bvIdx] < m_idxStorage[thisIdx]) {
+                bvIdx++;
+            }
+            if (bvIdx > bitVector.m_lastIdx || !(m_idxStorage[thisIdx] == bitVector.m_idxStorage[bvIdx])) {
+                result++;
+            }
+        }
+        return result;
+    }
 }

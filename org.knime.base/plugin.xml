@@ -509,8 +509,8 @@
             after="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"/>
       <node
             category-path="/manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.normalize2.Normalizer2NodeFactory"
-            id="org.knime.base.node.preproc.normalize2.Normalize2NodeFactory"/>
+            factory-class="org.knime.base.node.preproc.normalize3.Normalizer3NodeFactory"
+            id="org.knime.base.node.preproc.normalize3.Normalize3NodeFactory"/>
      <node
             category-path="/manipulation/pmml"
             factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLNodeFactory"
@@ -663,14 +663,14 @@
              id="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
        <node
             category-path="/statistics/regression"
-            factory-class="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"
-            id="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"
+            factory-class="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"
+            id="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"
             after="org.knime.base.node.mine.regression.linear2.learner.LinReg2LearnerNodeFactory"/>
        <node
              category-path="/statistics/regression"
              factory-class="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"
              id="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"
-             after="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"/>
+             after="org.knime.base.node.mine.regression.polynomial.learner2.PolyRegLearnerNodeFactory"/>
        <node
              category-path="/statistics/regression"
              factory-class="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeFactory"
@@ -1342,11 +1342,6 @@
             id="org.knime.base.node.io.listfiles.ListFilesNodeFactory">
       </node>
       <node
-            category-path="/io/io-other"
-            factory-class="org.knime.base.node.image.readpng.ReadPNGFromURLNodeFactory"
-            id="org.knime.base.node.image.readpng.ReadPNGFromURLNodeFactory">
-      </node>
-      <node
             category-path="/misc"
             factory-class="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory"
             id="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory">
@@ -1558,6 +1553,12 @@
             expert-flag="false"
             factory-class="org.knime.base.node.meta.looper.recursive.RecursiveLoopEnd2NodeFactory"
             id="org.knime.base.node.meta.looper.recursive.RecursiveLoopEnd2NodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/pmml"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.pmml.xml2pmml.XML2PMMLNodeFactory"
+            id="org.knime.base.node.preproc.pmml.xml2pmml.XML2PMMLNodeFactory">
       </node>
 
    </extension>

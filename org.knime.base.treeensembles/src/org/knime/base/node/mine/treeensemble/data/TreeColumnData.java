@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,9 +50,8 @@
  */
 package org.knime.base.node.mine.treeensemble.data;
 
-
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class TreeColumnData {
@@ -70,7 +69,7 @@ public abstract class TreeColumnData {
         m_metaData = metaData;
     }
 
-    /** @return the meta data*/
+    /** @return the meta data */
     public TreeColumnMetaData getMetaData() {
         return m_metaData;
     }
@@ -78,9 +77,9 @@ public abstract class TreeColumnData {
     /**
      * @param weights
      * @param totalWeight
-     * @return */
-    public static final double entropy(final double[] weights,
-            final double totalWeight) {
+     * @return
+     */
+    public static final double entropy(final double[] weights, final double totalWeight) {
         if (totalWeight < EPSILON) {
             return 0.0;
         }

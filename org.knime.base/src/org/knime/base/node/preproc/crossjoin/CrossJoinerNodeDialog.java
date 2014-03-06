@@ -1,7 +1,8 @@
+package org.knime.base.node.preproc.crossjoin;
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -46,26 +47,40 @@
  * ---------------------------------------------------------------------
  *
  */
-package org.knime.base.node.preproc.crossjoin;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 
 /**
  * <code>NodeDialog</code> for the "CrossJoiner" Node.
  *
- * @author Alexander Fillbrunn, Universit�t Konstanz
- * @author  Iris Adae, Universit�t Konstanz
+ * @author Alexander Fillbrunn, University Konstanz
+ * @author  Iris Adae, University Konstanz
  */
-public class CrossJoinerNodeDialog extends DefaultNodeSettingsPane {
+final class CrossJoinerNodeDialog extends DefaultNodeSettingsPane {
 
     /**
      * New pane for configuring the CrossJoiner node.
      */
-    protected CrossJoinerNodeDialog() {
+    CrossJoinerNodeDialog() {
+        addDialogComponent(new DialogComponentString(CrossJoinerNodeModel.createRightColumnNameSuffixSettingsModel(),
+                                                     "Right table's column name suffix"));
         addDialogComponent(new DialogComponentString(
-                            CrossJoinerNodeModel.createRightColumnNameSuffixSettingsModel(),
-                                                     "Second table's column name suffix"));
+                            CrossJoinerNodeModel.createRowKeySeparatorSettingsModel(), "Separator for new RowIds"));
+        addDialogComponent(new DialogComponentNumber(
+                            CrossJoinerNodeModel.createCacheSizeSettingsModel(), "Chunk size: ", 10));
+
+        final SettingsModelBoolean showFirstRowIdsModel = CrossJoinerNodeModel.createshowFirstRowIdsSettingsModel();
+        addDialogComponent(new DialogComponentBoolean(showFirstRowIdsModel, "Append left data tables RowIds"));
+        addDialogComponent(new DialogComponentString(
+            CrossJoinerNodeModel.createFirstRowIdsNameSettingsModel(showFirstRowIdsModel), "Column name(left)"));
+        final SettingsModelBoolean showSecondRowIdsModel = CrossJoinerNodeModel.createshowSecondRowIdsSettingsModel();
+        addDialogComponent(new DialogComponentBoolean(showSecondRowIdsModel, "Append right data tables RowIds"));
+        addDialogComponent(new DialogComponentString(
+            CrossJoinerNodeModel.createSecondRowIdsNameSettingsModel(showSecondRowIdsModel), "Column name(right)"));
     }
 }
 

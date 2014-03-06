@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -173,6 +173,11 @@ public class Statistics3Table {
     /** Used to 'cache' the maximum values. */
     private final DataCell[] m_maxCells;
 
+    /** Used to 'cache' the minimum non-infinite values. */
+    private final DataCell[] m_minNonInfValues;
+
+    /** Used to 'cache' the maximum non-infinite values. */
+    private final DataCell[] m_maxNonInfValues;
 
     /** Used to 'cache' the row count. */
     private final int m_rowCount;
@@ -284,6 +289,8 @@ public class Statistics3Table {
         m_maxValues = new double[nrCols];
         m_minCells = new DataCell[nrCols];
         m_maxCells = new DataCell[nrCols];
+        m_minNonInfValues = new DataCell[nrCols];
+        m_maxNonInfValues = new DataCell[nrCols];
         m_missingValueCnt = new int[nrCols];
         m_nanValueCnt = new int[nrCols];
         m_posInfinityValueCnt = new int[nrCols];
@@ -316,6 +323,8 @@ public class Statistics3Table {
             m_varianceValues[i] = Double.NaN;
             m_minCells[i] = DataType.getMissingCell();
             m_maxCells[i] = DataType.getMissingCell();
+            m_minNonInfValues[i] = DataType.getMissingCell();
+            m_maxNonInfValues[i] = DataType.getMissingCell();
             m_skewness[i] = Double.NaN;
             m_kurtosis[i] = Double.NaN;
             m_median[i] = Double.NaN;
@@ -360,7 +369,7 @@ public class Statistics3Table {
                         double d = ((DoubleValue)cell).getDoubleValue();
                         means[c].increment(d);
                         variances[c].increment(d);
-                        updateMinMax(c, cell, m_minCells, m_maxCells, cspec.getType().getComparator());
+                        updateMinMax(c, cell, cspec.getType().getComparator());
                         if (d == Double.POSITIVE_INFINITY) {
                             m_posInfinityValueCnt[c]++;
                         }
@@ -989,6 +998,34 @@ public class Statistics3Table {
 
 
     /**
+     * Returns the minimum (not infinite) value selected column. Will be {@link Double#NaN} for columns that only
+     * contain missing cells/{@link Double#NaN}/infinite values or for empty data tables.
+     * <br/>
+     * Can be infinity if the node was not executed and an old array is loaded.
+     *
+     * @param col The column index.
+     * @return the minimum value
+     * @since 2.10
+     */
+    public DataCell getNonInfMin(final int col) {
+        return m_minNonInfValues[col];
+    }
+
+    /**
+     * Returns the maximum (not infinite) value selected column. Will be {@link Double#NaN} for columns that only
+     * contain missing cells/{@link Double#NaN}/infinite values or for empty data tables.
+     * <br/>
+     * Can be infinity if the node was not executed and an old array is loaded.
+     *
+     * @param col The column index.
+     * @return the maximum value
+     * @since 2.10
+     */
+    public DataCell getNonInfMax(final int col) {
+        return m_maxNonInfValues[col];
+    }
+
+    /**
      * Returns the median for the desired column.
      *
      * @param colIdx the column index for which the median is calculated
@@ -1099,15 +1136,18 @@ public class Statistics3Table {
     }
 
     private Statistics3Table(final DataTableSpec spec, final DataCell[] minCells, final double[] minValues,
-        final DataCell[] maxCells, final double[] maxValues, final double[] meanValues, final double[] median,
-        final double[] varianceValues, final double[] sum, final int[] missings, final int[] nans, final int[] posInfs,
-        final int[] negInfs, final List<Map<DataCell, Integer>> nomValues, final double[] skewness,
-        final double[] kurtosis, final int rowCount) {
+        final DataCell[] minNonInfValues, final DataCell[] maxCells, final double[] maxValues,
+        final DataCell[] maxNonInfValues, final double[] meanValues, final double[] median, final double[] varianceValues,
+        final double[] sum, final int[] missings, final int[] nans, final int[] posInfs, final int[] negInfs,
+        final List<Map<DataCell, Integer>> nomValues, final double[] skewness, final double[] kurtosis,
+        final int rowCount) {
         m_spec = spec;
         m_minCells = minCells;
         m_minValues = minValues;
         m_maxCells = maxCells;
         m_maxValues = maxValues;
+        m_minNonInfValues = minNonInfValues;
+        m_maxNonInfValues = maxNonInfValues;
         m_meanValues = meanValues;
         m_median = median;
         m_varianceValues = varianceValues;
@@ -1196,6 +1236,9 @@ public class Statistics3Table {
         }
 
 
+        //Use min and max to load compatible values
+        DataCell[] minNonInf = sett.getDataCellArray("minimumNonInf", minCells);
+        DataCell[] maxNonInf = sett.getDataCellArray("maximumNonInf", maxCells);
         double[] mean = sett.getDoubleArray("mean");
         double[] var = sett.getDoubleArray("variance");
         double[] median = sett.getDoubleArray("median");
@@ -1212,8 +1255,8 @@ public class Statistics3Table {
         double[] kurtosis = sett.getDoubleArray("kurtosis", unknownDouble);
         // added with 2.7, fallback -1
         int rowCount = sett.getInt("row_count", -1);
-        return new Statistics3Table(spec, minCells, min, maxCells, max, mean, median, var, sums, missings, nans,
-            posInfs, negInfs, nominalValues, skewness, kurtosis, rowCount);
+        return new Statistics3Table(spec, minCells, min, minNonInf, maxCells, max, maxNonInf, mean, median, var, sums,
+            missings, nans, posInfs, negInfs, nominalValues, skewness, kurtosis, rowCount);
     }
 
     /**
@@ -1225,6 +1268,8 @@ public class Statistics3Table {
         m_spec.save(sett.addConfig("spec"));
         sett.addDataCellArray("minimumCells", m_minCells);
         sett.addDataCellArray("maximumCells", m_maxCells);
+        sett.addDataCellArray("minimumNonInf", m_minNonInfValues);
+        sett.addDataCellArray("maximumNonInf", m_maxNonInfValues);
         sett.addDoubleArray("mean", m_meanValues);
         sett.addDoubleArray("variance", m_varianceValues);
         sett.addDoubleArray("median", m_median);
@@ -1263,8 +1308,7 @@ public class Statistics3Table {
      * @param col The column of interest.
      * @param cell The new value to check.
      */
-    private void updateMinMax(final int col, final DataCell cell,
-        final DataCell[] mins, final DataCell[] maxs, final DataValueComparator comparator) {
+    private void updateMinMax(final int col, final DataCell cell, final DataValueComparator comparator) {
         if (cell.isMissing()) {
             return;
         }
@@ -1273,11 +1317,21 @@ public class Statistics3Table {
             return;
         }
 
-        if (mins[col].isMissing() || (comparator.compare(value, mins[col]) < 0)) {
-            mins[col] = value;
+        if (m_minCells[col].isMissing() || (comparator.compare(value, m_minCells[col]) < 0)) {
+            m_minCells[col] = value;
         }
-        if (maxs[col].isMissing() || (comparator.compare(value, maxs[col]) > 0)) {
-            maxs[col] = value;
+        if (m_maxCells[col].isMissing() || (comparator.compare(value, m_maxCells[col]) > 0)) {
+            m_maxCells[col] = value;
+        }
+
+
+        if (m_minNonInfValues[col].isMissing() || (!Double.isInfinite(((DoubleValue) value).getDoubleValue())
+                && (comparator.compare(value, m_minNonInfValues[col]) < 0))) {
+            m_minNonInfValues[col] = value;
+        }
+        if (m_maxNonInfValues[col].isMissing() || (!Double.isInfinite(((DoubleValue) value).getDoubleValue())
+                && (comparator.compare(value, m_maxNonInfValues[col]) > 0))) {
+            m_maxNonInfValues[col] = value;
         }
     }
 
@@ -1297,5 +1351,13 @@ public class Statistics3Table {
         } else {
             return cell;
         }
+    }
+
+    /**
+     * @return the spec
+     * @since 2.10
+     */
+    public DataTableSpec getSpec() {
+        return m_spec;
     }
 }

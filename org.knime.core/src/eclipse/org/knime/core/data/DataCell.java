@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -69,7 +69,8 @@ import org.knime.core.data.container.BlobWrapperDataCell;
  * <p>
  * Derived classes have to implement at least one interface
  * derived from {@link DataValue}. The derived class must be
- * read-only, i.e. setter methods must not be implemented.
+ * read-only, i.e. setter methods must not be implemented and
+ * objects returned by any of the get methods must be immutable.
  *
  * <p>
  * This class implements {@link java.io.Serializable}. However, if

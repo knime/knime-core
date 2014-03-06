@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -60,20 +60,21 @@ import org.knime.core.node.workflow.WorkflowManager;
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @param <T> the underlying node model
- * @param <V>
+ * @param <REP>
+ * @param <VAL>
  * @since 2.8
  */
-public abstract class InteractiveClientNodeView<T extends NodeModel & InteractiveNode<V>, V extends ViewContent>
-extends NodeView<T> implements InteractiveView<T, V> {
+public abstract class InteractiveClientNodeView<T extends NodeModel & InteractiveNode<REP, VAL>, REP extends ViewContent, VAL extends ViewContent>
+extends NodeView<T> implements InteractiveView<T, REP, VAL> {
 
-    private final InteractiveViewDelegate<V> m_delegate;
+    private final InteractiveViewDelegate<VAL> m_delegate;
 
     /**
      * @param nodeModel The underlying node model.
      */
     protected InteractiveClientNodeView(final T nodeModel) {
         super(nodeModel);
-        m_delegate = new InteractiveViewDelegate<V>();
+        m_delegate = new InteractiveViewDelegate<VAL>();
     }
 
     /**
@@ -96,8 +97,8 @@ extends NodeView<T> implements InteractiveView<T, V> {
      * {@inheritDoc}
      */
     @Override
-    public void triggerReExecution(final V vc, final ReexecutionCallback callback) {
-        m_delegate.triggerReExecution(vc, callback);
+    public void triggerReExecution(final VAL val, final ReexecutionCallback callback) {
+        m_delegate.triggerReExecution(val, callback);
     }
 
     /**

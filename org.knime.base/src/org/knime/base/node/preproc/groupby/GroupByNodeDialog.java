@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -170,7 +170,6 @@ public class GroupByNodeDialog extends NodeDialogPane {
 //The last tab: aggregations and advance settings
         final JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        addTab("Options", panel);
 
 //The aggregation column box
         panel.add(m_aggrColPanel.getComponentPanel());

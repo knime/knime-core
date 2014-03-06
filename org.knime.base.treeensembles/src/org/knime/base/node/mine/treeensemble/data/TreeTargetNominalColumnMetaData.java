@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,7 +55,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- *
+ * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeTargetNominalColumnMetaData extends TreeTargetColumnMetaData {
@@ -63,9 +63,9 @@ public class TreeTargetNominalColumnMetaData extends TreeTargetColumnMetaData {
     private final NominalValueRepresentation[] m_values;
 
     /**
-     * @param attributeName */
-    TreeTargetNominalColumnMetaData(final String attributeName,
-            final NominalValueRepresentation[] values) {
+     * @param attributeName
+     */
+    TreeTargetNominalColumnMetaData(final String attributeName, final NominalValueRepresentation[] values) {
         super(attributeName);
         m_values = values;
     }
@@ -81,8 +81,10 @@ public class TreeTargetNominalColumnMetaData extends TreeTargetColumnMetaData {
         }
     }
 
-    /** The internally sorted list of target values. The sorting follows the
-     * same rules as {@link TreeNominalColumnMetaData#getValues()}.
+    /**
+     * The internally sorted list of target values. The sorting follows the same rules as
+     * {@link TreeNominalColumnMetaData#getValues()}.
+     * 
      * @return The sorted list of target attributes.
      */
     public NominalValueRepresentation[] getValues() {

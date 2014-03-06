@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2013
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -147,7 +147,7 @@ public class WrappedNodeDialog extends Dialog {
     @Override
     protected void handleShellCloseEvent() {
         // send cancel&close action to underlying dialog pane
-        m_dialogPane.onCancel();
+        m_dialogPane.callOnCancel();
         m_dialogPane.callOnClose();
         super.handleShellCloseEvent();
     }
@@ -444,7 +444,7 @@ public class WrappedNodeDialog extends Dialog {
         // delegate cancel&close event to underlying dialog pane
         NodeContext.pushContext(m_nodeContainer);
         try {
-            m_dialogPane.onCancel();
+            m_dialogPane.callOnCancel();
             m_dialogPane.callOnClose();
         } finally {
             NodeContext.removeLastContext();
