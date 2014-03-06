@@ -182,45 +182,51 @@ public abstract class ExtensibleUtilityFactory extends UtilityFactory {
         if (m_renderers != null) {
             return;
         }
-        m_renderers = new HashMap<String, DataValueRendererFactory>();
+        synchronized(m_logger) {
+            if (m_renderers != null) {
+                return;
+            }
+            Map<String, DataValueRendererFactory> renderers = new HashMap<String, DataValueRendererFactory>();
 
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-        IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
-        assert point != null : "Invalid extension point id: " + EXT_POINT_ID;
+            IExtensionRegistry registry = Platform.getExtensionRegistry();
+            IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
+            assert point != null : "Invalid extension point id: " + EXT_POINT_ID;
 
-        String defaultRendererId = null;
-        for (IExtension ext : point.getExtensions()) {
-            IConfigurationElement[] elements = ext.getConfigurationElements();
-            for (IConfigurationElement valueClassElement : elements) {
-                String valueClassName = valueClassElement.getAttribute("valueClass");
-                if (!m_valueClass.getName().equals(valueClassName)) {
-                    continue;
-                }
+            String defaultRendererId = null;
+            for (IExtension ext : point.getExtensions()) {
+                IConfigurationElement[] elements = ext.getConfigurationElements();
+                for (IConfigurationElement valueClassElement : elements) {
+                    String valueClassName = valueClassElement.getAttribute("valueClass");
+                    if (!m_valueClass.getName().equals(valueClassName)) {
+                        continue;
+                    }
 
-                for (IConfigurationElement rendererClassElement : valueClassElement.getChildren()) {
-                    boolean suggestAsDefault =
-                        Boolean.parseBoolean(rendererClassElement.getAttribute("suggestAsDefault"));
+                    for (IConfigurationElement rendererClassElement : valueClassElement.getChildren()) {
+                        boolean suggestAsDefault =
+                            Boolean.parseBoolean(rendererClassElement.getAttribute("suggestAsDefault"));
 
-                    try {
-                        DataValueRendererFactory rendererFactory =
-                            (DataValueRendererFactory)rendererClassElement
-                                .createExecutableExtension("rendererFactoryClass");
+                        try {
+                            DataValueRendererFactory rendererFactory =
+                                (DataValueRendererFactory)rendererClassElement
+                                    .createExecutableExtension("rendererFactoryClass");
 
-                        m_renderers.put(rendererFactory.getId(), rendererFactory);
+                            renderers.put(rendererFactory.getId(), rendererFactory);
 
-                        if (suggestAsDefault || (defaultRendererId == null)) {
-                            defaultRendererId = rendererFactory.getId();
-                            CORE_DEFAULT_PREFS.put(getPreferenceKey(), defaultRendererId);
+                            if (suggestAsDefault || (defaultRendererId == null)) {
+                                defaultRendererId = rendererFactory.getId();
+                                CORE_DEFAULT_PREFS.put(getPreferenceKey(), defaultRendererId);
+                            }
+                        } catch (CoreException ex) {
+                            m_logger.error(
+                                "Could not load registered renderer factory "
+                                    + rendererClassElement.getAttribute("rendererFactoryClass") + " for " + valueClassName
+                                    + " from plug-in " + valueClassElement.getNamespaceIdentifier() + ": "
+                                    + ex.getMessage(), ex);
                         }
-                    } catch (CoreException ex) {
-                        m_logger.error(
-                            "Could not load registered renderer factory "
-                                + rendererClassElement.getAttribute("rendererFactoryClass") + " for " + valueClassName
-                                + " from plug-in " + valueClassElement.getNamespaceIdentifier() + ": "
-                                + ex.getMessage(), ex);
                     }
                 }
             }
+            m_renderers = renderers;
         }
     }
 
