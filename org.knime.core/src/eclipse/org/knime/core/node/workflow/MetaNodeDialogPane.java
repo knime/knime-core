@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -67,6 +67,11 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.dialog.MetaNodeDialogNode;
+import org.knime.core.node.dialog.DialogNode;
+import org.knime.core.node.dialog.DialogNodePanel;
+import org.knime.core.node.dialog.DialogNodeRepresentation;
+import org.knime.core.node.dialog.DialogNodeValue;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.quickform.AbstractQuickFormConfiguration;
 import org.knime.core.quickform.AbstractQuickFormValueInConfiguration;
@@ -82,15 +87,19 @@ import org.knime.core.util.Pair;
  */
 public final class MetaNodeDialogPane extends NodeDialogPane {
 
-    private final Map<Pair<NodeID, QuickFormInputNode>,
-         QuickFormConfigurationPanel<? extends AbstractQuickFormValueInConfiguration>> m_nodes;
+    private final Map<NodeID, MetaNodeDialogNode> m_nodes;
+
+    private final Map<NodeID, QuickFormConfigurationPanel<? extends AbstractQuickFormValueInConfiguration>> m_quickFormInputNodePanels;
+
+    private final Map<NodeID, DialogNodePanel<? extends DialogNodeValue>> m_dialogNodePanels;
 
     private final JPanel m_panel;
 
     /** Constructor. */
     public MetaNodeDialogPane() {
-        m_nodes = new LinkedHashMap<Pair<NodeID, QuickFormInputNode>,
-            QuickFormConfigurationPanel<? extends AbstractQuickFormValueInConfiguration>>();
+        m_nodes = new LinkedHashMap<NodeID, MetaNodeDialogNode>();
+        m_quickFormInputNodePanels = new LinkedHashMap<NodeID, QuickFormConfigurationPanel<? extends AbstractQuickFormValueInConfiguration>>();
+        m_dialogNodePanels = new LinkedHashMap<NodeID, DialogNodePanel<? extends DialogNodeValue>>();
 
         m_panel = new JPanel();
         final BoxLayout boxLayout = new BoxLayout(m_panel, BoxLayout.Y_AXIS);
@@ -110,54 +119,81 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
      * org.knime.core.data.DataTableSpec[])} is called.
      * @param nodes the quickform nodes to show settings for
      */
-    final void setQuickformNodes(final Map<NodeID, QuickFormInputNode> nodes) {
+    final void setQuickformNodes(final Map<NodeID, MetaNodeDialogNode> nodes) {
         // remove all quickform components from current panel
         m_panel.removeAll();
-        List<Pair<Integer, QuickFormConfigurationPanel<?>>> sortedPanelList =
-            new ArrayList<Pair<Integer, QuickFormConfigurationPanel<?>>>();
-
-        // a list of quick form elements that will sorted below according to
-        // the weight values
-        for (Map.Entry<NodeID, QuickFormInputNode> e : nodes.entrySet()) {
-            AbstractQuickFormConfiguration
-                <? extends AbstractQuickFormValueInConfiguration> config =
-                    e.getValue().getConfiguration();
-            if (config == null) { // quickform nodes has no valid configuration
-                continue;
+        List<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>> sortedNodeList = new ArrayList<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>>();
+        for (Map.Entry<NodeID, MetaNodeDialogNode> e : nodes.entrySet()) {
+            if (e.getValue() instanceof QuickFormInputNode) {
+                AbstractQuickFormConfiguration
+                    <? extends AbstractQuickFormValueInConfiguration> config =
+                        ((QuickFormInputNode)e.getValue()).getConfiguration();
+                if (config == null) { // quickform nodes has no valid configuration
+                    continue;
+                }
+                QuickFormConfigurationPanel
+                    <? extends AbstractQuickFormValueInConfiguration> quickform =
+                        config.createController();
+                m_nodes.put(e.getKey(), e.getValue());
+                m_quickFormInputNodePanels.put(e.getKey(), quickform);
+                Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> weightNodePair =
+                    new Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>(
+                            config.getWeight(), new Pair<NodeID, MetaNodeDialogNode>(e.getKey(), e.getValue()));
+                sortedNodeList.add(weightNodePair);
+            } else if (e.getValue() instanceof DialogNode) {
+                DialogNodeRepresentation<? extends DialogNodeValue> representation
+                    = ((DialogNode)e.getValue()).getDialogRepresentation();
+                if (representation == null) {
+                    // no valid representation
+                    continue;
+                }
+                DialogNodePanel dialogPanel = representation.createDialogPanel();
+                dialogPanel.loadNodeValue(((DialogNode)e.getValue()).getDialogValue());
+                m_nodes.put(e.getKey(), e.getValue());
+                m_dialogNodePanels.put(e.getKey(), dialogPanel);
+                Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> weightNodePair =
+                        new Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>(
+                                representation.getWeight(), new Pair<NodeID, MetaNodeDialogNode>(e.getKey(), e.getValue()));
+                    sortedNodeList.add(weightNodePair);
             }
-            QuickFormConfigurationPanel
-                <? extends AbstractQuickFormValueInConfiguration> quickform =
-                    config.createController();
-            m_nodes.put(new Pair<NodeID, QuickFormInputNode>(
-                    e.getKey(), e.getValue()), quickform);
-            Pair<Integer, QuickFormConfigurationPanel<?>> weightPanelPair =
-                new Pair<Integer, QuickFormConfigurationPanel<?>>(
-                        config.getWeight(), quickform);
-            sortedPanelList.add(weightPanelPair);
         }
-        Collections.sort(sortedPanelList, new Comparator<
-                Pair<Integer, QuickFormConfigurationPanel<?>>>() {
+
+        Collections.sort(sortedNodeList, new Comparator<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>>() {
             /** {@inheritDoc} */
             @Override
-            public int compare(
-                    final Pair<Integer, QuickFormConfigurationPanel<?>> o1,
-                    final Pair<Integer, QuickFormConfigurationPanel<?>> o2) {
+            public int compare(final Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> o1, final Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> o2) {
                 return o1.getFirst() - o2.getFirst();
             }
         });
-        for (Pair<Integer, QuickFormConfigurationPanel<?>> weightPanelPair : sortedPanelList) {
-            final QuickFormConfigurationPanel<?> qconfPanel = weightPanelPair.getSecond();
 
-            JPanel qpanel = new JPanel();
-            final BoxLayout boxLayout2 = new BoxLayout(qpanel, BoxLayout.Y_AXIS);
-            qpanel.setLayout(boxLayout2);
-            qpanel.setBorder(BorderFactory.createTitledBorder((String) null));
+        for (Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> weightNodePair : sortedNodeList) {
+            NodeID id = weightNodePair.getSecond().getFirst();
+            MetaNodeDialogNode node = weightNodePair.getSecond().getSecond();
+            if (node instanceof QuickFormInputNode) {
+                final QuickFormConfigurationPanel<?> qconfPanel = m_quickFormInputNodePanels.get(id);
+                JPanel qpanel = new JPanel();
+                final BoxLayout boxLayout2 = new BoxLayout(qpanel, BoxLayout.Y_AXIS);
+                qpanel.setLayout(boxLayout2);
+                qpanel.setBorder(BorderFactory.createTitledBorder((String) null));
+                JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                p.add(qconfPanel);
+                qpanel.add(p);
+                m_panel.add(qpanel);
+            } else if (node instanceof DialogNode) {
+                DialogNodePanel<? extends DialogNodeValue> nodePanel = m_dialogNodePanels.get(id);
 
-            JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            p.add(qconfPanel);
-            qpanel.add(p);
-            m_panel.add(qpanel);
+                JPanel dpanel = new JPanel();
+                final BoxLayout boxLayout2 = new BoxLayout(dpanel, BoxLayout.Y_AXIS);
+                dpanel.setLayout(boxLayout2);
+                dpanel.setBorder(BorderFactory.createTitledBorder((String) null));
+
+                JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                p.add(nodePanel);
+                dpanel.add(p);
+                m_panel.add(dpanel);
+            }
         }
+
         if (m_nodes.isEmpty()) {
             m_panel.add(new JLabel("No valid Quickform configurations."));
         }
@@ -167,24 +203,27 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        for (Map.Entry<Pair<NodeID, QuickFormInputNode>,
-        QuickFormConfigurationPanel
-            <? extends AbstractQuickFormValueInConfiguration>> e
-                : m_nodes.entrySet()) {
-            Pair<NodeID, QuickFormInputNode> pair = e.getKey();
-
-            AbstractQuickFormConfiguration
-                <? extends AbstractQuickFormValueInConfiguration> config =
-                pair.getSecond().getConfiguration();
-
-            AbstractQuickFormValueInConfiguration valueConfig =
-                config.createValueConfiguration();
-            QuickFormConfigurationPanel<AbstractQuickFormValueInConfiguration> value =
-                    (QuickFormConfigurationPanel<AbstractQuickFormValueInConfiguration>)e.getValue();
-            value.saveSettings(valueConfig);
-            NodeSettingsWO subSettings = settings.addNodeSettings(
-                    (Integer.toString(pair.getFirst().getIndex())));
-            valueConfig.saveValue(subSettings);
+        for (Map.Entry<NodeID, MetaNodeDialogNode> e : m_nodes.entrySet()) {
+            if (e.getValue() instanceof QuickFormInputNode) {
+                AbstractQuickFormConfiguration
+                    <? extends AbstractQuickFormValueInConfiguration> config =
+                    ((QuickFormInputNode)e.getValue()).getConfiguration();
+                AbstractQuickFormValueInConfiguration valueConfig =
+                    config.createValueConfiguration();
+                QuickFormConfigurationPanel<AbstractQuickFormValueInConfiguration> value =
+                        (QuickFormConfigurationPanel<AbstractQuickFormValueInConfiguration>)m_quickFormInputNodePanels.get(e.getKey());
+                value.saveSettings(valueConfig);
+                NodeSettingsWO subSettings = settings.addNodeSettings(
+                        (Integer.toString(e.getKey().getIndex())));
+                valueConfig.saveValue(subSettings);
+            } else if (e.getValue() instanceof DialogNode) {
+                DialogNodeValue nodeValue = ((DialogNode)e.getValue()).getDialogValue();
+                DialogNodePanel nodePanel = m_dialogNodePanels.get(e.getKey());
+                nodePanel.saveNodeValue(nodeValue);
+                NodeSettingsWO subSettings = settings.addNodeSettings(
+                    (Integer.toString(e.getKey().getIndex())));
+                nodeValue.saveToNodeSettings(subSettings);
+            }
         }
     }
 
@@ -195,23 +234,32 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         // This method ignored the input specs - make sure to review optional
         // inputs in case quickforms use the input data (e.g. at some point
         // we may have quickform nodes to allow a column selection?)
-        for (Map.Entry<Pair<NodeID, QuickFormInputNode>,
-                QuickFormConfigurationPanel<? extends AbstractQuickFormValueInConfiguration>> e
-                    : m_nodes.entrySet()) {
-            Pair<NodeID, QuickFormInputNode> pair = e.getKey();
-            AbstractQuickFormConfiguration<? extends AbstractQuickFormValueInConfiguration> config =
-                pair.getSecond().getConfiguration();
-            AbstractQuickFormValueInConfiguration valueConfig =
-                config.getValueConfiguration();
-            try {
-                NodeSettingsRO subSettings = settings.getNodeSettings(
-                    Integer.toString(pair.getFirst().getIndex()));
-                valueConfig.loadValueInDialog(subSettings);
-                QuickFormConfigurationPanel<AbstractQuickFormValueInConfiguration> value =
-                        (QuickFormConfigurationPanel<AbstractQuickFormValueInConfiguration>)e.getValue();
-                value.loadSettings(valueConfig);
-            } catch (InvalidSettingsException ise) {
-                // no op
+        for (Map.Entry<NodeID, MetaNodeDialogNode> e : m_nodes.entrySet()) {
+            if (e.getValue() instanceof QuickFormInputNode) {
+                AbstractQuickFormConfiguration
+                <? extends AbstractQuickFormValueInConfiguration> config =
+                ((QuickFormInputNode)e.getValue()).getConfiguration();
+                AbstractQuickFormValueInConfiguration valueConfig =
+                        config.getValueConfiguration();
+                try {
+                    NodeSettingsRO subSettings = settings.getNodeSettings(
+                        Integer.toString(e.getKey().getIndex()));
+                    valueConfig.loadValueInDialog(subSettings);
+                    QuickFormConfigurationPanel<AbstractQuickFormValueInConfiguration> value =
+                            (QuickFormConfigurationPanel<AbstractQuickFormValueInConfiguration>)e.getValue();
+                    value.loadSettings(valueConfig);
+                } catch (InvalidSettingsException ise) {
+                    // no op
+                }
+            } else if (e.getValue() instanceof DialogNode) {
+                DialogNodeValue nodeValue = ((DialogNode)e.getValue()).getDialogValue();
+                try {
+                    NodeSettingsRO subSettings = settings.getNodeSettings(
+                        Integer.toString(e.getKey().getIndex()));
+                    nodeValue.loadFromNodeSettings(subSettings);
+                } catch (InvalidSettingsException ex) {
+                    // no op
+                }
             }
         }
     }

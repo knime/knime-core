@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -49,6 +49,7 @@
 package org.knime.core.quickform.in;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.quickform.AbstractQuickFormConfiguration;
@@ -65,7 +66,7 @@ import org.knime.core.util.node.quickform.in.AbstractQuickFormInElement;
  *
  * @noimplement Not yet stable API.
  */
-public interface QuickFormInputNode extends QuickFormNode {
+public interface QuickFormInputNode extends QuickFormNode, MetaNodeDialogNode {
 
     /** Filter used in {@link WorkflowManager#findNextWaitingWorkflowManager(Class, NodeModelFilter)}.
      * It only includes not hidden qf nodes.

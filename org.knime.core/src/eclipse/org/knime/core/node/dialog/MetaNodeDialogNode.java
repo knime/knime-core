@@ -45,31 +45,16 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 08.10.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * Created on Mar 7, 2014 by "Patrick Winter"
  */
 package org.knime.core.node.dialog;
 
-
 /**
+ * A node that contributes to the meta nodes dialog.
  *
- * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
- * @param <REP> The configuration content of the dialog node.
- * @param <VAL> The node value implementation of the dialog node.
- * @since 2.9
+ * @author "Patrick Winter"
+ * @since 2.10
  */
-public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL extends DialogNodeValue>
-        extends MetaNodeDialogNode {
-
-    /**
-     * @return The representation content of the dialog node.
-     * @since 2.10
-     */
-    public REP getDialogRepresentation();
-
-    /**
-     * @return The node value content of the dialog node.
-     * @since 2.10
-     */
-    public VAL getDialogValue();
+public interface MetaNodeDialogNode {
 
 }

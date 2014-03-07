@@ -112,6 +112,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.dialog.MetaNodeDialogNode;
+import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
@@ -4809,7 +4811,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     public boolean hasDialog() {
         int c = NodeExecutionJobManagerPool.getNumberOfJobManagersFactories();
-        return c > 1 || findNodes(QuickFormInputNode.class, true).size() > 0;
+        return c > 1 || findNodes(MetaNodeDialogNode.class, true).size() > 0;
     }
 
     /** {@inheritDoc} */
@@ -4818,8 +4820,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final PortObject[] inData) throws NotConfigurableException {
         NodeDialogPane dialogPane = getDialogPane();
         // find all quickform input nodes and update meta dialog
-        Map<NodeID, QuickFormInputNode> nodes =
-            findNodes(QuickFormInputNode.class, false);
+        Map<NodeID, MetaNodeDialogNode> nodes =
+                findNodes(MetaNodeDialogNode.class, false);
         ((MetaNodeDialogPane) dialogPane).setQuickformNodes(nodes);
         NodeSettings settings = new NodeSettings("wfm_settings");
         saveSettings(settings);
