@@ -3367,7 +3367,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // remove virtual nodes
             for (NodeID id : virtualNodes) {
-                for (ConnectionContainer cc : m_workflow.getConnectionsByDest(oldIDsHash.get(id))) {
+                List<ConnectionContainer> connections = new ArrayList<ConnectionContainer>();
+                connections.addAll(m_workflow.getConnectionsByDest(oldIDsHash.get(id)));
+                for (ConnectionContainer cc : connections) {
                     m_workflow.removeConnection(cc);
                 }
                 m_workflow.removeNode(oldIDsHash.get(id));
@@ -3394,7 +3396,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (ConnectionContainer cc : m_workflow.getConnectionsByDest(subWFM.getID())) {
                 this.addConnection(cc.getSource(), cc.getSourcePort(), subNC.getID(), cc.getDestPort() + 1);
             }
-            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(subWFM.getID())) {
+            List<ConnectionContainer> connections = new ArrayList<ConnectionContainer>();
+            connections.addAll(m_workflow.getConnectionsByDest(subWFM.getID()));
+            for (ConnectionContainer cc : connections) {
                 this.removeConnection(cc);
             }
             // rewire connections FROM the sub workflow

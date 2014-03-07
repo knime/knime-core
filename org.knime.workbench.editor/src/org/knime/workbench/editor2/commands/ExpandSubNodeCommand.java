@@ -124,16 +124,15 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public boolean canUndo() {
-        // TODO enable once sub nodes can be saved and loaded
-        //        if (m_undoCopyPersistor != null) {
-        //            WorkflowManager hostWFM = getHostWFM();
-        //            for (NodeID id : m_pastedNodes) {
-        //                if (!hostWFM.canRemoveNode(id)) {
-        //                    return false;
-        //                }
-        //            }
-        //            return true;
-        //        }
+        if (m_undoCopyPersistor != null) {
+            WorkflowManager hostWFM = getHostWFM();
+            for (NodeID id : m_pastedNodes) {
+                if (hostWFM.containsNodeContainer(id) && !hostWFM.canRemoveNode(id)) {
+                    return false;
+                }
+            }
+            return true;
+        }
         return false;
     }
 
