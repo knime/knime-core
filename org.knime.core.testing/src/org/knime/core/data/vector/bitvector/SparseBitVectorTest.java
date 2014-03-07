@@ -928,6 +928,18 @@ public class SparseBitVectorTest extends TestCase {
                 "502004031204000812483400000898010";
         bv = new SparseBitVector(hex);
         assertEquals(hex, bv.toHexString());
+        
+        bv = new SparseBitVector(3);
+        assertEquals("0", bv.toHexString());
+        
+        bv = new SparseBitVector("0");
+        assertEquals("0", bv.toHexString());
+        
+        bv = new SparseBitVector(4);
+        assertEquals("0", bv.toHexString());
+        
+        bv = new SparseBitVector(8);
+        assertEquals("00", bv.toHexString());
     }
     
     public void testSubsequence(){

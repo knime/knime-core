@@ -11,20 +11,19 @@ public abstract class AbstractBitVectorCellFactoryTest {
 	private static final int AMOUNT_OF_BITS = 200;
 	private static final Random RANDOM = new Random(42);
 
-	private static final BitVectorValue SPARSE_DEFAULT = new SparseBitVectorCellFactory(
-			"020f").createDataCell();
+	private static final String FIRST_DEFAULT = "020f";
 
-	private static final BitVectorValue DENSE_DEFAULT = new SparseBitVectorCellFactory(
-			"0304").createDataCell();
+	private static final String SECOND_DEFAULT = "0304";
 
 	private static final String AND_RESULT = "0204";
 	private static final String OR_RESULT = "030F";
 	private static final String XOR_RESULT = "010B";
-	
+
 	@Test
 	public void testSameTypeAnd() {
 
-		BitVectorValue and = doAnd(SPARSE_DEFAULT, DENSE_DEFAULT);
+		BitVectorValue and = doAnd(createBitVector(FIRST_DEFAULT),
+				createBitVector(SECOND_DEFAULT));
 
 		Assert.assertEquals(AND_RESULT, and.toHexString());
 
@@ -49,11 +48,12 @@ public abstract class AbstractBitVectorCellFactoryTest {
 					doAnd(denseBV, sparseBV));
 		}
 	}
-	
+
 	@Test
 	public void testSameTypeOr() {
 
-		BitVectorValue or = doOr(SPARSE_DEFAULT, DENSE_DEFAULT);
+		BitVectorValue or = doOr(createBitVector(FIRST_DEFAULT),
+				createBitVector(SECOND_DEFAULT));
 
 		Assert.assertEquals(OR_RESULT, or.toHexString());
 
@@ -76,10 +76,11 @@ public abstract class AbstractBitVectorCellFactoryTest {
 					+ denseBV.toHexString(), reference, doOr(denseBV, sparseBV));
 		}
 	}
-	
+
 	@Test
 	public void testSameTypeXor() {
-		BitVectorValue xor = doXor(SPARSE_DEFAULT, DENSE_DEFAULT);
+		BitVectorValue xor = doXor(createBitVector(FIRST_DEFAULT),
+				createBitVector(SECOND_DEFAULT));
 
 		Assert.assertEquals(XOR_RESULT, xor.toHexString());
 
@@ -109,7 +110,9 @@ public abstract class AbstractBitVectorCellFactoryTest {
 	@Test
 	public void testBug5058And() {
 
-		BitVectorValue and = doAnd(SPARSE_DEFAULT, DENSE_DEFAULT);
+		BitVectorValue and = doAnd(
+				new DenseBitVectorCellFactory(FIRST_DEFAULT).createDataCell(),
+				new SparseBitVectorCellFactory(SECOND_DEFAULT).createDataCell());
 
 		Assert.assertEquals(AND_RESULT, and.toHexString());
 
@@ -136,11 +139,14 @@ public abstract class AbstractBitVectorCellFactoryTest {
 					doAnd(denseBV, sparseBV));
 		}
 	}
-
+	
+	// Tests for bug http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=5058
 	@Test
 	public void testBug5058Or() {
 
-		BitVectorValue or = doOr(SPARSE_DEFAULT, DENSE_DEFAULT);
+		BitVectorValue or = doOr(
+				new DenseBitVectorCellFactory(FIRST_DEFAULT).createDataCell(),
+				new SparseBitVectorCellFactory(SECOND_DEFAULT).createDataCell());
 
 		Assert.assertEquals(OR_RESULT, or.toHexString());
 
@@ -166,11 +172,12 @@ public abstract class AbstractBitVectorCellFactoryTest {
 		}
 	}
 
-	//
-	// // Tests for bug http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=5058
+	// Tests for bug http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=5058
 	@Test
 	public void testBug5058Xor() {
-		BitVectorValue xor = doXor(SPARSE_DEFAULT, DENSE_DEFAULT);
+		BitVectorValue xor = doXor(
+				new DenseBitVectorCellFactory(FIRST_DEFAULT).createDataCell(),
+				new SparseBitVectorCellFactory(SECOND_DEFAULT).createDataCell());
 
 		Assert.assertEquals(XOR_RESULT, xor.toHexString());
 
@@ -197,7 +204,7 @@ public abstract class AbstractBitVectorCellFactoryTest {
 					reference, doXor(b, a));
 		}
 	}
-	
+
 	abstract BitVectorValue createBitVector(String content);
 
 	abstract BitVectorValue createReferenceAnd(String first, String second);

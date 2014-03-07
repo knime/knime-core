@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -868,7 +868,17 @@ public class SparseBitVector {
      */
     public String toHexString() {
         if (m_lastIdx == -1) {
-            return "";
+            if (m_length == 0) {
+                return "";
+            }
+            // append as much 0's as the upper round
+            int max = (int)Math.min(m_length, BitVectorValue.MAX_DISPLAY_BITS);
+            StringBuilder builder = new StringBuilder((max / 4) + 1);
+            int times = (max / 4) + 1 - (max % 4 == 0 ? 1 : 0);
+            for (int i = 0; i < times; i++) {
+                builder.append("0");
+            }
+            return builder.toString();
         }
 
         // the number of bits we store in the string
