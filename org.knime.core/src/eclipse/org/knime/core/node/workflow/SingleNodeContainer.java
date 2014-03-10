@@ -1053,12 +1053,9 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * @return Such a (new!) stack. */
     public FlowObjectStack createOutFlowObjectStack() {
         synchronized (m_nodeMutex) {
-            if (isInactive()) {
-                // part of fix for bug 4432 - do not propagate variables in inactive branches
-                return new FlowObjectStack(getID());
-            }
             FlowObjectStack st = getFlowObjectStack();
-            FlowObjectStack finalStack = new FlowObjectStack(getID(), st);
+            // part of fix for bug 4432 - do not propagate variables in inactive branches
+            FlowObjectStack finalStack = new FlowObjectStack(getID(), st, isInactive());
             if (this.isModelCompatibleTo(ScopeEndNode.class)) {
                 finalStack.pop(FlowScopeContext.class);
             }
@@ -1067,6 +1064,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
             if (outgoingStack == null) { // not configured -> no stack
                 flowObjectsOwnedByThis = Collections.emptyList();
             } else {
+                // this list is empty for inactive node
                 flowObjectsOwnedByThis = outgoingStack.getFlowObjectsOwnedBy(getID(), Scope.Local);
             }
             for (FlowObject v : flowObjectsOwnedByThis) {
