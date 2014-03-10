@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -381,6 +381,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     @Override
     protected void setEnabledComponents(final boolean enabled) {
         m_chooser.setEnabled(enabled);
+        m_label.setEnabled(enabled);
     }
 
     /**
