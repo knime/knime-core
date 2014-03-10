@@ -1,10 +1,12 @@
 #!/bin/bash
 
 SOURCE="$0"
+APP_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+SOURCE="$APP_DIR/$(basename $SOURCE)"
 while [[ -h "$SOURCE" ]]; do
     SOURCE="$(readlink "$SOURCE")"
+    APP_DIR="$APP_DIR/$(dirname "$SOURCE")"
 done
-APP_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 KNIME_DIR="$APP_DIR/../../.."
 
 declare -a VM_ARGS
