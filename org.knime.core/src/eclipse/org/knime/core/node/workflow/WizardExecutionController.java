@@ -374,6 +374,15 @@ public final class WizardExecutionController {
             LOGGER.debugWithFormat("Stepping wizard execution to sub node %s (step %d/%d)",
                 m_subNodesWithWizardNodesList.get(m_levelIndex), m_levelIndex, m_subNodesWithWizardNodesList.size());
             m_manager.executeUpToHere(m_subNodesWithWizardNodesList.get(m_levelIndex));
+        } else {
+            // TODO not sure if that is expected:
+            // Last action while stepping is to execute the remainder of the workflow
+            if (m_subNodesWithWizardNodesList.isEmpty()) {
+                LOGGER.debugWithFormat("Executing all nodes in workflow as there are no subnodes to step through");
+            } else {
+                LOGGER.debugWithFormat("Completing stepping by executing remainder of the workflow");
+            }
+            m_manager.executeAll();
         }
     }
 
