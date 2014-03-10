@@ -123,7 +123,7 @@ public final class SubNodeDialogPane extends NodeDialogPane {
             m_nodes.put(new Pair<NodeID, DialogNode<? extends DialogNodeRepresentation<?>,
                 ? extends DialogNodeValue>>(entry.getKey(), entry.getValue()), dialogPanel);
             Pair<Integer, DialogNodePanel<? extends DialogNodeValue>> weightedPanelPair = new Pair<Integer,
-                    DialogNodePanel<? extends DialogNodeValue>>(representation.getWeight(), dialogPanel);
+                    DialogNodePanel<? extends DialogNodeValue>>(Integer.MAX_VALUE, dialogPanel);
             sortedPanelList.add(weightedPanelPair);
         }
 

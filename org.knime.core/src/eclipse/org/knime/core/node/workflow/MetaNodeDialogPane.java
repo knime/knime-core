@@ -67,11 +67,11 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.DialogNodePanel;
 import org.knime.core.node.dialog.DialogNodeRepresentation;
 import org.knime.core.node.dialog.DialogNodeValue;
+import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.quickform.AbstractQuickFormConfiguration;
 import org.knime.core.quickform.AbstractQuickFormValueInConfiguration;
@@ -120,11 +120,16 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
      * @param nodes the quickform nodes to show settings for
      */
     final void setQuickformNodes(final Map<NodeID, MetaNodeDialogNode> nodes) {
+        // If meta node contains new quickform nodes, ignore old ones
+        boolean containsNewNodes = false;
+        for (Map.Entry<NodeID, MetaNodeDialogNode> e : nodes.entrySet()) {
+            containsNewNodes |= e.getValue() instanceof DialogNode;
+        }
         // remove all quickform components from current panel
         m_panel.removeAll();
         List<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>> sortedNodeList = new ArrayList<Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>>();
         for (Map.Entry<NodeID, MetaNodeDialogNode> e : nodes.entrySet()) {
-            if (e.getValue() instanceof QuickFormInputNode) {
+            if (!containsNewNodes && e.getValue() instanceof QuickFormInputNode) {
                 AbstractQuickFormConfiguration
                     <? extends AbstractQuickFormValueInConfiguration> config =
                         ((QuickFormInputNode)e.getValue()).getConfiguration();
@@ -153,7 +158,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                 m_dialogNodePanels.put(e.getKey(), dialogPanel);
                 Pair<Integer, Pair<NodeID, MetaNodeDialogNode>> weightNodePair =
                         new Pair<Integer, Pair<NodeID, MetaNodeDialogNode>>(
-                                representation.getWeight(), new Pair<NodeID, MetaNodeDialogNode>(e.getKey(), e.getValue()));
+                                Integer.MAX_VALUE, new Pair<NodeID, MetaNodeDialogNode>(e.getKey(), e.getValue()));
                     sortedNodeList.add(weightNodePair);
             }
         }

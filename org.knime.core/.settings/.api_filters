@@ -377,8 +377,21 @@
         <filter id="437350426">
             <message_arguments>
                 <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="REP"/>
+                <message_argument value="org.knime.core.node.dialog.DialogNodeRepresentation"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
                 <message_argument value="VAL"/>
                 <message_argument value="org.knime.core.node.dialog.DialogNodeValue"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="REP"/>
             </message_arguments>
         </filter>
         <filter id="439378009">
@@ -404,11 +417,11 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/dialog/DialogNodeRepresentation.java" type="org.knime.core.node.dialog.DialogNodeRepresentation">
-        <filter id="437350426">
+        <filter id="337809484">
             <message_arguments>
                 <message_argument value="org.knime.core.node.dialog.DialogNodeRepresentation"/>
-                <message_argument value="VAL"/>
-                <message_argument value="org.knime.core.node.dialog.DialogNodeValue"/>
+                <message_argument value="4"/>
+                <message_argument value="8"/>
             </message_arguments>
         </filter>
         <filter id="439378009">

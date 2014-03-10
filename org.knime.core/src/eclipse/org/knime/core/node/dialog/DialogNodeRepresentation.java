@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -59,58 +59,32 @@ import org.knime.core.node.NodeSettingsWO;
  * @param <VAL> The node value type.
  * @since 2.9
  */
-public abstract class DialogNodeRepresentation<VAL extends DialogNodeValue> {
-
-    private static final String CFG_WEIGHT = "weight";
-
-    private static final int DEFAULT_WEIGHT = 1;
-
-    private int m_weight = DEFAULT_WEIGHT;
+public interface DialogNodeRepresentation<VAL extends DialogNodeValue> {
 
     /**
      * @param settings The settings
      */
-    public void saveToNodeSettings(final NodeSettingsWO settings) {
-        settings.addInt(CFG_WEIGHT, m_weight);
-    }
+    public void saveToNodeSettings(final NodeSettingsWO settings);
 
     /**
      * @param settings The settings
      * @throws InvalidSettingsException If the settings could not be loaded
      */
-    public void loadFromNodeSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_weight = settings.getInt(CFG_WEIGHT);
-    }
+    public void loadFromNodeSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
 
     /**
      * @param settings The settings
      */
-    public void loadFromNodeSettingsInDialog(final NodeSettingsRO settings) {
-        m_weight = settings.getInt(CFG_WEIGHT, DEFAULT_WEIGHT);
-    }
+    public void loadFromNodeSettingsInDialog(final NodeSettingsRO settings);
 
     /**
      * @return The panel to be shown as a dialog component.
      */
-    public abstract DialogNodePanel<VAL> createDialogPanel();
-
-    /**
-     * @return the weight
-     */
-    public int getWeight() {
-        return m_weight;
-    }
-
-    /**
-     * @param weight the weight to set
-     */
-    public void setWeight(final int weight) {
-        m_weight = weight;
-    }
+    public DialogNodePanel<VAL> createDialogPanel();
 
     /**
      * Resets a given DialogNodeValue to a default value.
      * @param value the value to reset.
      */
-    public abstract void resetNodeValueToDefault(VAL value);
+    public void resetNodeValueToDefault(VAL value);
 }
