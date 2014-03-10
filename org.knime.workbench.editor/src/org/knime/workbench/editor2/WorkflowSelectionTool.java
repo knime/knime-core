@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,27 +44,39 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   28.06.2007 (sieb): created
  */
 package org.knime.workbench.editor2;
 
+import org.eclipse.draw2d.Cursors;
+import org.eclipse.draw2d.FigureCanvas;
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.tools.SelectionTool;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.graphics.Cursor;
 
 /**
- * 
+ *
  * @author sieb, University of Konstanz
  */
 public class WorkflowSelectionTool extends SelectionTool {
+
+    private static final int STATE_PREPAN = SelectionTool.MAX_STATE << 1;
+
+    private static final int STATE_PANNING = STATE_PREPAN << 1;
+
+    private static final int PAN_BUTTON = 3; // right mouse button dragging scrolls the viewport
 
     private int m_xLocation;
 
     private int m_yLocation;
 
     private boolean m_rightButton;
+
+    private Point m_viewLocation;
 
     /**
      * {@inheritDoc}
@@ -93,5 +105,81 @@ public class WorkflowSelectionTool extends SelectionTool {
 
     public int getYLocation() {
         return m_yLocation;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean handleButtonDown(final int button) {
+        if (button == PAN_BUTTON && getCurrentViewer().getControl() instanceof FigureCanvas
+            && stateTransition(STATE_INITIAL, STATE_PREPAN)) {
+            m_viewLocation = ((FigureCanvas)getCurrentViewer().getControl()).getViewport().getViewLocation();
+            refreshCursor();
+            return true;
+        } else if (isInState(STATE_PREPAN | STATE_PANNING)) {
+            // any other button leaves the panning state
+            setState(STATE_INITIAL);
+            refreshCursor();
+            return true;
+        }
+        return super.handleButtonDown(button);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean handleButtonUp(final int button) {
+
+        if (button == PAN_BUTTON && isInState(STATE_PREPAN | STATE_PANNING)) {
+            // prevent the context menu from showing if pan button is the context trigger
+            if (isInState(STATE_PANNING) && PAN_BUTTON == 3) {    
+                getCurrentViewer().getContextMenu().getMenu().setVisible(false);
+            }
+            setState(STATE_INITIAL);
+            refreshCursor();
+            return true;
+        }
+        return super.handleButtonUp(button);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Cursor getDefaultCursor() {
+        if (isInState(STATE_PANNING | STATE_PREPAN)) {
+            return Cursors.HAND;
+        }
+        return super.getDefaultCursor();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean handleDrag() {
+        if ((stateTransition(STATE_PREPAN, STATE_PANNING) || isInState(STATE_PANNING))
+            && getCurrentViewer().getControl() instanceof FigureCanvas) {
+            FigureCanvas canvas = (FigureCanvas)getCurrentViewer().getControl();
+            canvas.scrollTo(m_viewLocation.x - getDragMoveDelta().width, m_viewLocation.y - getDragMoveDelta().height);
+            return true;
+        } else {
+            return super.handleDrag();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean handleFocusLost() {
+        if (isInState(STATE_PREPAN | STATE_PANNING)) {
+            setState(STATE_INITIAL);
+            refreshCursor();
+            return true;
+        }
+        return super.handleFocusLost();
     }
 }
