@@ -231,7 +231,7 @@ public class RenameNodeModel extends NodeModel {
             RenameColumnSetting set = findAndRemoveSettings(name, renameSettings);
             DataColumnSpec newColSpec;
             if (set == null) {
-                LOGGER.debug("No rename settings for column \"" + name + "\" leaving untouched.");
+                LOGGER.debug("No rename settings for column \"" + name + "\", leaving it untouched.");
                 newColSpec = current;
             } else {
                 newColSpec = set.configure(current);
@@ -240,7 +240,7 @@ public class RenameNodeModel extends NodeModel {
             CheckUtils.checkSetting(StringUtils.isNotEmpty(newName), "Column name at index '%d' is empty.", i);
 
             Integer duplIndex = duplicateHash.put(newName, i);
-            CheckUtils.checkSetting(duplIndex == null, "Duplicate column name '%s'  at index '%d' and '%d'", newName,
+            CheckUtils.checkSetting(duplIndex == null, "Duplicate column name '%s' at index '%d' and '%d'", newName,
                 duplIndex, i);
 
             colSpecs[i] = newColSpec;
@@ -256,7 +256,7 @@ public class RenameNodeModel extends NodeModel {
                 }
             }
 
-            setWarningMessage("Following columns are configured but no longer exist: "
+            setWarningMessage("The following columns are configured but no longer exist: "
                 + ConvenienceMethods.getShortStringFrom(missingColumnNames, 5));
         }
         return new DataTableSpec[]{new DataTableSpec(colSpecs)};
