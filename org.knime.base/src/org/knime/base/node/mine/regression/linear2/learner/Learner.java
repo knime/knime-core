@@ -129,16 +129,17 @@ final class Learner extends RegressionStatisticsLearner {
 
             LinearRegressionContent content =
                 new LinearRegressionContent(m_outSpec, (int)stats[0].getN(), factorList, covariateList, beta,
-                    m_includeConstant, m_offsetValue, covMat, result.getRSquared(), result.getAdjustedRSquared(), stats);
+                    m_includeConstant, m_offsetValue, covMat, result.getRSquared(), result.getAdjustedRSquared(), stats, null);
 
             return content;
         } catch (ModelSpecificationException e) {
-            Matrix beta = new Matrix(1, (m_includeConstant ? 1 : 0) + trainingData.getRegressorCount() + 1);
-            Matrix covMat = new Matrix(trainingData.getRegressorCount() + 1, trainingData.getRegressorCount() + 1);
+            int dim = (m_includeConstant ? 1 : 0) + trainingData.getRegressorCount() + (factorList.size() > 0 ? Math.max(1, data.getDataTableSpec().getColumnSpec(factorList.get(0)).getDomain().getValues().size() - 1): 0);
+            Matrix beta = new Matrix(1, dim);
+            Matrix covMat = new Matrix(dim, dim);
             //fillWithNaNs(beta);
             fillWithNaNs(covMat);
             return new LinearRegressionContent(m_outSpec, (int)stats[0].getN(), factorList, covariateList, beta,
-                m_includeConstant, m_offsetValue, covMat, Double.NaN, Double.NaN, stats);
+                m_includeConstant, m_offsetValue, covMat, Double.NaN, Double.NaN, stats, e.getMessage());
         }
     }
 

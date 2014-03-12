@@ -217,6 +217,9 @@ public abstract class RegressionContent {
         for (String colName : m_outSpec.getLearningFields()) {
             if (m_factorList.contains(colName)) {
                 Iterator<DataCell> designIter = m_factorDomainValues.get(colName).iterator();
+                if (!designIter.hasNext()) {
+                    continue;
+                }
                 // Omit first
                 designIter.next();
                 while (designIter.hasNext()) {
@@ -283,6 +286,9 @@ public abstract class RegressionContent {
         for (String colName : m_outSpec.getLearningFields()) {
             if (m_factorList.contains(colName)) {
                 Iterator<DataCell> designIter = m_factorDomainValues.get(colName).iterator();
+                if (!designIter.hasNext()) {
+                    continue;
+                }
                 // Omit first
                 designIter.next();
                 while (designIter.hasNext()) {
@@ -449,6 +455,9 @@ public abstract class RegressionContent {
         for (String colName : m_outSpec.getLearningFields()) {
             if (m_factorList.contains(colName)) {
                 Iterator<DataCell> designIter = m_factorDomainValues.get(colName).iterator();
+                if (!designIter.hasNext()) {
+                    continue;
+                }
                 // Omit first
                 designIter.next();
                 while (designIter.hasNext()) {

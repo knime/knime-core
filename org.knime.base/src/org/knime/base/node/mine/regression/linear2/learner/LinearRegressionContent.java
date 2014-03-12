@@ -78,8 +78,10 @@ public final class LinearRegressionContent extends RegressionContent {
         "Variable", "Coeff.", "Std. Err.", "t-value", "P>|t|"}, new DataType[]{StringCell.TYPE, DoubleCell.TYPE,
         DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE});
 
+    private transient String m_warningMessage;
+
     /**
-     * Empty constructor used for serialisation.
+     * Empty constructor used for serialization.
      */
     private LinearRegressionContent() {
         super(1, false);
@@ -112,11 +114,36 @@ public final class LinearRegressionContent extends RegressionContent {
      * @param rSquared the r-square value
      * @param adjustedRSquared the adjusted r-quare value
      * @param stats summary statistics of the parameters
+     * @deprecated use the constructor with the warning message to keep
      */
+    @Deprecated
     public LinearRegressionContent(final PMMLPortObjectSpec outSpec, final int valueCount,
         final List<String> factorList, final List<String> covariateList, final Matrix beta,
         final boolean includeConstant, final double offsetValue, final Matrix covMat, final double rSquared,
         final double adjustedRSquared, final SummaryStatistics[] stats) {
+        this(outSpec, valueCount, factorList, covariateList, beta, includeConstant, offsetValue, covMat, rSquared, adjustedRSquared, stats, null);
+    }
+
+    /**
+     * Create new instance.
+     *
+     * @param outSpec the spec of the output
+     * @param valueCount the number of data values in the training data set
+     * @param factorList the factors (nominal parameters)
+     * @param covariateList the covariates (numeric parameters)
+     * @param beta the estimated regression factors
+     * @param includeConstant false when the estimate should go through the origin
+     * @param offsetValue offset value (a user defined intercept)
+     * @param covMat the covariance matrix
+     * @param rSquared the r-square value
+     * @param adjustedRSquared the adjusted r-quare value
+     * @param stats summary statistics of the parameters
+     * @param warningMessage the warning message to use if there was a problem; can be {@code null}
+     */
+    LinearRegressionContent(final PMMLPortObjectSpec outSpec, final int valueCount,
+        final List<String> factorList, final List<String> covariateList, final Matrix beta,
+        final boolean includeConstant, final double offsetValue, final Matrix covMat, final double rSquared,
+        final double adjustedRSquared, final SummaryStatistics[] stats, final String warningMessage) {
         super(1, includeConstant);
         m_outSpec = outSpec;
         m_valueCount = valueCount;
@@ -132,6 +159,7 @@ public final class LinearRegressionContent extends RegressionContent {
         for (int i = 0; i < stats.length; i++) {
             m_means[i] = stats[i].getMean();
         }
+        m_warningMessage = warningMessage;
         init();
     }
 
@@ -183,11 +211,18 @@ public final class LinearRegressionContent extends RegressionContent {
     }
 
     /**
-     * @return
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec outputTableSpec() {
         return m_tableOutSpec;
     }
 
+    /**
+     * @return the warningMessage
+     * @since 2.10
+     */
+    public String getWarningMessage() {
+        return m_warningMessage;
+    }
 }

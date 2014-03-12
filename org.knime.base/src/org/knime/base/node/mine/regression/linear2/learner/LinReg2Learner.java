@@ -125,7 +125,7 @@ final class LinReg2Learner {
      * @throws Exception if computation of the linear regression model is
      * not successful or if given data is inconsistent with the settings
      * defined in the constructor.
-     * @see LinReg2LearnerNodeModel#execute(PortObjectSpec[])
+     * @see LinReg2LearnerNodeModel#execute(PortObject[], ExecutionContext)
      */
     public LinearRegressionContent execute(
             final PortObject[] portObjects, final ExecutionContext exec)

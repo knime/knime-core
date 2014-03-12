@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -168,6 +168,11 @@ public final class LinReg2LearnerNodeModel extends NodeModel implements LinReg2D
         PMMLGeneralRegressionTranslator trans = new PMMLGeneralRegressionTranslator(
                         m_content.createGeneralRegressionContent());
         outPMMLPort.addModelTranslater(trans);
+        final String warningMessage = m_content.getWarningMessage();
+        if (warningMessage != null) {
+            setWarningMessage(getWarningMessage() == null ? warningMessage
+                : (getWarningMessage() + "\n" + warningMessage));
+        }
         return new PortObject[]{outPMMLPort, m_content.createTablePortObject(exec)};
     }
 
