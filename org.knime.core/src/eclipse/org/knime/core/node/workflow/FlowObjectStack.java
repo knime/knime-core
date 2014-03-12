@@ -136,7 +136,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @param id ...
      */
     FlowObjectStack(final NodeID id) {
-       this(id, new FlowObjectStack[] {}, false);
+       this(id, new FlowObjectStack[] {}, /* ignored */ true);
     }
 
     /** Used for source nodes (or unconnected nodes) that are initialized with the workflow variable stack.
@@ -144,17 +144,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @param workflowVariableStack workflow variables.
      */
     FlowObjectStack(final NodeID id, final FlowObjectStack workflowVariableStack) {
-        this(id, new FlowObjectStack[] {workflowVariableStack}, false);
-    }
-
-    /** Used to initialize a node's output flow object stack.
-     * @param id Id of node
-     * @param inputStack A node's input stack (from which scope objects are popped or some filtering is done)
-     * @param filterOnlyScopeObjects True for inactive nodes (don't accept any flow variable in the output), false
-     *         otherwise
-     */
-    FlowObjectStack(final NodeID id, final FlowObjectStack inputStack, final boolean filterOnlyScopeObjects) {
-        this(id, new FlowObjectStack[] {inputStack}, filterOnlyScopeObjects);
+        this(id, new FlowObjectStack[] {workflowVariableStack}, /* ignored */ true);
     }
 
     /** Used to initialize input stack for a node that has predecessor nodes (merge).
@@ -162,7 +152,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @param upstreamStacks ...
      */
     FlowObjectStack(final NodeID id, final FlowObjectStack[] upstreamStacks) {
-        this(id, upstreamStacks, false);
+        this(id, upstreamStacks, /* ignored */ true);
     }
 
     /**
@@ -171,14 +161,12 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * more than one argument stack available, the stacks will be merged.
      * @param id The Node's ID, must not be null.
      * @param predStacks The stacks from the predecessor nodes, may be null or empty.
-     * @param filterOnlyScopeObjects If true only scope objects (@link {@link FlowScopeContext} are copied.
-     *         This is the case when a node is inactive and it should only retain scope information but not variables.
+     * @param ignoredFlag A flag to make the method signature unique
      * @throws NullPointerException If <code>id</code> is <code>null</code>.
      * @throws IllegalFlowObjectStackException If the stacks can't be merged.
      */
     @SuppressWarnings("unchecked")
-    private FlowObjectStack(final NodeID id, final FlowObjectStack[] predStacks,
-        final boolean filterOnlyScopeObjects) {
+    private FlowObjectStack(final NodeID id, final FlowObjectStack[] predStacks, final boolean ignoredFlag) {
         if (id == null) {
             throw new NullPointerException("NodeID argument must not be null.");
         }
@@ -194,7 +182,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         }
         Vector<FlowObject>[] sos = predecessors.toArray(
                 new Vector[predecessors.size()]);
-        m_stack = merge(resortInputStacks(sos), filterOnlyScopeObjects);
+        m_stack = merge(resortInputStacks(sos));
         m_nodeID = id;
     }
 
@@ -221,15 +209,14 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         return result;
     }
 
-    private static Vector<FlowObject> merge(final Vector<FlowObject>[] sos,
-        final boolean filterOnlyScopeObjects) {
+    private static Vector<FlowObject> merge(final Vector<FlowObject>[] sos) {
         Vector<FlowObject> result = new Vector<FlowObject>();
         @SuppressWarnings("unchecked") // no generics in array definition
         Iterator<FlowObject>[] its = new Iterator[sos.length];
         FlowObject[] nexts = new FlowObject[sos.length];
         boolean hasMoreElements = false;
         for (int i = 0; i < sos.length; i++) {
-            its[i] = new FilteredScopeIterator(sos[i].iterator(), filterOnlyScopeObjects, Scope.Local);
+            its[i] = new FilteredScopeIterator(sos[i].iterator(), Scope.Local);
             hasMoreElements = hasMoreElements ||  its[i].hasNext();
         }
         while (hasMoreElements) {
@@ -417,7 +404,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
             final Scope... ignoredScopes) {
         List<FlowObject> result = new ArrayList<FlowObject>();
         FilteredScopeIterator it =
-            new FilteredScopeIterator(m_stack.iterator(), false, ignoredScopes);
+            new FilteredScopeIterator(m_stack.iterator(), ignoredScopes);
         while (it.hasNext()) {
             FlowObject v = it.next();
             if (v.getOwner().equals(id)) {
@@ -550,13 +537,14 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
 
         private final Iterator<FlowObject> m_it;
         private final List<Scope> m_ignoredScopes;
-        private final boolean m_filterOnlyScopeObjects;
         private FlowObject m_next;
 
+        /**
+         *
+         */
         public FilteredScopeIterator(final Iterator<FlowObject> it,
-                final boolean filterOnlyScopeObjects, final Scope... ignoredScopes) {
+                final Scope... ignoredScopes) {
             m_it = it;
-            m_filterOnlyScopeObjects = filterOnlyScopeObjects;
             m_ignoredScopes = Arrays.asList(ignoredScopes);
             m_next = internalNext();
         }
@@ -589,7 +577,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                 FlowObject next = m_it.next();
                 if (next instanceof FlowVariable) {
                     FlowVariable v = (FlowVariable)next;
-                    if (m_filterOnlyScopeObjects || m_ignoredScopes.contains(v.getScope())) {
+                    if (m_ignoredScopes.contains(v.getScope())) {
                         continue;
                     }
                 }
