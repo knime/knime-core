@@ -108,6 +108,7 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.ToLongManipula
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ToNullManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.UpperCaseManipulator;
 import org.knime.base.node.util.ManipulatorProvider;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -242,7 +243,7 @@ public final class StringManipulatorProvider implements ManipulatorProvider {
     public File getJarFile() throws IOException {
         if (m_jarFile == null || !m_jarFile.exists()) {
             File tempClassPathDir =
-                    FileUtil.createTempDir("knime_stringmanipulation");
+                    FileUtil.createTempDir("knime_stringmanipulation", new File(KNIMEConstants.getKNIMETempDir()));
             tempClassPathDir.deleteOnExit();
             m_jarFile =
                     new File(tempClassPathDir.getPath() + File.separator
