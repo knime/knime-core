@@ -311,7 +311,7 @@ public class HiLiteHandler {
                     }
                 }
             };
-            ViewUtils.runOrInvokeLaterInEDT(r);
+            ViewUtils.invokeLaterInEDT(r);
         }
     }
 
@@ -381,7 +381,7 @@ public class HiLiteHandler {
                     }
                 }
             };
-            ViewUtils.runOrInvokeLaterInEDT(r);
+            ViewUtils.invokeLaterInEDT(r);
         }
     }
 
@@ -423,7 +423,7 @@ public class HiLiteHandler {
                     }
                 }
             };
-            ViewUtils.runOrInvokeLaterInEDT(r);
+            ViewUtils.invokeLaterInEDT(r);
         }
     }
 
