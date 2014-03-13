@@ -121,7 +121,11 @@ public abstract class NodeFactory<T extends NodeModel> {
         /** If not specified. */
         Unknown,
         /** @since 2.10 */
-        Subnode
+        Subnode,
+        /** @since 2.10 */
+        VirtualIn,
+        /** @since 2.10 */
+        VirtualOut
     }
 
     private static final Pattern ICON_PATH_PATTERN = Pattern.compile("[^\\./]+/\\.\\./");

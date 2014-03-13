@@ -134,4 +134,12 @@ public class VirtualPortObjectOutNodeFactory extends DynamicNodeFactory<VirtualP
 	    super.saveAdditionalFactorySettings(config);
 	    VirtualPortObjectInNodeFactory.savePortTypeList(m_inTypes, config);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+    public org.knime.core.node.NodeFactory.NodeType getType() {
+	    return NodeType.VirtualOut;
+	}
 }

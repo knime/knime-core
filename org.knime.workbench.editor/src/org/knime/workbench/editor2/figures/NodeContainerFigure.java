@@ -808,6 +808,12 @@ public class NodeContainerFigure extends RectangleFigure {
         private static final String BACKGROUND_SUBNODE =
             "icons/node/background_subnode.png";
 
+        private static final String BACKGROUND_VIRTUAL_IN =
+            "icons/node/background_virtual_in.png";
+
+        private static final String BACKGROUND_VIRTUAL_OUT =
+            "icons/node/background_virtual_out.png";
+
         private final Label m_backgroundIcon;
 
         /**
@@ -955,6 +961,10 @@ public class NodeContainerFigure extends RectangleFigure {
                 str = BACKGROUND_QUICKFORM;
             } else if (type.equals(NodeType.Subnode)) {
                 str = BACKGROUND_SUBNODE;
+            } else if (type.equals(NodeType.VirtualIn)) {
+                str = BACKGROUND_VIRTUAL_IN;
+            } else if (type.equals(NodeType.VirtualOut)) {
+                str = BACKGROUND_VIRTUAL_OUT;
             } else {
                 str = BACKGROUND_UNKNOWN;
             }
