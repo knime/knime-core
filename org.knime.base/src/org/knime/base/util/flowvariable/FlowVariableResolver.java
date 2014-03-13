@@ -2,6 +2,7 @@ package org.knime.base.util.flowvariable;
 
 import java.util.NoSuchElementException;
 
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
@@ -107,9 +108,41 @@ public final class FlowVariableResolver {
         }
     }
 
-    /** Reads the actual value from the {@link FlowVariableResolver} and returns their string representation.
-     * This class can be sub-classed when it becomes necessary to escape certain values, e.g. to put a string always
-     * in quotes. */
+    /**
+     * Provides generic access to flow variables of the given provider. The given class determines also the
+     * corresponding {@link org.knime.core.node.workflow.FlowVariable.Type}.
+     *
+     * @param provider the provider to receive the flow-variable from.
+     * @param name of the flow variable to receive
+     * @param clazz the type of the flow variable
+     * @param <T> the java type of the variable
+     * @return the flow variable instance
+     * @throws IllegalArgumentException if the given type is not supported, currently only Double, Integer and String
+     *             are supported
+     * @throws NoSuchElementException if there is no flow variable with the given name
+     * @throws NullPointerException if any argument <code>null</code>
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T getFlowVariable(final FlowVariableProvider provider,
+        final String name, final Class<T> clazz) {
+        CheckUtils.checkNotNull(name);
+        CheckUtils.checkNotNull(provider);
+        CheckUtils.checkNotNull(clazz);
+        if (Integer.class.equals(clazz)) {
+            return (T)Integer.valueOf(provider.peekFlowVariableInt(name));
+        } else if (Double.class.equals(clazz)) {
+            return (T)Double.valueOf(provider.peekFlowVariableDouble(name));
+        } else if (String.class.equals(clazz)) {
+            return (T)provider.peekFlowVariableString(name);
+        } else {
+            throw new IllegalArgumentException("Invalid variable class: " + clazz);
+        }
+    }
+
+    /**
+     * Reads the actual value from the {@link FlowVariableResolver} and returns their string representation. This class
+     * can be sub-classed when it becomes necessary to escape certain values, e.g. to put a string always in quotes.
+     */
     public static class FlowVariableEscaper {
 
         /** Default instance that does no escaping, just reads the value. */
@@ -119,7 +152,9 @@ public final class FlowVariableResolver {
         protected FlowVariableEscaper() {
         }
 
-        /** Read a double from {@link FlowVariableProvider#peekFlowVariableDouble(String)} and return its string.
+        /**
+         * Read a double from {@link FlowVariableProvider#peekFlowVariableDouble(String)} and return its string.
+         *
          * @param model to read from
          * @param var The name of the variable.
          * @return The string value
@@ -131,7 +166,9 @@ public final class FlowVariableResolver {
             return Double.toString(d);
         }
 
-        /** Read an integer from {@link FlowVariableProvider#peekFlowVariableInt(String)} and return its string.
+        /**
+         * Read an integer from {@link FlowVariableProvider#peekFlowVariableInt(String)} and return its string.
+         *
          * @param model to read from
          * @param var The name of the variable.
          * @return The string value
@@ -143,7 +180,9 @@ public final class FlowVariableResolver {
             return Integer.toString(i);
         }
 
-        /** Read a string from {@link FlowVariableProvider#peekFlowVariableString(String)} and return it.
+        /**
+         * Read a string from {@link FlowVariableProvider#peekFlowVariableString(String)} and return it.
+         *
          * @param model to read from
          * @param var The name of the variable.
          * @return The string value
