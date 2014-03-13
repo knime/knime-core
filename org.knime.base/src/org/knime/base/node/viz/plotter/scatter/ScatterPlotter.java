@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -825,8 +825,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     @Override
     public void hiLiteSelected() {
         if (isScatterPlotterDrawingPane()) {
-            changeHiliteStateTo(getScatterPlotterDrawingPane()
-                    .getSelectedDots(), true);
+            delegateHiLite(getScatterPlotterDrawingPane().getSelectedDots());
         }
     }
 
@@ -836,18 +835,12 @@ public class ScatterPlotter extends TwoColumnPlotter {
     @Override
     public void unHiLiteSelected() {
         if (isScatterPlotterDrawingPane()) {
-            changeHiliteStateTo(getScatterPlotterDrawingPane()
-                    .getSelectedDots(), false);
+            delegateUnHiLite(getScatterPlotterDrawingPane().getSelectedDots());
         }
     }
 
     private void changeHiliteStateTo(final Set<RowKey> rowIds,
             final boolean state) {
-        if (state) {
-            delegateHiLite(rowIds);
-        } else {
-            delegateUnHiLite(rowIds);
-        }
         if (isScatterPlotterDrawingPane()) {
             DotInfoArray dots =
                     getScatterPlotterDrawingPane().getDotInfoArray();
