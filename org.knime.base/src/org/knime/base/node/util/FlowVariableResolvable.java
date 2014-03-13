@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -25,6 +25,7 @@ package org.knime.base.node.util;
 
 import java.util.NoSuchElementException;
 
+import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
@@ -33,11 +34,14 @@ import org.knime.core.node.workflow.FlowVariable;
  *
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  * @since 2.7
+ * @deprecated Use {@link FlowVariableProvider} instead
  */
+@Deprecated
 public interface FlowVariableResolvable {
 
     /**
      * Delegate access to flow variable of type INTEGER.
+     *
      * @param name identifier for flow variable
      * @return int value
      */
@@ -45,6 +49,7 @@ public interface FlowVariableResolvable {
 
     /**
      * Delegate access to flow variable of type DOUBLE.
+     *
      * @param name identifier for flow variable
      * @return double value
      */
@@ -52,6 +57,7 @@ public interface FlowVariableResolvable {
 
     /**
      * Delegate access to flow variable of type STRING.
+     *
      * @param name identifier for flow variable
      * @return String value
      */
@@ -59,7 +65,10 @@ public interface FlowVariableResolvable {
 
     /**
      * Used to parse the a script containing flow and workflow variables.
+     *
+     * @deprecated use {@link org.knime.base.util.flowvariable.FlowVariableResolver} instead
      */
+    @Deprecated
     public static final class FlowVariableResolver {
         private FlowVariableResolver() {
             // empty
@@ -67,81 +76,45 @@ public interface FlowVariableResolvable {
 
         /**
          * Parses the given text and replaces all variable placeholders by their actual value.
+         *
          * @param text the text to parse (for instance an R script).
          * @param model delegator to to retrieve variables
          * @return the changed text with placeholders replaced by variables.
          * @throws NoSuchElementException If a variable cannot be resolved
          */
+        @Deprecated
         public static String parse(final String text, final FlowVariableResolvable model) {
-            String command = new String(text);
-            int currentIndex = 0;
-            do {
-                currentIndex = command.indexOf("$${", currentIndex);
-                if (currentIndex < 0) {
-                    break;
+            return org.knime.base.util.flowvariable.FlowVariableResolver.parse(text, new FlowVariableProvider() {
+
+                @Override
+                public String peekFlowVariableString(final String name) {
+                    return model.delegatePeekFlowVariableString(name);
                 }
-                int endIndex = command.indexOf("}$$", currentIndex);
-                if (endIndex < 0) {
-                    String badVarName;
-                    if (command.length() - currentIndex > 20) {
-                        badVarName = command.substring(currentIndex, currentIndex + 19) + "...";
-                    } else {
-                        badVarName = command.substring(currentIndex);
-                    }
-                    throw new IllegalArgumentException("Variable identifier \"" + badVarName + "\" is not closed");
+
+                @Override
+                public int peekFlowVariableInt(final String name) {
+                    return model.delegatePeekFlowVariableInt(name);
                 }
-                String var = command.substring(currentIndex + 4, endIndex);
-                switch (command.charAt(currentIndex + 3)) {
-                    case 'I' :
-                        int i = model.delegatePeekFlowVariableInt(var);
-                        command = command.replace(
-                                "$${I" + var + "}$$", Integer.toString(i));
-                        break;
-                    case 'D' :
-                        double d = model.delegatePeekFlowVariableDouble(var);
-                        command = command.replace(
-                                "$${D" + var + "}$$", Double.toString(d));
-                        break;
-                    case 'S' :
-                        String s = model.delegatePeekFlowVariableString(var);
-                        command = command.replace("$${S" + var + "}$$", s);
-                        break;
-                    default:
-                        String badVarName;
-                        if (endIndex > currentIndex) {
-                            badVarName = command.substring(currentIndex, endIndex + "}$$".length());
-                        } else if (command.indexOf("\n", currentIndex) >= 0) {
-                            badVarName = command.substring(currentIndex, command.indexOf("\n", currentIndex)) + "...";
-                        } else if (command.length() - currentIndex > 20) {
-                            badVarName = command.substring(currentIndex, currentIndex + 20) + "...";
-                        } else {
-                            badVarName = command.substring(currentIndex);
-                        }
-                        throw new IllegalArgumentException("Invalid flow variable identifier \"" + badVarName + "\"; "
-                                + "it should start with a type identifer.");
+
+                @Override
+                public double peekFlowVariableDouble(final String name) {
+                    return model.delegatePeekFlowVariableDouble(name);
                 }
-            } while (true);
-            return command;
+            });
         }
 
         /**
          * Replaces and returns the given flow variable.
+         *
          * @param var flow variable to be extended
-         * @return the new variable as string with pre- and suffix for
-         *         INTEGER, DOUBLE and STRING types
+         * @return the new variable as string with pre- and suffix for INTEGER, DOUBLE and STRING types
+         * @deprecated use
+         * {@link org.knime.base.util.flowvariable.FlowVariableResolver#getPlaceHolderForVariable(FlowVariable)}
+         * instead
          */
+        @Deprecated
         public static String getPlaceHolderForVariable(final FlowVariable var) {
-            switch (var.getType()) {
-                case INTEGER :
-                    return "$${I" + var.getName() + "}$$";
-                case DOUBLE :
-                    return "$${D" + var.getName() + "}$$";
-                case STRING :
-                    return "$${S" + var.getName() + "}$$";
-                default : throw new RuntimeException(
-                    "Unsupported flow variable type '" + var.getType() + "'");
-            }
+            return org.knime.base.util.flowvariable.FlowVariableResolver.getPlaceHolderForVariable(var);
         }
     }
-
 }

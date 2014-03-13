@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -71,6 +71,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingWorker;
 
+import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
@@ -215,8 +216,7 @@ class DBReaderDialogPane extends NodeDialogPane {
                     Object o = m_listVars.getSelectedValue();
                     if (o != null) {
                         FlowVariable var = (FlowVariable) o;
-                        m_statmnt.replaceSelection(
-                            DBVariableSupportNodeModel.Resolver.wrap(var));
+                        m_statmnt.replaceSelection(FlowVariableResolver.getPlaceHolderForVariable(var));
                         m_listVars.clearSelection();
                         m_statmnt.requestFocus();
                     }

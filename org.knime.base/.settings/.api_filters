@@ -20,6 +20,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.base.node.io.database.DBVariableSupportNodeModel">
+        <filter comment="using new flow variable provider instead (also see bug 4035)" id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.io.database.DBVariableSupportNodeModel"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.base.node.mine.regression.logistic.predict.LogRegPredictor">
         <filter id="305324134">
             <message_arguments>

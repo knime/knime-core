@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -76,8 +76,8 @@ import javax.mail.internet.MimeMultipart;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
-import org.knime.base.node.util.FlowVariableResolvable;
-import org.knime.base.node.util.FlowVariableResolvable.FlowVariableResolver;
+import org.knime.base.util.flowvariable.FlowVariableProvider;
+import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeSettingsRO;
@@ -544,7 +544,7 @@ final class SendMailConfiguration {
      * @throws IOException SSL problems or when copying remote URLs to temp local file.
      * @throws InvalidSettingsException on invalid referenced flow vars
      */
-    void send(final FlowVariableResolvable flowVarResolver, final CredentialsProvider credProvider)
+    void send(final FlowVariableProvider flowVarResolver, final CredentialsProvider credProvider)
             throws MessagingException, IOException, InvalidSettingsException {
         String flowVarCorrectedText;
         try {

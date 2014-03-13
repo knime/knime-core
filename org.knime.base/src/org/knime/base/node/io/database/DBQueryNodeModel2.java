@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.io.database;
 
+import org.knime.base.util.flowvariable.FlowVariableProvider;
+import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -67,8 +69,7 @@ import org.knime.core.node.port.database.DatabaseReaderConnection;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBQueryNodeModel2 extends DBNodeModel
-        implements DBVariableSupportNodeModel {
+final class DBQueryNodeModel2 extends DBNodeModel implements FlowVariableProvider {
 
     private String m_query = "SELECT * FROM "
         + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER;
@@ -191,34 +192,9 @@ final class DBQueryNodeModel2 extends DBNodeModel
         thisSelect = thisSelect.replaceAll(
                 DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER,
                 "(" + inSelect + ")");
-        thisSelect = DBVariableSupportNodeModel.Resolver.parse(
-                thisSelect, this);
+        thisSelect = FlowVariableResolver.parse(thisSelect, this);
         resultQueries.append(thisSelect);
         return resultQueries.toString();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int delegatePeekFlowVariableInt(final String name) {
-        return super.peekFlowVariableInt(name);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double delegatePeekFlowVariableDouble(final String name) {
-        return peekFlowVariableDouble(name);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String delegatePeekFlowVariableString(final String name) {
-        return peekFlowVariableString(name);
     }
 
 }

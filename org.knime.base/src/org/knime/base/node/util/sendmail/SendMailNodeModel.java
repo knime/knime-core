@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -54,7 +54,7 @@ import java.io.IOException;
 
 import javax.mail.MessagingException;
 
-import org.knime.base.node.util.FlowVariableResolvable;
+import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -70,7 +70,7 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 /** Node Model to node.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class SendMailNodeModel extends NodeModel implements FlowVariableResolvable {
+final class SendMailNodeModel extends NodeModel implements FlowVariableProvider {
 
     private SendMailConfiguration m_configuration;
 
@@ -147,23 +147,4 @@ final class SendMailNodeModel extends NodeModel implements FlowVariableResolvabl
             throws IOException, CanceledExecutionException {
 
     }
-
-    /** {@inheritDoc} */
-    @Override
-    public int delegatePeekFlowVariableInt(final String name) {
-        return super.peekFlowVariableInt(name);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public double delegatePeekFlowVariableDouble(final String name) {
-        return super.peekFlowVariableDouble(name);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String delegatePeekFlowVariableString(final String name) {
-        return super.peekFlowVariableString(name);
-    }
-
 }

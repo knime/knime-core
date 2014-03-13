@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -53,6 +53,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.knime.base.util.flowvariable.FlowVariableProvider;
+import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -72,8 +74,7 @@ import org.knime.core.node.workflow.CredentialsProvider;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBReaderNodeModel extends NodeModel
-        implements DBVariableSupportNodeModel {
+class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
 
     private DataTableSpec m_lastSpec = null;
 
@@ -122,31 +123,7 @@ class DBReaderNodeModel extends NodeModel
     }
 
     private String parseQuery(final String query) {
-        return DBVariableSupportNodeModel.Resolver.parse(query, this);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int delegatePeekFlowVariableInt(final String name) {
-        return super.peekFlowVariableInt(name);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double delegatePeekFlowVariableDouble(final String name) {
-        return peekFlowVariableDouble(name);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String delegatePeekFlowVariableString(final String name) {
-        return peekFlowVariableString(name);
+        return FlowVariableResolver.parse(query, this);
     }
 
     /**
