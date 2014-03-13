@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -106,10 +106,13 @@ import org.knime.ext.sun.nodes.script.expression.Expression;
  * This class is a sophisticated panel that offers an editor for almost
  * arbitrary java functions. The user has the ability to choose from a list of
  * functions that are provided by a {@link ManipulatorProvider}. In addition he
- * sees a list of available columns and flow variables from the input table.
+ * sees a list of available columns and flow variables from the input table. Subclasses may customize
+ * or extend the layout using the {@link #initSubComponents()},
+ * {@link #layoutLeftComponent()} and {@link #layoutRightComponent()} methods.
  *
  * @author Heiko Hofer
  * @author Thorsten Meinl, University of Konstanz
+ * @author Marcel Hanser
  * @since 2.6
  */
 @SuppressWarnings("serial")
@@ -190,10 +193,41 @@ public class JSnippetPanel extends JPanel {
     }
 
     private void createStringManipulationPanel() {
-        final JComponent leftComponent;
+        JPanel centerPanel = new JPanel(new GridLayout(0, 1));
+        JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        mainSplitPane.setLeftComponent(layoutLeftComponent());
+        mainSplitPane.setRightComponent(layoutRightComponent());
+        centerPanel.add(mainSplitPane);
+
+        add(centerPanel, BorderLayout.CENTER);
+        setPreferredSize(new Dimension(820, 420));
+        setMinimumSize(new Dimension(600, 350));
+    }
+
+
+
+    /**
+     * Hook for subclasses to create and initiates the components. The method is invoked
+     * before {@link #layoutLeftComponent()} and {@link #layoutRightComponent()}.
+     * @since 2.10
+     */
+    protected void initSubComponents() {
+        //NOOP
+    }
+
+    /**
+     * Subclasses can override this method to customize the left side layout of the main split pain.
+     * If the subclass uses self-defined components make sure that these are already created and
+     * initialized during the call of {@link #initSubComponents()}.
+     *
+     * @return the component for the left side of the main split-panel
+     * @since 2.10
+     */
+    protected JComponent layoutLeftComponent() {
+        JComponent leftComponent;
         if (m_showColumns && m_showFlowVariables) {
-            final JSplitPane varSplitPane;
-            leftComponent = varSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+            final JSplitPane varSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+            leftComponent = varSplitPane;
             JScrollPane colListPane = new JScrollPane(m_colList);
             colListPane.setBorder(createEmptyTitledBorder("Column List"));
             varSplitPane.setTopComponent(colListPane);
@@ -213,16 +247,19 @@ public class JSnippetPanel extends JPanel {
         } else {
             leftComponent = new JPanel();
         }
-        JPanel centerPanel = new JPanel(new GridLayout(0, 1));
-        JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        mainSplitPane.setLeftComponent(leftComponent);
+        return leftComponent;
+    }
 
-        mainSplitPane.setRightComponent(createFunctionAndExpressionPanel());
-        centerPanel.add(mainSplitPane);
-
-        add(centerPanel, BorderLayout.CENTER);
-        setPreferredSize(new Dimension(820, 420));
-        setMinimumSize(new Dimension(600, 350));
+    /**
+     * Subclasses can override this method to customize the right side layout of the main split pain.
+     * If the subclass uses self-defined components make sure that these are already created and
+     * initialized during the call of {@link #initSubComponents()}.
+     *
+     * @return the component for the right side of the main split-panel
+     * @since 2.10
+     */
+    protected JComponent layoutRightComponent() {
+       return createFunctionAndExpressionPanel();
     }
 
     private void initComponents() {
@@ -343,6 +380,8 @@ public class JSnippetPanel extends JPanel {
         m_description.setEditable(false);
         m_description.setBackground(getBackground());
         updateManipulatorList(ManipulatorProvider.ALL_CATEGORY);
+
+        initSubComponents();
     }
 
     /**
@@ -419,9 +458,9 @@ public class JSnippetPanel extends JPanel {
         c.weightx = 0.05;
         c.weighty = 1;
         c.insets = new Insets(2, 6, 4, 6);
-        JScrollPane manipScroller = new JScrollPane(m_manipulators);
+        JScrollPane manipScroller = new JScrollPane(getManipulators());
         Dimension preferred =
-                m_manipulators.getPreferredScrollableViewportSize();
+                getManipulators().getPreferredScrollableViewportSize();
 
         manipScroller.setPreferredSize(new Dimension(preferred.width + 5, 40));
         manipScroller.setMinimumSize(new Dimension(preferred.width - 45, 40));
@@ -437,9 +476,9 @@ public class JSnippetPanel extends JPanel {
         c.gridwidth = GridBagConstraints.REMAINDER;
         c.weighty = 0.6;
 
-        JComponent editor = createEditorComponent();
-        editor.setPreferredSize(editor.getMinimumSize());
-        p.add(editor, c);
+        JComponent editorComponent = createEditorComponent();
+        editorComponent.setPreferredSize(editorComponent.getMinimumSize());
+        p.add(editorComponent, c);
         c.weighty = 0;
 
         c.gridy = 0;
@@ -451,8 +490,8 @@ public class JSnippetPanel extends JPanel {
         c.weightx = 0.5;
         c.weighty = 1;
         c.insets = new Insets(2, 2, 4, 6);
-        m_description.setPreferredSize(m_description.getMinimumSize());
-        JScrollPane descScroller = new JScrollPane(m_description);
+        getDescription().setPreferredSize(getDescription().getMinimumSize());
+        JScrollPane descScroller = new JScrollPane(getDescription());
         descScroller
                 .setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         descScroller
@@ -619,6 +658,70 @@ public class JSnippetPanel extends JPanel {
     public void setExpressions(final String expression) {
         m_expEdit.setText(expression);
         m_expEdit.requestFocus();
+    }
+
+    /**
+     * @return the colList
+     * @since 2.10
+     */
+    protected JList getColList() {
+        return m_colList;
+    }
+
+    /**
+     * @return the flowVarsList
+     * @since 2.10
+     */
+    protected JList getFlowVarsList() {
+        return m_flowVarsList;
+    }
+
+    /**
+     * @return the expEdit
+     * @since 2.10
+     */
+    protected JTextComponent getExpEdit() {
+        return m_expEdit;
+    }
+
+    /**
+     * @return the categories
+     * @since 2.10
+     */
+    protected JComboBox getCategories() {
+        return m_categories;
+    }
+
+    /**
+     * @return the manipulators
+     * @since 2.10
+     */
+    protected JList getManipulators() {
+        return m_manipulators;
+    }
+
+    /**
+     * @return the description
+     * @since 2.10
+     */
+    protected JTextPane getDescription() {
+        return m_description;
+    }
+
+    /**
+     * @return the showColumns
+     * @since 2.10
+     */
+    protected boolean isShowColumns() {
+        return m_showColumns;
+    }
+
+    /**
+     * @return the showFlowVariables
+     * @since 2.10
+     */
+    protected boolean isShowFlowVariables() {
+        return m_showFlowVariables;
     }
 
     /**
