@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -162,14 +162,6 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
         super.setComponent(myComp);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected ClusterNodeModel getNodeModel() {
-        return super.getNodeModel();
-    }
-
     private JMenu getHiLiteMenu() {
         JMenu menu = new JMenu("Hilite");
         JMenuItem item = new JMenuItem(HILITE);
@@ -177,6 +169,7 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
             /**
              * {@inheritDoc}
              */
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
                 getNodeModel().getHiLiteHandler().fireHiLiteEvent(m_selected);
             }
@@ -187,6 +180,7 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
             /**
              * {@inheritDoc}
              */
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
                 getNodeModel().getHiLiteHandler().fireUnHiLiteEvent(m_selected);
             }
@@ -197,6 +191,7 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
             /**
              * {@inheritDoc}
              */
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
                 getNodeModel().getHiLiteHandler().fireClearHiLiteEvent();
             }
@@ -213,6 +208,7 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
             /**
              * {@inheritDoc}
              */
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
                 getNodeModel().getHiLiteHandler().fireHiLiteEvent(m_selected);
             }
@@ -225,6 +221,7 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
             /**
              * {@inheritDoc}
              */
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
                 getNodeModel().getHiLiteHandler().fireUnHiLiteEvent(m_selected);
             }
@@ -237,6 +234,7 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
             /**
              * {@inheritDoc}
              */
+            @Override
             public void actionPerformed(final ActionEvent arg0) {
                 getNodeModel().getHiLiteHandler().fireClearHiLiteEvent();
             }
@@ -248,25 +246,25 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void hiLite(final KeyEvent event) {
         getComponent().repaint();
-        getNodeModel().getHiLiteHandler().fireHiLiteEvent(event.keys());
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void unHiLite(final KeyEvent event) {
         getComponent().repaint();
-        getNodeModel().getHiLiteHandler().fireUnHiLiteEvent(event.keys());
     }
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void unHiLiteAll(final KeyEvent event) {
-        getNodeModel().getHiLiteHandler().fireClearHiLiteEvent();
         getComponent().repaint();
     }
 
