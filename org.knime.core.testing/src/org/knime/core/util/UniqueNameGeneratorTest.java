@@ -92,6 +92,16 @@ public class UniqueNameGeneratorTest {
         assertEquals("Parenthesis (#2)", ng.newName("Parenthesis"));
         assertEquals("Parenthesis (#4)", ng.newName("Parenthesis"));
     }
+    
+    @Test
+    public void testNameUntrimmed() {
+        UniqueNameGenerator ng = new UniqueNameGenerator(USED_NAMES);
+        assertEquals("Parenthesis (#2)", ng.newName("Parenthesis"));
+        assertEquals("Parenthesis (#4)", ng.newName("Parenthesis"));
+        // see http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=4577#c1 
+        assertEquals("Parenthesis (#5)", ng.newName(" Parenthesis"));
+        assertEquals("Parenthesis (#6)", ng.newName(" Parenthesis "));
+    }
 
     @Test
     public void testNewCreatorFromColumn() {

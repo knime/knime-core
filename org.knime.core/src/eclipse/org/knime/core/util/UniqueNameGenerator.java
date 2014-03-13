@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -105,11 +105,14 @@ public final class UniqueNameGenerator {
         if (suggested == null) {
             throw new NullPointerException("Argument must not be null.");
         }
-        if (m_nameHash.add(suggested)) {
-            return suggested;
+
+        String trimedName = suggested.trim();
+
+        if (m_nameHash.add(trimedName)) {
+            return trimedName;
         }
         int index = 1;
-        String baseName = suggested;
+        String baseName = trimedName;
         Matcher baseNameMatcher = PATTERN.matcher(baseName);
         if (baseNameMatcher.matches()) {
             baseName = baseNameMatcher.group(1);

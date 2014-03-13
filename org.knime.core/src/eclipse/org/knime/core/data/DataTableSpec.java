@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -989,13 +989,15 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      */
     public static String getUniqueColumnName(final DataTableSpec spec,
             final String columnName) {
+
         if (columnName == null) {
             throw new NullPointerException("Column name must not be null.");
         }
+        String trimedName = columnName.trim();
         int uniquifier = 1;
-        String result = columnName;
+        String result = trimedName;
         while (spec.containsName(result)) {
-            result = columnName + " (#" + uniquifier + ")";
+            result = trimedName + " (#" + uniquifier + ")";
             uniquifier++;
         }
         return result;
