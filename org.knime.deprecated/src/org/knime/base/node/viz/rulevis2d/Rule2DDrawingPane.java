@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   23.05.2006 (Fabian Dill): created
  */
@@ -62,8 +62,8 @@ import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.scatterplot.ScatterPlotDrawingPane;
@@ -78,7 +78,7 @@ import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
@@ -115,8 +115,8 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
     private boolean m_hideUnhilitedRules;
 
     /**
-     * 
-     * 
+     *
+     *
      */
     public Rule2DDrawingPane() {
         super();
@@ -124,7 +124,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
             /**
              * If a rule is clicked it is selected. If control is down more than
              * one rules can be selected.
-             * 
+             *
              * @param arg0 - the mouse event when the mouse is released.
              */
             @Override
@@ -157,7 +157,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
 
     /**
      * Sets the normalized rules to draw.
-     * 
+     *
      * @param normRules - the rules to draw.
      */
     public void setNormalizedRules(final DataArray normRules) {
@@ -167,7 +167,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
     /**
      * Sets the original data table containing the rules. Because of the color
      * information.
-     * 
+     *
      * @param orgTable - the original DataTable containing the rules.
      */
     public void setOriginalRuleTable(final DataTable orgTable) {
@@ -176,7 +176,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
 
     /**
      * Returns the number of selected rules.
-     * 
+     *
      * @return - the number of selected rules.
      */
     public int getNrSelectedRules() {
@@ -185,7 +185,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
 
     /**
      * Indicates whether the fade unhilited rules flag is set.
-     * 
+     *
      * @return - true if unhilited rules are not displayed, false otherwise.
      */
     public boolean isHideUnhilitedRules() {
@@ -194,7 +194,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
 
     /**
      * Sets whether unhilited rules should be diplayed or not.
-     * 
+     *
      * @param fadeUnhilitedRules - true if unhilited rules should not be
      *            displayed, false otherwise.
      */
@@ -205,7 +205,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
 
     /**
      * Returns the Ids of the currently selected rules.
-     * 
+     *
      * @return - the ids of the selected rules.
      */
     public Set<RowKey> getSelectedRules() {
@@ -231,7 +231,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
 
     /**
      * Returns the HiLiteHandler for the rules.
-     * 
+     *
      * @return - the HiLiteHandler for the rules.
      */
     public HiLiteHandler getHiLiteHandler() {
@@ -241,7 +241,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
     /**
      * Sets the HiLiteHandler for the rules. Checks if the current one is
      * different and unregisters from the old one. Triggers a repaint.
-     * 
+     *
      * @param hilitHdlr - the HiLiteHandler for the rules to set
      */
     public void setHiLiteHandler(final HiLiteHandler hilitHdlr) {
@@ -264,33 +264,32 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
     /*-----------------The HiLiteListener methods--------------------*/
     /**
      * HiLites the rules identified by the event. Triggers a repaint.
-     * 
+     *
      * @param event -the Hiliting event.
      */
+    @Override
     public void hiLite(final KeyEvent event) {
-        // LOGGER.debug("hilite: " + event.keys());
-        m_hiLiteHandler.fireHiLiteEvent(event.keys());
         repaint();
     }
 
 
     /**
      * Resets the current hilite. Triggers a repaint.
-     * @see HiLiteListener#unHiLiteAll(KeyEvent) 
+     * @see HiLiteListener#unHiLiteAll(KeyEvent)
      */
+    @Override
     public void unHiLiteAll(final KeyEvent ke) {
-        m_hiLiteHandler.fireClearHiLiteEvent();
         m_hideUnhilitedRules = false;
         repaint();
     }
 
     /**
      * Unhilites the rules identified by the event. Triggers a repaint.
-     * 
+     *
      * @param event - the hiliting event.
      */
+    @Override
     public void unHiLite(final KeyEvent event) {
-        m_hiLiteHandler.fireUnHiLiteEvent(event.keys());
         repaint();
     }
 
@@ -446,7 +445,7 @@ public class Rule2DDrawingPane extends ScatterPlotDrawingPane implements
          * g2.drawLine(a1, 0, a1, getHeight()); g2.drawLine(b1, 0, b1,
          * getHeight()); g2.drawLine(c1, 0, c1, getHeight()); g2.drawLine(d1, 0,
          * d1, getHeight());
-         * 
+         *
          * //draw horizontal orientation lines g2.drawLine(0, a2, getWidth(),
          * a2); g2.drawLine(0, b2, getWidth(), b2); g2.drawLine(0, c2,
          * getWidth(), c2); g2.drawLine(0, d2, getWidth(), d2);
