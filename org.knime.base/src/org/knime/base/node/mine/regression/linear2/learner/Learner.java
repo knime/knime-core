@@ -170,7 +170,7 @@ final class Learner extends RegressionStatisticsLearner {
                 for (int i = 0; i < trainingData.getRegressorCount(); i++) {
                     stats[i].addValue(parameter[i]);
                 }
-                regr.addObservation(parameter, row.getTarget() - m_offsetValue);
+                regr.addObservation(parameter, row.getTarget() + (m_includeConstant? 0 : -m_offsetValue));
             }
             if (rowCount > 0) {
                 double progressUpdate = r / (double)rowCount;
