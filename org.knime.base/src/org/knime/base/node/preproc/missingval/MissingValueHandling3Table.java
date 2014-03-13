@@ -49,14 +49,15 @@
 package org.knime.base.node.preproc.missingval;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.knime.base.data.statistics.Statistics3Table;
@@ -81,7 +82,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ConvenienceMethods;
-import org.knime.core.util.MutableInteger;
 
 /**
  * DataTable that replaces missing values according to ColSetting objects.
@@ -444,12 +444,13 @@ public final class MissingValueHandling3Table implements DataTable {
             }
         }
         boolean needStatistics = false;
-        int mostFrequentColCount = 0;
+
+        final Set<Integer> mostFrequentColumns = new HashSet<Integer>();
         for (int i = 0; i < colSetting.length; i++) {
             MissingValueHandling2ColSetting c = colSetting[i];
             switch (c.getMethod()) {
                 case MissingValueHandling2ColSetting.METHOD_MOST_FREQUENT:
-                    mostFrequentColCount++;
+                	mostFrequentColumns.add(i);
                 case MissingValueHandling2ColSetting.METHOD_MAX:
                 case MissingValueHandling2ColSetting.METHOD_MIN:
                 case MissingValueHandling2ColSetting.METHOD_MEAN:
@@ -458,25 +459,20 @@ public final class MissingValueHandling3Table implements DataTable {
                 default:
             }
         }
-        int[] mostFrequentCols = new int[mostFrequentColCount];
-        if (mostFrequentColCount > 0) {
-            int index = 0;
-            for (int i = 0; i < colSetting.length; i++) {
-                MissingValueHandling2ColSetting c = colSetting[i];
-                switch (c.getMethod()) {
-                    case MissingValueHandling2ColSetting.METHOD_MOST_FREQUENT:
-                        mostFrequentCols[index++] = i;
-                        break;
-                    default:
-                }
-            }
-        }
+
         MyStatisticsTable myT;
         ExecutionMonitor e;
         if (needStatistics) {
             // for creating statistics table
             ExecutionContext subExec = exec.createSubExecutionContext(0.5);
-            myT = new MyStatisticsTable(table, subExec, mostFrequentCols);
+            myT = new MyStatisticsTable(table, subExec) {
+                //do not try to get this Iterable in the constructor, it will not work, as long as
+                //Statistics3Table does the statistical computation in the constructor.
+                @Override
+                protected Iterable<Integer> getMostFrequentColumns() {
+                    return mostFrequentColumns;
+                }
+            };
             if (myT.m_warningMessage != null) {
                 if (warningBuffer.length() > 0) {
                     warningBuffer.append('\n');
@@ -513,90 +509,117 @@ public final class MissingValueHandling3Table implements DataTable {
     /**
      * Determines not only min, max, mean but also most frequent values in a certain column set.
      */
-    private static final class MyStatisticsTable extends Statistics3Table {
-        private HashMap<DataCell, MutableInteger>[] m_countMaps;
+    private abstract static class MyStatisticsTable extends Statistics3Table {
+        private Map<Integer, LinkedHashMap<DataCell, Integer>> m_currentMostFrequent;
 
-        private int[] m_cols;
-
-        private DataCell[] m_mostFrequentCells;
+        private Map<Integer, DataCell> m_actualMostFrequent;
 
         private String m_warningMessage;
 
-        @SuppressWarnings("unchecked")
-        private MyStatisticsTable(final BufferedDataTable t, final ExecutionContext exec, final int[] cols)
+        private MyStatisticsTable(final BufferedDataTable t, final ExecutionContext exec)
             throws CanceledExecutionException {
             super(t, false, 0, Collections.<String> emptyList(), exec);
-            final int colCount = t.getDataTableSpec().getNumColumns();
-            m_countMaps = new HashMap[colCount];
-            for (int i = 0; i < cols.length; i++) {
-                // use linked hash map to get the first most frequent value
-                // when counts are equal
-                m_countMaps[cols[i]] = new LinkedHashMap<DataCell, MutableInteger>();
-            }
-            m_cols = cols;
-            //calculateAllMoments(exec);
-            m_mostFrequentCells = new DataCell[colCount];
             ArrayList<String> errorCols = new ArrayList<String>();
-            for (int i = 0; i < m_cols.length; i++) {
-                HashMap<DataCell, MutableInteger> map = m_countMaps[cols[i]];
-                // determine most frequent item
-                int bestCount = 0;
-                DataCell best = null;
-                for (Map.Entry<DataCell, MutableInteger> e : map.entrySet()) {
-                    int count = e.getValue().intValue();
-                    if (count > bestCount) {
-                        bestCount = count;
-                        best = e.getKey();
-                    }
+
+            for (Integer col : getMostFrequentColumns()) {
+                LinkedHashMap<DataCell, Integer> map = getCurrentMostFrequent().get(col);
+                if (map != null) {
+                    getActualMostFrequent().put(col, findMostFrequent(map));
+                } else {
+                    errorCols.add(t.getDataTableSpec().getColumnSpec(col).getName());
                 }
-                if (best == null) {
-                    String colName = t.getDataTableSpec().getColumnSpec(cols[i]).getName();
-                    best = DataType.getMissingCell();
-                    errorCols.add(colName);
-                }
-                m_mostFrequentCells[cols[i]] = best;
             }
             if (errorCols.isEmpty()) {
                 m_warningMessage = null;
+            } else if (errorCols.size() == 1) {
+                m_warningMessage = String.format("Column %s contains no valid cells.",
+                    ConvenienceMethods.getShortStringFrom(errorCols, 5));
             } else {
-                m_warningMessage = "Column(s) " + Arrays.toString(errorCols.toArray()) + " contain(s) no valid cells.";
+                m_warningMessage = String.format("Columns %s contain no valid cells.",
+                    ConvenienceMethods.getShortStringFrom(errorCols, 5));
             }
-            for (DataRow dataRow : t) {
-                calculateMomentInSubClass(dataRow);
-            }
-            m_cols = null;
-            m_countMaps = null;
         }
 
         /**
-         * Derived classes may do additional calculations here. This method is called with all of the rows.
-         *
-         * @param row For processing.
+         * {@inheritDoc}
          */
-        protected void calculateMomentInSubClass(final DataRow row) {
-            for (int i = 0; i < m_cols.length; i++) {
-                DataCell c = row.getCell(m_cols[i]);
-                HashMap<DataCell, MutableInteger> map = m_countMaps[m_cols[i]];
+        @Override
+        protected void onStatisticComputation(final DataRow row) {
+            for (Integer i : getMostFrequentColumns()) {
+                DataCell c = row.getCell(i);
                 if (!c.isMissing()) {
-                    MutableInteger count = map.get(c);
-                    if (count == null) {
-                        map.put(c, new MutableInteger(1));
-                    } else {
-                        count.inc();
+                    LinkedHashMap<DataCell, Integer> map = getCurrentMostFrequent().get(i);
+                    if (map == null) {
+                        map = new LinkedHashMap<DataCell, Integer>();
+                        getCurrentMostFrequent().put(i, map);
                     }
+                    Integer integer = map.get(c);
+                    final int toSet = integer == null ? 1 : integer + 1;
+                    map.put(c, toSet);
                 }
             }
         }
+
+        /**
+         * As the given map is a linked hash map we can be sure that the returned item is always the first most frequent
+         * item.
+         *
+         * @param map map to use
+         * @return the first mostly frequent used item
+         */
+        private DataCell findMostFrequent(final LinkedHashMap<DataCell, Integer> map) {
+            int currentMax = 0;
+            DataCell toReturn = null;
+            for (Entry<DataCell, Integer> a : map.entrySet()) {
+                if (currentMax < a.getValue()) {
+                    currentMax = a.getValue();
+                    toReturn = a.getKey();
+                }
+            }
+            if (toReturn == null) {
+                throw new IllegalArgumentException("Coding issue, as there must be datacell in the map");
+            }
+            return toReturn;
+        }
+
+        /**
+         * Hacky stuff because Statistics3Table does the computation in the Constructor...
+         */
+        /**
+         * @return the columns to get the most frequent value from
+         */
+        protected abstract Iterable<Integer> getMostFrequentColumns();
 
         /**
          * @param col The column index
          * @return The most frequent cell.
          */
         public DataCell getMostFrequentCell(final int col) {
-            if (m_mostFrequentCells[col] == null) {
-                throw new IndexOutOfBoundsException("Didn't calculate most" + " frequent value for column " + col);
+            DataCell toReturn = getActualMostFrequent().get(col);
+            if (toReturn == null) {
+                return DataType.getMissingCell();
             }
-            return m_mostFrequentCells[col];
+            return toReturn;
+        }
+
+        /**
+         * @return the currentMostFrequent
+         */
+        private Map<Integer, LinkedHashMap<DataCell, Integer>> getCurrentMostFrequent() {
+            if (m_currentMostFrequent == null) {
+                m_currentMostFrequent = new HashMap<Integer, LinkedHashMap<DataCell, Integer>>();
+            }
+            return m_currentMostFrequent;
+        }
+
+        /**
+         * @return the actualMostFrequent
+         */
+        private Map<Integer, DataCell> getActualMostFrequent() {
+            if (m_actualMostFrequent == null) {
+                m_actualMostFrequent = new HashMap<Integer, DataCell>();
+            }
+            return m_actualMostFrequent;
         }
     }
 }
