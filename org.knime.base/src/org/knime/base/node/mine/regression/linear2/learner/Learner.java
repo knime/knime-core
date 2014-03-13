@@ -110,7 +110,7 @@ final class Learner extends RegressionStatisticsLearner {
 
         RegressionTrainingData trainingData = new RegressionTrainingData(data, m_outSpec, m_failOnMissing);
 
-        final int regressorCount = trainingData.getRegressorCount();
+        final int regressorCount = Math.max(1,trainingData.getRegressorCount());
         SummaryStatistics[] stats = new SummaryStatistics[regressorCount];
         UpdatingMultipleLinearRegression regr = initStatistics(regressorCount, stats);
 
