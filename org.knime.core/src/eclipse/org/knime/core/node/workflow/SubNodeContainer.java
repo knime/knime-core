@@ -85,6 +85,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeMessage.Type;
+import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
@@ -107,8 +108,8 @@ public final class SubNodeContainer extends SingleNodeContainer {
 
     private WorkflowManager m_wfm;
 
-    private final NodeInPort[] m_inports;
-    private final NodeContainerOutPort[] m_outports;
+    private NodeInPort[] m_inports;
+    private NodeContainerOutPort[] m_outports;
     /** Keeps outgoing information (specs, objects, HiLiteHandlers...). */
     static class Output {
         String name = "none";
@@ -258,10 +259,6 @@ public final class SubNodeContainer extends SingleNodeContainer {
         setInternalState(m_wfm.getInternalState());
     }
 
-    private void initFrom(final WorkflowManager wfm) {
-
-    }
-
     /* -------------------- Subnode specific -------------- */
 
     /** @return the inportNodeModel */
@@ -284,13 +281,15 @@ public final class SubNodeContainer extends SingleNodeContainer {
         return (VirtualPortObjectOutNodeModel)getVirtualOutNode().getNodeModel();
     }
 
-    /** @return the inNodeID */
-    NodeID getVirtualInNodeID() {
+    /** @return the inNodeID
+     * @since 2.10 */
+    public NodeID getVirtualInNodeID() {
         return new NodeID(m_wfm.getID(), m_virtualInNodeIDSuffix);
     }
 
-    /** @return the outNodeID */
-    NodeID getVirtualOutNodeID() {
+    /** @return the outNodeID
+     * @since 2.10 */
+    public NodeID getVirtualOutNodeID() {
         return new NodeID(m_wfm.getID(), m_virtualOutNodeIDSuffix);
     }
 
@@ -329,6 +328,16 @@ public final class SubNodeContainer extends SingleNodeContainer {
     @Override
     public String getName() {
         return m_wfm.getName();
+    }
+
+    /**
+     * @param name The new name
+     * @since 2.10
+     */
+    public void setName(final String name) {
+        m_wfm.setName(name);
+        setDirty();
+        notifyNodePropertyChangedListener(NodeProperty.Name);
     }
 
     /* ------------------- Specific Interna ------------------- */
@@ -459,7 +468,8 @@ public final class SubNodeContainer extends SingleNodeContainer {
      * {@inheritDoc}
      */
     @Override
-    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V getInteractiveView() {
+    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V
+        getInteractiveView() {
         return null;
     }
 
@@ -589,6 +599,26 @@ public final class SubNodeContainer extends SingleNodeContainer {
     }
 
     /**
+     * @param portTypes Types of the new ports
+     * @since 2.10
+     */
+    public void setInPorts(final PortType[] portTypes) {
+        m_inports = new NodeInPort[portTypes.length + 1];
+        for (int i = 0; i < portTypes.length; i++) {
+            m_inports[i + 1] = new NodeInPort(i + 1, portTypes[i]);
+        }
+        NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
+        m_inports[0] = new NodeInPort(0, FlowVariablePortObject.TYPE_OPTIONAL);
+        m_wfm.removeNode(getVirtualInNodeID());
+        m_virtualInNodeIDSuffix = m_wfm.addNode(new VirtualPortObjectInNodeFactory(portTypes)).getIndex();
+        NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
+        newVNode.setUIInformation(oldVNode.getUIInformation());
+        m_wfm.setDirty();
+        setDirty();
+        notifyNodePropertyChangedListener(NodeProperty.MetaNodePorts);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -602,6 +632,31 @@ public final class SubNodeContainer extends SingleNodeContainer {
     @Override
     public NodeOutPort getOutPort(final int index) {
         return m_outports[index];
+    }
+
+    /**
+     * @param portTypes Types of the new ports
+     * @since 2.10
+     */
+    public void setOutPorts(final PortType[] portTypes) {
+        m_outputs = new Output[portTypes.length + 1];
+        m_outports = new NodeContainerOutPort[portTypes.length + 1];
+        for (int i = 0; i < portTypes.length; i++) {
+            m_outputs[i + 1] = new Output();
+            m_outputs[i + 1].type = portTypes[i];
+            m_outports[i + 1] = new NodeContainerOutPort(this, portTypes[i], i + 1);
+        }
+        m_outputs[0] = new Output();
+        m_outputs[0].type = FlowVariablePortObject.TYPE;
+        m_outports[0] = new NodeContainerOutPort(this, FlowVariablePortObject.TYPE, 0);
+        NodeContainer oldVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
+        m_wfm.removeNode(getVirtualOutNodeID());
+        m_virtualOutNodeIDSuffix = m_wfm.addNode(new VirtualPortObjectOutNodeFactory(portTypes)).getIndex();
+        NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
+        newVNode.setUIInformation(oldVNode.getUIInformation());
+        m_wfm.setDirty();
+        setDirty();
+        notifyNodePropertyChangedListener(NodeProperty.MetaNodePorts);
     }
 
     /**
@@ -671,6 +726,7 @@ public final class SubNodeContainer extends SingleNodeContainer {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("rawtypes")
     @Override
     boolean performAreModelSettingsValid(final NodeSettingsRO modelSettings) {
         Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);

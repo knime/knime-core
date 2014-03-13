@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -57,6 +57,8 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.Wizard;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.MetaPortInfo;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.commands.ReconfigureMetaNodeCommand;
@@ -75,13 +77,28 @@ public class ReconfigureMetaNodeWizard extends Wizard {
 
     private final WorkflowManager m_metaNode;
     private final EditPartViewer m_viewer;
+    private final SubNodeContainer m_subNode;
 
     /**
-     *
+     * @param viewer The viewer
+     * @param metaNode The meta node
      */
     public ReconfigureMetaNodeWizard(final EditPartViewer viewer, final WorkflowManager metaNode) {
         super();
         m_metaNode = metaNode;
+        m_subNode = null;
+        m_viewer = viewer;
+        setHelpAvailable(false);
+    }
+
+    /**
+     * @param viewer The viewer
+     * @param subNode The sub node
+     */
+    public ReconfigureMetaNodeWizard(final EditPartViewer viewer, final SubNodeContainer subNode) {
+        super();
+        m_metaNode = null;
+        m_subNode = subNode;
         m_viewer = viewer;
         setHelpAvailable(false);
     }
@@ -93,11 +110,16 @@ public class ReconfigureMetaNodeWizard extends Wizard {
      */
     @Override
     public void addPages() {
-        setWindowTitle("Reconfigure Meta Node Wizard");
+        String name = m_metaNode != null ? "Meta Node" : "Sub Node";
+        setWindowTitle("Reconfigure " + name + " Wizard");
         setDefaultPageImageDescriptor(ImageDescriptor.createFromImage(
                 ImageRepository.getImage("icons/meta/meta_node_wizard2.png")));
-        m_addPage = new AddMetaNodePage("Change the Meta Node configuration");
-        m_addPage.setMetaNode(m_metaNode);
+        m_addPage = new AddMetaNodePage("Change the " + name + " configuration");
+        if (m_metaNode != null) {
+            m_addPage.setMetaNode(m_metaNode);
+        } else {
+            m_addPage.setSubNode(m_subNode);
+        }
         m_addPage.setTemplate(null);
         addPage(m_addPage);
     }
@@ -117,6 +139,7 @@ public class ReconfigureMetaNodeWizard extends Wizard {
      */
     @Override
     public boolean performFinish() {
+        NodeContainer node = m_metaNode != null ? m_metaNode : m_subNode;
         List<MetaPortInfo> inPorts = m_addPage.getInports();
         List<MetaPortInfo> outPorts = m_addPage.getOutPorts();
         String name = m_addPage.getMetaNodeName();
@@ -129,17 +152,17 @@ public class ReconfigureMetaNodeWizard extends Wizard {
             outPorts.get(i).setNewIndex(i);
         }
         // determine what has changed
-        boolean inPortChanges = m_metaNode.getNrInPorts() != inPorts.size();
+        boolean inPortChanges = node.getNrInPorts() != inPorts.size();
         for (MetaPortInfo inInfo : inPorts) {
             // new port types would create a new info object - which would have an unspecified old index -> change
             inPortChanges |= inInfo.getOldIndex() != inInfo.getNewIndex();
         }
-        boolean outPortChanges = m_metaNode.getNrOutPorts() != outPorts.size();
+        boolean outPortChanges = node.getNrOutPorts() != outPorts.size();
         for (MetaPortInfo outInfo : outPorts) {
             // new port types would create a new info object - which would have an unspecified old index -> change
             outPortChanges |= outInfo.getOldIndex() != outInfo.getNewIndex();
         }
-        boolean nameChange = !m_metaNode.getName().equals(name);
+        boolean nameChange = !node.getName().equals(name);
         StringBuilder infoStr = new StringBuilder();
         if (inPortChanges) {
             infoStr.append("the input ports - ");
@@ -155,11 +178,11 @@ public class ReconfigureMetaNodeWizard extends Wizard {
             return true;
         }
         infoStr.insert(0, "Changing - ");
-        infoStr.append("of MetaNode " + m_metaNode.getID());
+        infoStr.append("of MetaNode " + node.getID());
         LOGGER.info(infoStr);
 
-        ReconfigureMetaNodeCommand reconfCmd = new ReconfigureMetaNodeCommand(m_metaNode.getParent(),
-                m_metaNode.getID());
+        ReconfigureMetaNodeCommand reconfCmd = new ReconfigureMetaNodeCommand(node.getParent(),
+                node.getID());
         if (nameChange) {
             reconfCmd.setNewName(name);
         }

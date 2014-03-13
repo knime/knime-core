@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -58,6 +58,7 @@ import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -89,8 +90,6 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
      *
      * @param workflowManager hostWFM
      * @param metaNode to reconfigure (must be contained in hostWFM as direct child)
-     * @param inPorts the new input ports
-     * @param outPorts the new output ports
      */
     public ReconfigureMetaNodeCommand(final WorkflowManager workflowManager, final NodeID metaNode) {
         super(workflowManager);
@@ -130,7 +129,7 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
             return false;
         }
         NodeContainer nc = getHostWFM().getNodeContainer(m_metanodeID);
-        if (!(nc instanceof WorkflowManager)) {
+        if (!(nc instanceof WorkflowManager) && !(nc instanceof SubNodeContainer)) {
             return false;
         }
         // at least one thing to change should be set
@@ -140,21 +139,43 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
     /** {@inheritDoc} */
     @Override
     public void execute() {
-        if (m_name != null) {
-            WorkflowManager metaNode = (WorkflowManager)getHostWFM().getNodeContainer(m_metanodeID);
-            m_oldName = metaNode.getName();
-            metaNode.setName(m_name);
-        }
-        if (m_inPorts != null) {
-            m_reverseInports =
+        NodeContainer nc = getHostWFM().getNodeContainer(m_metanodeID);
+        if (nc instanceof WorkflowManager) {
+            if (m_name != null) {
+                WorkflowManager metaNode = (WorkflowManager) nc;
+                m_oldName = metaNode.getName();
+                metaNode.setName(m_name);
+            }
+            if (m_inPorts != null) {
+                m_reverseInports =
                     createReverseOperationList(getHostWFM().getMetanodeInputPortInfo(m_metanodeID), m_inPorts);
-            getHostWFM().changeMetaNodeInputPorts(m_metanodeID, m_inPorts.toArray(new MetaPortInfo[m_inPorts.size()]));
-        }
-        if (m_outPorts != null) {
-            m_reverseOutports =
-                    createReverseOperationList(getHostWFM().getMetanodeOutputPortInfo(m_metanodeID), m_outPorts);
-            getHostWFM().changeMetaNodeOutputPorts(m_metanodeID,
+                getHostWFM().changeMetaNodeInputPorts(m_metanodeID,
+                    m_inPorts.toArray(new MetaPortInfo[m_inPorts.size()]));
+            }
+            if (m_outPorts != null) {
+                m_reverseOutports =
+                        createReverseOperationList(getHostWFM().getMetanodeOutputPortInfo(m_metanodeID), m_outPorts);
+                getHostWFM().changeMetaNodeOutputPorts(m_metanodeID,
+                        m_outPorts.toArray(new MetaPortInfo[m_outPorts.size()]));
+            }
+        } else if (nc instanceof SubNodeContainer) {
+            SubNodeContainer snc = (SubNodeContainer) nc;
+            if (m_name != null) {
+                m_oldName = snc.getName();
+                snc.setName(m_name);
+            }
+            if (m_inPorts != null) {
+                m_reverseInports =
+                    createReverseOperationList(getHostWFM().getSubnodeInputPortInfo(m_metanodeID), m_inPorts);
+                getHostWFM().changeSubNodeInputPorts(m_metanodeID,
+                    m_inPorts.toArray(new MetaPortInfo[m_inPorts.size()]));
+            }
+            if (m_outPorts != null) {
+                m_reverseOutports =
+                        createReverseOperationList(getHostWFM().getSubnodeOutputPortInfo(m_metanodeID), m_outPorts);
+                getHostWFM().changeSubNodeOutputPorts(m_metanodeID,
                     m_outPorts.toArray(new MetaPortInfo[m_outPorts.size()]));
+            }
         }
     }
 
@@ -214,17 +235,33 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        if (m_oldName != null) {
-            ((WorkflowManager)getHostWFM().getNodeContainer(m_metanodeID)).setName(m_oldName);
+        NodeContainer nc = getHostWFM().getNodeContainer(m_metanodeID);
+        if (nc instanceof WorkflowManager) {
+            if (m_oldName != null) {
+                ((WorkflowManager)nc).setName(m_oldName);
 
-        }
-        if (m_reverseInports != null) {
-            getHostWFM().changeMetaNodeInputPorts(m_metanodeID,
-                    m_reverseInports.toArray(new MetaPortInfo[m_reverseInports.size()]));
-        }
-        if (m_reverseOutports != null) {
-            getHostWFM().changeMetaNodeOutputPorts(m_metanodeID,
-                    m_reverseOutports.toArray(new MetaPortInfo[m_reverseOutports.size()]));
+            }
+            if (m_reverseInports != null) {
+                getHostWFM().changeMetaNodeInputPorts(m_metanodeID,
+                        m_reverseInports.toArray(new MetaPortInfo[m_reverseInports.size()]));
+            }
+            if (m_reverseOutports != null) {
+                getHostWFM().changeMetaNodeOutputPorts(m_metanodeID,
+                        m_reverseOutports.toArray(new MetaPortInfo[m_reverseOutports.size()]));
+            }
+        } else if (nc instanceof SubNodeContainer) {
+            SubNodeContainer snc = (SubNodeContainer) nc;
+            if (m_oldName != null) {
+                snc.setName(m_oldName);
+            }
+            if (m_reverseInports != null) {
+                getHostWFM().changeSubNodeInputPorts(m_metanodeID,
+                        m_reverseInports.toArray(new MetaPortInfo[m_reverseInports.size()]));
+            }
+            if (m_reverseOutports != null) {
+                getHostWFM().changeSubNodeOutputPorts(m_metanodeID,
+                        m_reverseOutports.toArray(new MetaPortInfo[m_reverseOutports.size()]));
+            }
         }
     }
 

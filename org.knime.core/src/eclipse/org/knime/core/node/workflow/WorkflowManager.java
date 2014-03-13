@@ -113,7 +113,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.dialog.MetaNodeDialogNode;
-import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
@@ -300,8 +299,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     // Constructors
     ///////////////////////
 
-    /** Constructor - create new child workflow container with a parent,
+    /**
+     * Constructor - create new child workflow container with a parent,
      * a new ID, and the number and type of in/outports as specified.
+     *
+     * @param parent Parent of this workflow manager
+     * @param id ID of this workflow manager
+     * @param inTypes Types of the input ports
+     * @param outTypes Types of the output ports
+     * @param isProject If this workflow manager is a project
+     * @param context The context
+     * @param name Name of this workflow manager
      */
     WorkflowManager(final WorkflowManager parent, final NodeID id,
             final PortType[] inTypes, final PortType[] outTypes,
@@ -348,7 +356,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         LOGGER.debug("Created subworkflow " + this.getID());
     }
 
-    /** Constructor - create new workflow from persistor.
+    /**
+     * Constructor - create new workflow from persistor.
+     *
+     * @param parent The parent of this workflow
+     * @param id The ID of this workflow
+     * @param persistor Persistor containing the content for this workflow
      */
     WorkflowManager(final WorkflowManager parent, final NodeID id, final WorkflowPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
@@ -501,6 +514,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return internalAddNewNode(factory, context);
     }
 
+    @SuppressWarnings("unchecked")
     private NodeID internalAddNewNode(final NodeFactory<?> factory,
             final NodeCreationContext context) {
         synchronized (m_workflowMutex) {
@@ -787,7 +801,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             } else if (dest.equals(getID())) {
                 // we are feeding data out of the subworkflow
                 assert newConnType == ConnectionType.WFMOUT;
-                getOutPort(destPort).setUnderlyingPort(sourceNC.getOutPort(sourcePort));
+                if (sourceNC != null) {
+                    getOutPort(destPort).setUnderlyingPort(sourceNC.getOutPort(sourcePort));
+                }
             }
             if (!currentlyLoadingFlow) { // user adds connection -> configure
                 if (newConn.getType().isLeavingWorkflow()) {
@@ -837,6 +853,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /**
+     * @param source ID of the source node
+     * @param sourcePort Index of the sources port
+     * @param dest ID of the destination node
+     * @param destPort Index of the destination port
+     * @return true if the connection can be added, false otherwise
      * @since 2.6
      */
     public boolean canAddNewConnection(final NodeID source,
@@ -1058,11 +1079,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             } else if (!dest.equals(this.getID())) {
                 // connection goes into a metanode
                 WorkflowManager destWFM = (WorkflowManager)destNC;
-                destWFM.resetNodesInWFMConnectedToInPorts(Collections.singleton(cc.getDestPort()));
-                // also reset successors of this "port"
-                Set<Integer> outPorts = destWFM.getWorkflow().connectedOutPorts(destPort);
-                for (int i : outPorts) {
-                    resetSuccessors(dest, i);
+                if (destWFM != null) {
+                    destWFM.resetNodesInWFMConnectedToInPorts(Collections.singleton(cc.getDestPort()));
+                    // also reset successors of this "port"
+                    Set<Integer> outPorts = destWFM.getWorkflow().connectedOutPorts(destPort);
+                    for (int i : outPorts) {
+                        resetSuccessors(dest, i);
+                    }
                 }
             } else {
                 // connection leaves workflow
@@ -1221,9 +1244,36 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /** Get information on input ports of the argument (sub) node. It's used
+     * by the routines that allow the user to change the port information
+     * (add, delete, move).
+     * @param subNodeID The argument node
+     * @return the sub node's port info.
+     * @throws IllegalArgumentException If the node is invalid.
+     * @since 2.10 */
+    public MetaPortInfo[] getSubnodeInputPortInfo(final NodeID subNodeID) {
+        synchronized (m_workflowMutex) {
+            return m_workflow.getSubnodeInputPortInfo(subNodeID);
+        }
+    }
+
+    /** Get information on output ports of the argument (sub) node. Similar
+     * to {@link #getSubnodeInputPortInfo(NodeID)}.
+     * @param subNodeID ...
+     * @return ...
+     * @throws IllegalArgumentException If the node is invalid.
+     * @since 2.10 */
+    public MetaPortInfo[] getSubnodeOutputPortInfo(final NodeID subNodeID) {
+        synchronized (m_workflowMutex) {
+            return m_workflow.getSubnodeOutputPortInfo(subNodeID);
+        }
+    }
+
     /**
-     * @param newPorts
-     * @since 2.6 */
+     * @param subFlowID ID of the subflow
+     * @param newPorts The new ports
+     * @since 2.6
+     */
     public void changeMetaNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
         synchronized (m_workflowMutex) {
             WorkflowManager subFlowMgr = getMetaNodeContainer(subFlowID);
@@ -1231,7 +1281,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 return;
             }
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
-                m_workflow.changeDestinationPortsForMetaNode(subFlowID, newPorts);
+                m_workflow.changeDestinationPortsForMetaNode(subFlowID, newPorts, false);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer old = p.getFirst();
                 m_workflow.removeConnection(old);
@@ -1241,7 +1291,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
             Workflow subFlow = subFlowMgr.m_workflow;
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
-                subFlow.changeSourcePortsForMetaNode(subFlowID, newPorts);
+                subFlow.changeSourcePortsForMetaNode(subFlowID, newPorts, false);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer old = p.getFirst();
                 subFlow.removeConnection(old);
@@ -1280,8 +1330,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /**
-     * @param newPorts
-     * @since 2.6 */
+     * @param subFlowID ID of the subflow
+     * @param newPorts The new ports
+     * @since 2.6
+     */
     public void changeMetaNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
         synchronized (m_workflowMutex) {
             WorkflowManager subFlowMgr = getMetaNodeContainer(subFlowID);
@@ -1289,7 +1341,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 return;
             }
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
-                m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts);
+                m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts, false);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer old = p.getFirst();
                 m_workflow.removeConnection(old);
@@ -1299,7 +1351,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
             Workflow subFlow = subFlowMgr.m_workflow;
             List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
-                subFlow.changeDestinationPortsForMetaNode(subFlowID, newPorts);
+                subFlow.changeDestinationPortsForMetaNode(subFlowID, newPorts, false);
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
                 ConnectionContainer old = p.getFirst();
                 subFlow.removeConnection(old);
@@ -1337,12 +1389,134 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /**
+     * @param subFlowID ID of the subflow
+     * @param newPorts The new ports
+     * @since 2.10
+     */
+    public void changeSubNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
+        synchronized (m_workflowMutex) {
+            SubNodeContainer snc = getSubNodeContainer(subFlowID);
+            if (!haveSubPortsChanged(newPorts, true, snc)) {
+                return;
+            }
+            List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
+                m_workflow.changeDestinationPortsForMetaNode(subFlowID, newPorts, true);
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
+                ConnectionContainer old = p.getFirst();
+                m_workflow.removeConnection(old);
+                notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
+            }
+            Workflow subFlow = snc.getWorkflowManager().m_workflow;
+            List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
+                subFlow.changeSourcePortsForMetaNode(snc.getVirtualInNodeID(), newPorts, true);
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
+                ConnectionContainer old = p.getFirst();
+                subFlow.removeConnection(old);
+                snc.getWorkflowManager().notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
+            }
+            PortType[] portTypes = new PortType[newPorts.length - 1];
+            for (int i = 0; i < newPorts.length - 1; i++) {
+                portTypes[i] = newPorts[i + 1].getType();
+            }
+            snc.setInPorts(portTypes);
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
+                ConnectionContainer newConn = p.getSecond();
+                m_workflow.addConnection(newConn);
+                notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
+            }
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
+                ConnectionContainer newConn =
+                    new ConnectionContainer(snc.getVirtualInNodeID(), p.getSecond().getSourcePort(), p.getSecond()
+                        .getDest(), p.getSecond().getDestPort(), p.getSecond().getType());
+                subFlow.addConnection(newConn);
+                snc.getWorkflowManager().notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
+            }
+            setDirty();
+        }
+    }
+
+    /**
+     * @param subFlowID ID of the subflow
+     * @param newPorts The new ports
+     * @since 2.10
+     */
+    public void changeSubNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
+        synchronized (m_workflowMutex) {
+            SubNodeContainer snc = getSubNodeContainer(subFlowID);
+            if (!haveSubPortsChanged(newPorts, false, snc)) {
+                return;
+            }
+            List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
+                m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts, true);
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
+                ConnectionContainer old = p.getFirst();
+                m_workflow.removeConnection(old);
+                notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
+            }
+            Workflow subFlow = snc.getWorkflowManager().m_workflow;
+            List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
+                subFlow.changeDestinationPortsForMetaNode(snc.getVirtualOutNodeID(), newPorts, true);
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
+                ConnectionContainer old = p.getFirst();
+                subFlow.removeConnection(old);
+                snc.getWorkflowManager().notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
+            }
+            PortType[] portTypes = new PortType[newPorts.length - 1];
+            for (int i = 0; i < newPorts.length - 1; i++) {
+                portTypes[i] = newPorts[i + 1].getType();
+            }
+            snc.setOutPorts(portTypes);
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
+                ConnectionContainer newConn = p.getSecond();
+                m_workflow.addConnection(newConn);
+                notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
+            }
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
+                ConnectionContainer newConn =
+                    new ConnectionContainer(p.getSecond().getSource(), p.getSecond().getSourcePort(),
+                        snc.getVirtualOutNodeID(), p.getSecond().getDestPort(), p.getSecond().getType());
+                subFlow.addConnection(newConn);
+                snc.getWorkflowManager().notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
+            }
+            setDirty();
+        }
+    }
+
+    /**
      * @param newPorts
      * @param inPorts if true, otherwise outports
      * @param subFlowMgr */
     private static boolean haveMetaPortsChanged(final MetaPortInfo[] newPorts, final boolean inPorts,
             final WorkflowManager subFlowMgr) {
         if (newPorts.length != (inPorts ? subFlowMgr.getNrInPorts() : subFlowMgr.getNrOutPorts())) {
+            return true;
+        }
+        for (int i = 0; i < newPorts.length; i++) {
+            if (newPorts[i].getOldIndex() != newPorts[i].getNewIndex()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param newPorts
+     * @param inPorts if true, otherwise outports
+     * @param subFlowMgr */
+    private static boolean haveSubPortsChanged(final MetaPortInfo[] newPorts, final boolean inPorts,
+            final SubNodeContainer snc) {
+        int ports =
+            inPorts ? snc.getWorkflowManager().getNodeContainer(snc.getVirtualInNodeID()).getNrOutPorts() : snc
+                .getWorkflowManager().getNodeContainer(snc.getVirtualOutNodeID()).getNrInPorts();
+        if (newPorts.length != ports) {
             return true;
         }
         for (int i = 0; i < newPorts.length; i++) {
@@ -2168,6 +2342,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     NativeNodeContainer nnc = (NativeNodeContainer)nc;
                     // if current nodeModel is of class nodeModelClass and not filtered
                     if (nodeModelClass.isInstance(nnc.getNodeModel())) {
+                        @SuppressWarnings("unchecked")
                         final T nodeModel = (T) nnc.getNodeModel();
                         if (filter.include(nodeModel)) {
                             return;  // stop here
@@ -2961,7 +3136,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         for (NodeID id : ids) {
             if (m_workflow.getConnectionsByDest(id) != null) {
                 for (ConnectionContainer cc : m_workflow.getConnectionsByDest(id)) {
-                    if (   (!orgIDsHash.contains(cc.getSource()))
+                    if ((!orgIDsHash.contains(cc.getSource()))
                         && (!cc.getSource().equals(startID))) {
                         Pair<NodeID, Integer> npi
                                 = new Pair<NodeID, Integer>(cc.getDest(),
@@ -3161,7 +3336,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * This essentially checks if the nodes can be moved (=deleted from
      * the original WFM) or if they are executed
      *
-     * @param orgID the id of the metanode to be expanded
+     * @param wfmID the id of the metanode to be expanded
      * @return null of ok otherwise reason (String) why not
      */
     public String canExpandMetaNode(final NodeID wfmID) {
@@ -3303,7 +3478,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
                 // connect connections FROM the sub workflow:
-                for (ConnectionContainer outerConnection : m_workflow.getConnectionsBySource(nodeID)) {
+                List<ConnectionContainer> cons = new ArrayList<ConnectionContainer>();
+                cons.addAll(m_workflow.getConnectionsBySource(nodeID));
+                for (ConnectionContainer outerConnection : cons) {
                     for (ConnectionContainer innerConnection : subWFM.m_workflow.getConnectionsByDest(
                         ((SubNodeContainer)node).getVirtualOutNodeID())) {
                         if (outerConnection.getSourcePort() == innerConnection.getDestPort()) {
@@ -3736,8 +3913,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 // move bendpoints of all internal connections
                 for (ConnectionContainer cc : newWFM.getConnectionContainers()) {
-                    if (       (!cc.getSource().equals(newWFM.getID()))
-                            && (!cc.getDest().equals(newWFM.getID())) ) {
+                    if ((!cc.getSource().equals(newWFM.getID()))
+                            && (!cc.getDest().equals(newWFM.getID()))) {
                         ConnectionUIInformation uii = cc.getUIInfo();
                         if (uii != null) {
                             ConnectionUIInformation newUI =
@@ -4522,7 +4699,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * either step (= run only one iteration and pause again) or run
      * until the loop is finished.
      *
-     * @param nc
+     * @param nc The node container
+     * @param oneStep If execution should only be resumed by one step
      */
     public void resumeLoopExecution(final NodeContainer nc, final boolean oneStep) {
         if (nc instanceof NativeNodeContainer) {
@@ -4774,6 +4952,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /**
+     * @param nc The node container
+     * @param persistor The persistor
+     * @return true if load and execution was successful, false otherwise
+     * @throws InvalidSettingsException If the settings are invalid
+     * @throws NodeExecutionJobReconnectException If continuing the execution does fail
+     */
     boolean continueExecutionOnLoad(final NodeContainer nc,
             final NodeContainerPersistor persistor)
         throws InvalidSettingsException,  NodeExecutionJobReconnectException {
@@ -5649,6 +5834,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return (WorkflowManager)nc;
     }
 
+    /** Get contained node container and cast to SubNodeContainer. Throws exception if
+     * it not exists or is not a SubNodeContainer. */
+    private SubNodeContainer getSubNodeContainer(final NodeID id) {
+        NodeContainer nc = getNodeContainer(id);
+        if (!(nc instanceof SubNodeContainer)) {
+            throw new IllegalArgumentException("Node "
+                    + nc.getNameWithID() + " is not a sub node.");
+        }
+        return (SubNodeContainer)nc;
+    }
+
     /** Does the workflow contain a node with the argument id?
      * @param id The id in question.
      * @return true if there is node with the given id, false otherwise.
@@ -5707,7 +5903,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return result;
     }
 
-    /** @since 2.8 */
+    /**
+     * @param anchor The anchor
+     * @return List of node containers
+     * @since 2.8
+     */
     public List<NodeContainer> getNodesInScopeOLD(final SingleNodeContainer anchor) {
         ArrayList<NodeContainer> result = new ArrayList<NodeContainer>();
         // get closest (=top of stack) scope context for given anchor
@@ -6260,7 +6460,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (linksChecked == 0) {
                 LOGGER.debug("No meta node links in workflow, nothing updated");
             } else {
-                LOGGER.debug("Workflow contains " + linksChecked + " meta node link(s), " + linksUpdated + " were updated");
+                LOGGER.debug("Workflow contains " + linksChecked + " meta node link(s), " + linksUpdated
+                    + " were updated");
             }
             return update;
         } finally {
@@ -6284,6 +6485,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /**
+     * @param directory The directory to save in
+     * @param exec The execution monitor
+     * @return Information about the meta node template
+     * @throws IOException If an IO error occurs
+     * @throws CanceledExecutionException If execution is canceled during the operation
+     * @throws LockFailedException If locking failed
+     */
     public MetaNodeTemplateInformation saveAsMetaNodeTemplate(final File directory, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException, LockFailedException {
         WorkflowManager tempParent = lazyInitTemplateWorkflowRoot();
@@ -6376,17 +6585,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** @return see {@link WorkflowCipher#isUnlocked()}. */
+    @SuppressWarnings("javadoc")
     public boolean isUnlocked() {
         return m_cipher.isUnlocked();
     }
 
     /** @return see {@link WorkflowCipher#getPasswordHint()}. */
+    @SuppressWarnings("javadoc")
     public String getPasswordHint() {
         return m_cipher.getPasswordHint();
     }
 
     /** @param prompt The prompt
      * @return see {@link WorkflowCipher#unlock(WorkflowCipherPrompt)}. */
+    @SuppressWarnings("javadoc")
     public boolean unlock(final WorkflowCipherPrompt prompt) {
         boolean isNowUnlocked;
         boolean wasUnlocked;
@@ -6401,6 +6613,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** @return see {@link WorkflowCipher#isEncrypted()}. */
+    @SuppressWarnings("javadoc")
     public boolean isEncrypted() {
         return this != ROOT && m_cipher.isEncrypted();
     }
@@ -6409,6 +6622,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return see {@link WorkflowCipher#cipherOutput(WorkflowManager, OutputStream)}.
      * @throws IOException If fails
      * @noreference This method is not intended to be referenced by clients. */
+    @SuppressWarnings("javadoc")
     public final OutputStream cipherOutput(final OutputStream out)
         throws IOException {
         return m_cipher.cipherOutput(this, out);
@@ -6667,6 +6881,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Timestamp when the workflow was written. */
     static final String CFG_WRITTEN_ON = "written_on";
 
+    /**
+     * @param directory The directory to load from
+     * @param exec The execution monitor
+     * @param loadHelper The load helper
+     * @return Result of the load operation
+     * @throws IOException If an IO error occurs
+     * @throws InvalidSettingsException If invalid settings were found
+     * @throws CanceledExecutionException If execution was canceled
+     * @throws UnsupportedWorkflowVersionException If the workflow has an unsupported version
+     * @throws LockFailedException If locking failed
+     */
     public static WorkflowLoadResult loadProject(final File directory,
             final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper)
             throws IOException, InvalidSettingsException,
@@ -6776,9 +7001,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Create persistor for a workflow or template.
+    /**Create persistor for a workflow or template.
      * @noreference Clients should only be required to load projects using
      * {@link #loadProject(File, ExecutionMonitor, WorkflowLoadHelper)}
+     * @param directory The directory to load from
+     * @param loadHelper The load helper
+     * @return The persistor
+     * @throws IOException If an IO error occured
+     * @throws UnsupportedWorkflowVersionException If the workflow is of an unsupported version
      */
     public static FileWorkflowPersistor createLoadPersistor(
             final File directory, final WorkflowLoadHelper loadHelper)
@@ -7219,7 +7449,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     subResult.addError("Can't continue execution; no data in inport");
                 }
                 if (!cont.getInternalState().equals(InternalNodeContainerState.EXECUTINGREMOTELY)) {
-                    subResult.addError("Can't continue execution; node is not " + "configured but " + cont.getInternalState());
+                    subResult.addError("Can't continue execution; node is not " + "configured but "
+                            + cont.getInternalState());
                 }
                 try {
                     if (!continueExecutionOnLoad(cont, persistor)) {
@@ -7379,10 +7610,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Saves the workflow to a new location, setting the argument directory as the new NC dir. It will
+    /**
+     * Saves the workflow to a new location, setting the argument directory as the new NC dir. It will
      * first copy the "old" directory, point the NC dir to the new location and then do an incremental save.
      * @param directory new directory, not null
-     * @param exec ...
+     * @param exec The execution monitor
+     * @throws IOException If an IO error occured
+     * @throws CanceledExecutionException If the execution was canceled
+     * @throws LockFailedException If locking failed
      * @since 2.9
      */
     public void saveAs(final File directory, final ExecutionMonitor exec) throws IOException,
@@ -7430,6 +7665,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /**
+     * @param directory The directory to save in
+     * @param exec The execution monitor
+     * @param isSaveData ...
+     * @throws IOException If an IO error occured
+     * @throws CanceledExecutionException If the execution was canceled
+     * @throws LockFailedException If locking failed
+     */
     public void save(final File directory, final ExecutionMonitor exec,
         final boolean isSaveData)
                 throws IOException, CanceledExecutionException, LockFailedException {
@@ -7499,6 +7742,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** Performs sanity check on workflow. This is necessary upon load.
+     * @param nodes The nodes to check
      * @param propagate Whether to also reflect state changes in our parent
      * @return Whether everything was clean before (if false is returned,
      * something was wrong).
@@ -7555,7 +7799,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         case POSTEXECUTE:
                             allowedStates.retainAll(Arrays.asList(InternalNodeContainerState.IDLE,
                                     InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC,
-                                    InternalNodeContainerState.CONFIGURED, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC));
+                                    InternalNodeContainerState.CONFIGURED,
+                                        InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC));
                             break;
                         case EXECUTINGREMOTELY:
                             // be more flexible than in the EXECUTING case
@@ -7564,7 +7809,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             // of their internal flow to EXECUTINGREMOTELY
                             allowedStates.retainAll(Arrays.asList(InternalNodeContainerState.IDLE,
                                     InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC,
-                                    InternalNodeContainerState.CONFIGURED, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC,
+                                    InternalNodeContainerState.CONFIGURED,
+                                        InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC,
                                     InternalNodeContainerState.EXECUTINGREMOTELY));
                             break;
                         case EXECUTED:
@@ -7798,7 +8044,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
-    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V getInteractiveView() {
+    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent, ? extends ViewContent>> V
+        getInteractiveView() {
         return null;
     }
 
@@ -7844,6 +8091,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // was reset completely if any one of the settings change.
                     // SingleNodeContainer snc = (SingleNodeContainer)this.getNodeContainer(id);
                     // snc.reset();
+                    @SuppressWarnings("unchecked")
                     AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration> config =
                         (AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration>)qfin.getConfiguration();
                     if (config != null) {
@@ -7877,6 +8125,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 : findNodes(QuickFormInputNode.class, false).entrySet()) {
             String nodeID = Integer.toString(e.getKey().getIndex());
             NodeSettingsWO subSettings = modelSettings.addNodeSettings(nodeID);
+            @SuppressWarnings("unchecked")
             AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration> config =
                 (AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration>)e.getValue().getConfiguration();
             if (config != null) {
@@ -7965,18 +8214,32 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     // Workflow port handling
     /////////////////////////
 
+    /**
+     * @return The number of incoming ports
+     */
     public int getNrWorkflowIncomingPorts() {
         return getNrInPorts();
     }
 
+    /**
+     * @return The number of outgoing ports
+     */
     public int getNrWorkflowOutgoingPorts() {
         return getNrOutPorts();
     }
 
+    /**
+     * @param i Index of the port
+     * @return The incoming port at the given index
+     */
     public NodeOutPort getWorkflowIncomingPort(final int i) {
         return m_inPorts[i].getUnderlyingPort();
     }
 
+    /**
+     * @param i Index of the port
+     * @return The outgoing port at the given index
+     */
     public NodeInPort getWorkflowOutgoingPort(final int i) {
         return m_outPorts[i].getSimulatedInPort();
     }
@@ -8320,9 +8583,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Find all nodes of a certain type that are currently ready to
-     * be executed (= node is configured, all predecessors are executed).
-     * See {@link #findNodes(Class, boolean)}
+    /**
+     * Find all nodes of a certain type that are currently ready to be executed (= node is configured, all predecessors
+     * are executed). See {@link #findNodes(Class, boolean)}
      *
      * @param <T> ...
      * @param nodeModelClass ...
@@ -8331,33 +8594,32 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.7
      * @noreference This method is not intended to be referenced by clients.
      */
-    public <T> Map<NodeID, T> findWaitingNodes(final Class<T> nodeModelClass,
-                             final NodeModelFilter<T> filter) {
-    	synchronized (m_workflowMutex) {
+    public <T> Map<NodeID, T> findWaitingNodes(final Class<T> nodeModelClass, final NodeModelFilter<T> filter) {
+        synchronized (m_workflowMutex) {
             Map<NodeID, T> nodes = findNodes(nodeModelClass, /*recurse=*/false);
-	    	Iterator<Map.Entry<NodeID, T>> it = nodes.entrySet().iterator();
-	    	while (it.hasNext()) {
-	    		Entry<NodeID, T> next = it.next();
+            Iterator<Map.Entry<NodeID, T>> it = nodes.entrySet().iterator();
+            while (it.hasNext()) {
+                Entry<NodeID, T> next = it.next();
                 NodeID id = next.getKey();
-	    		T nodeModel = next.getValue();
-	    		NodeContainer nc = getNodeContainer(id);
-	    		PortObject[] inData = new PortObject[nc.getNrInPorts()];
-	    		if (!filter.include(nodeModel)) {
-	    		    it.remove();
-	    		} else if (InternalNodeContainerState.EXECUTED.equals(nc.getInternalState())
-	    		        || (!assembleInputData(id, inData))) {
-	    		    // only keep nodes that can be executed (= have all
-	    		    // data available) but are not yet executed
-	    			it.remove();
-	    		} else if (nc instanceof SingleNodeContainer) {
-	    		    if (((SingleNodeContainer)nc).isInactive()) {
-	    		        // also remove inactive nodes:
-	                    it.remove();
-	    		    }
-	    		}
-	    	}
-	    	return nodes;
-    	}
+                T nodeModel = next.getValue();
+                NodeContainer nc = getNodeContainer(id);
+                PortObject[] inData = new PortObject[nc.getNrInPorts()];
+                if (!filter.include(nodeModel)) {
+                    it.remove();
+                } else if (InternalNodeContainerState.EXECUTED.equals(nc.getInternalState())
+                    || (!assembleInputData(id, inData))) {
+                    // only keep nodes that can be executed (= have all
+                    // data available) but are not yet executed
+                    it.remove();
+                } else if (nc instanceof SingleNodeContainer) {
+                    if (((SingleNodeContainer)nc).isInactive()) {
+                        // also remove inactive nodes:
+                        it.remove();
+                    }
+                }
+            }
+            return nodes;
+        }
     }
 
     /** Find all nodes of a certain type that are already executed.

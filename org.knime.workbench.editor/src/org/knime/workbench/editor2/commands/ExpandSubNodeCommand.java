@@ -113,6 +113,7 @@ public class ExpandSubNodeCommand extends AbstractKNIMECommand {
             m_pastedNodes = wcc.getNodeIDs();
             m_pastedAnnotations = wcc.getAnnotations();
         } catch (Exception e) {
+            m_undoCopyPersistor = null;
             String error = "Expanding Sub Node failed: " + e.getMessage();
             LOGGER.error(error, e);
             MessageDialog.openError(Display.getCurrent().getActiveShell(), "Expand failed", error);

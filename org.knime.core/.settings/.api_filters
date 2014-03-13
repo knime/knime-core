@@ -1301,12 +1301,6 @@
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
-                <message_argument value="getInteractiveWebViewTemplate()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
                 <message_argument value="getWebTemplate()"/>
             </message_arguments>
         </filter>

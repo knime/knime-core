@@ -79,6 +79,7 @@ import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
@@ -116,9 +117,12 @@ public class AddMetaNodePage extends WizardPage {
     private Button m_downOutPort;
 
     private WorkflowManager m_metaNode;
+    private SubNodeContainer m_subNode;
     private String m_template;
 
     private Label m_portMsg;
+
+    private int m_offset;
 
     /**
      * Creates the page and sets title and description.
@@ -162,8 +166,18 @@ public class AddMetaNodePage extends WizardPage {
      */
     void setMetaNode(final WorkflowManager metaNode) {
         m_metaNode = metaNode;
+        m_offset = 0;
     }
 
+    /**
+     * This page initializes from the sub node.
+     *
+     * @param subNode the sub node to initialize the port lists from (and that is to be reconfigured)
+     */
+    void setSubNode(final SubNodeContainer subNode) {
+        m_subNode = subNode;
+        m_offset = 1;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -175,10 +189,14 @@ public class AddMetaNodePage extends WizardPage {
                 populateInfoListsFromTemplate();
             } else if (m_metaNode != null) {
                 populateInfoListsFromMetaNode(m_metaNode);
+            } else if (m_subNode != null) {
+                populateInfoListsFromSubNode(m_subNode);
             }
             populateSelectionListsFromInfoList();
             if (m_metaNode != null) {
                 m_name.setText(m_metaNode.getName());
+            } else if (m_subNode != null) {
+                m_name.setText(m_subNode.getName());
             } else {
                 m_name.setText("MetaNode");
             }
@@ -195,6 +213,15 @@ public class AddMetaNodePage extends WizardPage {
         m_outPortList.clear();
         MetaPortInfo[] inPortInfo = metaNode.getParent().getMetanodeInputPortInfo(metaNode.getID());
         MetaPortInfo[] outPortInfo = metaNode.getParent().getMetanodeOutputPortInfo(metaNode.getID());
+        m_inPortList.addAll(Arrays.asList(inPortInfo));
+        m_outPortList.addAll(Arrays.asList(outPortInfo));
+    }
+
+    private void populateInfoListsFromSubNode(final SubNodeContainer subNode) {
+        m_inPortList.clear();
+        m_outPortList.clear();
+        MetaPortInfo[] inPortInfo = subNode.getParent().getSubnodeInputPortInfo(subNode.getID());
+        MetaPortInfo[] outPortInfo = subNode.getParent().getSubnodeOutputPortInfo(subNode.getID());
         m_inPortList.addAll(Arrays.asList(inPortInfo));
         m_outPortList.addAll(Arrays.asList(outPortInfo));
     }
@@ -247,7 +274,7 @@ public class AddMetaNodePage extends WizardPage {
     private void populateSelectionlistFromInfolist(final List selList, final java.util.List<MetaPortInfo> infoList,
             final String namePrefix) {
         selList.removeAll();
-        for (int i = 0; i < infoList.size(); i++) {
+        for (int i = m_offset; i < infoList.size(); i++) {
             MetaPortInfo info = infoList.get(i);
 
             String typeName = info.getType().getPortObjectClass().getSimpleName();
@@ -295,7 +322,7 @@ public class AddMetaNodePage extends WizardPage {
         if (!m_wasVisible) {
             return false;
         }
-        if (m_template == null && m_metaNode == null) {
+        if (m_template == null && m_metaNode == null && m_subNode == null) {
             return false;
         }
         return true;
@@ -311,7 +338,7 @@ public class AddMetaNodePage extends WizardPage {
             idx = m_outPorts.getSelectionIndex();
         }
         if (idx >= 0) {
-            MetaPortInfo info = inPort ? m_inPortList.get(idx) : m_outPortList.get(idx);
+            MetaPortInfo info = inPort ? m_inPortList.get(idx + m_offset) : m_outPortList.get(idx + m_offset);
             StringBuilder str = new StringBuilder();
             str.append(inPort ? "Input " : "Output ");
             str.append("port ");
@@ -329,7 +356,7 @@ public class AddMetaNodePage extends WizardPage {
                 } else {
                     str.append("Not connected. ");
                 }
-                if (info.getOldIndex() != idx) {
+                if (info.getOldIndex() != idx + m_offset) {
                     str.append("Moved from old index ");
                     str.append(info.getOldIndex());
                     str.append(". ");
@@ -337,7 +364,7 @@ public class AddMetaNodePage extends WizardPage {
             } else {
                 str.append("New port. ");
             }
-            if (m_metaNode != null) {
+            if (m_metaNode != null || m_subNode != null) {
                 // only when we change things we show the infos
                 m_portMsg.setText(str.toString());
             }
@@ -350,11 +377,11 @@ public class AddMetaNodePage extends WizardPage {
     private void updateButtonState() {
         int inSel = m_inPorts.getSelectionIndex();
         if (inSel >= 0) {
-            MetaPortInfo info = m_inPortList.get(inSel);
+            MetaPortInfo info = m_inPortList.get(inSel + m_offset);
             m_addInPort.setEnabled(true);
             m_remInPort.setEnabled(!info.isConnected());
             m_upInPort.setEnabled(inSel > 0);
-            m_downInPort.setEnabled(inSel < m_inPortList.size() - 1);
+            m_downInPort.setEnabled(inSel < m_inPorts.getItemCount() - 1);
         } else {
             m_addInPort.setEnabled(true);
             m_remInPort.setEnabled(false);
@@ -364,11 +391,11 @@ public class AddMetaNodePage extends WizardPage {
 
         int outSel = m_outPorts.getSelectionIndex();
         if (outSel >= 0) {
-            MetaPortInfo info = m_outPortList.get(outSel);
+            MetaPortInfo info = m_outPortList.get(outSel + m_offset);
             m_addOutPort.setEnabled(true);
             m_remOutPort.setEnabled(!info.isConnected());
             m_upOutPort.setEnabled(outSel > 0);
-            m_downOutPort.setEnabled(outSel < m_outPortList.size() - 1);
+            m_downOutPort.setEnabled(outSel < m_outPorts.getItemCount() - 1);
         } else {
             m_addOutPort.setEnabled(true);
             m_remOutPort.setEnabled(false);
@@ -595,7 +622,7 @@ public class AddMetaNodePage extends WizardPage {
             MetaPortInfo info = new MetaPortInfo(port.getType(), infoList.size());
             infoList.add(info);
             populateSelectionlistFromInfolist(portList, infoList, inPort ? "in_" : "out_");
-            portList.select(infoList.size() - 1);
+            portList.select(portList.getItemCount() - 1);
         }
         m_previewPanel.redraw();
         updateStatus();
@@ -613,7 +640,7 @@ public class AddMetaNodePage extends WizardPage {
             LOGGER.coding("Selected port index is too big for internal port info list");
             return;
         }
-        infoList.remove(idx);
+        infoList.remove(idx + m_offset);
         populateSelectionlistFromInfolist(portList, infoList, inPort ? "in_" : "out_");
         updateStatus();
     }
@@ -626,18 +653,18 @@ public class AddMetaNodePage extends WizardPage {
         if (idx < minIdx) {
             return;
         }
-        int maxIdx = moveUp ? infoList.size() - 1 : infoList.size() - 2;
+        int maxIdx = moveUp ? portList.getItemCount() - 1 : portList.getItemCount() - 2;
         if (idx > maxIdx) {
             LOGGER.coding("Selected port index is too big for internal port info list to move "
                     + (moveUp ? "up" : "down"));
             return;
         }
-        MetaPortInfo info = infoList.get(idx);
-        infoList.remove(idx);
+        MetaPortInfo info = infoList.get(idx + m_offset);
+        infoList.remove(idx + m_offset);
 
         idx = moveUp ? (idx - 1) : (idx + 1);
 
-        infoList.add(idx, info);
+        infoList.add(idx + m_offset, info);
 
         populateSelectionlistFromInfolist(portList, infoList, inPort ? "in_" : "out_");
         portList.select(idx);

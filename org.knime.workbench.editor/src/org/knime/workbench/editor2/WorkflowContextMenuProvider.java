@@ -103,6 +103,7 @@ import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SelectLoopAction;
 import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
+import org.knime.workbench.editor2.actions.SubNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
@@ -370,6 +371,11 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     if (container instanceof SubNodeContainer) {
                         action = new OpenSubNodeEditorAction((NodeContainerEditPart)p);
                         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                        if (parts.size() == 1) {
+                            action = m_actionRegistry.getAction(SubNodeReconfigureAction.ID);
+                            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+                            ((AbstractNodeAction)action).update();
+                        }
                     }
                 }
 

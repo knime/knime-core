@@ -93,7 +93,6 @@ import org.eclipse.gef.SnapToGeometry;
 import org.eclipse.gef.SnapToGrid;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.commands.CommandStack;
-import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.ui.actions.ActionRegistry;
@@ -131,7 +130,6 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.ISaveablePart2;
-import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IURIEditorInput;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -208,6 +206,7 @@ import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SelectLoopAction;
 import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
+import org.knime.workbench.editor2.actions.SubNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNewConnectedNodeCommand;
@@ -238,7 +237,7 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowEditor extends GraphicalEditor implements
-        CommandStackListener, ISelectionListener, WorkflowListener,
+        WorkflowListener,
         NodeStateChangeListener,
         NodePropertyChangedListener, ISaveablePart2, NodeUIInformationListener,
         EventListener, IPropertyChangeListener {
@@ -536,6 +535,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
 
         AbstractNodeAction metaNodeReConfigure = new MetaNodeReconfigureAction(this);
+        AbstractNodeAction subNodeReConfigure = new SubNodeReconfigureAction(this);
         AbstractNodeAction metaNodeChangeLink = new ChangeMetaNodeLinkAction(this);
         AbstractNodeAction defineMetaNodeTemplate = new SaveAsMetaNodeTemplateAction(this);
         AbstractNodeAction checkUpdateMetaNodeLink = new CheckUpdateMetaNodeLinkAction(this);
@@ -592,6 +592,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(convert);
 
         m_actionRegistry.registerAction(metaNodeReConfigure);
+        m_actionRegistry.registerAction(subNodeReConfigure);
         m_actionRegistry.registerAction(metaNodeChangeLink);
         m_actionRegistry.registerAction(defineMetaNodeTemplate);
         m_actionRegistry.registerAction(checkUpdateMetaNodeLink);
@@ -626,6 +627,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
         m_editorActions.add(metaNodeReConfigure.getId());
+        m_editorActions.add(subNodeReConfigure.getId());
         m_editorActions.add(metaNodeChangeLink.getId());
         m_editorActions.add(defineMetaNodeTemplate.getId());
         m_editorActions.add(checkUpdateMetaNodeLink.getId());
@@ -690,6 +692,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * first invocation.
      *
      * @see org.eclipse.gef.ui.parts.GraphicalEditor#getActionRegistry()
+     * @return The action registry
      */
     @Override
     public ActionRegistry getActionRegistry() {
@@ -705,6 +708,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      *
      * @see org.eclipse.gef.ui.parts.GraphicalEditor
      *      #createGraphicalViewer(org.eclipse.swt.widgets.Composite)
+     * @param parent The parent
      */
     @Override
     protected void createGraphicalViewer(final Composite parent) {
@@ -1068,9 +1072,11 @@ public class WorkflowEditor extends GraphicalEditor implements
      *
      * @see org.eclipse.gef.ui.parts.GraphicalEditor
      *      #getAdapter(java.lang.Class)
+     * @param adapter The adapters class
+     * @return The adapter object
      */
     @Override
-    public Object getAdapter(final Class adapter) {
+    public Object getAdapter(@SuppressWarnings("rawtypes") final Class adapter) {
         // we need to handle common GEF elements we created
         if (adapter == GraphicalViewer.class) {
             return this.getGraphicalViewer();
@@ -1652,6 +1658,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * has changed). Updates the available actions afterwards
      *
      * @see org.eclipse.ui.part.WorkbenchPart#firePropertyChange(int)
+     * @param property The property that has changed
      */
     @Override
     protected void firePropertyChange(final int property) {
@@ -1669,6 +1676,8 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @see org.eclipse.ui.ISelectionListener#selectionChanged
      *      (org.eclipse.ui.IWorkbenchPart,
      *      org.eclipse.jface.viewers.ISelection)
+     * @param part The selected parts
+     * @param selection The selection that has changed
      */
     @Override
     public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
@@ -2476,6 +2485,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      *
      * @param zoomManager the zoom manager providing the zoom levels
      * @param pointToAdapt the point to adapt
+     * @param adaptViewPortLocation The adapt view port location
      */
     public static void transposeZoom(final ZoomManager zoomManager,
             final Point pointToAdapt, final boolean adaptViewPortLocation) {
@@ -2499,6 +2509,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      *
      * @param zoomManager the zoom manager providing the zoom levels
      * @param pointToAdapt the point to adapt
+     * @param adaptViewPortLocation The adapt view port location
      */
     public static void adaptZoom(final ZoomManager zoomManager,
             final Point pointToAdapt, final boolean adaptViewPortLocation) {
@@ -2521,6 +2532,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      *
      * @param zoomManager the zoom manager providing the zoom levels
      * @param pointToAdapt the point to adapt
+     * @param adaptViewPortLocation The adapt view port location
      */
     public static void adaptZoom(final ZoomManager zoomManager,
             final PrecisionPoint pointToAdapt,
@@ -2550,6 +2562,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_isDirty = dirty;
     }
 
+    /**
+     * @return The selection tool
+     */
     public WorkflowSelectionTool getSelectionTool() {
         return m_selectionTool;
     }

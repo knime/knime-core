@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -306,7 +306,7 @@ class Workflow {
      * See also {@link #getBreadthFirstListOfNodeAndSuccessors()}
      *
      * @param id of node
-     * @param outPortIndex of node
+     * @param outPortIndices of node
      * @param skipWFM if true, do not include WFM in the list
      * @return map as described above.
      */
@@ -520,23 +520,22 @@ class Workflow {
      * @return set of nodes without predecessors
      */
     private LinkedHashSet<NodeID> getSourceNodes(final Set<NodeID> ids) {
-    	LinkedHashSet<NodeID> result = new LinkedHashSet<NodeID>();
-    	for (NodeID thisNode : ids) {
-    		// find the nodes in the list which are sources (i.e. not
-    		// preceded by any others in the list)
-    		Set<ConnectionContainer> incomingConns
-    		= m_connectionsByDest.get(thisNode);
-    		boolean isSource = true;
-    		for (ConnectionContainer thisConn : incomingConns) {
-    			if (ids.contains(thisConn.getSource())) {
-    				isSource = false;
-    			}
-    		}
-    		if (isSource) {
-    			result.add(thisNode);
-    		}
-    	}
-    	return result;
+        LinkedHashSet<NodeID> result = new LinkedHashSet<NodeID>();
+        for (NodeID thisNode : ids) {
+            // find the nodes in the list which are sources (i.e. not
+            // preceded by any others in the list)
+            Set<ConnectionContainer> incomingConns = m_connectionsByDest.get(thisNode);
+            boolean isSource = true;
+            for (ConnectionContainer thisConn : incomingConns) {
+                if (ids.contains(thisConn.getSource())) {
+                    isSource = false;
+                }
+            }
+            if (isSource) {
+                result.add(thisNode);
+            }
+        }
+        return result;
     }
 
     /** Return list of nodes, which are either source nodes (no inputs) in this workflow or which are connected to
@@ -1217,7 +1216,7 @@ class Workflow {
             if (hasInsideConnection || outsideCount > 0) {
                 isConnected = true;
                 if (hasInsideConnection && outsideCount > 0) {
-                    message = "Connected to one upstream node and" + outsideCount + " downstream node(s)";
+                    message = "Connected to one upstream node and " + outsideCount + " downstream node(s)";
                 } else if (hasInsideConnection) {
                     // could also be a through conn but we ignore here
                     message = "Connected to one upstream node";
@@ -1233,13 +1232,113 @@ class Workflow {
         return result;
     }
 
+    /** Implementation of {@link WorkflowManager#getSubnodeInputPortInfo(NodeID)}.
+     * @param subNodeID ...
+     * @return ...
+     */
+    MetaPortInfo[] getSubnodeInputPortInfo(final NodeID subNodeID) {
+        SubNodeContainer snc = (SubNodeContainer)m_nodes.get(subNodeID);
+        WorkflowManager wfm = snc.getWorkflowManager();
+        Workflow wfmFlow = wfm.getWorkflow();
+        NodeContainer inNode = wfm.getNodeContainer(snc.getVirtualInNodeID());
+
+        List<MetaPortInfo> result = new ArrayList<MetaPortInfo>(inNode.getNrOutPorts());
+        for (int i = 0; i < inNode.getNrOutPorts(); i++) {
+            int insideCount = 0;
+            for (ConnectionContainer cc : wfmFlow.getConnectionsBySource(
+                    snc.getVirtualInNodeID())) {
+                if (cc.getSourcePort() == i) {
+                    // could also be a through connection
+                    insideCount += 1;
+                }
+            }
+            boolean hasOutsideConnection = false;
+            for (ConnectionContainer outCC : getConnectionsByDest(subNodeID)) {
+                if (outCC.getDestPort() == i) {
+                    hasOutsideConnection = true;
+                    break;
+                }
+            }
+            String message;
+            boolean isConnected;
+            PortType portType = inNode.getOutPort(i).getPortType();
+            if (hasOutsideConnection || insideCount > 0) {
+                isConnected = true;
+                if (hasOutsideConnection && insideCount > 0) {
+                    message = "Connected to one upstream node and "
+                        + insideCount + " downstream node(s)";
+                } else if (hasOutsideConnection) {
+                    message = "Connected to one upstream node";
+                } else {
+                    message = "Connected to " + insideCount + " downstream node(s)";
+                }
+            } else {
+                isConnected = false;
+                message = null;
+            }
+            result.add(new MetaPortInfo(portType, isConnected, message, i));
+        }
+        return result.toArray(new MetaPortInfo[result.size()]);
+    }
+
+    /** Implementation of {@link WorkflowManager#getSubnodeOutputPortInfo(NodeID)}.
+     * @param subNodeID ...
+     * @return ...
+     */
+    MetaPortInfo[] getSubnodeOutputPortInfo(final NodeID subNodeID) {
+        SubNodeContainer snc = (SubNodeContainer)m_nodes.get(subNodeID);
+        WorkflowManager wfm = snc.getWorkflowManager();
+        Workflow wfmFlow = wfm.getWorkflow();
+        NodeContainer outNode = wfm.getNodeContainer(snc.getVirtualOutNodeID());
+
+        List<MetaPortInfo> result = new ArrayList<MetaPortInfo>(outNode.getNrInPorts());
+        for (int i = 0; i < outNode.getNrInPorts(); i++) {
+            boolean hasInsideConnection = false;
+            for (ConnectionContainer cc : wfmFlow.getConnectionsByDest(snc.getVirtualOutNodeID())) {
+                if (cc.getDestPort() == i) {
+                    hasInsideConnection = true;
+                    break;
+                }
+            }
+            int outsideCount = 0;
+            for (ConnectionContainer outCC : getConnectionsBySource(subNodeID)) {
+                if (outCC.getSourcePort() == i) {
+                    outsideCount += 1;
+                }
+            }
+            String message;
+            boolean isConnected;
+            PortType portType = outNode.getInPort(i).getPortType();
+            if (hasInsideConnection || outsideCount > 0) {
+                isConnected = true;
+                if (hasInsideConnection && outsideCount > 0) {
+                    message = "Connected to one upstream node and " + outsideCount + " downstream node(s)";
+                } else if (hasInsideConnection) {
+                    // could also be a through conn but we ignore here
+                    message = "Connected to one upstream node";
+                } else {
+                    message = "Connected to " + outsideCount + " downstream node(s)";
+                }
+            } else {
+                isConnected = false;
+                message = null;
+            }
+            result.add(new MetaPortInfo(portType, isConnected, message, i));
+        }
+        return result.toArray(new MetaPortInfo[result.size()]);
+    }
+
     /**
-     * @param newPorts */
+     * @param metaNodeID ID of the metanode
+     * @param newPorts The new ports
+     * @param includeUnchanged If connections that will not change should be included
+     * @return List of pairs of original (first) and changed (second) connections
+     */
     List<Pair<ConnectionContainer, ConnectionContainer>>
-    changeDestinationPortsForMetaNode(final NodeID metaNodeID, final MetaPortInfo[] newPorts) {
+    changeDestinationPortsForMetaNode(final NodeID metaNodeID, final MetaPortInfo[] newPorts,
+            final boolean includeUnchanged) {
         // argument node is either a contained meta node or this wfm itself
         // (latter only when updating outgoing connections)
-        assert metaNodeID.equals(getID()) || m_nodes.get(metaNodeID) instanceof WorkflowManager;
         List<Pair<ConnectionContainer, ConnectionContainer>> result =
             new ArrayList<Pair<ConnectionContainer, ConnectionContainer>>();
         final Set<ConnectionContainer> connectionsToMetaNode = m_connectionsByDest.get(metaNodeID);
@@ -1249,7 +1348,7 @@ class Workflow {
             for (MetaPortInfo mpi : newPorts) {
                 if (mpi.getOldIndex() == destPort) {
                     hasBeenFound = true;
-                    if (mpi.getNewIndex() != destPort) {
+                    if (mpi.getNewIndex() != destPort || includeUnchanged) {
                         ConnectionContainer newConn = new ConnectionContainer(cc.getSource(),
                                 cc.getSourcePort(), metaNodeID, mpi.getNewIndex(), cc.getType());
                         newConn.setUIInfo(cc.getUIInfo());
@@ -1267,14 +1366,16 @@ class Workflow {
     }
 
     /**
-     * @param metaNodeID
-     * @param newPorts
-     * @return */
+     * @param metaNodeID ID of the metanode
+     * @param newPorts The new ports
+     * @param includeUnchanged If connections that will not change should be included
+     * @return List of pairs of original (first) and changed (second) connections
+     */
     List<Pair<ConnectionContainer, ConnectionContainer>>
-    changeSourcePortsForMetaNode(final NodeID metaNodeID, final MetaPortInfo[] newPorts) {
+    changeSourcePortsForMetaNode(final NodeID metaNodeID, final MetaPortInfo[] newPorts,
+            final boolean includeUnchanged) {
         // argument node is either a contained meta node or this wfm itself
         // (latter only when updating outgoing connections)
-        assert metaNodeID.equals(getID()) || m_nodes.get(metaNodeID) instanceof WorkflowManager;
         List<Pair<ConnectionContainer, ConnectionContainer>> result =
             new ArrayList<Pair<ConnectionContainer, ConnectionContainer>>();
         final Set<ConnectionContainer> connectionsFromMetaNode = m_connectionsBySource.get(metaNodeID);
@@ -1284,7 +1385,7 @@ class Workflow {
             for (MetaPortInfo mpi : newPorts) {
                 if (mpi.getOldIndex() == sourcePort) {
                     hasBeenFound = true;
-                    if (mpi.getNewIndex() != sourcePort) {
+                    if (mpi.getNewIndex() != sourcePort || includeUnchanged) {
                         ConnectionContainer newConn = new ConnectionContainer(metaNodeID,
                                 mpi.getNewIndex(), cc.getDest(), cc.getDestPort(), cc.getType());
                         newConn.setUIInfo(cc.getUIInfo());
