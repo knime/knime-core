@@ -1253,7 +1253,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.10 */
     public MetaPortInfo[] getSubnodeInputPortInfo(final NodeID subNodeID) {
         synchronized (m_workflowMutex) {
-            return m_workflow.getSubnodeInputPortInfo(subNodeID);
+            return getSubNodeContainer(subNodeID).getInputPortInfo();
         }
     }
 
@@ -1265,7 +1265,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.10 */
     public MetaPortInfo[] getSubnodeOutputPortInfo(final NodeID subNodeID) {
         synchronized (m_workflowMutex) {
-            return m_workflow.getSubnodeOutputPortInfo(subNodeID);
+            return getSubNodeContainer(subNodeID).getOutputPortInfo();
         }
     }
 
