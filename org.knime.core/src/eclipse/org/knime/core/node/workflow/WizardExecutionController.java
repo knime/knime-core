@@ -499,7 +499,7 @@ public final class WizardExecutionController {
                 m_subNodesWithWizardNodesList.get(m_levelIndex - 1), m_levelIndex - 1,
                 m_subNodesWithWizardNodesList.size());
             m_levelIndex--;
-            m_manager.resetAndConfigureNode(m_subNodesWithWizardNodesList.get(m_levelIndex));
+            m_manager.resetAndConfigureNodeAndSuccessors(m_subNodesWithWizardNodesList.get(m_levelIndex), false);
         }
     }
 

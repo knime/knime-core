@@ -4319,7 +4319,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         nc.resetJobManagerViews();
     }
 
-    /* Check all successors and the given node and make sure that
+    /** Check all successors and the given node and make sure that
      * all loops that are partially contained in the set of
      * successors are completely reset and freshly configured. This
      * is used to ensure proper reset/configure of the entire loop
@@ -4414,16 +4414,28 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param id of first node in chain to be reset.
      */
     public void resetAndConfigureNode(final NodeID id) {
+        resetAndConfigureNodeAndSuccessors(id, true);
+    }
+
+    /** Reset node and all executed successors of a specific node and
+     * launch configure storm.
+     *
+     * @param id of first node in chain to be reset.
+     * @param resetMyself If to include the node itself or only downstream nodes
+     */
+    void resetAndConfigureNodeAndSuccessors(final NodeID id, final boolean resetMyself) {
         synchronized (m_workflowMutex) {
             if (hasSuccessorInProgress(id)) {
-                // we can not reset nodes with executing successors.
-                throw new IllegalStateException(
-                    "Can not reset node (wrong state of node or successors) "
-                        + id);
+                throw new IllegalStateException("Can not reset node (wrong state of node or successors) " + id);
             }
-            resetNodeAndSuccessors(id);
+            if (resetMyself) {
+                resetNodeAndSuccessors(id);
+            } else {
+                // TODO does it need a reset-loop context, too (see resetNodeAndSuccessors)
+                resetSuccessors(id);
+            }
             // and launch configure starting with this node
-            configureNodeAndSuccessors(id, true);
+            configureNodeAndSuccessors(id, resetMyself);
             checkForNodeStateChanges(true);
         }
     }
