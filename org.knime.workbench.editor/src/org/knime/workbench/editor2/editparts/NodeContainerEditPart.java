@@ -1066,6 +1066,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     public void updateHeaderField() {
         NodeContainerFigure ncFigure = (NodeContainerFigure)getFigure();
         ncFigure.setLabelText(getNodeContainer().getName());
+        // Bug 3037 trigger refresh of bounds
+        getNodeContainer().setUIInformation(getNodeContainer().getUIInformation());
+        refreshBounds();
     }
 
     /**
