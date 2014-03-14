@@ -50,7 +50,11 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.knime.core.node.port.MetaPortInfo;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 
 /**
  * 
@@ -59,8 +63,11 @@ import org.knime.core.node.port.MetaPortInfo;
 public class Bug4890_reconfigureSubNode extends WorkflowTestCase {
     
     private NodeID m_subNode;
+    private NodeID m_varSource;
+    private NodeID m_varTarget;
     private NodeID m_diffChecker1;
     private NodeID m_diffChecker2;
+    private NodeID m_diffChecker3;
 
     /** {@inheritDoc} */
     @Override
@@ -68,8 +75,11 @@ public class Bug4890_reconfigureSubNode extends WorkflowTestCase {
         super.setUp();
         NodeID baseID = loadAndSetWorkflow();
         m_subNode = new NodeID(baseID, 8);
+        m_varSource = new NodeID(baseID, 11);
+        m_varTarget = new NodeID(baseID, 12);
         m_diffChecker1 = new NodeID(baseID, 5);
         m_diffChecker2 = new NodeID(baseID, 6);
+        m_diffChecker3 = new NodeID(baseID, 9);
     }
 
     /**
@@ -97,7 +107,33 @@ public class Bug4890_reconfigureSubNode extends WorkflowTestCase {
         executeAllAndWait();
         checkState(m_diffChecker1, InternalNodeContainerState.EXECUTED);
         checkState(m_diffChecker2, InternalNodeContainerState.EXECUTED);
-        
+        // Remove all connections, change ports to variable ports and connect var nodes
+        SubNodeContainer subNode = (SubNodeContainer)getManager().getNodeContainer(m_subNode);
+        WorkflowManager subWorkflow = subNode.getWorkflowManager();
+        List<ConnectionContainer> connections = new ArrayList<ConnectionContainer>();
+        connections.addAll(getManager().getWorkflow().getConnectionsByDest(m_subNode));
+        connections.addAll(getManager().getWorkflow().getConnectionsBySource(m_subNode));
+        for (ConnectionContainer con : connections) {
+            getManager().removeConnection(con);
+        }
+        List<NodeContainer> nodes = new ArrayList<NodeContainer>();
+        nodes.addAll(subWorkflow.getNodeContainers());
+        for (NodeContainer node : nodes) {
+            NodeID id = node.getID();
+            if (!id.equals(subNode.getVirtualInNodeID()) && !id.equals(subNode.getVirtualOutNodeID())) {
+                subWorkflow.removeNode(id);
+            }
+        }
+        MetaPortInfo[] ports = new MetaPortInfo[2];
+        ports[0] = new MetaPortInfo(FlowVariablePortObject.TYPE, 0);
+        ports[1] = new MetaPortInfo(FlowVariablePortObject.TYPE, 1);
+        getManager().changeSubNodeInputPorts(m_subNode, ports);
+        getManager().changeSubNodeOutputPorts(m_subNode, ports);
+        getManager().addConnection(m_varSource, 1, m_subNode, 1);
+        getManager().addConnection(m_subNode, 1, m_varTarget, 1);
+        subWorkflow.addConnection(subNode.getVirtualInNodeID(), 1, subNode.getVirtualOutNodeID(), 1);
+        executeAllAndWait();
+        checkState(m_diffChecker3, InternalNodeContainerState.EXECUTED);
     }
 
 }
