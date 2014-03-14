@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -106,14 +106,12 @@ public class PngHistogramDifferenceChecker extends AbstractDifferenceChecker<PNG
     private final SettingsModelDoubleBounded m_allowedDifference = new SettingsModelDoubleBounded("allowedDifference",
             5, 0, 100);
 
-    private final DialogComponentNumber m_allowedDifferenceDialogComponent = new DialogComponentNumber(
-            m_allowedDifference, "Allowed difference in %", 1);
+    private DialogComponentNumber m_allowedDifferenceDialogComponent;
 
     private final SettingsModelIntegerBounded m_numberOfBins = new SettingsModelIntegerBounded("numberOfBins", 5, 1,
             255);
 
-    private final DialogComponentNumber m_binsDialogComponent = new DialogComponentNumber(m_numberOfBins,
-            "Bins per color", 1);
+    private DialogComponentNumber m_binsDialogComponent;
 
     /**
      * {@inheritDoc}
@@ -132,7 +130,6 @@ public class PngHistogramDifferenceChecker extends AbstractDifferenceChecker<PNG
                 diff += Math.abs(referenceHisto[i][j] - testHisto[i][j]);
             }
         }
-
 
         double relativeDiff = 100 * diff / (3 * m_numberOfBins.getIntValue());
         if (relativeDiff <= m_allowedDifference.getDoubleValue()) {
@@ -196,6 +193,14 @@ public class PngHistogramDifferenceChecker extends AbstractDifferenceChecker<PNG
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
+        if (m_allowedDifferenceDialogComponent == null) {
+            m_allowedDifferenceDialogComponent =
+                    new DialogComponentNumber(m_allowedDifference, "Allowed difference in %", 1);
+        }
+        if (m_binsDialogComponent == null) {
+            m_binsDialogComponent = new DialogComponentNumber(m_numberOfBins, "Bins per color", 1);
+        }
+
         List<DialogComponent> l = new ArrayList<DialogComponent>(super.getDialogComponents());
         l.add(m_allowedDifferenceDialogComponent);
         l.add(m_binsDialogComponent);

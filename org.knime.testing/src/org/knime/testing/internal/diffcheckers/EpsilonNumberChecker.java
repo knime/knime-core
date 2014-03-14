@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -104,7 +104,7 @@ public class EpsilonNumberChecker extends AbstractDifferenceChecker<DoubleValue>
 
     private final SettingsModelDouble m_epsilon = new SettingsModelDouble("epsilon", 0.01);
 
-    private final DialogComponentNumber m_component = new DialogComponentNumber(m_epsilon, "Epsilon", 0.001);
+    private DialogComponentNumber m_component;
 
     /**
      * {@inheritDoc}
@@ -165,6 +165,10 @@ public class EpsilonNumberChecker extends AbstractDifferenceChecker<DoubleValue>
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
+        if (m_component == null) {
+            m_component = new DialogComponentNumber(m_epsilon, "Epsilon", 0.001);
+        }
+
         List<DialogComponent> l = new ArrayList<DialogComponent>(super.getDialogComponents());
         l.add(m_component);
         return l;

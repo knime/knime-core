@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -112,13 +112,11 @@ public class PngDHashChecker extends AbstractDifferenceChecker<PNGImageValue> {
     private final SettingsModelDoubleBounded m_allowedDifference = new SettingsModelDoubleBounded("allowedDifference",
             5, 0, 100);
 
-    private final DialogComponentNumber m_allowedDifferenceComponent = new DialogComponentNumber(m_allowedDifference,
-            "Allowed difference in %", 1);
+    private DialogComponentNumber m_allowedDifferenceComponent;
 
     private final SettingsModelIntegerBounded m_sampleSize = new SettingsModelIntegerBounded("sampleSize", 8, 4, 128);
 
-    private final DialogComponentNumber m_sampleSizeComponent = new DialogComponentNumber(m_sampleSize, "Sample size",
-            1);
+    private DialogComponentNumber m_sampleSizeComponent;
 
     private final ColorConvertOp m_colorConvert = new ColorConvertOp(ColorSpace.getInstance(ColorSpace.CS_GRAY), null);
 
@@ -144,7 +142,6 @@ public class PngDHashChecker extends AbstractDifferenceChecker<PNGImageValue> {
                     + m_allowedDifference.getDoubleValue() + "%");
         }
     }
-
 
     /**
      * {@inheritDoc}
@@ -199,6 +196,13 @@ public class PngDHashChecker extends AbstractDifferenceChecker<PNGImageValue> {
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
+        if (m_allowedDifferenceComponent == null) {
+            m_allowedDifferenceComponent = new DialogComponentNumber(m_allowedDifference, "Allowed difference in %", 1);
+        }
+        if (m_sampleSizeComponent == null) {
+            m_sampleSizeComponent = new DialogComponentNumber(m_sampleSize, "Sample size", 1);
+        }
+
         List<DialogComponent> l = new ArrayList<DialogComponent>(super.getDialogComponents());
         l.add(m_allowedDifferenceComponent);
         l.add(m_sampleSizeComponent);

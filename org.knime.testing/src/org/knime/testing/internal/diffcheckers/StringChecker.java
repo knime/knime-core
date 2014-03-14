@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -107,8 +107,7 @@ public class StringChecker extends AbstractDifferenceChecker<StringValue> {
 
     private final SettingsModelBoolean m_ignoreLinefeeds = new SettingsModelBoolean("ignoreLinefeeds", false);
 
-    private final DialogComponentBoolean m_component = new DialogComponentBoolean(m_ignoreLinefeeds,
-            "Ignore line feeds");
+    private DialogComponentBoolean m_component;
 
     /**
      * {@inheritDoc}
@@ -131,7 +130,7 @@ public class StringChecker extends AbstractDifferenceChecker<StringValue> {
                 }
 
                 lineB = rB.readLine();
-                if (lineB == null){
+                if (lineB == null) {
                     return OK;
                 } else {
                     return new Result("unexpected additional lines: " + lineB);
@@ -194,6 +193,10 @@ public class StringChecker extends AbstractDifferenceChecker<StringValue> {
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
+        if (m_component == null) {
+            m_component = new DialogComponentBoolean(m_ignoreLinefeeds, "Ignore line feeds");
+        }
+
         List<DialogComponent> l = new ArrayList<DialogComponent>(super.getDialogComponents());
         l.add(m_component);
         return l;

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -106,8 +106,7 @@ public class PngFullDifferenceChecker extends AbstractDifferenceChecker<PNGImage
     private final SettingsModelDoubleBounded m_allowedDifference = new SettingsModelDoubleBounded("allowedDifference",
             5, 0, 100);
 
-    private final DialogComponentNumber m_dialogComponent = new DialogComponentNumber(m_allowedDifference,
-            "Allowed difference in %", 1);
+    private DialogComponentNumber m_dialogComponent;
 
     /**
      * {@inheritDoc}
@@ -195,6 +194,10 @@ public class PngFullDifferenceChecker extends AbstractDifferenceChecker<PNGImage
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
+        if (m_dialogComponent == null) {
+            m_dialogComponent = new DialogComponentNumber(m_allowedDifference, "Allowed difference in %", 1);
+        }
+
         List<DialogComponent> l = new ArrayList<DialogComponent>(super.getDialogComponents());
         l.add(m_dialogComponent);
         return l;

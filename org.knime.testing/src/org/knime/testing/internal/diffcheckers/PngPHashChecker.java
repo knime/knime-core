@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -73,9 +73,7 @@ import org.knime.testing.core.DifferenceCheckerFactory;
 /**
  * Checker for PNGs that uses the pHash algorithm. See
  *
- * http://www.hackerfactor.com/blog/index.php?/archives/432-Looks-Like-It.html
- * and
- * http://www.phash.org/
+ * http://www.hackerfactor.com/blog/index.php?/archives/432-Looks-Like-It.html and http://www.phash.org/
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
@@ -114,17 +112,15 @@ public class PngPHashChecker extends AbstractDifferenceChecker<PNGImageValue> {
     private final SettingsModelDoubleBounded m_allowedDifference = new SettingsModelDoubleBounded("allowedDifference",
             5, 0, 100);
 
-    private final DialogComponentNumber m_allowedDifferenceComponent = new DialogComponentNumber(m_allowedDifference,
-            "Allowed difference in %", 1);
+    private DialogComponentNumber m_allowedDifferenceComponent;
 
     private final SettingsModelIntegerBounded m_sampleSize = new SettingsModelIntegerBounded("sampleSize", 32, 8, 64);
 
-    private final DialogComponentNumber m_sampleSizeComponent = new DialogComponentNumber(m_sampleSize, "Sample size",
-            1);
+    private DialogComponentNumber m_sampleSizeComponent;
 
     private final SettingsModelIntegerBounded m_dctSize = new SettingsModelIntegerBounded("dctSize", 8, 8, 64);
 
-    private final DialogComponentNumber m_dctSizeComponent = new DialogComponentNumber(m_dctSize, "DCT sample size", 1);
+    private DialogComponentNumber m_dctSizeComponent;
 
     private double[] m_dctCoefficients;
 
@@ -215,6 +211,16 @@ public class PngPHashChecker extends AbstractDifferenceChecker<PNGImageValue> {
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
+        if (m_allowedDifferenceComponent == null) {
+            m_allowedDifferenceComponent = new DialogComponentNumber(m_allowedDifference, "Allowed difference in %", 1);
+        }
+        if (m_sampleSizeComponent == null) {
+            m_sampleSizeComponent = new DialogComponentNumber(m_sampleSize, "Sample size", 1);
+        }
+        if (m_dctSizeComponent == null) {
+            m_dctSizeComponent = new DialogComponentNumber(m_dctSize, "DCT sample size", 1);
+        }
+
         List<DialogComponent> l = new ArrayList<DialogComponent>(super.getDialogComponents());
         l.add(m_allowedDifferenceComponent);
         l.add(m_sampleSizeComponent);
