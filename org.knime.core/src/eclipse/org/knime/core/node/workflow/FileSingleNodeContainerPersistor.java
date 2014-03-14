@@ -539,11 +539,11 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
                 throws CanceledExecutionException, IOException, LockFailedException {
         String settingsDotXML = singleNC.getParent().getCipherFileName(SETTINGS_FILE_NAME);
         ReferencedFile sncWorkingDirRef = singleNC.getNodeContainerDirectory();
-        if (nodeDirRef.equals(sncWorkingDirRef) && !singleNC.isDirty()) {
-            return settingsDotXML;
-        }
         File nodeDir = nodeDirRef.getFile();
         boolean nodeDirExists = nodeDir.exists();
+        if (nodeDirRef.equals(sncWorkingDirRef) && !singleNC.isDirty() && nodeDirExists) {
+            return settingsDotXML;
+        }
         boolean nodeDirDeleted = deleteChildren(nodeDir, SingleNodeContainer.DROP_DIR_NAME);
         nodeDir.mkdirs();
         if (!nodeDir.isDirectory() || !nodeDir.canWrite()) {

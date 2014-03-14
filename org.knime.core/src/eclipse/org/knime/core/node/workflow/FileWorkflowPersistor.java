@@ -2137,7 +2137,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         // name of sub-directory container node/sub-workflow settings
         // all chars which are not letter or number are replaced by '_'
         final String containerName = container.getName();
-        String nodeDirID = FileUtil.getValidFileName(containerName, container instanceof WorkflowManager ? 12 : -1);
+        String nodeDirID =
+            FileUtil.getValidFileName(containerName, container instanceof WorkflowManager
+                || container instanceof SubNodeContainer ? 12 : -1);
         nodeDirID = nodeDirID.concat(" (#" + idSuffix + ")");
 
         // try to re-use previous node dir (might be different from calculated
