@@ -137,7 +137,7 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
                     Collections.sort(valueList, colSpec.getType().getComparator());
                 }
                 m_domainValues.put(i, valueList);
-                m_parameterCount += valueList.size() - 1;
+                m_parameterCount += Math.max(0, valueList.size() - 1);
             } else {
                 m_learningCols.add(i);
                 m_isNominal.put(i, false);
