@@ -973,4 +973,12 @@ public final class SubNodeContainer extends SingleNodeContainer {
         return result.toArray(new MetaPortInfo[result.size()]);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean internalIsDirty() {
+        return m_wfm.isDirty();
+    }
+
 }

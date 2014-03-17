@@ -1314,7 +1314,15 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @return the isDirty
      */
     public final boolean isDirty() {
-        return m_isDirty;
+        return m_isDirty || internalIsDirty();
+    }
+
+    /**
+     * @return If this node is dirty
+     * @since 2.10
+     */
+    protected boolean internalIsDirty() {
+        return false;
     }
 
     /**
