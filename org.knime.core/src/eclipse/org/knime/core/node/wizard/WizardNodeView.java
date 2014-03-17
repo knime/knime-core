@@ -370,7 +370,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
      */
     @Override
     public final void callCloseView() {
-        if (m_tempFolder.exists()) {
+        if (m_tempFolder != null && m_tempFolder.exists()) {
             deleteTempFolder(m_tempFolder);
         }
     }

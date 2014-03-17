@@ -466,7 +466,7 @@ public final class WizardExecutionController {
         synchronized (m_manager.getWorkflowMutex()) {
             NodeContext.pushContext(m_manager);
             try {
-                return hasNextWizardPageInternal();
+                return hasPreviousWizardPageInternal();
             } finally {
                 NodeContext.removeLastContext();
             }
@@ -484,7 +484,7 @@ public final class WizardExecutionController {
         synchronized (m_manager.getWorkflowMutex()) {
             NodeContext.pushContext(m_manager);
             try {
-                stepNextInternal();
+                stepPreviousInternal();
             } finally {
                 NodeContext.removeLastContext();
             }
