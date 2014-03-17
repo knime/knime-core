@@ -50,7 +50,9 @@
  */
 package org.knime.testing.core.ng;
 
+import java.lang.management.LockInfo;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MonitorInfo;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.Timer;
@@ -95,9 +97,9 @@ class WorkflowExecuteTest extends WorkflowTest {
             final TestflowConfiguration flowConfiguration = new TestflowConfiguration(m_context.getWorkflowManager());
 
             watchdog = new TimerTask() {
-                private final long timeout =
-                        ((flowConfiguration.getTimeout() > 0) ? flowConfiguration.getTimeout() : m_runConfiguration
-                                .getTimeout()) * 1000;
+                private final long timeout = ((flowConfiguration.getTimeout() > 0) ? flowConfiguration.getTimeout()
+                        : m_runConfiguration.getTimeout()) * 1000;
+
                 private final long startTime = System.currentTimeMillis();
 
                 @Override
@@ -110,8 +112,9 @@ class WorkflowExecuteTest extends WorkflowTest {
                         String status =
                                 m_context.getWorkflowManager().printNodeSummary(m_context.getWorkflowManager().getID(),
                                                                                 0);
-                        String message = "Worklow running longer than " + (timeout / 1000.0) + " seconds.\n"
-                                                                                + "Node status:\n" + status;
+                        String message =
+                                "Worklow running longer than " + (timeout / 1000.0) + " seconds.\n" + "Node status:\n"
+                                        + status;
                         if (m_runConfiguration.isStacktraceOnTimeout()) {
                             message += "\nThread status:\n" + createStacktrace();
                         }
@@ -138,15 +141,74 @@ class WorkflowExecuteTest extends WorkflowTest {
 
     }
 
-
     private static String createStacktrace() {
         StringBuilder buf = new StringBuilder(4096);
 
         ThreadMXBean bean = ManagementFactory.getThreadMXBean();
         for (ThreadInfo ti : bean.dumpAllThreads(true, true)) {
-            buf.append(ti);
+            fillStackFromThread(ti, buf);
         }
         return buf.toString();
+    }
+
+    private static void fillStackFromThread(final ThreadInfo ti, final StringBuilder buf) {
+        StringBuilder sb =
+                new StringBuilder("\"" + ti.getThreadName() + "\"" + " Id=" + ti.getThreadId() + " "
+                        + ti.getThreadState());
+        if (ti.getLockName() != null) {
+            sb.append(" on " + ti.getLockName());
+        }
+        if (ti.getLockOwnerName() != null) {
+            sb.append(" owned by \"" + ti.getLockOwnerName() + "\" Id=" + ti.getLockOwnerId());
+        }
+        if (ti.isSuspended()) {
+            sb.append(" (suspended)");
+        }
+        if (ti.isInNative()) {
+            sb.append(" (in native)");
+        }
+        sb.append('\n');
+        int i = 0;
+        for (StackTraceElement ste : ti.getStackTrace()) {
+            sb.append("\tat " + ste.toString());
+            sb.append('\n');
+            if (i == 0 && ti.getLockInfo() != null) {
+                Thread.State ts = ti.getThreadState();
+                switch (ts) {
+                    case BLOCKED:
+                        sb.append("\t-  blocked on " + ti.getLockInfo());
+                        sb.append('\n');
+                        break;
+                    case WAITING:
+                        sb.append("\t-  waiting on " + ti.getLockInfo());
+                        sb.append('\n');
+                        break;
+                    case TIMED_WAITING:
+                        sb.append("\t-  waiting on " + ti.getLockInfo());
+                        sb.append('\n');
+                        break;
+                    default:
+                }
+            }
+
+            for (MonitorInfo mi : ti.getLockedMonitors()) {
+                if (mi.getLockedStackDepth() == i) {
+                    sb.append("\t-  locked " + mi);
+                    sb.append('\n');
+                }
+            }
+        }
+
+        LockInfo[] locks = ti.getLockedSynchronizers();
+        if (locks.length > 0) {
+            sb.append("\n\tNumber of locked synchronizers = " + locks.length);
+            sb.append('\n');
+            for (LockInfo li : locks) {
+                sb.append("\t- " + li);
+                sb.append('\n');
+            }
+        }
+        sb.append('\n');
     }
 
     /**
