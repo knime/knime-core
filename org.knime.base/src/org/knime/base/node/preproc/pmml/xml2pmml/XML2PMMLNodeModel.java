@@ -12,6 +12,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
@@ -24,6 +25,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -40,6 +42,8 @@ import org.w3c.dom.Document;
  * @author Alexander Fillbrunn
  */
 public class XML2PMMLNodeModel extends NodeModel {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(XML2PMMLNodeModel.class);
+
 
     /**
      * Constructor for the node model.
@@ -201,20 +205,25 @@ public class XML2PMMLNodeModel extends NodeModel {
                         return DataType.getMissingCell();
                     } else {
                         Document d = (Document)((XMLValue)cell).getDocument().cloneNode(true);
-                        boolean failed = false;
+                        String failure = null;
                         try {
                             PMMLDocument doc = PMMLDocument.Factory.parse(d);
-                            failed = !PMMLValidator.validatePMML(doc).isEmpty();
+                            if (!PMMLValidator.validatePMML(doc).isEmpty()) {
+                                failure = "Document does not conform to PMML schema";
+                            }
                         } catch (XmlException e) {
-                            e.printStackTrace();
-                            failed = true;
+                            if (!m_failOnInvalid.getBooleanValue()) {
+                                LOGGER.error("Invalid PMML in row " + row.getKey() + ": " + e.getMessage(), e);
+                            }
+                            failure = e.getMessage();
                         }
-                        if (failed) {
+
+                        if (failure != null) {
                             m_failCounter.incrementAndGet();
                             if (m_failOnInvalid.getBooleanValue()) {
-                                throw new RuntimeException("The XML is invalid");
+                                throw new RuntimeException("Invalid PMML in row " + row.getKey() + ": " + failure);
                             } else {
-                                return DataType.getMissingCell();
+                                return new MissingCell(failure);
                             }
                         } else {
                             return PMMLCellFactory.create(d);
