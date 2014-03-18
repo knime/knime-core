@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -134,8 +134,8 @@ public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandle
         if (m_duplicateChecker == null) {
             throw new IllegalStateException("file store handler is not open");
         }
-        FileStore fs = m_loopStartFSHandler.createFileStore(name);
         m_duplicateChecker.add(name);
+        FileStore fs = m_loopStartFSHandler.createFileStoreInLoopBody(name);
         m_fileStoresInLoopCache.add(fs);
         return fs;
     }
