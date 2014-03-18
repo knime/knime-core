@@ -57,6 +57,12 @@
             id="org.knime.testing.node.filestore.create.FileStoreCreateNodeFactory">
       </node>
       <node
+            category-path="/testing"
+            expert-flag="false"
+            factory-class="org.knime.testing.node.filestore.createloopend.FileStoreCreateLoopEndNodeFactory"
+            id="org.knime.testing.node.filestore.createloopend.FileStoreCreateLoopEndNodeFactory">
+      </node>
+      <node
             after="org.knime.testing.node.config.TestConfigNodeFactory"
             category-path="/testing"
             expert-flag="false"

@@ -48,21 +48,48 @@
  * History
  *   Jun 27, 2012 (wiswedel): created
  */
-package org.knime.testing.node.filestore.create;
+package org.knime.testing.node.filestore.createloopend;
 
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+import org.knime.testing.node.filestore.create.FileStoreCreateNodeDialogPane;
 
 /**
  * 
- * @author wiswedel
+ * @author Christian Dietz, University of Konstanz
  */
-final public class FileStoreCreateNodeDialogPane extends DefaultNodeSettingsPane {
-    
-    public FileStoreCreateNodeDialogPane() {
-        final SettingsModelBoolean keepInMemorySettingsModel = FileStoreCreateNodeModel.createKeepInMemorySettingsModel();
-        addDialogComponent(new DialogComponentBoolean(keepInMemorySettingsModel, "Keep in memory"));
-    }
+public final class FileStoreCreateLoopEndNodeFactory extends
+		NodeFactory<FileStoreCreateLoopEndNodeModel> {
 
+	/** {@inheritDoc} */
+	@Override
+	public FileStoreCreateLoopEndNodeModel createNodeModel() {
+		return new FileStoreCreateLoopEndNodeModel();
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	protected int getNrNodeViews() {
+		return 0;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public NodeView<FileStoreCreateLoopEndNodeModel> createNodeView(
+			final int viewIndex, final FileStoreCreateLoopEndNodeModel nodeModel) {
+		throw new IllegalStateException();
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	protected boolean hasDialog() {
+		return true;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	protected NodeDialogPane createNodeDialogPane() {
+		return new FileStoreCreateNodeDialogPane();
+	}
 }

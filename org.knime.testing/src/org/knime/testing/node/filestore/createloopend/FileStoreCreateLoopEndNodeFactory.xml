@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="LoopEnd">
+	<name>Create FileStore Column in LoopEnd</name>
+
+	<shortDescription>
+		Creates FileStore Column in a LoopEnd node.
+	</shortDescription>
+
+	<fullDescription>
+		<intro>
+			<p>
+				Outputs simple table with one column full of FS cells.
+			</p>
+		</intro>
+	</fullDescription>
+
+	<ports>
+		<inPort name="input" index="0">...</inPort>
+		<outPort name="Table with one FS cell column" index="0">...</outPort>
+	</ports>
+</knimeNode>

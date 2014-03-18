@@ -84,15 +84,15 @@ public class FileStoreCreateNodeModel extends NodeModel {
 
     /**
      *  */
-    FileStoreCreateNodeModel() {
+    protected FileStoreCreateNodeModel() {
         super(1, 1);
     }
 
     private ColumnRearranger createColumnRearranger(final DataTableSpec spec,
             final ExecutionContext ec) {
-        ColumnRearranger r = new ColumnRearranger(spec);
-        String name = DataTableSpec.getUniqueColumnName(spec, "large-file-store");
-        DataColumnSpec s = new DataColumnSpecCreator(name, LargeFileStoreCell.TYPE).createSpec();
+        final ColumnRearranger r = new ColumnRearranger(spec);
+        final String name = DataTableSpec.getUniqueColumnName(spec, "large-file-store");
+        final DataColumnSpec s = new DataColumnSpecCreator(name, LargeFileStoreCell.TYPE).createSpec();
         final boolean keepInMemory = m_keepInMemorySettingsModel.getBooleanValue();
         r.append(new SingleCellFactory(s) {
             @Override
@@ -100,9 +100,9 @@ public class FileStoreCreateNodeModel extends NodeModel {
                 LargeFile lf;
                 final long seed = Double.doubleToLongBits(Math.random());
                 try {
-                    FileStore fs = ec.createFileStore(row.getKey().getString());
+                    final FileStore fs = ec.createFileStore(row.getKey().getString());
                     lf = LargeFile.create(fs, seed, keepInMemory);
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     throw new RuntimeException(e);
                 }
                 return new LargeFileStoreCell(lf, seed);
@@ -115,7 +115,7 @@ public class FileStoreCreateNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        ColumnRearranger r = createColumnRearranger(inSpecs[0], null);
+        final ColumnRearranger r = createColumnRearranger(inSpecs[0], null);
         return new DataTableSpec[] {r.createSpec()};
     }
 
@@ -123,8 +123,8 @@ public class FileStoreCreateNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        ColumnRearranger r = createColumnRearranger(inData[0].getSpec(), exec);
-        BufferedDataTable out = exec.createColumnRearrangeTable(
+        final ColumnRearranger r = createColumnRearranger(inData[0].getSpec(), exec);
+        final BufferedDataTable out = exec.createColumnRearrangeTable(
                 inData[0], r, exec);
         return new BufferedDataTable[] {out};
     }
@@ -155,7 +155,7 @@ public class FileStoreCreateNodeModel extends NodeModel {
             throws InvalidSettingsException {
         try {
             m_keepInMemorySettingsModel.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException e) {
+        } catch (final InvalidSettingsException e) {
             m_keepInMemorySettingsModel.setBooleanValue(false);
         }
     }
