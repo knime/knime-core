@@ -10,4 +10,4 @@ Export-Package: org.knime.base,
  org.knime.base.node.preproc.stringmanipulation.manipulator
 Require-Bundle: org.junit;bundle-version="4.8.1",
  org.knime.testing;bundle-version="2.3.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7

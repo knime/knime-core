@@ -6,5 +6,5 @@ Bundle-Version: 2.10.0.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.core.data.uri
 Require-Bundle: org.knime.core
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy

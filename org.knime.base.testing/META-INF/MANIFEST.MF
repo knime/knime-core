@@ -26,4 +26,4 @@ Export-Package: org.knime.base,
  org.knime.core.data.container.blobs
 Require-Bundle: org.junit;bundle-version="4.8.1",
  org.knime.testing;bundle-version="2.3.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7

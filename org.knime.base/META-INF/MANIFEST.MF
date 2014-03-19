@@ -270,5 +270,5 @@ Require-Bundle: org.knime.core;bundle-version="[2.10.0,3.0.0)";visibility:=reexp
  com.fasterxml.jackson;bundle-version="[2.2.2,3.0.0)",
  org.apache.commons.math3;bundle-version="[3.2.0,4.0.0)",
  javax.mail.glassfish;bundle-version="[1.4.1,2.0.0)"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Eclipse-BuddyPolicy: dependent

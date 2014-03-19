@@ -4,4 +4,4 @@ Bundle-Name: KNIME Workbench
 Bundle-SymbolicName: org.knime.workbench;singleton:=true
 Bundle-Version: 2.10.0.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7

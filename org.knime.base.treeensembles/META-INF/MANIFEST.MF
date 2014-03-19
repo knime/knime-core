@@ -7,4 +7,4 @@ Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.apache.commons.math;bundle-version="2.1.0",
  org.knime.base;bundle-version="[2.7.0,3.0.0)"
 Bundle-ActivationPolicy: lazy
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
