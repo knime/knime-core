@@ -17,6 +17,7 @@
 		<xmlbean schema="schemas" destfile="lib/schemas.jar" srcgendir="src/xmlbeans" javasource="1.5" optimize="on" debug="on" classpath="${xbean.jar}">
 			<fileset dir="src">
 				<include name="**/*.xsd" />
+				<include name="**/*.xsdconfig" />
 				<exclude name="**/pmml/schemata/**" />
 			</fileset>
 		</xmlbean>
