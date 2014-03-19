@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Sink" icon="./csvwriter.ico">
+<knimeNode icon="csvwriter.ico" type="Sink"
+    xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10.xsd">
 	<name>CSV Writer</name>
 	
 	<shortDescription>
@@ -15,6 +16,10 @@
  		it is possible to write out the data in a format that makes it 
  		impossible to read it in again (e. g. if you specify no data separator).
  		</intro>
+ 		<tab name="Settings">
+ 		<p>
+ 		    General settings regarding the output file location and formats.
+ 		</p>
  		<option name="Output file location">Enter a valid file name. 
 			You can also choose a previously selected file from the drop-down list,
 			or select a file from the &quot;Browse...&quot; dialog.
@@ -42,24 +47,31 @@
  		    existing file, <i>Append</i> will append the input table to the end
  		    of the file (possibly skipping the column header) and <i>Abort</i>
  		    will issue an error during the node's execution (to prevent
- 		    unintentional overwrite).</option>		
-        <option name="Data Separator">In the Advanced tab, you can specify the
-            character(s) that will be written out between the data items. You can
-            use &quot;\t&quot; for a tab or &quot;\n&quot; for a new line character (and must use
-            &quot;\\&quot; for a backslash) in any character sequence.
-            </option>
+ 		    unintentional overwrite).</option>
+		</tab>
+		<tab name="Advanced">
+		<p>
+		  In the Advanced tab, you can specify the character(s) that will be written 
+		  out between the data items.
+		</p>
+        <option name="Data Separator"> You can use &quot;\t&quot; for a tab or &quot;\n&quot; 
+            for a new line character (and must use &quot;\\&quot; for a backslash) in 
+            any character sequence.
+        </option>
  		<option name="Missing Value Pattern">In the Advanced tab, enter a pattern 
  			that will be written out for missing data values. Note, the missing
  			value pattern will never be put into quotes (see below).
 			</option>
-		<option name="Quote Pattern">In the Quotes tab, you can enter a left
+		</tab>
+		<tab name="Quotes">
+		<p>In the Quotes tab, you can enter a left
 		    and right quotation mark pattern. Also, select a mode, which determines
 		    when quotation marks should be placed around the data item. When quotes
 		    are used (in every mode other than &quot;never&quot;) you must also specify a 
 		    replacement pattern for the right quote. If it appears in the data
 		    item, it must be replaced (so it won&apos;t be confused with the actual
 		    closing quote). 
-		    </option>
+	    </p>
 		<option name="Quote Mode: always">Every data item written out is
 		    placed between quotation marks. (The missing value pattern is not
 		    quoted though.)
@@ -78,12 +90,14 @@
 		    marks. You should specify a replacement pattern for the data separator,
 		    if it occurs in the data item.
 			</option>
-		<option name="Comment Header">In the Comment Header tab you can add a 
+		</tab>
+		<tab name="Comment Header">
+		<p>In the Comment Header tab you can add a 
 		    comment header to the beginning of the output. Either specify your 
 		    own comment line(s) or choose from the predefined items. 
 		    If you check one of the options you must also enter a comment begin 
 		    and comment end pattern.
-			</option>
+		</p>
 		<option name="Header Content: the current creation time">If checked, a
 		    comment line with the current time and date is added.
 			</option>
@@ -106,17 +120,19 @@
 		    line comments, in contrast to block comment if you specify both
 		    patterns).
 			</option>
-		<option name="Decimal Separator">
+		</tab>
+		<tab name="Decimal Separator">
+		<p>
 		    In the tab "decimal separator" you can enter a character that is used as 
 		    decimal separator for floating point numbers. It replaces the default 
 		    character '.' then.
-		    </option>
+	    </p>
         <option name="Line Ending">
             In the tab "Advanced" you can select the line endings that are written to the file. Default value is the
             system default value, which is system dependent (LF on Linux/Unix systems, CR+LF on Windows systems). You 
             can enforce a certain line ending to generate a file that is readable on a different operating system. 
         </option>
-		    
+		</tab>
 	</fullDescription>
 	
 	<ports>
