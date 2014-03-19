@@ -111,12 +111,23 @@ public class EpsilonNumberChecker extends AbstractDifferenceChecker<DoubleValue>
      */
     @Override
     public Result check(final DoubleValue expected, final DoubleValue got) {
-        double diff = Math.abs(expected.getDoubleValue() - got.getDoubleValue());
-        if (diff <= m_epsilon.getDoubleValue()) {
+        double ev = expected.getDoubleValue();
+        double gv = got.getDoubleValue();
+
+        if (ev == gv) {
+            // for infinity the difference does not work
             return OK;
         } else {
-            return new Result("expected " + expected.getDoubleValue() + ", got " + got.getDoubleValue()
-                    + "; difference " + diff + " is greater than " + m_epsilon.getDoubleValue());
+            double diff = Math.abs(ev - gv);
+
+            if (diff <= m_epsilon.getDoubleValue()) {
+                return OK;
+            } else if (Double.isNaN(expected.getDoubleValue()) && Double.isNaN(got.getDoubleValue())) {
+                return OK;
+            } else {
+                return new Result("expected " + ev + ", got " + gv + "; difference " + diff + " is greater than "
+                        + m_epsilon.getDoubleValue());
+            }
         }
     }
 
