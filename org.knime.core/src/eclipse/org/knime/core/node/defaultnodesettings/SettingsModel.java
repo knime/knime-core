@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -124,9 +124,9 @@ public abstract class SettingsModel {
             final NodeSettingsRO settings) throws InvalidSettingsException {
 
         T result = createClone();
-        result.m_enabled = m_enabled;
+        ((SettingsModel) result).m_enabled = m_enabled;
 
-        result.readEnableStatusAndCheckModelID(settings);
+        ((SettingsModel) result).readEnableStatusAndCheckModelID(settings);
 
         // call the clone to actually read the values
         result.loadSettingsForModel(settings);

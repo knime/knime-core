@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -91,14 +91,14 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
         @Override
         public void serialize(final T cell, final DataCellDataOutput output) throws IOException {
             List<Class<? extends DataValue>> values =
-                    new ArrayList<Class<? extends DataValue>>(cell.m_adapterMap.size());
+                    new ArrayList<Class<? extends DataValue>>(((AdapterCell) cell).m_adapterMap.size());
             // temporary map which gets reduced for each data cell written
             @SuppressWarnings("unchecked")
             Map<Class<? extends DataValue>, DataCell> temp =
-                    (Map<Class<? extends DataValue>, DataCell>)cell.m_adapterMap.clone();
+                    (Map<Class<? extends DataValue>, DataCell>)((AdapterCell) cell).m_adapterMap.clone();
 
             // this may seem inefficient, but we assume that there are really only a few adapters per cell
-            for (Map.Entry<Class<? extends DataValue>, DataCell> e1 : cell.m_adapterMap.entrySet()) {
+            for (Map.Entry<Class<? extends DataValue>, DataCell> e1 : ((AdapterCell) cell).m_adapterMap.entrySet()) {
                 for (Map.Entry<Class<? extends DataValue>, DataCell> e2 : temp.entrySet()) {
                     if ((e2.getValue() == e1.getValue()) && !e2.getKey().isAssignableFrom(AdapterCell.class)) {
                         // only add value class if contents are equal AND
