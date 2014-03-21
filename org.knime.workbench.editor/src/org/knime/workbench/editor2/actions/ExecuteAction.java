@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -133,6 +133,9 @@ public class ExecuteAction extends AbstractNodeAction {
             getSelectedParts(NodeContainerEditPart.class);
         // enable if we have at least one executable node in our selection
         WorkflowManager wm = getEditor().getWorkflowManager();
+        if (wm == null) { // fixes NPE when shutting down
+            return false;
+        }
         for (int i = 0; i < parts.length; i++) {
             NodeContainer nc = parts[i].getNodeContainer();
             if (wm.canExecuteNode(nc.getID())) {
