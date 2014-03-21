@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -86,6 +86,8 @@ class NodeDescriptionParser {
                 path = "Node_v2.7.xsd";
             } else if ("http://knime.org/node/v2.8.xsd".equals(systemId)) {
                 path = "Node_v2.8.xsd";
+            } else if ("http://knime.org/node/v2.10.xsd".equals(systemId)) {
+                path = "Node_v2.10.xsd";
             } else if ("http://www.knime.org/Node.dtd".equals(systemId)) {
                 path = "Node.dtd";
             } else {
