@@ -124,6 +124,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
@@ -7324,6 +7325,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         Collection<NodeID> failedNodes = new LinkedHashSet<NodeID>();
         boolean isStateChangePredictable = false;
         final Set<NodeID> nodeIDsInPersistorSet = persistorMap.keySet();
+        // had NPE below - adding this line to get better debug information
+        CheckUtils.checkArgumentNotNull(nodeIDsInPersistorSet,
+            "NodeID list from persistor must not be null for workflow %s", getNameWithID());
         for (NodeID bfsID : m_workflow.createBreadthFirstSortedList(nodeIDsInPersistorSet, true).keySet()) {
             NodeContainer cont = getNodeContainer(bfsID);
             // initialize node container with CredentialsStore
