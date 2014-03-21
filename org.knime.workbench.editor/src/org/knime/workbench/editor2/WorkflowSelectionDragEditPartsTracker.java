@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -81,6 +81,18 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
      */
     public WorkflowSelectionDragEditPartsTracker(final EditPart sourceEditPart) {
         super(sourceEditPart);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean handleButtonDown(final int button) {
+        // don't do any state changes if this is the pan button
+        if (button != WorkflowSelectionTool.PAN_BUTTON) {
+            return super.handleButtonDown(button);
+        }
+        return true;
     }
 
     /**

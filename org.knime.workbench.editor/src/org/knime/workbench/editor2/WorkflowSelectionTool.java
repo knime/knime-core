@@ -56,7 +56,6 @@ import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.tools.SelectionTool;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.graphics.Cursor;
 
 /**
  *
@@ -64,11 +63,8 @@ import org.eclipse.swt.graphics.Cursor;
  */
 public class WorkflowSelectionTool extends SelectionTool {
 
-    private static final int STATE_PREPAN = SelectionTool.MAX_STATE << 1;
-
-    private static final int STATE_PANNING = STATE_PREPAN << 1;
-
-    private static final int PAN_BUTTON = 3; // right mouse button dragging scrolls the viewport
+    /** button for panning the editor contents with the mouse. */
+    public static final int PAN_BUTTON = 2; // middle mouse button dragging scrolls the viewport
 
     private int m_xLocation;
 
@@ -112,16 +108,10 @@ public class WorkflowSelectionTool extends SelectionTool {
      */
     @Override
     protected boolean handleButtonDown(final int button) {
-        if (button == PAN_BUTTON && getCurrentViewer().getControl() instanceof FigureCanvas
-            && stateTransition(STATE_INITIAL, STATE_PREPAN)) {
-            m_viewLocation = ((FigureCanvas)getCurrentViewer().getControl()).getViewport().getViewLocation();
-            refreshCursor();
-            return true;
-        } else if (isInState(STATE_PREPAN | STATE_PANNING)) {
-            // any other button leaves the panning state
-            setState(STATE_INITIAL);
-            refreshCursor();
-            return true;
+        if (button == PAN_BUTTON && isInState(STATE_INITIAL)) {
+            if (getCurrentViewer().getControl() instanceof FigureCanvas) {
+                m_viewLocation = ((FigureCanvas)getCurrentViewer().getControl()).getViewport().getViewLocation();
+            }
         }
         return super.handleButtonDown(button);
     }
@@ -131,28 +121,9 @@ public class WorkflowSelectionTool extends SelectionTool {
      */
     @Override
     protected boolean handleButtonUp(final int button) {
-
-        if (button == PAN_BUTTON && isInState(STATE_PREPAN | STATE_PANNING)) {
-            // prevent the context menu from showing if pan button is the context trigger
-            if (isInState(STATE_PANNING) && PAN_BUTTON == 3) {    
-                getCurrentViewer().getContextMenu().getMenu().setVisible(false);
-            }
-            setState(STATE_INITIAL);
-            refreshCursor();
-            return true;
-        }
-        return super.handleButtonUp(button);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected Cursor getDefaultCursor() {
-        if (isInState(STATE_PANNING | STATE_PREPAN)) {
-            return Cursors.HAND;
-        }
-        return super.getDefaultCursor();
+        boolean result = super.handleButtonUp(button);
+        refreshCursor();
+        return result;
     }
 
     /**
@@ -160,14 +131,23 @@ public class WorkflowSelectionTool extends SelectionTool {
      */
     @Override
     protected boolean handleDrag() {
-        if ((stateTransition(STATE_PREPAN, STATE_PANNING) || isInState(STATE_PANNING))
-            && getCurrentViewer().getControl() instanceof FigureCanvas) {
-            FigureCanvas canvas = (FigureCanvas)getCurrentViewer().getControl();
-            canvas.scrollTo(m_viewLocation.x - getDragMoveDelta().width, m_viewLocation.y - getDragMoveDelta().height);
-            return true;
-        } else {
-            return super.handleDrag();
+        if (getCurrentInput().isMouseButtonDown(PAN_BUTTON)
+                && getCurrentViewer().getControl() instanceof FigureCanvas) {
+            boolean pan = false;
+            if (stateTransition(STATE_DRAG, STATE_DRAG_IN_PROGRESS)) {
+                setCursor(Cursors.HAND);
+                pan = true;
+            } else if (isInState(STATE_DRAG_IN_PROGRESS)) {
+                pan = true;
+            }
+            if (pan) {
+                FigureCanvas canvas = (FigureCanvas)getCurrentViewer().getControl();
+                canvas.scrollTo(m_viewLocation.x - getDragMoveDelta().width, m_viewLocation.y
+                    - getDragMoveDelta().height);
+                return true;
+            }
         }
+        return super.handleDrag();
     }
 
     /**
@@ -175,11 +155,8 @@ public class WorkflowSelectionTool extends SelectionTool {
      */
     @Override
     protected boolean handleFocusLost() {
-        if (isInState(STATE_PREPAN | STATE_PANNING)) {
-            setState(STATE_INITIAL);
-            refreshCursor();
-            return true;
-        }
+        setState(STATE_INITIAL);
         return super.handleFocusLost();
     }
+
 }
