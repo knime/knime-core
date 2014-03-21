@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -91,6 +91,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.product.ProductPlugin;
 import org.osgi.framework.FrameworkUtil;
@@ -119,7 +120,7 @@ public class TipsAndTricksDialog extends Dialog {
     static {
         URL url = null;
         try {
-            url = new URL("http://www.knime.org/tips-and-tricks");
+            url = new URL("http://www.knime.org/tips-and-tricks?knid=" + KNIMEConstants.getKNIMEInstanceID());
         } catch (MalformedURLException ex) {
             // does not happen
         }

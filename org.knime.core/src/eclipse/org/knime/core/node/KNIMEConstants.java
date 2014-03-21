@@ -51,14 +51,28 @@
 package org.knime.core.node;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 import javax.swing.ImageIcon;
 
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.osgi.service.datalocation.Location;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
 import org.osgi.framework.Bundle;
+
+import com.fasterxml.uuid.EthernetAddress;
+import com.fasterxml.uuid.Generators;
 
 /**
  * Class that hold static values about the KNIME platform. This includes,
@@ -292,7 +306,7 @@ public final class KNIMEConstants {
 
 
     static {
-        BUILD_DATE = "March 05, 2014";
+        BUILD_DATE = "Nightly-Build March 21, 2014";
         String versionString;
         Bundle coreBundle = OSGIHelper.getBundle(KNIMEConstants.class);
         if (coreBundle != null) {
@@ -397,6 +411,8 @@ public final class KNIMEConstants {
     /** Global flag indicating whether assertions are enabled or disabled. */
     public static final boolean ASSERTIONS_ENABLED;
 
+    private static UUID knimeUuid;
+
     /**
      * The directory where knime will put log files and configuration files. If
      * started in eclipse, this is usually ${workspace_path}/.metadata/knime.
@@ -449,6 +465,62 @@ public final class KNIMEConstants {
             return localMachine.getHostName();
         } catch (Exception uhe) {
             return null;
+        }
+    }
+
+    /**
+     * Returns the unique ID of this KNIME installation. The ID is saved in the configuration area when KNIME is started
+     * for the first time and then read from there. If there are problems saving or reading the unique ID a random ID is
+     * returned.
+     *
+     * @return a unique ID for this KNIME installation
+     * @since 2.10
+     */
+    public static synchronized UUID getKNIMEInstanceID() {
+        if (knimeUuid == null) {
+            assignUniqueID();
+        }
+        return knimeUuid;
+    }
+
+    private static void assignUniqueID() {
+        Location configLocation = Platform.getConfigurationLocation();
+        if (configLocation != null) {
+            URL configURL = configLocation.getURL();
+            if (configURL != null) {
+                Path uniqueId = Paths.get(configURL.getPath(), "org.knime.core", "knime-id");
+
+                if (!Files.exists(uniqueId)) {
+                    try {
+                        Files.createDirectories(uniqueId.getParent());
+                        knimeUuid = Generators.timeBasedGenerator(EthernetAddress.fromInterface()).generate();
+                        try (OutputStream os = Files.newOutputStream(uniqueId)) {
+                            os.write(knimeUuid.toString().getBytes("UTF-8"));
+                        } catch (IOException ex) {
+                            NodeLogger.getLogger(KNIMEConstants.class).error(
+                                "Could not write KNIME id to '" + uniqueId.toAbsolutePath() + "': " + ex.getMessage(),
+                                ex);
+                        }
+                    } catch (IOException ex) {
+                        NodeLogger.getLogger(KNIMEConstants.class).error(
+                            "Could not create configuration directory '" + uniqueId.getParent().toAbsolutePath()
+                                + "': " + ex.getMessage(), ex);
+                    }
+                } else if (Files.isReadable(uniqueId)) {
+                    try (InputStream is = Files.newInputStream(uniqueId)) {
+                        byte[] buf = new byte[256];
+                        int read = is.read(buf);
+                        knimeUuid = UUID.fromString(new String(buf, 0, read, Charset.forName("UTF-8")));
+                    } catch (IOException ex) {
+                        NodeLogger.getLogger(KNIMEConstants.class).error(
+                            "Could not read KNIME id from '" + uniqueId.toAbsolutePath() + "': " + ex.getMessage(), ex);
+                    }
+                }
+            }
+        }
+        if (knimeUuid == null) {
+            // fall back to a random UUID
+            knimeUuid = UUID.randomUUID();
         }
     }
 

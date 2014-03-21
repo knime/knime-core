@@ -59,6 +59,7 @@ import org.eclipse.ui.internal.ide.ChooseWorkspaceDialog;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.knime.core.util.MutableBoolean;
 import org.knime.product.ProductPlugin;
+import org.knime.product.p2.RepositoryUpdater;
 
 /**
  * This class controls all aspects of the application's execution.
@@ -108,6 +109,7 @@ public class KNIMEApplication implements IApplication {
                 shell.dispose();
             }
             parseApplicationArguments(appContext);
+            RepositoryUpdater.INSTANCE.updateArtifactRepositoryURLs();
 
             int returnCode;
             if (m_checkForUpdates && checkForUpdates(shell)) {

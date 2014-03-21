@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -344,6 +344,7 @@ public final class NodeLogger {
         l.info("# max mem=" + Runtime.getRuntime().maxMemory() / (1024 * 1024)
                 + "MB");
         l.info("# application=" + OSGIHelper.getApplicationName());
+        l.info("# ID=" + KNIMEConstants.getKNIMEInstanceID());
         l.info("#############################################################");
     }
 
