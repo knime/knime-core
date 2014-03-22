@@ -105,8 +105,15 @@ div.groupname {
     text-align: center;
     font-weight: bold;
     background-color: #EEEEEE;
-    padding: 0.1em;
+    padding: 0.3em;
 }
+
+div.group-description {
+    background-color: #F8F8F8;
+    padding: 0.4em;
+    border-top: 1px solid #AAAAAA;
+}
+
 
 div#origin-bundle {
     color: #cccccc;

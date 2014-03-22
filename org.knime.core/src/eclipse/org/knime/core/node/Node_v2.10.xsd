@@ -117,10 +117,26 @@
   <xs:element name="tab">
     <xs:complexType>
       <xs:sequence>
-        <xs:element minOccurs="0" maxOccurs="1" ref="p"/>
+        <xs:element minOccurs="0" maxOccurs="1" ref="description"/>
         <xs:element maxOccurs="unbounded" ref="option"/>
       </xs:sequence>
       <xs:attribute name="name" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="description">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="br"/>
+        <xs:element ref="b"/>
+        <xs:element ref="i"/>
+        <xs:element ref="u"/>
+        <xs:element ref="a"/>
+        <xs:element ref="tt"/>
+        <xs:element ref="ul"/>
+        <xs:element ref="ol"/>
+        <xs:element ref="sup"/>
+        <xs:element ref="sub"/>
+      </xs:choice>
     </xs:complexType>
   </xs:element>
   <xs:element name="p">

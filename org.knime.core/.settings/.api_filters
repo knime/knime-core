@@ -1391,6 +1391,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/xmlbeans/org/knime/node/v210/DescriptionDocument.java" type="org.knime.node.v210.DescriptionDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v210.DescriptionDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/xmlbeans/org/knime/node/v210/FullDescriptionDocument.java" type="org.knime.node.v210.FullDescriptionDocument">
         <filter id="1110441988">
             <message_arguments>
