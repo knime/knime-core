@@ -61,7 +61,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.UUID;
+import java.util.Formatter;
+import java.util.Random;
 
 import javax.swing.ImageIcon;
 
@@ -71,9 +72,6 @@ import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
 import org.osgi.framework.Bundle;
-
-import com.fasterxml.uuid.EthernetAddress;
-import com.fasterxml.uuid.Generators;
 
 /**
  * Class that hold static values about the KNIME platform. This includes,
@@ -307,7 +305,7 @@ public final class KNIMEConstants {
 
 
     static {
-        BUILD_DATE = "Nightly-Build March 21, 2014";
+        BUILD_DATE = "Nightly-Build March 24, 2014";
         String versionString;
         Bundle coreBundle = OSGIHelper.getBundle(KNIMEConstants.class);
         if (coreBundle != null) {
@@ -412,7 +410,7 @@ public final class KNIMEConstants {
     /** Global flag indicating whether assertions are enabled or disabled. */
     public static final boolean ASSERTIONS_ENABLED;
 
-    private static UUID knimeUuid;
+    private static String knimeID;
 
     /**
      * The directory where knime will put log files and configuration files. If
@@ -471,20 +469,21 @@ public final class KNIMEConstants {
 
     /**
      * Returns the unique ID of this KNIME installation. The ID is saved in the configuration area when KNIME is started
-     * for the first time and then read from there. If there are problems saving or reading the unique ID a random ID is
-     * returned.
+     * for the first time and then read from there.
      *
      * @return a unique ID for this KNIME installation
      * @since 2.10
      */
-    public static synchronized UUID getKNIMEInstanceID() {
-        if (knimeUuid == null) {
+    public static synchronized String getKNIMEInstanceID() {
+        if (knimeID == null) {
             assignUniqueID();
         }
-        return knimeUuid;
+        return knimeID;
     }
 
     private static void assignUniqueID() {
+        Formatter idFormatter = new Formatter(new StringBuilder());
+
         Location configLocation = Platform.getConfigurationLocation();
         if (configLocation != null) {
             URL configURL = configLocation.getURL();
@@ -495,9 +494,11 @@ public final class KNIMEConstants {
                 if (!Files.exists(uniqueId)) {
                     try {
                         Files.createDirectories(uniqueId.getParent());
-                        knimeUuid = Generators.timeBasedGenerator(EthernetAddress.fromInterface()).generate();
+
+                        idFormatter.format("01-%1$016x-%2$08x", new Random().nextLong(), configURL.hashCode());
+                        knimeID = idFormatter.out().toString();
                         try (OutputStream os = Files.newOutputStream(uniqueId)) {
-                            os.write(knimeUuid.toString().getBytes("UTF-8"));
+                            os.write(knimeID.toString().getBytes("UTF-8"));
                         } catch (IOException ex) {
                             NodeLogger.getLogger(KNIMEConstants.class).error(
                                 "Could not write KNIME id to '" + uniqueId.toAbsolutePath() + "': " + ex.getMessage(),
@@ -512,7 +513,7 @@ public final class KNIMEConstants {
                     try (InputStream is = Files.newInputStream(uniqueId)) {
                         byte[] buf = new byte[256];
                         int read = is.read(buf);
-                        knimeUuid = UUID.fromString(new String(buf, 0, read, Charset.forName("UTF-8")));
+                        knimeID = new String(buf, 0, read, Charset.forName("UTF-8"));
                     } catch (IOException ex) {
                         NodeLogger.getLogger(KNIMEConstants.class).error(
                             "Could not read KNIME id from '" + uniqueId.toAbsolutePath() + "': " + ex.getMessage(), ex);
@@ -520,9 +521,8 @@ public final class KNIMEConstants {
                 }
             }
         }
-        if (knimeUuid == null) {
-            // fall back to a random UUID
-            knimeUuid = UUID.randomUUID();
+        if (knimeID == null) {
+            knimeID = idFormatter.format("01-%1$016x-%2$08x", new Random().nextLong(), 0).out().toString();
         }
     }
 

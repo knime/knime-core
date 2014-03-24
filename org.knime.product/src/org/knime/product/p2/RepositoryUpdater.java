@@ -230,7 +230,7 @@ public class RepositoryUpdater implements ProvisioningListener {
     }
 
     private static final Pattern KNID_PATTERN = Pattern
-        .compile("/knid=[0-9a-fA-F]{8,8}-[0-9a-fA-F]{4,4}-[0-9a-fA-F]{4,4}-[0-9a-fA-F]{4,4}-[0-9a-fA-F]{12,12}/");
+        .compile("/knid=[0-9a-fA-F]{2,2}-[0-9a-fA-F]{16,16}(?:-[0-9a-fA-F]+){0,}/");
 
     private static boolean urlContainsID(final URI uri) {
         return KNID_PATTERN.matcher(uri.getPath()).find();
