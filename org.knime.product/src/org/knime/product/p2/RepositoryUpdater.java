@@ -143,9 +143,7 @@ public class RepositoryUpdater implements ProvisioningListener {
      * @param uri a URI to a repository, must be known by the repository manager
      */
     private void updateArtifactRepositoryURL(final IArtifactRepositoryManager repoManager, final URI uri) {
-        if (uri.getScheme().startsWith("http")
-            && (uri.getHost().endsWith(".knime.org") || uri.getHost().endsWith(".knime.com")) && !urlContainsID(uri)) {
-
+        if (uri.getScheme().startsWith("http") && isKnimeURI(uri) && !urlContainsID(uri)) {
             boolean enabled = repoManager.isEnabled(uri);
             String knidPath =
                 (uri.getPath().endsWith("/") ? "" : "/") + "knid=" + KNIMEConstants.getKNIMEInstanceID() + "/";
@@ -173,20 +171,60 @@ public class RepositoryUpdater implements ProvisioningListener {
             RepositoryEvent event = (RepositoryEvent)o;
             if ((event.getKind() == RepositoryEvent.ADDED) && (event.getRepositoryType() == IRepository.TYPE_ARTIFACT)
                 && !urlContainsID(event.getRepositoryLocation())) {
-                BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
-                ServiceReference<IProvisioningAgent> ref = context.getServiceReference(IProvisioningAgent.class);
-                if (ref != null) {
-                    IProvisioningAgent agent = context.getService(ref);
-                    try {
-                        IArtifactRepositoryManager repoManager =
-                            (IArtifactRepositoryManager)agent.getService(IArtifactRepositoryManager.SERVICE_NAME);
-                        if (repoManager != null) {
-                            updateArtifactRepositoryURL(repoManager, event.getRepositoryLocation());
+
+                // update artifact repository location when a new repository is added
+                updateNewArtifactRepository(event);
+            } else if ((event.getKind() == RepositoryEvent.REMOVED)
+                && (event.getRepositoryType() == IRepository.TYPE_METADATA)
+                && isKnimeURI(event.getRepositoryLocation())) {
+
+                // remove modified artifact repository when the corresponding metadata repository is removed
+                removeOutdatedArtifactRepository(event);
+            }
+        }
+    }
+
+    private void removeOutdatedArtifactRepository(final RepositoryEvent event) {
+        BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ServiceReference<IProvisioningAgent> ref = context.getServiceReference(IProvisioningAgent.class);
+        if (ref != null) {
+            IProvisioningAgent agent = context.getService(ref);
+            try {
+                IArtifactRepositoryManager repoManager =
+                    (IArtifactRepositoryManager)agent.getService(IArtifactRepositoryManager.SERVICE_NAME);
+
+                if (repoManager != null) {
+                    URI removedMetadatalocation = event.getRepositoryLocation();
+                    for (URI uri : repoManager.getKnownRepositories(IRepositoryManager.REPOSITORIES_NON_LOCAL)) {
+                        if (urlContainsID(uri) && uri.toString().startsWith(removedMetadatalocation.toString())) {
+                            repoManager.removeRepository(uri);
                         }
-                    } finally {
-                        context.ungetService(ref);
+                    }
+                    for (URI uri : repoManager.getKnownRepositories(IRepositoryManager.REPOSITORIES_DISABLED)) {
+                        if (urlContainsID(uri) && uri.toString().startsWith(removedMetadatalocation.toString())) {
+                            repoManager.removeRepository(uri);
+                        }
                     }
                 }
+            } finally {
+                context.ungetService(ref);
+            }
+        }
+    }
+
+    private void updateNewArtifactRepository(final RepositoryEvent event) {
+        BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ServiceReference<IProvisioningAgent> ref = context.getServiceReference(IProvisioningAgent.class);
+        if (ref != null) {
+            IProvisioningAgent agent = context.getService(ref);
+            try {
+                IArtifactRepositoryManager repoManager =
+                    (IArtifactRepositoryManager)agent.getService(IArtifactRepositoryManager.SERVICE_NAME);
+                if (repoManager != null) {
+                    updateArtifactRepositoryURL(repoManager, event.getRepositoryLocation());
+                }
+            } finally {
+                context.ungetService(ref);
             }
         }
     }
@@ -196,5 +234,9 @@ public class RepositoryUpdater implements ProvisioningListener {
 
     private static boolean urlContainsID(final URI uri) {
         return KNID_PATTERN.matcher(uri.getPath()).find();
+    }
+
+    private static boolean isKnimeURI(final URI uri) {
+        return uri.getHost().endsWith(".knime.org") || uri.getHost().endsWith(".knime.com");
     }
 }
