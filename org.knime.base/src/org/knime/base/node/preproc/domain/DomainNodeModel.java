@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -54,25 +54,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.knime.core.data.BoundedValue;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.NominalValue;
-import org.knime.core.data.RowIterator;
-import org.knime.core.data.container.BlobWrapperDataCell;
+import org.knime.core.data.DomainCreatorColumnSelection;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -121,140 +110,49 @@ public class DomainNodeModel extends NodeModel {
         super(1, 1);
     }
 
+    private DataTableDomainCreator getDomainCreator() {
+        DataTableDomainCreator domainCreator = new DataTableDomainCreator();
+        final Set<String> possValCols = new HashSet<String>();
+        possValCols.addAll(Arrays.asList(m_possValCols));
+        final Set<String> minMaxCols = new HashSet<String>();
+        minMaxCols.addAll(Arrays.asList(m_minMaxCols));
+        domainCreator.attachColumnSelection(new DomainCreatorColumnSelection() {
+
+            @Override
+            public boolean createDomain(final DataColumnSpec colSpec) {
+                return possValCols.contains(colSpec.getName());
+            }
+
+            @Override
+            public boolean dropDomain(final DataColumnSpec colSpec) {
+                return !possValCols.contains(colSpec.getName())  && !m_possValRetainUnselected;
+            }
+
+        }, new DomainCreatorColumnSelection() {
+
+            @Override
+            public boolean createDomain(final DataColumnSpec colSpec) {
+                return minMaxCols.contains(colSpec.getName());
+            }
+
+            @Override
+            public boolean dropDomain(final DataColumnSpec colSpec) {
+                return !minMaxCols.contains(colSpec.getName())  && !m_minMaxRetainUnselected;
+            }
+
+        });
+        return domainCreator;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        final DataTableSpec oldSpec = inData[0].getDataTableSpec();
-        final int colCount = oldSpec.getNumColumns();
-        HashSet<String> possValColsHash =
-            new HashSet<String>(Arrays.asList(m_possValCols));
-        HashSet<String> minMaxColsHash =
-            new HashSet<String>(Arrays.asList(m_minMaxCols));
-        @SuppressWarnings("unchecked")
-        LinkedHashSet<DataCell>[] possVals = new LinkedHashSet[colCount];
-        DataCell[] mins = new DataCell[colCount];
-        DataCell[] maxs = new DataCell[colCount];
-        DataValueComparator[] comparators = new DataValueComparator[colCount];
-        for (int i = 0; i < colCount; i++) {
-            DataColumnSpec col = oldSpec.getColumnSpec(i);
-            if (possValColsHash.contains(col.getName())) {
-                possVals[i] = new LinkedHashSet<DataCell>();
-            } else {
-                possVals[i] = null;
-            }
-            if (minMaxColsHash.contains(col.getName())) {
-                mins[i] = DataType.getMissingCell();
-                maxs[i] = DataType.getMissingCell();
-                comparators[i] = col.getType().getComparator();
-            } else {
-                mins[i] = null;
-                maxs[i] = null;
-                comparators[i] = null;
-            }
-        }
-
-        int row = 0;
-        final double rowCount = inData[0].getRowCount();
-        for (RowIterator it = inData[0].iterator(); it.hasNext(); row++) {
-            DataRow r = it.next();
-            for (int i = 0; i < colCount; i++) {
-                DataCell c = r.getCell(i);
-                if (!c.isMissing() && possVals[i] != null) {
-                    possVals[i].add(c);
-                    if (m_maxPossValues >= 0
-                            && possVals[i].size() > m_maxPossValues) {
-                        possVals[i] = null;
-                    }
-                }
-                updateMinMax(i, c, mins, maxs, comparators);
-            }
-            exec.checkCanceled();
-            exec.setProgress(row / rowCount, "Processed row #"
-                    + (row + 1) + " (\"" + r.getKey() + "\")");
-        }
-        DataColumnSpec[] colSpec = new DataColumnSpec[colCount];
-        for (int i = 0; i < colSpec.length; i++) {
-            DataColumnSpec original = oldSpec.getColumnSpec(i);
-            String name = original.getName();
-            DataColumnDomainCreator domainCreator =
-                new DataColumnDomainCreator(original.getDomain());
-
-            if (possValColsHash.contains(name)) {
-                domainCreator.setValues(possVals[i]);
-            } else if (m_possValRetainUnselected) {
-                // use old one (already set in creator)
-            } else {
-                domainCreator.setValues(null);
-            }
-
-            if (minMaxColsHash.contains(name)) {
-                DataCell min = !mins[i].isMissing() ? mins[i] : null;
-                DataCell max = !maxs[i].isMissing() ? maxs[i] : null;
-                domainCreator.setLowerBound(min);
-                domainCreator.setUpperBound(max);
-            } else if (m_minMaxRetainUnselected) {
-                // use old one (already set in creator)
-            } else {
-                domainCreator.setLowerBound(null);
-                domainCreator.setUpperBound(null);
-            }
-
-            DataColumnSpecCreator specCreator =
-                new DataColumnSpecCreator(original);
-            specCreator.setDomain(domainCreator.createDomain());
-            colSpec[i] = specCreator.createSpec();
-        }
-        DataTableSpec newSpec = new DataTableSpec(oldSpec.getName(), colSpec);
-        BufferedDataTable o = exec.createSpecReplacerTable(inData[0], newSpec);
-        return new BufferedDataTable[]{o};
+        DataTableDomainCreator domainCreator = getDomainCreator();
+        return new BufferedDataTable[]{domainCreator.execute(inData[0], exec)};
     }
-
-    /** Updates the min and max value for an respective column. This method
-     * does nothing if the min and max values don't need to be stored, e.g.
-     * the column at hand contains string values.
-     * @param col The column of interest.
-     * @param cell The new value to check.
-     */
-    private void updateMinMax(final int col, final DataCell cell,
-        final DataCell[] mins, final DataCell[] maxs, final DataValueComparator[] comparators) {
-        if (mins[col] == null || cell.isMissing()) {
-            return;
-        }
-        DataCell value = handleNaN(cell instanceof BlobWrapperDataCell ? ((BlobWrapperDataCell)cell).getCell() : cell);
-        if (value.isMissing()) {
-            return;
-        }
-
-        Comparator<DataCell> comparator = comparators[col];
-        if (mins[col].isMissing() || (comparator.compare(value, mins[col]) < 0)) {
-            mins[col] = value;
-        }
-        if (maxs[col].isMissing() || (comparator.compare(value, maxs[col]) > 0)) {
-            maxs[col] = value;
-        }
-    }
-
-    /*
-     * Returns
-     * - the cell if it is not a DoubleValue
-     * - the cell if it is not NaN
-     * - a missing cell if it is NaN
-     */
-    private static DataCell handleNaN(final DataCell cell) {
-        if (cell.getType().isCompatible(DoubleValue.class)) {
-            if (Double.isNaN(((DoubleValue) cell).getDoubleValue())) {
-                return DataType.getMissingCell();
-            } else {
-                return cell;
-            }
-        } else {
-            return cell;
-        }
-    }
-
 
     /**
      * {@inheritDoc}
@@ -262,51 +160,8 @@ public class DomainNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
     throws InvalidSettingsException {
-        DataTableSpec oldSpec = inSpecs[0];
-        if (m_minMaxCols == null) {
-            setWarningMessage(
-                    "No configuration available, using auto-configuration.");
-            m_minMaxCols = getAllCols(BoundedValue.class, oldSpec);
-            m_possValCols = getAllCols(NominalValue.class, oldSpec);
-            m_maxPossValues = 60;
-        }
-        Set<String> possValColSet =
-            new HashSet<String>(Arrays.asList(m_possValCols));
-        Set<String> minMaxColSet =
-            new HashSet<String>(Arrays.asList(m_minMaxCols));
-        int colCount = oldSpec.getNumColumns();
-        DataColumnSpec[] colSpec = new DataColumnSpec[colCount];
-        for (int i = 0; i < colSpec.length; i++) {
-            DataColumnSpec original = oldSpec.getColumnSpec(i);
-            String name = original.getName();
-            DataColumnSpecCreator specCreator =
-                new DataColumnSpecCreator(original);
-            DataColumnDomainCreator domainCreator =
-                new DataColumnDomainCreator(original.getDomain());
-            if (possValColSet.contains(name)) {
-                // will be set to concrete values in execute
-                domainCreator.setValues(null);
-            } else if (m_possValRetainUnselected) {
-                // use old one (already set in creator)
-            } else {
-                domainCreator.setValues(null);
-            }
-
-            if (minMaxColSet.contains(name)) {
-                // will be set to concrete values in execute
-                domainCreator.setLowerBound(null);
-                domainCreator.setUpperBound(null);
-            } else if (m_minMaxRetainUnselected) {
-                // use old one (already set in creator)
-            } else {
-                domainCreator.setLowerBound(null);
-                domainCreator.setUpperBound(null);
-            }
-            specCreator.setDomain(domainCreator.createDomain());
-            colSpec[i] = specCreator.createSpec();
-        }
-        DataTableSpec newSpec = new DataTableSpec(oldSpec.getName(), colSpec);
-        return new DataTableSpec[]{newSpec};
+        DataTableDomainCreator domainCreator = getDomainCreator();
+        return new DataTableSpec[]{domainCreator.configure(inSpecs[0])};
     }
 
     /**
