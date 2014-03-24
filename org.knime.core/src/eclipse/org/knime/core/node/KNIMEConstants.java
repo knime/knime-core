@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -488,7 +489,8 @@ public final class KNIMEConstants {
         if (configLocation != null) {
             URL configURL = configLocation.getURL();
             if (configURL != null) {
-                Path uniqueId = Paths.get(configURL.getPath(), "org.knime.core", "knime-id");
+                Path uniqueId =
+                    Paths.get(URI.create(configURL.toString())).resolve("org.knime.core").resolve("knime-id");
 
                 if (!Files.exists(uniqueId)) {
                     try {
