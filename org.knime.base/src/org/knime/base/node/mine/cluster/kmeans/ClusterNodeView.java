@@ -130,10 +130,8 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
                     return;
                 }
                 for (TreePath path : m_jtree.getSelectionPaths()) {
-                    if (path.getLastPathComponent()
-                            instanceof ClusterMutableTreeNode) {
-                        RowKey rowKey = ((ClusterMutableTreeNode)path
-                                .getLastPathComponent()).getRowId();
+                    if (path.getLastPathComponent() instanceof ClusterMutableTreeNode) {
+                        RowKey rowKey = ((ClusterMutableTreeNode)path.getLastPathComponent()).getRowId();
                         m_selected.add(rowKey);
                         m_openPopup = true;
                     }
@@ -149,12 +147,9 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
             public void mouseReleased(final MouseEvent e) {
                 boolean selected = m_selected.size() > 0;
                 m_hiliteMenu.getMenuComponent(HILITE_POS).setEnabled(selected);
-                boolean hasHilite = getNodeModel()
-                        .getHiLiteHandler().getHiLitKeys().size() > 0;
-                m_hiliteMenu.getMenuComponent(UNHILITE_POS).setEnabled(
-                        selected && hasHilite);
-                m_hiliteMenu.getMenuComponent(CLEAR_POS).setEnabled(
-                        selected && hasHilite);
+                boolean hasHilite = getNodeModel().getHiLiteHandler().getHiLitKeys().size() > 0;
+                m_hiliteMenu.getMenuComponent(UNHILITE_POS).setEnabled(selected && hasHilite);
+                m_hiliteMenu.getMenuComponent(CLEAR_POS).setEnabled(selected && hasHilite);
             }
         });
         m_hiliteMenu = getHiLiteMenu();
@@ -304,20 +299,16 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
             if (!myModel.hasModel()) {
                 root = new DefaultMutableTreeNode("Empty Model");
             } else { // put cluster info into the tree
-                root = new DefaultMutableTreeNode(myModel.getNumClusters()
-                        + " Clusters");
+                root = new DefaultMutableTreeNode(myModel.getNumClusters() + " Clusters");
                 DefaultMutableTreeNode clusterParent; // TreeNode for cluster
                 // c
                 for (int c = 0; c < myModel.getNumClusters(); c++) {
                     // add information about coverage and center vector
-                    clusterParent = new ClusterMutableTreeNode(
-                            ClusterNodeModel.CLUSTER + c + " (coverage: "
-                                    + myModel.getClusterCoverage(c) + ")",
-                            new RowKey(ClusterNodeModel.CLUSTER + c));
+                    clusterParent = new ClusterMutableTreeNode(ClusterNodeModel.CLUSTER + c + " (coverage: "
+                                    + myModel.getClusterCoverage(c) + ")", new RowKey(ClusterNodeModel.CLUSTER + c));
                     for (int i = 0; i < myModel.getNrUsedColumns(); i++) {
                         clusterParent.add(new DefaultMutableTreeNode(
-                                  myModel.getFeatureName(i) + " = "
-                                + myModel.getClusterCenter(c)[i]));
+                                  myModel.getFeatureName(i) + " = " + myModel.getClusterCenter(c)[i]));
                     }
                     root.add(clusterParent);
                 }
@@ -336,7 +327,7 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
          * purposes.
          *
          * @param o the object to be displayed
-         * @param rowId the row key srtored internally
+         * @param rowId the row key stored internally
          */
         public ClusterMutableTreeNode(final Object o, final RowKey rowId) {
             super(o);
@@ -366,8 +357,7 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
             if (value instanceof ClusterMutableTreeNode) {
                 // can cast and check whether it is hilited
                 ClusterMutableTreeNode node = (ClusterMutableTreeNode)value;
-                m_isHilite = getNodeModel()
-                        .getHiLiteHandler().isHiLit(node.getRowId());
+                m_isHilite = getNodeModel().getHiLiteHandler().isHiLit(node.getRowId());
             } else {
                 m_isHilite = false;
             }
@@ -386,8 +376,7 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
             }
             setTextSelectionColor(Color.BLACK);
             setTextNonSelectionColor(Color.BLACK);
-            return super.getTreeCellRendererComponent(tree, value, sel,
-                    expanded, leaf, row, hasFoc);
+            return super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFoc);
         }
     }
 }
