@@ -55,7 +55,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
-import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -488,8 +487,13 @@ public final class KNIMEConstants {
         if (configLocation != null) {
             URL configURL = configLocation.getURL();
             if (configURL != null) {
-                Path uniqueId =
-                    Paths.get(URI.create(configURL.toString())).resolve("org.knime.core").resolve("knime-id");
+                String path = configURL.getPath();
+                if (Platform.OS_WIN32.equals(Platform.getOS()) && path.matches("^/[a-zA-Z]:/.*")) {
+                    // Windows path with drive letter => remove first slash
+                    path = path.substring(1);
+                }
+
+                Path uniqueId = Paths.get(path, "org.knime.core", "knime-id");
 
                 if (!Files.exists(uniqueId)) {
                     try {
