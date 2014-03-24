@@ -150,7 +150,7 @@ public class ClusterNodeModel extends NodeModel {
 
     private final HiLiteTranslator m_translator = new HiLiteTranslator();
 
-    private DataTableSpec m_spec;
+//    private DataTableSpec m_spec;
 
 //    private static final String CFG_PROTOTYPE = "prototype";
 
@@ -164,12 +164,10 @@ public class ClusterNodeModel extends NodeModel {
      * 02.05.2007 Dill
      */
     private final SettingsModelIntegerBounded m_nrOfClusters
-        = new SettingsModelIntegerBounded(CFG_NR_OF_CLUSTERS,
-                INITIAL_NR_CLUSTERS, 1, Integer.MAX_VALUE);
+        = new SettingsModelIntegerBounded(CFG_NR_OF_CLUSTERS, INITIAL_NR_CLUSTERS, 1, Integer.MAX_VALUE);
 
     private final SettingsModelIntegerBounded m_nrMaxIterations
-        = new SettingsModelIntegerBounded(CFG_MAX_ITERATIONS,
-                INITIAL_MAX_ITERATIONS, 1, Integer.MAX_VALUE);
+        = new SettingsModelIntegerBounded(CFG_MAX_ITERATIONS, INITIAL_MAX_ITERATIONS, 1, Integer.MAX_VALUE);
 
     private final SettingsModelFilterString m_usedColumns
         = new SettingsModelFilterString(CFG_COLUMNS);
@@ -180,9 +178,7 @@ public class ClusterNodeModel extends NodeModel {
     ClusterNodeModel() {
         super(new PortType[] {BufferedDataTable.TYPE,
                 new PortType(PMMLPortObject.class, true)},
-                new PortType[] {
-                    BufferedDataTable.TYPE,
-                    PMMLPortObject.TYPE});
+                new PortType[] {BufferedDataTable.TYPE, PMMLPortObject.TYPE});
     }
 
     /**
@@ -244,8 +240,7 @@ public class ClusterNodeModel extends NodeModel {
      *             doesn't fit
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         assert (settings != null);
         m_nrOfClusters.validateSettings(settings);
         m_nrMaxIterations.validateSettings(settings);
@@ -265,17 +260,14 @@ public class ClusterNodeModel extends NodeModel {
      * have been validated before this method is called.
      *
      * @param settings to read from
-     * @throws InvalidSettingsException if a property is not available - which
-     *             shouldn't happen...
+     * @throws InvalidSettingsException if a property is not available - which shouldn't happen...
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         assert (settings != null);
         m_nrOfClusters.loadSettingsFrom(settings);
         m_nrMaxIterations.loadSettingsFrom(settings);
-        m_dimension = m_usedColumns.getIncludeList().size()
-            + m_usedColumns.getExcludeList().size();
+        m_dimension = m_usedColumns.getIncludeList().size() + m_usedColumns.getExcludeList().size();
         try {
             m_usedColumns.loadSettingsFrom(settings);
         } catch (InvalidSettingsException ise) {
@@ -332,7 +324,7 @@ public class ClusterNodeModel extends NodeModel {
      * @return the number of used columns
      */
     int getNrUsedColumns() {
-        return m_dimension - m_nrIgnoredColumns;
+        return getDimension() - m_nrIgnoredColumns;
     }
 
     /**
@@ -384,16 +376,14 @@ public class ClusterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] data,
-            final ExecutionContext exec) throws Exception {
+    protected PortObject[] execute(final PortObject[] data, final ExecutionContext exec) throws Exception {
         // FIXME actually do something useful with missing values!
         BufferedDataTable inData = (BufferedDataTable)data[0];
-        m_spec = inData.getDataTableSpec();
+        DataTableSpec spec = inData.getDataTableSpec();
         // get dimension of feature space
         m_dimension = inData.getDataTableSpec().getNumColumns();
-        HashMap<RowKey, Set<RowKey>> mapping
-          = new HashMap<RowKey, Set<RowKey>>();
-        addExcludeColumnsToIgnoreList();
+        HashMap<RowKey, Set<RowKey>> mapping = new HashMap<RowKey, Set<RowKey>>();
+        addExcludeColumnsToIgnoreList(spec);
         initialize(inData);
         // --------- create clusters --------------
         // reserve space for cluster center updates (do batch update!)
@@ -406,13 +396,11 @@ public class ClusterNodeModel extends NodeModel {
         // main loop - until clusters stop changing or maxNrIterations reached
         int currentIteration = 0;
         boolean finished = false;
-        while ((!finished)
-                && (currentIteration < m_nrMaxIterations.getIntValue())) {
+        while ((!finished) && (currentIteration < m_nrMaxIterations.getIntValue())) {
             if (exec != null) {
                 exec.checkCanceled();
-                exec.setProgress((double)currentIteration
-                        / (double)m_nrMaxIterations.getIntValue(), "Iteration "
-                        + currentIteration);
+                exec.setProgress((double)currentIteration / (double)m_nrMaxIterations.getIntValue(),
+                                     "Iteration " + currentIteration);
             }
             // initialize counts and cluster-deltas
             for (int c = 0; c < m_nrOfClusters.getIntValue(); c++) {
@@ -438,12 +426,9 @@ public class ClusterNodeModel extends NodeModel {
                         DataCell currentCell = currentRow.getCell(i);
                         if (!m_ignoreColumn[i]) {
                             if (!currentCell.isMissing()) {
-                                delta[winner][deltaPos]
-                                              += ((DoubleValue)(currentCell))
-                                        .getDoubleValue();
+                                delta[winner][deltaPos] += ((DoubleValue)(currentCell)).getDoubleValue();
                             } else {
-                                throw new Exception("Missing Values not"
-                                    + " (yet) allowed in k-Means.");
+                                throw new Exception("Missing Values not (yet) allowed in k-Means.");
                             }
                             deltaPos++;
                         }
@@ -454,8 +439,7 @@ public class ClusterNodeModel extends NodeModel {
                     assert (winner >= 0); // let's report this during
                     // debugging!
                     // otherwise just don't reproduce result
-                    throw new IllegalStateException("No winner found: "
-                            + winner);
+                    throw new IllegalStateException("No winner found: " + winner);
                 }
             }
             // update cluster centers
@@ -487,13 +471,13 @@ public class ClusterNodeModel extends NodeModel {
         m_featureNames = new String[m_dimension];
         do {
             if (!m_ignoreColumn[j]) {
-                m_featureNames[k] = m_spec.getColumnSpec(j).getName();
+                m_featureNames[k] = spec.getColumnSpec(j).getName();
                 k++;
             }
             j++;
         } while (j < m_dimension);
         // create output container and also mapping for HiLiteing
-        DataContainer labeledInput = new DataContainer(createAppendedSpec());
+        DataContainer labeledInput = new DataContainer(createAppendedSpec(spec));
         for (DataRow row : inData) {
             int winner = findClosestPrototypeFor(row);
             DataCell cell = new StringCell(CLUSTER + winner);
@@ -509,8 +493,7 @@ public class ClusterNodeModel extends NodeModel {
         }
         labeledInput.close();
         m_translator.setMapper(new DefaultHiLiteMapper(mapping));
-        BufferedDataTable outData = exec.createBufferedDataTable(
-                labeledInput.getTable(), exec);
+        BufferedDataTable outData = exec.createBufferedDataTable(labeledInput.getTable(), exec);
 
         // handle the optional PMML input
         PMMLPortObject inPMMLPort = (PMMLPortObject)data[1];
@@ -518,19 +501,16 @@ public class ClusterNodeModel extends NodeModel {
         if (inPMMLPort != null) {
             inPMMLSpec = inPMMLPort.getSpec();
         }
-        PMMLPortObjectSpec pmmlOutSpec = createPMMLSpec(inPMMLSpec);
-        PMMLPortObject outPMMLPort
-                = new PMMLPortObject(pmmlOutSpec, inPMMLPort, m_spec);
+        PMMLPortObjectSpec pmmlOutSpec = createPMMLSpec(inPMMLSpec, spec);
+        PMMLPortObject outPMMLPort = new PMMLPortObject(pmmlOutSpec, inPMMLPort, spec);
         Set<String> columns = new LinkedHashSet<String>();
         for (String s : pmmlOutSpec.getLearningFields()) {
             columns.add(s);
         }
-        outPMMLPort.addModelTranslater(new PMMLClusterTranslator(
-                ComparisonMeasure.squaredEuclidean,
-                m_nrOfClusters.getIntValue(), m_clusters, m_clusterCoverage,
-                columns));
+        outPMMLPort.addModelTranslater(new PMMLClusterTranslator(ComparisonMeasure.squaredEuclidean,
+                m_nrOfClusters.getIntValue(), m_clusters, m_clusterCoverage, columns));
         return new PortObject[]{outData, outPMMLPort};
-    }
+     }
 
     private void initialize(final DataTable input) {
         m_dimension = input.getDataTableSpec().getNumColumns();
@@ -551,10 +531,8 @@ public class ClusterNodeModel extends NodeModel {
                         m_clusters[c][pos] = 0;
                         // missing value: replace with zero
                     } else {
-                        assert currentRow.getCell(i).getType().isCompatible(
-                                DoubleValue.class);
-                        DoubleValue currentValue = (DoubleValue)currentRow
-                                .getCell(i);
+                        assert currentRow.getCell(i).getType().isCompatible(DoubleValue.class);
+                        DoubleValue currentValue = (DoubleValue)currentRow.getCell(i);
                         m_clusters[c][pos] = currentValue.getDoubleValue();
                     }
                     pos++;
@@ -575,11 +553,8 @@ public class ClusterNodeModel extends NodeModel {
                 DataCell currentCell = row.getCell(i);
                 if (!m_ignoreColumn[i]) {
                     if (!currentCell.isMissing()) {
-                        assert currentCell.getType().isCompatible(
-                                DoubleValue.class);
-                        double d = (m_clusters[c][pos]
-                                - ((DoubleValue)(currentCell))
-                                .getDoubleValue());
+                        assert currentCell.getType().isCompatible(DoubleValue.class);
+                        double d = (m_clusters[c][pos] - ((DoubleValue)(currentCell)).getDoubleValue());
                         if (!Double.isNaN(d)) {
                             distance += d * d;
                         }
@@ -621,10 +596,10 @@ public class ClusterNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
         throws InvalidSettingsException {
-        m_spec = (DataTableSpec)inSpecs[0];
+        DataTableSpec spec = (DataTableSpec)inSpecs[0];
         // input is output spec with all double compatible values set to
         // Double.
-        m_dimension = m_spec.getNumColumns();
+        m_dimension = spec.getNumColumns();
         // Find out which columns we can use (must be Double compatible)
         // Note that, for simplicity, we still use the entire dimensionality
         // for cluster prototypes below and simply ignore useless columns.
@@ -633,25 +608,23 @@ public class ClusterNodeModel extends NodeModel {
 
         if (m_usedColumns.isKeepAllSelected()) {
             boolean hasNumericColumn = false;
-            for (DataColumnSpec colSpec : m_spec) {
+            for (DataColumnSpec colSpec : spec) {
                 if (colSpec.getType().isCompatible(DoubleValue.class)) {
                     hasNumericColumn = true;
                     break;
                 }
             }
             if (!hasNumericColumn) {
-                throw new InvalidSettingsException(
-                        "No numeric columns in input");
+                throw new InvalidSettingsException("No numeric columns in input");
             }
         } else {
             // if not configured yet fill include list with
             // double compatible columns
-            if (m_usedColumns.getIncludeList().size() == 0
-                    && m_usedColumns.getExcludeList().size() == 0) {
+            if (m_usedColumns.getIncludeList().size() == 0 && m_usedColumns.getExcludeList().size() == 0) {
                 List<String> includedColumns = new ArrayList<String>();
                 List<String> excludedColumns = new ArrayList<String>();
-                for (int i = 0; i < m_spec.getNumColumns(); i++) {
-                    DataColumnSpec colSpec = m_spec.getColumnSpec(i);
+                for (int i = 0; i < spec.getNumColumns(); i++) {
+                    DataColumnSpec colSpec = spec.getColumnSpec(i);
                     if (colSpec.getType().isCompatible(DoubleValue.class)) {
                         includedColumns.add(colSpec.getName());
                     } else {
@@ -664,19 +637,17 @@ public class ClusterNodeModel extends NodeModel {
             }
             // check if some columns are included
             if (m_usedColumns.getIncludeList().size() <= 0) {
-                setWarningMessage("No column in include list! "
-                        + "Produces one huge cluster");
+                setWarningMessage("No column in include list! Produces one huge cluster");
             }
         }
-        addExcludeColumnsToIgnoreList();
-        DataTableSpec appendedSpec = createAppendedSpec();
+        addExcludeColumnsToIgnoreList(spec);
+        DataTableSpec appendedSpec = createAppendedSpec(spec);
         // return spec for data and model outport!
         PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
-        return new PortObjectSpec[]{appendedSpec,
-                createPMMLSpec(pmmlSpec)};
+        return new PortObjectSpec[]{appendedSpec, createPMMLSpec(pmmlSpec, spec)};
     }
 
-    private DataTableSpec createAppendedSpec() {
+    private DataTableSpec createAppendedSpec(final DataTableSpec originalSpec) {
         // determine the possible values of the appended column
         DataCell[] possibleValues = new DataCell[m_nrOfClusters.getIntValue()];
         for (int i = 0; i < m_nrOfClusters.getIntValue(); i++) {
@@ -687,38 +658,31 @@ public class ClusterNodeModel extends NodeModel {
         // 1) guess an unused name for the new column (fixes bug #1022)
         String colNameGuess = "Cluster";
         int uniqueNr = 0;
-        while (m_spec.getColumnSpec(colNameGuess) != null) {
+        while (originalSpec.getColumnSpec(colNameGuess) != null) {
             uniqueNr++;
             colNameGuess = "Cluster_" + uniqueNr;
         }
         // 2) create spec
-        DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(
-                possibleValues);
-        DataColumnSpecCreator creator = new DataColumnSpecCreator(colNameGuess,
-                StringCell.TYPE);
+        DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(possibleValues);
+        DataColumnSpecCreator creator = new DataColumnSpecCreator(colNameGuess, StringCell.TYPE);
         creator.setDomain(domainCreator.createDomain());
         // create the appended column spec
         DataColumnSpec labelColSpec = creator.createSpec();
-        DataTableSpec appendedSpec = new DataTableSpec(labelColSpec);
-        return new DataTableSpec(m_spec, appendedSpec);
+        return new DataTableSpec(originalSpec, new DataTableSpec(labelColSpec));
     }
 
-    private void addExcludeColumnsToIgnoreList() {
+    private void addExcludeColumnsToIgnoreList(final DataTableSpec originalSpec) {
         // add all excluded columns to the ignore list
         m_ignoreColumn = new boolean[m_dimension];
         m_nrIgnoredColumns = 0;
         Collection<String> exclList = m_usedColumns.getExcludeList();
         for (int i = 0; i < m_dimension; i++) {
-            DataColumnSpec col = m_spec.getColumnSpec(i);
+            DataColumnSpec col = originalSpec.getColumnSpec(i);
             // ignore if not compatible with double
             boolean ignore = !col.getType().isCompatible(DoubleValue.class);
-            if (!ignore) {
-                if (m_usedColumns.isKeepAllSelected()) {
-                    // leave "ignore" untouched
-                } else {
-                    //  or if it is in the exclude list:
-                    ignore = exclList.contains(col.getName());
-                }
+            if (!ignore && !m_usedColumns.isKeepAllSelected()) {
+                //  or if it is in the exclude list:
+                ignore = exclList.contains(col.getName());
             }
             m_ignoreColumn[i] = ignore;
             if (ignore) {
@@ -727,24 +691,29 @@ public class ClusterNodeModel extends NodeModel {
         }
     }
 
-    private PMMLPortObjectSpec createPMMLSpec(final PMMLPortObjectSpec pmmlSpec)
+    private PMMLPortObjectSpec createPMMLSpec(final PMMLPortObjectSpec pmmlSpec, final DataTableSpec originalSpec)
             throws InvalidSettingsException {
         List<String> includes;
         if (m_usedColumns.isKeepAllSelected()) {
             includes = new ArrayList<String>();
-            for (DataColumnSpec col : m_spec) {
+            for (DataColumnSpec col : originalSpec) {
                 if (col.getType().isCompatible(DoubleValue.class)) {
                     includes.add(col.getName());
                 }
             }
         } else {
-            includes = m_usedColumns.getIncludeList();
+            includes = new ArrayList<String>();
+            for (String s : m_usedColumns.getIncludeList()) {
+                if (originalSpec.getColumnSpec(s).getType().isCompatible(DoubleValue.class)) {
+                    includes.add(s);
+                }
+            }
         }
         HashSet<String> colNameHash = new HashSet<String>(includes);
         // the order in this list is important, need to use the order defined
         // by DTS, not m_usedColumns
         List<String> activeCols = new LinkedList<String>();
-        for (DataColumnSpec colSpec : m_spec) {
+        for (DataColumnSpec colSpec : originalSpec) {
             String name = colSpec.getName();
             if (colNameHash.remove(name)) {
                 activeCols.add(name);
@@ -752,12 +721,10 @@ public class ClusterNodeModel extends NodeModel {
         }
         if (!colNameHash.isEmpty()) {
             throw new InvalidSettingsException("Input table does not match "
-                    + "selected columns, unable to find column(s): "
-                    + colNameHash);
+                    + "selected columns, unable to find column(s): " + colNameHash);
         }
 
-        PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
-                pmmlSpec, m_spec);
+        PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(pmmlSpec, originalSpec);
         creator.setLearningColsNames(activeCols);
         return creator.createSpec();
     }
@@ -783,8 +750,7 @@ public class ClusterNodeModel extends NodeModel {
             // ignore and set mapper to null if info is not available.
             // (fixes bug #1016)
             m_featureNames = settings.getStringArray(CFG_FEATURE_NAMES);
-            NodeSettingsRO mapSet = settings.getNodeSettings(
-                    CFG_HILITEMAPPING);
+            NodeSettingsRO mapSet = settings.getNodeSettings(CFG_HILITEMAPPING);
             m_translator.setMapper(DefaultHiLiteMapper.load(mapSet));
         } catch (InvalidSettingsException e) {
             throw new IOException(e);
@@ -806,8 +772,7 @@ public class ClusterNodeModel extends NodeModel {
             internalSettings.addDoubleArray(CFG_CLUSTER + i, m_clusters[i]);
         }
         internalSettings.addStringArray(CFG_FEATURE_NAMES, m_featureNames);
-        NodeSettingsWO mapSet =
-            internalSettings.addNodeSettings(CFG_HILITEMAPPING);
+        NodeSettingsWO mapSet = internalSettings.addNodeSettings(CFG_HILITEMAPPING);
         ((DefaultHiLiteMapper) m_translator.getMapper()).save(mapSet);
         File f = new File(internDir, SETTINGS_FILE_NAME);
         FileOutputStream out = new FileOutputStream(f);
