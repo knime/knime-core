@@ -60,11 +60,11 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Formatter;
-import java.util.Random;
+import java.security.SecureRandom;
 
 import javax.swing.ImageIcon;
 
+import org.apache.commons.codec.binary.Hex;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.knime.core.eclipseUtil.OSGIHelper;
@@ -481,8 +481,6 @@ public final class KNIMEConstants {
     }
 
     private static void assignUniqueID() {
-        Formatter idFormatter = new Formatter(new StringBuilder());
-
         Location configLocation = Platform.getConfigurationLocation();
         if (configLocation != null) {
             URL configURL = configLocation.getURL();
@@ -499,8 +497,7 @@ public final class KNIMEConstants {
                     try {
                         Files.createDirectories(uniqueId.getParent());
 
-                        idFormatter.format("01-%1$016x-%2$08x", new Random().nextLong(), configURL.hashCode());
-                        knimeID = idFormatter.out().toString();
+                        knimeID = "01-" + createUniqeID();
                         try (OutputStream os = Files.newOutputStream(uniqueId)) {
                             os.write(knimeID.toString().getBytes("UTF-8"));
                         } catch (IOException ex) {
@@ -526,8 +523,15 @@ public final class KNIMEConstants {
             }
         }
         if (knimeID == null) {
-            knimeID = idFormatter.format("01-%1$016x-%2$08x", new Random().nextLong(), 0).out().toString();
+            knimeID = "00-" + createUniqeID();
         }
+    }
+
+    private static String createUniqeID() {
+        SecureRandom rand = new SecureRandom();
+        byte[] uid = new byte[8];
+        rand.nextBytes(uid);
+        return new String(Hex.encodeHex(uid));
     }
 
     /**
