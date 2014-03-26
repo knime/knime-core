@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -202,6 +202,10 @@ public class ThreadPool {
 
         private boolean m_stopped;
 
+        // set context class loader after each runnable#run -- we had problems with some cxf web service client that
+        // hijacked the current thread and subsequent runnables were using some URL class loader set by cxf
+        private final ClassLoader m_contextClassLoaderAtInit;
+
         /**
          * Creates a new worker.
          */
@@ -209,6 +213,7 @@ public class ThreadPool {
             super("KNIME-Worker-" + workerCounter++);
             setPriority(Thread.MIN_PRIORITY + 2);
             setDaemon(true);
+            m_contextClassLoaderAtInit = getContextClassLoader();
         }
 
         /**
@@ -250,6 +255,8 @@ public class ThreadPool {
                         // prevent the worker from being terminated
                         LOGGER.error("An exception occurred while executing "
                                 + "a runnable.", ex);
+                    } finally {
+                        setContextClassLoader(m_contextClassLoaderAtInit);
                     }
                     m_runnable = null;
                 }
