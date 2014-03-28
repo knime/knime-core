@@ -236,7 +236,9 @@ public class RepositoryUpdater implements ProvisioningListener {
         return KNID_PATTERN.matcher(uri.getPath()).find();
     }
 
+    private static final Pattern KNIME_HOST_PATTERN = Pattern.compile("^(?:www|tech|update)\\.knime\\.(?:org|com)$");
+
     private static boolean isKnimeURI(final URI uri) {
-        return uri.getHost().endsWith(".knime.org") || uri.getHost().endsWith(".knime.com");
+        return KNIME_HOST_PATTERN.matcher(uri.getHost()).matches();
     }
 }
