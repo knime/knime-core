@@ -86,7 +86,7 @@ public class AddAnnotationAction extends AbstractNodeAction {
      * {@inheritDoc}
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         return !getManager().isWriteProtected();
     }
 

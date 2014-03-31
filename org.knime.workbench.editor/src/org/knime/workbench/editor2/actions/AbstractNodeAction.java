@@ -225,4 +225,18 @@ public abstract class AbstractNodeAction extends SelectionAction {
     protected WorkflowEditor getEditor() {
         return m_editor;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected final boolean calculateEnabled() {
+        return getManager() != null && internalCalculateEnabled();
+    }
+
+    /**
+     * @return If this action is enabled
+     */
+    protected abstract boolean internalCalculateEnabled();
+
 }

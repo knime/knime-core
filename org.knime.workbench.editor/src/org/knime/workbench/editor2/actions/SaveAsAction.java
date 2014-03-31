@@ -114,7 +114,7 @@ public class SaveAsAction extends AbstractNodeAction {
      * {@inheritDoc}
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         return true;
     }
 

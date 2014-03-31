@@ -78,7 +78,7 @@ public class ToggleFlowVarPortsAction extends AbstractNodeAction {
 
     /** {@inheritDoc} */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         if (getManager().isWriteProtected()) {
             return false;
         }

@@ -128,7 +128,7 @@ public class CancelAllAction extends AbstractNodeAction {
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         WorkflowManager manager = getManager();
         return manager.getParent().canCancelNode(manager.getID());
     }

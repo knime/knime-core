@@ -115,7 +115,7 @@ public class CopyAction extends AbstractClipboardAction {
      * {@inheritDoc}
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         NodeContainerEditPart[] nodeParts =
             getSelectedParts(NodeContainerEditPart.class);
         AnnotationEditPart[] annoParts =

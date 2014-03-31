@@ -113,7 +113,7 @@ public class PasteAction extends AbstractClipboardAction {
      * {@inheritDoc}
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         if (getManager().isWriteProtected()) {
             return false;
         }

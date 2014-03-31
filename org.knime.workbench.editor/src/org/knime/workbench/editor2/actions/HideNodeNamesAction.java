@@ -141,7 +141,7 @@ public class HideNodeNamesAction extends AbstractClipboardAction {
      * {@inheritDoc}
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         return true;
     }
 }

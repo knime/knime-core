@@ -129,7 +129,7 @@ public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         if (getManager().isWriteProtected()) {
             return false;
         }

@@ -124,7 +124,7 @@ public class RevealMetaNodeTemplateAction extends AbstractNodeAction {
      *         <code>WorkflowManager</code>, otherwise false
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         NodeContainerEditPart[] nodes =
             getSelectedParts(NodeContainerEditPart.class);
         if (nodes == null) {

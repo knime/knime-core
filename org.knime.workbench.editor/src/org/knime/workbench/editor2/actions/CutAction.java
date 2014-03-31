@@ -119,7 +119,7 @@ public class CutAction extends AbstractClipboardAction {
      * {@inheritDoc}
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         if (getManager().isWriteProtected()) {
             return false;
         }

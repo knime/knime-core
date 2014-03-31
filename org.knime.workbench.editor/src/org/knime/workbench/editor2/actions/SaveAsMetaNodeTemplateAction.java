@@ -126,7 +126,7 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
      *         with it, otherwise false
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         if (getManager().isWriteProtected()) {
             return false;
         }

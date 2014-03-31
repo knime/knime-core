@@ -130,7 +130,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         NodeContainerEditPart[] parts =
             getSelectedParts(NodeContainerEditPart.class);
         // enable if we have at least one executable node in our selection

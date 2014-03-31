@@ -120,7 +120,7 @@ public class DisconnectMetaNodeLinkAction extends AbstractNodeAction {
      *         <code>WorkflowManager</code>, otherwise false
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         if (getManager().isWriteProtected()) {
             return false;
         }

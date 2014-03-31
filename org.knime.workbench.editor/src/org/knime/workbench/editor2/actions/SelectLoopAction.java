@@ -115,7 +115,7 @@ public class SelectLoopAction extends AbstractNodeAction {
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         NodeContainerEditPart[] selected =
             getSelectedParts(NodeContainerEditPart.class);
         if (selected.length != 1) {

@@ -142,7 +142,7 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
      * @return true, if underlying model instance of <code>WorkflowManager</code>, otherwise false
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         NodeContainerEditPart[] nodes = getSelectedParts(NodeContainerEditPart.class);
         if (nodes.length != 1) {
             return false;

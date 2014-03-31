@@ -129,7 +129,7 @@ public class VerticAlignLayoutAction extends AbstractNodeAction {
      * {@inheritDoc}
      */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         return !getSelectedObjects().isEmpty();
     }
 }

@@ -125,7 +125,7 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
 
     /** {@inheritDoc} */
     @Override
-    protected boolean calculateEnabled() {
+    protected boolean internalCalculateEnabled() {
         NodeContainerEditPart[] parts =
             getSelectedParts(NodeContainerEditPart.class);
         for (NodeContainerEditPart p : parts) {
