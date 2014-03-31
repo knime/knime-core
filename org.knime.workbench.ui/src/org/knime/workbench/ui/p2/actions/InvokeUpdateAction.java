@@ -50,13 +50,9 @@
  */
 package org.knime.workbench.ui.p2.actions;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,9 +70,11 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
+import org.knime.workbench.ui.p2.actions.UpdateChecker.UpdateInfo;
 
 /**
- * Custom action to open the install wizard.
+ * Custom action to open the install wizard. In addition to just opening the update manager, it also checks if there is
+ * a new major or minor release available.
  *
  * @author Christoph Sieb, University of Konstanz
  * @author Thorsten Meinl, University of Konstanz
@@ -98,33 +96,19 @@ public class InvokeUpdateAction extends AbstractP2Action {
 
             monitor.beginTask("Checking for new KNIME release", repositories.length);
 
-            final List<URI> nextVersionRepositories = new ArrayList<URI>();
-            String newVersion = null;
+            final List<UpdateInfo> updateInfos = new ArrayList<UpdateInfo>();
             for (URI uri : repositories) {
                 if (monitor.isCanceled()) {
                     break;
                 }
-                if (("http".equals(uri.getScheme()) || "https".equals(uri.getScheme()))
-                    && (uri.getHost() != null) && uri.getHost().endsWith(".knime.org")) {
+                if (("http".equals(uri.getScheme()) || "https".equals(uri.getScheme())) && (uri.getHost() != null)
+                    && uri.getHost().endsWith(".knime.org")) {
                     try {
-                        URL nextVersionURL = new URL(uri.toString() + "/nextRelease.txt");
-                        monitor.subTask("Checking " + nextVersionURL);
-
-                        HttpURLConnection conn = (HttpURLConnection)nextVersionURL.openConnection();
-                        conn.setConnectTimeout(5000);
-                        conn.connect();
-                        if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                            BufferedReader in =
-                                new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
-                            String reposURL = in.readLine();
-                            String version = in.readLine();
-                            if (version != null) {
-                                newVersion = version;
-                            }
-                            in.close();
-                            nextVersionRepositories.add(new URI(reposURL));
+                        monitor.subTask("Checking " + uri.toString());
+                        UpdateInfo newRelease = UpdateChecker.checkForNewRelease(uri);
+                        if (newRelease != null) {
+                            updateInfos.add(newRelease);
                         }
-                        conn.disconnect();
                     } catch (URISyntaxException ex) {
                         // should not happen
                         LOGGER.error("Error while checking for new update sites: " + ex.getMessage(), ex);
@@ -135,21 +119,37 @@ public class InvokeUpdateAction extends AbstractP2Action {
                 monitor.worked(1);
             }
 
-            if (!nextVersionRepositories.isEmpty()) {
-                final String v = newVersion;
+            if (!updateInfos.isEmpty()) {
                 Display.getDefault().syncExec(new Runnable() {
                     @Override
                     public void run() {
                         Shell shell = PlatformUI.getWorkbench().getModalDialogShellProvider().getShell();
-                        boolean yes =
-                            MessageDialog.openQuestion(shell, "New KNIME release available", ((v != null) ? "KNIME "
-                                + v + " is available." : "A new KNIME version is available.")
-                                + " Do you want to upgrade to the new version?");
-                        if (yes) {
-                            for (URI uri : nextVersionRepositories) {
-                                provUI.getRepositoryTracker().addRepository(uri, null, provUI.getSession());
-                            }
+
+                        boolean updatePossible = true;
+                        for (UpdateInfo ui : updateInfos) {
+                            updatePossible &= ui.isUpdatePossible();
                         }
+
+                        String message = "New releases of the following components are available:\n";
+                        for (UpdateInfo ui : updateInfos) {
+                            message += "\t" + ui.getName() + "\n";
+                        }
+
+                        if (updatePossible) {
+                            message += "Do you want to upgrade to the new version?";
+                            boolean yes = MessageDialog.openQuestion(shell, "New KNIME release available", message);
+                            if (yes) {
+                                for (UpdateInfo ui : updateInfos) {
+                                    provUI.getRepositoryTracker().addRepository(ui.getUri(), null, provUI.getSession());
+                                }
+                            }
+                        } else {
+                            message +=
+                                "Unfortunately a direct update is not possible. Please download the new version"
+                                    + " from the KNIME web page.";
+                            MessageDialog.openInformation(shell, "New KNIME release available", message);
+                        }
+
                     }
                 });
             }
