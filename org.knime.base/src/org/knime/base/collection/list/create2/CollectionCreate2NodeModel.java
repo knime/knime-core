@@ -62,6 +62,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.ListCell;
 import org.knime.core.data.collection.SetCell;
@@ -147,9 +148,6 @@ public class CollectionCreate2NodeModel extends NodeModel {
         FilterResult filterResult = m_includeModel.applyTo(in);
         List<String> includes = Arrays.asList(filterResult.getIncludes());
 
-        if (includes == null || includes.isEmpty()) {
-            throw new InvalidSettingsException("Select columns to aggregate");
-        }
         String[] names = includes.toArray(new String[includes.size()]);
         final int[] colIndices = new int[names.length];
         for (int i = 0; i < names.length; i++) {
@@ -160,7 +158,12 @@ public class CollectionCreate2NodeModel extends NodeModel {
             }
             colIndices[i] = index;
         }
-        DataType comType = CollectionCellFactory.getElementType(in, colIndices);
+        DataType comType;
+        if (includes.size() == 0) {
+            comType = DataType.getType(DataCell.class);
+        } else {
+            comType = CollectionCellFactory.getElementType(in, colIndices);
+        }
         String newColName = m_newColName.getStringValue();
         DataType type;
         if (m_createSet.getBooleanValue()) {

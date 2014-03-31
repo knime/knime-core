@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,6 +50,11 @@
  */
 package org.knime.base.collection.list.create2;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
@@ -66,12 +71,22 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 public class CollectionCreate2NodeDialogPane extends DefaultNodeSettingsPane {
 
     /**
+     * Needed to check the settings while saving.
+     */
+    private SettingsModelColumnFilter2 m_columnFilterModel;
+
+    /**
+     * Needed to apply the settings.
+     */
+    private DataTableSpec m_inSpec;
+
+    /**
      *
      */
     public CollectionCreate2NodeDialogPane() {
-        SettingsModelColumnFilter2 m =
+        m_columnFilterModel =
                 CollectionCreate2NodeModel.createSettingsModel();
-        DialogComponent dc = new DialogComponentColumnFilter2(m, 0);
+        DialogComponent dc = new DialogComponentColumnFilter2(m_columnFilterModel, 0);
         addDialogComponent(dc);
 
         createNewGroup("Collection type");
@@ -104,4 +119,27 @@ public class CollectionCreate2NodeDialogPane extends DefaultNodeSettingsPane {
                 "Enter the name of the new column:", true, 25);
         addDialogComponent(col);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveAdditionalSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        super.saveAdditionalSettingsTo(settings);
+        // Check if current settings applied to current specs have at least one include
+        if (m_columnFilterModel.applyTo(m_inSpec).getIncludes().length < 1) {
+            throw new InvalidSettingsException("At least one column needs to be selected");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+        throws NotConfigurableException {
+        super.loadAdditionalSettingsFrom(settings, specs);
+        m_inSpec = specs[0];
+    }
+
 }
