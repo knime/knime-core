@@ -76,45 +76,6 @@
       </splashHandlerProductBinding>
    </extension>
    <extension
-         point="org.eclipse.ui.intro">
-      <intro
-            class="org.eclipse.ui.intro.config.CustomizableIntroPart"
-            icon="icons/gif/knime16.gif"
-            id="org.knime.product.intro"
-            label="Welcome to KNIME">
-      </intro>
-      <introProductBinding
-            introId="org.knime.product.intro"
-            productId="org.knime.product.KNIME_PRODUCT">
-      </introProductBinding>
-   </extension>
-   <extension
-         point="org.eclipse.ui.intro.config">
-      <config
-            introId="org.knime.product.intro"
-            content="intro/introContent.xml"
-            id="org.knime.product.config">
-         <presentation
-               home-page-id="org.knime.product.presentation"
-               standby-page-id="org.knime.product.presentation">
-            <implementation
-                  kind="html">
-            </implementation>
-         </presentation>
-      </config>
-   </extension>
-   <extension
-         point="org.eclipse.ui.intro.configExtension">
-      <action
-            replaces="runAction?pluginId=org.knime.product&amp;class=org.knime.product.rcp.NewProjectWizardIntroAction"
-            name="createProjectFromIntro">
-      </action>
-      <action
-            replaces="runAction?pluginId=org.knime.workbench.ui&amp;class=org.knime.workbench.ui.p2.actions.InvokeInstallSiteAction"
-            name="launchInstallWizard">
-      </action>
-   </extension>
-   <extension
          point="org.eclipse.equinox.p2.engine.actions">
       <action
             class="org.knime.product.p2.actions.ShellExec"

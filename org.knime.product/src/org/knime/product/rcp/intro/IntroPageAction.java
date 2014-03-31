@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -46,60 +46,30 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   11.08.2011 (meinl): created
+ *   26.03.2014 (thor): created
  */
-package org.knime.product.rcp;
+package org.knime.product.rcp.intro;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.PlatformUI;
 
 /**
- * Simple action that opens a browser window with the tips and tricks page.
+ * Action for showing the intro page.
  *
- * @author Thorsten Meinl, University of Konstanz
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class TipsAndTricksAction extends Action {
-    // private static final NodeLogger LOGGER = NodeLogger
-    // .getLogger(KNIMEApplicationWorkbenchAdvisor.class.getPackage()
-    // .toString() + ".TipsAndTricks");
-
-    private static final String ID = "KNIMETipsAndTricks";
-
-    /**
-     *
-     */
-    public TipsAndTricksAction() {
-        super("&Tips and Tricks");
-        setToolTipText("Opens the Tips&Tricks dialog");
-        setId(ID);
+public class IntroPageAction extends Action {
+    public IntroPageAction() {
+        super("KNIME Intro Page");
+        setToolTipText("Opens the KNIME intro page");
+        setId("KNIMEIntroPageAction");
     }
+
 
     /**
      * {@inheritDoc}
      */
     @Override
     public void run() {
-        openTipsAndTricks();
-    }
-
-    /**
-     * Opens the tips and tricks window in an editor.
-     */
-    static void openTipsAndTricks() {
-        Shell parentShell =
-                PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-        Dialog d = new TipsAndTricksDialog(parentShell);
-        d.create();
-        Rectangle shellBounds = parentShell.getBounds();
-        Point dialogSize = d.getShell().getSize();
-
-        d.getShell().setLocation(
-                shellBounds.x + (shellBounds.width - dialogSize.x) / 2,
-                shellBounds.y + (shellBounds.height - dialogSize.y) / 2);
-        d.open();
+        IntroPage.INSTANCE.show(true);
     }
 }

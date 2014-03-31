@@ -1,56 +1,157 @@
 body {
-    background: #fff url(img/KNIME_logo_white.png);
-    background-repeat: no-repeat;
-    background-position: top left;
-    color: #333;
-    font-family: Arial, sans-serif;
-    font-size: 12px;
+	color: #333;
+	font-family: Arial, sans-serif;
+	font-size: 11pt;
 }
 
-#page-links {
-    padding-top: 200px;
-    padding-left: 5px;
-    }
-
 h1 {
-    font-style: normal;
-    }
-    
-a {
-    color: #666;
-    display: block;
-    margin-bottom: 50px;
-    text-decoration: none;
-    width: 650px;
-    padding: 5px;
-    }
+	font-style: normal;
+}
 
+h2 {
+	font-size: 130%;
+}
+
+a {
+    color: #F4AB27;
+}
+
+
+div#mru {
+    width: 80%;
+    max-width: 1000px;
+    margin: 10px auto 30px auto;
+}
+
+ul#mruList li {
+	font-size: 16pt;
+	font-weight: bold;
+	list-style-image: url(img/workflow.png);
+	margin-bottom: 5px;
+}
+
+ul#mruList li a {
+    text-decoration: none;
+}
+
+
+#intro {
+	margin: 10px auto 0;
+	width: 80%;
+	max-width: 1000px;
+}
+
+#update {
+	width: 80%;
+	font-weight: bold;
+	font-size: 14pt;
+	padding: 0.6em;
+	margin: 1em auto 0 auto;
+	border: 2px groove #888;
+	background-color: #EEFFEE;
+}
+
+
+body > h2 {
+    margin: 30px auto 20px;
+    width: 80%;
+    max-width: 1000px;
+}
+
+div.link-block {
+	width: 80%;
+	overflow: hidden;
+	margin: 0 auto;
+}
+
+div.floating-link {
+    float: left;
+    width: 45%;
+    max-width: 500px;
+    min-width: 300px;
+    padding-right: 20px;
+    margin-bottom: 20px;
+    color: #666;
+}
+
+.floating-link a {
+	color: #666;
+	display: block;
+	height: 48px;
+	text-decoration: none;
+	padding: 4;
+}
 
 a .link-label {
-       padding-left: 75px;
-       font-size: 16px;
-       font-weight: bold;
-    }
-    
+	padding-left: 75px;
+	font-size: 16px;
+	font-weight: bold;
+}
+
 a .text {
-    padding-left: 75px;
-    }
-    
+	padding-left: 75px;
+}
+
+div#news h2 {
+    border-bottom: 1px solid #888;
+}
+
+
+div#tips h2 {
+	border-bottom: 1px solid #888;
+}
+
+span.field-content {
+	font-size: 115%;
+	font-weight: bold;
+}
+
+#news {
+	width: 80%;
+	max-width: 700px;
+	margin: 0 auto;
+	margin-bottom: 20px;
+	padding: 5px 5px;
+	background: #eee;
+}
+
+#tips {
+    width: 80%;
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 5px 5px;
+    background: #eee;
+}
+
+
 #install {
-    background: url(img/install.png) no-repeat 5px center;
-    height: 64px;
+	background: url(img/icon_inactive.png) no-repeat 5px center;
+}
 
-    }
 #install:hover {
-    background: #eee url(img/install_hover.png) no-repeat 5px center;
-    height: 64px; 
-    }
+	background: #eee url(img/icon_active.png) no-repeat 5px center;
+}
 
-#launch {
-    background: url(img/launch.png) no-repeat 5px center;
-    height: 64px;
-    }
-#launch:hover {
-    background: #eee url(img/launch_hover.png) no-repeat 5px center;
-    height: 64px;
-    }
+#examples {
+	background: url(img/icon_inactive.png) no-repeat 5px center;
+}
+
+#examples:hover {
+	background: #eee url(img/icon_active.png) no-repeat 5px center;
+}
+
+#learning-hub {
+	background: url(img/icon_inactive.png) no-repeat 5px center;
+}
+
+#learning-hub:hover {
+	background: #eee url(img/icon_active.png) no-repeat 5px center;
+}
+
+#new-workflow {
+	background: url(img/icon_inactive.png) no-repeat 5px center;
+}
+
+#new-workflow:hover {
+	background: #eee url(img/icon_active.png) no-repeat 5px center;
+}

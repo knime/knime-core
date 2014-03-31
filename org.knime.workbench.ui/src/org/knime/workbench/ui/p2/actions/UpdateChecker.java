@@ -100,7 +100,14 @@ public class UpdateChecker {
 
         private final boolean m_updatePossible;
 
-        UpdateInfo(final URI uri, final String name, final boolean updatePossible) {
+        /**
+         * Creates a new update info.
+         *
+         * @param uri the URI to the new update site, never <code>null</code>
+         * @param name a name for the update, never <code>null</code>
+         * @param updatePossible <code>true</code> if an direct update is possible, <code>false</code> otherwise
+         */
+        public UpdateInfo(final URI uri, final String name, final boolean updatePossible) {
             m_uri = uri;
             m_name = name;
             m_updatePossible = updatePossible;

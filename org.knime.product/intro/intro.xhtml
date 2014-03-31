@@ -1,24 +1,129 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
+<!-- 
+The intro page supports a special "intro" protocol in links which KNIME handles, e.g. intro://newWorkflow/. The
+actual meaning of the action is implemented in the IntroPage class.
+Additionally certain elements in the intro page may be hidden using the checkboxes at the bottom. There is also some
+functionality in the IntroPage class the writes the selection into a preference. When adding a new hideable block make
+sure that:
+- the <div> has a unique id
+- the <input> has a name identical to the div's id
+- add a onclick callback to the input that shows or hides the div and sets the location using the intro protocol. The
+  query parameter for the property must match the div's id
+
+See below for examples.
+ -->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+<base href="css/" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>KNIME</title>
-<link rel="stylesheet" href="css/knime.css" type="text/css" />
-</head>
+<script type="text/javascript">
+function showIntro() {
+	show = document.getElementById('show-intro').checked;
+	document.getElementById('intro').style.display=(show ? 'block' : 'none');
+	window.location.href='intro://setProperty/?intro=' + show;
+}
 
+function showMru() {
+    show = document.getElementById('show-mru').checked;
+    document.getElementById('mru').style.display=(show ? 'block' : 'none');
+    window.location.href='intro://setProperty/?mru=' + show;
+}
+</script>
+<title>KNIME Intro</title>
+<link rel="stylesheet" href="knime.css" type="text/css" />
+</head>
+<!-- This page is shown upon each startup. -->
 <body>
-  <img src="css/img/KNIME_logo_white.png" />
-    <div class="links">
-      <a href="http://org.eclipse.ui.intro/createProjectFromIntro" id="launch">
-        <h2 class="link-label">Open KNIME workbench</h2> <span class="text">Closes
-          this intro page, starts the KNIME workbench.</span> </a>
+    <img src="img/KNIME_logo.png" />
+
+    <div id="update" style="display: none;">New releases of the following components are available:
+        <ul id="update-list">
+        </ul>
+        <span style="display: none;"
+            id="update-not-possible">Unfortunately an update is not possible, but you can download the new
+            version from <a href="http://www.knime.org/downloads">http://www.knime.org/downloads</a>
+        </span>
+        <span style="display: none;" id="update-possible"> Click <a href="intro://invokeUpdate/">here</a>
+            in order to upgrade to the new version.
+        </span>
     </div>
-    <div class="links">
-      <a href="http://org.eclipse.ui.intro/launchInstallWizard" id="install">
-        <h2 class="link-label">Get additional nodes</h2> <span class="text">Launches
-          the install wizard to get additional KNIME features (Weka, R,
-          Chemistry...).</span> </a>
+
+    <div id="intro">
+    Welcome to KNIME. On the left you see your local workspace with your workflows. Some more
+        text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more
+        text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more
+        text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more
+        text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more
+        text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more
+        text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more
+        text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more
+        text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more
+        text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more
+        text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more text. Some more
+        text.
+    </div>
+
+
+    <div id="mru">
+        <h2>Most recently used workflows</h2>
+        <ul id="mruList" />
+    </div>
+
+
+    <h2>Where to go from here</h2>
+
+    <div class="link-block">
+        <div class="floating-link">
+            <a href="intro://newWorkflow/" id="new-workflow">
+                <div class="link-label">Create new workflow</div>
+                <div class="text">Create a new KNIME workflow.</div>
+            </a>
+        </div>
+
+
+        <div class="floating-link">
+            <a href="http://www.knime.org/learning-hub" id="learning-hub">
+                <div class="link-label">Learning Hub</div>
+                <div class="text">Takes you to the KNIME Learning Hub with all kinds of introductory material.</div>
+            </a>
+        </div>
+
+        <div class="floating-link">
+            <a href="intro://browseExamples/" id="examples">
+                <div class="link-label">Browse example workflows</div>
+                <div class="text">Open the KNIME Public Server and browse through numerous examples.</div>
+            </a>
+        </div>
+
+
+        <div class="floating-link">
+            <a href="intro://installExtensions/" id="install">
+                <div class="link-label">Get additional nodes</div>
+                <div class="text">Launch the install wizard to get additional KNIME features (e.g. Weka, R,
+                    Chemistry...).</div>
+            </a>
+        </div>
+
+        <div class="floating-link">
+            <a href="intro://closeIntro/" id="install">
+                <div class="link-label">Goto my workflows</div>
+                <div class="text">Closes this intro page and takes you to your workflows.</div>
+            </a>
+        </div>
+    </div>
+
+
+    <div id="news" style="display: none;">
+        <h2>News</h2>
+    </div>
+
+    <div id="tips" style="display: none;">
+        <h2>Tips &amp; Tricks</h2>
+    </div>
+    
+    <div id="properties">
+        <input type="checkbox" name="intro" id="show-intro" onclick="showIntro();"/>Show intro text
+        <input type="checkbox" name="mru" id="show-mru" onclick="showMru();"/>Show most recently used workflows
     </div>
 </body>
 </html>

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -86,6 +86,7 @@ import org.eclipse.ui.internal.registry.ActionSetRegistry;
 import org.eclipse.ui.internal.registry.IActionSetDescriptor;
 import org.eclipse.ui.views.IViewDescriptor;
 import org.eclipse.ui.views.IViewRegistry;
+import org.knime.product.rcp.intro.IntroPageAction;
 import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
 import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
 import org.knime.workbench.ui.p2.actions.InvokeInstallSiteAction;
@@ -120,7 +121,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
 
     private IWorkbenchAction m_helpSearchAction;
 
-    private IAction m_helpTipsAction;
+    private IAction m_introAction;
 
     private IWorkbenchAction m_cutAction;
 
@@ -264,8 +265,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         m_helpSearchAction = ActionFactory.HELP_SEARCH.create(window);
         register(m_helpSearchAction);
 
-        m_helpTipsAction = new TipsAndTricksAction();
-        register(m_helpTipsAction);
+        m_introAction = new IntroPageAction();
+        register(m_introAction);
 
         m_aboutAction = ActionFactory.ABOUT.create(window);
         register(m_aboutAction);
@@ -365,7 +366,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         // helpMenu.add(m_introAction);
         helpMenu.add(m_helpAction);
         helpMenu.add(m_helpSearchAction);
-        helpMenu.add(m_helpTipsAction);
+        helpMenu.add(m_introAction);
         // menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         helpMenu.add(m_aboutAction);
 
