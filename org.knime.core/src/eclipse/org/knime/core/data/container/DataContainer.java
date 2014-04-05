@@ -268,8 +268,9 @@ public class DataContainer implements RowAppender {
      * @since 2.8 */
     public static final int MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB;
 
-    /** The actual number of possible values being kept at most. See {@link #DEF_MAX_POSSIBLE_VALUES}. */
-    private static final int MAX_POSSIBLE_VALUES;
+    /** The actual number of possible values being kept at most. See {@link #DEF_MAX_POSSIBLE_VALUES}.
+     * @since 2.10 */
+    public static final int MAX_POSSIBLE_VALUES;
 
     /** Size of buffers. */
     static final int ASYNC_CACHE_SIZE;
