@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -158,6 +158,14 @@ public class DataContainer implements RowAppender {
      */
     public static final int DEF_ASYNC_CACHE_SIZE = 10;
 
+    /**
+     * The default number of possible values being kept at most. If the number of
+     * possible values in a column exceeds this values, no values will
+     * be memorized. Can be changed via system property {@link KNIMEConstants#PROPERTY_DOMAIN_MAX_POSSIBLE_VALUES}.
+     * @since 2.10
+     */
+    public static final int DEF_MAX_POSSIBLE_VALUES = 60;
+
     static {
         int size = DEF_MAX_CELLS_IN_MEMORY;
         String envCellsInMem = PROPERTY_CELLS_IN_MEMORY;
@@ -180,6 +188,25 @@ public class DataContainer implements RowAppender {
             }
         }
         MAX_CELLS_IN_MEMORY = size;
+
+        int maxPossValues = DEF_MAX_POSSIBLE_VALUES;
+        String envPossValues = KNIMEConstants.PROPERTY_DOMAIN_MAX_POSSIBLE_VALUES;
+        String valPossValues = System.getProperty(envPossValues);
+        if (valPossValues != null) {
+            String s = valPossValues.trim();
+            try {
+                int newSize = Integer.parseInt(s);
+                if (newSize < 0) {
+                    throw new NumberFormatException("max possible value count < 0" + newSize);
+                }
+                maxPossValues = newSize;
+                LOGGER.debug("Setting default count for possible domain values to " + maxPossValues);
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Unable to parse property " + envPossValues + ", using default ("
+                        + DEF_MAX_POSSIBLE_VALUES + ")", e);
+            }
+        }
+        MAX_POSSIBLE_VALUES = maxPossValues;
 
         int minFreeDiscSpaceMB = DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB;
         String minFree = System.getProperty(KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB);
@@ -241,12 +268,8 @@ public class DataContainer implements RowAppender {
      * @since 2.8 */
     public static final int MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB;
 
-    /**
-     * The number of possible values being kept at most. If the number of
-     * possible values in a column exceeds this values, no values will
-     * be memorized.
-     */
-    private static final int MAX_POSSIBLE_VALUES = 60;
+    /** The actual number of possible values being kept at most. See {@link #DEF_MAX_POSSIBLE_VALUES}. */
+    private static final int MAX_POSSIBLE_VALUES;
 
     /** Size of buffers. */
     static final int ASYNC_CACHE_SIZE;

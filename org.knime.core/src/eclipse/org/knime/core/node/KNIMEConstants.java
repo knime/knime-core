@@ -131,6 +131,12 @@ public final class KNIMEConstants {
     public static final String PROPERTY_ASYNC_WRITE_CACHE_SIZE =
         "knime.async.io.cachesize";
 
+    /** The number of nominal values kept in the domain when adding rows to a table. This is only the default and
+     * may be overruled by individual node implementations. If not specified the default is {@value
+     * org.knime.core.data.container.DataContainer#DEF_MAX_POSSIBLE_VALUES}.
+     */
+    public static final String PROPERTY_DOMAIN_MAX_POSSIBLE_VALUES = "knime.domain.valuecount";
+
     /** Java property name to set a different threshold for the number of
      * cells to be held in main memory (if memory setting is
      * "Keep only small tables in memory"). The default is {@value
