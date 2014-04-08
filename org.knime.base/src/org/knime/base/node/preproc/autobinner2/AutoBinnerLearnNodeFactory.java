@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by
+ *  Copyright by 
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,55 +40,61 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
- *
- * History
- *   19.07.2010 (hofer): created
+ * --------------------------------------------------------------------- *
  */
-package org.knime.base.node.preproc.autobinner.pmml;
+package org.knime.base.node.preproc.autobinner2;
 
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-
-import org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObject;
-import org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObjectSpec;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- *
+ * 
  * @author Heiko Hofer
  */
-public class PMMLDiscretizePreprocPortObject extends PMMLPreprocPortObject {
-
-
-    public PMMLDiscretizePreprocPortObject() {
-        // necessary for loading (see documentation of PMMLPreprocPortObject)
-    }
-
-    public PMMLDiscretizePreprocPortObject(final PMMLPreprocDiscretize operation) {
-        super(operation);
+public final class AutoBinnerLearnNodeFactory extends NodeFactory<AutoBinnerLearnNodeModel> {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AutoBinnerLearnNodeModel createNodeModel() {
+        return new AutoBinnerLearnNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public PMMLPreprocPortObjectSpec getSpec() {
-        PMMLPreprocDiscretize op =
-            (PMMLPreprocDiscretize) getOperations().get(0);
-        return new PMMLDiscretizePreprocPortObjectSpec(op);
+    public int getNrNodeViews() {
+        return 0;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public JComponent[] getViews() {
-        PMMLPreprocDiscretize op =
-            (PMMLPreprocDiscretize) getOperations().get(0);
-        String text = "Discretization on column(s): " + op.getColumnNames();
-        final JLabel jLabel = new JLabel(text);
-        jLabel.setToolTipText(text);
-        return new JComponent[] {jLabel};
+    public NodeView<AutoBinnerLearnNodeModel> createNodeView(final int viewIndex,
+        final AutoBinnerLearnNodeModel nodeModel) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * @return <b>true</b>.
+     * @see org.knime.core.node.NodeFactory#hasDialog()
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new AutoBinnerLearnNodeDialogPane();
     }
 }
-

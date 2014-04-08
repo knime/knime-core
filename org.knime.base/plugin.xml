@@ -1318,8 +1318,8 @@
       </node>
       <node
             category-path="/manipulation/column/binning"
-            factory-class="org.knime.base.node.preproc.autobinner.AutoBinnerLearnNodeFactory"
-            id="org.knime.base.node.preproc.autobinner.AutoBinnerLearnNodeFactory">
+            factory-class="org.knime.base.node.preproc.autobinner2.AutoBinnerLearnNodeFactory"
+            id="org.knime.base.node.preproc.autobinner2.AutoBinnerLearnNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/binning"
