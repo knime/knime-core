@@ -134,6 +134,7 @@ public final class KNIMEConstants {
     /** The number of nominal values kept in the domain when adding rows to a table. This is only the default and
      * may be overruled by individual node implementations. If not specified the default is {@value
      * org.knime.core.data.container.DataContainer#DEF_MAX_POSSIBLE_VALUES}.
+     * @since 2.10
      */
     public static final String PROPERTY_DOMAIN_MAX_POSSIBLE_VALUES = "knime.domain.valuecount";
 
