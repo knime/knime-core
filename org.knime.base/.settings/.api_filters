@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.base" version="2">
     <resource path="META-INF/MANIFEST.MF">
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="2.10.0"/>
+                <message_argument value="2.9.2"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="923795461">
             <message_arguments>
                 <message_argument value="2.9.0"/>
@@ -204,6 +210,142 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/columnTrans/AbstractMany2OneCellFactory.java" type="org.knime.base.node.preproc.columnTrans.AbstractMany2OneCellFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.columnTrans.AbstractMany2OneCellFactory"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/columnTrans/BinaryCellFactory.java" type="org.knime.base.node.preproc.columnTrans.BinaryCellFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.columnTrans.BinaryCellFactory"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/columnTrans/Many2OneColNodeDialog.java" type="org.knime.base.node.preproc.columnTrans.Many2OneColNodeDialog">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.columnTrans.Many2OneColNodeDialog"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/columnTrans/Many2OneColNodeFactory.java" type="org.knime.base.node.preproc.columnTrans.Many2OneColNodeFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.columnTrans.Many2OneColNodeFactory"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/columnTrans/Many2OneColNodeModel.java" type="org.knime.base.node.preproc.columnTrans.Many2OneColNodeModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.columnTrans.Many2OneColNodeModel"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/columnTrans/MinMaxCellFactory.java" type="org.knime.base.node.preproc.columnTrans.MinMaxCellFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.columnTrans.MinMaxCellFactory"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/columnTrans/One2ManyCellFactory.java" type="org.knime.base.node.preproc.columnTrans.One2ManyCellFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.columnTrans.One2ManyCellFactory"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/columnTrans/One2ManyColNodeDialog.java" type="org.knime.base.node.preproc.columnTrans.One2ManyColNodeDialog">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.columnTrans.One2ManyColNodeDialog"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/columnTrans/One2ManyColNodeFactory.java" type="org.knime.base.node.preproc.columnTrans.One2ManyColNodeFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.columnTrans.One2ManyColNodeFactory"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/columnTrans/One2ManyColNodeModel.java" type="org.knime.base.node.preproc.columnTrans.One2ManyColNodeModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.columnTrans.One2ManyColNodeModel"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/columnTrans/RegExpCellFactory.java" type="org.knime.base.node.preproc.columnTrans.RegExpCellFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.columnTrans.RegExpCellFactory"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/pmml/columnTrans/Many2OneColPMMLNodeFactory.java" type="org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeFactory"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/pmml/columnTrans/Many2OneColPMMLNodeModel.java" type="org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeModel"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/pmml/columnTrans/One2ManyColPMMLNodeFactory.java" type="org.knime.base.node.preproc.pmml.columnTrans.One2ManyColPMMLNodeFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.columnTrans.One2ManyColPMMLNodeFactory"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/pmml/columnTrans/One2ManyColPMMLNodeModel.java" type="org.knime.base.node.preproc.pmml.columnTrans.One2ManyColPMMLNodeModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.columnTrans.One2ManyColPMMLNodeModel"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/pmml/columnTrans/PMMLMany2OneTranslator.java" type="org.knime.base.node.preproc.pmml.columnTrans.PMMLMany2OneTranslator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.columnTrans.PMMLMany2OneTranslator"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/preproc/pmml/columnTrans/PMMLOne2ManyTranslator.java" type="org.knime.base.node.preproc.pmml.columnTrans.PMMLOne2ManyTranslator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.columnTrans.PMMLOne2ManyTranslator"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/data/aggregation/AggregationMethod.java" type="org.knime.base.data.aggregation.AggregationMethod">
         <filter id="403767336">
             <message_arguments>
@@ -260,14 +402,6 @@
             <message_arguments>
                 <message_argument value="org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplit"/>
                 <message_argument value="getWinnerNode(DataCell, DataRow, DataTableSpec)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/org/knime/base/node/preproc/columnTrans/Many2OneColNodeModel.java" type="org.knime.base.node.preproc.columnTrans.Many2OneColNodeModel">
-        <filter id="338886760">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.columnTrans.Many2OneColNodeModel.IncludeMethod"/>
-                <message_argument value="org.knime.base_2.8.0"/>
             </message_arguments>
         </filter>
     </resource>
