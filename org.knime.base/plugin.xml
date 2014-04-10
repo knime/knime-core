@@ -533,12 +533,12 @@
             id="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory"/>
       <node
             category-path="/manipulation/pmml"
-            factory-class="org.knime.base.node.preproc.pmml.columnTrans.One2ManyColPMMLNodeFactory"
-            id="org.knime.base.node.preproc.columnTrans.One2ManyColPMMLNodeFactory" />
+            factory-class="org.knime.base.node.preproc.pmml.columntrans2.One2ManyCol2PMMLNodeFactory"
+            id="org.knime.base.node.preproc.columntrans2.One2ManyCol2PMMLNodeFactory" />
             
         <node category-path="/manipulation/pmml" 
-        factory-class="org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeFactory"
-         id="org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeFactory"/>
+        factory-class="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory"
+         id="org.knime.base.node.preproc.pmml.columntrans2.Many2OneCol2PMMLNodeFactory"/>
          
          
         <node category-path="/manipulation/pmml" 
@@ -894,14 +894,14 @@
             id="org.knime.base.node.preproc.colconvert.stringtonumber.StringToNumberNodeFactory"/>
       <node
             category-path="/manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.columnTrans.One2ManyColNodeFactory"
-            id="org.knime.base.node.preproc.columnTrans.One2ManyColNodeFactory">
+            factory-class="org.knime.base.node.preproc.columntrans2.One2ManyCol2NodeFactory"
+            id="org.knime.base.node.preproc.columntrans2.One2ManyCol2NodeFactory">
       </node>
       <node
-            after="org.knime.base.node.preproc.columnTrans.One2ManyColNodeFactory"
+            after="org.knime.base.node.preproc.columntrans2.One2ManyCol2NodeFactory"
             category-path="/manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.columnTrans.Many2OneColNodeFactory"
-            id="org.knime.base.node.preproc.columnTrans.Many2OneColNodeFactory">
+            factory-class="org.knime.base.node.preproc.columntrans2.Many2OneCol2NodeFactory"
+            id="org.knime.base.node.preproc.columntrans2.Many2OneCol2NodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-split+combine"
