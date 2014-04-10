@@ -60,7 +60,7 @@ import org.knime.core.data.DataTableSpec;
  *
  * @author Fabian Dill, University of Konstanz
  */
-class RegExpCellFactory extends AbstractMany2OneCellFactory {
+public class RegExpCellFactory extends AbstractMany2OneCellFactory {
 
     private Pattern m_pattern;
 

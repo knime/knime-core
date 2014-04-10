@@ -69,7 +69,7 @@ import org.knime.core.node.ExecutionMonitor;
  *
  * @author Fabian Dill, University of Konstanz
  */
-abstract class AbstractMany2OneCellFactory implements CellFactory {
+public abstract class AbstractMany2OneCellFactory implements CellFactory {
 
     private final String m_appendedColumnName;
 

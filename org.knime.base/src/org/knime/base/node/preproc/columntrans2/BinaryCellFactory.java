@@ -59,7 +59,7 @@ import org.knime.core.data.DoubleValue;
  *
  * @author Fabian Dill, University of Konstanz
  */
-class BinaryCellFactory extends AbstractMany2OneCellFactory {
+public class BinaryCellFactory extends AbstractMany2OneCellFactory {
 
     /**
      *

@@ -52,11 +52,11 @@ import java.io.File;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.preproc.columnTrans.AbstractMany2OneCellFactory;
-import org.knime.base.node.preproc.columnTrans.BinaryCellFactory;
-import org.knime.base.node.preproc.columnTrans.MinMaxCellFactory;
-import org.knime.base.node.preproc.columnTrans.RegExpCellFactory;
+import org.knime.base.node.preproc.columntrans2.AbstractMany2OneCellFactory;
+import org.knime.base.node.preproc.columntrans2.BinaryCellFactory;
 import org.knime.base.node.preproc.columntrans2.Many2OneCol2NodeModel;
+import org.knime.base.node.preproc.columntrans2.MinMaxCellFactory;
+import org.knime.base.node.preproc.columntrans2.RegExpCellFactory;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.ColumnRearranger;

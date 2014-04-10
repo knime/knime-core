@@ -55,10 +55,10 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-class MinMaxCellFactory extends AbstractMany2OneCellFactory {
+public class MinMaxCellFactory extends AbstractMany2OneCellFactory {
 
     private final boolean m_max;
 
@@ -75,7 +75,7 @@ class MinMaxCellFactory extends AbstractMany2OneCellFactory {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
