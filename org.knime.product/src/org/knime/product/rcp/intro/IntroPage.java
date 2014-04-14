@@ -59,6 +59,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.locks.ReentrantLock;
@@ -284,6 +285,7 @@ public class IntroPage implements LocationListener {
                 String[] parts = uri.split("/");
                 if (parts.length > 2) {
                     String workflowName = parts[parts.length - 2];
+                    workflowName = URLDecoder.decode(workflowName, "UTF-8");
 
                     Element li = mruList.getOwnerDocument().createElement("li");
                     mruList.appendChild(li);
