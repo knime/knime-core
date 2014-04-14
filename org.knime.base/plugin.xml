@@ -1644,12 +1644,6 @@
         <FileExtensionMapping
               NodeFactory="org.knime.base.node.io.database.DBReaderNodeFactory">
            <FileExtension
-                 extension=".sql">
-           </FileExtension>
-           <FileExtension
-                 extension=".db">
-           </FileExtension>
-           <FileExtension
                  extension=".sqlite">
            </FileExtension>
         </FileExtensionMapping>
