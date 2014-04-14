@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -43,7 +43,7 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.core.util;
 
@@ -51,16 +51,16 @@ package org.knime.core.util;
  * This class is a little helper that just adds another indirection to and
  * object. This can be useful if you want to pass a value from an anonymous
  * inner class method to the enclosing outer method.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  * @param <T> any type
  */
 public class Pointer<T> {
     private T m_p;
-    
+
     /**
      * Returns the value of the pointer.
-     * 
+     *
      * @return the pointer's value
      */
     public T get() {
@@ -69,10 +69,22 @@ public class Pointer<T> {
 
     /**
      * Sets the pointer's value.
-     * 
+     *
      * @param v the new value
      */
     public void set(final T v) {
         m_p = v;
+    }
+
+    /** Factory method to create new instance with given default.
+     * @param value The default value
+     * @param <T> The type the returned pointer represents.
+     * @return A new pointer instance with the given value set.
+     * @since 2.10
+     */
+    public static final <T> Pointer<T> newInstance(final T value) {
+        Pointer<T> result = new Pointer<T>();
+        result.set(value);
+        return result;
     }
 }
