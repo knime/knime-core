@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -175,9 +175,10 @@ public class SVMPredictor implements CellFactory {
         int pos = 0;
         double bestDistance = m_svms[0].distance(vector);
         for (int i = 1; i < m_svms.length; ++i) {
-            if (m_svms[i].distance(vector) > bestDistance) {
+            double newDist = m_svms[i].distance(vector);
+            if (newDist > bestDistance) {
                 pos = i;
-                bestDistance = m_svms[i].distance(vector);
+                bestDistance = newDist;
             }
         }
         return m_svms[pos].getPositive();
