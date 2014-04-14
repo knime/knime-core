@@ -48,8 +48,9 @@
  */
 package org.knime.base.node.io.database;
 
+import org.knime.core.node.ContextAwareNodeFactory;
+import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
@@ -57,7 +58,7 @@ import org.knime.core.node.NodeView;
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class DBReaderNodeFactory
-        extends NodeFactory<DBReaderNodeModel> {
+        extends ContextAwareNodeFactory<DBReaderNodeModel> {
 
     /**
      * {@inheritDoc}
@@ -104,5 +105,14 @@ public final class DBReaderNodeFactory
                 return true;
             }
         };
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public DBReaderNodeModel createNodeModel(final NodeCreationContext context) {
+        return new DBReaderNodeModel(0, 1, context);
     }
 }

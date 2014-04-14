@@ -52,15 +52,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.internal.KNIMEPath;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -93,6 +96,26 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
      */
     DBReaderNodeModel(final int ins, final int outs) {
         super(ins, outs);
+    }
+
+    /**
+     * Creates a new database reader with one data out-port.
+     * @param ins number data input ports
+     * @param outs number data output ports
+     * @param context The context
+     */
+    DBReaderNodeModel(final int ins, final int outs, final NodeCreationContext context) {
+        this(ins, outs);
+        String workspace = KNIMEPath.getWorkspaceDirPath().getAbsolutePath();
+        String url;
+        try {
+            url = "jdbc:sqlite:" + workspace + context.getUrl().toURI().getPath();
+        } catch (URISyntaxException e) {
+            url = "";
+        }
+        DatabaseConnectionSettings settings =
+            new DatabaseConnectionSettings("org.sqlite.JDBC", url, null, null, null, "current");
+        m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(settings, null));
     }
 
     /**
@@ -190,6 +213,9 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
             if (conn == null) {
                 throw new InvalidSettingsException(
                         "No database connection available.");
+            }
+            if (m_query == null) {
+                throw new InvalidSettingsException("No query configured.");
             }
             m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(
                     conn, parseQuery(m_query)));
