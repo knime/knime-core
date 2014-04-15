@@ -175,7 +175,10 @@ final class LinReg2Learner {
                 + "/" + rowCount + " (\"" + row.getKey() + "\")");
             exec.checkCanceled();
             for (int i = 0; i < valuesI.length; i++) {
-                valuesMap.get(valuesI[i]).add(row.getCell(valuesI[i]));
+                DataCell cell = row.getCell(valuesI[i]);
+                if (!cell.isMissing()) {
+                    valuesMap.get(valuesI[i]).add(cell);
+                }
             }
         }
 
