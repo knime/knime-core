@@ -156,7 +156,8 @@ public final class PMMLPortObject implements PortObject {
     public static final String PMML_V4_0 = "4.0";
     /** Constant for version 4.1.*/
     public static final String PMML_V4_1 = "4.1";
-    /** Constant for version 4.2.*/
+    /** Constant for version 4.2.
+     * @since 2.10 */
     public static final String PMML_V4_2 = "4.2";
 
     /** Static initialization of all expressions needed for XPath.*/
