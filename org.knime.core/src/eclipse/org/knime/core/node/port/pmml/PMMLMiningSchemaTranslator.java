@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -136,7 +136,7 @@ public class PMMLMiningSchemaTranslator {
             FIELDUSAGETYPE.Enum usageType = miningField.getUsageType();
             if (FIELDUSAGETYPE.ACTIVE == usageType) {
                 m_learningFields.add(name);
-            } else if (FIELDUSAGETYPE.PREDICTED == usageType) {
+            } else if (FIELDUSAGETYPE.PREDICTED == usageType || FIELDUSAGETYPE.TARGET == usageType) {
                 m_targetFields.add(name);
             }
         }
@@ -222,7 +222,7 @@ public class PMMLMiningSchemaTranslator {
             miningField.setName(colName);
             miningField.setInvalidValueTreatment(
                     INVALIDVALUETREATMENTMETHOD.AS_IS);
-            miningField.setUsageType(FIELDUSAGETYPE.PREDICTED);
+            miningField.setUsageType(FIELDUSAGETYPE.TARGET);
         }
 
         /* Unfortunately the PMML models have no common base class. Therefore

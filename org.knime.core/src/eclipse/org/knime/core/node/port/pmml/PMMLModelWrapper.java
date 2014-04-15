@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -272,7 +272,7 @@ public abstract class PMMLModelWrapper {
         PMMLDocument pmmlDoc = PMMLDocument.Factory.newInstance(
                                  PMMLFormatter.getOptions());
         PMML pmml = pmmlDoc.addNewPMML();
-        pmml.setVersion(PMMLPortObject.PMML_V4_1);
+        pmml.setVersion(PMMLPortObject.PMML_V4_2);
         if (dataDict == null) {
             pmml.addNewDataDictionary();
         } else {

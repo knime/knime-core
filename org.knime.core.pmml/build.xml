@@ -11,7 +11,7 @@
 			<or>
 			    <os family="windows" /><!-- Windows cannot create classes for the PMML schema -->
         		<uptodate property="schemas.notRequired" targetfile="lib/schemas.jar">
-        			<srcfiles dir="src" includes="**/*.xsd*" />
+        			<srcfiles dir="src" includes="**/pmml-4-2.xsd*" />
         		</uptodate>
 			</or>
 		</condition>
@@ -27,7 +27,7 @@
 		<antcall target="clean" />
 		<xmlbean destfile="lib/schemas.jar" srcgendir="src/xmlbeans" javasource="1.5" optimize="on" debug="on" classpath="${xbean.jar}">
 			<fileset dir="src">
-				<include name="**/*.xsd"/>
+				<include name="**/pmml-4-2.xsd"/>
 				<include name="**/*.xsdconfig" />
 			</fileset>
 		</xmlbean>

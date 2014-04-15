@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -98,8 +98,11 @@ public class PMMLUtils {
     private static final String PMML_V3_NS_PREFIX = "http://www.dmg.org/PMML-3";
     private static final String PMML_V4_NS = "http://www.dmg.org/PMML-4_0";
     private static final String PMML_V41_NS = "http://www.dmg.org/PMML-4_1";
+    private static final String PMML_V42_NS = "http://www.dmg.org/PMML-4_2";
 
     private static final String PMML_V41 = "4.1";
+
+    private static final String PMML_V42 = "4.2";
 
     private PMMLUtils() {
         // hiding constructor of utility class
@@ -252,7 +255,7 @@ public class PMMLUtils {
                     "Invalid PMML document without a PMML element encountered.");
         }
         Node version = pmmlNode.getAttributes().getNamedItem("version");
-        version.setNodeValue(PMML_V41);
+        version.setNodeValue(PMML_V42);
     }
 
     /**
@@ -305,11 +308,11 @@ public class PMMLUtils {
             if ((att.getNodeName().equals("xmlns") || att.getNodeName()
                     .startsWith("xmlns:"))
                     && (att.getNodeValue().startsWith(PMML_V3_NS_PREFIX)
-                            || att.getNodeValue().equals(PMML_V4_NS))) {
-                att.setNodeValue(PMML_V41_NS);
+                            || att.getNodeValue().equals(PMML_V4_NS) || att.getNodeValue().equals(PMML_V41_NS))) {
+                att.setNodeValue(PMML_V42_NS);
             } else if (att.getNodeName().equals("xsi:schemaLocation")
                     && (att.getNodeValue().startsWith(PMML_V3_NS_PREFIX)
-                            || att.getNodeValue().equals(PMML_V4_NS))) {
+                            || att.getNodeValue().equals(PMML_V4_NS) || att.getNodeValue().equals(PMML_V41_NS))) {
                 element.removeAttribute(att.getNodeName());
             }
         }
@@ -359,6 +362,29 @@ public class PMMLUtils {
         return (version.startsWith("3.") || "4.0".equals(version))
                 && ("KNIME".equals(application) // learned by KNIME
                         || "Rattle/PMML".equals(application)); // learned in R
+    }
+
+    /**
+     * @param xmlDoc the {@link XmlObject} to verify
+     * @return true if the xmlDoc is a 4.1 PMML document
+     * @since 2.10
+     */
+    public static boolean is4_1PMML(final XmlObject xmlDoc) {
+        // Insert a cursor and move it to the PMML element.
+        XmlCursor pmmlCursor = xmlDoc.newCursor();
+        pmmlCursor.toFirstChild(); // the PMML element
+
+        String version = "";
+        while (!pmmlCursor.toNextToken().isNone() && pmmlCursor.isAnyAttr()) {
+            String name = pmmlCursor.getName().getLocalPart();
+            if ("version".equals(name)) {
+                // the version attribute
+                version = pmmlCursor.getTextValue();
+            }
+        }
+        pmmlCursor.dispose();
+
+        return version.equals(PMML_V41);
     }
 
 

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -156,6 +156,8 @@ public final class PMMLPortObject implements PortObject {
     public static final String PMML_V4_0 = "4.0";
     /** Constant for version 4.1.*/
     public static final String PMML_V4_1 = "4.1";
+    /** Constant for version 4.2.*/
+    public static final String PMML_V4_2 = "4.2";
 
     /** Static initialization of all expressions needed for XPath.*/
     private static final String NAMESPACE_DECLARATION =
@@ -361,7 +363,7 @@ public final class PMMLPortObject implements PortObject {
         m_pmmlDoc = PMMLDocument.Factory.newInstance(
                 PMMLFormatter.getOptions());
         PMML pmml = m_pmmlDoc.addNewPMML();
-        pmml.setVersion(PMML_V4_1);
+        pmml.setVersion(PMML_V4_2);
         PMMLPortObjectSpec.writeHeader(pmml);
         new PMMLDataDictionaryTranslator().exportTo(m_pmmlDoc, inData);
         /** No model is written yet. It has to be added by the responsible
@@ -654,6 +656,7 @@ public final class PMMLPortObject implements PortObject {
         // the argument input stream is a NonClosableZipInput, which delegates
         // close to closeEntry(), we have to make sure that close is only
         // called once.
+        // TODO: The document is read twice here. Could we "probe" into the file to check the version?
         XmlObject xmlDoc = XmlObject.Factory.parse(
                 new NonClosableInputStream(is));
         is.close();
@@ -663,7 +666,7 @@ public final class PMMLPortObject implements PortObject {
             /* Try to recover when reading a PMML 3.x/4.0 document that
              * was produced by KNIME by just replacing the PMML version and
              * namespace. */
-            if (PMMLUtils.isOldKNIMEPMML(xmlDoc)) {
+            if (PMMLUtils.isOldKNIMEPMML(xmlDoc) || PMMLUtils.is4_1PMML(xmlDoc)) {
                 try {
                     String updatedPMML
                             = PMMLUtils.getUpdatedVersionAndNamespace(xmlDoc);
