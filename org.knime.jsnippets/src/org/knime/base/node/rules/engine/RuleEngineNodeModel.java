@@ -54,20 +54,27 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.knime.base.node.rules.engine.Condition.MatchOutcome.MatchState;
 import org.knime.base.node.rules.engine.Rule.Outcome;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.BooleanCell;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
@@ -143,7 +150,7 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
         return rules;
     }
 
-    private ColumnRearranger createRearranger(final DataTableSpec inSpec, final List<Rule> rules)
+    private ColumnRearranger createRearranger(final DataTableSpec inSpec, final List<Rule> rules, final boolean updateColSpec)
             throws InvalidSettingsException {
         if (m_settings.isAppendColumn() && m_settings.getNewColName().isEmpty()) {
             throw new InvalidSettingsException("No name for prediction column provided");
@@ -158,7 +165,11 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
         final DataType outType =
                 computeOutputType(rules, RuleNodeSettings.RuleEngine);
 
-        DataColumnSpec cs = new DataColumnSpecCreator(newColName, outType).createSpec();
+        DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(newColName, outType);
+        if (updateColSpec) {//only update in configure, execute will compute properly
+            updateColSpec(rules, outType, colSpecCreator, this);
+        }
+        DataColumnSpec cs = colSpecCreator.createSpec();
 
 
         VariableProvider.SingleCellFactoryProto cellFactory = new VariableProvider.SingleCellFactoryProto(cs) {
@@ -198,6 +209,88 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
         }
 
         return crea;
+    }
+
+    /**
+     * Updates the prediction column specification if the rule outcomes are computable in advance.
+     * <br/>
+     * This will add all outcomes, not just the possibles.
+     * <br/>
+     * Sorry for the high complexity.
+     *
+     * @param rules The {@link Rule}s we want to analyse.
+     * @param outType The output data type.
+     * @param colSpecCreator The column creator.
+     */
+    private static void updateColSpec(final List<Rule> rules, final DataType outType, final DataColumnSpecCreator colSpecCreator, final FlowVariableProvider nm) {
+        List<DataValue> results = new ArrayList<DataValue>(rules.size());
+        for (Rule rule : rules) {
+            try {
+                DataValue result =
+                    rule.getOutcome().getComputedResult(new DefaultRow("", new double[0]), new VariableProvider() {
+                        /**
+                         * {@inheritDoc}
+                         */
+                        @Override
+                        public int getRowCount() {
+                            throw new IllegalStateException("We will catch this.");
+                        }
+                        /**
+                         * {@inheritDoc}
+                         */
+                        @Override
+                        public int getRowIndex() {
+                            throw new IllegalStateException("We will catch this.");
+                        }
+                        /**
+                         * {@inheritDoc}
+                         */
+                        @Override
+                        public Object readVariable(final String arg0, final Class<?> arg1) {
+                            return nm.readVariable(arg0, arg1);
+                        }
+                    });
+                results.add(result);
+            } catch (RuntimeException e) {
+                //We stop, cannot update properly
+                return;
+            }
+        }
+        Set<DataCell> values = new LinkedHashSet<DataCell>(results.size());
+        if (outType.equals(StringCell.TYPE)) {
+            for (DataValue dataValue : results) {
+                if (dataValue instanceof StringCell) {
+                    values.add((StringCell)dataValue);
+                } else if (dataValue instanceof StringValue) {
+                    StringValue sv = (StringValue)dataValue;
+                    values.add(new StringCell(sv.getStringValue()));
+                } else {
+                    values.add(new StringCell(dataValue.toString()));
+                }
+            }
+            colSpecCreator.setDomain(new DataColumnDomainCreator(values).createDomain());
+        } else if (outType.isCompatible(DoubleValue.class)) {
+            DataCell min = new DoubleCell(Double.POSITIVE_INFINITY), max = new DoubleCell(Double.NEGATIVE_INFINITY);
+            for (DataValue dataValue : results) {
+                if (dataValue instanceof DoubleValue) {
+                    DoubleValue dv = (DoubleValue)dataValue;
+                    double d = dv.getDoubleValue();
+                    min = d < ((DoubleValue)min).getDoubleValue() ? (DataCell)dv : min;
+                    max = d > ((DoubleValue)max).getDoubleValue() ? (DataCell)dv : max;
+                    values.add((DataCell)dv);
+                }
+            }
+            DataColumnDomainCreator dcdc = new DataColumnDomainCreator(/*values*/);
+            if (min instanceof DoubleValue && max instanceof DoubleValue) {
+                double mi = ((DoubleValue)min).getDoubleValue(), ma = ((DoubleValue)max).getDoubleValue();
+                if (mi != Double.POSITIVE_INFINITY && ma != Double.NEGATIVE_INFINITY && !Double.isNaN(mi)
+                    && !Double.isNaN(ma)) {
+                    dcdc.setLowerBound(min);
+                    dcdc.setUpperBound(max);
+                }
+            }
+            colSpecCreator.setDomain(dcdc.createDomain());
+        }
     }
 
     /**
@@ -271,7 +364,8 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         try {
             m_rowCount = -1;
-            ColumnRearranger crea = createRearranger(inSpecs[0], parseRules(inSpecs[0], RuleNodeSettings.RuleEngine));
+            final List<Rule> rules = parseRules(inSpecs[0], RuleNodeSettings.RuleEngine);
+            ColumnRearranger crea = createRearranger(inSpecs[0], rules, true);
             return new DataTableSpec[]{crea.createSpec()};
         } catch (ParseException ex) {
             throw new InvalidSettingsException(ex.getMessage(), ex);
@@ -287,7 +381,7 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
         m_rowCount = inData[0].getRowCount();
         try {
             List<Rule> rules = parseRules(inData[0].getDataTableSpec(), RuleNodeSettings.RuleEngine);
-            ColumnRearranger crea = createRearranger(inData[0].getDataTableSpec(), rules);
+            ColumnRearranger crea = createRearranger(inData[0].getDataTableSpec(), rules, false);
 
             return new BufferedDataTable[]{exec.createColumnRearrangeTable(inData[0], crea, exec)};
         } finally {
