@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,6 +50,12 @@
  */
 package org.knime.base.node.mine.bayes.naivebayes.predictor;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.knime.base.data.append.column.AppendedCellFactory;
+import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -61,18 +67,12 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionMonitor;
 
-import org.knime.base.data.append.column.AppendedCellFactory;
-import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 /**
  * Naive Bayes <code>AppendCellFactory</code> class which uses the given
  * <code>NaiveBayesModel</code> to predict the class membership of each row.
  * @author Tobias Koetter, University of Konstanz
  */
+@Deprecated
 public class NaiveBayesCellFactory implements AppendedCellFactory,
 CellFactory {
 
@@ -208,6 +208,7 @@ CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell[] getAppendedCell(final DataRow row) {
        return getCells(row);
     }
@@ -226,6 +227,7 @@ CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell[] getCells(final DataRow row) {
         final String mostLikelyClass =
             m_model.getMostLikelyClass(m_attributeNames, row,
@@ -254,6 +256,7 @@ CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataColumnSpec[] getColumnSpecs() {
         return getResultColumnsSpec();
     }
@@ -261,6 +264,7 @@ CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress(1.0 / rowCount * curRowNr);

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,6 +50,14 @@
  */
 package org.knime.base.node.mine.bayes.naivebayes.predictor;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.knime.base.data.append.column.AppendedColumnTable;
+import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
+import org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObject;
+import org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObjectSpec;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -68,21 +76,13 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
-import org.knime.base.data.append.column.AppendedColumnTable;
-import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
-import org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObject;
-import org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObjectSpec;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * This is the <code>NodeModel</code> implementation of the
  * "Naive Bayes Predictor" node.
  *
  * @author Tobias Koetter
  */
+@Deprecated
 public class NaiveBayesPredictorNodeModel extends NodeModel {
 
     // our logger instance

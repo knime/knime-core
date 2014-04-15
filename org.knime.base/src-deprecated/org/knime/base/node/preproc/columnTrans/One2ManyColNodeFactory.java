@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -56,6 +56,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class One2ManyColNodeFactory extends NodeFactory<One2ManyColNodeModel> {
 
     /**

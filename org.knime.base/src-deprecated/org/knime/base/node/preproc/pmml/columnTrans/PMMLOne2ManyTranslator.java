@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -68,6 +68,7 @@ import org.knime.core.util.Pair;
  * @author morent
  *
  */
+@Deprecated
 public class PMMLOne2ManyTranslator implements PMMLPreprocTranslator {
     private final Map<String, List<Pair<String, String>>> m_columnMapping;
     private final DerivedFieldMapper m_mapper;

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -104,6 +104,7 @@ import org.xml.sax.SAXException;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
+@Deprecated
 public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
     private final PolyRegLearnerSettings m_settings = new PolyRegLearnerSettings();
 

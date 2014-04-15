@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,9 +50,9 @@
  */
 package org.knime.base.node.mine.neural.mlp;
 
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.NodeDialogPane;
 
 /**
  * The Factory for the NeuralNet PredictorNode. This node reads a neural network
@@ -60,6 +60,7 @@ import org.knime.core.node.NodeDialogPane;
  *
  * @author Nicolas Cebron, University of Konstanz
  */
+@Deprecated
 public class MLPPredictorNodeFactory extends
         NodeFactory<MLPPredictorNodeModel> {
     /**

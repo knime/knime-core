@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -60,6 +60,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Nicolas Cebron, University of Konstanz
  */
+@Deprecated
 public class Normalizer2NodeFactory
 extends NodeFactory<Normalizer2NodeModel> {
     /**

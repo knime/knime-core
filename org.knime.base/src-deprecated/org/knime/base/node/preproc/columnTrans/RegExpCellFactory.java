@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   14.05.2007 (Fabian Dill): created
  */
@@ -57,24 +57,25 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class RegExpCellFactory extends AbstractMany2OneCellFactory {
-    
+
     private Pattern m_pattern;
 
     /**
-     * 
+     *
      * @param inputSpec input spec of the whole table
      * @param appendedColumnName name of the new column
      * @param includedColsIndices indices of columns to condense
      * @param regExp regular expression to determine matching columns
      */
-    public RegExpCellFactory(final DataTableSpec inputSpec, 
-            final String appendedColumnName, 
+    public RegExpCellFactory(final DataTableSpec inputSpec,
+            final String appendedColumnName,
             final int[] includedColsIndices, final String regExp) {
-        super(inputSpec, 
+        super(inputSpec,
                 appendedColumnName, includedColsIndices);
         m_pattern = Pattern.compile(regExp);
     }

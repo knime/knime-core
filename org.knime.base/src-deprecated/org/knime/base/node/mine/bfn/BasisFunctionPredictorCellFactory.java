@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -65,28 +65,29 @@ import org.knime.core.node.ExecutionMonitor;
 /**
  * This predictor cell factory predicts the passed rows using the underlying
  * basisfunction model.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
+@Deprecated
 public class BasisFunctionPredictorCellFactory implements CellFactory {
-    
+
     private final Map<DataCell, List<BasisFunctionPredictorRow>> m_model;
-    
+
     private final int[] m_filteredColumns;
-    
+
     private final double m_dontKnowClass;
-    
+
     private final boolean m_normClass;
-    
+
     private final DataColumnSpec[] m_specs;
-    
+
     private final boolean m_appendClassProps;
-    
+
     /**
-     * Create new predictor cell factory. Only used to create the 
+     * Create new predictor cell factory. Only used to create the
      * <code>ColumnRearranger</code> with the appended model spec.
      * @param specs the appended column specs
-     * @param appendClassProps if class probabilities should be append 
+     * @param appendClassProps if class probabilities should be append
      */
     public BasisFunctionPredictorCellFactory(final DataColumnSpec[] specs,
             final boolean appendClassProps) {
@@ -109,10 +110,10 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      * @param model the trained model as list of rows
      * @param dontKnowClass the don't know class probability
      * @param normClass normalize classification output
-     * @param appendClassProps if class probabilities should be append  
+     * @param appendClassProps if class probabilities should be append
      * @throws NullPointerException if one of the arguments is <code>null</code>
      */
-    public BasisFunctionPredictorCellFactory(final DataTableSpec dataSpec, 
+    public BasisFunctionPredictorCellFactory(final DataTableSpec dataSpec,
             final DataColumnSpec[] specs,
             final int[] filteredColumns,
             final Map<DataCell, List<BasisFunctionPredictorRow>> model,
@@ -127,7 +128,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
         m_filteredColumns = filteredColumns;
         m_appendClassProps = appendClassProps;
     }
-    
+
     /**
      * Predicts an unknown row to the given model.
      * @param row the row to predict
@@ -151,16 +152,16 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
                 map.put(classInfo, act);
             }
         }
-        
+
         // hash column specs
         DataTableSpec hash = new DataTableSpec(m_specs);
-        
+
         // find best class activation index
         DataCell best = DataType.getMissingCell();
         // set default highest activation, not yet set
-        double hact = -1.0; 
+        double hact = -1.0;
         double sumAct = 0.0;
-        Double[] act = new Double[m_specs.length]; 
+        Double[] act = new Double[m_specs.length];
         for (DataCell cell : map.keySet()) {
             Double d = map.get(cell);
             if (d > hact || (d == hact && best.isMissing())) {
@@ -173,7 +174,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
                 sumAct += d;
             }
         }
-  
+
         // all class values
         DataCell[] res = new DataCell[act.length];
         // skip last column which is the winner
@@ -201,6 +202,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      * Predicts given row using the underlying basis function model.
      * {@inheritDoc}
      */
+    @Override
     public DataCell[] getCells(final DataRow row) {
         DataRow wRow = new FilterColumnRow(row, m_filteredColumns);
         DataCell[] pred = predict(wRow, m_model);
@@ -212,10 +214,11 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
             return new DataCell[]{pred[pred.length - 1]};
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataColumnSpec[] getColumnSpecs() {
         if (m_appendClassProps) {
             return m_specs;
@@ -227,7 +230,8 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
     /**
      * {@inheritDoc}
      */
-    public void setProgress(final int curRowNr, final int rowCount, 
+    @Override
+    public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress((double) curRowNr / rowCount,
                 "Predicting row \"" + lastKey.getString() + "\"");

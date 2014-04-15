@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -76,14 +76,15 @@ import org.knime.core.util.Pair;
  *
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class One2ManyCellFactory implements CellFactory {
 
     private final Map<Integer/*colIdx*/, List<DataCell>/*possVal*/>
             m_possibleValues;
 
     private DataColumnSpec[] m_columnSpecs = new DataColumnSpec[0];
-    /* A mapping the name of the "splitted" column to a pair of resulting 
-     * column name and the value this column is based on. 
+    /* A mapping the name of the "splitted" column to a pair of resulting
+     * column name and the value this column is based on.
      * */
     private final Map<String, List<Pair<String, String>>> m_columnMapping
             = new LinkedHashMap<String, List<Pair<String, String>>>();

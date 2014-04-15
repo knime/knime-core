@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -97,6 +97,7 @@ import org.knime.core.node.property.hilite.KeyEvent;
  *
  * @author Heiko Hofer
  */
+@Deprecated
 final class DecTreePredictorGraphView
             extends NodeView<DecTreePredictorNodeModel>
             implements HiLiteListener {

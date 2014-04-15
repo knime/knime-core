@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -57,6 +57,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Dominik Morent, University of Konstanz
  */
+@Deprecated
 public class One2ManyColPMMLNodeFactory extends NodeFactory<One2ManyColPMMLNodeModel> {
 
     /**

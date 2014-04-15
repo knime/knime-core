@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -43,7 +43,7 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.node.mine.regression.polynomial.learner;
 
@@ -57,9 +57,10 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * This class holds the settings for the polynomial regression learner node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
+@Deprecated
 public class PolyRegLearnerSettings {
     private int m_degree = 2;
 
@@ -67,9 +68,9 @@ public class PolyRegLearnerSettings {
 
     private String m_targetColumn;
 
-    private final Set<String> m_selectedColumnNames = 
+    private final Set<String> m_selectedColumnNames =
         new LinkedHashSet<String>();
-    
+
     private boolean m_includeAll = false;
 
     private final Set<String> m_unmodSelectedColumnNames = Collections
@@ -78,7 +79,7 @@ public class PolyRegLearnerSettings {
     /**
      * Returns the maximum degree that polynomial used for regression should
      * have.
-     * 
+     *
      * @return the maximum degree
      */
     public int getDegree() {
@@ -87,7 +88,7 @@ public class PolyRegLearnerSettings {
 
     /**
      * Returns the name of the target column that holds the dependent variable.
-     * 
+     *
      * @return the target column's name
      */
     public String getTargetColumn() {
@@ -96,9 +97,9 @@ public class PolyRegLearnerSettings {
 
     /**
      * Loads the settings from the node settings object.
-     * 
+     *
      * @param settings the node settings
-     * 
+     *
      * @throws InvalidSettingsException if one of the settings is missing
      */
     public void loadSettingsFrom(final NodeSettingsRO settings)
@@ -117,7 +118,7 @@ public class PolyRegLearnerSettings {
 
     /**
      * Saves the settings to the node settings object.
-     * 
+     *
      * @param settings the node settings
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
@@ -135,7 +136,7 @@ public class PolyRegLearnerSettings {
 
     /**
      * Sets the maximum degree that polynomial used for regression should have.
-     * 
+     *
      * @param degree the maximum degree
      */
     public void setDegree(final int degree) {
@@ -144,7 +145,7 @@ public class PolyRegLearnerSettings {
 
     /**
      * Sets the name of the target column that holds the dependent variable.
-     * 
+     *
      * @param targetColumn the target column's name
      */
     public void setTargetColumn(final String targetColumn) {
@@ -153,7 +154,7 @@ public class PolyRegLearnerSettings {
 
     /**
      * Returns the maximum number of rows that are shown in the curve view.
-     * 
+     *
      * @return the maximum number of rows
      */
     public int getMaxRowsForView() {
@@ -162,7 +163,7 @@ public class PolyRegLearnerSettings {
 
     /**
      * Sets the maximum number of rows that are shown in the curve view.
-     * 
+     *
      * @param maxRowsForView the maximum number of rows
      */
     public void setMaxRowsForView(final int maxRowsForView) {
@@ -172,7 +173,7 @@ public class PolyRegLearnerSettings {
     /**
      * Sets the names of the columns that should be used for the regression. The
      * target column name must not be among these columns!
-     * 
+     *
      * @param columnNames a set with the selected column names
      */
     public void setSelectedColumns(final Set<String> columnNames) {
@@ -184,20 +185,20 @@ public class PolyRegLearnerSettings {
 
     /**
      * Returns an (unmodifieable) set of the select column names.
-     * 
+     *
      * @return a set with the selectec column names
      */
     public Set<String> getSelectedColumns() {
         return m_unmodSelectedColumnNames;
     }
-    
+
     /**
      * @return the includeAll
      */
     public boolean isIncludeAll() {
         return m_includeAll;
     }
-    
+
     /**
      * @param includeAll the includeAll to set
      */

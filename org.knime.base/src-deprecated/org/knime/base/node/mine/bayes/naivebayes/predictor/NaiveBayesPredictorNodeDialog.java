@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -62,6 +62,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
  *
  * @author Tobias Koetter
  */
+@Deprecated
 public class NaiveBayesPredictorNodeDialog extends DefaultNodeSettingsPane {
 
     private static final String INCL_PROB_VALS_LABEL =

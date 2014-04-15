@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -59,6 +59,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Heiko Hofer
  */
+@Deprecated
 public class GeneralRegressionPredictorSettings {
     /** Key for whether to include probabilities in the output. */
     static final String CFG_INCLUDE_PROBABILITIES = "include_probabilites";

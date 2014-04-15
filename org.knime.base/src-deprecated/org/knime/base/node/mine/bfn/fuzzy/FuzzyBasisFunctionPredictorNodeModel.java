@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,19 +52,20 @@ import org.knime.base.node.mine.bfn.BasisFunctionPredictorNodeModel;
 /**
  * The fuzzy basis function predictor model performing a prediction on the data
  * from the first input and the fuzzy basisfunction model from the second.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
+@Deprecated
 public class FuzzyBasisFunctionPredictorNodeModel extends
         BasisFunctionPredictorNodeModel {
-    
+
     /**
-     * 
+     *
      */
     public FuzzyBasisFunctionPredictorNodeModel() {
         super(FuzzyBasisFunctionPortObject.TYPE);
     }
-    
+
     /**
      * {@inheritDoc}
      */

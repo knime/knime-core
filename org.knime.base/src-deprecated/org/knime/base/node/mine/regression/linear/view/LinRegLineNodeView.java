@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -60,6 +60,7 @@ import org.knime.core.node.NodeModel;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
+@Deprecated
 public class LinRegLineNodeView extends DefaultVisualizationNodeView {
 
     private final LinRegLinePlotter m_plotter;

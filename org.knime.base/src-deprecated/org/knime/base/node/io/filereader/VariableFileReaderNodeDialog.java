@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -119,7 +119,9 @@ import org.knime.core.util.tokenizer.TokenizerSettings;
 /**
  *
  * @author ohl, University of Konstanz
+ * @deprecated the File Reader now has the same functionality
  */
+@Deprecated
 public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         ItemListener {
 
@@ -298,6 +300,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         m_preserveSettings.setSelected(false);
         m_preserveSettings.setEnabled(true);
         m_preserveSettings.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 m_frSettings.setPreserveSettings(m_preserveSettings
                         .isSelected());
@@ -365,6 +368,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
      * @see java.awt.event.ItemListener
      *      #itemStateChanged(java.awt.event.ItemEvent)
      */
+    @Override
     public void itemStateChanged(final ItemEvent e) {
         if ((e.getSource() == m_urlCombo)
                 && (e.getStateChange() == ItemEvent.SELECTED)) {
@@ -394,6 +398,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         m_analyzeCancel.setToolTipText("Analyze the first "
                 + FileAnalyzer.NUMOFLINES + " lines only.");
         m_analyzeCancel.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_analyzeCancel.setEnabled(false);
                 m_analyzeCancel.setText("Scanning quickly");
@@ -482,6 +487,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         ptcv.addPropertyChangeListener(
                 PreviewTableContentView.PROPERTY_SPEC_CHANGED,
                 new PropertyChangeListener() {
+                    @Override
                     public void propertyChange(final PropertyChangeEvent evt) {
                         // thats the col idx the mouse was clicked on
                         Integer colNr = (Integer)evt.getNewValue();
@@ -575,45 +581,54 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         int componentsHeight = (2 * COMP_HEIGHT) + 30 + buttonHeight;
         panel.setMaximumSize(new Dimension(PANEL_WIDTH, componentsHeight));
         advanced.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 advancedSettings();
             }
         });
         m_hasRowHeaders.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 rowHeadersSettingsChanged();
             }
         });
         m_hasColHeaders.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 colHeadersSettingsChanged();
             }
         });
         m_cStyleComment.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 commentSettingsChanged();
             }
         });
         m_delimField.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 delimSettingsChanged();
             }
         });
         m_ignoreWS.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 ignoreWSChanged();
             }
         });
         m_singleLineComment.getDocument().addDocumentListener(
                 new DocumentListener() {
+                    @Override
                     public void changedUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
 
+                    @Override
                     public void insertUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
 
+                    @Override
                     public void removeUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
@@ -1382,6 +1397,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
     private void showAnalyzeButton() {
 
         ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            @Override
             public void run() {
                 // first remove the preview panel
                 m_previewArea.removeAll();
@@ -1403,6 +1419,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
      */
     private void showPreviewTable() {
         ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            @Override
             public void run() {
                 // first remove the analysis panel
                 m_previewArea.removeAll();
@@ -1472,10 +1489,12 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
             m_analysisExecMonitor = new FileReaderExecutionMonitor();
             m_analysisExecMonitor.getProgressMonitor().addProgressListener(
                     new NodeProgressListener() {
+                        @Override
                         public void progressChanged(
                                 final NodeProgressEvent pEvent) {
                             if (pEvent.getNodeProgress().getMessage() != null) {
                                 ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+                                    @Override
                                     public void run() {
                                         Double p =
                                                 pEvent.getNodeProgress()
@@ -1693,6 +1712,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         // register a listener for error messages with the new table
         if (table != null) {
             table.addChangeListener(new ChangeListener() {
+                @Override
                 public void stateChanged(final ChangeEvent e) {
                     if (m_previewTable != null) {
                         setErrorLabelText(m_previewTable.getErrorMsg(),

@@ -1,7 +1,7 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 23, 2006 (wiswedel): created
  */
@@ -61,18 +61,19 @@ import org.knime.core.node.NodeView;
 /**
  * View on the linear regression learner node. It only has a text pane where
  * some statistics are displayed.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class LinRegLearnerNodeView 
+@Deprecated
+public class LinRegLearnerNodeView
     extends NodeView<LinRegLearnerNodeModel> {
-    
+
     /** The text pane that holds the information. */
     private final JEditorPane m_pane;
 
     /**
      * Constructs new view, inits members.
-     * 
+     *
      * @param model the model to look at
      */
     public LinRegLearnerNodeView(final LinRegLearnerNodeModel model) {

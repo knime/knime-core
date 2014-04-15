@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,16 +52,17 @@ import org.knime.base.node.mine.bfn.BasisFunctionPredictorNodeModel;
 /**
  * The radial basisfunction predictor model performing a prediction on the data
  * from the first input and the radial basisfunction model from the second.
- * 
+ *
  * @see org.knime.base.node.mine.bfn.BasisFunctionPredictorCellFactory
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
+@Deprecated
 public class RadialBasisFunctionPredictorNodeModel extends
         BasisFunctionPredictorNodeModel {
-    
+
     /**
-     * 
+     *
      */
     public RadialBasisFunctionPredictorNodeModel() {
         super(RadialBasisFunctionPortObject.TYPE);

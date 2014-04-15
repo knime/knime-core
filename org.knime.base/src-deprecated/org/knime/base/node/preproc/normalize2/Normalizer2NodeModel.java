@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -88,6 +88,7 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
  * @see Normalizer2
  * @author Nicolas Cebron, University of Konstanz
  */
+@Deprecated
 public class Normalizer2NodeModel extends NodeModel {
 
     /** Key to store the new minimum value (in min/max mode). */

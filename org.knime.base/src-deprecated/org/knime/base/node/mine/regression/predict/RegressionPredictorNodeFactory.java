@@ -1,7 +1,7 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 23, 2006 (wiswedel): created
  */
@@ -58,12 +58,13 @@ import org.knime.core.node.NodeView;
 
 /**
  * Factory for linear regression predictor node.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class RegressionPredictorNodeFactory 
+@Deprecated
+public class RegressionPredictorNodeFactory
     extends NodeFactory<RegressionPredictorNodeModel> {
-    
+
     static {
         try {
             NodeFactory.addLoadedFactory(LinRegPredictorNodeFactory.class);
@@ -92,7 +93,7 @@ public class RegressionPredictorNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public NodeView<RegressionPredictorNodeModel> 
+    public NodeView<RegressionPredictorNodeModel>
         createNodeView(final int index, final RegressionPredictorNodeModel m) {
         throw new IndexOutOfBoundsException();
     }

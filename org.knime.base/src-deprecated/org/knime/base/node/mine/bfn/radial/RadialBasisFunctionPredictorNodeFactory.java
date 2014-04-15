@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -48,17 +48,18 @@
 package org.knime.base.node.mine.bfn.radial;
 
 import org.knime.base.node.mine.bfn.BasisFunctionPredictorNodeDialog;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.NodeDialogPane;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
-public class RadialBasisFunctionPredictorNodeFactory 
+@Deprecated
+public class RadialBasisFunctionPredictorNodeFactory
         extends NodeFactory<RadialBasisFunctionPredictorNodeModel> {
-    
+
     /**
      * {@inheritDoc}
      */
@@ -79,8 +80,8 @@ public class RadialBasisFunctionPredictorNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public NodeView<RadialBasisFunctionPredictorNodeModel> 
-            createNodeView(final int i, 
+    public NodeView<RadialBasisFunctionPredictorNodeModel>
+            createNodeView(final int i,
             final RadialBasisFunctionPredictorNodeModel nodeModel) {
         return null;
     }

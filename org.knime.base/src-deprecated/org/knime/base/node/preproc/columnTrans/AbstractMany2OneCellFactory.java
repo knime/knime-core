@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -69,6 +69,7 @@ import org.knime.core.node.ExecutionMonitor;
  *
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public abstract class AbstractMany2OneCellFactory implements CellFactory {
 
     private final String m_appendedColumnName;

@@ -2,7 +2,7 @@
  *
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -74,7 +74,8 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  *
  * @author Michael Berthold, University of Konstanz
  */
-public class DecTreePredictorNodeView 
+@Deprecated
+public class DecTreePredictorNodeView
         extends NodeView<DecTreePredictorNodeModel> {
 
     private JTree m_jTree;
@@ -195,6 +196,7 @@ public class DecTreePredictorNodeView
         JMenuItem item = new JMenuItem("Hilite Selected Branch");
         item.setMnemonic('S');
         item.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 assert (m_hiLiteHdl != null);
                 changeSelectedHiLite(true);
@@ -204,6 +206,7 @@ public class DecTreePredictorNodeView
         item = new JMenuItem("Unhilite Selected Branch");
         item.setMnemonic('U');
         item.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 assert (m_hiLiteHdl != null);
                 changeSelectedHiLite(false);
@@ -213,6 +216,7 @@ public class DecTreePredictorNodeView
         item = new JMenuItem("Clear Hilite");
         item.setMnemonic('C');
         item.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 assert (m_hiLiteHdl != null);
                 m_hiLiteHdl.fireClearHiLiteEvent();

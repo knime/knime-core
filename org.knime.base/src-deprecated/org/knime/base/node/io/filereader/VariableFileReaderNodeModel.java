@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -79,7 +79,9 @@ import org.knime.core.util.tokenizer.SettingsStatus;
 /**
  *
  * @author ohl, University of Konstanz
+ * @deprecated the File Reader now has the same functionality
  */
+@Deprecated
 public class VariableFileReaderNodeModel extends NodeModel {
 
     /** The node logger fot this class. */

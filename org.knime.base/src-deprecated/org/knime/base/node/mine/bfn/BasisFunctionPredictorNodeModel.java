@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -74,21 +74,22 @@ import org.knime.core.node.port.PortType;
 /**
  * The basis function predictor model performing a prediction on the data from
  * the first input and the radial basisfunction model from the second.
- * 
+ *
  * @see BasisFunctionPredictorCellFactory
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
+@Deprecated
 public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
-    
+
     private String m_applyColumn = "Winner";
 
     private double m_dontKnow = -1.0;
-    
+
     private boolean m_ignoreDontKnow = false;
-    
+
     private boolean m_appendClassProps = true;
-    
+
     /**
      * Creates a new basisfunction predictor model with two inputs, the first
      * one which contains the data and the second with the model.
@@ -104,7 +105,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      */
     @Override
     public BufferedDataTable[] execute(final PortObject[] portObj,
-            final ExecutionContext exec) 
+            final ExecutionContext exec)
             throws CanceledExecutionException, InvalidSettingsException {
         BasisFunctionPortObject pred = (BasisFunctionPortObject) portObj[0];
         if (pred.getBasisFunctions().size() == 0) {
@@ -119,14 +120,14 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
                     modelSpec.getColumnSpec(i).getName());
         }
         final ColumnRearranger colreg = new ColumnRearranger(dataSpec);
-        colreg.append(new BasisFunctionPredictorCellFactory(dataSpec, 
-        	createSpec(dataSpec, modelSpec, modelSpec.getNumColumns() - 5), 
-                filteredColumns, pred.getBasisFunctions(), 
+        colreg.append(new BasisFunctionPredictorCellFactory(dataSpec,
+        	createSpec(dataSpec, modelSpec, modelSpec.getNumColumns() - 5),
+                filteredColumns, pred.getBasisFunctions(),
                 m_dontKnow, normalizeClassification(), m_appendClassProps));
        return new BufferedDataTable[]{exec.createColumnRearrangeTable(
                 data, colreg, exec)};
     }
-    
+
     /**
      * Creates the output model spec.
      * @param dataSpec input data spec
@@ -136,13 +137,13 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      */
     public final DataColumnSpec[] createSpec(final DataTableSpec dataSpec,
             final DataTableSpec modelSpec, final int modelClassIdx) {
-        Set<DataCell> possClasses = 
+        Set<DataCell> possClasses =
             modelSpec.getColumnSpec(modelClassIdx).getDomain().getValues();
         final DataColumnSpec[] specs;
         if (possClasses == null) {
             if (m_appendClassProps) {
                 return null;
-            } else { 
+            } else {
                 specs = new DataColumnSpec[1];
             }
         } else {
@@ -157,32 +158,32 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
         }
         DataColumnSpecCreator newTargetSpec = new DataColumnSpecCreator(
                 modelSpec.getColumnSpec(modelClassIdx));
-        String applyColumn = DataTableSpec.getUniqueColumnName(dataSpec, 
+        String applyColumn = DataTableSpec.getUniqueColumnName(dataSpec,
         	m_applyColumn);
         newTargetSpec.setName(applyColumn);
         specs[specs.length - 1] = newTargetSpec.createSpec();
         return specs;
     }
-    
+
     /**
      * @return <code>true</code> if normalization is required for output
      */
     public abstract boolean normalizeClassification();
-    
+
     /**
      * @return the column name contained the winner prediction
      */
     public String getApplyColumn() {
         return m_applyColumn;
     }
-    
+
     /**
      * @return the <i>don't know</i> class probability between 0.0 and 1.0
      */
     public double getDontKnowClassDegree() {
         return m_dontKnow;
     }
-    
+
     /**
      * @return true if class probability columns should be appended
      */
@@ -201,7 +202,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
         // get data spec
         final DataTableSpec dataSpec = (DataTableSpec) portObjSpec[1];
         // sanity check for empty set of nominal values
-        DataColumnSpec[] modelSpecs = 
+        DataColumnSpec[] modelSpecs =
             createSpec(dataSpec, modelSpec, modelSpec.getNumColumns() - 5);
         if (modelSpecs == null) {
             return new DataTableSpec[]{null};
@@ -215,7 +216,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
                 modelSpecs, m_appendClassProps));
         return new DataTableSpec[]{colreg.createSpec()};
     }
-    
+
     /**
      * Creates a column rearranger based on the data spec. The new apply column
      * is appended.
@@ -226,7 +227,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      *      data and/or model spec
      */
     public final ColumnRearranger createRearranger(final DataTableSpec dataSpec,
-            final String[] modelSpec) 
+            final String[] modelSpec)
             throws InvalidSettingsException {
         if (modelSpec.length == 0) {
             throw new InvalidSettingsException("Model spec must not be empty.");
@@ -238,7 +239,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
                 DataType dataType = dataSpec.getColumnSpec(idx).getType();
                 if (!dataType.isCompatible(DoubleValue.class)) {
                     throw new InvalidSettingsException("Data column \""
-                        + dataSpec.getColumnSpec(idx).getName() + "\"" 
+                        + dataSpec.getColumnSpec(idx).getName() + "\""
                         + " is not compatible with DoubleValue.");
                 }
             } else {
@@ -250,7 +251,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
                 dataSpec, m_applyColumn);
         return new ColumnRearranger(dataSpec);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -290,7 +291,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
         settings.addDouble(BasisFunctionPredictorNodeDialog.DONT_KNOW_PROP,
                 m_dontKnow);
         settings.addBoolean(
-                BasisFunctionPredictorNodeDialog.CFG_DONT_KNOW_IGNORE, 
+                BasisFunctionPredictorNodeDialog.CFG_DONT_KNOW_IGNORE,
                 m_ignoreDontKnow);
         // append class probability columns
         settings.addBoolean(BasisFunctionPredictorNodeDialog.CFG_CLASS_PROPS,

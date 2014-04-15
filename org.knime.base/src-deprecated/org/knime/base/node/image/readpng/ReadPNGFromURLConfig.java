@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -59,7 +59,9 @@ import org.knime.core.node.NotConfigurableException;
 /** Configuration object to the Read PNG node.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @deprecated replaced by the new Image Reader node
  */
+@Deprecated
 final class ReadPNGFromURLConfig {
 
     private String m_urlColName;

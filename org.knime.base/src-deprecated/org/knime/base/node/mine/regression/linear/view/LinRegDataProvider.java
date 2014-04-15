@@ -1,7 +1,7 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 30, 2006 (wiswedel): created
  */
@@ -57,29 +57,30 @@ import org.knime.base.node.viz.plotter.DataProvider;
 /**
  * An interface that both the learner node model and the predictor node model
  * implement. It describes the access methods for the 2D line viewer.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
+@Deprecated
 public interface LinRegDataProvider extends DataProvider {
     /**
      * Get the parameters for the regression line.
-     * 
+     *
      * @return the parameters, may be <code>null</code>
      */
     public LinearRegressionContent getParams();
 
     /**
      * Get the row container for the rows to paint in the view.
-     * 
+     *
      * @return the rows to paint
      */
     public DataArray getRowContainer();
-    
-    
+
+
     /**
-     * 
+     *
      * @return those columns which were used to calculate the model
      */
     public String[] getLearningColumns();
-    
+
 }

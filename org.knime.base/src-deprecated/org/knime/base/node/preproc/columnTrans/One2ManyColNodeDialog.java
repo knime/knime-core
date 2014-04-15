@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.columnTrans;
 
@@ -57,12 +57,13 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class One2ManyColNodeDialog extends DefaultNodeSettingsPane {
-    
-    
+
+
     private DialogComponentColumnFilter m_columnFilter;
 
 

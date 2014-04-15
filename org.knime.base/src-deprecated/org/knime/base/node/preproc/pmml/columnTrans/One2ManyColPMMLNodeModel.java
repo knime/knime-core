@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -80,6 +80,7 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
  *
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class One2ManyColPMMLNodeModel extends NodeModel {
 
     /** Config key for the columns 2 be transformed. */

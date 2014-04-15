@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,6 +55,7 @@ import org.knime.base.node.mine.regression.predict.RegressionPredictorNodeFactor
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class PolyRegPredictorNodeFactory extends 
+@Deprecated
+public class PolyRegPredictorNodeFactory extends
 RegressionPredictorNodeFactory {
 }

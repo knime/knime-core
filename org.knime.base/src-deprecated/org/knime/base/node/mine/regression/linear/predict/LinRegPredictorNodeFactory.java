@@ -1,7 +1,7 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 23, 2006 (wiswedel): created
  */
@@ -54,10 +54,11 @@ import org.knime.base.node.mine.regression.predict.RegressionPredictorNodeFactor
 
 /**
  * Factory for linear regression predictor node.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class LinRegPredictorNodeFactory 
+@Deprecated
+public class LinRegPredictorNodeFactory
     extends RegressionPredictorNodeFactory {
-    
+
 }

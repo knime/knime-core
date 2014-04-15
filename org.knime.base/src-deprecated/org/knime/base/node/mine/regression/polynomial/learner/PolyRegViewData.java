@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -54,6 +54,7 @@ package org.knime.base.node.mine.regression.polynomial.learner;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
+@Deprecated
 class PolyRegViewData {
     final double[] meanValues;
 

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -86,6 +86,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  * @author Tobias Koetter, University of Konstanz
  * @since 2.8
  */
+@Deprecated
 public class Many2OneColPMMLNodeModel extends NodeModel {
 
     /**

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -101,6 +101,7 @@ import org.w3c.dom.Node;
  *
  * @author Nicolas Cebron, University of Konstanz
  */
+@Deprecated
 public class MLPPredictorNodeModel extends NodeModel {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =

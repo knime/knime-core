@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,15 +50,16 @@
  */
 package org.knime.base.node.mine.svm.predictor;
 
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.NodeDialogPane;
 
 /**
  * SVMPredictor NodeFactory.
  *
  * @author cebron, University of Konstanz
  */
+@Deprecated
 public class SVMPredictorNodeFactory extends
         NodeFactory<SVMPredictorNodeModel> {
 

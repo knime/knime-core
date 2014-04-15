@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -57,6 +57,7 @@ import org.knime.base.node.preproc.pmml.columnTrans.One2ManyColPMMLNodeModel;
  *
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class One2ManyColNodeModel extends One2ManyColPMMLNodeModel {
     /**
      */

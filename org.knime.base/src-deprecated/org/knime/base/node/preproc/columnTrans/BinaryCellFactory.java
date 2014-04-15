@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   16.05.2007 (Fabian Dill): created
  */
@@ -56,24 +56,25 @@ import org.knime.core.data.DoubleValue;
 
 /**
  * Cell with value = 1 matches, others don't.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class BinaryCellFactory extends AbstractMany2OneCellFactory {
-    
+
     /**
-     * 
+     *
      * @param inputSpec input spec of the whole table
      * @param appendedColumnName name of the new column
      * @param includedColsIndices indices of columns to condense
      */
-    public BinaryCellFactory(final DataTableSpec inputSpec, 
+    public BinaryCellFactory(final DataTableSpec inputSpec,
             final String appendedColumnName, final int[] includedColsIndices) {
         super(inputSpec, appendedColumnName, includedColsIndices);
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

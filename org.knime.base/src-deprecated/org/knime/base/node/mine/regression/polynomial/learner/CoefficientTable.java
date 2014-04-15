@@ -1,7 +1,7 @@
 /* Created on 22.01.2007 10:04:59 by thor
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -63,6 +63,7 @@ import javax.swing.table.AbstractTableModel;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
+@Deprecated
 public class CoefficientTable extends JPanel {
     private PolyRegViewData m_viewData;
     private static final NumberFormat FORMATTER = new DecimalFormat("0.0000");

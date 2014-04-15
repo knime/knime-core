@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -66,6 +66,7 @@ import org.knime.core.node.NotConfigurableException;
  * @author Fabian Dill, University of Konstanz
  *
  */
+@Deprecated
 public class LinRegLinePlotterProperties extends ScatterPlotterProperties {
 
     private static final NodeLogger LOGGER =

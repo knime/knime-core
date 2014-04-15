@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -62,7 +62,9 @@ import org.knime.core.node.workflow.FlowVariable;
 /**
  *
  * @author ohl, University of Konstanz
+ * @deprecated the File Reader now has the same functionality
  */
+@Deprecated
 class VariableFileReaderNodeSettings extends FileReaderNodeSettings {
 
     private static final String VAR_NAME = "variable_name";

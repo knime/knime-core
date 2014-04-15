@@ -54,6 +54,7 @@ package org.knime.exp.node.columnTrans;
  *
  * @author wiswedel
  */
+@Deprecated
 public class One2ManyColNodeFactory extends org.knime.base.node.preproc.columnTrans.One2ManyColNodeFactory {
 
 }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -68,6 +68,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Tobias Koetter
  */
+@Deprecated
 public class Many2OneColNodeDialog extends DefaultNodeSettingsPane {
 
     // new column name

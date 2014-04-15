@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -49,15 +49,16 @@
  *   02.05.2006 (koetter): created
  */
 package org.knime.base.node.mine.bayes.naivebayes.predictor;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.NodeDialogPane;
 
 /**
  * <code>NodeFactory</code> for the "Naive Bayes Predictor" node.
 
  * @author Tobias Koetter
  */
+@Deprecated
 public class NaiveBayesPredictorNodeFactory
     extends NodeFactory<NaiveBayesPredictorNodeModel> {
     /**

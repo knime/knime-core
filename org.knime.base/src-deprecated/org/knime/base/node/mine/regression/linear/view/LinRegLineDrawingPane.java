@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -65,6 +65,7 @@ import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
  * @author Bernd Wiswedel, University of Konstanz
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class LinRegLineDrawingPane extends ScatterPlotterDrawingPane {
     private int m_x1;
 

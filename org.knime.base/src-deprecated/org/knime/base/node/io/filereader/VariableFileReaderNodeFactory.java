@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,14 +50,16 @@
  */
 package org.knime.base.node.io.filereader;
 
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.NodeDialogPane;
 
 /**
  *
  * @author ohl, University of Konstanz
+ * @deprecated the File Reader now has the same functionality
  */
+@Deprecated
 public class VariableFileReaderNodeFactory extends
         NodeFactory<VariableFileReaderNodeModel> {
 

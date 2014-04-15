@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   14.05.2007 (Fabian Dill): created
  */
@@ -55,32 +55,33 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class MinMaxCellFactory extends AbstractMany2OneCellFactory {
 
     private final boolean m_max;
-    
-    
+
+
     /**
      * @param inputSpec input spec of the whole table
      * @param appendedColumnName name of the new column
      * @param includedColsIndices indices of columns to condense
-     * @param max true if maximum value leads to inclusion 
+     * @param max true if maximum value leads to inclusion
      */
     public MinMaxCellFactory(final DataTableSpec inputSpec,
-            final String appendedColumnName, 
-            final int[] includedColsIndices, 
+            final String appendedColumnName,
+            final int[] includedColsIndices,
             final boolean max) {
-        super(inputSpec, 
+        super(inputSpec,
                 appendedColumnName, includedColsIndices);
         m_max = max;
     }
 
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -90,7 +91,7 @@ public class MinMaxCellFactory extends AbstractMany2OneCellFactory {
         }
         return findMinimumColumn(row);
     }
-    
+
     private int findMaximumColumn(final DataRow row) {
         boolean multipleValue = false;
         // current min value
@@ -119,7 +120,7 @@ public class MinMaxCellFactory extends AbstractMany2OneCellFactory {
         }
         return columnIndex;
     }
-    
+
     private int findMinimumColumn(final DataRow row) {
         boolean multipleValue = false;
         // current min value
@@ -134,7 +135,7 @@ public class MinMaxCellFactory extends AbstractMany2OneCellFactory {
                 .getDoubleValue();
             if (minValue == currentValue) {
                 multipleValue = true;
-            }            
+            }
             if (minValue > currentValue) {
                 multipleValue = false;
                 minValue = currentValue;
@@ -149,5 +150,5 @@ public class MinMaxCellFactory extends AbstractMany2OneCellFactory {
         return columnIndex;
     }
 
-    
+
 }

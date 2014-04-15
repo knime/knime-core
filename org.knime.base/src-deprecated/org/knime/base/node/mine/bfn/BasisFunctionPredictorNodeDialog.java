@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -74,22 +74,23 @@ import org.knime.core.node.NotConfigurableException;
 /**
  * A dialog to apply data to basis functions. Can be used to set a name for the
  * new, applied column.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
+@Deprecated
 public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
-    
+
     /** Prediction column. */
     private final JTextField m_apply = new JTextField();
 
     private final JRadioButton m_dftButton;
 
     private final JRadioButton m_setButton;
-    
+
     private final JCheckBox m_ignButton;
 
     private final JSpinner m_dontKnow;
-    
+
     private final JCheckBox m_appendProp;
 
     /** Key for the applied column: <i>apply_column</i>. */
@@ -97,10 +98,10 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
 
     /** Key for don't know probability for the unknown class. */
     public static final String DONT_KNOW_PROP = "dont_know_prop";
-    
+
     /** Config key if don't know should be ignored. */
     public static final String CFG_DONT_KNOW_IGNORE = "ignore_dont_know";
-    
+
     /** Config key if class probabilities should be appended to the table. */
     public static final String CFG_CLASS_PROPS = "append_class_probabilities";
 
@@ -127,12 +128,13 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
                 BorderFactory.createTitledBorder(" Class Probabilities "));
         propPanel.add(m_appendProp);
         p.add(propPanel);
-        
+
         // add don't know probability
         m_dftButton = new JRadioButton("Default ", true);
         m_setButton = new JRadioButton("Use ");
         m_ignButton = new JCheckBox("Ignore ", true);
         m_ignButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 selectionChanged();
             }
@@ -158,19 +160,21 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
         p.add(dontKnowPanel);
 
         m_dftButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_dontKnow.setEnabled(false);
             }
         });
 
         m_setButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_dontKnow.setEnabled(true);
             }
         });
         super.addTab("Winner Column", p);
     }
-    
+
     private void selectionChanged() {
         if (m_ignButton.isSelected()) {
             m_dftButton.setEnabled(false);

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -54,7 +54,9 @@ import org.knime.core.node.NodeView;
 
 /** Factory for Read PNG node.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @deprecated replaced by the new Image Reader node
  */
+@Deprecated
 public final class ReadPNGFromURLNodeFactory extends
         NodeFactory<ReadPNGFromURLNodeModel> {
 

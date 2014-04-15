@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -73,7 +73,9 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /** Dialog to Read PNG node. It has a column selector and few other controls.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @deprecated replaced by the new Image Reader node
  */
+@Deprecated
 final class ReadPNGFromURLNodeDialogPane extends NodeDialogPane {
 
     private final ColumnSelectionComboxBox m_columnPanel;

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   02.10.2007 (cebron): created
  */
@@ -70,12 +70,13 @@ import org.knime.core.node.ExecutionMonitor;
  * input {@link DataRow}.
  * @author cebron, University of Konstanz
  */
+@Deprecated
 public class SVMPredictor implements CellFactory {
 
     private Svm[] m_svms;
-    
+
     private int[] m_colindices;
-    
+
     /**
      * Constructor.
      * @param svms the Support Vector Machine(s) to use.
@@ -88,6 +89,7 @@ public class SVMPredictor implements CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell[] getCells(final DataRow row) {
         ArrayList<Double> values = new ArrayList<Double>();
         for (int i = 0; i < m_colindices.length; i++) {
@@ -103,7 +105,7 @@ public class SVMPredictor implements CellFactory {
 
     /**
      * Given a vector, find out it's class.
-     * 
+     *
      * @param values the parameters.
      */
     private String doPredict(final ArrayList<Double> values) {
@@ -118,10 +120,11 @@ public class SVMPredictor implements CellFactory {
         }
         return m_svms[pos].getPositive();
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataColumnSpec[] getColumnSpecs() {
         DataColumnSpecCreator colspeccreator =
                 new DataColumnSpecCreator("SVM Prediction", StringCell.TYPE);
@@ -131,6 +134,7 @@ public class SVMPredictor implements CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress((double)curRowNr / (double)rowCount, "Classifying");

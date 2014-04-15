@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -69,6 +69,7 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author Heiko Hofer
  */
+@Deprecated
 public final class GeneralRegressionPredictorNodeDialogPane
         extends NodeDialogPane {
     private final GeneralRegressionPredictorSettings m_settings;
