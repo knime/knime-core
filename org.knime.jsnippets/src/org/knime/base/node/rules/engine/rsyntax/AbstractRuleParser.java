@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -269,6 +269,12 @@ public class AbstractRuleParser implements Parser {
                     case TokenTypes.COMMENT_DOCUMENTATION:
                     case TokenTypes.COMMENT_MULTILINE:
                         token.type = TokenTypes.IDENTIFIER;
+                        break;
+                    case TokenTypes.ERROR_STRING_DOUBLE:
+                    case TokenTypes.LITERAL_STRING_DOUBLE_QUOTE:
+                            if (token.getLexeme().endsWith("\"")) {
+                                token.type = TokenTypes.LITERAL_STRING_DOUBLE_QUOTE;
+                            }
                         break;
                     default:
                         //Do nothing.
