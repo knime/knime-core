@@ -94,6 +94,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -246,11 +247,12 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
                 if ((m_colSelected[i] || (i == dependentIndex)) && row.getCell(i).isMissing()) {
                     switch (m_settings.getMissingValueHandling()) {
                         case fail:
-                        throw new IllegalArgumentException("Missing values are not supported by this node.");
+                            throw new IllegalArgumentException("Missing values are not supported by this node.");
                         case ignore:
-                        continue nextRow;
+                            continue nextRow;
                         default:
-                            throw new UnsupportedOperationException("Not supported strategy: " + m_settings.getMissingValueHandling());
+                            throw new UnsupportedOperationException("Not supported strategy: "
+                                + m_settings.getMissingValueHandling());
                     }
                 }
 
@@ -337,9 +339,18 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
                     }
                     break;
                 case fail:
-                    throw new IllegalStateException("Execution should stopped earlier!");
-                    default:
-                        throw new UnsupportedOperationException("Not supported missing value strategy: " + m_settings.getMissingValueHandling().name());
+                    //This should not happen, we failed earlier
+                    if (KNIMEConstants.ASSERTIONS_ENABLED) {
+                        for (int i = 0; i < row.getNumCells(); i++) {
+                            if (row.getCell(i).isMissing()) {
+                                throw new IllegalStateException("Execution should stopped earlier!");
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Not supported missing value strategy: "
+                        + m_settings.getMissingValueHandling().name());
             }
             for (int i = 0; i < row.getNumCells(); i++) {
                 if (i != ignore) {
