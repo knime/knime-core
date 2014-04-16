@@ -111,7 +111,12 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
     public void preStartup() {
         super.preStartup();
 
-        IntroPage.INSTANCE.modifyWorkbenchState();
+        IPreferenceStore pStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        boolean showTipsAndTricks = !pStore.getBoolean(PreferenceConstants.P_HIDE_TIPS_AND_TRICKS);
+
+        if (!EclipseUtil.isRunFromSDK() && showTipsAndTricks) {
+            IntroPage.INSTANCE.modifyWorkbenchState();
+        }
     }
 
     /**

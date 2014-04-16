@@ -62,6 +62,8 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -119,6 +121,7 @@ import org.knime.workbench.ui.p2.actions.InvokeInstallSiteAction;
 import org.knime.workbench.ui.p2.actions.InvokeUpdateAction;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -225,25 +228,25 @@ public class IntroPage implements LocationListener {
     }
 
     /**
-     * Iterates over all checkbox elements in the intro page and looks up the corresponding preference keys. The
-     * div corresponding to the checkboxes/preference keys are then either show or hidden.
+     * Iterates over all checkbox elements in the intro page and looks up the corresponding preference keys. The div
+     * corresponding to the checkboxes/preference keys are then either show or hidden.
      *
      * @param xpath an XPath object for reuse
      * @param doc the document
      */
     private void processIntroProperties(final XPath xpath, final Document doc) throws XPathExpressionException {
         IEclipsePreferences prefs =
-                InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
+            InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
         NodeList checkBoxes =
-                (NodeList)xpath.evaluate("//div[@id='properties']//input[@type='checkbox']", doc.getDocumentElement(),
-                    XPathConstants.NODESET);
+            (NodeList)xpath.evaluate("//div[@id='properties']//input[@type='checkbox']", doc.getDocumentElement(),
+                XPathConstants.NODESET);
         for (int i = 0; i < checkBoxes.getLength(); i++) {
             Element cb = (Element)checkBoxes.item(i);
             String name = cb.getAttribute("name");
             String key = "org.knime.product.intro." + name;
 
             Element div =
-                    (Element)xpath.evaluate("//div[@id='" + name + "']", doc.getDocumentElement(), XPathConstants.NODE);
+                (Element)xpath.evaluate("//div[@id='" + name + "']", doc.getDocumentElement(), XPathConstants.NODE);
             if (prefs.getBoolean(key, true)) {
                 cb.setAttribute("checked", "checked");
                 div.removeAttribute("style");
@@ -253,7 +256,6 @@ public class IntroPage implements LocationListener {
             }
         }
     }
-
 
     /**
      * Inserts the most recently used workflows in the MRU list on the intro page. It will insert &lt;li> elements.
@@ -291,7 +293,7 @@ public class IntroPage implements LocationListener {
                     mruList.appendChild(li);
 
                     Element a = mruList.getOwnerDocument().createElement("a");
-                    a.setAttribute("href", "openWorkflow:" + uri);
+                    a.setAttribute("href", "intro://openWorkflow/" + uri);
                     a.setTextContent(workflowName);
                     li.appendChild(a);
                 }
@@ -374,26 +376,25 @@ public class IntroPage implements LocationListener {
                     Document doc = parser.parse(workbenchFile);
 
                     XPath xpath = m_xpathFactory.newXPath();
+
                     NodeList editorList =
-                        (NodeList)xpath.evaluate("//editors/editor", doc.getDocumentElement(), XPathConstants.NODESET);
+                        (NodeList)xpath.evaluate("//page/editors/editor", doc.getDocumentElement(), XPathConstants.NODESET);
                     if (editorList.getLength() > 0) {
-                        for (int i = 0; i < editorList.getLength(); i++) {
-                            Element editor = (Element)editorList.item(i);
+                        resortEditorList(editorList);
+                    }
+                    editorList =
+                        (NodeList)xpath.evaluate("//page/editors/editor", doc.getDocumentElement(), XPathConstants.NODESET);
 
-                            if (!removeStaleIntroEditor(editor)) {
-                                // "disable" all other (workflow) editors
-                                editor.removeAttribute("activePart");
-                                editor.removeAttribute("focus");
-                            }
-                        }
+                    NodeList partList =
+                            (NodeList)xpath.evaluate("//editors//part", doc.getDocumentElement(), XPathConstants.NODESET);
+                    if (partList.getLength() > 0) {
+                        Node parent = partList.item(0).getParentNode();
+                        Element newPart = doc.createElement("part");
+                        newPart.setAttribute("id", Integer.toString(editorList.getLength() - 1));
+                        parent.insertBefore(newPart, parent.getFirstChild());
+                    }
 
-                        Node firstEditor = editorList.item(0);
-                        Node parent = firstEditor.getParentNode();
-                        if (parent != null) {
-                            // is null if the only editor was a stale intro page that got removed above
-                            parent.insertBefore(createIntroEditorNode(doc, m_introFile.toURI().toURL()), firstEditor);
-                            m_workbenchModified = true;
-                        }
+                    if (editorList.getLength() > 0) {
                         serializeWorkbenchState(doc, workbenchFile);
                     }
                     // if no editor was open, the intro page will be opened by #show; it's too complicated to re-build
@@ -403,6 +404,39 @@ public class IntroPage implements LocationListener {
                     LOGGER.error("Could not modify workbench state to show intro page: " + ex.getMessage(), ex);
                 }
             }
+        }
+    }
+
+
+    private void resortEditorList(final NodeList editorList) throws DOMException, MalformedURLException {
+        // find last active workflow editor
+        Deque<Node> newEditorList = new LinkedList<>();
+        for (int i = 0; i < editorList.getLength(); i++) {
+            Element editor = (Element)editorList.item(i);
+
+            if (!removeStaleIntroEditor(editor)) {
+                if ("true".equals(editor.getAttribute("activePart"))) {
+                    newEditorList.addFirst(editor);
+                } else {
+                    newEditorList.add(editor);
+                }
+
+                // "disable" all other (workflow) editors
+                editor.removeAttribute("activePart");
+                editor.removeAttribute("focus");
+            }
+        }
+
+        if (!newEditorList.isEmpty()) {
+            // move active editor to front so that it gets activated when the intro page is closed
+            Node parent = newEditorList.getFirst().getParentNode();
+            for (Node n : newEditorList) {
+                parent.removeChild(n);
+                parent.appendChild(n);
+            }
+
+            parent.appendChild(createIntroEditorNode(parent.getOwnerDocument(), m_introFile.toURI().toURL()));
+            m_workbenchModified = true;
         }
     }
 
@@ -514,13 +548,18 @@ public class IntroPage implements LocationListener {
     private void handleIntroCommand(final URI command) {
         switch (command.getHost().toLowerCase()) {
             case "openworkflow":
+                String workflowUri = command.getPath();
+                if (workflowUri.startsWith("/")) {
+                    workflowUri = workflowUri.substring(1);
+                }
                 try {
+                    URL u = new URL(workflowUri);
                     IDE.openEditor(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(), new URI(
-                        command.getPath()), WorkflowEditor.ID, true);
-                } catch (URISyntaxException ex) {
-                    LOGGER.error("Invalid workflow URI '" + command.getPath() + "': " + ex.getMessage(), ex);
+                        u.getProtocol(), u.getHost(), u.getPath(), u.getQuery()), WorkflowEditor.ID, true);
+                } catch (URISyntaxException  | MalformedURLException ex) {
+                    LOGGER.error("Invalid workflow URI '" + workflowUri + "': " + ex.getMessage(), ex);
                 } catch (PartInitException ex) {
-                    LOGGER.error("Could not open workflow '" + command.getPath() + "': " + ex.getMessage(), ex);
+                    LOGGER.error("Could not open workflow '" + workflowUri + "': " + ex.getMessage(), ex);
                 }
                 break;
             case "invokeupdate":
