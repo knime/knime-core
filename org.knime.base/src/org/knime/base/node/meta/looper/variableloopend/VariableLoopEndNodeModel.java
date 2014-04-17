@@ -79,6 +79,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.util.filter.variable.FlowVariableFilterConfiguration;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNodeTerminator;
@@ -103,6 +104,7 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
 
     private int m_count;
     
+    private FlowVariableFilterConfiguration m_selection;
 
     /**
      * Creates new instance of <code>VariableLoopEndNodeModel</code>.
@@ -110,6 +112,8 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
     protected VariableLoopEndNodeModel() {
         super(new PortType[]{FlowVariablePortObject.TYPE},
               new PortType[]{BufferedDataTable.TYPE});
+        m_selection = new FlowVariableFilterConfiguration("selection");
+        m_selection.loadDefaults(getAvailableFlowVariables(), true);
     }
 
     /**
@@ -206,13 +210,9 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
         Map<String, FlowVariable> availableFlowVars = 
             getAvailableFlowVariables();
         // for now take all variable names
-        String[] flowVarNames = new String[availableFlowVars.size()];
-        int j = 0;
-        for (String name : availableFlowVars.keySet()) {
-            flowVarNames[j] = name;
-            j++;
-        }
-        
+
+        String[] flowVarNames = m_selection.applyTo(availableFlowVars).getIncludes();
+
         // create a cell for each selected and available flow var
         DataCell[] cells = new DataCell[flowVarNames.length];
         if (flowVarNames.length > 0) {
@@ -249,13 +249,9 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
         Map<String, FlowVariable> availableFlowVars = 
             getAvailableFlowVariables();        
         // for now take all variable names
-        String[] flowVarNames = new String[availableFlowVars.size()];
-        int j = 0;
-        for (String name : availableFlowVars.keySet()) {
-            flowVarNames[j] = name;
-            j++;
-        }
-        
+
+        String[] flowVarNames = m_selection.applyTo(availableFlowVars).getIncludes();
+
         DataColumnSpec[] colSpecs = new DataColumnSpec[0];
         
         // create for each  specified flow variable a column spec, if available
@@ -349,7 +345,7 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // Nothing to do ...
+        m_selection.saveConfiguration(settings);
     }
 
     /**
@@ -358,7 +354,8 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // Nothing to do ...
+        FlowVariableFilterConfiguration config = new FlowVariableFilterConfiguration("selection");
+        config.loadConfigurationInModel(settings);
     }
 
     /**
@@ -367,7 +364,9 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // Nothing to do ...
+        FlowVariableFilterConfiguration config = new FlowVariableFilterConfiguration("selection");
+        config.loadConfigurationInModel(settings);
+        m_selection = config;
     }
 
     /**

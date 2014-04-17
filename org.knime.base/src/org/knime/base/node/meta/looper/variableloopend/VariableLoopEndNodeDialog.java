@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,67 +40,64 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
- * 
+ * ---------------------------------------------------------------------
+ *
  * History
- *   31.05.2012 (kilian): created
+ *   Apr 17, 2014 ("Patrick Winter"): created
  */
 package org.knime.base.node.meta.looper.variableloopend;
 
+import java.util.Map;
+
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.filter.variable.FlowVariableFilterConfiguration;
+import org.knime.core.node.util.filter.variable.FlowVariableFilterPanel;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
- * The factory of the variable loop end node.
- * 
- * @author Kilian Thiel, KNIME.com, Berlin, Germany
+ *
+ * @author "Patrick Winter"
  */
-public class VariableLoopEndNodeFactory extends
-        NodeFactory<VariableLoopEndNodeModel> {
+public class VariableLoopEndNodeDialog extends NodeDialogPane {
+
+    private FlowVariableFilterPanel m_selection;
 
     /**
-     * {@inheritDoc}
+     *
      */
-    @Override
-    public VariableLoopEndNodeModel createNodeModel() {
-        return new VariableLoopEndNodeModel();
+    public VariableLoopEndNodeDialog() {
+        m_selection = new FlowVariableFilterPanel();
+        addTab("Options", m_selection);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected int getNrNodeViews() {
-        return 0;
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        FlowVariableFilterConfiguration config = new FlowVariableFilterConfiguration("selection");
+        m_selection.saveConfiguration(config);
+        config.saveConfiguration(settings);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<VariableLoopEndNodeModel> createNodeView(
-            final int viewIndex,
-            final VariableLoopEndNodeModel nodeModel) {
-        return null;
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+            throws NotConfigurableException {
+        FlowVariableFilterConfiguration config = new FlowVariableFilterConfiguration("selection");
+        Map<String, FlowVariable> variables = getAvailableFlowVariables();
+        config.loadConfigurationInDialog(settings, variables);
+        m_selection.loadConfiguration(config, variables);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new VariableLoopEndNodeDialog();
-    }
 }
