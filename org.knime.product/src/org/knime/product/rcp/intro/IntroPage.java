@@ -294,6 +294,7 @@ public class IntroPage implements LocationListener {
 
                     Element a = mruList.getOwnerDocument().createElement("a");
                     a.setAttribute("href", "intro://openWorkflow/" + uri);
+                    a.setAttribute("title", URLDecoder.decode(uri, "UTF-8").replaceAll("/workflow\\.knime$", ""));
                     a.setTextContent(workflowName);
                     li.appendChild(a);
                 }
