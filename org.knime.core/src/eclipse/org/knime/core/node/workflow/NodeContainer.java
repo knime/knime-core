@@ -1372,9 +1372,13 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     }
 
     /**
-     * @return the nodeContainerDirectory
+     * Returns the directory for this node container. If the node has not been persisted yet, <code>null</code> is
+     * returned.
+     *
+     * @return a directory or <code>null</code>
+     * @noreference this is not part of the public API
      */
-    protected final ReferencedFile getNodeContainerDirectory() {
+    public final ReferencedFile getNodeContainerDirectory() {
         return m_nodeContainerDirectory;
     }
 
