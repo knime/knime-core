@@ -47,11 +47,11 @@ All other trademarks are the property of their respective owners.
    <splash
       location="org.knime.product" />
    <launcher name="knime">
-      <linux icon="/org.knime.product/icons/knime128.xpm"/>
-      <macosx icon="/org.knime.product/icons/knime.icns"/>
+      <linux icon="/org.knime.product/icons/knime_linux_128.xpm"/>
+      <macosx icon="/org.knime.product/icons/knime_mac.icns"/>
       <solaris/>
       <win useIco="true">
-         <ico path="/org.knime.product/icons/knime.ico"/>
+         <ico path="/org.knime.product/icons/knime_windows_128.ico"/>
          <bmp/>
       </win>
    </launcher>
