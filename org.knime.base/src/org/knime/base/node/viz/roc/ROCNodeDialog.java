@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -63,6 +63,8 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.border.Border;
 
 import org.knime.core.data.DataCell;
@@ -94,12 +96,15 @@ public class ROCNodeDialog extends NodeDialogPane {
     private final ColumnSelectionComboxBox m_classColumn =
             new ColumnSelectionComboxBox((Border)null, NominalValue.class);
 
-    private final JComboBox m_positiveClass =
-            new JComboBox(new DefaultComboBoxModel());
+    private final JComboBox<DataCell> m_positiveClass =
+            new JComboBox<>(new DefaultComboBoxModel<DataCell>());
+
+    private final JSpinner m_maxPoints = new JSpinner(new SpinnerNumberModel(2000, -1, Integer.MAX_VALUE, 10));
 
     @SuppressWarnings("unchecked")
     private final ColumnFilterPanel m_sortColumns =
             new ColumnFilterPanel(false, DoubleValue.class);
+
 
     private final JLabel m_warningLabel = new JLabel();
 
@@ -119,6 +124,7 @@ public class ROCNodeDialog extends NodeDialogPane {
         c.gridx++;
         p.add(m_classColumn, c);
         m_classColumn.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 changeClassColumn(p);
             }
@@ -136,6 +142,13 @@ public class ROCNodeDialog extends NodeDialogPane {
         c.anchor = GridBagConstraints.WEST;
         p.add(m_warningLabel, c);
         c.anchor = GridBagConstraints.NORTHWEST;
+
+
+        c.gridx = 0;
+        c.gridy++;
+        p.add(new JLabel("Limit data points for each curve to   "), c);
+        c.gridx++;
+        p.add(m_maxPoints, c);
 
         c.gridy++;
         c.gridx = 0;
@@ -160,7 +173,7 @@ public class ROCNodeDialog extends NodeDialogPane {
      */
     private void changeClassColumn(final JComponent parent) {
         String selCol = m_classColumn.getSelectedColumn();
-        ((DefaultComboBoxModel)m_positiveClass.getModel()).removeAllElements();
+        ((DefaultComboBoxModel<DataCell>)m_positiveClass.getModel()).removeAllElements();
         if ((selCol != null) && (m_spec != null)) {
             DataColumnSpec cs = m_spec.getColumnSpec(selCol);
             Set<DataCell> values = cs.getDomain().getValues();
@@ -197,6 +210,7 @@ public class ROCNodeDialog extends NodeDialogPane {
         m_classColumn.update(specs[0], m_settings.getClassColumn());
         m_positiveClass.setSelectedItem(m_settings.getPositiveClass());
         m_sortColumns.update(specs[0], false, m_settings.getCurves());
+        m_maxPoints.setValue(m_settings.getMaxPoints());
     }
 
     /**
@@ -210,6 +224,7 @@ public class ROCNodeDialog extends NodeDialogPane {
                 .setPositiveClass((DataCell)m_positiveClass.getSelectedItem());
         m_settings.getCurves().clear();
         m_settings.getCurves().addAll(m_sortColumns.getIncludedColumnSet());
+        m_settings.setMaxPoints((Integer) m_maxPoints.getValue());
         m_settings.saveSettings(settings);
     }
 

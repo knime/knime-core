@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -140,20 +140,16 @@ public class ROCNodeView extends NodeView<ROCNodeModel> {
             Stroke st = new BasicStroke(2);
             synchronized (curves) {
                 for (ROCCurve curve : curves) {
-                    maxX =
-                            (int)Math.max(maxX,
-                                    curve.getX()[curve.getX().length - 1]);
-                    for (int k = 0; k < curve.getX().length; k++) {
-                        maxY = Math.max(maxY, curve.getY()[k]);
-                    }
+                    maxX = (int)Math.max(maxX, curve.getX()[curve.getX().length - 1]);
+                    maxY = Math.max(maxY, curve.getY()[curve.getY().length - 1]);
+                }
 
-                    addLine(curve.getX(), curve.getY(), COLORS[i++
-                            % COLORS.length], st);
+                addLine(new double[]{0, maxX}, new double[]{0, maxY}, Color.lightGray, st);
+
+                for (ROCCurve curve : curves) {
+                    addLine(curve.getX(), curve.getY(), COLORS[i++ % COLORS.length], st);
                 }
             }
-
-            addLine(new double[]{0, maxX}, new double[]{0, maxY},
-                    Color.lightGray, st);
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -114,19 +114,41 @@ public class ROCNodeModel extends NodeModel {
         private final double[] m_x, m_y;
 
         /**
-         * Creates a new ROC curve container.
+         * Creates a new ROC curve container. The data points may be downsampled by providing a maximum number
+         * of points. This should speed up the view for curves with many data points
          *
          * @param name the curve's name
          * @param x the curve's x-values
          * @param y the curve's y-values
          * @param area the curve's area
+         * @param maxSamples the maximum number of points to store when downsampling the curve; -1 disabled downsampling
          */
         ROCCurve(final String name, final double[] x, final double[] y,
-                final double area) {
+                final double area, final int maxPoints) {
             m_name = name;
-            m_x = x;
-            m_y = y;
+            m_x = sample(x, maxPoints);
+            m_y = sample(y, maxPoints);
             m_area = area;
+        }
+
+        private static double[] sample(final double[] in, final int maxPoints) {
+            if ((maxPoints == -1) || (in.length <= maxPoints)) {
+                return in;
+            }
+
+            double[] out = new double[maxPoints];
+            out[0] = in[0];
+            out[out.length - 1] = in[in.length - 1];
+
+            final double factor = in.length / (double) maxPoints;
+            double x = factor;
+
+            for (int i = 1; i < out.length - 1; i++) {
+                out[i] = in[(int) Math.round(x)];
+                x += factor;
+            }
+
+            return out;
         }
 
         /**
@@ -251,7 +273,7 @@ public class ROCNodeModel extends NodeModel {
                 }
                 // if values differ (if they are equal we can't prefer one
                 // value over the other as they are indifferent; for a sequence
-                // of equal probabilities, think of what would happen if we 
+                // of equal probabilities, think of what would happen if we
                 // first encounter all TP and then the FP and the other way
                 // around ... the following lines circumvent this)
                 if (!row.getCell(scoreColIndex).equals(lastScore)) {
@@ -282,7 +304,7 @@ public class ROCNodeModel extends NodeModel {
                 }
             }
 
-            m_curves.add(new ROCCurve(c, xValues, yValues, area));
+            m_curves.add(new ROCCurve(c, xValues, yValues, area, m_settings.getMaxPoints()));
             outCont.addRowToTable(new DefaultRow(new RowKey(c.toString()),
                     new DoubleCell(area)));
         }
@@ -319,7 +341,7 @@ public class ROCNodeModel extends NodeModel {
             try {
                 area = Double.parseDouble(in.readLine());
             } catch (final NumberFormatException e) {
-                throw new IOException("Can't parse double: " 
+                throw new IOException("Can't parse double: "
                         + e.getMessage(), e);
             }
 
@@ -331,7 +353,7 @@ public class ROCNodeModel extends NodeModel {
                 try {
                     x[k] = Double.parseDouble(parts[k]);
                 } catch (final NumberFormatException e) {
-                    throw new IOException("Can't parse double: " 
+                    throw new IOException("Can't parse double: "
                             + e.getMessage(), e);
                 }
             }
@@ -344,12 +366,12 @@ public class ROCNodeModel extends NodeModel {
                 try {
                     y[k] = Double.parseDouble(parts[k]);
                 } catch (final NumberFormatException e) {
-                    throw new IOException("Can't parse double: " 
+                    throw new IOException("Can't parse double: "
                             + e.getMessage(), e);
                 }
             }
 
-            m_curves.add(new ROCCurve(name, x, y, area));
+            m_curves.add(new ROCCurve(name, x, y, area, -1));
         }
 
         in.close();
@@ -424,6 +446,10 @@ public class ROCNodeModel extends NodeModel {
         if (s.getPositiveClass().isMissing()) {
             throw new InvalidSettingsException(
                     "Missing value for the positive class chosen");
+        }
+
+        if ((s.getMaxPoints() == 0) || (s.getMaxPoints() == 1)) {
+            throw new InvalidSettingsException("At least two data points are necessary for each curve");
         }
     }
 

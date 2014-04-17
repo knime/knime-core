@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -70,6 +70,8 @@ public class ROCSettings {
 
     private DataCell m_positiveClass;
 
+    private int m_maxPoints = 2000;
+
     /**
      * Returns the list of class probability columns that should be shown
      * in the ROC view.
@@ -118,6 +120,28 @@ public class ROCSettings {
         m_classColumn = colName;
     }
 
+
+    /**
+     * Sets the maximum number of points for each curve that are shown in the view.
+     *
+     * @param maxPoints the maximum number of points or -1 if the number should not be limited
+     * @since 2.10
+     */
+    public void setMaxPoints(final int maxPoints) {
+        m_maxPoints = maxPoints;
+    }
+
+
+    /**
+     * Returns the maximum number of points for each curve that are shown in the view.
+     *
+     * @return the maximum number of points or -1 if the number should not be limited
+     * @since 2.10
+     */
+    public int getMaxPoints() {
+        return m_maxPoints;
+    }
+
     /**
      * Saves this object's settings to the given node settings.
      *
@@ -127,6 +151,7 @@ public class ROCSettings {
         settings.addString("classColumn", m_classColumn);
         settings.addDataCell("positiveClass", m_positiveClass);
         settings.addStringArray("curves", m_curves.toArray(new String[0]));
+        settings.addInt("maxPoints", m_maxPoints);
     }
 
     /**
@@ -144,6 +169,8 @@ public class ROCSettings {
         for (String s : settings.getStringArray("curves")) {
             m_curves.add(s);
         }
+
+        m_maxPoints = settings.getInt("maxPoints", -1); // since 2.10
     }
 
     /**
@@ -159,5 +186,7 @@ public class ROCSettings {
         for (String s : settings.getStringArray("curves", new String[0])) {
             m_curves.add(s);
         }
+
+        m_maxPoints = settings.getInt("maxPoints", 2000); // since 2.10
     }
 }

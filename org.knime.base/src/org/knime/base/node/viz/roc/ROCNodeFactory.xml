@@ -31,6 +31,10 @@
         </option>
         <option name="Positive class value">Select the value from the class column that stands for the "positive" class, i.e.
         the value high probabilities in the probability column (see below) are assigned to.</option>
+        <option name="Limit data points for each curve to">By default each curve shows at most 2,000 different data points
+        regardless how may rows are in the input. If you want to see more or less points in the curve, adjust this value.
+        Lower values make rendering the curves faster but this is only an issue if you have many different curves. A value
+        of -1 disables the limit and shows all input data points.</option>
         <option name="Columns containing the positive class probabilities">Select the
         column(s) that contain the probabilities for the a row being from the positive class.        
         </option>
