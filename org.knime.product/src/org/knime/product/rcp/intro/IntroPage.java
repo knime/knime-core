@@ -525,6 +525,10 @@ public class IntroPage implements LocationListener {
     public void changing(final LocationEvent event) {
         try {
             URI uri = new URI(event.location);
+            if (uri.toString().endsWith(m_introFile.getAbsolutePath().replace("\\", "/"))) {
+                return;
+            }
+
             if ("intro".equals(uri.getScheme())) {
                 handleIntroCommand(uri);
             } else {
@@ -681,6 +685,6 @@ public class IntroPage implements LocationListener {
 
         IEditorInput input = ref.getEditorInput();
         return (input instanceof WebBrowserEditorInput)
-            && ((WebBrowserEditorInput)input).getURL().getPath().endsWith(m_introFile.getAbsolutePath());
+            && ((WebBrowserEditorInput)input).getURL().getPath().endsWith(m_introFile.getAbsolutePath().replace("\\", "/"));
     }
 }
