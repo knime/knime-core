@@ -51,7 +51,7 @@ All other trademarks are the property of their respective owners.
       <macosx icon="/org.knime.product/icons/knime_mac.icns"/>
       <solaris/>
       <win useIco="true">
-         <ico path="/org.knime.product/icons/knime_windows_256.ico"/>
+         <ico path="/org.knime.product/icons/knime_windows_128.ico"/>
          <bmp/>
       </win>
    </launcher>
@@ -63,7 +63,6 @@ All other trademarks are the property of their respective owners.
       <macos include="true">org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7</macos>
       <windows include="true">org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7</windows>
    </vm>
-
 
    <plugins>
    </plugins>
