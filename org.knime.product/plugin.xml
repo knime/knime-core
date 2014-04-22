@@ -23,7 +23,7 @@
             description="An Integrated and Extensible Data Analysis Workbench">
          <property
                name="windowImage"
-               value="icons/gif/knime16.gif">
+               value="icons/png/knime_16.png">
          </property>
          <property
                name="aboutText"
@@ -31,7 +31,7 @@
          </property>
          <property
                name="aboutImage"
-               value="icons/gif/knime128.gif">
+               value="icons/png/knime_about.png">
          </property>
          <property
                name="appName"
@@ -43,7 +43,7 @@
          </property>
          <property
                name="windowImages"
-               value="icons/gif/knime16.gif,icons/gif/knime32.gif,icons/gif/knime48.gif,icons/gif/knime64.gif,icons/gif/knime128.gif">
+               value="icons/png/knime_16.png,icons/png/knime_32.png,icons/png/knime_48.png,icons/png/knime_64.png,icons/png/knime_128.png">
          </property>
       </product>
    </extension>
