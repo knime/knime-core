@@ -264,6 +264,9 @@ public class IntroPage implements LocationListener {
      */
     private void insertMRUList(final Element mruList) throws ParserConfigurationException, SAXException, IOException,
         XPathExpressionException {
+        if (m_freshWorkspace) {
+            return; // no workflows used in a fresh workspace
+        }
 
         // if it's not fresh workspace, the workbench.xml file exists (already checked in constructor)
         IPath path = WorkbenchPlugin.getDefault().getDataLocation().append("workbench.xml");
