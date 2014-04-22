@@ -19,9 +19,11 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -123,6 +125,8 @@ public class KNIMESplashHandler extends BasicSplashHandler {
 
     private static final Rectangle MESSAGE_RECT = new Rectangle(7, 272, 445, 20);
 
+    private static final RGB KNIME_GRAY = new RGB(0x7d, 0x7d, 0x7d);
+
     private Composite m_iconPanel;
 
     private Label m_installedExtensions;
@@ -136,6 +140,7 @@ public class KNIMESplashHandler extends BasicSplashHandler {
     public void init(final Shell splash) {
         // Store the shell
         super.init(splash);
+        setForeground(KNIME_GRAY);
         splash.setLayout(null);
         // Force shell to inherit the splash background
         splash.setBackgroundMode(SWT.INHERIT_DEFAULT);
@@ -315,6 +320,7 @@ public class KNIMESplashHandler extends BasicSplashHandler {
 
         if (splashExtensions.size() > 0) {
             m_installedExtensions = new Label(splash, SWT.NONE);
+            m_installedExtensions.setForeground(new Color(Display.getCurrent(), KNIME_GRAY));
             m_installedExtensions.setText("Installed Extensions:");
 
             /*
