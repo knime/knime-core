@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -222,7 +222,7 @@ public abstract class AbstractCellFactory implements CellFactory {
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress(curRowNr / (double)rowCount, "Processed row "
-                + curRowNr + " (\"" + lastKey + "\")");
+                + curRowNr + "/" + rowCount + " (\"" + lastKey + "\")");
     }
 
 }
