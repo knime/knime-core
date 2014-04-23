@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -143,7 +143,7 @@ public class PMMLImport {
             /* Try to recover when reading a PMML 3.x document that
              * was produced by KNIME by just replacing the PMML version and
              * namespace or when the recover flag is set. */
-            if (update || PMMLUtils.isOldKNIMEPMML(xmlDoc)) {
+            if (update || PMMLUtils.isOldKNIMEPMML(xmlDoc) || PMMLUtils.is4_1PMML(xmlDoc)) {
                 try {
                     String updatedPMML
                             = PMMLUtils.getUpdatedVersionAndNamespace(xmlDoc);
@@ -152,23 +152,23 @@ public class PMMLImport {
                     pmmlDoc = PMMLDocument.Factory.parse(updatedPMML);
                 } catch (Exception e) {
                     throw new RuntimeException(
-                            "Parsing of PMML v 3.x/4.0 document failed.", e);
+                            "Parsing of PMML v 3.x/4.0/4.1 document failed.", e);
                 }
                 if (!update) {
                     LOGGER.info(
-                            "KNIME produced PMML 3.x/4.0 updated to PMML 4.1.");
+                            "KNIME produced PMML 3.x/4.0/4.1 updated to PMML 4.2.");
                 } else {
-                    LOGGER.info("Older PMML version updated to PMML 4.1.");
+                    LOGGER.info("Older PMML version updated to PMML 4.2.");
                 }
             }
         }
         if (pmmlDoc == null) {
-            throw new IllegalArgumentException("File \"" + urlToString + "\" is not a valid PMML 4.1 file.");
+            throw new IllegalArgumentException("File \"" + urlToString + "\" is not a valid PMML 4.2 file.");
         }
         Map<String, String> msg = PMMLValidator.validatePMML(pmmlDoc);
         if (!msg.isEmpty()) {
             StringBuffer sb = new StringBuffer();
-            sb.append("File \"" + urlToString + "\" is not a valid PMML 4.1 file. Errors:\n");
+            sb.append("File \"" + urlToString + "\" is not a valid PMML 4.2 file. Errors:\n");
             for (Map.Entry<String, String> entry : msg.entrySet()) {
                 String location = entry.getKey();
                 String message = entry.getValue();
