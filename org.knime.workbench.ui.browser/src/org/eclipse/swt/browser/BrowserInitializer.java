@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -127,13 +127,13 @@ public class BrowserInitializer {
     private static boolean isWebkitInstalled() throws ClassNotFoundException, SecurityException, NoSuchMethodException,
         IllegalArgumentException, IllegalAccessException, InvocationTargetException {
         Class<?> webkitClass = Class.forName("org.eclipse.swt.browser.WebKit");
-        Method m = webkitClass.getDeclaredMethod("isInstalled");
+        Method m = webkitClass.getDeclaredMethod("IsInstalled");
         return (Boolean)m.invoke(null);
     }
 
     private static boolean isWebkitComaptible() throws ClassNotFoundException, SecurityException,
         NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
-        // Check if webkit version is < 2
+        // Check if webkit version is < 3
         Class<?> webkitGTKClass = Class.forName("org.eclipse.swt.internal.webkit.WebKitGTK");
         Method majorVersionMethod = webkitGTKClass.getDeclaredMethod("webkit_major_version");
         int majorVersion = (Integer)majorVersionMethod.invoke(null);
@@ -142,10 +142,11 @@ public class BrowserInitializer {
         Method microVersionMethod = webkitGTKClass.getDeclaredMethod("webkit_micro_version");
         int microVersion = (Integer)microVersionMethod.invoke(null);
         String webkitVersion = majorVersion + "." + minorVersion + "." + microVersion;
-        if (majorVersion >= 2) {
-            logger.warn("Found WebKit version " + webkitVersion + ". Only WebKit version 1.x is supported.");
+        if (majorVersion >= 3) {
+            logger.warn("Found WebKit version " + webkitVersion + ". Only WebKit version 1.x & 2.x are supported.");
             return false;
         } else {
+            logger.info("Found WebKit version " + webkitVersion + ".");
             return true;
         }
     }
