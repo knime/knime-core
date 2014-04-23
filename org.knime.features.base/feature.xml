@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.base"
       label="KNIME Core"
-      version="2.9.3.qualifier"
+      version="2.10.0.qualifier"
       provider-name="KNIME GmbH, Konstanz, Germany"
       plugin="org.knime.product"
       image="icons/knime64.gif">
@@ -731,7 +731,9 @@ license terms applicable to such Node, including when such Node is
 propagated with or for interoperation with KNIME.
    </license>
 
-   <includes id="org.eclipse.rcp.swt_patch" version="0.0.0"/>
+   <includes
+         id="org.eclipse.rcp.swt_patch"
+         version="0.0.0"/>
 
    <requires>
       <import feature="org.eclipse.gef" version="3.4.2.v20090218-1145-67728084A56B4I233613552" match="compatible"/>
