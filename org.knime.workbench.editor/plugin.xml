@@ -596,7 +596,7 @@
       <view
             category="org.knime.workbench.ui.category"
             class="org.knime.workbench.nodemonitorview.NodeMonitorView"
-            icon="icons/node_description.png"
+            icon="icons/node_monitor.png"
             id="org.knime.workbench.nodemonitorview.nodemonitorview"
             name="Node Monitor"/>
    </extension>
