@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -63,6 +63,7 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.AbstractSimplePortObject;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabaseConnectionPortObject;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.image.ImagePortObject;
@@ -212,6 +213,9 @@ public abstract class AbstractPortFigure extends Shape {
         } else if (getType().equals(BufferedDataTable.TYPE)) {
             // data
             color = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
+        } else if (getType().equals(DatabaseConnectionPortObject.TYPE)) {
+            // database connection
+            color = new Color(Display.getCurrent(), 0xff, 0x50, 0x50);
         } else if (getType().equals(DatabasePortObject.TYPE)) {
             // database
             color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);

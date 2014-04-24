@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -252,7 +252,7 @@ public class DatabaseConnectionSettings {
     /**
      * Creates and inits a new database configuration.
      * @param config to load
-     * @param cp <code>CredentialProvider</code> used to get user name/password
+     * @param cp <code>CredentialProvider</code> used to get user name/password, may be <code>null</code>
      * @throws InvalidSettingsException if settings are invalid
      * @since 2.7
      */
@@ -485,7 +485,7 @@ public class DatabaseConnectionSettings {
     /**
      * Load validated settings.
      * @param settings to load
-     * @param cp <code>CredentialProvider</code> used to get user name/password
+     * @param cp <code>CredentialProvider</code> used to get user name/password, may be <code>null</code>
      * @return true, if settings have changed
      * @throws InvalidSettingsException if settings are invalid
      */

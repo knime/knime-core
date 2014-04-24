@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -70,9 +70,9 @@ import org.knime.core.data.DataTable;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectZipInputStream;
 import org.knime.core.node.port.PortObjectZipOutputStream;
@@ -87,29 +87,27 @@ import org.knime.core.util.SwingWorkerWithContext;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DatabasePortObject implements PortObject {
-
+public class DatabasePortObject extends DatabaseConnectionPortObject {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             DatabasePortObject.class);
-
-    private final DatabasePortObjectSpec m_spec;
 
     /**
      * Database port type formed <code>PortObjectSpec.class</code> and
      * <code>PortObject.class</code> from this class.
      */
+    @SuppressWarnings("hiding")
     public static final PortType TYPE = new PortType(DatabasePortObject.class);
 
     /** {@inheritDoc} */
     @Override
     public DatabasePortObjectSpec getSpec() {
-        return m_spec;
+        return (DatabasePortObjectSpec)m_spec;
     }
 
     /** {@inheritDoc} */
     @Override
     public String getSummary() {
-        return "No. of columns: " + m_spec.getDataTableSpec().getNumColumns();
+        return "No. of columns: " + ((DatabasePortObjectSpec) m_spec).getDataTableSpec().getNumColumns();
     }
 
     /**
@@ -118,11 +116,7 @@ public class DatabasePortObject implements PortObject {
      * @throws NullPointerException if one of the arguments is null
      */
     public DatabasePortObject(final DatabasePortObjectSpec spec) {
-      if (spec == null) {
-            throw new NullPointerException(
-                    "DatabasePortObjectSpec must not be null!");
-        }
-        m_spec = spec;
+        super(spec);
     }
 
     /**
@@ -143,21 +137,35 @@ public class DatabasePortObject implements PortObject {
 
     /**
      * @return connection model
+     *
+     * @deprecated use {@link #getConnectionSettings(CredentialsProvider)} instead
      */
+    @Deprecated
     public ModelContentRO getConnectionModel() {
         return m_spec.getConnectionModel();
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public DatabaseQueryConnectionSettings getConnectionSettings(final CredentialsProvider credProvider)
+        throws InvalidSettingsException {
+        return ((DatabasePortObjectSpec) m_spec).getConnectionSettings(credProvider);
     }
 
     /**
      * Serializer used to save <code>DatabasePortObject</code>.
      * @return a new database port object serializer
      */
-    public static PortObjectSerializer<DatabasePortObject>
+    public static PortObjectSerializer<DatabaseConnectionPortObject>
             getPortObjectSerializer() {
-        return new PortObjectSerializer<DatabasePortObject>() {
+        return new PortObjectSerializer<DatabaseConnectionPortObject>() {
             /** {@inheritDoc} */
             @Override
-            public void savePortObject(final DatabasePortObject portObject,
+            public void savePortObject(final DatabaseConnectionPortObject portObject,
                     final PortObjectZipOutputStream out,
                     final ExecutionMonitor exec)
                     throws IOException, CanceledExecutionException {
@@ -204,8 +212,9 @@ public class DatabasePortObject implements PortObject {
     /** {@inheritDoc} */
     @Override
     public JComponent[] getViews() {
-        JComponent[] specPanels = m_spec.getViews();
-        final JComponent[] panels = new JComponent[specPanels.length + 1];
+        JComponent[] superViews = super.getViews();
+
+        final JComponent[] panels = new JComponent[superViews.length + 1];
         @SuppressWarnings("serial")
         final BufferedDataTableView dataView = new BufferedDataTableView(null) {
             @Override
@@ -279,7 +288,7 @@ public class DatabasePortObject implements PortObject {
             }
         });
         for (int i = 1; i < panels.length; i++) {
-            panels[i] = specPanels[i - 1];
+            panels[i] = superViews[i - 1];
         }
         return panels;
     }
@@ -293,14 +302,6 @@ public class DatabasePortObject implements PortObject {
         if (!(obj instanceof DatabasePortObject)) {
             return false;
         }
-        DatabasePortObject dbPort = (DatabasePortObject) obj;
-        return m_spec.equals(dbPort.m_spec);
+        return super.equals(obj);
     }
-
-    /** {@inheritDoc} */
-    @Override
-    public int hashCode() {
-        return m_spec.hashCode();
-    }
-
 }
