@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10 ">
+    <name>JDBC Connector</name>
+    <shortDescription>Create a database connection to any JDBC database</shortDescription>
+    <fullDescription>
+        <intro>
+            This node creates a connection to an arbitrary JDBC database. You need to select an appropriate driver and the
+            JDBC URL of the database (which is database specific). Login data can either be provided directly in the 
+            configuration or via credentials set on the workflow.
+        </intro>
+        
+        <option name="Database Driver">
+            Enter the database driver here; it is a Java class (including the
+            package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
+            Additional driver can be registered via KNIME's preference page
+            (Database Driver).
+        </option>
+        <option name="Database URL">
+            Enter the database name here, for example 
+            jdbc:odbc:database_name or jdbc:mysql://host:port/database_name
+        </option>
+        <option name="Workflow Credentials">
+            If checked, the credentials (user and password) are used as defined on 
+            the workflow. The credential name links to the specified user and 
+            password. Those can be replaced or edit using the 'Workflow Credentials'
+            menu available in the workflow context menu.
+        </option>
+        <option name="User Name">
+            Your log-in user name for the database.
+        </option>
+        <option name="Password">
+            Your log-in password for the database. Note, the password is
+            de- and encrypted before handling it internally.
+        </option>
+        <option name="TimeZone">
+            Select the TimeZone to convert the date, time or timestamp field into. The current implementation can't 
+            represent time zones. In order to support persisting those fields into a database, the time values can be 
+            changed according to the selected time zone, which is used as the offset (including the daylight saving time)
+            for the original values: <i>No Correction (use UTC)</i> is used for workflows (created before 2.8) and doesn't
+            apply any correction, <i>Use local TimeZone</i> uses the local time zone offset to correct the date field 
+            before reading or writing, and <i>TimeZone: </i> allows selecting the time zone to covert the date values into.  
+        </option>
+    </fullDescription>
+
+    <ports>
+        <outPort index="0" name="Database Connection">A database connection</outPort>
+    </ports>    
+</knimeNode>
