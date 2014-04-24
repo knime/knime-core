@@ -188,7 +188,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
 
         Display display = Display.getCurrent();
         final Shell shell = new Shell(display);
-        shell.setText(title);
+        shell.setText(title == null ? "View" : title);
         GridLayout layout = new GridLayout();
         layout.numColumns = 1;
         shell.setLayout(layout);

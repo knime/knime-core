@@ -84,6 +84,7 @@ public class JSONDataTable {
 
     /* serialized members */
     private JSONDataTableSpec m_spec;
+    private String[] m_rowKeys;
     private Object[][] m_data;
     private Object[][] m_extensions;
 
@@ -138,6 +139,7 @@ public class JSONDataTable {
         int currentRowNumber = 0;
         int numRows = 0;
 
+        ArrayList<String> rowKeyList = new ArrayList<String>();
         ArrayList<Object[]> dataArray = new ArrayList<Object[]>();
 
         while ((rIter.hasNext()) && (currentRowNumber + firstRow - 1 < numOfRows)) {
@@ -149,6 +151,8 @@ public class JSONDataTable {
                 // skip all rows until we see the specified first row
                 continue;
             }
+
+            rowKeyList.add(row.getKey().getString());
 
             dataArray.add(new Object[numOfColumns]);
             numRows++;
@@ -210,6 +214,7 @@ public class JSONDataTable {
         jsonTableSpec.setPossibleValues(possValues);
 
         setSpec(jsonTableSpec);
+        setRowKeys(rowKeyList.toArray(new String[0]));
         setData(getJSONDataArray(dataArray, numOfColumns));
         setExtensions(extensionArray);
 
@@ -245,6 +250,22 @@ public class JSONDataTable {
 
     public void setSpec(final JSONDataTableSpec spec) {
         m_spec = spec;
+    }
+
+    /**
+     * @return the rowKeys
+     * @since 2.10
+     */
+    public String[] getRowKeys() {
+        return m_rowKeys;
+    }
+
+    /**
+     * @param rowKeys the rowKeys to set
+     * @since 2.10
+     */
+    public void setRowKeys(final String[] rowKeys) {
+        m_rowKeys = rowKeys;
     }
 
     public Object[][] getData() {
