@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -48,6 +48,7 @@
  */
 package org.knime.base.node.io.database;
 
+import org.knime.base.node.io.database.util.DBReaderDialogPane;
 import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeDialogPane;
@@ -98,7 +99,7 @@ public final class DBReaderNodeFactory
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new DBReaderDialogPane(true) {
+        return new DBReaderDialogPane(true, true) {
             /** {@inheritDoc} */
             @Override
             protected boolean runWithoutConfigure() {

@@ -53,6 +53,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.sql.SQLException;
 
 import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.base.util.flowvariable.FlowVariableResolver;
@@ -78,13 +79,9 @@ import org.knime.core.node.workflow.CredentialsProvider;
  * @author Thomas Gabriel, University of Konstanz
  */
 class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
+    private DatabaseQueryConnectionSettings m_settings = new DatabaseQueryConnectionSettings();
 
     private DataTableSpec m_lastSpec = null;
-
-    private String m_query = null;
-
-    /** Retrieve meta data during {@link #configure(DataTableSpec[])}. */
-    private boolean m_skipConfigure = false;
 
     private final DatabaseReaderConnection m_load =
         new DatabaseReaderConnection(null);
@@ -113,9 +110,9 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
         } catch (URISyntaxException e) {
             url = "";
         }
-        DatabaseConnectionSettings settings =
-            new DatabaseConnectionSettings("org.sqlite.JDBC", url, null, null, null, "current");
-        m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(settings, null));
+        m_settings.setDriver("org.sqlite.JDBC");
+        m_settings.setDBName(url);
+        m_settings.setTimezone("current");
     }
 
     /**
@@ -127,8 +124,8 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
             throws CanceledExecutionException, Exception {
         exec.setProgress("Opening database connection...");
         try {
-            m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(
-                    m_load.getQueryConnection(), parseQuery(m_query)));
+            m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(m_settings, parseQuery(m_settings
+                .getQuery())));
             exec.setProgress("Reading data from database...");
             CredentialsProvider cp = getCredentialsProvider();
             final BufferedDataTable result = m_load.createTable(exec, cp);
@@ -205,28 +202,24 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
         if (m_lastSpec != null) {
             return new DataTableSpec[]{m_lastSpec};
         }
-        if (m_skipConfigure) {
+        if (!m_settings.getValidateQuery()) {
             return new DataTableSpec[] {null};
         }
         try {
-            DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
-            if (conn == null) {
-                throw new InvalidSettingsException(
-                        "No database connection available.");
-            }
-            if (m_query == null) {
+            if ((m_settings.getQuery() == null) || m_settings.getQuery().isEmpty()) {
                 throw new InvalidSettingsException("No query configured.");
             }
-            m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(
-                    conn, parseQuery(m_query)));
+            m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(m_settings, parseQuery(m_settings
+                .getQuery())));
             m_lastSpec = m_load.getDataTableSpec(getCredentialsProvider());
             return new DataTableSpec[]{m_lastSpec};
         } catch (InvalidSettingsException e) {
             m_lastSpec = null;
             throw e;
-        } catch (Throwable t) {
+        } catch (SQLException ex) {
             m_lastSpec = null;
-            throw new InvalidSettingsException(t);
+            throw new InvalidSettingsException(
+                "Could not determine table spec from database query: " + ex.getMessage(), ex);
         }
     }
 
@@ -255,20 +248,12 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        String query = settings.getString(DatabaseConnectionSettings.CFG_STATEMENT);
-        DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
-        if (conn == null || conn.loadValidatedConnection(settings, getCredentialsProvider())
-                || query == null || m_query == null || !query.equals(m_query)) {
+        boolean settingsChanged = m_settings.loadValidatedConnection(settings, getCredentialsProvider());
+
+        if (settingsChanged || (m_settings.getQuery() == null) || m_settings.getQuery().isEmpty()) {
             m_lastSpec = null;
-            try {
-                m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(settings, getCredentialsProvider()));
-            } catch (Throwable t) {
-                throw new InvalidSettingsException(t);
-            }
+            m_load.setDBQueryConnection(m_settings);
         }
-        m_query = query;
-        m_skipConfigure = settings.getBoolean(
-                DBReaderDialogPane.EXECUTE_WITHOUT_CONFIGURE, false);
     }
 
     /**
@@ -276,26 +261,20 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
-        if (conn != null) {
-            conn.saveConnection(settings);
-        }
-        settings.addString(DatabaseConnectionSettings.CFG_STATEMENT, m_query);
-        settings.addBoolean(DBReaderDialogPane.EXECUTE_WITHOUT_CONFIGURE,
-                m_skipConfigure);
+        m_settings.saveConnection(settings);
     }
 
     /**
      * @param newQuery the new query to set
      */
     final void setQuery(final String newQuery) {
-        m_query = newQuery;
+        m_settings.setQuery(newQuery);
     }
 
     /**
      * @return current query
      */
     final String getQuery() {
-        return m_query;
+        return m_settings.getQuery();
     }
 }

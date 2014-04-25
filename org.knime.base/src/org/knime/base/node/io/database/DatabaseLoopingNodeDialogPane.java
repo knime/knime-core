@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -56,6 +56,7 @@ import java.awt.GridLayout;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 
+import org.knime.base.node.io.database.util.DBReaderDialogPane;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -87,7 +88,7 @@ public class DatabaseLoopingNodeDialogPane extends DBReaderDialogPane {
      * Creates a new dialog for the Database Looping node.
      */
     DatabaseLoopingNodeDialogPane() {
-        super(true);
+        super(true, true);
         m_columns = new DialogComponentColumnNameSelection(createColumnModel(),
                 "Column selection: ", 0, DataValue.class);
         m_aggregatebyRow = new DialogComponentBoolean(createAggregateModel(),

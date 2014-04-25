@@ -128,6 +128,23 @@ public class DatabasePortObjectSpec extends DatabaseConnectionPortObjectSpec {
     }
 
     /**
+     * Creates a new database port object spec.
+     *
+     * @param spec underlying table spec
+     * @param querySettings database query settings
+     * @since 2.10
+     */
+    public DatabasePortObjectSpec(final DataTableSpec spec,
+            final DatabaseQueryConnectionSettings querySettings) {
+        super(querySettings);
+        if (spec == null) {
+            throw new IllegalArgumentException("DataTableSpec must not be null.");
+        }
+        m_spec = spec;
+    }
+
+
+    /**
      * @return underlying table spec
      */
     public DataTableSpec getDataTableSpec() {

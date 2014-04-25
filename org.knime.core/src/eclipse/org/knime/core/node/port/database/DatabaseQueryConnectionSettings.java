@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -65,7 +65,18 @@ public final class DatabaseQueryConnectionSettings
     /** Table place holder <code>#table#</code>. */
     public static final String TABLE_PLACEHOLDER = "#table#";
 
-    private final String m_query;
+    private String m_query;
+
+    private boolean m_validateQuery;
+
+    /**
+     * Creates a new empty settings object. Settings must be loaded with
+     * {@link #loadValidatedConnection(ConfigRO, CredentialsProvider)}.
+     * @since 2.10
+     */
+    public DatabaseQueryConnectionSettings() {
+
+    }
 
     /**
      * Create a new connection with an empty query object.
@@ -116,6 +127,7 @@ public final class DatabaseQueryConnectionSettings
     @Override
     public void saveConnection(final ConfigWO settings) {
         settings.addString(CFG_STATEMENT, m_query);
+        settings.addBoolean("execute_without_configure", !m_validateQuery);
         super.saveConnection(settings);
     }
 
@@ -127,6 +139,40 @@ public final class DatabaseQueryConnectionSettings
     }
 
     /**
+     * Sets the query in this object.
+     *
+     * @param sql a SQL query
+     * @since 2.10
+     */
+    public void setQuery(final String sql) {
+        m_query = sql;
+    }
+
+
+    /**
+     * Sets whether the query should be validated during configure.
+     *
+     * @param validateQuery <code>true</code> if the query should be validated, <code>false</code> otherwise
+     * @since 2.10
+     */
+    public void setValidateQuery(final boolean validateQuery) {
+        m_validateQuery = validateQuery;
+    }
+
+
+    /**
+     * Returns whether the query should be validated during configure.
+     *
+     * @return <code>true</code> if the query should be validated, <code>false</code> otherwise
+     * @since 2.10
+     */
+    public boolean getValidateQuery() {
+        return m_validateQuery;
+    }
+
+
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -136,4 +182,22 @@ public final class DatabaseQueryConnectionSettings
         return cont;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean loadValidatedConnection(final ConfigRO settings, final CredentialsProvider cp)
+        throws InvalidSettingsException {
+        boolean settingsChanged = false;
+
+        String newQuery = settings.getString(DatabaseConnectionSettings.CFG_STATEMENT);
+        settingsChanged |= (newQuery != m_query) && (newQuery != null) && !newQuery.equals(m_query);
+        m_query = newQuery;
+
+        boolean newValidateQuery = !settings.getBoolean("execute_without_configure");
+        settingsChanged |= (newValidateQuery != m_validateQuery);
+        m_validateQuery = newValidateQuery;
+
+        return super.loadValidatedConnection(settings, cp) || settingsChanged;
+    }
 }

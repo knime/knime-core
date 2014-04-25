@@ -43,10 +43,12 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   25.04.2014 (thor): created
  */
-package org.knime.base.node.io.database;
+package org.knime.base.node.io.database.connection;
 
 import org.knime.base.node.io.database.util.DBReaderDialogPane;
 import org.knime.core.node.NodeDialogPane;
@@ -55,24 +57,22 @@ import org.knime.core.node.NodeView;
 
 /**
  *
- * @author Thomas Gabriel, University of Konstanz
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-public final class DBReaderConnectionNodeFactory
-        extends NodeFactory<DBReaderConnectionNodeModel> {
-
+public class DBTableSelectorNodeFactory extends NodeFactory<DBTableSelectorNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public DBReaderConnectionNodeModel createNodeModel() {
-        return new DBReaderConnectionNodeModel();
+    public DBTableSelectorNodeModel createNodeModel() {
+        return new DBTableSelectorNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getNrNodeViews() {
+    protected int getNrNodeViews() {
         return 0;
     }
 
@@ -80,8 +80,8 @@ public final class DBReaderConnectionNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public NodeView<DBReaderConnectionNodeModel> createNodeView(
-            final int viewIndex, final DBReaderConnectionNodeModel nodeModel) {
+    public NodeView<DBTableSelectorNodeModel> createNodeView(final int viewIndex,
+        final DBTableSelectorNodeModel nodeModel) {
         return null;
     }
 
@@ -89,7 +89,7 @@ public final class DBReaderConnectionNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public boolean hasDialog() {
+    protected boolean hasDialog() {
         return true;
     }
 
@@ -97,7 +97,7 @@ public final class DBReaderConnectionNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DBReaderDialogPane(true, true);
+    protected NodeDialogPane createNodeDialogPane() {
+        return new DBReaderDialogPane(false, true);
     }
 }

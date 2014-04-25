@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -72,22 +72,22 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * Class implements a tree that shows all available tables grouped by table
- * types together with their table names and column names (requested on 
- * demand). 
- * 
+ * types together with their table names and column names (requested on
+ * demand).
+ *
  * @author Thomas Gabriel, KNIME.com AG, Zurich, Switzerland
  */
 public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
-    
+
     private final JTree m_tree;
     private DatabaseMetaData m_meta;
-    
-    private final DefaultMutableTreeNode m_root = 
+
+    private final DefaultMutableTreeNode m_root =
             new DefaultMutableTreeNode("ROOT");
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DBTreeBrowser.class);
-    
+
     /**
      * Create a new database browser.
      * @param editor to which table and table column names are added
@@ -131,13 +131,14 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
         final JScrollPane jsp = new JScrollPane(m_tree);
         super.add(jsp, BorderLayout.CENTER);
     }
-    
+
     /**
      * Update this tree and metadata from database.
-     * @param meta <code>DatabaseMetaData</code> used to retrieve table names 
+     * @param meta <code>DatabaseMetaData</code> used to retrieve table names
      *             and column names from.
+     * @since 2.10
      */
-    final synchronized void update(final DatabaseMetaData meta) {
+    public final synchronized void update(final DatabaseMetaData meta) {
         m_meta = meta;
         m_tree.collapsePath(new TreePath(m_root));
         m_root.removeAllChildren();
@@ -162,18 +163,18 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
                 try {
                      tableNames = getTableNames(type);
                 } catch (Exception e) {
-                     LOGGER.debug("Could fetch database metadata of type '" 
+                     LOGGER.debug("Could fetch database metadata of type '"
                              + type + "', reason: " + e.getMessage());
                 }
                 if (tableNames == null || tableNames.length == 0) {
                     LOGGER.info("No database metainfo on type '" + type + "'.");
                     continue;
                 }
-                final DefaultMutableTreeNode typeNode = 
+                final DefaultMutableTreeNode typeNode =
                         new DefaultMutableTreeNode(type);
                 typeNode.setAllowsChildren(true);
                 for (final String table : tableNames) {
-                     final DefaultMutableTreeNode tableNode = 
+                     final DefaultMutableTreeNode tableNode =
                                 new DefaultMutableTreeNode(table);
                      tableNode.setAllowsChildren(true);
                      typeNode.add(tableNode);
@@ -186,7 +187,7 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
         m_tree.validate();
         m_tree.repaint();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void valueChanged(final TreeSelectionEvent event) {
@@ -202,18 +203,18 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
         try {
             String[] columnNames = getColumnNames(nodeInfo);
             for (String colName : columnNames) {
-                final DefaultMutableTreeNode child = 
+                final DefaultMutableTreeNode child =
                         new DefaultMutableTreeNode(colName);
                 child.setAllowsChildren(false);
                 node.add(child);
-            } 
+            }
         } catch (SQLException sqle) {
             LOGGER.debug(sqle);
         }
     }
-    
+
     private String[] getTableNames(final String type) throws SQLException {
-        final ResultSet rs = m_meta.getTables(null, null, "%", 
+        final ResultSet rs = m_meta.getTables(null, null, "%",
                 new String[]{type});
         final ArrayList<String> tableNames = new ArrayList<String>();
         while (rs.next()) {
@@ -225,7 +226,7 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
         return tableNames.toArray(new String[tableNames.size()]);
     }
 
-    private String[] getColumnNames(final String tableName) 
+    private String[] getColumnNames(final String tableName)
             throws SQLException {
         final ArrayList<String> columnNames = new ArrayList<String>();
         ResultSet rsc = m_meta.getColumns(null, null, tableName, null);

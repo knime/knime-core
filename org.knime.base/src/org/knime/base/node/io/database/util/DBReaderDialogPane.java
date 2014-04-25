@@ -46,7 +46,7 @@
  * -------------------------------------------------------------------
  *
  */
-package org.knime.base.node.io.database;
+package org.knime.base.node.io.database.util;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -70,7 +70,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingWorker;
 
-import org.knime.base.node.io.database.util.DBDialogPane;
+import org.knime.base.node.io.database.DBTreeBrowser;
 import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -79,6 +79,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabaseReaderConnection;
@@ -90,18 +91,19 @@ import org.knime.core.util.SwingWorkerWithContext;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBReaderDialogPane extends NodeDialogPane {
+public class DBReaderDialogPane extends NodeDialogPane {
 
-    private final boolean m_hasLoginPane;
-    private final DBDialogPane m_loginPane = new DBDialogPane(false);
+    private final boolean m_showConnectionPanel;
+    private final boolean m_showDBBrowser;
+
+    private final DBDialogPane m_connectionPane = new DBDialogPane(false);
+
+    private DatabaseConnectionSettings m_upstreamConnectionSettings;
 
     private final JEditorPane m_statmnt = new JEditorPane("text", "");
 
-    private final DefaultListModel m_listModelVars;
-    private final JList m_listVars;
-
-    /** Config key for the option to run the SQL query during configure. */
-    static final String EXECUTE_WITHOUT_CONFIGURE = "execute_without_configure";
+    private final DefaultListModel<FlowVariable> m_listModelVars;
+    private final JList<FlowVariable> m_listVars;
 
     private final JCheckBox m_configureBox = new JCheckBox(
             "Run SQL query only during execute, skips configure");
@@ -112,11 +114,15 @@ class DBReaderDialogPane extends NodeDialogPane {
     private SwingWorker<Void, Void> m_worker;
 
     /**
-     * Creates new dialog.
-     * @param hasLoginPane true, if a login pane is visible, otherwise false
+     * Creates a new dialog.
+     *
+     * @param showConnectionPanel <code>true</code>, if a panel for defining the connection should be shown,
+     *            <code>false</code> otherwise
+     * @param showDBBrowser <code>true</code> if the database browser should be shown, <code>false</code> otherwise
      */
-    DBReaderDialogPane(final boolean hasLoginPane) {
-        super();
+    public DBReaderDialogPane(final boolean showConnectionPanel, final boolean showDBBrowser) {
+        m_showConnectionPanel = showConnectionPanel;
+        m_showDBBrowser = showDBBrowser;
 
 // init SQL statement component
         m_statmnt.setPreferredSize(new Dimension(350, 200));
@@ -126,7 +132,7 @@ class DBReaderDialogPane extends NodeDialogPane {
 
 // init database table browser
         final JPanel browserPanel = new JPanel(new BorderLayout());
-        if (hasLoginPane) {
+        if (showDBBrowser) {
             browserPanel.setBorder(
                     BorderFactory.createTitledBorder(" Database Browser "));
             final JButton updateButton = new JButton("Fetch Metadata");
@@ -141,8 +147,7 @@ class DBReaderDialogPane extends NodeDialogPane {
                     updateButton.setEnabled(false);
                     updateButton.setText("Fetching...");
                     try {
-                        final DatabaseConnectionSettings settings =
-                                m_loginPane.getConnectionSettings();
+                        final DatabaseConnectionSettings settings = getConnectionSettings();
                         final DatabaseReaderConnection conn =
                                 new DatabaseReaderConnection(
                                     new DatabaseQueryConnectionSettings(
@@ -198,14 +203,13 @@ class DBReaderDialogPane extends NodeDialogPane {
         }
         JPanel allPanel = new JPanel(new BorderLayout());
 
-        m_hasLoginPane = hasLoginPane;
-        if (hasLoginPane) {
-            allPanel.add(m_loginPane, BorderLayout.NORTH);
+        if (showConnectionPanel) {
+            allPanel.add(m_connectionPane, BorderLayout.NORTH);
         }
 
 // init variable list
-        m_listModelVars = new DefaultListModel();
-        m_listVars = new JList(m_listModelVars);
+        m_listModelVars = new DefaultListModel<FlowVariable>();
+        m_listVars = new JList<FlowVariable>(m_listModelVars);
         m_listVars.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_listVars.setCellRenderer(new FlowVariableListCellRenderer());
         m_listVars.addMouseListener(new MouseAdapter() {
@@ -231,7 +235,7 @@ class DBReaderDialogPane extends NodeDialogPane {
 
         final JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         jsp.setResizeWeight(0.4);
-        if (hasLoginPane) {
+        if (showDBBrowser) {
             final JSplitPane browserTables = new JSplitPane(
                     JSplitPane.VERTICAL_SPLIT);
             browserTables.setResizeWeight(0.5);
@@ -258,12 +262,19 @@ class DBReaderDialogPane extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
-        if (m_hasLoginPane) {
-            m_loginPane.loadSettingsFrom(settings, specs, getCredentialsProvider());
+        if (m_showConnectionPanel) {
+            m_connectionPane.loadSettingsFrom(settings, specs, getCredentialsProvider());
         }
+
+        DatabaseQueryConnectionSettings s = new DatabaseQueryConnectionSettings();
+        try {
+            s.loadValidatedConnection(settings, getCredentialsProvider());
+        } catch (InvalidSettingsException ex) {
+            // use settings as they are
+        }
+
         // statement
-        String statement =
-            settings.getString(DatabaseConnectionSettings.CFG_STATEMENT, null);
+        String statement = s.getQuery();
         m_statmnt.setText(statement == null
                 ? "SELECT * FROM "
                         + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER
@@ -276,8 +287,30 @@ class DBReaderDialogPane extends NodeDialogPane {
         }
         // read execute without configure checkbox
         if (runWithoutConfigure()) {
-            m_configureBox.setSelected(
-                settings.getBoolean(EXECUTE_WITHOUT_CONFIGURE, false));
+            m_configureBox.setSelected(!s.getValidateQuery());
+        }
+
+        for (PortObjectSpec pos : specs) {
+            if (pos instanceof DatabaseConnectionPortObjectSpec) {
+                try {
+                    m_upstreamConnectionSettings =
+                        ((DatabaseConnectionPortObjectSpec)pos).getConnectionSettings(getCredentialsProvider());
+                } catch (InvalidSettingsException ex) {
+                    LOGGER.warn("Could not load database connection from upstream node: " + ex.getMessage(), ex);
+                }
+            }
+        }
+        if ((m_upstreamConnectionSettings == null) && !m_showConnectionPanel) {
+            throw new NotConfigurableException("Cannot open table selection without a valid database connection");
+        }
+    }
+
+
+    private DatabaseConnectionSettings getConnectionSettings() {
+        if (m_showConnectionPanel) {
+            return m_connectionPane.getConnectionSettings();
+        } else {
+            return m_upstreamConnectionSettings;
         }
     }
 
@@ -285,14 +318,15 @@ class DBReaderDialogPane extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        if (m_hasLoginPane) {
-            m_loginPane.saveSettingsTo(settings, getCredentialsProvider());
-        }
-        settings.addString(DatabaseConnectionSettings.CFG_STATEMENT,
-                m_statmnt.getText().trim());
+        DatabaseQueryConnectionSettings s = new DatabaseQueryConnectionSettings();
+        s.setQuery(m_statmnt.getText().trim());
         if (runWithoutConfigure()) {
-            settings.addBoolean(EXECUTE_WITHOUT_CONFIGURE,
-                m_configureBox.isSelected());
+            s.setValidateQuery(!m_configureBox.isSelected());
+        }
+        s.saveConnection(settings);
+
+        if (m_showConnectionPanel) {
+            m_connectionPane.saveSettingsTo(settings, getCredentialsProvider());
         }
     }
 
