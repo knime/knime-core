@@ -124,9 +124,7 @@ public class DatabasePortObject extends DatabaseConnectionPortObject {
      */
     private DataTable getDataTable(final int cacheNoRows) {
         try {
-            DatabaseReaderConnection load = new DatabaseReaderConnection(
-                new DatabaseQueryConnectionSettings(
-                       m_spec.getConnectionModel(), m_credentials));
+            DatabaseReaderConnection load = new DatabaseReaderConnection(getConnectionSettings(m_credentials));
             return load.createTable(cacheNoRows, m_credentials);
         } catch (Throwable t) {
             LOGGER.error("Could not fetch data from database, reason: "

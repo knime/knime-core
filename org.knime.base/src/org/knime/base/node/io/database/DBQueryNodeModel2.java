@@ -126,9 +126,7 @@ final class DBQueryNodeModel2 extends DBNodeModel implements FlowVariableProvide
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-        DatabaseQueryConnectionSettings conn =
-            new DatabaseQueryConnectionSettings(
-                     spec.getConnectionModel(), getCredentialsProvider());
+        DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
         String newQuery = parseQuery(conn.getQuery());
         conn = createDBQueryConnection(spec, newQuery);
         try {
@@ -152,9 +150,7 @@ final class DBQueryNodeModel2 extends DBNodeModel implements FlowVariableProvide
             final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
-        DatabaseQueryConnectionSettings conn =
-                new DatabaseQueryConnectionSettings(
-                dbObj.getSpec().getConnectionModel(), getCredentialsProvider());
+        DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
         String newQuery = parseQuery(conn.getQuery());
         conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         DatabaseReaderConnection load = new DatabaseReaderConnection(conn);

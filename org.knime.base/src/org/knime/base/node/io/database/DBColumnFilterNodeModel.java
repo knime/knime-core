@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -123,13 +123,11 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
     protected final PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
-        DatabasePortObjectSpec spec = ((DatabasePortObject)inData[0]).getSpec();
-        DatabaseQueryConnectionSettings conn =
-            new DatabaseQueryConnectionSettings(spec.getConnectionModel(),
-                getCredentialsProvider());
+        DatabasePortObject dbObj = (DatabasePortObject)inData[0];
+        DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery(), conn.getDriver());
-        conn = createDBQueryConnection(spec, newQuery);
-        ColumnRearranger colre = new ColumnRearranger(spec.getDataTableSpec());
+        conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
+        ColumnRearranger colre = new ColumnRearranger(dbObj.getSpec().getDataTableSpec());
         colre.keepOnly(m_filter.getIncludeList().toArray(new String[0]));
         DatabasePortObjectSpec outSpec = new DatabasePortObjectSpec(
                 colre.createSpec(), conn.createConnectionModel());
@@ -154,9 +152,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
             throw new InvalidSettingsException("Not all columns available in "
                     + "input spec: " + buf.toString());
         }
-        DatabaseQueryConnectionSettings conn =
-            new DatabaseQueryConnectionSettings(
-                spec.getConnectionModel(), getCredentialsProvider());
+        DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery(), conn.getDriver());
         conn = createDBQueryConnection(spec, newQuery);
         ColumnRearranger colre = new ColumnRearranger(spec.getDataTableSpec());

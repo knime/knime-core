@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -87,8 +87,7 @@ final class DBConnectionNodeModel extends NodeModel {
             throws CanceledExecutionException, Exception {
         exec.setProgress("Opening database connection...");
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
-        DatabaseQueryConnectionSettings conn =
-            new DatabaseQueryConnectionSettings(dbObj.getConnectionModel(), getCredentialsProvider());
+        DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
         final DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
         exec.setProgress("Reading data from database...");
         CredentialsProvider cp = getCredentialsProvider();

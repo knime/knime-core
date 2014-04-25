@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -95,9 +95,7 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         exec.setProgress("Opening database connection...");
         String tableName = m_tableName.getStringValue();
-        DatabaseQueryConnectionSettings conn =
-            new DatabaseQueryConnectionSettings(
-                dbObj.getConnectionModel(), getCredentialsProvider());
+        DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
         CredentialsProvider cp = getCredentialsProvider();
         try {
             conn.execute("DROP TABLE " + tableName, cp);
@@ -149,9 +147,7 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         }
         try {
             DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-            DatabaseQueryConnectionSettings conn =
-                new DatabaseQueryConnectionSettings(
-                    spec.getConnectionModel(), getCredentialsProvider());
+            DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
             conn.createConnection(getCredentialsProvider());
         } catch (InvalidSettingsException ise) {
             throw ise;

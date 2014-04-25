@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -128,9 +128,7 @@ final class DBQueryNodeModel extends DBNodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-        DatabaseQueryConnectionSettings conn =
-            new DatabaseQueryConnectionSettings(
-                        spec.getConnectionModel(), getCredentialsProvider());
+        DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery());
         conn = createDBQueryConnection(spec, newQuery);
         try {
@@ -155,9 +153,7 @@ final class DBQueryNodeModel extends DBNodeModel {
             throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         CredentialsProvider cp = getCredentialsProvider();
-        DatabaseQueryConnectionSettings conn =
-                new DatabaseQueryConnectionSettings(
-                dbObj.getSpec().getConnectionModel(), cp);
+        DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(cp);
         String newQuery = createQuery(conn.getQuery());
         conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         DatabaseReaderConnection load = new DatabaseReaderConnection(conn);

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -128,9 +128,7 @@ final class DBRowFilterNodeModel extends DBNodeModel {
             final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
-        DatabaseQueryConnectionSettings conn =
-            new DatabaseQueryConnectionSettings(
-                dbObj.getConnectionModel(), getCredentialsProvider());
+        DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery(), conn.getDriver());
         conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         DatabasePortObject outObj = new DatabasePortObject(
@@ -154,9 +152,7 @@ final class DBRowFilterNodeModel extends DBNodeModel {
             throw new InvalidSettingsException("Can't filter according to "
                     + "selected column \"" + columnName + "\".");
         }
-        DatabaseQueryConnectionSettings conn =
-            new DatabaseQueryConnectionSettings(
-                spec.getConnectionModel(), getCredentialsProvider());
+        DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery(), conn.getDriver());
         conn = createDBQueryConnection(spec, newQuery);
         return new PortObjectSpec[]{new DatabasePortObjectSpec(

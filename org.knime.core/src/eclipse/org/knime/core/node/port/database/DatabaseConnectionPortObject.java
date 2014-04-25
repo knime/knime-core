@@ -94,7 +94,13 @@ public class DatabaseConnectionPortObject implements PortObject {
      */
     @Override
     public String getSummary() {
-        return "Database: " + m_spec.getConnectionModel().getString("database", "<unknown>");
+        String dbName = "<unknown>";
+        try {
+            dbName = getConnectionSettings(null).getDBName();
+        } catch (InvalidSettingsException ex) {
+            // jo mei...
+        }
+        return "Database: " + dbName;
     }
 
     /**

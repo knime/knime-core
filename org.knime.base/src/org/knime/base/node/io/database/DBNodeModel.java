@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -140,9 +140,7 @@ abstract class DBNodeModel extends NodeModel {
     final DatabaseQueryConnectionSettings createDBQueryConnection(
             final DatabasePortObjectSpec spec, final String newQuery)
             throws InvalidSettingsException {
-        DatabaseQueryConnectionSettings conn =
-            new DatabaseQueryConnectionSettings(
-                spec.getConnectionModel(), getCredentialsProvider());
+        DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
         return new DatabaseQueryConnectionSettings(conn, newQuery);
     }
 
