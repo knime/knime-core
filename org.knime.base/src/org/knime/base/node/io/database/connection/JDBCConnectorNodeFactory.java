@@ -48,40 +48,55 @@
  * History
  *   24.04.2014 (thor): created
  */
-package org.knime.base.node.io.database;
+package org.knime.base.node.io.database.connection;
 
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @since 2.10
  */
-class JDBCConnectorNodeDialog extends NodeDialogPane {
-    private final DBDialogPane m_configPanel = new DBDialogPane(true);
-
-
-    JDBCConnectorNodeDialog() {
-        addTab("Connection settings", m_configPanel);
+public class JDBCConnectorNodeFactory extends NodeFactory<JDBCConnectorNodeModel> {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public JDBCConnectorNodeModel createNodeModel() {
+        return new JDBCConnectorNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
-        m_configPanel.loadSettingsFrom(settings, specs, getCredentialsProvider());
+    protected int getNrNodeViews() {
+        return 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        m_configPanel.saveSettingsTo(settings, getCredentialsProvider());
+    public NodeView<JDBCConnectorNodeModel> createNodeView(final int viewIndex, final JDBCConnectorNodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new JDBCConnectorNodeDialog();
     }
 }

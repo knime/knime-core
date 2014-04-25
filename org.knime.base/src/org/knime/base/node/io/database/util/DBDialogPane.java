@@ -46,7 +46,7 @@
  * -------------------------------------------------------------------
  *
  */
-package org.knime.base.node.io.database;
+package org.knime.base.node.io.database.util;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -95,7 +95,7 @@ import org.knime.core.util.KnimeEncryption;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-final class DBDialogPane extends JPanel {
+public final class DBDialogPane extends JPanel {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DBDialogPane.class);
 
@@ -119,7 +119,7 @@ final class DBDialogPane extends JPanel {
     private final JRadioButton m_selectTZ = new JRadioButton("TimeZone:");
 
     /** Default font used for all components within the database dialogs. */
-    static final Font FONT = new Font("Monospaced", Font.PLAIN, 12);
+    public static final Font FONT = new Font("Monospaced", Font.PLAIN, 12);
 
     /**
      * Creates a new dialog.
@@ -127,7 +127,7 @@ final class DBDialogPane extends JPanel {
      * @param showValidateOption <code>true</code> the "Validate connection on close" option should be shown,
      *            <code>false</code> otherwise
      */
-    DBDialogPane(final boolean showValidateOption) {
+    public DBDialogPane(final boolean showValidateOption) {
         super.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 // create and driver component
@@ -262,7 +262,7 @@ final class DBDialogPane extends JPanel {
      * @param specs input spec
      * @param credProvider a credentials provider, must not be <code>null</code>
      */
-    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs,
+    public void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs,
         final CredentialsProvider credProvider) {
         DatabaseConnectionSettings s = new DatabaseConnectionSettings();
         try {
@@ -355,7 +355,7 @@ final class DBDialogPane extends JPanel {
      * @param credProvider a credentials provider, must not be <code>null</code>
      * @throws InvalidSettingsException if the connection could not be validated
      */
-    protected void saveSettingsTo(final NodeSettingsWO settings, final CredentialsProvider credProvider)
+    public void saveSettingsTo(final NodeSettingsWO settings, final CredentialsProvider credProvider)
         throws InvalidSettingsException {
         DatabaseConnectionSettings s = new DatabaseConnectionSettings();
 
@@ -407,7 +407,7 @@ final class DBDialogPane extends JPanel {
      * Settings object holding the current database connection properties.
      * @return a <code>DatabaseConnectionSettings</code> object
      */
-    protected DatabaseConnectionSettings getConnectionSettings() {
+    public DatabaseConnectionSettings getConnectionSettings() {
         return new DatabaseConnectionSettings(
                 m_driver.getSelectedItem().toString(),
                 m_db.getSelectedItem().toString(),

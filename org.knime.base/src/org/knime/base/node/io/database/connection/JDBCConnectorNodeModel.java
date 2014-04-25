@@ -48,7 +48,7 @@
  * History
  *   24.04.2014 (thor): created
  */
-package org.knime.base.node.io.database;
+package org.knime.base.node.io.database.connection;
 
 import java.io.File;
 import java.io.IOException;

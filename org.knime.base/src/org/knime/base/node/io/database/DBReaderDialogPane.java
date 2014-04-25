@@ -70,6 +70,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingWorker;
 
+import org.knime.base.node.io.database.util.DBDialogPane;
 import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;

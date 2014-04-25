@@ -1563,7 +1563,7 @@
       <node
             category-path="/database"
             expert-flag="false"
-            factory-class="org.knime.base.node.io.database.JDBCConnectorNodeFactory"
+            factory-class="org.knime.base.node.io.database.connection.JDBCConnectorNodeFactory"
             id="org.knime.base.node.io.database.JDBCConnectorNodeFactory">
       </node>
 
