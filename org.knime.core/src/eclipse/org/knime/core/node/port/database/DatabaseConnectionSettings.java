@@ -793,7 +793,7 @@ public class DatabaseConnectionSettings {
      * @return <code>true</code> if the connection should be validated, <code>false</code> otherwise
      * @since 2.10
      */
-    public final boolean validateConnection() {
+    public final boolean getValidateConnection() {
         return m_validateConnection;
     }
 
@@ -803,7 +803,7 @@ public class DatabaseConnectionSettings {
      * @param b <code>true</code> if the connection should be validated, <code>false</code> otherwise
      * @since 2.10
      */
-    public final void validateConnection(final boolean b) {
+    public final void setValidateConnection(final boolean b) {
         m_validateConnection = b;
     }
 }

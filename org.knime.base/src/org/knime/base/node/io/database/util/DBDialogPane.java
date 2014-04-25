@@ -330,7 +330,7 @@ public final class DBDialogPane extends JPanel {
             m_timezone.setSelectedItem(timezone);
         }
 
-        m_validateConnection.setSelected(s.validateConnection());
+        m_validateConnection.setSelected(s.getValidateConnection());
     }
 
     private void updateDriver() {
@@ -390,8 +390,8 @@ public final class DBDialogPane extends JPanel {
             s.setTimezone(timezone);
         }
 
-        s.validateConnection(m_validateConnection.isSelected());
-        if (s.validateConnection()) {
+        s.setValidateConnection(m_validateConnection.isSelected());
+        if (s.getValidateConnection()) {
             try {
                 s.createConnection(credProvider);
             } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException | IOException ex) {
