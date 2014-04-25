@@ -202,6 +202,8 @@ public class DatabaseConnectionSettings {
 
     private String m_timezone = "current"; // use current as of KNIME 2.8, none before 2.8
 
+    private boolean m_validateConnection;
+
     /** Create a default settings connection object. */
     public DatabaseConnectionSettings() {
         // init default driver with the first from the driver list
@@ -468,6 +470,7 @@ public class DatabaseConnectionSettings {
         DRIVER_ORDER.add(m_driver);
         DATABASE_URLS.add(m_dbName);
         settings.addString("timezone", m_timezone);
+        settings.addBoolean("validateConnection", m_validateConnection);
     }
 
     /**
@@ -508,6 +511,8 @@ public class DatabaseConnectionSettings {
         String password = null;
         String credName = null;
         String timezone = settings.getString("timezone", "none");
+        boolean validateConnection = settings.getBoolean("validateConnection", false);
+
         boolean useCredential = settings.containsKey("credential_name");
         if (useCredential) {
             credName = settings.getString("credential_name");
@@ -537,11 +542,11 @@ public class DatabaseConnectionSettings {
             DRIVER_ORDER.add(m_driver);
             boolean changed = false;
             if (useCredential) {
-                changed = m_credName != null && credName.equals(m_credName);
+                changed = (m_credName != null) && (credName != null) && credName.equals(m_credName);
                 m_credName = credName;
             } else {
-                if (m_user != null && m_dbName != null && m_pass != null) {
-                    if (!user.equals(m_user) || !database.equals(m_dbName) || !password.equals(m_pass)) {
+                if ((m_user != null) && (m_dbName != null) && (m_pass != null)) {
+                    if (!m_user.equals(user) || !m_dbName.equals(database) || !m_pass.equals(password)) {
                         changed = true;
                     }
                 }
@@ -551,6 +556,7 @@ public class DatabaseConnectionSettings {
             m_pass = (password == null ? "" : password);
             m_dbName = database;
             m_timezone = timezone;
+            m_validateConnection = validateConnection;
             DATABASE_URLS.add(m_dbName);
             return changed;
         }
@@ -700,13 +706,11 @@ public class DatabaseConnectionSettings {
         return getPassword(null);
     }
 
+
     /**
      * Set a new database driver.
      * @param driver used to open the connection
-     * @deprecated use {@link DatabaseConnectionSettings#
-     * DatabaseConnectionSettings(String, String, String, String, String, String)}
      */
-    @Deprecated
     public final void setDriver(final String driver) {
         m_driver = driver;
     }
@@ -714,10 +718,7 @@ public class DatabaseConnectionSettings {
     /**
      * Set a new database name.
      * @param databaseName used to access the database URL
-     * @deprecated use {@link DatabaseConnectionSettings#
-     * DatabaseConnectionSettings(String, String, String, String, String, String)}
      */
-    @Deprecated
     public final void setDBName(final String databaseName) {
         m_dbName = databaseName;
     }
@@ -725,10 +726,7 @@ public class DatabaseConnectionSettings {
     /**
      * Set a new user name.
      * @param userName used to login to the database
-     * @deprecated use {@link DatabaseConnectionSettings#
-     * DatabaseConnectionSettings(String, String, String, String, String, String)}
      */
-    @Deprecated
     public final void setUserName(final String userName) {
         m_user = userName;
     }
@@ -736,12 +734,76 @@ public class DatabaseConnectionSettings {
     /**
      * Set a new password.
      * @param password (decrypted) used to login to the database
-     * @deprecated use {@link DatabaseConnectionSettings#
-     * DatabaseConnectionSettings(String, String, String, String, String, String)}
      */
-    @Deprecated
     public final void setPassword(final String password) {
         m_pass = password;
     }
 
+    /**
+     * Returns the name of the credential entry that should be used. If <code>null</code> is returned username and
+     * password should be used instead.
+     *
+     * @return a credential identifier or <code>null</code>
+     * @since 2.10
+     */
+    public final String getCredentialName() {
+        return m_credName;
+    }
+
+    /**
+     * Returns the name of the credential entry that should be used. If it is set to <code>null</code> username and
+     * password should be used instead.
+     *
+     * @param name a credential identifier or <code>null</code>
+     * @since 2.10
+     */
+    public final void setCredentialName(final String name) {
+        m_credName = name;
+    }
+
+
+    /**
+     * Returns the manually set timezone that should be assumed for dates returned by the database. If the timezone is
+     * set to <tt>current</tt> the client's local timezone should be used. If the timezone is set to <tt>none</tt> no
+     * correction is applied
+     *
+     * @return a timezone identifier, <tt>current/tt>, or <tt>none</tt>
+     * @since 2.10
+     */
+    public final String getTimezone() {
+        return m_timezone;
+    }
+
+    /**
+     * Sets the manually set timezone that should be assumed for dates returned by the database. If the timezone is
+     * set to <tt>current</tt> the client's local timezone should be used. If the timezone is set to <tt>none</tt> no
+     * correction is applied
+     *
+     * @param tz a timezone identifier, <tt>current/tt>, or <tt>none</tt>
+     * @since 2.10
+     */
+    public void setTimezone(final String tz) {
+        m_timezone = tz;
+    }
+
+
+    /**
+     * Returns whether the connection should be validated by dialogs.
+     *
+     * @return <code>true</code> if the connection should be validated, <code>false</code> otherwise
+     * @since 2.10
+     */
+    public final boolean validateConnection() {
+        return m_validateConnection;
+    }
+
+    /**
+     * Sets whether the connection should be validated by dialogs.
+     *
+     * @param b <code>true</code> if the connection should be validated, <code>false</code> otherwise
+     * @since 2.10
+     */
+    public final void validateConnection(final boolean b) {
+        m_validateConnection = b;
+    }
 }
