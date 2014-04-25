@@ -2,7 +2,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -93,7 +93,7 @@ final class DBDeleteRowsDialogPane extends NodeDialogPane {
         m_columnsInWhereClause.setBorder(BorderFactory.createTitledBorder(" Select WHERE Columns "));
         columnPanel.add(m_columnsInWhereClause);
 
-        m_loginPanel = new DBDialogPane();
+        m_loginPanel = new DBDialogPane(false);
         final JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBorder(BorderFactory.createTitledBorder(" Table Name "));
         tablePanel.setFont(DBDialogPane.FONT);
@@ -124,7 +124,7 @@ final class DBDeleteRowsDialogPane extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         // load login setting
-        m_loginPanel.loadSettingsFrom(settings, specs, getCredentialsNames());
+        m_loginPanel.loadSettingsFrom(settings, specs, getCredentialsProvider());
         // load table name
         m_tableName.setText(settings.getString(DBDeleteRowsNodeModel.KEY_TABLE_NAME, ""));
         // load WHERE column panel
@@ -143,7 +143,7 @@ final class DBDeleteRowsDialogPane extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         // save login settings
-        m_loginPanel.saveSettingsTo(settings);
+        m_loginPanel.saveSettingsTo(settings, getCredentialsProvider());
         // save table name
         settings.addString(DBDeleteRowsNodeModel.KEY_TABLE_NAME, m_tableName.getText().trim());
         // save WHERE columns

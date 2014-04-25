@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,12 +55,17 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TimeZone;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -74,12 +79,14 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseDriverLoader;
+import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.util.KnimeEncryption;
 
 /**
@@ -92,9 +99,9 @@ final class DBDialogPane extends JPanel {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DBDialogPane.class);
 
-    private final JComboBox m_driver = new JComboBox();
+    private final JComboBox<String> m_driver = new JComboBox<>();
 
-    private final JComboBox m_db = new JComboBox();
+    private final JComboBox<String> m_db = new JComboBox<>();
 
     private final JTextField m_user = new JTextField("");
 
@@ -103,8 +110,9 @@ final class DBDialogPane extends JPanel {
     private boolean m_passwordChanged = false;
 
     private final JCheckBox m_credCheckBox = new JCheckBox();
-    private final JComboBox m_credBox = new JComboBox();
-    private final JComboBox m_timezone; // filled with all time zones (sorted by name)
+    private final JCheckBox m_validateConnection = new JCheckBox();
+    private final JComboBox<String> m_credBox = new JComboBox<>();
+    private final JComboBox<String> m_timezone; // filled with all time zones (sorted by name)
 
     private final JRadioButton m_noCorrectionTZ = new JRadioButton("No Correction (use UTC)");
     private final JRadioButton m_currentTZ = new JRadioButton("Use local TimeZone");
@@ -113,9 +121,13 @@ final class DBDialogPane extends JPanel {
     /** Default font used for all components within the database dialogs. */
     static final Font FONT = new Font("Monospaced", Font.PLAIN, 12);
 
-    /** Creates new dialog. */
-    DBDialogPane() {
-        super();
+    /**
+     * Creates a new dialog.
+     *
+     * @param showValidateOption <code>true</code> the "Validate connection on close" option should be shown,
+     *            <code>false</code> otherwise
+     */
+    DBDialogPane(final boolean showValidateOption) {
         super.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 // create and driver component
@@ -202,7 +214,7 @@ final class DBDialogPane extends JPanel {
 // create and timezone field
         final String[] timezones = TimeZone.getAvailableIDs();
         Arrays.sort(timezones);
-        m_timezone = new JComboBox(timezones);
+        m_timezone = new JComboBox<String>(timezones);
         m_timezone.setFont(FONT);
         m_timezone.setSelectedItem(TimeZone.getDefault().getID());
         m_timezone.setEnabled(false);
@@ -229,6 +241,13 @@ final class DBDialogPane extends JPanel {
         timezonePanel.add(tzPanel1, BorderLayout.NORTH);
         timezonePanel.add(tzPanel2, BorderLayout.SOUTH);
         super.add(timezonePanel);
+
+        if (showValidateOption) {
+            final JPanel validatePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            validatePanel.add(m_validateConnection);
+            validatePanel.add(new JLabel("Validate connection on close"));
+            super.add(validatePanel);
+        }
     }
 
     private void enableCredentials(final boolean flag) {
@@ -241,19 +260,26 @@ final class DBDialogPane extends JPanel {
      * Load settings.
      * @param settings to load
      * @param specs input spec
-     * @param creds credentials
+     * @param credProvider a credentials provider, must not be <code>null</code>
      */
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs, final Collection<String> creds) {
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs,
+        final CredentialsProvider credProvider) {
+        DatabaseConnectionSettings s = new DatabaseConnectionSettings();
+        try {
+            s.loadValidatedConnection(settings, null);
+        } catch (InvalidSettingsException ex) {
+            // use the available settings as they are
+        }
+
         // update credentials
         m_credBox.removeAllItems();
-        if (creds.isEmpty()) {
+        if (credProvider.listNames().isEmpty()) {
             m_credCheckBox.setEnabled(false);
             m_credBox.setEnabled(false);
         } else {
             m_credCheckBox.setEnabled(true);
             m_credBox.setEnabled(true);
-            for (String c : creds) {
+            for (String c : credProvider.listNames()) {
                 m_credBox.addItem(c);
             }
         }
@@ -264,48 +290,47 @@ final class DBDialogPane extends JPanel {
         // check if at least one driver is selected and the list is not empty
         final Object selectedDriver = m_driver.getSelectedItem();
         if (selectedDriver != null) {
-            String select = settings.getString("driver", selectedDriver.toString());
-            m_driver.setSelectedItem(select);
+            m_driver.setSelectedItem(s.getDriver());
         }
         // update list of urls
         m_db.removeAllItems();
         for (String databaseURL : DatabaseConnectionSettings.DATABASE_URLS.getHistory()) {
             m_db.addItem(databaseURL);
         }
-        String dbName = settings.getString("database", null);
-        if (dbName == null) {
+        if (s.getDBName() == null) {
             m_db.setSelectedItem("jdbc:odbc:<database_name>");
         } else {
-            m_db.setSelectedItem(dbName);
+            m_db.setSelectedItem(s.getDBName());
         }
 
-        boolean useCredential = settings.containsKey("credential_name");
+        boolean useCredential = (s.getCredentialName() != null);
         enableCredentials(useCredential);
         if (useCredential) {
-            String credName = settings.getString("credential_name", null);
-            m_credBox.setSelectedItem(credName);
+            m_credBox.setSelectedItem(s.getCredentialName());
             m_credCheckBox.setSelected(true);
         } else {
             // user
-            String user = settings.getString("user", null);
+            String user = s.getUserName(null);
             m_user.setText(user == null ? "" : user);
             // password
-            String password = settings.getString("password", null);
+            String password = s.getPassword(null);
             m_pass.setText(password == null ? "" : password);
             m_passwordChanged = false;
             m_credCheckBox.setSelected(false);
         }
 
         // read timezone
-        final String timezone = settings.getString("timezone", "current");
-        if (timezone.equals("none")) {
+        final String timezone = s.getTimezone();
+        if ("none".equals(timezone) || (timezone == null)) {
             m_noCorrectionTZ.setSelected(true);
-        } else if (timezone.equals("current")) {
+        } else if ("current".equals(timezone)) {
             m_currentTZ.setSelected(true);
         } else {
             m_selectTZ.setSelected(true);
             m_timezone.setSelectedItem(timezone);
         }
+
+        m_validateConnection.setSelected(s.validateConnection());
     }
 
     private void updateDriver() {
@@ -327,46 +352,62 @@ final class DBDialogPane extends JPanel {
     /**
      * Save settings.
      * @param settings to save into
+     * @param credProvider a credentials provider, must not be <code>null</code>
+     * @throws InvalidSettingsException if the connection could not be validated
      */
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings, final CredentialsProvider credProvider)
+        throws InvalidSettingsException {
+        DatabaseConnectionSettings s = new DatabaseConnectionSettings();
+
         String driverName = m_driver.getSelectedItem().toString();
-        settings.addString("driver", driverName);
+        s.setDriver(driverName);
+
         String url = m_db.getEditor().getItem().toString();
-        settings.addString("database", url);
+        s.setDBName(url);
+
         boolean useCredential = m_credCheckBox.isSelected();
         if (useCredential) {
-            settings.addString("credential_name",
-                (String) m_credBox.getSelectedItem());
+            s.setCredentialName((String) m_credBox.getSelectedItem());
         } else {
-            settings.addString("user", m_user.getText().trim());
+            s.setUserName(m_user.getText().trim());
             if (m_passwordChanged) {
                 try {
-                    settings.addString("password", KnimeEncryption.encrypt(
-                            m_pass.getPassword()));
-                } catch (Throwable t) {
-                    LOGGER.error("Could not encrypt password, reason: "
-                            + t.getMessage(), t);
+                    s.setPassword(KnimeEncryption.encrypt(m_pass.getPassword()));
+                } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException
+                        | UnsupportedEncodingException ex) {
+                    LOGGER.error("Could not encrypt password, reason: " + ex.getMessage(), ex);
                 }
             } else {
-                settings.addString("password",
-                    new String(m_pass.getPassword()));
+                s.setPassword(new String(m_pass.getPassword()));
             }
         }
         if (m_noCorrectionTZ.isSelected()) {
-            settings.addString("timezone", "none");
+            s.setTimezone("none");
         } else if (m_currentTZ.isSelected()) {
-            settings.addString("timezone", "current");
+            s.setTimezone("current");
         } else {
             final String timezone = (String) m_timezone.getSelectedItem();
-            settings.addString("timezone", timezone);
+            s.setTimezone(timezone);
         }
+
+        s.validateConnection(m_validateConnection.isSelected());
+        if (s.validateConnection()) {
+            try {
+                s.createConnection(credProvider);
+            } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException | IOException ex) {
+                throw new InvalidSettingsException("Database connection could not be validated: " + ex.getMessage(),
+                    ex);
+            }
+        }
+
+        s.saveConnection(settings);
     }
 
     /**
      * Settings object holding the current database connection properties.
      * @return a <code>DatabaseConnectionSettings</code> object
      */
-    protected final DatabaseConnectionSettings getConnectionSettings() {
+    protected DatabaseConnectionSettings getConnectionSettings() {
         return new DatabaseConnectionSettings(
                 m_driver.getSelectedItem().toString(),
                 m_db.getSelectedItem().toString(),

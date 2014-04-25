@@ -62,7 +62,7 @@ import org.knime.core.node.port.PortObjectSpec;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class JDBCConnectorNodeDialog extends NodeDialogPane {
-    private final DBDialogPane m_configPanel = new DBDialogPane();
+    private final DBDialogPane m_configPanel = new DBDialogPane(true);
 
 
     JDBCConnectorNodeDialog() {
@@ -74,7 +74,7 @@ class JDBCConnectorNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs) throws NotConfigurableException {
-        m_configPanel.loadSettingsFrom(settings, specs, getCredentialsNames());
+        m_configPanel.loadSettingsFrom(settings, specs, getCredentialsProvider());
     }
 
     /**
@@ -82,6 +82,6 @@ class JDBCConnectorNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        m_configPanel.saveSettingsTo(settings);
+        m_configPanel.saveSettingsTo(settings, getCredentialsProvider());
     }
 }

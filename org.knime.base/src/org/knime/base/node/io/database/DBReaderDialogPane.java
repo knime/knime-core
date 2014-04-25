@@ -55,7 +55,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.DatabaseMetaData;
-import java.util.Collection;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
@@ -93,7 +92,7 @@ import org.knime.core.util.SwingWorkerWithContext;
 class DBReaderDialogPane extends NodeDialogPane {
 
     private final boolean m_hasLoginPane;
-    private final DBDialogPane m_loginPane = new DBDialogPane();
+    private final DBDialogPane m_loginPane = new DBDialogPane(false);
 
     private final JEditorPane m_statmnt = new JEditorPane("text", "");
 
@@ -259,8 +258,7 @@ class DBReaderDialogPane extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
         if (m_hasLoginPane) {
-            Collection<String> creds = super.getCredentialsNames();
-            m_loginPane.loadSettingsFrom(settings, specs, creds);
+            m_loginPane.loadSettingsFrom(settings, specs, getCredentialsProvider());
         }
         // statement
         String statement =
@@ -287,7 +285,7 @@ class DBReaderDialogPane extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         if (m_hasLoginPane) {
-            m_loginPane.saveSettingsTo(settings);
+            m_loginPane.saveSettingsTo(settings, getCredentialsProvider());
         }
         settings.addString(DatabaseConnectionSettings.CFG_STATEMENT,
                 m_statmnt.getText().trim());

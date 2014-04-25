@@ -2,7 +2,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,7 +52,6 @@ package org.knime.base.node.io.database;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.util.Collection;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -76,7 +75,7 @@ import org.knime.core.node.port.database.DatabaseConnectionSettings;
  */
 final class DBWriterDialogPane extends NodeDialogPane {
 
-    private final DBDialogPane m_loginPane = new DBDialogPane();
+    private final DBDialogPane m_loginPane = new DBDialogPane(false);
 
     private final JTextField m_table = new JTextField("");
 
@@ -132,8 +131,7 @@ final class DBWriterDialogPane extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         // get workflow credentials
-        Collection<String> creds = super.getCredentialsNames();
-        m_loginPane.loadSettingsFrom(settings, specs, creds);
+        m_loginPane.loadSettingsFrom(settings, specs, getCredentialsProvider());
         // table name
         m_table.setText(settings.getString(DBWriterNodeModel.KEY_TABLE_NAME, ""));
         // append data flag
@@ -159,7 +157,7 @@ final class DBWriterDialogPane extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        m_loginPane.saveSettingsTo(settings);
+        m_loginPane.saveSettingsTo(settings, getCredentialsProvider());
 
         settings.addString(DBWriterNodeModel.KEY_TABLE_NAME, m_table.getText().trim());
         settings.addBoolean(DBWriterNodeModel.KEY_APPEND_DATA, m_append.isSelected());
