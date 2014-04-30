@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,7 +52,9 @@ package org.knime.workbench.editor2.figures;
 
 import org.eclipse.draw2d.FreeformLayeredPane;
 import org.eclipse.draw2d.Graphics;
+import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 
 /**
@@ -63,9 +65,14 @@ import org.eclipse.swt.graphics.Image;
  * @author Florian Georg, University of Konstanz
  */
 public class WorkflowFigure extends FreeformLayeredPane {
+
+    private static final Color MSG_BG = new Color(null, 255, 249, 0);
+
     private ProgressToolTipHelper m_progressToolTipHelper;
 
     private Image m_jobManagerFigure;
+
+    private Label m_message;
 
     /**
      * New workflow root figure.
@@ -73,7 +80,6 @@ public class WorkflowFigure extends FreeformLayeredPane {
     public WorkflowFigure() {
         // not opaque, so that we can directly select on the "background" layer
         this.setOpaque(false);
-
     }
 
     /**
@@ -98,8 +104,39 @@ public class WorkflowFigure extends FreeformLayeredPane {
             graphics.drawImage(m_jobManagerFigure, 0, 0, imgBox.width,
                                imgBox.height, bounds2.width - imgBox.width, 5, imgBox.width, imgBox.height + 5);
         }
+        if (m_message != null) {
+            graphics.setForegroundColor(MSG_BG);
+            graphics.setBackgroundColor(MSG_BG);
+            graphics.fillRectangle(m_message.getBounds().x, m_message.getBounds().y, getBounds().width,
+                m_message.getBounds().height);
+        }
     }
 
+    /**
+     * @param msg message to display at the top of the editor
+     */
+    public void setMessage(final String msg) {
+        if (msg == null) {
+            if (m_message != null) {
+                remove(m_message);
+                m_message = null;
+            }
+        } else {
+            if (m_message == null) {
+                m_message = new Label(msg);
+                m_message.setOpaque(true);
+                m_message.setBackgroundColor(MSG_BG);
+                Rectangle msgBounds = new Rectangle(m_message.getBounds());
+                msgBounds.x += 10;
+                msgBounds.y += 10;
+                m_message.setBounds(msgBounds);
+                add(m_message, new Rectangle(msgBounds.x, msgBounds.y, getBounds().width - 20, 120));
+            } else {
+                m_message.setText(msg);
+            }
+        }
+        repaint();
+    }
     /**
      * @param jobManagerFigure the jobManagerFigure to set
      */

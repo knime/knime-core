@@ -57,6 +57,7 @@ import java.util.Arrays;
 import java.util.EventObject;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,6 +67,7 @@ import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -106,7 +108,6 @@ import org.eclipse.gef.ui.parts.GraphicalEditor;
 import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
 import org.eclipse.gef.ui.properties.UndoablePropertySheetEntry;
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -168,6 +169,7 @@ import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.Pointer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
@@ -218,10 +220,16 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.editor2.pervasive.PervasiveJobExecutorHelper;
 import org.knime.workbench.editor2.svgexport.WorkflowSVGExport;
+import org.knime.workbench.explorer.ExplorerMountTable;
+import org.knime.workbench.explorer.RemoteWorkflowInput;
+import org.knime.workbench.explorer.dialogs.SaveAsValidator;
+import org.knime.workbench.explorer.dialogs.SpaceResourceSelectionDialog;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 import org.knime.workbench.explorer.filesystem.ExplorerFileSystem;
 import org.knime.workbench.explorer.filesystem.LocalExplorerFileStore;
-import org.knime.workbench.explorer.view.actions.validators.FileStoreNameValidator;
+import org.knime.workbench.explorer.filesystem.RemoteExplorerFileStore;
+import org.knime.workbench.explorer.view.AbstractContentProvider;
+import org.knime.workbench.explorer.view.ContentObject;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
@@ -281,6 +289,9 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /** path to the workflow directory (that contains the workflow.knime file). */
     private URI m_fileResource;
+
+    /** downloaded workflows stored in a temp dir store their original remote location here. */
+    private URI m_origRemoteLocation = null;
 
     /** If subworkflow editor, store the parent for saving. */
     private WorkflowEditor m_parentEditor;
@@ -456,7 +467,27 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (m_fileResource != null && m_manager != null) {
             // disposed is also called when workflow load fails or is canceled
             ProjectWorkflowMap.unregisterClientFrom(m_fileResource, this);
-            ProjectWorkflowMap.remove(m_fileResource);
+            ProjectWorkflowMap.remove(m_fileResource); // removes the workflow from memory
+            if (isTempRemoteWorkflowEditor()) {
+                // after the workflow is deleted we can delete the temp location
+                final AbstractExplorerFileStore flowLoc = getFileStore(m_fileResource);
+                if (flowLoc != null) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                File d = flowLoc.toLocalFile();
+                                if (d != null) {
+                                    FileUtil.deleteRecursively(d.getParentFile());
+                                }
+                            } catch (Exception e) {
+                                LOGGER.warn("Error during deletion of temporary workflow location: " + e.getMessage(),
+                                    e);
+                            }
+                        }
+                    }).start();
+                }
+            }
         }
         // remember that this editor has been closed
         m_closed = true;
@@ -749,6 +780,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         loadProperties();
         updateEditorBackgroundColor();
         updateJobManagerDisplay();
+        updateTempRemoteWorkflowMessage();
         ((WorkflowRootEditPart)getGraphicalViewer().getRootEditPart()
                 .getChildren().get(0))
                 .createToolTipHelper(getSite().getShell());
@@ -791,12 +823,16 @@ public class WorkflowEditor extends GraphicalEditor implements
     protected void setInput(final IEditorInput input) {
         LOGGER.debug("Setting input into editor...");
         super.setInput(input);
+        m_origRemoteLocation = null;
         if (input instanceof WorkflowManagerInput) {
             setWorkflowManagerInput((WorkflowManagerInput)input);
         } else if (input instanceof IURIEditorInput) {
             File wfFile;
             File mountPointRoot = null;
             URI uri = ((IURIEditorInput)input).getURI();
+            if (input instanceof RemoteWorkflowInput) {
+                m_origRemoteLocation = ((RemoteWorkflowInput)input).getRemoteOriginalLocation();
+            }
             if ("file".equals(uri.getScheme())) {
                 wfFile = new File(uri);
                 try {
@@ -903,9 +939,9 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             m_manuallySetToolTip = null;
             updatePartName();
-
             if (getGraphicalViewer() != null) {
                 loadProperties();
+                updateTempRemoteWorkflowMessage();
             }
 
             // update Actions, as now there's everything available
@@ -1354,7 +1390,16 @@ public class WorkflowEditor extends GraphicalEditor implements
     /** {@inheritDoc} */
     @Override
     public void doSave(final IProgressMonitor monitor) {
-        saveTo(m_fileResource, monitor);
+        if (isTempRemoteWorkflowEditor()) {
+            boolean doSaveAs = MessageDialog.openQuestion(getSite().getShell(), "Temporary Copy - Can't save in place",
+                "This is a temporary editor of a downloaded workflow\nIt cannot be saved in place, "
+            + "you must use \"Save As...\".\nDo you want to save it to a new location now?");
+            if (doSaveAs) {
+                doSaveAs();
+            }
+        } else {
+            saveTo(m_fileResource, monitor);
+        }
     }
 
     /**
@@ -1381,49 +1426,124 @@ public class WorkflowEditor extends GraphicalEditor implements
                     "\"Save As...\" is not possible while another editor to this workflow is open.");
                 return;
         }
-        File workflowDirParent = workflowDir.getParentFile();
-        final Set<String> invalidFileNames = new HashSet<String>(
-                Arrays.asList(workflowDirParent.list()));
-        String workflowDirName = workflowDir.getName();
-        String workflowDirNewName = guessNewWorkflowNameOnSaveAs(
-                invalidFileNames, workflowDirName);
-//        AbstractExplorerFileStore saveAsTarget = getSaveAsTarget();
-        final InputDialog newNameDialog = new InputDialog(activeShell,
-                "Save as new workflow", "New workflow name",
-                workflowDirNewName, new FileStoreNameValidator() {
-            @Override
-            public String isValid(final String name) {
-                if (invalidFileNames.contains(name)) {
-                    return "Workflow/Directory already exists";
-                }
-                return super.isValid(name);
+        AbstractExplorerFileStore newWorkflowDir = getNewLocation(fileResource, isTempRemoteWorkflowEditor());
+        if (newWorkflowDir == null) {
+            return;
+        }
+        if (newWorkflowDir instanceof RemoteExplorerFileStore) {
+            // selected a remote location: save + upload
+            if (isDirty()) {
+                saveTo(m_fileResource, new NullProgressMonitor());
             }
-        });
-        newNameDialog.setBlockOnOpen(true);
+            AbstractExplorerFileStore localFS = getFileStore(fileResource);
+            if (localFS == null || !(localFS instanceof LocalExplorerFileStore)) {
+                LOGGER.error("Unable to resolve current workflow location. Flow not uploaded!");
+                return;
+            }
+            try {
+                newWorkflowDir.getContentProvider().performUpload((LocalExplorerFileStore)localFS,
+                    (RemoteExplorerFileStore)newWorkflowDir, new NullProgressMonitor());
+            } catch (CoreException e) {
+                String msg =
+                    "\"Save As...\" failed to upload the workflow to the selected remote location\n(" + e.getMessage()
+                        + ")";
+                LOGGER.error(msg, e);
+                MessageDialog.openError(activeShell, "\"Save As...\" failed.", msg);
+            }
+            // no need to change any registered locations as this was a save+upload (didn't change flow location)
+        } else {
+
+            // this is messy. Some methods want the URI with the folder, others the file store denoting workflow.knime
+            AbstractExplorerFileStore newWorkflowFile = newWorkflowDir.getChild(WorkflowPersistor.WORKFLOW_FILE);
+            File localNewWorkflowDir = null;
+            try {
+                localNewWorkflowDir = newWorkflowDir.toLocalFile();
+            } catch (CoreException e1) {
+                LOGGER.error("Unable to resolve selection to local file path: " + e1.getMessage(), e1);
+                return;
+            }
+
+            saveTo(localNewWorkflowDir.toURI(), new NullProgressMonitor());
+            setInput(new FileStoreEditorInput(newWorkflowFile));
+            if (newWorkflowDir.getParent() != null) {
+                newWorkflowDir.getParent().refresh();
+            }
+            registerProject(localNewWorkflowDir);
+        }
+    }
+
+    /**
+     * For SaveAs...
+     * @param currentLocation
+     * @param allowRemoteLocation local and remote mount points are added to the selection dialog
+     * @return new (different!) URI or null if user canceled.
+     */
+    private AbstractExplorerFileStore getNewLocation(final URI currentLocation, final boolean allowRemoteLocation) {
+        final AbstractExplorerFileStore currentStore = getFileStore(currentLocation);
+        AbstractExplorerFileStore currentParent = null;
+        if (currentStore != null) {
+            currentParent = currentStore.getParent();
+        }
+        String currentName = new Path(currentLocation.getPath()).lastSegment();
+        List<String> selIDs = new LinkedList<String>();
+        for (String id : ExplorerMountTable.getAllVisibleMountIDs()) {
+            AbstractContentProvider provider = ExplorerMountTable.getMountPoint(id).getProvider();
+            if (!provider.isRemote() || (allowRemoteLocation && provider.isWritable())) {
+                selIDs.add(id);
+            }
+        }
+        ContentObject preSel = ContentObject.forFile(currentParent);
+
+        final SpaceResourceSelectionDialog dialog =
+            new SpaceResourceSelectionDialog(getSite().getShell(), selIDs.toArray(new String[selIDs.size()]),
+                preSel);
+        SaveAsValidator validator = new SaveAsValidator(dialog, currentStore);
+        String defName = currentName + " - Copy";
+        if (!isTempRemoteWorkflowEditor()) {
+            if (currentParent != null) {
+                try {
+                    Set<String> childs = new HashSet<String>(Arrays.asList(currentParent.childNames(EFS.NONE, null)));
+                    defName = guessNewWorkflowNameOnSaveAs(childs, currentName);
+                } catch (CoreException e1) {
+                    // keep the simple default
+                }
+            }
+        } else {
+            defName = currentName;
+        }
+        dialog.setTitle("Save to new Location");
+        dialog.setDescription("Select the new destination workflow group for the workflow.");
+        dialog.setValidator(validator);
+        // Setup the name field of the dialog
+        dialog.setNameFieldEnabled(true);
+        dialog.setNameFieldDefaultValue(defName);
         final AtomicBoolean proceed = new AtomicBoolean(false);
-        display.syncExec(new Runnable() {
+        Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
-                proceed.set(newNameDialog.open() == Window.OK);
+                proceed.set(dialog.open() == Window.OK);
             }
         });
         if (!proceed.get()) {
-            return;
+            return null;
         }
-        workflowDirNewName = newNameDialog.getValue();
-        // this is messy. Some methods want the URI with the folder, others want a file store denoting workflow.knime
-        File newWorkflowDir = new File(workflowDirParent, workflowDirNewName);
-        final URI newFileResource = newWorkflowDir.toURI();
-        AbstractExplorerFileStore workflowKnimeFileStore =
-                getFileStore(new File(newWorkflowDir, WorkflowPersistor.WORKFLOW_FILE).toURI());
-        saveTo(newFileResource, new NullProgressMonitor());
-        setInput(new FileStoreEditorInput(workflowKnimeFileStore));
-
-        if (workflowKnimeFileStore != null && workflowKnimeFileStore.getParent().getParent() != null) {
-            // parent is workflow dir, parent's parent is workflow group
-            workflowKnimeFileStore.getParent().getParent().refresh();
+        AbstractExplorerFileStore newLocation = dialog.getSelection();
+        if (newLocation.fetchInfo().isWorkflowGroup()) {
+            newLocation = newLocation.getChild(dialog.getNameFieldValue());
+        } else {
+            // in case they have selected a flow but changed the name in the name field afterwards
+            newLocation = newLocation.getParent().getChild(dialog.getNameFieldValue());
         }
-        registerProject(newWorkflowDir);
+        assert !newLocation.fetchInfo().exists() || newLocation.fetchInfo().isWorkflow();
+        if (newLocation.fetchInfo().exists()) {
+            boolean overwrite = MessageDialog.openConfirm(getSite().getShell(),
+                "Confirm SaveAs Overwrite", "The selected destination\n\n\t" + newLocation.getMountIDWithFullPath()
+                + "\n\nexists and will be overwritten.\n\n\nPlease confirm the overwrite.");
+            if (!overwrite) {
+                return null;
+            }
+        }
+        return newLocation;
     }
 
     /**
@@ -1448,9 +1568,9 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Checks if a non workflow editor to the workflow with the given URI is open.
+     * Checks if a non workflow editor (e.g. meta info editor) to the workflow with the given URI is open.
      *
-     * @param workflowURI The URI to the workflow directory
+     * @param workflowURI The URI to the workflow directory. Must be file protocol
      * @return true if an editor is open, false otherwise
      */
     private static boolean isOtherEditorToWorkflowOpen(final URI workflowURI) {
@@ -1477,47 +1597,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         return isOpen;
     }
-
-    /** TODO this routine should be used in save as to le the user choose the target. The dialog needs an edit field
-     * and it should also have the user confirm if an existing workflow is overwritten.
-     * @return ...
-     */
-//    private AbstractExplorerFileStore getSaveAsTarget() {
-//        List<String> validMountPointList = new ArrayList<String>();
-////        Workbench.getInstance().getActiveWorkbenchWindow().getActivePage().findView(ID)
-//        for (Map.Entry<String, AbstractContentProvider> entry : ExplorerMountTable.getMountedContent().entrySet()) {
-//            AbstractContentProvider contentProvider = entry.getValue();
-//            if (contentProvider.isWritable() && !contentProvider.isRemote()) {
-//                validMountPointList.add(entry.getKey());
-//            }
-//        }
-//        if (validMountPointList.isEmpty()) {
-//            throw new IllegalStateException("No valid mount points defined.");
-//        }
-//        String[] validMountPoints = validMountPointList.toArray(new String[validMountPointList.size()]);
-//        final Shell shell = Display.getCurrent().getActiveShell();
-//        LocalExplorerFileStore origFileStore = ExplorerFileSystem.INSTANCE.fromLocalFile(
-//            m_manager.getWorkingDir().getFile());
-//        ContentObject defSel = ContentObject.forFile(origFileStore);
-//        SpaceResourceSelectionDialog dialog = new SpaceResourceSelectionDialog(shell, validMountPoints, defSel);
-//        dialog.setTitle("Save workflow as...");
-//        dialog.setHeader("Select destination workflow group for meta node template");
-//        dialog.setValidator(new SelectionValidator() {
-//            @Override
-//            public String isValid(final AbstractExplorerFileStore selection) {
-//                final AbstractExplorerFileInfo info = selection.fetchInfo();
-//                if (info.isWorkflowGroup() || info.isWorkflow()) {
-//                    return null;
-//                }
-//                return "Only workflows and groups can be selected as target.";
-//            }
-//        });
-//        if (dialog.open() != Window.OK) {
-//            return null;
-//        }
-//        AbstractExplorerFileStore target = dialog.getSelection();
-//        return target;
-//    }
 
     /** Derives new name, e.g. KNIME_project_2 -> KNIME_project_3.
      * Separator between name and number can be empty, space, dash, underscore
@@ -1635,6 +1714,26 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public boolean isSaveAsAllowed() {
         return true; // disallow save-as on subworkflow editors
+    }
+
+    /**
+     * @return true if this is an editor of a remote workflow that was downloaded in a temp location
+     */
+    private boolean isTempRemoteWorkflowEditor() {
+        return m_origRemoteLocation != null;
+    }
+
+    /**
+     * Places the message at the top of the editor - above all other contents.
+     */
+    private void updateTempRemoteWorkflowMessage() {
+        WorkflowFigure workflowFigure = ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getFigure();
+        if (isTempRemoteWorkflowEditor()) {
+            workflowFigure.setMessage("\tThis is a temporary copy of a downloaded workflow. "
+                + "Use \"Save As...\" to permanently store it locally.");
+        } else {
+            workflowFigure.setMessage(null);
+        }
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -67,7 +67,7 @@ import org.knime.workbench.editor2.commands.DisconnectMetaNodeLinkCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.explorer.ExplorerMountTable;
 import org.knime.workbench.explorer.dialogs.SpaceResourceSelectionDialog;
-import org.knime.workbench.explorer.dialogs.SpaceResourceSelectionDialog.SelectionValidator;
+import org.knime.workbench.explorer.dialogs.Validator;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileInfo;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 import org.knime.workbench.explorer.filesystem.ExplorerFileSystem;
@@ -178,10 +178,9 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
         SpaceResourceSelectionDialog dialog = new SpaceResourceSelectionDialog(shell, validMountPoints, defSel);
         dialog.setTitle("Save As Meta Node Template");
         dialog.setHeader("Select destination workflow group for meta node template");
-        dialog.setValidator(new SelectionValidator() {
+        dialog.setValidator(new Validator() {
             @Override
-            public String isValid(
-                    final AbstractExplorerFileStore selection) {
+            public String validateSelectionValue(final AbstractExplorerFileStore selection, final String name) {
                 final AbstractExplorerFileInfo info = selection.fetchInfo();
                 if (info.isWorkflowGroup()) {
                     return null;

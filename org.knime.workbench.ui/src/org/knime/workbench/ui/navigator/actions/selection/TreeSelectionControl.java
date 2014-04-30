@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright by 
+ * Copyright by
  * KNIME.com, Zurich, Switzerland
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
@@ -29,6 +29,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
@@ -144,6 +145,11 @@ public class TreeSelectionControl {
         m_treeViewer.setInput(m_root);
         if (m_initialSelection != null) {
             m_treeViewer.setSelection(m_initialSelection, true);
+            if (m_initialSelection instanceof StructuredSelection) {
+                if (((StructuredSelection)m_initialSelection).size() == 1) {
+                    m_treeViewer.expandToLevel(((StructuredSelection)m_initialSelection).getFirstElement(), 1);
+                }
+            }
             treeSelectionChanged(getSelectedTreeObject());
         }
         m_treeViewer
