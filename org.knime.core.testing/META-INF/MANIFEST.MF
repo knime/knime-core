@@ -26,9 +26,9 @@ Export-Package: org.knime.core,
  org.knime.core.util.tokenizer
 Require-Bundle: org.knime.testing;bundle-version="[2.5.0,3.0.0)",
  org.junit;bundle-version="4.8.1",
- com.knime.explorer.sharedspace;bundle-version="[3.0.1,4.0.0)";resolution:=optional,
  com.knime.licenses;bundle-version="[4.1.1,5.0.0)";resolution:=optional,
  org.knime.workbench.explorer.view;bundle-version="[5.0.0,7.0.0)";resolution:=optional,
  org.knime.ext.sun;bundle-version="[2.7.0,3.0.0)",
- org.knime.core.dbdrivers;bundle-version="[2.7.0,3.0.0)"
+ org.knime.core.dbdrivers;bundle-version="[2.7.0,3.0.0)",
+ com.knime.explorer.teamspace;bundle-version="[3.4.0,4.0.0)";resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7

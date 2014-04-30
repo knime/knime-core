@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -79,8 +79,8 @@ import org.knime.workbench.explorer.ExplorerMountTable;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
-import com.knime.explorer.sharedspace.SharedSpaceContentProvider;
-import com.knime.explorer.sharedspace.SharedSpaceContentProviderFactory;
+import com.knime.explorer.teamspace.TeamSpaceContentProvider;
+import com.knime.explorer.teamspace.TeamSpaceContentProviderFactory;
 import com.knime.licenses.LicenseStore;
 
 /**
@@ -537,7 +537,7 @@ public class BatchExecutorTestcase {
         // setup a teamspace for the metanode
         File licenseFile = findInPlugin("/files/teamspace_license.xml");
         LicenseStore.getDefaultStore().addLicense(new FileInputStream(licenseFile));
-        String providerId = new SharedSpaceContentProviderFactory().getID();
+        String providerId = new TeamSpaceContentProviderFactory().getID();
         File teamspaceLocation = findInPlugin("/files/originalMetanode");
         ExplorerMountTable.mount("org.knime.core.testing", providerId, teamspaceLocation.getAbsolutePath());
 
@@ -612,7 +612,7 @@ public class BatchExecutorTestcase {
 
     private static boolean isTeamspaceAvailable() {
         try {
-            Class.forName(SharedSpaceContentProvider.class.getName());
+            Class.forName(TeamSpaceContentProvider.class.getName());
             Class.forName(LicenseStore.class.getName());
             Class.forName(ExplorerMountTable.class.getName());
             return true;
