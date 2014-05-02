@@ -56,6 +56,7 @@ import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 
 /**
  * The root figure, containing all diagram elements inside the workflow.
@@ -107,8 +108,7 @@ public class WorkflowFigure extends FreeformLayeredPane {
         if (m_message != null) {
             graphics.setForegroundColor(MSG_BG);
             graphics.setBackgroundColor(MSG_BG);
-            graphics.fillRectangle(m_message.getBounds().x, m_message.getBounds().y, getBounds().width,
-                m_message.getBounds().height);
+            graphics.fillRectangle(0, 0, getBounds().width, m_message.getBounds().height + 20);
         }
     }
 
@@ -126,6 +126,7 @@ public class WorkflowFigure extends FreeformLayeredPane {
                 m_message = new Label(msg);
                 m_message.setOpaque(true);
                 m_message.setBackgroundColor(MSG_BG);
+                m_message.setIcon(org.knime.workbench.core.util.ImageRepository.getImage(SharedImages.Warning));
                 Rectangle msgBounds = new Rectangle(m_message.getBounds());
                 msgBounds.x += 10;
                 msgBounds.y += 10;
