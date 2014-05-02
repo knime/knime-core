@@ -71,6 +71,7 @@ import org.knime.core.node.workflow.CredentialsProvider;
  * @since 2.10
  */
 public class DatabaseConnectionPortObject implements PortObject {
+
     /**
      * The spec for this port object.
      */
@@ -110,7 +111,7 @@ public class DatabaseConnectionPortObject implements PortObject {
      */
     public DatabaseConnectionPortObject(final DatabaseConnectionPortObjectSpec spec) {
         if (spec == null) {
-            throw new IllegalArgumentException("DatabasePortObjectSpec must not be null!");
+            throw new IllegalArgumentException("DatabaseConnectionPortObjectSpec must not be null!");
         }
         m_spec = spec;
     }
@@ -128,7 +129,7 @@ public class DatabaseConnectionPortObject implements PortObject {
     }
 
     /**
-     * Serializer used to save {@link DatabaseConnectionPortObject}s
+     * Serializer used to save {@link DatabaseConnectionPortObject}s.
      *
      * @return a new serializer
      */
@@ -174,7 +175,7 @@ public class DatabaseConnectionPortObject implements PortObject {
         if (!(obj instanceof DatabaseConnectionPortObject)) {
             return false;
         }
-        DatabaseConnectionPortObject dbPort = (DatabaseConnectionPortObject)obj;
+        DatabaseConnectionPortObject dbPort = (DatabaseConnectionPortObject) obj;
         return m_spec.equals(dbPort.m_spec);
     }
 

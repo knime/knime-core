@@ -1572,6 +1572,16 @@
             factory-class="org.knime.base.node.io.database.connection.DBTableSelectorNodeFactory"
             id="org.knime.base.node.io.database.connection.DBTableSelectorNodeFactory">
       </node>
+      <node
+            category-path="database"
+            factory-class="org.knime.base.node.io.database.SQLInjectNodeFactory"
+            id="org.knime.base.node.io.database.SQLInjectNodeFactory">
+      </node>
+      <node
+            category-path="database"
+            factory-class="org.knime.base.node.io.database.SQLExtractNodeFactory"
+            id="org.knime.base.node.io.database.SQLExtractNodeFactory">
+      </node>
 
    </extension>
    

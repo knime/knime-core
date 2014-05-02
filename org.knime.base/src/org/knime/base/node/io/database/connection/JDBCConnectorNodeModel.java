@@ -74,6 +74,9 @@ import org.knime.core.node.port.database.DatabaseConnectionSettings;
 class JDBCConnectorNodeModel extends NodeModel {
     private DatabaseConnectionSettings m_settings = new DatabaseConnectionSettings();
 
+    /**
+     * Creates a new Database JDBC Connector node model.
+     */
     JDBCConnectorNodeModel() {
         super(new PortType[0], new PortType[]{DatabaseConnectionPortObject.TYPE});
     }

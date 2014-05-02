@@ -94,7 +94,6 @@ import org.knime.core.util.SwingWorkerWithContext;
 public class DBReaderDialogPane extends NodeDialogPane {
 
     private final boolean m_showConnectionPanel;
-    private final boolean m_showDBBrowser;
 
     private final DBDialogPane m_connectionPane = new DBDialogPane(false);
 
@@ -122,7 +121,6 @@ public class DBReaderDialogPane extends NodeDialogPane {
      */
     public DBReaderDialogPane(final boolean showConnectionPanel, final boolean showDBBrowser) {
         m_showConnectionPanel = showConnectionPanel;
-        m_showDBBrowser = showDBBrowser;
 
 // init SQL statement component
         m_statmnt.setPreferredSize(new Dimension(350, 200));

@@ -394,7 +394,8 @@ public final class DBDialogPane extends JPanel {
         if (s.getValidateConnection()) {
             try {
                 s.createConnection(credProvider);
-            } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException | IOException ex) {
+            } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException
+                    | IOException ex) {
                 throw new InvalidSettingsException("Database connection could not be validated: " + ex.getMessage(),
                     ex);
             }

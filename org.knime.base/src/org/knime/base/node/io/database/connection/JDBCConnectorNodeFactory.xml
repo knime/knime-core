@@ -1,37 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <knimeNode xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10 ">
+    xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10"  type="Source">
     <name>Database JDBC Connector</name>
-    <shortDescription>Create a database connection to any JDBC database</shortDescription>
+    <shortDescription>Create a database connection to any JDBC database.</shortDescription>
     <fullDescription>
         <intro>
-            This node creates a connection to an arbitrary JDBC database. You need to select an appropriate driver and the
-            JDBC URL of the database (which is database specific). Login data can either be provided directly in the 
-            configuration or via credentials set on the workflow.
+            This node creates a connection to an arbitrary JDBC database. You need to select an appropriate driver
+            (if not availble, add your vendor-sepcific driver under File > Preferences > KNIME > Database Driver) and 
+            the JDBC URL of the database (which is database specific). Login credentials can either be provided directly
+             in the configuration or via credentials set on the workflow.
         </intro>
         
         <option name="Database Driver">
-            Enter the database driver here; it is a Java class (including the
-            package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
-            Additional driver can be registered via KNIME's preference page
-            (Database Driver).
+            Enter the database driver here; it is a Java class (including the package path), for example: 
+            sun.jdbc.odbc.JdbcOdbcDriver
+            Additional driver can be registered via KNIME's preference page (Database Driver).
         </option>
         <option name="Database URL">
-            Enter the database name here, for example 
-            jdbc:odbc:database_name or jdbc:mysql://host:port/database_name
+            Enter the database name here, for example jdbc:odbc:database_name or jdbc:mysql://host:port/database_name
         </option>
         <option name="Workflow Credentials">
-            If checked, the credentials (user and password) are used as defined on 
-            the workflow. The credential name links to the specified user and 
-            password. Those can be replaced or edit using the 'Workflow Credentials'
+            If checked, the credentials (user and password) are used as defined on the workflow. The credential name 
+            links to the specified user and password. Those can be replaced or edit using the 'Workflow Credentials'
             menu available in the workflow context menu.
         </option>
         <option name="User Name">
             Your log-in user name for the database.
         </option>
         <option name="Password">
-            Your log-in password for the database. Note, the password is
-            de- and encrypted before handling it internally.
+            Your log-in password for the database. Note, the password is de- and encrypted before handling it internally.
         </option>
         <option name="TimeZone">
             Select the TimeZone to convert the date, time or timestamp field into. The current implementation can't 
@@ -44,6 +41,6 @@
     </fullDescription>
 
     <ports>
-        <outPort index="0" name="Database Connection">A database connection</outPort>
+        <outPort index="0" name="Database JDBC Connection">A database JDBC connection</outPort>
     </ports>    
 </knimeNode>

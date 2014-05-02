@@ -82,6 +82,9 @@ import org.knime.core.node.port.database.DatabaseReaderConnection;
 class DBTableSelectorNodeModel extends NodeModel implements FlowVariableProvider {
     private DatabaseQueryConnectionSettings m_settings = new DatabaseQueryConnectionSettings();
 
+    /**
+     * Creates a new Database Table Selector node model.
+     */
     DBTableSelectorNodeModel() {
         super(new PortType[] {DatabaseConnectionPortObject.TYPE}, new PortType[] {DatabasePortObject.TYPE});
     }
@@ -107,7 +110,7 @@ class DBTableSelectorNodeModel extends NodeModel implements FlowVariableProvider
         try {
             DataTableSpec tableSpec = conn.getDataTableSpec(getCredentialsProvider());
 
-            return new PortObjectSpec[] { new DatabasePortObjectSpec(tableSpec, m_settings) };
+            return new PortObjectSpec[] {new DatabasePortObjectSpec(tableSpec, m_settings)};
         } catch (SQLException ex) {
             throw new InvalidSettingsException("Error while validating SQL query: " + ex.getMessage(), ex);
         }
@@ -128,7 +131,7 @@ class DBTableSelectorNodeModel extends NodeModel implements FlowVariableProvider
         try {
             DataTableSpec tableSpec = conn.getDataTableSpec(getCredentialsProvider());
 
-            return new PortObject[] { new DatabasePortObject(new DatabasePortObjectSpec(tableSpec, querySettings)) };
+            return new PortObject[] {new DatabasePortObject(new DatabasePortObjectSpec(tableSpec, querySettings))};
         } catch (SQLException ex) {
             throw new InvalidSettingsException("Error while validating SQL query: " + ex.getMessage(), ex);
         }

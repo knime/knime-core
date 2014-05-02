@@ -80,7 +80,8 @@ public class JDBCConnectorNodeFactory extends NodeFactory<JDBCConnectorNodeModel
      * {@inheritDoc}
      */
     @Override
-    public NodeView<JDBCConnectorNodeModel> createNodeView(final int viewIndex, final JDBCConnectorNodeModel nodeModel) {
+    public NodeView<JDBCConnectorNodeModel> createNodeView(
+            final int viewIndex, final JDBCConnectorNodeModel nodeModel) {
         return null;
     }
 
