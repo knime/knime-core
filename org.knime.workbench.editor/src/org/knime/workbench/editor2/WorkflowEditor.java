@@ -1493,10 +1493,16 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
         }
         ContentObject preSel = ContentObject.forFile(currentParent);
-
+        if (isTempRemoteWorkflowEditor()) {
+            AbstractExplorerFileStore remoteStore = ExplorerFileSystem.INSTANCE.getStore(m_origRemoteLocation);
+            if (remoteStore != null) {
+                preSel = ContentObject.forFile(remoteStore.getParent());
+            } else {
+                preSel = null;
+            }
+        }
         final SpaceResourceSelectionDialog dialog =
-            new SpaceResourceSelectionDialog(getSite().getShell(), selIDs.toArray(new String[selIDs.size()]),
-                preSel);
+            new SpaceResourceSelectionDialog(getSite().getShell(), selIDs.toArray(new String[selIDs.size()]), preSel);
         SaveAsValidator validator = new SaveAsValidator(dialog, currentStore);
         String defName = currentName + " - Copy";
         if (!isTempRemoteWorkflowEditor()) {
