@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,6 +52,7 @@ package org.knime.base.node.mine.subgroupminer;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
@@ -67,6 +68,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
+import org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeModel.STRING_TYPES;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -78,6 +80,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
 
 
 /**
@@ -92,7 +95,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
 
     private DialogComponentColumnNameSelection m_stringColumn;
 
-    private JComboBox m_stringType;
+    private JComboBox<STRING_TYPES> m_stringType;
 
     private JCheckBox m_useMean;
 
@@ -105,6 +108,8 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
     private boolean m_hasStringCol = false;
 
     private JCheckBox m_replaceBox;
+
+    private DialogComponentString m_outputColumn;
 
     private static final int COMP_HEIGHT = 20;
 
@@ -124,7 +129,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
     public BitVectorGeneratorNodeDialog() {
         super();
 
-        m_stringType = new JComboBox(BitVectorGeneratorNodeModel.STRING_TYPES
+        m_stringType = new JComboBox<>(BitVectorGeneratorNodeModel.STRING_TYPES
                 .values());
         m_stringType.setEnabled(false);
         m_useMean = new JCheckBox();
@@ -204,21 +209,30 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         JPanel numericPanel = createNumericInputPanel();
         JPanel stringPanel = createStringInputPanel();
         JPanel replacePanel = createReplacePanel();
+        JPanel outputPanel = createOutputPanel(replacePanel);
 
         numericPanel.setBorder(BorderFactory.createTitledBorder(
                 "Bits from numeric columns"));
         stringPanel.setBorder(BorderFactory.createTitledBorder(
                 "Bits from string column"));
-        replacePanel.setBorder(BorderFactory.createTitledBorder(
+        outputPanel.setBorder(BorderFactory.createTitledBorder(
                 "General"));
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(numericPanel);
         panel.add(stringPanel);
-        panel.add(replacePanel);
+        panel.add(outputPanel);
 
         addTab("Default Settings", panel);
+    }
+
+    private JPanel createOutputPanel(final JPanel replacePanel) {
+        JPanel ret = new JPanel(new GridLayout(2, 1));
+        ret.add(replacePanel);
+        m_outputColumn = new DialogComponentString(BitVectorGeneratorNodeModel.createOutputColumnModel(), "Output column: ");
+        ret.add(m_outputColumn.getComponentPanel());
+        return ret;
     }
 
     private JPanel createReplacePanel() {

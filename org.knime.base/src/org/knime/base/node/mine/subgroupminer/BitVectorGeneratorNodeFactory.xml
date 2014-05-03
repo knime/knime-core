@@ -94,6 +94,7 @@
         or the selected string column) are removed.
         If it is unchecked the generated bitvectors are appended to the input table.
         </option>
+        <option name="Output column">Name of the output column.</option>
 	</fullDescription>
 	
 	<ports>

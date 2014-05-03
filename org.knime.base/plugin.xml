@@ -695,6 +695,10 @@
            factory-class="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"
            id="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"/>
      <node
+           category-path="/manipulation/row/row-transform"
+           factory-class="org.knime.base.node.preproc.bitvector.expand.ExpandBitVectorNodeFactory"
+           id="org.knime.base.node.preproc.bitvector.expand.ExpandBitVectorNodeFactory"/>
+     <node
            category-path="/view"
            factory-class="org.knime.base.node.viz.histogram.node.HistogramNodeFactory"
            id="org.knime.base.node.viz.histogram.node.HistogramNodeFactory"/>
@@ -1461,6 +1465,16 @@
             factory-class="org.knime.base.node.preproc.columnaggregator.ColumnAggregatorNodeFactory"
             id="org.knime.base.node.preproc.columnaggregator.ColumnAggregatorNodeFactory">
       </node>
+      <node
+            category-path="/manipulation/column/column-split+combine"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.bytevector.create.CreateByteVectorNodeFactory"
+            id="org.knime.base.node.preproc.bytevector.create.CreateByteVectorNodeFactory"/>
+      <node
+            category-path="/manipulation/column/column-split+combine"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.bytevector.expand.ExpandByteVectorNodeFactory"
+            id="org.knime.base.node.preproc.bytevector.expand.ExpandByteVectorNodeFactory"/>
       <node
             category-path="/flowcontrol/trycatch"
             expert-flag="false"

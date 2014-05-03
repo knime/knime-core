@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,7 +55,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.knime.base.data.bitvector.BitString2BitVectorCellFactory;
 import org.knime.base.data.bitvector.BitVectorCellFactory;
@@ -63,7 +65,9 @@ import org.knime.base.data.bitvector.Hex2BitVectorCellFactory;
 import org.knime.base.data.bitvector.IdString2BitVectorCellFactory;
 import org.knime.base.data.bitvector.Numeric2BitVectorMeanCellFactory;
 import org.knime.base.data.bitvector.Numeric2BitVectorThresholdCellFactory;
+import org.knime.base.node.util.SourceColumnsAsProperties;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -148,6 +152,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     private final SettingsModelString m_stringColumn = createStringColModel();
 
     private final SettingsModelFilterString m_includedColumns;
+
+    private final SettingsModelString m_outputColumn = createOutputColumnModel();
 
     /** when saved in version <2.0 then there are no include columns. Keep that information to omit the saving
      * of the includeColumns upon saveSettingsTo */
@@ -235,6 +241,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         settings.addInt(CFG_MEAN_THRESHOLD, m_meanPercentage);
         settings.addString(CFG_STRING_TYPE, m_type.name());
         settings.addBoolean(CFG_REPLACE, m_replace);
+        m_outputColumn.saveSettingsTo(settings);
     }
 
     /**
@@ -270,6 +277,11 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             }
         }
 
+        try {
+            m_outputColumn.validateSettings(settings);
+        } catch (InvalidSettingsException e) {
+            //Added in 2.10, so no validation for compatibility.
+        }
     }
 
     /**
@@ -304,6 +316,11 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             m_loadedSettingsDontHaveIncludeColumns = true;
         }
         m_includedColumns.setEnabled(!m_fromString);
+        try {
+            m_outputColumn.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            // Added only in 2.10, we use the default.
+        }
     }
 
     private double[] calculateMeanValues(final DataTable input) {
@@ -589,19 +606,23 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
 
 
     private DataColumnSpec createNumericOutputSpec(final DataTableSpec spec) {
-        String name;
-        int j = 0;
-        do {
-            name = "BitVectors" + (j == 0 ? "" : "_" + j);
-            j++;
-        } while (spec.containsName(name));
+        String name = DataTableSpec.getUniqueColumnName(spec, m_outputColumn.getStringValue());
         // get the names of numeric columns
         List<String> nameMapping = new ArrayList<String>();
         nameMapping.addAll(m_includedColumns.getIncludeList());
         DataColumnSpecCreator creator = new DataColumnSpecCreator(
                 name, DenseBitVectorCell.TYPE);
-        creator.setElementNames(nameMapping.toArray(
-                new String[nameMapping.size()]));
+        final String[] includes = nameMapping.toArray(new String[nameMapping.size()]);
+        creator.setElementNames(includes);
+        final int[] sourceColumnIndices = SourceColumnsAsProperties.indices(includes, spec);
+        for (int i = sourceColumnIndices.length; i-- > 0;) {
+            if (sourceColumnIndices[i] < 0) {
+                throw new IllegalStateException("Unknown column: " + includes[i]);
+            }
+        }
+        final Map<String, String> map = new LinkedHashMap<>();
+        map.put(SourceColumnsAsProperties.PROPKEY_SOURCE_COLUMN_INDICES, SourceColumnsAsProperties.indicesAsString(sourceColumnIndices));
+        creator.setProperties(new DataColumnProperties(map));
         return creator.createSpec();
     }
 
@@ -652,6 +673,14 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
      */
     static SettingsModelFilterString createColumnFilterModel() {
         return new SettingsModelFilterString("included.numeric.columns");
+    }
+
+    /**
+     *
+     * @return the settings model for output column name
+     */
+    static SettingsModelString createOutputColumnModel() {
+        return new SettingsModelString("output.column", "BitVectors");
     }
 
 }
