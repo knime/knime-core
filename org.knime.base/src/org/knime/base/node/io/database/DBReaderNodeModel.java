@@ -202,12 +202,12 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
         if (m_lastSpec != null) {
             return new DataTableSpec[]{m_lastSpec};
         }
-        if (!m_settings.getValidateQuery()) {
-            return new DataTableSpec[] {null};
-        }
         try {
             if ((m_settings.getQuery() == null) || m_settings.getQuery().isEmpty()) {
                 throw new InvalidSettingsException("No query configured.");
+            }
+            if (!m_settings.getValidateQuery()) {
+                return new DataTableSpec[] {null};
             }
             m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(m_settings, parseQuery(m_settings
                 .getQuery())));
