@@ -198,6 +198,6 @@ public class StatementManipulator {
      * @return a random table name
      */
     protected final String getTempTableName() {
-        return "tempTable_" + m_rand.nextLong();
+        return "tempTable_" + Math.abs(m_rand.nextLong());
     }
 }
