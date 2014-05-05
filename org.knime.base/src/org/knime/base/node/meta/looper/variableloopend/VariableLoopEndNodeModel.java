@@ -354,8 +354,6 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        FlowVariableFilterConfiguration config = new FlowVariableFilterConfiguration("selection");
-        config.loadConfigurationInModel(settings);
     }
 
     /**
@@ -364,9 +362,13 @@ class VariableLoopEndNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        FlowVariableFilterConfiguration config = new FlowVariableFilterConfiguration("selection");
-        config.loadConfigurationInModel(settings);
-        m_selection = config;
+        try {
+            FlowVariableFilterConfiguration config = new FlowVariableFilterConfiguration("selection");
+            config.loadConfigurationInModel(settings);
+            m_selection = config;
+        } catch (InvalidSettingsException e) {
+            // stay with defaults
+        }
     }
 
     /**
