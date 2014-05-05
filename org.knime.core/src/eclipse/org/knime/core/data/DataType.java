@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -1024,6 +1024,17 @@ public final class DataType {
                 list.add(fam);
             }
         }
+
+        for (Class<? extends DataValue> cl : m_adapterValueList) {
+            if (!m_valueClasses.contains(cl)) {
+                UtilityFactory fac = getUtilityFor(cl);
+                DataValueRendererFamily fam = fac.getRendererFamily(spec);
+                if (fam != null) {
+                    list.add(fam);
+                }
+            }
+        }
+
         if (list.isEmpty()) {
             list.add(new DefaultDataValueRendererFamily());
         }
