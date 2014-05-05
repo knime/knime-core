@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -125,7 +125,7 @@ public final class DatabaseWriterConnection {
                 ResultSet rs = null;
                 try {
                     // try to count all rows to see if table exists
-                    final String query = "SELECT * FROM " + table + " WHERE 1 = 0";
+                    final String query = dbConn.getStatementManipulator().limitRows("SELECT * FROM " + table, 0);
                     statement = conn.createStatement();
                     LOGGER.debug("Executing SQL statement as executeQuery: " + query);
                     rs = statement.executeQuery(query);
@@ -138,7 +138,7 @@ public final class DatabaseWriterConnection {
                             + "\" does not exist in database, "
                             + "will create new table.");
                     // and create new table
-                    final String query = "CREATE TABLE " + table + " " + createStmt(spec, sqlTypes);
+                    final String query = "CREATE TABLE " + table + " " + createStmt(spec, sqlTypes, dbConn);
                     LOGGER.debug("Executing SQL statement as execute: " + query);
                     statement.execute(query);
                 }
@@ -148,8 +148,7 @@ public final class DatabaseWriterConnection {
                     final Map<String, Integer> columnNames =
                         new LinkedHashMap<String, Integer>();
                     for (int i = 0; i < spec.getNumColumns(); i++) {
-                        String colName = replaceColumnName(
-                                spec.getColumnSpec(i).getName()).toLowerCase();
+                        String colName = replaceColumnName(spec.getColumnSpec(i).getName(), dbConn).toLowerCase();
                         columnNames.put(colName, i);
                     }
                     // sanity check to lock if all input columns are in db
@@ -277,7 +276,7 @@ public final class DatabaseWriterConnection {
                     LOGGER.info("Can't drop table \"" + table + "\", will create new table.");
                 }
                 // and create new table
-                final String query = "CREATE TABLE " + table + " " + createStmt(spec, sqlTypes);
+                final String query = "CREATE TABLE " + table + " " + createStmt(spec, sqlTypes, dbConn);
                 LOGGER.debug("Executing SQL statement as execute: " + query);
                 statement.execute(query);
                 statement.close();
@@ -426,7 +425,7 @@ public final class DatabaseWriterConnection {
                 if (i > 0) {
                     query.append(",");
                 }
-                final String newColumnName = replaceColumnName(setColumns[i]);
+                final String newColumnName = replaceColumnName(setColumns[i], dbConn);
                 query.append(" " + newColumnName + " = ?");
             }
             query.append(" WHERE");
@@ -434,7 +433,7 @@ public final class DatabaseWriterConnection {
                 if (i > 0) {
                     query.append(" AND");
                 }
-                final String newColumnName = replaceColumnName(whereColumns[i]);
+                final String newColumnName = replaceColumnName(whereColumns[i], dbConn);
                 query.append(" " + newColumnName + " = ?");
             }
 
@@ -576,7 +575,7 @@ public final class DatabaseWriterConnection {
                 if (i > 0) {
                     query.append(" AND");
                 }
-                final String newColumnName = replaceColumnName(whereColumns[i]);
+                final String newColumnName = replaceColumnName(whereColumns[i], dbConn);
                 query.append(" " + newColumnName + " = ?");
             }
 
@@ -763,7 +762,7 @@ public final class DatabaseWriterConnection {
     }
 
     private static String createStmt(final DataTableSpec spec,
-            final Map<String, String> sqlTypes) {
+            final Map<String, String> sqlTypes, final DatabaseConnectionSettings settings) {
         StringBuilder buf = new StringBuilder("(");
         for (int i = 0; i < spec.getNumColumns(); i++) {
             if (i > 0) {
@@ -771,15 +770,18 @@ public final class DatabaseWriterConnection {
             }
             DataColumnSpec cspec = spec.getColumnSpec(i);
             String colName = cspec.getName();
-            String column = replaceColumnName(colName);
+            String column = replaceColumnName(colName, settings);
             buf.append(column + " " + sqlTypes.get(colName));
         }
         buf.append(")");
         return buf.toString();
     }
 
-    private static String replaceColumnName(final String oldName) {
-        return oldName.replaceAll("[^a-zA-Z0-9]", "_");
+    private static String replaceColumnName(final String oldName, final DatabaseConnectionSettings settings) {
+        if (!settings.getAllowSpacesInColumnNames()) {
+            return oldName.replaceAll("[^a-zA-Z0-9]", "_");
+        } else {
+            return settings.getStatementManipulator().quoteColumn(oldName);
+        }
     }
-
 }

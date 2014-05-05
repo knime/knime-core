@@ -204,6 +204,8 @@ public class DatabaseConnectionSettings {
 
     private boolean m_validateConnection;
 
+    private boolean m_allowSpacesInColumnNames;
+
     /** Create a default settings connection object. */
     public DatabaseConnectionSettings() {
         // init default driver with the first from the driver list
@@ -216,6 +218,7 @@ public class DatabaseConnectionSettings {
         }
         // create database name from driver class
         m_dbName = DatabaseDriverLoader.getURLForDriver(m_driver);
+        m_allowSpacesInColumnNames = true;
     }
 
     /** Create a default database connection object.
@@ -471,6 +474,7 @@ public class DatabaseConnectionSettings {
         DATABASE_URLS.add(m_dbName);
         settings.addString("timezone", m_timezone);
         settings.addBoolean("validateConnection", m_validateConnection);
+        settings.addBoolean("allowSpacesInColumnNames", m_allowSpacesInColumnNames);
     }
 
     /**
@@ -512,6 +516,7 @@ public class DatabaseConnectionSettings {
         String credName = null;
         String timezone = settings.getString("timezone", "none");
         boolean validateConnection = settings.getBoolean("validateConnection", false);
+        boolean allowSpacesInColumnNames = settings.getBoolean("allowSpacesInColumnNames", false);
 
         boolean useCredential = settings.containsKey("credential_name");
         if (useCredential) {
@@ -557,6 +562,7 @@ public class DatabaseConnectionSettings {
             m_dbName = database;
             m_timezone = timezone;
             m_validateConnection = validateConnection;
+            m_allowSpacesInColumnNames = allowSpacesInColumnNames;
             DATABASE_URLS.add(m_dbName);
             return changed;
         }
@@ -806,6 +812,31 @@ public class DatabaseConnectionSettings {
     public final void setValidateConnection(final boolean b) {
         m_validateConnection = b;
     }
+
+
+    /**
+     * Returns whether spaces in columns names are allowed and passed on to the database. If spaces are not allowed
+     * they will be replaced.
+     *
+     * @return <code>true</code> if spaces are allowed, <code>false</code> otherwise
+     * @since 2.10
+     */
+    public boolean getAllowSpacesInColumnNames() {
+        return m_allowSpacesInColumnNames;
+    }
+
+
+    /**
+     * Sets whether spaces in columns names are allowed and passed on to the database. If spaces are not allowed
+     * they will be replaced.
+     *
+     * @param allow <code>true</code> if spaces are allowed, <code>false</code> otherwise
+     * @since 2.10
+     */
+    public void setAllowSpacesInColumnNames(final boolean allow) {
+        m_allowSpacesInColumnNames = allow;
+    }
+
 
     /**
      * Returns an statement manipulator for the current database.

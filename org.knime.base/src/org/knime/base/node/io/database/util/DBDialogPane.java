@@ -51,6 +51,7 @@ package org.knime.base.node.io.database.util;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
@@ -110,6 +111,7 @@ public final class DBDialogPane extends JPanel {
     private boolean m_passwordChanged = false;
 
     private final JCheckBox m_credCheckBox = new JCheckBox();
+    private final JCheckBox m_allowSpacesInColumnNames = new JCheckBox();
     private final JCheckBox m_validateConnection = new JCheckBox();
     private final JComboBox<String> m_credBox = new JComboBox<>();
     private final JComboBox<String> m_timezone; // filled with all time zones (sorted by name)
@@ -242,12 +244,22 @@ public final class DBDialogPane extends JPanel {
         timezonePanel.add(tzPanel2, BorderLayout.SOUTH);
         super.add(timezonePanel);
 
+        // misc options (validate, spaces, ...)
+        final JPanel miscPanel = new JPanel(new GridLayout(0, 1));
+        miscPanel.setBorder(BorderFactory.createTitledBorder("Misc"));
+
+        final JPanel spacesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        spacesPanel.add(m_allowSpacesInColumnNames);
+        spacesPanel.add(new JLabel("Allow spaces in column names"));
+        miscPanel.add(spacesPanel);
+
         if (showValidateOption) {
             final JPanel validatePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             validatePanel.add(m_validateConnection);
             validatePanel.add(new JLabel("Validate connection on close"));
-            super.add(validatePanel);
+            miscPanel.add(validatePanel);
         }
+        super.add(miscPanel);
     }
 
     private void enableCredentials(final boolean flag) {
@@ -330,6 +342,7 @@ public final class DBDialogPane extends JPanel {
             m_timezone.setSelectedItem(timezone);
         }
 
+        m_allowSpacesInColumnNames.setSelected(s.getAllowSpacesInColumnNames());
         m_validateConnection.setSelected(s.getValidateConnection());
     }
 
@@ -390,6 +403,7 @@ public final class DBDialogPane extends JPanel {
             s.setTimezone(timezone);
         }
 
+        s.setAllowSpacesInColumnNames(m_allowSpacesInColumnNames.isSelected());
         s.setValidateConnection(m_validateConnection.isSelected());
         if (s.getValidateConnection()) {
             try {

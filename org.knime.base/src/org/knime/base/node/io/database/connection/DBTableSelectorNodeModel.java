@@ -112,7 +112,8 @@ class DBTableSelectorNodeModel extends NodeModel implements FlowVariableProvider
 
             return new PortObjectSpec[] {new DatabasePortObjectSpec(tableSpec, m_settings)};
         } catch (SQLException ex) {
-            throw new InvalidSettingsException("Error while validating SQL query: " + ex.getMessage(), ex);
+            throw new InvalidSettingsException("Error while validating SQL query '" + sql + "' : " + ex.getMessage(),
+                ex);
         }
     }
 

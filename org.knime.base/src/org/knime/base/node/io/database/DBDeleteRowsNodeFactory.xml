@@ -57,6 +57,10 @@
         apply any correction, <i>Use local TimeZone</i> uses the local time zone offset to correct the date field 
         before reading or writing, and <i>TimeZone: </i> allows selecting the time zone to covert the date values into.  
 	  </option>
+      <option name="Allow spaces in column names">
+        Some databases do not allow whitespace characters in column names. If your database supports spaces in column
+        names you can enable this option. Otherwise whitespace characters will be replaced by underscores.
+      </option>      
 	  <option name="Table Name">
         Enter the name of the table in which rows should be deleted.
 	  </option>
