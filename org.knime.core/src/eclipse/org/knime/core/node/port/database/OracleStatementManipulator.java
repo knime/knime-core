@@ -70,7 +70,7 @@ public class OracleStatementManipulator extends StatementManipulator {
      */
     @Override
     public String limitRows(final String sql, final long count, final long offset) {
-        String tempTableName = "table_" + System.identityHashCode(this);
+        String tempTableName = getTempTableName();
 
         return "SELECT * FROM (SELECT rownum __rnum__, " + tempTableName + ".* FROM (" + sql + ") " + tempTableName
             + " WHERE rownum <= " + (offset + count) + ") " + getTempTableName() + " WHERE rnum > " + offset;
