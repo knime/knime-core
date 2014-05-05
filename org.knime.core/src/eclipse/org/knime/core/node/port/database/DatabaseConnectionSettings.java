@@ -206,8 +206,30 @@ public class DatabaseConnectionSettings {
 
     private boolean m_allowSpacesInColumnNames;
 
-    /** Create a default settings connection object. */
+    // this is to fix bug #4066 and not exposed to the user
+    private boolean m_rowIdsStartWithZero;
+
+    private final boolean m_disablePre210Compatibility;
+
+    /**
+     * Create a default settings connection object.
+     */
     public DatabaseConnectionSettings() {
+        this(false);
+    }
+
+    /**
+     * Create a default settings connection object. This constructor allows you to enable new features and bugfixes in
+     * 2.10 that may break existing workflows. Make sure that you all this method only if you are sure the user creates
+     * a new workflow or uses nodes that did not exist before 2.10. By default all new connection settings will still
+     * have pre-2.10 compatibility.
+     *
+     * @param disablePre210Compatibility <code>true</code> if compatibility should be disabled, <code>false</code>
+     *            otherwise
+     *
+     * @since 2.10
+     */
+    public DatabaseConnectionSettings(final boolean disablePre210Compatibility) {
         // init default driver with the first from the driver list
         // or use Java JDBC-ODBC as default
         String[] history = DRIVER_ORDER.getHistory();
@@ -219,6 +241,8 @@ public class DatabaseConnectionSettings {
         // create database name from driver class
         m_dbName = DatabaseDriverLoader.getURLForDriver(m_driver);
         m_allowSpacesInColumnNames = true;
+        m_rowIdsStartWithZero = disablePre210Compatibility;
+        m_disablePre210Compatibility = disablePre210Compatibility;
     }
 
     /** Create a default database connection object.
@@ -274,7 +298,15 @@ public class DatabaseConnectionSettings {
      * @throws NullPointerException if the connection is null
      */
     public DatabaseConnectionSettings(final DatabaseConnectionSettings conn) {
-        this(conn.m_driver, conn.m_dbName, conn.m_user, conn.m_pass, conn.m_credName, conn.m_timezone);
+        m_driver   = conn.m_driver;
+        m_dbName   = conn.m_dbName;
+        m_user     = conn.m_user;
+        m_pass     = conn.m_pass;
+        m_credName = conn.m_credName;
+        m_timezone = conn.m_timezone;
+        m_allowSpacesInColumnNames = conn.m_allowSpacesInColumnNames;
+        m_rowIdsStartWithZero = conn.m_rowIdsStartWithZero;
+        m_disablePre210Compatibility = conn.m_disablePre210Compatibility;
     }
 
     /** Map the keeps database connection based on the user and URL. */
@@ -475,6 +507,7 @@ public class DatabaseConnectionSettings {
         settings.addString("timezone", m_timezone);
         settings.addBoolean("validateConnection", m_validateConnection);
         settings.addBoolean("allowSpacesInColumnNames", m_allowSpacesInColumnNames);
+        settings.addBoolean("rowIdsStartWithZero", m_rowIdsStartWithZero);
     }
 
     /**
@@ -517,6 +550,7 @@ public class DatabaseConnectionSettings {
         String timezone = settings.getString("timezone", "none");
         boolean validateConnection = settings.getBoolean("validateConnection", false);
         boolean allowSpacesInColumnNames = settings.getBoolean("allowSpacesInColumnNames", false);
+        boolean rowIdsStartWithZero = settings.getBoolean("rowIdsStartWithZero", m_disablePre210Compatibility);
 
         boolean useCredential = settings.containsKey("credential_name");
         if (useCredential) {
@@ -563,6 +597,7 @@ public class DatabaseConnectionSettings {
             m_timezone = timezone;
             m_validateConnection = validateConnection;
             m_allowSpacesInColumnNames = allowSpacesInColumnNames;
+            m_rowIdsStartWithZero = rowIdsStartWithZero;
             DATABASE_URLS.add(m_dbName);
             return changed;
         }
@@ -837,6 +872,10 @@ public class DatabaseConnectionSettings {
         m_allowSpacesInColumnNames = allow;
     }
 
+
+    boolean getRowIdsStartWithZero() {
+        return m_rowIdsStartWithZero;
+    }
 
     /**
      * Returns an statement manipulator for the current database.

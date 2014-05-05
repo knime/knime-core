@@ -72,7 +72,7 @@ import org.knime.core.node.port.database.DatabaseConnectionSettings;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class JDBCConnectorNodeModel extends NodeModel {
-    private DatabaseConnectionSettings m_settings = new DatabaseConnectionSettings();
+    private DatabaseConnectionSettings m_settings = new DatabaseConnectionSettings(true);
 
     /**
      * Creates a new Database JDBC Connector node model.

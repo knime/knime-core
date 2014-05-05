@@ -436,6 +436,9 @@ public final class DatabaseReaderConnection {
          */
         private final boolean[] m_streamException;
 
+        // fix for bug #4066
+        private final boolean m_rowIdsStartWithZero;
+
         /**
          * Creates new iterator.
          * @param result result set to iterate
@@ -443,6 +446,7 @@ public final class DatabaseReaderConnection {
         DBRowIterator(final ResultSet result) {
             m_result = result;
             m_streamException = new boolean[m_spec.getNumColumns()];
+            m_rowIdsStartWithZero = m_conn.getRowIdsStartWithZero();
         }
 
         /**
@@ -586,16 +590,19 @@ public final class DatabaseReaderConnection {
                     handlerException("I/O Exception reading Object of type \"" + dbType + "\": ", ioe);
                 }
             }
-            int rowId = m_rowCounter;
+            int rowId;
             try {
                 rowId = m_result.getRow();
                 // Bug 2729: ResultSet#getRow return 0 if there is no row id
                 if (rowId <= 0) {
                     // use row counter
                     rowId = m_rowCounter;
+                } else if (m_rowIdsStartWithZero) {
+                    rowId--; // first row in SQL always is 1, KNIME starts with 0
                 }
             } catch (SQLException sqle) {
                  // ignored: use m_rowCounter
+                rowId = m_rowCounter;
             }
             m_rowCounter++;
             return new DefaultRow(RowKey.createRowKey(rowId), cells);
