@@ -5,6 +5,7 @@
    <extension-point id="JDBCDriver" name="JDBCDriver" schema="schema/JDBCDriver.exsd"/>
    <extension-point id="DataValueRenderer" name="DataValueRenderer" schema="schema/DataValueRenderer.exsd"/>
    <extension-point id="NodeFactoryClassMapper" name="Changes NodeFactory class names in saved workflows" schema="schema/NodeFactoryClassMapper.exsd"/>
+   <extension-point id="StatementManipulator" name="StatementManipulator" schema="schema/StatementManipulator.exsd"/>
    <extension
          point="org.knime.core.NodeExecutionJobManagerFactory">
       <NodeExecutionJobManagerFactory
@@ -195,5 +196,24 @@
                suggestAsDefault="true">
          </renderer>
       </dataValue>
+   </extension>
+   <extension
+         point="org.knime.core.StatementManipulator">
+      <statementManipulator
+            class="org.knime.core.node.port.database.MySQLStatementManipulator"
+            database="mysql">
+      </statementManipulator>
+      <statementManipulator
+            class="org.knime.core.node.port.database.PostgreSQLStatementManipulator"
+            database="postgresql">
+      </statementManipulator>
+      <statementManipulator
+            class="org.knime.core.node.port.database.OracleStatementManipulator"
+            database="oracle">
+      </statementManipulator>
+      <statementManipulator
+            class="org.knime.core.node.port.database.SQLiteStatementManipulator"
+            database="sqlite">
+      </statementManipulator>
    </extension>
 </plugin>

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -203,23 +203,7 @@ public final class DatabaseReaderConnection {
                 oQueries[selectIndex] = oQueries[selectIndex].substring(0, oQueries[selectIndex].length() - 1);
             }
 
-            // replace SELECT (last) query with wrapped statement
-            /* Fixed Bug 2874. For sqlite the data must always be
-             * fetched as the column type string is returned
-             * for all columns when fetching only meta data. */
-            if (!m_conn.getDriver().startsWith("org.sqlite")) {
-                // Bug 2041: to limit the number of row during configure, mysql
-                // does not optimize 'WHERE 1 = 0', better use 'LIMIT 0'
-                if (m_conn.getDriver().startsWith("com.mysql")) {
-                    final int hashAlias = System.identityHashCode(this);
-                    oQueries[selectIndex] = "SELECT * FROM (" + oQueries[selectIndex] + ") "
-                        + "table_" + hashAlias + " LIMIT 0";
-                } else {
-                    final int hashAlias = System.identityHashCode(this);
-                    oQueries[selectIndex] = "SELECT * FROM (" + oQueries[selectIndex] + ") "
-                        + "table_" + hashAlias + " WHERE 1 = 0";
-                }
-            }
+            oQueries[selectIndex] = m_conn.getStatementManipulator().forMetadataOnly(oQueries[selectIndex]);
             ResultSet result = null;
             final Statement stmt = initStatement(cp, conn);
             try {
@@ -269,23 +253,9 @@ public final class DatabaseReaderConnection {
             final boolean autoCommit = conn.getAutoCommit();
             final Statement stmt = initStatement(cp, conn);
             try {
-                if (DatabaseConnectionSettings.FETCH_SIZE != null) {
-                    // fix 2741: postgresql databases ignore fetchsize when
-                    // AUTOCOMMIT on; setting it to false
-                    if (stmt.getClass().getCanonicalName().startsWith("org.postgresql")) {
-                        DatabaseConnectionSettings.setAutoCommit(conn, false);
-                    }
-                    stmt.setFetchSize(DatabaseConnectionSettings.FETCH_SIZE);
-                } else {
-                    // fix 2040: mySQL databases read everything into one, big
-                    // ResultSet leading to an heap space error
-                    // Integer.MIN_VALUE is an indicator in order to enable
-                    // streaming results
-                    if (stmt.getClass().getCanonicalName().startsWith("com.mysql")) {
-                        stmt.setFetchSize(Integer.MIN_VALUE);
-                        LOGGER.info("Database fetchsize for mySQL database set to \"" + Integer.MIN_VALUE + "\".");
-                    }
-                }
+                int fetchsize = (DatabaseConnectionSettings.FETCH_SIZE != null) ?
+                    DatabaseConnectionSettings.FETCH_SIZE : -1;
+                m_conn.getStatementManipulator().setFetchSize(stmt, fetchsize);
                 final String[] oQueries = m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
                 // execute all except the last query
                 for (int i = 0; i < oQueries.length - 1; i++) {
@@ -339,23 +309,9 @@ public final class DatabaseReaderConnection {
             try {
                 final String[] oQueries = m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
                 if (cachedNoRows < 0) {
-                    if (DatabaseConnectionSettings.FETCH_SIZE != null) {
-                        // fix 2741: postgresql databases ignore fetchsize when
-                        // AUTOCOMMIT on; setting it to false
-                        if (stmt.getClass().getCanonicalName().startsWith("org.postgresql")) {
-                            DatabaseConnectionSettings.setAutoCommit(conn, false);
-                        }
-                        stmt.setFetchSize(DatabaseConnectionSettings.FETCH_SIZE);
-                    } else {
-                        // fix 2040: mySQL databases read everything into one
-                        // big ResultSet leading to an heap space error
-                        // Integer.MIN_VALUE is an indicator in order to enable
-                        // streaming results
-                        if (stmt.getClass().getCanonicalName().startsWith("com.mysql")) {
-                            stmt.setFetchSize(Integer.MIN_VALUE);
-                            LOGGER.info("Database fetchsize for mySQL database set to \"" + Integer.MIN_VALUE + "\".");
-                        }
-                    }
+                    int fetchsize = (DatabaseConnectionSettings.FETCH_SIZE != null) ?
+                        DatabaseConnectionSettings.FETCH_SIZE : -1;
+                    m_conn.getStatementManipulator().setFetchSize(stmt, fetchsize);
                 } else {
                     final int hashAlias = System.identityHashCode(this);
                     final int selectIdx = oQueries.length - 1;
@@ -472,11 +428,11 @@ public final class DatabaseReaderConnection {
 
         private int m_rowCounter = 0;
 
-        /** FIXME: Some database (such as sqlite do NOT support) methods like
-         * #getAsciiStream nor #getBinaryStream and will fail with an
+        /** FIXME: Some database (such as sqlite) do NOT support methods such as
+         * <code>getAsciiStream</code> nor <code>getBinaryStream</code> and will fail with an
          * SQLException. To prevent this exception for each ResultSet's value,
          * this flag for each column indicated that this exception has been
-         * thrown and we directly can access the value via #getString.
+         * thrown and we directly can access the value via <code>getString</code>.
          */
         private final boolean[] m_streamException;
 

@@ -64,6 +64,7 @@ import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabaseReaderConnection;
+import org.knime.core.node.port.database.StatementManipulator;
 
 /**
  *
@@ -125,7 +126,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
             throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject)inData[0];
         DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
-        String newQuery = createQuery(conn.getQuery(), conn.getDriver());
+        String newQuery = createQuery(conn.getQuery(), conn.getStatementManipulator());
         conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         ColumnRearranger colre = new ColumnRearranger(dbObj.getSpec().getDataTableSpec());
         colre.keepOnly(m_filter.getIncludeList().toArray(new String[0]));
@@ -153,7 +154,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
                     + "input spec: " + buf.toString());
         }
         DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
-        String newQuery = createQuery(conn.getQuery(), conn.getDriver());
+        String newQuery = createQuery(conn.getQuery(), conn.getStatementManipulator());
         conn = createDBQueryConnection(spec, newQuery);
         ColumnRearranger colre = new ColumnRearranger(spec.getDataTableSpec());
         colre.keepOnly(m_filter.getIncludeList().toArray(new String[0]));
@@ -161,7 +162,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
                 colre.createSpec(), conn.createConnectionModel())};
     }
 
-    private String createQuery(final String query, final String driver) {
+    private String createQuery(final String query, final StatementManipulator manipulator) {
         final StringBuilder buf = new StringBuilder();
         final String[] queries = query.split(
                 DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
@@ -181,15 +182,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
                 if (i > 0) {
                     buf.append(",");
                 }
-                if (!colName.matches("\\w*")) { // if no word chars in name
-                    if (driver.contains("mysql")) {
-                        buf.append("`" + colName  + "`");
-                    } else {
-                        buf.append("\"" + colName  + "\"");
-                    }
-                } else {
-                    buf.append(colName);
-                }
+                buf.append(manipulator.quoteColumn(colName));
             }
         }
         final String selectQuery = queries[queries.length - 1];

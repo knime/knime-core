@@ -61,6 +61,7 @@ import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabaseReaderConnection;
+import org.knime.core.node.port.database.StatementManipulator;
 
 /**
  *
@@ -129,7 +130,7 @@ final class DBRowFilterNodeModel extends DBNodeModel {
             throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
-        String newQuery = createQuery(conn.getQuery(), conn.getDriver());
+        String newQuery = createQuery(conn.getQuery(), conn.getStatementManipulator());
         conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         DatabasePortObject outObj = new DatabasePortObject(
                 new DatabasePortObjectSpec(dbObj.getSpec().getDataTableSpec(),
@@ -153,13 +154,13 @@ final class DBRowFilterNodeModel extends DBNodeModel {
                     + "selected column \"" + columnName + "\".");
         }
         DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
-        String newQuery = createQuery(conn.getQuery(), conn.getDriver());
+        String newQuery = createQuery(conn.getQuery(), conn.getStatementManipulator());
         conn = createDBQueryConnection(spec, newQuery);
         return new PortObjectSpec[]{new DatabasePortObjectSpec(
                 spec.getDataTableSpec(), conn.createConnectionModel())};
     }
 
-    private String createQuery(final String query, final String driver) {
+    private String createQuery(final String query, final StatementManipulator manipulator) {
         final StringBuilder buf = new StringBuilder();
         final String[] queries = query.split(
                 DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
@@ -170,17 +171,9 @@ final class DBRowFilterNodeModel extends DBNodeModel {
         final String selectQuery = queries[queries.length - 1];
         buf.append("SELECT * FROM (" + selectQuery + ") "
                 + "table_" + System.identityHashCode(this) + " WHERE ");
+
         // build WHERE clause
-        String colName = m_column.getStringValue();
-        if (!colName.matches("\\w*")) { // if no word chars in column name
-            if (driver.contains("mysql")) {
-                buf.append("`" + colName  + "`");
-            } else {
-                buf.append("\"" + colName  + "\"");
-            }
-        } else {
-            buf.append(colName);
-        }
+        buf.append(manipulator.quoteColumn(m_column.getStringValue()));
         buf.append(" " + m_operator.getStringValue());
         if (!m_value.getStringValue().trim().isEmpty()) {
             buf.append(" " + m_value.getStringValue().trim());

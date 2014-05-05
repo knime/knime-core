@@ -806,4 +806,18 @@ public class DatabaseConnectionSettings {
     public final void setValidateConnection(final boolean b) {
         m_validateConnection = b;
     }
+
+    /**
+     * Returns an statement manipulator for the current database.
+     *
+     * @return a statement manipulator
+     * @since 2.10
+     */
+    public StatementManipulator getStatementManipulator() {
+        String[] parts = m_dbName.split(":");
+        if ((parts.length < 2) || !"jdbc".equals(parts[0])) {
+            throw new IllegalArgumentException("Invalid JDBC URL in settings: " + m_dbName);
+        }
+        return StatementManipulator.getManipulator(parts[1]);
+    }
 }
