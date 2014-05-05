@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -75,6 +75,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.output.NullOutputStream;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -464,6 +465,16 @@ public final class FileUtil {
         if (execMon == null) {
             execMon = new ExecutionMonitor();
         }
+        // traverse the source to get a good progress estimate
+        long size = 0;
+        if (exec != null) {
+            for (File f : includeList) {
+                size += getFileSizeRec(f);
+            }
+        } else {
+            size = Long.MAX_VALUE;
+        }
+        ZipWrapper zipper = new ZipWrapper(zout);
 
         // the read buffer, re-used for each file
         final byte[] buff = new byte[BUFF_SIZE];
@@ -477,9 +488,9 @@ public final class FileUtil {
                 continue;
             }
             if (f.isFile()) {
-                complete &= addZipEntry(buff, zout, f, f.getName(), execMon);
+                complete &= addZipEntry(buff, zipper, f, f.getName(), execMon, size);
             } else if (f.isDirectory()) {
-                complete &= addOneDir(zout, f, filter, execMon, buff);
+                complete &= addOneDir(zipper, f, filter, execMon, size, buff);
             } else {
                 throw new IOException("File " + f.getAbsolutePath()
                         + " not added to zip archive");
@@ -489,9 +500,33 @@ public final class FileUtil {
         return complete;
     }
 
-    private static boolean addOneDir(final ZipOutputStream zout,
+    /**
+     * recursively adds the file sizes.
+     * @param fileOrDir to get the (contained) size for. Must not be null.
+     * @return the sum of all file sizes
+     */
+    private static long getFileSizeRec(final File fileOrDir) {
+        if (fileOrDir.isFile()) {
+            return fileOrDir.length();
+        } else if (fileOrDir.isDirectory()) {
+            File[] children = fileOrDir.listFiles();
+            if (children == null) {
+                return 0;
+            } else {
+                long s = 0;
+                for (File f : children) {
+                    s += getFileSizeRec(f);
+                }
+                return s;
+            }
+        } else {
+            return 0;
+        }
+    }
+
+    private static boolean addOneDir(final ZipWrapper zout,
             final File rootDir, final ZipFileFilter filter,
-            final ExecutionMonitor exec, final byte[] buff) throws IOException,
+            final ExecutionMonitor exec, final long origSize, final byte[] buff) throws IOException,
             CanceledExecutionException {
 
         // false if unable to look into a sub dir or an I/O error occurs
@@ -529,7 +564,7 @@ public final class FileUtil {
 
                 if (f.isFile()) {
 
-                    complete &= addZipEntry(buff, zout, f, entryName, exec);
+                    complete &= addZipEntry(buff, zout, f, entryName, exec, origSize);
 
                 } else if (f.isDirectory()) {
 
@@ -545,18 +580,19 @@ public final class FileUtil {
     }
 
     private static boolean addZipEntry(final byte[] buf,
-            final ZipOutputStream zout, final File f, final String entryName,
-            final ExecutionMonitor exec) throws IOException,
+            final ZipWrapper zout, final File f, final String entryName,
+            final ExecutionMonitor exec, final long origSize) throws IOException,
             CanceledExecutionException {
         InputStream in = new FileInputStream(f);
         try {
-            exec.setProgress("Adding file " + entryName);
             zout.putNextEntry(new ZipEntry(entryName));
             int read;
             while ((read = in.read(buf)) >= 0) {
                 exec.checkCanceled();
                 zout.write(buf, 0, read);
+                exec.setProgress(zout.getBytesWritten() / (double)origSize);
             }
+            exec.setProgress(zout.getBytesWritten() / (double)origSize, "Added file " + entryName);
         } catch (CanceledExecutionException cee) {
             throw cee;
         } catch (IOException ioe) {
@@ -1060,4 +1096,144 @@ public final class FileUtil {
         }
         return new BufferedInputStream(stream);
     }
+
+    private static final class ZipWrapper extends ZipOutputStream {
+        private long m_written = 0;
+        private ZipOutputStream m_zipper;
+
+        /**
+         * Wraps a zip stream and counts the bytes written.
+         * @param zipStream stream to wrap
+         */
+        public ZipWrapper(final ZipOutputStream zipStream) {
+            super(new NullOutputStream());
+            m_zipper = zipStream;
+        }
+        /**
+         * @return the number of original (uncompressed) bytes written to the stream.
+         */
+        public long getBytesWritten() {
+            return m_written;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public synchronized void write(final byte[] b, final int off, final int len) throws IOException {
+            m_written += len;
+            m_zipper.write(b, off, len);
+        }
+        /**
+         * @return
+         * @see java.lang.Object#hashCode()
+         */
+        @Override
+        public int hashCode() {
+            return m_zipper.hashCode();
+        }
+        /**
+         * @param b
+         * @throws IOException
+         * @see java.io.FilterOutputStream#write(byte[])
+         */
+        @Override
+        public void write(final byte[] b) throws IOException {
+            m_written += b.length;
+            m_zipper.write(b);
+        }
+        /**
+         * @param comment
+         * @see java.util.zip.ZipOutputStream#setComment(java.lang.String)
+         */
+        @Override
+        public void setComment(final String comment) {
+            m_zipper.setComment(comment);
+        }
+        /**
+         * @param obj
+         * @return
+         * @see java.lang.Object#equals(java.lang.Object)
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            return m_zipper.equals(obj);
+        }
+        /**
+         * @param method
+         * @see java.util.zip.ZipOutputStream#setMethod(int)
+         */
+        @Override
+        public void setMethod(final int method) {
+            m_zipper.setMethod(method);
+        }
+        /**
+         * @param level
+         * @see java.util.zip.ZipOutputStream#setLevel(int)
+         */
+        @Override
+        public void setLevel(final int level) {
+            m_zipper.setLevel(level);
+        }
+        /**
+         * @param e
+         * @throws IOException
+         * @see java.util.zip.ZipOutputStream#putNextEntry(java.util.zip.ZipEntry)
+         */
+        @Override
+        public void putNextEntry(final ZipEntry e) throws IOException {
+            m_zipper.putNextEntry(e);
+        }
+        /**
+         * @param b
+         * @throws IOException
+         * @see java.util.zip.DeflaterOutputStream#write(int)
+         */
+        @Override
+        public void write(final int b) throws IOException {
+            m_written += 1;
+            m_zipper.write(b);
+        }
+        /**
+         * @throws IOException
+         * @see java.util.zip.ZipOutputStream#closeEntry()
+         */
+        @Override
+        public void closeEntry() throws IOException {
+            m_zipper.closeEntry();
+        }
+        /**
+         * @throws IOException
+         * @see java.util.zip.DeflaterOutputStream#flush()
+         */
+        @Override
+        public void flush() throws IOException {
+            m_zipper.flush();
+        }
+        /**
+         * @return
+         * @see java.lang.Object#toString()
+         */
+        @Override
+        public String toString() {
+            return m_zipper.toString();
+        }
+        /**
+         * @throws IOException
+         * @see java.util.zip.ZipOutputStream#finish()
+         */
+        @Override
+        public void finish() throws IOException {
+            m_zipper.finish();
+        }
+        /**
+         * @throws IOException
+         * @see java.util.zip.ZipOutputStream#close()
+         */
+        @Override
+        public void close() throws IOException {
+            m_zipper.close();
+        }
+    }
+
 }

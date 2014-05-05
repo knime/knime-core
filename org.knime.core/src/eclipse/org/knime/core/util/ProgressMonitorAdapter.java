@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -49,9 +49,15 @@
  */
 package org.knime.core.util;
 
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeProgressMonitor;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeProgress;
+import org.knime.core.node.workflow.NodeProgressEvent;
 import org.knime.core.node.workflow.NodeProgressListener;
 
 /**
@@ -61,7 +67,15 @@ import org.knime.core.node.workflow.NodeProgressListener;
  * @since 2.9
  */
 public class ProgressMonitorAdapter implements NodeProgressMonitor {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ProgressMonitorAdapter.class);
+
+    private final CopyOnWriteArrayList<NodeProgressListener> m_listeners;
+
     private final IProgressMonitor m_monitor;
+
+    private int m_worked; // progress reported so far
+
     private String m_message;
 
     /**
@@ -70,7 +84,9 @@ public class ProgressMonitorAdapter implements NodeProgressMonitor {
      * @param monitor the underlying progress monitor
      */
     public ProgressMonitorAdapter(final IProgressMonitor monitor) {
+        m_listeners = new CopyOnWriteArrayList<NodeProgressListener>();
         m_monitor = monitor;
+        m_worked = 0;
     }
 
     /**
@@ -88,7 +104,12 @@ public class ProgressMonitorAdapter implements NodeProgressMonitor {
      */
     @Override
     public void setProgress(final double progress) {
-        // not supported
+        int newWork = (int)Math.floor(progress * 100.0);
+        if (newWork > m_worked) {
+            m_monitor.worked(newWork - m_worked); // report only the increment
+            m_worked = newWork;
+            fireProgressChanged();
+        }
     }
 
     /**
@@ -96,7 +117,7 @@ public class ProgressMonitorAdapter implements NodeProgressMonitor {
      */
     @Override
     public Double getProgress() {
-        return null;
+        return m_worked / 100.0;
     }
 
     /**
@@ -104,8 +125,8 @@ public class ProgressMonitorAdapter implements NodeProgressMonitor {
      */
     @Override
     public void setProgress(final double progress, final String message) {
-        m_message = message;
-        m_monitor.setTaskName(message);
+        setMessage(message);
+        setProgress(progress);
     }
 
     /**
@@ -113,8 +134,16 @@ public class ProgressMonitorAdapter implements NodeProgressMonitor {
      */
     @Override
     public void setMessage(final String message) {
-        m_message = message;
-        m_monitor.setTaskName(message);
+        if (m_message == null) {
+            if (message == null) {
+                return; // no change
+            }
+        }
+        if (m_message == null || !m_message.equals(message)) {
+            m_message = message;
+            m_monitor.subTask(message);
+            fireProgressChanged();
+        }
     }
 
     /**
@@ -122,7 +151,7 @@ public class ProgressMonitorAdapter implements NodeProgressMonitor {
      */
     @Override
     public void setProgress(final String message) {
-        // not supported
+        setMessage(message);
     }
 
     /**
@@ -146,27 +175,39 @@ public class ProgressMonitorAdapter implements NodeProgressMonitor {
      */
     @Override
     public void reset() {
-        // nothing to to
+        // can't reset the progress
+    }
+
+    private void fireProgressChanged() {
+        NodeProgress pe = new NodeProgress(getProgress(), getMessage());
+        for (NodeProgressListener l : m_listeners) {
+            try {
+                // we can't provide a useful node id here (copied from DefaultNodeProgressMonitor!)
+                l.progressChanged(new NodeProgressEvent(new NodeID(0), pe));
+            } catch (Throwable t) {
+                LOGGER.error("Exception while notifying listeners", t);
+            }
+        }
     }
 
     /**
-     * This operation is not supported by the adapter.
-     *
      * {@inheritDoc}
      */
     @Override
     public void addProgressListener(final NodeProgressListener l) {
-        // not supported
+        if ((l != null) && !m_listeners.contains(l)) {
+            m_listeners.add(l);
+        }
     }
 
     /**
-     * This operation is not supported by the adapter.
-     *
      * {@inheritDoc}
      */
     @Override
     public void removeProgressListener(final NodeProgressListener l) {
-        // not supported
+        if (l != null) {
+            m_listeners.remove(l);
+        }
     }
 
     /**
@@ -174,8 +215,7 @@ public class ProgressMonitorAdapter implements NodeProgressMonitor {
      */
     @Override
     public void removeAllProgressListener() {
-        // TODO Auto-generated method stub
-
+        m_listeners.clear();
     }
 
 }
