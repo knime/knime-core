@@ -72,7 +72,7 @@ import org.knime.core.node.port.database.DatabaseConnectionSettings;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class JDBCConnectorNodeModel extends NodeModel {
-    private DatabaseConnectionSettings m_settings = new DatabaseConnectionSettings(true);
+    private DatabaseConnectionSettings m_settings = new DatabaseConnectionSettings();
 
     /**
      * Creates a new Database JDBC Connector node model.
@@ -104,8 +104,11 @@ class JDBCConnectorNodeModel extends NodeModel {
      */
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        DatabaseConnectionSettings s = new DatabaseConnectionSettings(m_settings);
+        s.setRowIdsStartWithZero(true); // new behavior since 2.10
+
         DatabaseConnectionPortObject dbPort =
-            new DatabaseConnectionPortObject(new DatabaseConnectionPortObjectSpec(m_settings));
+            new DatabaseConnectionPortObject(new DatabaseConnectionPortObjectSpec(s));
         return new PortObject[]{dbPort};
     }
 

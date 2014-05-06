@@ -209,27 +209,10 @@ public class DatabaseConnectionSettings {
     // this is to fix bug #4066 and not exposed to the user
     private boolean m_rowIdsStartWithZero;
 
-    private final boolean m_disablePre210Compatibility;
-
     /**
      * Create a default settings connection object.
      */
     public DatabaseConnectionSettings() {
-        this(false);
-    }
-
-    /**
-     * Create a default settings connection object. This constructor allows you to enable new features and bugfixes in
-     * 2.10 that may break existing workflows. Make sure that you all this method only if you are sure the user creates
-     * a new workflow or uses nodes that did not exist before 2.10. By default all new connection settings will still
-     * have pre-2.10 compatibility.
-     *
-     * @param disablePre210Compatibility <code>true</code> if compatibility should be disabled, <code>false</code>
-     *            otherwise
-     *
-     * @since 2.10
-     */
-    public DatabaseConnectionSettings(final boolean disablePre210Compatibility) {
         // init default driver with the first from the driver list
         // or use Java JDBC-ODBC as default
         String[] history = DRIVER_ORDER.getHistory();
@@ -241,8 +224,6 @@ public class DatabaseConnectionSettings {
         // create database name from driver class
         m_dbName = DatabaseDriverLoader.getURLForDriver(m_driver);
         m_allowSpacesInColumnNames = true;
-        m_rowIdsStartWithZero = disablePre210Compatibility;
-        m_disablePre210Compatibility = disablePre210Compatibility;
     }
 
     /** Create a default database connection object.
@@ -306,7 +287,6 @@ public class DatabaseConnectionSettings {
         m_timezone = conn.m_timezone;
         m_allowSpacesInColumnNames = conn.m_allowSpacesInColumnNames;
         m_rowIdsStartWithZero = conn.m_rowIdsStartWithZero;
-        m_disablePre210Compatibility = conn.m_disablePre210Compatibility;
     }
 
     /** Map the keeps database connection based on the user and URL. */
@@ -550,7 +530,7 @@ public class DatabaseConnectionSettings {
         String timezone = settings.getString("timezone", "none");
         boolean validateConnection = settings.getBoolean("validateConnection", false);
         boolean allowSpacesInColumnNames = settings.getBoolean("allowSpacesInColumnNames", false);
-        boolean rowIdsStartWithZero = settings.getBoolean("rowIdsStartWithZero", m_disablePre210Compatibility);
+        boolean rowIdsStartWithZero = settings.getBoolean("rowIdsStartWithZero", false);
 
         boolean useCredential = settings.containsKey("credential_name");
         if (useCredential) {
@@ -873,9 +853,29 @@ public class DatabaseConnectionSettings {
     }
 
 
-    boolean getRowIdsStartWithZero() {
+    /**
+     * Returns whether row IDs returned by a database reader should start with zero (correct behavior) or with
+     * (backward compatibility with pre 2.10). The default is <code>false</code>.
+     *
+     * @return <code>true</code> if row ids should start with 0, <code>false</code> if they should start with 1
+     * @since 2.10
+     */
+    public boolean getRowIdsStartWithZero() {
         return m_rowIdsStartWithZero;
     }
+
+
+    /**
+     * Sets whether row IDs returned by a database reader should start with zero (correct behavior) or with
+     * (backward compatibility with pre 2.10). This should only be enabled for nodes that did not exist before 2.10.
+     *
+     * @param b <code>true</code> if row ids should start with 0, <code>false</code> if they should start with 1
+     * @since 2.10
+     */
+    public void setRowIdsStartWithZero(final boolean b) {
+        m_rowIdsStartWithZero = b;
+    }
+
 
     /**
      * Returns an statement manipulator for the current database.
