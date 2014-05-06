@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -286,12 +286,19 @@ ColumnAggregator, DataColumnSpec> {
     }
 
 
-
     /**Constructor for class AggregationColumnPanel.
      *
      */
     public AggregationColumnPanel() {
-        super(" Aggregation settings ", " Available columns ",
+        this(" Aggregation settings ");
+    }
+
+    /**Constructor for class AggregationColumnPanel.
+     * @param title the title of the border or <code>null</code> for no border
+     * @since 2.10
+    */
+   public AggregationColumnPanel(final String title) {
+        super(title, " Available columns ",
                 new DataColumnSpecListCellRenderer(), " To change multiple "
                 + "columns use right mouse click for context menu. ",
                 new AggregationColumnTableModel());

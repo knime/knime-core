@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -319,41 +319,7 @@ public class GroupByNodeModel extends NodeModel {
             } catch (final InvalidSettingsException e) {
                 namePolicy = compGetColumnNamePolicy(settings);
             }
-            if (ColumnNamePolicy.KEEP_ORIGINAL_NAME.equals(namePolicy)) {
-                // avoid using the same column multiple times
-                final Set<String> uniqueNames = new HashSet<String>(
-                        aggregators.size());
-                for (final ColumnAggregator aggregator : aggregators) {
-                    if (!uniqueNames.add(aggregator.getOriginalColSpec()
-                            .getName())) {
-                        throw new IllegalArgumentException(
-                                "Duplicate column names: "
-                                        + aggregator.getOriginalColSpec()
-                                                .getName()
-                                        + ". Not possible with "
-                                        + "'Keep original name(s)' option");
-                    }
-                }
-            } else {
-                // avoid using the same column with the same method
-                // multiple times
-                final Set<String> uniqueAggregators = new HashSet<String>(
-                        aggregators.size());
-                for (final ColumnAggregator aggregator : aggregators) {
-                    final String uniqueName = aggregator.getOriginalColName()
-                            + "@" + aggregator.getMethodTemplate().getId()
-                            + "@" + aggregator.inclMissingCells();
-                    if (!uniqueAggregators.add(uniqueName)) {
-                        throw new IllegalArgumentException(
-                                "Duplicate settings: Column "
-                                        + aggregator.getOriginalColSpec()
-                                                .getName()
-                                        + " with aggregation method "
-                                        + aggregator.getMethodTemplate()
-                                                .getLabel());
-                    }
-                }
-            }
+            checkDuplicateAggregators(namePolicy, aggregators);
             try {
                 ColumnAggregator.validateSettings(settings, aggregators);
             } catch (InvalidSettingsException e) {
@@ -364,6 +330,42 @@ public class GroupByNodeModel extends NodeModel {
             // a column several times
         } catch (final IllegalArgumentException e) {
             throw new InvalidSettingsException(e.getMessage());
+        }
+    }
+
+    /**
+     * @param namePolicy {@link ColumnNamePolicy} to use
+     * @param aggregators {@link List} of {@link ColumnAggregator} to check
+     * @throws IllegalArgumentException if the aggregators contain a duplicate
+     * @since 2.10
+     */
+    public static void checkDuplicateAggregators(final ColumnNamePolicy namePolicy,
+        final List<ColumnAggregator> aggregators) throws IllegalArgumentException {
+        if (ColumnNamePolicy.KEEP_ORIGINAL_NAME.equals(namePolicy)) {
+            // avoid using the same column multiple times
+            final Set<String> uniqueNames = new HashSet<>(aggregators.size());
+            for (final ColumnAggregator aggregator : aggregators) {
+                if (!uniqueNames.add(aggregator.getOriginalColSpec().getName())) {
+                    throw new IllegalArgumentException(
+                            "Duplicate column names: " + aggregator.getOriginalColSpec().getName()
+                                    + ". Not possible with '" + ColumnNamePolicy.KEEP_ORIGINAL_NAME.getLabel()
+                                    + "' option");
+                }
+            }
+        } else {
+            // avoid using the same column with the same method
+            // multiple times
+            final Set<String> uniqueAggregators = new HashSet<>(aggregators.size());
+            for (final ColumnAggregator aggregator : aggregators) {
+                final String uniqueName = aggregator.getOriginalColName()
+                        + "@" + aggregator.getMethodTemplate().getId()
+                        + "@" + aggregator.inclMissingCells();
+                if (!uniqueAggregators.add(uniqueName)) {
+                    throw new IllegalArgumentException("Duplicate settings: Column "
+                                    + aggregator.getOriginalColSpec().getName()
+                                    + " with aggregation method " + aggregator.getMethodTemplate().getLabel());
+                }
+            }
         }
     }
 
