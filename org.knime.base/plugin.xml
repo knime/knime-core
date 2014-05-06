@@ -972,6 +972,11 @@
       <node
             after="org.knime.base.node.io.database.DBColumnFilterNodeFactory"
             category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBSorterNodeFactory"
+            id="org.knime.base.node.io.database.DBSorterNodeFactory"/>
+      <node
+            after="org.knime.base.node.io.database.DBSorterNodeFactory"
+            category-path="/database"
             factory-class="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
             id="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"/>
       <node
