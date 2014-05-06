@@ -52,6 +52,7 @@
 package org.knime.core.pmml;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -59,13 +60,16 @@ import java.util.Map;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.xmlbeans.SchemaType;
 import org.apache.xmlbeans.XmlCursor;
+import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
 import org.dmg.pmml.AssociationModelDocument.AssociationModel;
 import org.dmg.pmml.ClusteringModelDocument.ClusteringModel;
@@ -88,6 +92,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -240,18 +245,19 @@ public class PMMLUtils {
     }
 
     /**
-     * Update the namespace and version of the document to PMML 4.1.
+     * Update the namespace and version of the document to PMML 4.2.
      *
      * @param document the document to update the namespace
+     * @throws XmlException when the PMML element could not be updated to 4.2
      */
-    public static void updatePmmlNamespaceAndVersion(final Document document) {
+    public static void updatePmmlNamespaceAndVersion(final Document document) throws XmlException{
         Element root = document.getDocumentElement();
         String rootPrefix = root.getPrefix();
         fixNamespace(document, root, rootPrefix);
         NodeList nodeList = document.getElementsByTagName("PMML");
         Node pmmlNode = nodeList.item(0);
         if (pmmlNode == null) {
-            throw new RuntimeException(
+            throw new XmlException(
                     "Invalid PMML document without a PMML element encountered.");
         }
         Node version = pmmlNode.getAttributes().getNamedItem("version");
@@ -259,12 +265,13 @@ public class PMMLUtils {
     }
 
     /**
-     * Update the namespace and version of the document to PMML 4.1.
+     * Update the namespace and version of the document to PMML 4.2.
      *
      * @param xmlDoc the {@link XmlObject} to update the namespace
      * @return the updated PMML
+     * @throws XmlException when the PMML element could not be updated to 4.2
      */
-    public static String getUpdatedVersionAndNamespace(final XmlObject xmlDoc) {
+    public static String getUpdatedVersionAndNamespace(final XmlObject xmlDoc) throws XmlException {
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             dbf.setNamespaceAware(false);
@@ -288,8 +295,8 @@ public class PMMLUtils {
             transformer.transform(domSource, result);
             writer.flush();
             return writer.toString();
-        } catch (Exception e) {
-            throw new RuntimeException("Could not update PMML document.", e);
+        } catch (IOException | ParserConfigurationException | SAXException | TransformerException e) {
+            throw new XmlException("Could not update PMML document.", e);
         }
     }
 
@@ -335,6 +342,10 @@ public class PMMLUtils {
         // Insert a cursor and move it to the PMML element.
         XmlCursor pmmlCursor = xmlDoc.newCursor();
         pmmlCursor.toFirstChild(); // the PMML element
+        if (!"PMML".equals(pmmlCursor.getName().getLocalPart())) {
+            return false;
+        }
+
         String xmlns = "";
         String version = "";
         while (!pmmlCursor.toNextToken().isNone() && pmmlCursor.isAnyAttr()) {
@@ -373,6 +384,9 @@ public class PMMLUtils {
         // Insert a cursor and move it to the PMML element.
         XmlCursor pmmlCursor = xmlDoc.newCursor();
         pmmlCursor.toFirstChild(); // the PMML element
+        if (!"PMML".equals(pmmlCursor.getName().getLocalPart())) {
+            return false;
+        }
 
         String version = "";
         while (!pmmlCursor.toNextToken().isNone() && pmmlCursor.isAnyAttr()) {

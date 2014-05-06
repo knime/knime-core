@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.xmlbeans.XmlException;
+import org.apache.xmlbeans.XmlObject;
 import org.dmg.pmml.PMMLDocument;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -32,8 +33,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.CheckUtils;
-import org.knime.core.pmml.PMMLValidator;
-import org.w3c.dom.Document;
+import org.knime.core.pmml.PMMLUtils;
 
 /**
  * This is the model implementation of XML2PMML.
@@ -204,12 +204,21 @@ public class XML2PMMLNodeModel extends NodeModel {
                     if (cell.isMissing()) {
                         return DataType.getMissingCell();
                     } else {
-                        Document d = (Document)((XMLValue)cell).getDocument().cloneNode(true);
+                        PMMLDocument pmmlDoc = null;
                         String failure = null;
+                        XmlObject xmlDoc;
+
                         try {
-                            PMMLDocument doc = PMMLDocument.Factory.parse(d);
-                            if (!PMMLValidator.validatePMML(doc).isEmpty()) {
-                                failure = "Document does not conform to PMML schema";
+                            xmlDoc = XmlObject.Factory.parse(((XMLValue)cell).getDocument().cloneNode(true));
+                            if (xmlDoc instanceof PMMLDocument) {
+                                pmmlDoc = (PMMLDocument)xmlDoc;
+                            } else if (PMMLUtils.isOldKNIMEPMML(xmlDoc) || PMMLUtils.is4_1PMML(xmlDoc)) {
+                                String updatedPMML = PMMLUtils.getUpdatedVersionAndNamespace(xmlDoc);
+                                /* Parse the modified document and assign it to a
+                                 * PMMLDocument.*/
+                                pmmlDoc = PMMLDocument.Factory.parse(updatedPMML);
+                            } else {
+                                failure = "No valid PMML v 3.x/4.0/4.1 document";
                             }
                         } catch (XmlException e) {
                             if (!m_failOnInvalid.getBooleanValue()) {
@@ -226,7 +235,11 @@ public class XML2PMMLNodeModel extends NodeModel {
                                 return new MissingCell(failure);
                             }
                         } else {
-                            return PMMLCellFactory.create(d);
+                            try {
+                            return PMMLCellFactory.create(pmmlDoc.toString());
+                            } catch (Exception e) {
+                                return new MissingCell(e.getMessage());
+                            }
                         }
                     }
                 }
