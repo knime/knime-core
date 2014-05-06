@@ -67,4 +67,16 @@ public class SQLiteStatementManipulator extends StatementManipulator {
          * for all columns when fetching only meta data. */
         return sql;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String unquoteColumn(final String colName) {
+        if (colName.startsWith("\"") && colName.endsWith("\"") && colName.contains(" ")) {
+            return colName.substring(1, colName.length() -1);
+        } else {
+            return colName;
+        }
+    }
 }

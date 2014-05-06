@@ -360,10 +360,11 @@ public final class DatabaseReaderConnection {
         if (cols == 0) {
             return new DataTableSpec("database");
         }
+        StatementManipulator manipulator = m_conn.getStatementManipulator();
         DataTableSpec spec = null;
         for (int i = 0; i < cols; i++) {
             int dbIdx = i + 1;
-            String name = meta.getColumnName(dbIdx);
+            String name =  manipulator.unquoteColumn(meta.getColumnName(dbIdx));
             int type = meta.getColumnType(dbIdx);
             DataType newType;
             switch (type) {

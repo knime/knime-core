@@ -179,6 +179,17 @@ public class StatementManipulator {
     }
 
     /**
+     * Unquotes a column name from database metadata. Most databases don't need unquoting, but some drivers return
+     * column names with quotes.
+     *
+     * @param colName the column's name
+     * @return the column's name, unquoted
+     */
+    public String unquoteColumn(final String colName) {
+        return colName;
+    }
+
+    /**
      * Sets the fetch size on the statement. Note that some database specific implementation need to modify connection
      * properties such as auto-commit, therefore you should save and restore the connection state around this commend.
      *
