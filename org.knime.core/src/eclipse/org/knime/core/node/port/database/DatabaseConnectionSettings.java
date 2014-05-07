@@ -196,7 +196,7 @@ public class DatabaseConnectionSettings {
     private String m_driver;
     private String m_credName = null;
 
-    private String m_dbName;
+    private String m_jdbcUrl;
     private String m_user = null;
     private String m_pass = null;
 
@@ -222,37 +222,37 @@ public class DatabaseConnectionSettings {
             m_driver = DatabaseDriverLoader.JDBC_ODBC_DRIVER;
         }
         // create database name from driver class
-        m_dbName = DatabaseDriverLoader.getURLForDriver(m_driver);
+        m_jdbcUrl = DatabaseDriverLoader.getURLForDriver(m_driver);
         m_allowSpacesInColumnNames = true;
     }
 
     /** Create a default database connection object.
      * @param driver the database driver
-     * @param dbName database URL
+     * @param jdbcUrl database URL
      * @param user user name
      * @param pass password for user name
      * @param credName credential id from {@link CredentialsProvider} or null
      */
     @Deprecated
-    public DatabaseConnectionSettings(final String driver, final String dbName,
+    public DatabaseConnectionSettings(final String driver, final String jdbcUrl,
             final String user, final String pass, final String credName) {
-        this(driver, dbName, user, pass, credName, "none");
+        this(driver, jdbcUrl, user, pass, credName, "none");
     }
 
     /** Create a default database connection object.
      * @param driver the database driver
-     * @param dbName database URL
+     * @param jdbcUrl database URL
      * @param user user name
      * @param pass password for user name
      * @param credName credential id from {@link CredentialsProvider} or null
      * @param timezone the TimeZone to correct data/time/timestamp fields
      * @since 2.8
      */
-    public DatabaseConnectionSettings(final String driver, final String dbName,
+    public DatabaseConnectionSettings(final String driver, final String jdbcUrl,
             final String user, final String pass, final String credName, final String timezone) {
         this();
         m_driver   = driver;
-        m_dbName   = dbName;
+        m_jdbcUrl  = jdbcUrl;
         m_user     = user;
         m_pass     = pass;
         m_credName = credName;
@@ -280,7 +280,7 @@ public class DatabaseConnectionSettings {
      */
     public DatabaseConnectionSettings(final DatabaseConnectionSettings conn) {
         m_driver   = conn.m_driver;
-        m_dbName   = conn.m_dbName;
+        m_jdbcUrl  = conn.m_jdbcUrl;
         m_user     = conn.m_user;
         m_pass     = conn.m_pass;
         m_credName = conn.m_credName;
@@ -368,15 +368,15 @@ public class DatabaseConnectionSettings {
             throws InvalidSettingsException, SQLException,
             BadPaddingException, IllegalBlockSizeException,
             InvalidKeyException, IOException {
-        if (m_dbName == null || m_user == null || m_pass == null || m_driver == null || m_timezone == null) {
+        if (m_jdbcUrl == null || m_user == null || m_pass == null || m_driver == null || m_timezone == null) {
             throw new InvalidSettingsException("No settings available to create database connection.");
         }
         final Driver d = DatabaseDriverLoader.registerDriver(m_driver);
-        if (!d.acceptsURL(m_dbName)) {
-            throw new InvalidSettingsException("Driver \"" + d + "\" does not accept URL: " + m_dbName);
+        if (!d.acceptsURL(m_jdbcUrl)) {
+            throw new InvalidSettingsException("Driver \"" + d + "\" does not accept URL: " + m_jdbcUrl);
         }
 
-        final String dbName = m_dbName;
+        final String dbName = m_jdbcUrl;
         final String user;
         final String pass;
         if (cp == null || m_credName == null) {
@@ -465,7 +465,7 @@ public class DatabaseConnectionSettings {
      */
     public void saveConnection(final ConfigWO settings) {
         settings.addString("driver", m_driver);
-        settings.addString("database", m_dbName);
+        settings.addString("database", m_jdbcUrl);
         if (m_credName == null) {
             settings.addString("user", m_user);
             try {
@@ -483,7 +483,7 @@ public class DatabaseConnectionSettings {
             settings.addString("credential_name", m_credName);
         }
         DRIVER_ORDER.add(m_driver);
-        DATABASE_URLS.add(m_dbName);
+        DATABASE_URLS.add(m_jdbcUrl);
         settings.addString("timezone", m_timezone);
         settings.addBoolean("validateConnection", m_validateConnection);
         settings.addBoolean("allowSpacesInColumnNames", m_allowSpacesInColumnNames);
@@ -564,8 +564,8 @@ public class DatabaseConnectionSettings {
                 changed = (m_credName != null) && (credName != null) && credName.equals(m_credName);
                 m_credName = credName;
             } else {
-                if ((m_user != null) && (m_dbName != null) && (m_pass != null)) {
-                    if (!m_user.equals(user) || !m_dbName.equals(database) || !m_pass.equals(password)) {
+                if ((m_user != null) && (m_jdbcUrl != null) && (m_pass != null)) {
+                    if (!m_user.equals(user) || !m_jdbcUrl.equals(database) || !m_pass.equals(password)) {
                         changed = true;
                     }
                 }
@@ -573,12 +573,12 @@ public class DatabaseConnectionSettings {
             }
             m_user = user;
             m_pass = (password == null ? "" : password);
-            m_dbName = database;
+            m_jdbcUrl = database;
             m_timezone = timezone;
             m_validateConnection = validateConnection;
             m_allowSpacesInColumnNames = allowSpacesInColumnNames;
             m_rowIdsStartWithZero = rowIdsStartWithZero;
-            DATABASE_URLS.add(m_dbName);
+            DATABASE_URLS.add(m_jdbcUrl);
             return changed;
         }
         return false;
@@ -657,9 +657,21 @@ public class DatabaseConnectionSettings {
 
     /**
      * @return database name used to access the database URL
+     * @deprecated use {@link #getJDBCUrl()} instead
      */
+    @Deprecated
     public final String getDBName() {
-        return m_dbName;
+        return m_jdbcUrl;
+    }
+
+    /**
+     * Returns the JDBC URL for the database.
+     *
+     * @return a JDBC URL
+     * @since 2.10
+     */
+    public final String getJDBCUrl() {
+        return m_jdbcUrl;
     }
 
     /**
@@ -739,10 +751,23 @@ public class DatabaseConnectionSettings {
     /**
      * Set a new database name.
      * @param databaseName used to access the database URL
+     * @deprecated use {@link #setJDBCUrl(String)} instead
      */
+    @Deprecated
     public final void setDBName(final String databaseName) {
-        m_dbName = databaseName;
+        m_jdbcUrl = databaseName;
     }
+
+    /**
+     * Sets the JDBC URL for the database.
+     *
+     * @param url a JDBC URL
+     * @since 2.10
+     */
+    public final void setJDBCUrl(final String url) {
+        m_jdbcUrl = url;
+    }
+
 
     /**
      * Set a new user name.
@@ -884,9 +909,9 @@ public class DatabaseConnectionSettings {
      * @since 2.10
      */
     public StatementManipulator getStatementManipulator() {
-        String[] parts = m_dbName.split(":");
+        String[] parts = m_jdbcUrl.split(":");
         if ((parts.length < 2) || !"jdbc".equals(parts[0])) {
-            throw new IllegalArgumentException("Invalid JDBC URL in settings: " + m_dbName);
+            throw new IllegalArgumentException("Invalid JDBC URL in settings: " + m_jdbcUrl);
         }
         return StatementManipulator.getManipulator(parts[1]);
     }

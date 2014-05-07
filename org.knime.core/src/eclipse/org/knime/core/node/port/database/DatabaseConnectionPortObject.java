@@ -95,13 +95,13 @@ public class DatabaseConnectionPortObject implements PortObject {
      */
     @Override
     public String getSummary() {
-        String dbName = "<unknown>";
+        String jdbcUrl = "<unknown>";
         try {
-            dbName = getConnectionSettings(null).getDBName();
+            jdbcUrl = getConnectionSettings(null).getJDBCUrl();
         } catch (InvalidSettingsException ex) {
             // jo mei...
         }
-        return "Database: " + dbName;
+        return "Database: " + jdbcUrl;
     }
 
     /**

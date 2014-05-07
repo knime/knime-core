@@ -111,7 +111,7 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
             url = "";
         }
         m_settings.setDriver("org.sqlite.JDBC");
-        m_settings.setDBName(url);
+        m_settings.setJDBCUrl(url);
         m_settings.setTimezone("current");
     }
 

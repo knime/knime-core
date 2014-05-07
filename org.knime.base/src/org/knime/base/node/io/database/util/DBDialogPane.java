@@ -309,10 +309,10 @@ public final class DBDialogPane extends JPanel {
         for (String databaseURL : DatabaseConnectionSettings.DATABASE_URLS.getHistory()) {
             m_db.addItem(databaseURL);
         }
-        if (s.getDBName() == null) {
+        if (s.getJDBCUrl() == null) {
             m_db.setSelectedItem("jdbc:odbc:<database_name>");
         } else {
-            m_db.setSelectedItem(s.getDBName());
+            m_db.setSelectedItem(s.getJDBCUrl());
         }
 
         boolean useCredential = (s.getCredentialName() != null);
@@ -376,7 +376,7 @@ public final class DBDialogPane extends JPanel {
         s.setDriver(driverName);
 
         String url = m_db.getEditor().getItem().toString();
-        s.setDBName(url);
+        s.setJDBCUrl(url);
 
         boolean useCredential = m_credCheckBox.isSelected();
         if (useCredential) {

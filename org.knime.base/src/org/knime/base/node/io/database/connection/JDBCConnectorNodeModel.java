@@ -90,8 +90,8 @@ class JDBCConnectorNodeModel extends NodeModel {
             throw new InvalidSettingsException("No JDBC driver selected");
         }
 
-        if ((m_settings.getDBName() == null) || m_settings.getDBName().isEmpty()) {
-            throw new InvalidSettingsException("No database name provided");
+        if ((m_settings.getJDBCUrl() == null) || m_settings.getJDBCUrl().isEmpty()) {
+            throw new InvalidSettingsException("No database URL provided");
         }
 
         DatabaseConnectionPortObjectSpec spec = new DatabaseConnectionPortObjectSpec(m_settings);

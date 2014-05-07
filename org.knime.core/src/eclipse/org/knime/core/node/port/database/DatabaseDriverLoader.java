@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -49,20 +49,18 @@
 package org.knime.core.node.port.database;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.Driver;
 import java.sql.DriverManager;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -72,6 +70,8 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.wiring.BundleWiring;
 
 /**
  * Utility class to load additional drivers from jar and zip to the
@@ -102,9 +102,6 @@ public final class DatabaseDriverLoader {
      * Allowed file extensions, jar and zip only.
      */
     public static final String[] EXTENSIONS = {".jar", ".zip"};
-
-    private static final ClassLoader CLASS_LOADER = ClassLoader
-            .getSystemClassLoader();
 
     private static final Map<String, DatabaseWrappedDriver> DRIVER_MAP
         = new HashMap<String, DatabaseWrappedDriver>();
@@ -196,7 +193,11 @@ public final class DatabaseDriverLoader {
      * @throws IOException {@link IOException}
      */
     public static void loadDriver(final File file) throws IOException {
-        if (file == null || !file.exists()) {
+        loadDriver(file, null);
+    }
+
+    private static void loadDriver(final File file, final ClassLoader bundleClassloader) throws IOException {
+        if ((file == null) || !file.exists()) {
             throw new IOException("File \"" + file + "\" does not exist.");
         }
         if (file.isDirectory()) {
@@ -211,32 +212,32 @@ public final class DatabaseDriverLoader {
         if (DRIVERFILE_TO_DRIVERCLASS.containsValue(file)) {
             return;
         }
-        readZip(file, new JarFile(file));
+
+        readZip(file, bundleClassloader);
     }
 
-    private static void readZip(final File file, final ZipFile zipFile)
-            throws MalformedURLException {
-        final ClassLoader cl = new URLClassLoader(
-                new URL[]{file.toURI().toURL()}, CLASS_LOADER);
-        for (Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
-            zipEntries.hasMoreElements();) {
-            ZipEntry e = zipEntries.nextElement();
-            if (e == null) {
-                continue;
-            }
-            String name = e.getName();
-            if (name.endsWith(".class")) {
-                   try {
-                    Class<?> c = loadClass(cl, name);
-                    if (Driver.class.isAssignableFrom(c)) {
-                        DatabaseWrappedDriver d = new DatabaseWrappedDriver(
-                                (Driver)c.newInstance());
-                        String driverName = d.toString();
-                        DRIVER_MAP.put(driverName, d);
-                        DRIVERFILE_TO_DRIVERCLASS.put(driverName, file);
+
+    private static void readZip(final File file, final ClassLoader bundleClassLoader) throws IOException {
+        final ClassLoader fileClassLoader =
+            new URLClassLoader(new URL[]{file.toURI().toURL()}, ClassLoader.getSystemClassLoader());
+
+        try (ZipInputStream is = new ZipInputStream(new FileInputStream(file))) {
+            ZipEntry entry;
+            while ((entry = is.getNextEntry()) != null) {
+                String name = entry.getName();
+                if (name.endsWith(".class")) {
+                    Class<?> driverClass = loadClass(name, bundleClassLoader, fileClassLoader);
+                    if ((driverClass != null) && Driver.class.isAssignableFrom(driverClass)) {
+                        try {
+                            DatabaseWrappedDriver d = new DatabaseWrappedDriver((Driver)driverClass.newInstance());
+                            String driverName = d.toString();
+                            DRIVER_MAP.put(driverName, d);
+                            DRIVERFILE_TO_DRIVERCLASS.put(driverName, file);
+                        } catch (InstantiationException | IllegalAccessException ex) {
+                            LOGGER.info("Could not create instance of JDBC driver class '" + driverClass.getName()
+                                + "': " + ex.getMessage(), ex);
+                        }
                     }
-                } catch (Throwable t) {
-                    // ignored
                 }
             }
         }
@@ -270,11 +271,19 @@ public final class DatabaseDriverLoader {
         return d;
     }
 
-    private static Class<?> loadClass(final ClassLoader cl, final String name)
-            throws ClassNotFoundException {
+    private static Class<?> loadClass(final String name, final ClassLoader... classLoaders) {
         String newName = name.substring(0, name.indexOf(".class"));
         String className = newName.replace('/', '.');
-        return cl.loadClass(className);
+        for (ClassLoader cl : classLoaders) {
+            if (cl != null) {
+                try {
+                    return cl.loadClass(className);
+                } catch (ClassNotFoundException | NoClassDefFoundError ex) {
+                    // ignore it
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -313,17 +322,19 @@ public final class DatabaseDriverLoader {
         IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
         if (point == null) {
             throw new IllegalStateException("Invalid extension point id: " + EXT_POINT_ID);
-
         }
+
         for (IExtension ext : point.getExtensions()) {
             IConfigurationElement[] elements = ext.getConfigurationElements();
             for (IConfigurationElement e : elements) {
                 String path = e.getAttribute("jarFile");
                 String bundleId = e.getDeclaringExtension().getNamespaceIdentifier();
 
-                URL jdbcUrl = Platform.getBundle(bundleId).getEntry(path);
+                Bundle bundle = Platform.getBundle(bundleId);
+                URL jdbcUrl = bundle.getEntry(path);
+                ClassLoader bundleClassLoader = bundle.adapt(BundleWiring.class).getClassLoader();
                 try {
-                    loadDriver(new File(FileLocator.toFileURL(jdbcUrl).getPath()));
+                    loadDriver(new File(FileLocator.toFileURL(jdbcUrl).getPath()), bundleClassLoader);
                 } catch (IOException ex) {
                     LOGGER.error("Could not load JDBC driver '" + path + "': " + ex.getMessage(), ex);
                 }
