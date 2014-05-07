@@ -6,7 +6,7 @@
          <meta.schema plugin="org.knime.core" id="JDBCDriver" name="JDBCDriver"/>
       </appInfo>
       <documentation>
-         Simple extension points that allows to register JDBC drivers (i.e. their Jar files) with the KNIME Core so that they are available in the database nodes.
+         Simple extension points that allows to register JDBC drivers (i.e. their Jar files) with the KNIME Core so that they are available in the database nodes. Note that the JDBC driver must consists of a single Jar file only. It&apos;s not possible to register drivers that need additional Jar files.
       </documentation>
    </annotation>
 
