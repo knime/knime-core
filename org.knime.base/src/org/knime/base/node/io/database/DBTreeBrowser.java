@@ -55,6 +55,8 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.swing.JEditorPane;
 import javax.swing.JPanel;
@@ -144,15 +146,13 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
         m_root.removeAllChildren();
         ((DefaultTreeModel) m_tree.getModel()).reload(m_root);
         if (meta != null) {
-            ArrayList<String> tableTypes = new ArrayList<String>();
-            try {
-                ResultSet rsTableTypes = meta.getTableTypes();
+            Set<String> tableTypes = new HashSet<String>();
+            try (ResultSet rsTableTypes = meta.getTableTypes()) {
                 while (rsTableTypes.next()) {
                     final String tableName = rsTableTypes.getString(1);
                     tableTypes.add(tableName);
 
                 }
-                rsTableTypes.close();
             } catch (SQLException sqle) {
                 LOGGER.warn("Could not get table types from database, reason: "
                         + sqle.getMessage(), sqle);
@@ -214,28 +214,25 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
     }
 
     private String[] getTableNames(final String type) throws SQLException {
-        final ResultSet rs = m_meta.getTables(null, null, "%",
-                new String[]{type});
         final ArrayList<String> tableNames = new ArrayList<String>();
-        while (rs.next()) {
-            final String tableName = rs.getString("TABLE_NAME");
-            tableNames.add(tableName);
-
+        try (ResultSet rs = m_meta.getTables(null, null, "%",  new String[]{type})) {
+            while (rs.next()) {
+                final String tableName = rs.getString("TABLE_NAME");
+                tableNames.add(tableName);
+            }
         }
-        rs.close();
         return tableNames.toArray(new String[tableNames.size()]);
     }
 
     private String[] getColumnNames(final String tableName)
             throws SQLException {
         final ArrayList<String> columnNames = new ArrayList<String>();
-        ResultSet rsc = m_meta.getColumns(null, null, tableName, null);
-        while (rsc.next()) {
-            final String columnName = rsc.getString("COLUMN_NAME");
-            columnNames.add(columnName);
+        try (ResultSet rsc = m_meta.getColumns(null, null, tableName, null)) {
+            while (rsc.next()) {
+                final String columnName = rsc.getString("COLUMN_NAME");
+                columnNames.add(columnName);
+            }
         }
-        rsc.close();
         return columnNames.toArray(new String[columnNames.size()]);
     }
-
 }
