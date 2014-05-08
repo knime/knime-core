@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -98,9 +98,9 @@ import org.xml.sax.helpers.AttributesImpl;
  *
  * @author Dominik Morent, KNIME.com AG, Zurich, Switzerland
  * @author wenlin, Zementis, May 2011
- *
+ * <p>Despite being public no official API.
  */
-public class PMMLNeuralNetworkTranslator implements PMMLTranslator {
+public final class PMMLNeuralNetworkTranslator implements PMMLTranslator {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(PMMLNeuralNetworkTranslator.class);

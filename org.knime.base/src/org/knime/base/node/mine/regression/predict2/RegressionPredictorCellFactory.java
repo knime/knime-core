@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -74,7 +74,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  * Abstraction for all predictro cell factories.
- *
+ * <p>Despite being public no official API.
  * @author Heiko Hofer
  */
 public abstract class RegressionPredictorCellFactory extends AbstractCellFactory {

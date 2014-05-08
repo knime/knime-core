@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -100,10 +100,10 @@ import org.w3c.dom.Node;
  * The Neural Net Predictor takes as input a
  * {@link org.knime.core.data.DataTable} with the data that has to be classified
  * and the trained Neural Network.
- *
+ * <p>Despite being public no official API.
  * @author Nicolas Cebron, University of Konstanz
  */
-public class MLPPredictorNodeModel extends NodeModel {
+public final class MLPPredictorNodeModel extends NodeModel {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(MLPPredictorNodeModel.class);

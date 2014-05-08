@@ -405,6 +405,90 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/mine/decisiontree2/predictor2/DecTreePredictorNodeModel.java" type="org.knime.base.node.mine.decisiontree2.predictor2.DecTreePredictorNodeModel">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.decisiontree2.predictor2.DecTreePredictorNodeModel"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/neural/mlp2/MLPPredictorNodeFactory.java" type="org.knime.base.node.mine.neural.mlp2.MLPPredictorNodeFactory">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.neural.mlp2.MLPPredictorNodeFactory"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/neural/mlp2/MLPPredictorNodeModel.java" type="org.knime.base.node.mine.neural.mlp2.MLPPredictorNodeModel">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.neural.mlp2.MLPPredictorNodeModel"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/neural/mlp2/PMMLNeuralNetworkTranslator.java" type="org.knime.base.node.mine.neural.mlp2.PMMLNeuralNetworkTranslator">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.neural.mlp2.PMMLNeuralNetworkTranslator"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/regression/predict2/LogRegPredictor.java" type="org.knime.base.node.mine.regression.predict2.LogRegPredictor">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.predict2.LogRegPredictor"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/regression/predict2/RegressionPredictorCellFactory.java" type="org.knime.base.node.mine.regression.predict2.RegressionPredictorCellFactory">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.predict2.RegressionPredictorCellFactory"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/regression/predict2/RegressionPredictorNodeFactory.java" type="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeFactory">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeFactory"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/regression/predict2/RegressionPredictorNodeModel.java" type="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeModel">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.predict2.RegressionPredictorNodeModel"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/regression/predict2/RegressionPredictorSettings.java" type="org.knime.base.node.mine.regression.predict2.RegressionPredictorSettings">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.predict2.RegressionPredictorSettings"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/svm/predictor2/SVMPredictor.java" type="org.knime.base.node.mine.svm.predictor2.SVMPredictor">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.svm.predictor2.SVMPredictor"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/svm/predictor2/SVMPredictorNodeFactory.java" type="org.knime.base.node.mine.svm.predictor2.SVMPredictorNodeFactory">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.svm.predictor2.SVMPredictorNodeFactory"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/svm/predictor2/SVMPredictorNodeModel.java" type="org.knime.base.node.mine.svm.predictor2.SVMPredictorNodeModel">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.svm.predictor2.SVMPredictorNodeModel"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/preproc/filter/hilite/collector/InteractiveHiLiteCollectorNodeModel.java" type="org.knime.base.node.preproc.filter.hilite.collector.InteractiveHiLiteCollectorNodeModel">
         <filter id="338792546">
             <message_arguments>

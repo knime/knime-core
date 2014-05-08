@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -410,7 +410,7 @@ public class PMMLDecisionTreeTranslator extends PMMLConditionTranslator implemen
             treeModel.getMiningSchema().getMiningFieldArray();
         String predictedField = "predictedField";
         for (MiningField mf : miningFields) {
-            if (FIELDUSAGETYPE.PREDICTED == mf.getUsageType()) {
+            if (FIELDUSAGETYPE.PREDICTED == mf.getUsageType() || FIELDUSAGETYPE.TARGET == mf.getUsageType()) {
                 predictedField = mf.getName();
                 break;
             }

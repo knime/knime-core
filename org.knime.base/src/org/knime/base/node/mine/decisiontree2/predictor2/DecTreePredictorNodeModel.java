@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -102,10 +102,10 @@ import org.knime.core.util.Pair;
 import org.w3c.dom.Node;
 
 /**
- *
+ * <p>Despite being public no official API.
  * @author Michael Berthold, University of Konstanz
  */
-class DecTreePredictorNodeModel extends NodeModel {
+public final class DecTreePredictorNodeModel extends NodeModel {
     /** Index of input data port. */
     public static final int INDATAPORT = 1;
 

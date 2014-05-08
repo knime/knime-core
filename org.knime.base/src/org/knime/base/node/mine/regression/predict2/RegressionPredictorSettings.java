@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -56,7 +56,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * This class hold the settings for the General Regression Predictor node.
- *
+ * <p>Despite being public no official API.
  * @author Heiko Hofer
  */
 public final class RegressionPredictorSettings {

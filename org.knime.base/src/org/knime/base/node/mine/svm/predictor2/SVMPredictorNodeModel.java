@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -85,7 +85,7 @@ import org.w3c.dom.Node;
  * NodeModel of the SVM Predictor Node.
  * @author cebron, University of Konstanz
  */
-public class SVMPredictorNodeModel extends NodeModel {
+public final class SVMPredictorNodeModel extends NodeModel {
     /** The node logger for this class. */
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(SVMPredictorNodeModel.class);

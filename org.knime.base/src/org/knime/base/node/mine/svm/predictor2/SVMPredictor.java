@@ -71,9 +71,10 @@ import org.knime.core.node.ExecutionMonitor;
 /**
  * This {@link CellFactory} produces the class values for each
  * input {@link DataRow}.
+ * <p>Despite being public no official API.
  * @author cebron, University of Konstanz
  */
-public class SVMPredictor implements CellFactory {
+public final class SVMPredictor implements CellFactory {
 
     private Svm[] m_svms;
 

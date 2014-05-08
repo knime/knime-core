@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -57,10 +57,10 @@ import org.knime.core.node.NodeView;
 
 /**
  * The Factory for the NeuralNet PredictorNode. This node reads a neural network and computes the outputs.
- *
+ * <p>Despite being public no official API.
  * @author Nicolas Cebron, University of Konstanz
  */
-public class MLPPredictorNodeFactory extends NodeFactory<MLPPredictorNodeModel> {
+public final class MLPPredictorNodeFactory extends NodeFactory<MLPPredictorNodeModel> {
     /**
      * {@inheritDoc}
      */

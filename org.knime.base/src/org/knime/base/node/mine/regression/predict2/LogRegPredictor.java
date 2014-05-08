@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -79,7 +79,7 @@ import Jama.Matrix;
 
 /**
  * A Predictor for a logistic regression model.
- *
+ * <p>Despite being public no official API.
  * @author Heiko Hofer
  */
 public final class LogRegPredictor extends RegressionPredictorCellFactory {

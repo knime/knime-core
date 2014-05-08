@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -86,10 +86,10 @@ import org.w3c.dom.Node;
 
 /**
  * Node model for the general regression predictor.
- *
+ * <p>Despite being public no official API.
  * @author Heiko Hofer
  */
-final class RegressionPredictorNodeModel extends NodeModel {
+public final class RegressionPredictorNodeModel extends NodeModel {
     private final RegressionPredictorSettings m_settings;
 
     /** The node logger for this class. */
