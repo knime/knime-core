@@ -341,6 +341,13 @@
             locked="false"
             name="Uncategorized"
             path="/">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="mining-pmml"
+            locked="true"
+            name="PMML"
+            path="/mining">
       </category>            
    </extension>
             
