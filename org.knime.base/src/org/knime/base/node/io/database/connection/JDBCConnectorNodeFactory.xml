@@ -38,6 +38,13 @@
             apply any correction, <i>Use local TimeZone</i> uses the local time zone offset to correct the date field 
             before reading or writing, and <i>TimeZone: </i> allows selecting the time zone to covert the date values into.  
         </option>
+        <option name="Allow spaces in column names">
+            Check this option if the database can handle spaces in column names. Otherwise KNIME will replaces them by
+            underscores.
+        </option>
+        <option name="Validate connection on close">
+            Check this option if you want to validate the connection when closing the dialog.
+        </option>        
     </fullDescription>
 
     <ports>
