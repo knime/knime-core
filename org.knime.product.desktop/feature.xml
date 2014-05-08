@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.knime.product.desktop"
-      label="KNIME Desktop"
+      label="KNIME Analytics Platform"
       version="2.10.0.qualifier"
       provider-name="KNIME GmbH, Konstanz, Germany">
 
    <description>
-      KNIME Desktop feature
+      KNIME Analytics Platform feature
    </description>
 
    <copyright>
