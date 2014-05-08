@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <knimeNode xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10"  type="Source">
+    xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10"  icon="./db_jdbc_connector.png" type="Source">
     <name>Database JDBC Connector</name>
     <shortDescription>Create a database connection to any JDBC database.</shortDescription>
     <fullDescription>
         <intro>
             This node creates a connection to an arbitrary JDBC database. You need to select an appropriate driver
-            (if not availble, add your vendor-sepcific driver under File > Preferences > KNIME > Database Driver) and 
+            (if not available, add your vendor-specific driver under File > Preferences > KNIME > Database Driver) and 
             the JDBC URL of the database (which is database specific). Login credentials can either be provided directly
-             in the configuration or via credentials set on the workflow.
+            in the configuration or via credentials set on the workflow.
         </intro>
         
         <option name="Database Driver">
