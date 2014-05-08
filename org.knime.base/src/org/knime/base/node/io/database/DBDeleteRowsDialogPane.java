@@ -52,6 +52,8 @@ package org.knime.base.node.io.database;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 
 import javax.swing.BorderFactory;
@@ -67,6 +69,8 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
@@ -80,11 +84,11 @@ final class DBDeleteRowsDialogPane extends NodeDialogPane {
 
     private final DataColumnSpecFilterPanel m_columnsInWhereClause;
 
-    private final DBDialogPane m_loginPanel;
+    private final DBDialogPane m_loginPanel = new DBDialogPane(false);
 
-    private final JTextField m_tableName;
+    private final JTextField m_tableName = new JTextField();
 
-    private final JTextField m_batchSize;
+    private final JTextField m_batchSize = new JTextField();
 
     /** Creates new dialog. */
     DBDeleteRowsDialogPane() {
@@ -94,28 +98,33 @@ final class DBDeleteRowsDialogPane extends NodeDialogPane {
         m_columnsInWhereClause.setBorder(BorderFactory.createTitledBorder(" Select WHERE Columns "));
         columnPanel.add(m_columnsInWhereClause);
 
-        m_loginPanel = new DBDialogPane(false);
         final JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBorder(BorderFactory.createTitledBorder(" Table Name "));
         tablePanel.setFont(DBDialogPane.FONT);
-        m_tableName = new JTextField("");
         tablePanel.add(m_tableName, BorderLayout.CENTER);
-        m_loginPanel.add(tablePanel);
 
-        final JPanel panel = new JPanel(new BorderLayout());
-        panel.add(m_loginPanel, BorderLayout.NORTH);
-        panel.add(columnPanel, BorderLayout.CENTER);
+        final JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.NORTH;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+
+        panel.add(m_loginPanel, c);
+        c.gridy++;
+        panel.add(tablePanel, c);
+        c.gridy++;
+        panel.add(columnPanel, c);
         final JScrollPane scroll = new JScrollPane(panel);
         super.addTab("Settings", scroll);
 
 // advanced tab with batch size
         final JPanel batchSizePanel = new JPanel(new FlowLayout());
         batchSizePanel.add(new JLabel("Batch Size: "));
-        m_batchSize = new JTextField();
         m_batchSize.setPreferredSize(new Dimension(100, 20));
         batchSizePanel.add(m_batchSize);
         super.addTab("Advanced", batchSizePanel);
-
     }
 
     /**
@@ -123,7 +132,9 @@ final class DBDeleteRowsDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
+        DataTableSpec tableSpec = (DataTableSpec)specs[0];
+
         // load login setting
         m_loginPanel.loadSettingsFrom(settings, specs, getCredentialsProvider());
         // load table name
@@ -131,11 +142,17 @@ final class DBDeleteRowsDialogPane extends NodeDialogPane {
         // load WHERE column panel
         DataColumnSpecFilterConfiguration configWhere = new DataColumnSpecFilterConfiguration(
             DBDeleteRowsNodeModel.KEY_WHERE_FILTER_COLUMN);
-        configWhere.loadConfigurationInDialog(settings, specs[0]);
-        m_columnsInWhereClause.loadConfiguration(configWhere, specs[0]);
+        configWhere.loadConfigurationInDialog(settings, tableSpec);
+        m_columnsInWhereClause.loadConfiguration(configWhere, tableSpec);
         // load batch size
         final int batchSize = settings.getInt(DBDeleteRowsNodeModel.KEY_BATCH_SIZE, 1);
         m_batchSize.setText(Integer.toString(batchSize));
+
+        if ((specs.length > 1) && (specs[1] instanceof DatabaseConnectionPortObjectSpec)) {
+            m_loginPanel.setVisible(false);
+        } else {
+            m_loginPanel.setVisible(true);
+        }
     }
 
     /**

@@ -49,9 +49,11 @@
  */
 package org.knime.base.node.io.database;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -67,6 +69,8 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 
 /**
@@ -91,24 +95,31 @@ final class DBWriterDialogPane extends NodeDialogPane {
      */
     DBWriterDialogPane() {
 // add login and table name tab
-        final JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBorder(BorderFactory.createTitledBorder(" Table Name "));
-        m_table.setFont(DBDialogPane.FONT);
-        tablePanel.add(m_table, BorderLayout.CENTER);
-        m_loginPane.add(tablePanel);
+        JPanel tableAndConnectionPanel = new JPanel(new GridBagLayout());
 
-        final JPanel appendPanel = new JPanel(new BorderLayout());
-        appendPanel.setBorder(
-                BorderFactory.createTitledBorder(" Append Data "));
-        m_append.setFont(DBDialogPane.FONT);
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+
+        tableAndConnectionPanel.add(m_loginPane, c);
+
+        c.gridy++;
+        JPanel p = new JPanel(new GridLayout());
+        p.add(m_table);
+        p.setBorder(BorderFactory.createTitledBorder(" Table Name "));
+        tableAndConnectionPanel.add(p, c);
+
+        c.gridy++;
+        p = new JPanel(new GridLayout());
+        p.add(m_append);
+        p.setBorder(BorderFactory.createTitledBorder(" Append Data "));
         m_append.setToolTipText("Table structure from input and database table"
                 + " must match!");
-        appendPanel.add(m_append, BorderLayout.CENTER);
-        m_loginPane.add(appendPanel);
-
-        final JPanel p = new JPanel(new BorderLayout());
-        p.add(m_loginPane, BorderLayout.NORTH);
-        super.addTab("Settings", p);
+        tableAndConnectionPanel.add(p, c);
+        super.addTab("Settings", tableAndConnectionPanel);
 
 // add SQL Types tab
         m_typePanel = new DBSQLTypesPanel();
@@ -130,7 +141,7 @@ final class DBWriterDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         // get workflow credentials
         m_loginPane.loadSettingsFrom(settings, specs, getCredentialsProvider());
         // table name
@@ -141,15 +152,21 @@ final class DBWriterDialogPane extends NodeDialogPane {
         // load SQL Types for each column
         try {
             NodeSettingsRO typeSett = settings.getNodeSettings(DBWriterNodeModel.CFG_SQL_TYPES);
-            m_typePanel.loadSettingsFrom(typeSett, specs);
+            m_typePanel.loadSettingsFrom(typeSett, (DataTableSpec)specs[0]);
         } catch (InvalidSettingsException ise) {
-            m_typePanel.loadSettingsFrom(null, specs);
+            m_typePanel.loadSettingsFrom(null, (DataTableSpec)specs[0]);
         }
 
         // load batch size
         final int batchSize = settings.getInt(DBWriterNodeModel.KEY_BATCH_SIZE,
                                               DatabaseConnectionSettings.BATCH_WRITE_SIZE);
         m_batchSize.setText(Integer.toString(batchSize));
+
+        if ((specs.length > 1) && (specs[1] instanceof DatabaseConnectionPortObjectSpec)) {
+            m_loginPane.setVisible(false);
+        } else {
+            m_loginPane.setVisible(true);
+        }
     }
 
     /**

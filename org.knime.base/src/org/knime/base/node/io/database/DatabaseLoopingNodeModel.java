@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -77,6 +77,9 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabaseConnectionPortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.util.MutableInteger;
 
@@ -111,7 +114,8 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
      *
      */
     DatabaseLoopingNodeModel() {
-        super(1, 1);
+        super(new PortType[]{BufferedDataTable.TYPE, DatabaseConnectionPortObject.TYPE_OPTIONAL},
+            new PortType[]{BufferedDataTable.TYPE});
         setQuery("SELECT * FROM " + TABLE_NAME_PLACE_HOLDER
                 + " WHERE " + TABLE_COLUMN_PLACE_HOLDER
                 + " IN ('" + IN_PLACE_HOLDER + "')");
@@ -147,10 +151,13 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
+        BufferedDataTable inputTable = (BufferedDataTable)inData[0];
+        final int rowCount = inputTable.getRowCount();
+
         String column = m_columnModel.getStringValue();
-        DataTableSpec spec = inData[0].getDataTableSpec();
+        DataTableSpec spec = inputTable.getDataTableSpec();
         int colIdx = spec.findColumnIndex(column);
         HashSet<DataCell> values = new HashSet<DataCell>();
         BufferedDataContainer buf = null;
@@ -159,14 +166,13 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         try {
             final int noValues = m_noValues.getIntValue();
             MutableInteger rowCnt = new MutableInteger(0);
-            for (Iterator<DataRow> it = inData[0].iterator(); it.hasNext();) {
+            for (Iterator<DataRow> it = inputTable.iterator(); it.hasNext();) {
                 exec.checkCanceled();
                 DataCell cell = it.next().getCell(colIdx);
-                if (values.contains(cell)) {
-                    if (!it.hasNext() && curSet.size() == 0) {
-                        continue;
-                    }
+                if (values.contains(cell) && !it.hasNext() && curSet.isEmpty()) {
+                    continue;
                 }
+
                 values.add(cell);
                 curSet.add(cell);
                 if (curSet.size() == noValues || !it.hasNext()) {
@@ -180,10 +186,9 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                     String newQuery = oQuery.replaceAll(
                             IN_PLACE_HOLDER, queryValues.toString());
                     setQuery(newQuery);
-                    exec.setProgress(values.size() * (double) noValues
-                            / inData[0].getRowCount(),
-                            "Selecting all values \"" + queryValues + "\"...");
-                    BufferedDataTable table = super.execute(inData, exec)[0];
+                    exec.setProgress(values.size() * (double)noValues / rowCount, "Selecting all values \""
+                        + queryValues + "\"...");
+                    BufferedDataTable table = (BufferedDataTable)super.execute(inData, exec)[0];
                     if (buf == null) {
                         DataTableSpec resSpec = table.getDataTableSpec();
                         buf = exec.createDataContainer(createSpec(resSpec,
@@ -204,7 +209,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
             setQuery(oQuery);
             if (buf == null) {
                 // create empty dummy container with spec generated during #configure
-                final DataTableSpec outSpec = this.configure(new DataTableSpec[]{inData[0].getSpec()})[0];
+                final DataTableSpec outSpec = this.configure(new DataTableSpec[]{inputTable.getSpec()})[0];
                 buf = exec.createDataContainer(outSpec);
             }
             buf.close();
@@ -243,6 +248,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
     private void aggregate(final DataTable table, final MutableInteger rowCnt,
             final BufferedDataContainer buf, final DataCell gridValue) {
         final DataTableSpec spec = table.getDataTableSpec();
+        @SuppressWarnings("unchecked")
         Set<DataCell>[] values = new LinkedHashSet[spec.getNumColumns()];
         for (final DataRow resRow : table) {
             for (int i = 0; i < values.length; i++) {

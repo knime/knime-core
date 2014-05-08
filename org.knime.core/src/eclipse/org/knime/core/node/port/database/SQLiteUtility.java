@@ -46,37 +46,49 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   02.05.2014 (thor): created
+ *   08.05.2014 (thor): created
  */
 package org.knime.core.node.port.database;
 
 /**
- * Statement manipulator for SQLite.
+ * Database utility for SQLite.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.10
  */
-public class SQLiteStatementManipulator extends StatementManipulator {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String forMetadataOnly(final String sql) {
-        /* Fixed Bug 2874. For sqlite the data must always be
-         * fetched as the column type string is returned
-         * for all columns when fetching only meta data. */
-        return sql;
+public class SQLiteUtility extends DatabaseUtility {
+    private static class SQLiteStatementManipulator extends StatementManipulator {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String forMetadataOnly(final String sql) {
+            /* Fixed Bug 2874. For sqlite the data must always be
+             * fetched as the column type string is returned
+             * for all columns when fetching only meta data. */
+            return sql;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String unquoteColumn(final String colName) {
+            if (colName.startsWith("\"") && colName.endsWith("\"") && colName.contains(" ")) {
+                return colName.substring(1, colName.length() -1);
+            } else {
+                return colName;
+            }
+        }
     }
+
+    private static final StatementManipulator MANIPULATOR = new SQLiteStatementManipulator();
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String unquoteColumn(final String colName) {
-        if (colName.startsWith("\"") && colName.endsWith("\"") && colName.contains(" ")) {
-            return colName.substring(1, colName.length() -1);
-        } else {
-            return colName;
-        }
+    public StatementManipulator getStatementManipulator() {
+        return MANIPULATOR;
     }
 }

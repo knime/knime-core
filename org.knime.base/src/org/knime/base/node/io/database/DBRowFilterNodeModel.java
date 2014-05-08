@@ -130,7 +130,7 @@ final class DBRowFilterNodeModel extends DBNodeModel {
             throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
-        String newQuery = createQuery(conn.getQuery(), conn.getStatementManipulator());
+        String newQuery = createQuery(conn.getQuery(), conn.getUtility().getStatementManipulator());
         conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         DatabasePortObject outObj = new DatabasePortObject(
                 new DatabasePortObjectSpec(dbObj.getSpec().getDataTableSpec(),
@@ -154,7 +154,7 @@ final class DBRowFilterNodeModel extends DBNodeModel {
                     + "selected column \"" + columnName + "\".");
         }
         DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
-        String newQuery = createQuery(conn.getQuery(), conn.getStatementManipulator());
+        String newQuery = createQuery(conn.getQuery(), conn.getUtility().getStatementManipulator());
         conn = createDBQueryConnection(spec, newQuery);
         return new PortObjectSpec[]{new DatabasePortObjectSpec(
                 spec.getDataTableSpec(), conn.createConnectionModel())};

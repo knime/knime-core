@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -90,18 +90,17 @@ final class DBSQLTypesPanel extends JPanel {
      * mapping read from spec and settings object. If no type is available
      * to default types are used.
      * @param settings Settings object to read specified SQL-types from.
-     * @param specs The data spec to retrieve all column names and types.
+     * @param spec the data spec to retrieve all column names and types from
      */
-    void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) {
+    void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec spec) {
         m_map.clear();
         super.removeAll();
-        if (specs == null || specs[0] == null) {
+        if (spec == null) {
             return;
         }
-        for (int i = 0; i < specs[0].getNumColumns(); i++) {
+        for (int i = 0; i < spec.getNumColumns(); i++) {
             JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 15));
-            DataColumnSpec cspec = specs[0].getColumnSpec(i);
+            DataColumnSpec cspec = spec.getColumnSpec(i);
             String colName = cspec.getName();
             JLabel label = new JLabel(colName.replaceAll("[^a-zA-Z0-9]", "_"));
             int labelHeight = label.getPreferredSize().height;

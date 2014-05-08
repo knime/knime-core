@@ -18,8 +18,13 @@
          an update count giving the number of rows in the database that were affected by the command's execution
          A value of -2 -- indicates that the command was processed successfully but that the number of rows affected 
          is unknown.    
-	     <br/>
-	     Make sure you have your vendor-specific database driver registered in
+         <br/>
+         <br />
+          If the optional input is connected the database connection information is taken from the port, otherwise
+          you need to specify the connection information in the dialog.          
+         <br/>
+         <br />
+         Make sure you have your vendor-specific database driver registered in
          the KNIME preference page (section Database Driver). By default, the 
          sun.jdbc.odbc.JdbcOdbcDriver (Windows and Linux) is only available.
 		</intro>
@@ -83,6 +88,10 @@
 		<inPort index="0" name="Data to delete row in Database">
 			Table with data rows to be deleted in the database
 		</inPort>
+        <inPort index="1" name="Database connection" optional="true">
+          An optional database connection that should be used instead of providing the connection information
+          in the dialog.
+        </inPort>        
 		<outPort index="0" name="Input Data with Delete Status">
             Input table with additional column providing number of affected rows in the database.
         </outPort>

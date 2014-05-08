@@ -125,7 +125,8 @@ public final class DatabaseWriterConnection {
                 ResultSet rs = null;
                 try {
                     // try to count all rows to see if table exists
-                    final String query = dbConn.getStatementManipulator().limitRows("SELECT * FROM " + table, 0);
+                    final String query =
+                        dbConn.getUtility().getStatementManipulator().limitRows("SELECT * FROM " + table, 0);
                     statement = conn.createStatement();
                     LOGGER.debug("Executing SQL statement as executeQuery: " + query);
                     rs = statement.executeQuery(query);
@@ -781,7 +782,7 @@ public final class DatabaseWriterConnection {
         if (!settings.getAllowSpacesInColumnNames()) {
             return oldName.replaceAll("[^a-zA-Z0-9]", "_");
         } else {
-            return settings.getStatementManipulator().quoteColumn(oldName);
+            return settings.getUtility().getStatementManipulator().quoteColumn(oldName);
         }
     }
 }

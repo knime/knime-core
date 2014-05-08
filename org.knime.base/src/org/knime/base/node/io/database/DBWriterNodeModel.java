@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -65,6 +65,11 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabaseConnectionPortObject;
+import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseWriterConnection;
 
@@ -81,7 +86,7 @@ final class DBWriterNodeModel extends NodeModel {
      * DOUBLE.POSITIVE_INFINITY
      */
 
-    private final DatabaseConnectionSettings m_conn;
+    private final DatabaseConnectionSettings m_conn = new DatabaseConnectionSettings();
 
     /** Config key for the table name. */
     static final String KEY_TABLE_NAME = "table";
@@ -123,8 +128,7 @@ final class DBWriterNodeModel extends NodeModel {
      * Creates a new model with one data input.
      */
     DBWriterNodeModel() {
-        super(1, 0);
-        m_conn = new DatabaseConnectionSettings();
+        super(new PortType[]{BufferedDataTable.TYPE, DatabaseConnectionPortObject.TYPE_OPTIONAL}, new PortType[0]);
     }
 
     /**
@@ -202,13 +206,22 @@ final class DBWriterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
         exec.setProgress("Opening database connection to write data...");
+
+        DatabaseConnectionSettings connSettings;
+        if ((inData.length > 1) && (inData[1] instanceof DatabaseConnectionPortObject)) {
+            connSettings = ((DatabaseConnectionPortObject) inData[1]).getConnectionSettings(getCredentialsProvider());
+        } else {
+            connSettings = m_conn;
+        }
+
         // write entire data
-        String error = DatabaseWriterConnection.writeData(m_conn, m_tableName, inData[0], m_append, exec, m_types,
-                getCredentialsProvider(), m_batchSize);
+        String error =
+            DatabaseWriterConnection.writeData(connSettings, m_tableName, (BufferedDataTable)inData[0], m_append, exec,
+                m_types, getCredentialsProvider(), m_batchSize);
         if (error != null) {
             super.setWarningMessage(error);
         }
@@ -245,21 +258,48 @@ final class DBWriterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
+
         // check table name
-        if (m_tableName == null || m_tableName.trim().isEmpty()) {
+        if ((m_tableName == null) || m_tableName.trim().isEmpty()) {
             throw new InvalidSettingsException(
                 "Configure node and enter a valid table name.");
         }
+
+        // throw exception if no data provided
+        if (tableSpec.getNumColumns() == 0) {
+            throw new InvalidSettingsException("No columns in input data.");
+        }
+
+        // check optional incoming connection
+        if ((inSpecs.length > 1) && (inSpecs[1] instanceof DatabaseConnectionPortObjectSpec)) {
+            DatabaseConnectionSettings connSettings =
+                ((DatabaseConnectionPortObjectSpec)inSpecs[1]).getConnectionSettings(getCredentialsProvider());
+
+            if ((connSettings.getJDBCUrl() == null) || connSettings.getJDBCUrl().isEmpty()
+                || (connSettings.getDriver() == null) || connSettings.getDriver().isEmpty()) {
+                throw new InvalidSettingsException("No valid database connection provided via second input port");
+            }
+            if (!connSettings.getUtility().supportsInsert()) {
+                throw new InvalidSettingsException("Connected database does not support insert operations");
+            }
+        } else {
+            if (!m_conn.getUtility().supportsInsert()) {
+                throw new InvalidSettingsException("Selected database does not support insert operations");
+            }
+        }
+
+
         // copy map to ensure only columns which are with the data
         Map<String, String> map = new LinkedHashMap<String, String>();
         // check that each column has a assigned type
-        for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
-            final String name = inSpecs[0].getColumnSpec(i).getName();
+        for (int i = 0; i < tableSpec.getNumColumns(); i++) {
+            final String name = tableSpec.getColumnSpec(i).getName();
             String sqlType = m_types.get(name);
             if (sqlType == null) {
-                final DataType type = inSpecs[0].getColumnSpec(i).getType();
+                final DataType type = tableSpec.getColumnSpec(i).getType();
                 if (type.isCompatible(IntValue.class)) {
                     sqlType = DBWriterNodeModel.SQL_TYPE_INTEGER;
                 } else if (type.isCompatible(DoubleValue.class)) {
@@ -275,10 +315,6 @@ final class DBWriterNodeModel extends NodeModel {
         m_types.clear();
         m_types.putAll(map);
 
-        // throw exception if no data provided
-        if (inSpecs[0].getNumColumns() == 0) {
-            throw new InvalidSettingsException("No columns in input data.");
-        }
 
         if (!m_append) {
             super.setWarningMessage("Existing table \"" + m_tableName + "\" will be dropped!");

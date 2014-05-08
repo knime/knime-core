@@ -46,7 +46,7 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   02.05.2014 (thor): created
+ *   08.05.2014 (thor): created
  */
 package org.knime.core.node.port.database;
 
@@ -57,41 +57,53 @@ import java.util.regex.Matcher;
 import org.knime.core.node.NodeLogger;
 
 /**
- * Statement manipulator for MySQL.
+ * Database utility for MySQL.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.10
  */
-public class MySQLStatementManipulator extends StatementManipulator {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String quoteColumn(final String colName) {
-        Matcher m = WHITESPACE_PATTERN.matcher(colName);
-        if (m.find()) {
-            return "`" + colName + "`";
-        } else {
-            // no need to quote
-            return colName;
+public class MySQLUtility extends DatabaseUtility {
+    private static class MySQLStatementManipulator extends StatementManipulator {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String quoteColumn(final String colName) {
+            Matcher m = WHITESPACE_PATTERN.matcher(colName);
+            if (m.find()) {
+                return "`" + colName + "`";
+            } else {
+                // no need to quote
+                return colName;
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setFetchSize(final Statement statement, final int fetchSize) throws SQLException {
+            if (fetchSize >= 0) {
+                super.setFetchSize(statement, fetchSize);
+            } else {
+                // fix 2040: MySQL databases read everything into one, big
+                // ResultSet leading to an heap space error
+                // Integer.MIN_VALUE is an indicator in order to enable
+                // streaming results
+                statement.setFetchSize(Integer.MIN_VALUE);
+                NodeLogger.getLogger(getClass()).info(
+                    "Database fetchsize for MySQL database set to " + Integer.MIN_VALUE + ".");
+            }
         }
     }
+
+    private static final StatementManipulator MANIPULATOR = new MySQLStatementManipulator();
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void setFetchSize(final Statement statement, final int fetchSize) throws SQLException {
-        if (fetchSize >= 0) {
-            super.setFetchSize(statement, fetchSize);
-        } else {
-            // fix 2040: MySQL databases read everything into one, big
-            // ResultSet leading to an heap space error
-            // Integer.MIN_VALUE is an indicator in order to enable
-            // streaming results
-            statement.setFetchSize(Integer.MIN_VALUE);
-            NodeLogger.getLogger(getClass()).info(
-                "Database fetchsize for MySQL database set to " + Integer.MIN_VALUE + ".");
-        }
+    public StatementManipulator getStatementManipulator() {
+        return MANIPULATOR;
     }
 }

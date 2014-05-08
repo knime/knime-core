@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -72,6 +72,11 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabaseConnectionPortObject;
+import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseWriterConnection;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
@@ -100,27 +105,50 @@ final class DBDeleteRowsNodeModel extends NodeModel {
 
     /** Create a new database UPDATE node model. */
     DBDeleteRowsNodeModel() {
-        super(1, 1);
+        super(new PortType[]{BufferedDataTable.TYPE, DatabaseConnectionPortObject.TYPE_OPTIONAL},
+            new PortType[]{BufferedDataTable.TYPE});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
+
         // check table name
         if (m_tableName == null || m_tableName.trim().isEmpty()) {
             throw new InvalidSettingsException(
                 "Configure node and enter a valid table name.");
         }
         final List<String> whereIncludes = new ArrayList<String>(
-                Arrays.asList(m_configWHERE.applyTo(inSpecs[0]).getIncludes()));
+                Arrays.asList(m_configWHERE.applyTo(tableSpec).getIncludes()));
         if (whereIncludes.isEmpty()) {
             throw new InvalidSettingsException("No WHERE column selected.");
         }
+
+        // check optional incoming connection
+        if ((inSpecs.length > 1) && (inSpecs[1] instanceof DatabaseConnectionPortObjectSpec)) {
+            DatabaseConnectionSettings connSettings =
+                ((DatabaseConnectionPortObjectSpec)inSpecs[1]).getConnectionSettings(getCredentialsProvider());
+
+            if ((connSettings.getJDBCUrl() == null) || connSettings.getJDBCUrl().isEmpty()
+                || (connSettings.getDriver() == null) || connSettings.getDriver().isEmpty()) {
+                throw new InvalidSettingsException("No valid database connection provided via second input port");
+            }
+
+            if (!connSettings.getUtility().supportsDelete()) {
+                throw new InvalidSettingsException("Connected database does not support delete operations");
+            }
+        } else {
+            if (!m_loginConfig.getUtility().supportsDelete()) {
+                throw new InvalidSettingsException("Selected database does not support delete operations");
+            }
+        }
+
         // forward input spec with one additional update (=int) column
-        final ColumnRearranger colre = createColumnRearranger(inSpecs[0], new int[]{});
+        final ColumnRearranger colre = createColumnRearranger(tableSpec, new int[]{});
         return new DataTableSpec[]{colre.createSpec()};
     }
 
@@ -144,14 +172,22 @@ final class DBDeleteRowsNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        final BufferedDataTable inTable = inData[0];
+        final BufferedDataTable inTable = (BufferedDataTable)inData[0];
         final DataTableSpec inSpec = inTable.getSpec();
         final String[] whereIncludes = m_configWHERE.applyTo(inSpec).getIncludes();
+
+        DatabaseConnectionSettings connSettings;
+        if ((inData.length > 1) && (inData[1] instanceof DatabaseConnectionPortObject)) {
+            connSettings = ((DatabaseConnectionPortObject) inData[1]).getConnectionSettings(getCredentialsProvider());
+        } else {
+            connSettings = m_loginConfig;
+        }
+
         // DELETE rows
         final int[] deleteStatus = new int[inTable.getRowCount()];
-        DatabaseWriterConnection.deleteRows(m_loginConfig, m_tableName, inTable,
+        DatabaseWriterConnection.deleteRows(connSettings, m_tableName, inTable,
             whereIncludes, deleteStatus, exec, getCredentialsProvider(), m_batchSize);
         // create out table with update column
         final ColumnRearranger colre = createColumnRearranger(inTable.getSpec(), deleteStatus);
@@ -234,5 +270,4 @@ final class DBDeleteRowsNodeModel extends NodeModel {
     protected void reset() {
         // no op
     }
-
 }

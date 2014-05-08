@@ -126,7 +126,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
             throws CanceledExecutionException, Exception {
         DatabasePortObject dbObj = (DatabasePortObject)inData[0];
         DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
-        String newQuery = createQuery(conn.getQuery(), conn.getStatementManipulator());
+        String newQuery = createQuery(conn.getQuery(), conn.getUtility().getStatementManipulator());
         conn = createDBQueryConnection(dbObj.getSpec(), newQuery);
         ColumnRearranger colre = new ColumnRearranger(dbObj.getSpec().getDataTableSpec());
         colre.keepOnly(m_filter.getIncludeList().toArray(new String[0]));
@@ -154,7 +154,7 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
                     + "input spec: " + buf.toString());
         }
         DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
-        String newQuery = createQuery(conn.getQuery(), conn.getStatementManipulator());
+        String newQuery = createQuery(conn.getQuery(), conn.getUtility().getStatementManipulator());
         conn = createDBQueryConnection(spec, newQuery);
         ColumnRearranger colre = new ColumnRearranger(spec.getDataTableSpec());
         colre.keepOnly(m_filter.getIncludeList().toArray(new String[0]));

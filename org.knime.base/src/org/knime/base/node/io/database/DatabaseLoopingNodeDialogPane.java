@@ -69,6 +69,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 
 /**
  *
@@ -135,7 +136,12 @@ public class DatabaseLoopingNodeDialogPane extends DBReaderDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
-            // super.getCredentialsNames());
+        if ((specs.length > 1) && (specs[1] instanceof DatabaseConnectionPortObjectSpec)) {
+            showConnectionPanel(false);
+        } else {
+            showConnectionPanel(true);
+        }
+
         m_columns.loadSettingsFrom(settings, specs);
         m_aggregatebyRow.loadSettingsFrom(settings, specs);
         m_appendGridColumn.loadSettingsFrom(settings, specs);

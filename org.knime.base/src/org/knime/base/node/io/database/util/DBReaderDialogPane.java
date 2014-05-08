@@ -93,7 +93,7 @@ import org.knime.core.util.SwingWorkerWithContext;
  */
 public class DBReaderDialogPane extends NodeDialogPane {
 
-    private final boolean m_showConnectionPanel;
+    private boolean m_showConnectionPanel;
 
     private final DBDialogPane m_connectionPane = new DBDialogPane(false);
 
@@ -120,8 +120,6 @@ public class DBReaderDialogPane extends NodeDialogPane {
      * @param showDBBrowser <code>true</code> if the database browser should be shown, <code>false</code> otherwise
      */
     public DBReaderDialogPane(final boolean showConnectionPanel, final boolean showDBBrowser) {
-        m_showConnectionPanel = showConnectionPanel;
-
 // init SQL statement component
         m_statmnt.setPreferredSize(new Dimension(350, 200));
         m_statmnt.setFont(DBDialogPane.FONT);
@@ -201,9 +199,8 @@ public class DBReaderDialogPane extends NodeDialogPane {
         }
         JPanel allPanel = new JPanel(new BorderLayout());
 
-        if (showConnectionPanel) {
-            allPanel.add(m_connectionPane, BorderLayout.NORTH);
-        }
+        allPanel.add(m_connectionPane, BorderLayout.NORTH);
+        showConnectionPanel(showConnectionPanel);
 
 // init variable list
         m_listModelVars = new DefaultListModel<FlowVariable>();
@@ -335,5 +332,15 @@ public class DBReaderDialogPane extends NodeDialogPane {
         if (m_worker != null && !m_worker.isDone()) {
             m_worker.cancel(true);
         }
+    }
+
+    /**
+     * Shows or hides the connection information panel.
+     *
+     * @param b <code>true</code> if the connection info panel should be shown, <code>false</code> otherwise
+     */
+    public void showConnectionPanel(final boolean b) {
+        m_showConnectionPanel = b;
+        m_connectionPane.setVisible(b);
     }
 }

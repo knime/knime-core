@@ -903,16 +903,16 @@ public class DatabaseConnectionSettings {
 
 
     /**
-     * Returns an statement manipulator for the current database.
+     * Returns a utility implementation for the current database.
      *
      * @return a statement manipulator
      * @since 2.10
      */
-    public StatementManipulator getStatementManipulator() {
+    public DatabaseUtility getUtility() {
         String[] parts = m_jdbcUrl.split(":");
         if ((parts.length < 2) || !"jdbc".equals(parts[0])) {
             throw new IllegalArgumentException("Invalid JDBC URL in settings: " + m_jdbcUrl);
         }
-        return StatementManipulator.getManipulator(parts[1]);
+        return  DatabaseUtility.getUtility(parts[1]);
     }
 }

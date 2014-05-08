@@ -83,6 +83,12 @@ public class DatabaseConnectionPortObject implements PortObject {
     public static final PortType TYPE = new PortType(DatabaseConnectionPortObject.class);
 
     /**
+     * Database type for optional ports.
+     */
+    public static final PortType TYPE_OPTIONAL = new PortType(DatabaseConnectionPortObject.class, true);
+
+
+    /**
      * {@inheritDoc}
      */
     @Override

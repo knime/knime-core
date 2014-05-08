@@ -69,6 +69,11 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabaseConnectionPortObject;
+import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabaseReaderConnection;
@@ -85,6 +90,17 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
 
     private final DatabaseReaderConnection m_load =
         new DatabaseReaderConnection(null);
+
+
+    /**
+     * Creates a new model with the given number (and types!) of input and output types.
+     *
+     * @param inPortTypes an array of non-null in-port types
+     * @param outPortTypes an array of non-null out-port types
+     */
+    protected DBReaderNodeModel(final PortType[] inPortTypes, final PortType[] outPortTypes) {
+        super(inPortTypes, outPortTypes);
+    }
 
     /**
      * Creates a new database reader with one data out-port.
@@ -119,13 +135,24 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
         exec.setProgress("Opening database connection...");
+
+        String query = parseQuery(m_settings.getQuery());
+        DatabaseQueryConnectionSettings connSettings;
+        if ((inData.length > 1) && (inData[1] instanceof DatabaseConnectionPortObject)) {
+            DatabaseConnectionPortObject dbObj = (DatabaseConnectionPortObject)inData[1];
+
+            connSettings =
+                new DatabaseQueryConnectionSettings(dbObj.getConnectionSettings(getCredentialsProvider()), query);
+        } else {
+            connSettings = new DatabaseQueryConnectionSettings(m_settings, query);
+        }
+
         try {
-            m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(m_settings, parseQuery(m_settings
-                .getQuery())));
+            m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(connSettings, query));
             exec.setProgress("Reading data from database...");
             CredentialsProvider cp = getCredentialsProvider();
             final BufferedDataTable result = m_load.createTable(exec, cp);
@@ -136,9 +163,6 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
         } catch (Exception e) {
             m_lastSpec = null;
             throw e;
-        } catch (Throwable t) {
-            m_lastSpec = null;
-            throw new Exception(t);
         }
     }
 
@@ -197,7 +221,7 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         if (m_lastSpec != null) {
             return new DataTableSpec[]{m_lastSpec};
@@ -209,8 +233,19 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
             if (!m_settings.getValidateQuery()) {
                 return new DataTableSpec[] {null};
             }
-            m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(m_settings, parseQuery(m_settings
-                .getQuery())));
+
+            String query = parseQuery(m_settings.getQuery());
+            DatabaseQueryConnectionSettings connSettings;
+            if ((inSpecs.length > 1) && (inSpecs[1] instanceof DatabaseConnectionPortObjectSpec)) {
+                DatabaseConnectionPortObjectSpec connSpec = (DatabaseConnectionPortObjectSpec)inSpecs[1];
+
+                connSettings =
+                    new DatabaseQueryConnectionSettings(connSpec.getConnectionSettings(getCredentialsProvider()), query);
+            } else {
+                connSettings = new DatabaseQueryConnectionSettings(m_settings, query);
+            }
+
+            m_load.setDBQueryConnection(connSettings);
             m_lastSpec = m_load.getDataTableSpec(getCredentialsProvider());
             return new DataTableSpec[]{m_lastSpec};
         } catch (InvalidSettingsException e) {

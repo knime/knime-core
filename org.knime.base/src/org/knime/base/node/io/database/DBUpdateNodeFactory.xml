@@ -20,6 +20,11 @@
          A value of -2 -- indicates that the command was processed successfully but that the number of rows affected 
          is unknown.	     
 	     <br/>
+         <br />
+          If the optional input is connected the database connection information is taken from the port, otherwise
+          you need to specify the connection information in the dialog.          
+         <br/>
+         <br />
 	     Make sure you have your vendor-specific database driver registered in
          the KNIME preference page (section Database Driver). By default, the 
          sun.jdbc.odbc.JdbcOdbcDriver (Windows and Linux) is only available.
@@ -88,6 +93,10 @@
 		<inPort index="0" name="Data to update Database">
 			Table with data to be updated in the database
 		</inPort>
+        <inPort index="1" name="Database connection" optional="true">
+          An optional database connection that should be used instead of providing the connection information
+          in the dialog.
+        </inPort>                
 		<outPort index="0" name="Input Data with Update Status">
             Input table with additional column providing number of affected rows in the database.
         </outPort>

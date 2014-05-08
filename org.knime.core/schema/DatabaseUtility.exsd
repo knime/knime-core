@@ -3,10 +3,10 @@
 <schema targetNamespace="org.knime.core" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appInfo>
-         <meta.schema plugin="org.knime.core" id="StatementManipulator" name="StatementManipulator"/>
+         <meta.schema plugin="org.knime.core" id="DatabaseUtility" name="DatabaseUtility"/>
       </appInfo>
       <documentation>
-         Simple extension points that allows to register a statement manipulator that creates database-specific SQL queries. Statement manipulators must be thread-safe since they may be re-used.
+         Simple extension points that allows to register a database utility class that provides database specific routines and information. All implementations must be thread-safe since they are re-used.
       </documentation>
    </annotation>
 
@@ -18,7 +18,7 @@
       </annotation>
       <complexType>
          <sequence>
-            <element ref="statementManipulator" minOccurs="1" maxOccurs="unbounded"/>
+            <element ref="databaseUtility" minOccurs="1" maxOccurs="unbounded"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -47,15 +47,15 @@
       </complexType>
    </element>
 
-   <element name="statementManipulator">
+   <element name="databaseUtility">
       <complexType>
          <attribute name="class" type="string" use="required">
             <annotation>
                <documentation>
-                  Class of the extended StatementManipulator
+                  Class of the extended DatabaseUtility.
                </documentation>
                <appInfo>
-                  <meta.attribute kind="java" basedOn="org.knime.core.node.port.database.StatementManipulator:"/>
+                  <meta.attribute kind="java" basedOn="org.knime.core.node.port.database.DatabaseSupport:"/>
                </appInfo>
             </annotation>
          </attribute>
@@ -87,11 +87,11 @@
 
 &lt;pre&gt;
    &lt;extension
-         point=&quot;org.knime.core.StatementManipulator&quot;&gt;
-      &lt;statementManipulator
-            class=&quot;org.knime.core.node.port.database.MySQLStatementManipulator&quot;
+         point=&quot;org.knime.core.DatabaseUtility&quot;&gt;
+      &lt;databaseUtility
+            class=&quot;org.knime.core.node.port.database.MySQLUtility&quot;
             database=&quot;mysql&quot;&gt;
-      &lt;/sqlManipulator&gt;
+      &lt;/databaseUtility&gt;
    &lt;/extension&gt;
 &lt;/pre&gt;
       </documentation>

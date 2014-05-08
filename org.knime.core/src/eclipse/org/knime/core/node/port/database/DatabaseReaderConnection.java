@@ -203,7 +203,8 @@ public final class DatabaseReaderConnection {
                 oQueries[selectIndex] = oQueries[selectIndex].substring(0, oQueries[selectIndex].length() - 1);
             }
 
-            oQueries[selectIndex] = m_conn.getStatementManipulator().forMetadataOnly(oQueries[selectIndex]);
+            oQueries[selectIndex] =
+                m_conn.getUtility().getStatementManipulator().forMetadataOnly(oQueries[selectIndex]);
             ResultSet result = null;
             final Statement stmt = initStatement(cp, conn);
             try {
@@ -255,7 +256,7 @@ public final class DatabaseReaderConnection {
             try {
                 int fetchsize = (DatabaseConnectionSettings.FETCH_SIZE != null) ?
                     DatabaseConnectionSettings.FETCH_SIZE : -1;
-                m_conn.getStatementManipulator().setFetchSize(stmt, fetchsize);
+                m_conn.getUtility().getStatementManipulator().setFetchSize(stmt, fetchsize);
                 final String[] oQueries = m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
                 // execute all except the last query
                 for (int i = 0; i < oQueries.length - 1; i++) {
@@ -311,7 +312,7 @@ public final class DatabaseReaderConnection {
                 if (cachedNoRows < 0) {
                     int fetchsize = (DatabaseConnectionSettings.FETCH_SIZE != null) ?
                         DatabaseConnectionSettings.FETCH_SIZE : -1;
-                    m_conn.getStatementManipulator().setFetchSize(stmt, fetchsize);
+                    m_conn.getUtility().getStatementManipulator().setFetchSize(stmt, fetchsize);
                 } else {
                     final int hashAlias = System.identityHashCode(this);
                     final int selectIdx = oQueries.length - 1;
@@ -360,7 +361,7 @@ public final class DatabaseReaderConnection {
         if (cols == 0) {
             return new DataTableSpec("database");
         }
-        StatementManipulator manipulator = m_conn.getStatementManipulator();
+        StatementManipulator manipulator = m_conn.getUtility().getStatementManipulator();
         DataTableSpec spec = null;
         for (int i = 0; i < cols; i++) {
             int dbIdx = i + 1;

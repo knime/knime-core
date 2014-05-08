@@ -52,76 +52,23 @@ package org.knime.core.node.port.database;
 
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.Platform;
-import org.knime.core.node.NodeLogger;
-
 /**
  * This class lets you manipulate SQL statement by adding database-specific parts or changing statement parameters.
- * Subclasses may override some methods and change the manipulation.
+ * Subclasses may override some methods and change the manipulation. All implementations must be thread-safe.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.10
  */
 public class StatementManipulator {
-    private static final String EXT_POINT_ID = "org.knime.core.StatementManipulator";
-
-    private static final Map<String, StatementManipulator> MANIPULATOR_MAP = new HashMap<>();
-
     /**
      * Pattern for matching any whitespace character.
      */
     protected static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
 
-    /**
-     * Returns a manipulator for the given database type. If no specific manipulator is available, a generic manipulator
-     * is returned.
-     *
-     * @param dbIdentifier the database identifier, the same as the second part of a JDBC URL; must not be
-     *            <code>null</code>
-     * @return an SQL manipulator
-     */
-    public static synchronized StatementManipulator getManipulator(final String dbIdentifier) {
-        StatementManipulator manip = MANIPULATOR_MAP.get(dbIdentifier);
-        if (manip == null) {
-            IExtensionRegistry registry = Platform.getExtensionRegistry();
-            IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
-            assert point != null : "Invalid extension point id: " + EXT_POINT_ID;
-
-            for (IExtension ext : point.getExtensions()) {
-                IConfigurationElement[] elements = ext.getConfigurationElements();
-                for (IConfigurationElement sqlManipulatorElement : elements) {
-                    if (dbIdentifier.equals(sqlManipulatorElement.getAttribute("database"))) {
-                        try {
-                            manip = (StatementManipulator)sqlManipulatorElement.createExecutableExtension("class");
-                        } catch (CoreException ex) {
-                            NodeLogger.getLogger(StatementManipulator.class).error(
-                                "Could not create registered statement manipulator "
-                                    + sqlManipulatorElement.getAttribute("class") + " for " + dbIdentifier
-                                    + " from plug-in " + sqlManipulatorElement.getNamespaceIdentifier() + ": "
-                                    + ex.getMessage(), ex);
-                        }
-                    }
-                }
-            }
-
-            if (manip == null) {
-                manip = new StatementManipulator();
-            }
-            MANIPULATOR_MAP.put(dbIdentifier, manip);
-        }
-        return manip;
-    }
 
     private final Random m_rand = new Random();
 

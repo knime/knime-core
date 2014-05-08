@@ -46,30 +46,46 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   02.05.2014 (thor): created
+ *   08.05.2014 (thor): created
  */
 package org.knime.core.node.port.database;
 
-import java.sql.SQLException;
-import java.sql.Statement;
 
 /**
- * Statement manipulator for PostgreSQL.
+ * Database utility for Oracle.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.10
  */
-public class PostgreSQLStatementManipulator extends StatementManipulator {
+public class OracleUtility extends DatabaseUtility {
+    private static class OracleStatementManipulator extends StatementManipulator {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String limitRows(final String sql, final long count) {
+            return "SELECT * FROM (" + sql + ") " + getTempTableName() + " WHERE rownum <= " + count;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String limitRows(final String sql, final long count, final long offset) {
+            String tempTableName = getTempTableName();
+
+            return "SELECT * FROM (SELECT rownum __rnum__, " + tempTableName + ".* FROM (" + sql + ") " + tempTableName
+                + " WHERE rownum <= " + (offset + count) + ") " + getTempTableName() + " WHERE rnum > " + offset;
+        }
+    }
+
+    private static final StatementManipulator MANIPULATOR = new OracleStatementManipulator();
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public void setFetchSize(final Statement statement, final int fetchSize) throws SQLException {
-        if (fetchSize >= 0) {
-            // fix 2741: postgresql databases ignore fetchsize when
-            // AUTOCOMMIT on; setting it to false
-            DatabaseConnectionSettings.setAutoCommit(statement.getConnection(), false);
-            super.setFetchSize(statement, fetchSize);
-        }
+    public StatementManipulator getStatementManipulator() {
+        return MANIPULATOR;
     }
 }
