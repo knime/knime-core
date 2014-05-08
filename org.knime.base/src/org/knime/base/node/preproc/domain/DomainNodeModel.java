@@ -114,6 +114,8 @@ public class DomainNodeModel extends NodeModel {
         DataTableDomainCreator domainCreator = new DataTableDomainCreator();
         final Set<String> possValCols = new HashSet<String>();
         possValCols.addAll(Arrays.asList(m_possValCols));
+        int maxPoss = m_maxPossValues >= 0 ? m_maxPossValues : Integer.MAX_VALUE;
+        domainCreator.setMaxValues(maxPoss);
         final Set<String> minMaxCols = new HashSet<String>();
         minMaxCols.addAll(Arrays.asList(m_minMaxCols));
         domainCreator.attachColumnSelection(new DomainCreatorColumnSelection() {
