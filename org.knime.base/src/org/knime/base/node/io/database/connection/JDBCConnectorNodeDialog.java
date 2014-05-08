@@ -50,27 +50,60 @@
  */
 package org.knime.base.node.io.database.connection;
 
-import org.knime.base.node.io.database.util.DBDialogPane;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+
+import javax.swing.JPanel;
+
+import org.knime.base.node.io.database.connection.util.DBAuthenticationPanel;
+import org.knime.base.node.io.database.connection.util.DBGenericConnectionPanel;
+import org.knime.base.node.io.database.connection.util.DBMiscPanel;
+import org.knime.base.node.io.database.connection.util.DBTimezonePanel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
 
 /**
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class JDBCConnectorNodeDialog extends NodeDialogPane {
+    private final DatabaseConnectionSettings m_settings = new DatabaseConnectionSettings();
 
-    private final DBDialogPane m_configPanel = new DBDialogPane(true);
+    private final DBGenericConnectionPanel<DatabaseConnectionSettings> m_connectionPanel =
+        new DBGenericConnectionPanel<>(m_settings);
 
-    /**
-     * Creates a new Database JDBC Connector dialog.
-     */
+    private final DBAuthenticationPanel<DatabaseConnectionSettings> m_authPanel = new DBAuthenticationPanel<>(
+        m_settings);
+
+    private final DBTimezonePanel<DatabaseConnectionSettings> m_tzPanel = new DBTimezonePanel<>(m_settings);
+
+    private final DBMiscPanel<DatabaseConnectionSettings> m_miscPanel = new DBMiscPanel<>(m_settings, true);
+
     JDBCConnectorNodeDialog() {
-        addTab("Connection settings", m_configPanel);
+        JPanel p = new JPanel(new GridBagLayout());
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridy = 0;
+        c.weightx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(0, 0, 4, 0);
+
+        p.add(m_connectionPanel, c);
+        c.gridy++;
+        p.add(m_authPanel, c);
+        c.gridy++;
+        p.add(m_tzPanel, c);
+        c.gridy++;
+        c.insets = new Insets(0, 0, 0, 0);
+        p.add(m_miscPanel, c);
+
+        addTab("Connection settings", p);
     }
 
     /**
@@ -78,8 +111,17 @@ class JDBCConnectorNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
-            throws NotConfigurableException {
-        m_configPanel.loadSettingsFrom(settings, specs, getCredentialsProvider());
+        throws NotConfigurableException {
+        try {
+            m_settings.loadValidatedConnection(settings, getCredentialsProvider());
+        } catch (InvalidSettingsException ex) {
+            // too bad, use default values
+        }
+
+        m_connectionPanel.loadSettings(specs);
+        m_authPanel.loadSettings(specs, getCredentialsProvider());
+        m_tzPanel.loadSettings(specs);
+        m_miscPanel.loadSettings(specs);
     }
 
     /**
@@ -87,6 +129,11 @@ class JDBCConnectorNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        m_configPanel.saveSettingsTo(settings, getCredentialsProvider());
+        m_connectionPanel.saveSettings();
+        m_authPanel.saveSettings();
+        m_tzPanel.saveSettings();
+        m_miscPanel.saveSettings(getCredentialsProvider());
+
+        m_settings.saveConnection(settings);
     }
 }
