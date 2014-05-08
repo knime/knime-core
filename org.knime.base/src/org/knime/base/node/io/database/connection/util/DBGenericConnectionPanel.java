@@ -190,5 +190,6 @@ public class DBGenericConnectionPanel<T extends DatabaseConnectionSettings> exte
      */
     public void saveSettings() throws InvalidSettingsException {
         m_settings.setDriver((String)m_driver.getSelectedItem());
+        m_settings.setJDBCUrl((String) m_db.getEditor().getItem());
     }
 }
