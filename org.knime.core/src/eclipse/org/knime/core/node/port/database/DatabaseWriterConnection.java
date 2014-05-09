@@ -62,6 +62,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -133,7 +134,7 @@ public final class DatabaseWriterConnection {
                 } catch (SQLException sqle) {
                     if (statement == null) {
                         throw new SQLException("Could not create SQL statement,"
-                                + " reason: " + sqle.getMessage(), sqle);
+                                + " reason: " + ExceptionUtils.getRootCause(sqle).getMessage(), sqle);
                     }
                     LOGGER.info("Table \"" + table
                             + "\" does not exist in database, "

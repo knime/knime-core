@@ -54,6 +54,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.data.DataTableSpec;
@@ -112,8 +113,8 @@ class DBTableSelectorNodeModel extends NodeModel implements FlowVariableProvider
 
             return new PortObjectSpec[] {new DatabasePortObjectSpec(tableSpec, m_settings)};
         } catch (SQLException ex) {
-            throw new InvalidSettingsException("Error while validating SQL query '" + sql + "' : " + ex.getMessage(),
-                ex);
+            throw new InvalidSettingsException("Error while validating SQL query '" + sql + "' : "
+                + ExceptionUtils.getRootCause(ex).getMessage(), ex);
         }
     }
 
@@ -134,7 +135,8 @@ class DBTableSelectorNodeModel extends NodeModel implements FlowVariableProvider
 
             return new PortObject[] {new DatabasePortObject(new DatabasePortObjectSpec(tableSpec, querySettings))};
         } catch (SQLException ex) {
-            throw new InvalidSettingsException("Error while validating SQL query: " + ex.getMessage(), ex);
+            throw new InvalidSettingsException("Error while validating SQL query: "
+                + ExceptionUtils.getRootCause(ex).getMessage(), ex);
         }
     }
 

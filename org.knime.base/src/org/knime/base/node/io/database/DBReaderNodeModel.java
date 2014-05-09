@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.data.DataTableSpec;
@@ -253,8 +254,8 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
             throw e;
         } catch (SQLException ex) {
             m_lastSpec = null;
-            throw new InvalidSettingsException(
-                "Could not determine table spec from database query: " + ex.getMessage(), ex);
+            throw new InvalidSettingsException("Could not determine table spec from database query: "
+                + ExceptionUtils.getRootCause(ex).getMessage(), ex);
         }
     }
 

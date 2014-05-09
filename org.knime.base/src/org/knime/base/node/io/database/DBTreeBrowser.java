@@ -70,6 +70,7 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -155,7 +156,7 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
                 }
             } catch (SQLException sqle) {
                 LOGGER.warn("Could not get table types from database, reason: "
-                        + sqle.getMessage(), sqle);
+                        + ExceptionUtils.getRootCause(sqle).getMessage(), sqle);
             }
             LOGGER.debug("Fetching table types: " + tableTypes);
             for (String type : tableTypes) {

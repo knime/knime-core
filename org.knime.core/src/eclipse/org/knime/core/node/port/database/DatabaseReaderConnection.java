@@ -53,6 +53,7 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.security.InvalidKeyException;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -69,6 +70,10 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -94,6 +99,7 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.util.FileUtil;
@@ -157,8 +163,9 @@ public final class DatabaseReaderConnection {
             }
         } catch (SQLException sql) {
             throw sql;
-        } catch (Throwable t) {
-            throw new SQLException(t);
+        } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | InvalidSettingsException
+                | IOException ex) {
+            throw new SQLException(ex);
         }
     }
 
@@ -322,7 +329,8 @@ public final class DatabaseReaderConnection {
                         // bugfix 2925: may fail, e.g. on sqlite
                         stmt.setMaxRows(cachedNoRows);
                     } catch (SQLException sqle) {
-                        LOGGER.warn("Can't set max rows on statement, reason: " + sqle.getMessage());
+                        LOGGER.warn("Can't set max rows on statement, reason: "
+                            + ExceptionUtils.getRootCause(sqle).getMessage(), sqle);
                     }
                 }
                 // execute all except the last query
@@ -466,7 +474,8 @@ public final class DatabaseReaderConnection {
                 try {
                     m_result.close();
                 } catch (SQLException e) {
-                    LOGGER.error("SQL Exception while closing result set: ", e);
+                    LOGGER.error("SQL Exception while closing result set: "
+                        + ExceptionUtils.getRootCause(e).getMessage(), e);
                 }
             }
             return ret;
@@ -889,7 +898,7 @@ public final class DatabaseReaderConnection {
                 LOGGER.debug(msg + e.getMessage(), e);
             } else {
                 m_hasExceptionReported = true;
-                LOGGER.error(msg + e.getMessage()
+                LOGGER.error(msg + ExceptionUtils.getRootCause(e).getMessage()
                         + " - all further errors are suppressed "
                         + "and reported on debug level only", e);
             }
