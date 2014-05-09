@@ -78,6 +78,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabaseConnectionPortObject;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -125,26 +126,29 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
+
         String column = m_columnModel.getStringValue();
         if (column == null) {
             throw new InvalidSettingsException("No column selected.");
         }
-        if (!inSpecs[0].containsName(column)) {
+        if (!tableSpec.containsName(column)) {
             throw new InvalidSettingsException("Column '" + column
                     + "' not found in input data.");
         }
+        m_settings.setValidateQuery(true);
         final String oQuery = getQuery();
         DataTableSpec spec = null;
         try {
             String newQuery = oQuery.replace(IN_PLACE_HOLDER, "");
             setQuery(newQuery);
-            spec = super.configure(inSpecs)[0];
+            spec = (DataTableSpec)super.configure(inSpecs)[0];
         } finally {
             setQuery(oQuery);
         }
-        return new DataTableSpec[]{createSpec(spec, inSpecs[0].getColumnSpec(column))};
+        return new DataTableSpec[]{createSpec(spec, tableSpec.getColumnSpec(column))};
     }
 
     /**

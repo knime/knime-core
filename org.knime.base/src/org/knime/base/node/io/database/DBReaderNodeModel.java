@@ -85,7 +85,7 @@ import org.knime.core.node.workflow.CredentialsProvider;
  * @author Thomas Gabriel, University of Konstanz
  */
 class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
-    private DatabaseQueryConnectionSettings m_settings = new DatabaseQueryConnectionSettings();
+    protected final DatabaseQueryConnectionSettings m_settings = new DatabaseQueryConnectionSettings();
 
     private DataTableSpec m_lastSpec = null;
 
