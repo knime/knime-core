@@ -80,6 +80,7 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
@@ -410,8 +411,8 @@ public final class DBDialogPane extends JPanel {
                 s.createConnection(credProvider);
             } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException
                     | IOException ex) {
-                throw new InvalidSettingsException("Database connection could not be validated: " + ex.getMessage(),
-                    ex);
+                throw new InvalidSettingsException("Database connection could not be validated: "
+                    + ExceptionUtils.getRootCause(ex).getMessage(), ex);
             }
         }
 

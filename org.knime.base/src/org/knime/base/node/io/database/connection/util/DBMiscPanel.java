@@ -63,6 +63,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
@@ -153,7 +154,8 @@ public class DBMiscPanel<T extends DatabaseConnectionSettings> extends JPanel {
             try {
                 m_settings.createConnection(credentialProvider);
             } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException | IOException ex) {
-                throw new InvalidSettingsException("Database connection could not be validated: " + ex.getMessage(), ex);
+                throw new InvalidSettingsException("Database connection could not be validated: "
+                    + ExceptionUtils.getRootCause(ex).getMessage(), ex);
             }
         }
     }
