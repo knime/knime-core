@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -87,7 +87,7 @@ import org.knime.core.node.tableview.TableSortOrder.TableSortKey;
  * the row header view in a scroll pane (realized by {@link TableView}).
  *
  * @see org.knime.core.node.tableview.TableContentView
- * @author Bernd Wiswedel, University Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public final class TableRowHeaderView extends JTable {
     private static final long serialVersionUID = 4115412802300446736L;

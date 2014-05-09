@@ -20,7 +20,7 @@
             class="org.knime.workbench.ui.perspective.ModellerPerspectiveFactory"
             id="org.knime.workbench.ui.ModellerPerspective">
          <description>
-            Konstanz Information Miner
+            KNIME Analytics Platform
          </description>
       </perspective>
    </extension>

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -61,8 +61,8 @@ import org.knime.core.data.RowIterator;
  * generic {@link org.knime.core.data.DataTable DataTable}. It delegates to a
  * given <code>Iterator&lt;DataRow&gt</code>; but disallows the invocation of
  * the <code>remove</code> method.
- * 
- * @author Bernd Wiswedel, University Konstanz
+ *
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public class DefaultRowIterator extends RowIterator {
 
@@ -71,7 +71,7 @@ public class DefaultRowIterator extends RowIterator {
 
     /**
      * Constructs a new iterator based on an {@link Iterable}.
-     * 
+     *
      * @param iterable the underlying iterable row container.
      * @throws NullPointerException if the argument is null.
      */
@@ -81,7 +81,7 @@ public class DefaultRowIterator extends RowIterator {
 
     /**
      * Constructs a new iterator that traverses an array of {@link DataRow}.
-     * 
+     *
      * @param rows the array to iterate over.
      * @throws NullPointerException if the argument is null.
      */

@@ -57,8 +57,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 /**
  * <code>NodeDialog</code> for the "CrossJoiner" Node.
  *
- * @author Alexander Fillbrunn, University Konstanz
- * @author  Iris Adae, University Konstanz
+ * @author Alexander Fillbrunn, University of Konstanz
+ * @author Iris Adae, University of Konstanz
  */
 final class CrossJoinerNodeDialog extends DefaultNodeSettingsPane {
 

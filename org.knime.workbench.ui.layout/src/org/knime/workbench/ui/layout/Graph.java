@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -70,7 +70,7 @@ import java.util.Map;
  * should not be used for any other operations!
  *
  *
- * @author Martin Mader, University Konstanz
+ * @author Martin Mader, University of Konstanz
  *
  */
 public class Graph {
@@ -443,7 +443,7 @@ public class Graph {
      * implements a simple node data structure, using an incidence-list storing
      * incident edges.
      *
-     * @author Martin Mader, University Konstanz
+     * @author Martin Mader, University of Konstanz
      *
      */
     public static class Node {
@@ -588,7 +588,7 @@ public class Graph {
     /**
      * implements a simple edge data structure for directed edges
      *
-     * @author Martin Mader, University Konstanz
+     * @author Martin Mader, University of Konstanz
      *
      */
     public static class Edge {

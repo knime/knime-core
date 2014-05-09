@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -79,7 +79,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  * quarter, month, week, day, hour, minute).
  *
  * @author KNIME GmbH
- * @author Iris Adae, University Konstanz
+ * @author Iris Adae, University of Konstanz
  */
 public class TimeDifferenceNodeModel extends NodeModel {
 

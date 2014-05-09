@@ -6,8 +6,7 @@
    <aboutInfo>
       <image path="/org.knime.product/icons/png/knime_about.png"/>
       <text>
-         Welcome to KNIME v2.10.0
-the Konstanz Information Miner
+         Welcome to the KNIME Analytics Platform v2.10.0
 Copyright by KNIME GmbH, Konstanz, Germany 
 email: contact@knime.org
 

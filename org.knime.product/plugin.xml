@@ -20,7 +20,7 @@
       <product
             name="KNIME"
             application="org.knime.product.KNIME_APPLICATION"
-            description="An Integrated and Extensible Data Analysis Workbench">
+            description="KNIME Analytics Platform">
          <property
                name="windowImage"
                value="icons/png/knime_16.png">
