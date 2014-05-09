@@ -148,10 +148,14 @@ public class DBTimezonePanel<T extends DatabaseConnectionSettings> extends JPane
         add(m_noTZCorrection, m_c);
 
         m_c.gridx = 1;
+        m_c.weightx = 1;
+        m_c.fill = GridBagConstraints.HORIZONTAL;
         add(m_useCurrentTZ, m_c);
 
         m_c.gridx = 0;
         m_c.gridy++;
+        m_c.weightx = 0;
+        m_c.fill = GridBagConstraints.NONE;
         add(m_useSelectedTZ, m_c);
         m_c.gridx = 1;
         add(m_timezone, m_c);

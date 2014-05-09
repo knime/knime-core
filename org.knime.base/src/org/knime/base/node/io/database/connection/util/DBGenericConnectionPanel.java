@@ -114,18 +114,19 @@ public class DBGenericConnectionPanel<T extends DatabaseConnectionSettings> exte
         m_c.gridy = 0;
         m_c.insets = new Insets(2, 2, 2, 2);
         m_c.anchor = GridBagConstraints.WEST;
-        m_c.fill = GridBagConstraints.HORIZONTAL;
-        m_c.weightx = 1;
 
         add(new JLabel("Database driver   "), m_c);
         m_c.gridx = 1;
+        m_c.fill = GridBagConstraints.HORIZONTAL;
+        m_c.weightx = 1;
         add(m_driver, m_c);
 
         m_c.gridx = 0;
         m_c.gridy++;
-
+        m_c.weightx = 0;
         add(new JLabel("Database URL   "), m_c);
         m_c.gridx = 1;
+        m_c.weightx = 1;
         m_db.setPreferredSize(new Dimension(200, m_db.getPreferredSize().height));
         add(m_db, m_c);
 
