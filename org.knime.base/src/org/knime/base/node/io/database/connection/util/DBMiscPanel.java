@@ -154,8 +154,13 @@ public class DBMiscPanel<T extends DatabaseConnectionSettings> extends JPanel {
             try {
                 m_settings.createConnection(credentialProvider);
             } catch (InvalidKeyException | BadPaddingException | IllegalBlockSizeException | SQLException | IOException ex) {
-                throw new InvalidSettingsException("Database connection could not be validated: "
-                    + ExceptionUtils.getRootCause(ex).getMessage(), ex);
+                Throwable cause = ExceptionUtils.getRootCause(ex);
+                if (cause == null) {
+                    cause = ex;
+                }
+
+                throw new InvalidSettingsException("Database connection could not be validated: " + cause.getMessage(),
+                    ex);
             }
         }
     }

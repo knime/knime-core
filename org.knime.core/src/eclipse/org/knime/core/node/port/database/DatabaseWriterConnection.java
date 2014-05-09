@@ -131,10 +131,15 @@ public final class DatabaseWriterConnection {
                     statement = conn.createStatement();
                     LOGGER.debug("Executing SQL statement as executeQuery: " + query);
                     rs = statement.executeQuery(query);
-                } catch (SQLException sqle) {
+                } catch (SQLException ex) {
                     if (statement == null) {
-                        throw new SQLException("Could not create SQL statement,"
-                                + " reason: " + ExceptionUtils.getRootCause(sqle).getMessage(), sqle);
+                        Throwable cause = ExceptionUtils.getRootCause(ex);
+                        if (cause == null) {
+                            cause = ex;
+                        }
+
+                        throw new SQLException("Could not create SQL statement," + " reason: " + cause.getMessage(),
+                            cause);
                     }
                     LOGGER.info("Table \"" + table
                             + "\" does not exist in database, "

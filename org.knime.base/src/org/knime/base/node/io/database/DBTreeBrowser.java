@@ -154,9 +154,13 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
                     tableTypes.add(tableName);
 
                 }
-            } catch (SQLException sqle) {
-                LOGGER.warn("Could not get table types from database, reason: "
-                        + ExceptionUtils.getRootCause(sqle).getMessage(), sqle);
+            } catch (SQLException ex) {
+                Throwable cause = ExceptionUtils.getRootCause(ex);
+                if (cause == null) {
+                    cause = ex;
+                }
+
+                LOGGER.warn("Could not get table types from database, reason: " + cause.getMessage(), ex);
             }
             LOGGER.debug("Fetching table types: " + tableTypes);
             for (String type : tableTypes) {

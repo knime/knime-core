@@ -254,8 +254,13 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
             throw e;
         } catch (SQLException ex) {
             m_lastSpec = null;
+            Throwable cause = ExceptionUtils.getRootCause(ex);
+            if (cause == null) {
+                cause = ex;
+            }
+
             throw new InvalidSettingsException("Could not determine table spec from database query: "
-                + ExceptionUtils.getRootCause(ex).getMessage(), ex);
+                + cause.getMessage(), ex);
         }
     }
 

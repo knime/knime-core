@@ -113,8 +113,13 @@ class DBTableSelectorNodeModel extends NodeModel implements FlowVariableProvider
 
             return new PortObjectSpec[] {new DatabasePortObjectSpec(tableSpec, m_settings)};
         } catch (SQLException ex) {
-            throw new InvalidSettingsException("Error while validating SQL query '" + sql + "' : "
-                + ExceptionUtils.getRootCause(ex).getMessage(), ex);
+            Throwable cause = ExceptionUtils.getRootCause(ex);
+            if (cause == null) {
+                cause = ex;
+            }
+
+            throw new InvalidSettingsException(
+                "Error while validating SQL query '" + sql + "' : " + cause.getMessage(), ex);
         }
     }
 
@@ -135,8 +140,12 @@ class DBTableSelectorNodeModel extends NodeModel implements FlowVariableProvider
 
             return new PortObject[] {new DatabasePortObject(new DatabasePortObjectSpec(tableSpec, querySettings))};
         } catch (SQLException ex) {
-            throw new InvalidSettingsException("Error while validating SQL query: "
-                + ExceptionUtils.getRootCause(ex).getMessage(), ex);
+            Throwable cause = ExceptionUtils.getRootCause(ex);
+            if (cause == null) {
+                cause = ex;
+            }
+
+            throw new InvalidSettingsException("Error while validating SQL query: " + cause.getMessage(), ex);
         }
     }
 

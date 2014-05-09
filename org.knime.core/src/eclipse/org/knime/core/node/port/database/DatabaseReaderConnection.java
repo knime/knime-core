@@ -328,9 +328,13 @@ public final class DatabaseReaderConnection {
                     try {
                         // bugfix 2925: may fail, e.g. on sqlite
                         stmt.setMaxRows(cachedNoRows);
-                    } catch (SQLException sqle) {
-                        LOGGER.warn("Can't set max rows on statement, reason: "
-                            + ExceptionUtils.getRootCause(sqle).getMessage(), sqle);
+                    } catch (SQLException ex) {
+                        Throwable cause = ExceptionUtils.getRootCause(ex);
+                        if (cause == null) {
+                            cause = ex;
+                        }
+
+                        LOGGER.warn("Can't set max rows on statement, reason: " + cause.getMessage(), ex);
                     }
                 }
                 // execute all except the last query
@@ -473,9 +477,13 @@ public final class DatabaseReaderConnection {
             if (!ret) {
                 try {
                     m_result.close();
-                } catch (SQLException e) {
-                    LOGGER.error("SQL Exception while closing result set: "
-                        + ExceptionUtils.getRootCause(e).getMessage(), e);
+                } catch (SQLException ex) {
+                    Throwable cause = ExceptionUtils.getRootCause(ex);
+                    if (cause == null) {
+                        cause = ex;
+                    }
+
+                    LOGGER.error("SQL Exception while closing result set: " + ex.getMessage(), ex);
                 }
             }
             return ret;
@@ -893,14 +901,18 @@ public final class DatabaseReaderConnection {
             }
         }
 
-        private void handlerException(final String msg, final Exception e) {
+        private void handlerException(final String msg, final Exception ex) {
             if (m_hasExceptionReported) {
-                LOGGER.debug(msg + e.getMessage(), e);
+                LOGGER.debug(msg + ex.getMessage(), ex);
             } else {
                 m_hasExceptionReported = true;
-                LOGGER.error(msg + ExceptionUtils.getRootCause(e).getMessage()
-                        + " - all further errors are suppressed "
-                        + "and reported on debug level only", e);
+                Throwable cause = ExceptionUtils.getRootCause(ex);
+                if (cause == null) {
+                    cause = ex;
+                }
+
+                LOGGER.error(msg + cause.getMessage() + " - all further errors are suppressed "
+                    + "and reported on debug level only", ex);
             }
         }
     }
