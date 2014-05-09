@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -61,7 +61,7 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
- * Utility class for resolving URIs (e.g. on a server inside a team space) into local files.
+ * Utility class for resolving URIs (e.g. on a server inside a KNIME TeamSpace) into local files.
  *
  * @author Thorsten Meinl, University of Konstanz
  * @since 2.6

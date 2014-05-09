@@ -56,7 +56,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
  * A service interface to convert a URI into a local file. The URI is usually
- * (always?) either a file URI or a URI pointing into the team space (also file
+ * (always?) either a file URI or a URI pointing into the KNIME TeamSpace (also file
  * based), e.g. "knime:/MOUNT_ID/some/path/workflow.knime".
  *
  * <p>

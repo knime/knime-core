@@ -75,7 +75,7 @@ import org.knime.workbench.explorer.view.AbstractContentProvider;
 import org.knime.workbench.explorer.view.ContentObject;
 
 /**
- * Action to save a meta node as template (requires team space feature).
+ * Action to save a meta node as template (requires KNIME TeamSpace feature).
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {

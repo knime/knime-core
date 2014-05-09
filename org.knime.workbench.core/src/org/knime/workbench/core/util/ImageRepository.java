@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -257,7 +257,8 @@ public final class ImageRepository {
     }
 
     /**
-     * Flags to decorate server space icons. Icon file names with the corresponding combinations of suffixes must exist!
+     * Flags to decorate KNIME ServerSpace icons. Icon file names with the corresponding combinations of suffixes must
+     * exist!
      */
     public enum ImgDecorator {
         /** Decorator for messages. */
