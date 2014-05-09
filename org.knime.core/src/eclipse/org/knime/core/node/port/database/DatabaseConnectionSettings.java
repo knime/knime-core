@@ -59,6 +59,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
@@ -67,6 +68,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -376,7 +378,7 @@ public class DatabaseConnectionSettings {
             throw new InvalidSettingsException("Driver \"" + d + "\" does not accept URL: " + m_jdbcUrl);
         }
 
-        final String dbName = m_jdbcUrl;
+        final String jdbcUrl = m_jdbcUrl;
         final String user;
         final String pass;
         if (cp == null || m_credName == null) {
@@ -389,7 +391,7 @@ public class DatabaseConnectionSettings {
         }
 
         // database connection key with user, password and database URL
-        ConnectionKey databaseConnKey = new ConnectionKey(user, pass, dbName);
+        ConnectionKey databaseConnKey = new ConnectionKey(user, pass, jdbcUrl);
 
         // retrieve original key and/or modify connection key map
         synchronized (CONNECTION_KEYS) {
@@ -429,8 +431,12 @@ public class DatabaseConnectionSettings {
                 /** {@inheritDoc} */
                 @Override
                 public Connection call() throws Exception {
-                    LOGGER.debug("Opening database connection to \"" + dbName + "\"...");
-                    return DriverManager.getConnection(dbName, user, pass);
+                    LOGGER.debug("Opening database connection to \"" + jdbcUrl + "\"...");
+                    Driver driver = DriverManager.getDriver(jdbcUrl);
+                    Properties props = new Properties();
+                    props.put("user", user);
+                    props.put("password", pass);
+                    return driver.connect(jdbcUrl, props);
                 }
             };
             Future<Connection> task = CONNECTION_CREATOR_EXECUTOR.submit(callable);
@@ -439,9 +445,15 @@ public class DatabaseConnectionSettings {
                 CONNECTION_MAP.put(databaseConnKey, conn);
                 return conn;
             } catch (ExecutionException ee) {
-                throw new SQLException(ee.getCause());
-            } catch (Throwable t) {
-                throw new SQLException(t);
+                if (ee.getCause() instanceof SQLException) {
+                    throw (SQLException) ee.getCause();
+                } else {
+                    throw new SQLException(ee.getCause());
+                }
+            } catch (InterruptedException ex) {
+                throw new SQLException("Thread was interrupted while waiting for database to respond");
+            } catch (TimeoutException ex) {
+                throw new IOException("Connection to database '" + jdbcUrl + "' timed out");
             }
         }
     }
