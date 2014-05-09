@@ -49,10 +49,13 @@
 package org.knime.base.node.io.database;
 
 import org.knime.base.node.io.database.util.DBReaderDialogPane;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ContextAwareNodeFactory;
 import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeView;
+import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabaseConnectionPortObject;
 
 /**
  *
@@ -66,7 +69,8 @@ public final class DBReaderNodeFactory
      */
     @Override
     public DBReaderNodeModel createNodeModel() {
-        return new DBReaderNodeModel(0, 1);
+        return new DBReaderNodeModel(new PortType[]{DatabaseConnectionPortObject.TYPE_OPTIONAL},
+            new PortType[]{BufferedDataTable.TYPE});
     }
 
     /**

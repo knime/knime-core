@@ -143,8 +143,8 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
 
         String query = parseQuery(m_settings.getQuery());
         DatabaseQueryConnectionSettings connSettings;
-        if ((inData.length > 1) && (inData[1] instanceof DatabaseConnectionPortObject)) {
-            DatabaseConnectionPortObject dbObj = (DatabaseConnectionPortObject)inData[1];
+        if ((inData[getNrInPorts() - 1] instanceof DatabaseConnectionPortObject)) {
+            DatabaseConnectionPortObject dbObj = (DatabaseConnectionPortObject)inData[getNrInPorts() - 1];
 
             connSettings =
                 new DatabaseQueryConnectionSettings(dbObj.getConnectionSettings(getCredentialsProvider()), query);

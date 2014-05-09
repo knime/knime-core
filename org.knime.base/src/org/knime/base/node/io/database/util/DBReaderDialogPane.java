@@ -285,6 +285,7 @@ public class DBReaderDialogPane extends NodeDialogPane {
             m_configureBox.setSelected(!s.getValidateQuery());
         }
 
+        m_upstreamConnectionSettings = null;
         for (PortObjectSpec pos : specs) {
             if (pos instanceof DatabaseConnectionPortObjectSpec) {
                 try {
@@ -297,6 +298,11 @@ public class DBReaderDialogPane extends NodeDialogPane {
         }
         if ((m_upstreamConnectionSettings == null) && !m_showConnectionPanel) {
             throw new NotConfigurableException("Cannot open table selection without a valid database connection");
+        }
+        if (m_upstreamConnectionSettings != null) {
+            m_connectionPane.setVisible(false);
+        } else {
+            m_connectionPane.setVisible(true);
         }
     }
 

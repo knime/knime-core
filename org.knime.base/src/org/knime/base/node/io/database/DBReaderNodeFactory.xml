@@ -10,7 +10,12 @@
 	<fullDescription>
 		<intro>		
 	     Establishes and opens a database access connection to read data from.
+         <br/>
+         <br />
+          If the optional input is connected the database connection information is taken from the port, otherwise
+          you need to specify the connection information in the dialog.          
 	     <br/>
+         <br />
 	     Make sure you have your vendor-specific database driver registered in
          the KNIME preference page (section Database Driver). By default, the 
          sun.jdbc.odbc.JdbcOdbcDriver (Windows and Linux) is only available.
@@ -77,6 +82,10 @@
 	</fullDescription>
 	
 	<ports>
+        <inPort index="0" name="Database connection" optional="true">
+          An optional database connection that should be used instead of providing the connection information
+          in the dialog.
+        </inPort>                    
 		<outPort index="0" name="Data from Database">Table with data read from the database</outPort>
 	</ports>	
 </knimeNode>
