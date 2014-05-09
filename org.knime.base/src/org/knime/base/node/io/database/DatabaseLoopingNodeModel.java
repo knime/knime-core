@@ -138,6 +138,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
             throw new InvalidSettingsException("Column '" + column
                     + "' not found in input data.");
         }
+
         m_settings.setValidateQuery(true);
         final String oQuery = getQuery();
         DataTableSpec spec = null;
@@ -208,15 +209,17 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                     curSet.clear();
                 }
             }
-        } finally {
-            // reset query to original
-            setQuery(oQuery);
+
             if (buf == null) {
                 // create empty dummy container with spec generated during #configure
-                final DataTableSpec outSpec = this.configure(new DataTableSpec[]{inputTable.getSpec()})[0];
+                final DataTableSpec outSpec =
+                        (DataTableSpec)this.configure(new PortObjectSpec[]{inputTable.getSpec()})[0];
                 buf = exec.createDataContainer(outSpec);
             }
             buf.close();
+        } finally {
+            // reset query to original
+            setQuery(oQuery);
         }
         return new BufferedDataTable[]{buf.getTable()};
     }
@@ -373,6 +376,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         m_aggByRow.validateSettings(settings);
         m_appendGridColumn.validateSettings(settings);
         m_noValues.validateSettings(settings);
+        // do not check validateQuery, it does not exist before 2.10
     }
 
     /**
