@@ -124,8 +124,7 @@ public class DateGeneratorNodeModel extends NodeModel {
     }
 
     private DataTableSpec createOutSpec() {
-        DataColumnSpecCreator creator = new DataColumnSpecCreator(
-                "Date and time", DateAndTimeCell.TYPE);
+        DataColumnSpecCreator creator = new DataColumnSpecCreator("Date and time", DateAndTimeCell.TYPE);
         return new DataTableSpec(creator.createSpec());
     }
 
@@ -152,7 +151,7 @@ public class DateGeneratorNodeModel extends NodeModel {
         Calendar from = m_from.getCalendar();
         // new since 2.8. the start time is the current time.
         if (m_useExecution.getBooleanValue()) {
-            from = Calendar.getInstance(TimeZone.getDefault());
+            from = DateAndTimeCell.getUTCCalendar();
             from.setTimeInMillis(System.currentTimeMillis()
                                  + TimeZone.getDefault().getOffset(System.currentTimeMillis()));
         }

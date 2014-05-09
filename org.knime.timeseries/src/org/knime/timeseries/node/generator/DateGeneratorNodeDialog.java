@@ -51,6 +51,7 @@
 package org.knime.timeseries.node.generator;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -126,15 +127,18 @@ public class DateGeneratorNodeDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelCalendar createStartingPointModel() {
         Calendar c = Calendar.getInstance(DateAndTimeCell.UTC_TIMEZONE);
+        c.setTimeInMillis(System.currentTimeMillis() + TimeZone.getDefault().getOffset(System.currentTimeMillis()));
         c.roll(Calendar.YEAR, false);
-        return new SettingsModelCalendar("starting-point", c);
+        return new SettingsModelCalendar("starting-point", c, true, true, false);
     }
 
     /**
      * @return the calendar model for the end point
      */
     static SettingsModelCalendar createEndPointModel() {
-        return new SettingsModelCalendar("end-point", null);
+        Calendar c = Calendar.getInstance(DateAndTimeCell.UTC_TIMEZONE);
+        c.setTimeInMillis(System.currentTimeMillis() + TimeZone.getDefault().getOffset(System.currentTimeMillis()));
+        return new SettingsModelCalendar("end-point", c, true, true, false);
     }
 
 }
