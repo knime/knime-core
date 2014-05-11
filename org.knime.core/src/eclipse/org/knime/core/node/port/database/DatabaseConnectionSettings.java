@@ -434,8 +434,12 @@ public class DatabaseConnectionSettings {
                     LOGGER.debug("Opening database connection to \"" + jdbcUrl + "\"...");
                     Driver driver = DriverManager.getDriver(jdbcUrl);
                     Properties props = new Properties();
-                    props.put("user", user);
-                    props.put("password", pass);
+                    if (user != null) {
+                        props.put("user", user);
+                    }
+                    if (pass != null) {
+                        props.put("password", pass);
+                    }
                     return driver.connect(jdbcUrl, props);
                 }
             };
