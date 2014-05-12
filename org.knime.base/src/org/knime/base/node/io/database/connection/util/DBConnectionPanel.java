@@ -73,7 +73,7 @@ import org.knime.core.node.util.StringHistoryPanel;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.10
  */
-public class DBConnectionPanel<T extends DefaultDatabaseConnectionSettings> extends JPanel {
+public abstract class DBConnectionPanel<T extends DefaultDatabaseConnectionSettings> extends JPanel {
     private static final long serialVersionUID = 5107567313142629692L;
 
     /**
@@ -176,6 +176,17 @@ public class DBConnectionPanel<T extends DefaultDatabaseConnectionSettings> exte
 
         m_settings.setPort((Integer)m_port.getValue());
         m_settings.setDatabaseName(m_databaseName.getSelectedString());
+        m_settings.setJDBCUrl(getJDBCURL(m_settings.getHost(), m_settings.getPort(), m_settings.getDatabaseName()));
         m_databaseName.commitSelectedToHistory();
     }
+
+    /**
+     * Returns the database-specific JDBC URL for the given host and database.
+     *
+     * @param host the hostname
+     * @param port the port
+     * @param dbName the database name
+     * @return a JDBC URL
+     */
+    protected abstract String getJDBCURL(String host, int port, String dbName);
 }
