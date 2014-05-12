@@ -47,9 +47,9 @@
  */
 package org.knime.base.node.io.database;
 
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -71,8 +71,9 @@ import org.knime.core.node.NodeSettingsWO;
  * Panel which allows to specify an SQL type for each column.
  *
  * @author Thomas Gabriel, University of Konstanz
+ * @since 2.10
  */
-final class DBSQLTypesPanel extends JPanel {
+public final class DBSQLTypesPanel extends JPanel {
 
     /** Keep column name from spec to text field which contains the SQL type. */
     private final Map<String, JTextField> m_map;
@@ -80,8 +81,8 @@ final class DBSQLTypesPanel extends JPanel {
     /**
      * Creates new empty panel.
      */
-    DBSQLTypesPanel() {
-        super(new GridLayout(0, 1));
+    public DBSQLTypesPanel() {
+        super(new GridBagLayout());
         m_map = new LinkedHashMap<String, JTextField>();
     }
 
@@ -92,24 +93,25 @@ final class DBSQLTypesPanel extends JPanel {
      * @param settings Settings object to read specified SQL-types from.
      * @param spec the data spec to retrieve all column names and types from
      */
-    void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec spec) {
+    public void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec spec) {
         m_map.clear();
         super.removeAll();
         if (spec == null) {
             return;
         }
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.insets = new Insets(2, 2, 5, 2);
+        c.anchor = GridBagConstraints.WEST;
+
         for (int i = 0; i < spec.getNumColumns(); i++) {
-            JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 15));
             DataColumnSpec cspec = spec.getColumnSpec(i);
             String colName = cspec.getName();
-            JLabel label = new JLabel(colName.replaceAll("[^a-zA-Z0-9]", "_"));
-            int labelHeight = label.getPreferredSize().height;
+            JLabel label = new JLabel(colName + "   ");
             label.setIcon(cspec.getType().getIcon());
-            label.setPreferredSize(new Dimension(150, labelHeight));
-            label.setMinimumSize(new Dimension(200, labelHeight));
             JTextField textFld = new JTextField();
-            textFld.setPreferredSize(new Dimension(250, 25));
-            textFld.setMinimumSize(new Dimension(250, 25));
             String type = null;
             if (settings != null) {
                 type = settings.getString(colName, null);
@@ -129,9 +131,17 @@ final class DBSQLTypesPanel extends JPanel {
             } else {
                 textFld.setText(DBWriterNodeModel.SQL_TYPE_STRING);
             }
-            p.add(label);
-            p.add(textFld);
-            super.add(p);
+
+            c.fill = GridBagConstraints.NONE;
+            c.weightx = 0;
+            c.gridx = 0;
+            add(label, c);
+            c.gridx = 1;
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.weightx = 0.75;
+            add(textFld, c);
+
+            c.gridy++;
             m_map.put(colName, textFld);
         }
     }
@@ -140,7 +150,7 @@ final class DBSQLTypesPanel extends JPanel {
      * Saves SQL types by column name.
      * @param settings Save column to SQL mapping to.
      */
-    void saveSettingsTo(final NodeSettingsWO settings) {
+    public void saveSettingsTo(final NodeSettingsWO settings) {
         for (Map.Entry<String, JTextField> e : m_map.entrySet()) {
             String type = e.getValue().getText().trim();
             settings.addString(e.getKey(), type);
