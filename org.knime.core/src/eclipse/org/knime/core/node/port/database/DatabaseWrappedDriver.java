@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -48,8 +48,6 @@
  */
 package org.knime.core.node.port.database;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverPropertyInfo;
@@ -60,11 +58,11 @@ import java.util.logging.Logger;
 
 /**
  * Wraps an <code>java.sql.Driver</code> object.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class DatabaseWrappedDriver implements Driver {
-    
+
     /** Underlying java.sql.Driver wrapped by this instance. */
     private final Driver m_d;
 
@@ -142,22 +140,12 @@ public final class DatabaseWrappedDriver implements Driver {
     public int hashCode() {
         return m_d.hashCode();
     }
-    
+
     /**
-     * Added to be compatible with Java 1.7, needs to be flagged with @Override.
-     * @since KNIME v2.5
+     * {@inheritDoc}
      */
+    @Override
     public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-        try {
-            final Method m = m_d.getClass().getDeclaredMethod(
-                    "getParentLogger", null);
-            return (Logger) m.invoke(m_d);
-        } catch (IllegalAccessException iae) {
-            throw new SQLFeatureNotSupportedException(iae);
-        } catch (InvocationTargetException ite) {
-            throw new SQLFeatureNotSupportedException(ite);
-        } catch (NoSuchMethodException nsme) {
-            throw new SQLFeatureNotSupportedException(nsme);
-        }
+        return m_d.getParentLogger();
     }
 }
