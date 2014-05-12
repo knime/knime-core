@@ -308,7 +308,6 @@ public final class NodeLogger {
                 + ("Welcome to KNIME v" + KNIMEConstants.VERSION + " (Build "
                         + KNIMEConstants.BUILD_DATE
                         + ")                        ").substring(0, 62) + " #");
-        l.info("# the Konstanz Information Miner                            #");
         l.info("# Based on Eclipse, www.eclipse.org                         #");
         l.info("# Uses: Java, GEF, Log4J                                    #");
         l.info("#                                                           #");
@@ -351,10 +350,7 @@ public final class NodeLogger {
     /** Write copyright message. */
     private static void copyrightMessage() {
         NodeLogger l = getLogger(NodeLogger.class);
-        l.info("# Copyrighty by University of Konstanz, Germany.            #");
-        l.info("# Chair for Bioinformatics and Information Mining           #");
-        l.info("# Prof. Dr. Michael R. Berthold                             #");
-        l.info("# and KNIME GmbH, Konstanz, Germany                         #");
+        l.info("# Copyrighty by KNIME GmbH, Konstanz, Germany               #");
         l.info("# website: http://www.knime.org                             #");
         l.info("# email: contact@knime.org                                  #");
     }
@@ -681,7 +677,7 @@ public final class NodeLogger {
         app.addFilter(filter);
 
         // remove the writer first if existent
-        synchronized(WRITER) {
+        synchronized (WRITER) {
             if (WRITER.containsKey(writer)) {
                 Appender a = WRITER.get(writer);
                 Logger.getRootLogger().removeAppender(a);
@@ -699,7 +695,7 @@ public final class NodeLogger {
      * @param writer The Writer to remove.
      */
     public static void removeWriter(final Writer writer) {
-        synchronized(WRITER) {
+        synchronized (WRITER) {
             Appender o = WRITER.get(writer);
             if (o != null) {
                 if (o != FILE_APPENDER) {

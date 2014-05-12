@@ -186,7 +186,7 @@ public final class KNIMEConstants {
      * the GUI is shown. If this flag is set, it will load the entire repository
      * in the background while the GUI is already there is usable.
      * <br />
-     * This flag only affects the KNIME desktop.
+     * This flag only affects the KNIME client.
      * @since v2.4 */
     public static final String PROPERTY_ENABLE_FAST_LOADING =
         "knime.enable.fastload";
@@ -199,7 +199,7 @@ public final class KNIMEConstants {
      * specified).
      *
      * <br />
-     * This flag only affects the KNIME desktop.
+     * This flag only affects the KNIME client.
      * @since v2.5 */
     public static final String PROPERTY_SHOW_METANODE_LOCK_ACTION =
         "knime.showaction.metanodelock";
@@ -305,7 +305,7 @@ public final class KNIMEConstants {
     private static File knimeTempDir;
 
     /**
-     * <i>Welcome to KNIME Konstanz Information Miner</i>.
+     * <i>Welcome to KNIME</i>.
      */
     public static final String WELCOME_MESSAGE;
 
@@ -331,8 +331,8 @@ public final class KNIMEConstants {
         String stars = "**********************************************************************************************";
         String spaces = "                                    ";
 
-        String line1 = "***  Welcome to KNIME v" + VERSION + " - the Konstanz Information Miner  ***";
-        String line2 = "Copyright by Uni Konstanz and KNIME GmbH, Germany";
+        String line1 = "***  Welcome to KNIME v" + VERSION + "  ***";
+        String line2 = "Copyright by KNIME GmbH, Konstanz, Germany";
         line2 =
             "***" + spaces.substring(0, (line1.length() - line2.length() - 6) / 2) + line2
                 + spaces.substring(0, (int)Math.ceil((line1.length() - line2.length() - 6) / 2.0)) + "***";
