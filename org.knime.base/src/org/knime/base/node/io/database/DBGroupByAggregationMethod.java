@@ -43,72 +43,82 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   May 7, 2014 ("Patrick Winter"): created
  */
 package org.knime.base.node.io.database;
 
-import org.knime.base.node.io.database.util.DBReaderDialogPane;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.database.DatabaseConnectionPortObject;
+import org.knime.core.data.DataType;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
 
 /**
- *
- * @author Thomas Gabriel, University of Konstanz
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
-public final class DBReaderNodeFactory
-        extends NodeFactory<DBReaderNodeModel> {
+enum DBGroupByAggregationMethod {
 
     /**
-     * {@inheritDoc}
+     * Average value.
      */
-    @Override
-    public DBReaderNodeModel createNodeModel() {
-        return new DBReaderNodeModel(new PortType[]{DatabaseConnectionPortObject.TYPE_OPTIONAL},
-            new PortType[]{BufferedDataTable.TYPE});
+    AVG(DoubleCell.TYPE),
+    /**
+     * Number of rows.
+     */
+    COUNT(IntCell.TYPE),
+    /**
+     * First value.
+     */
+    FIRST(null),
+    /**
+     * Last value.
+     */
+    LAST(null),
+    /**
+     * Largest value.
+     */
+    MAX(null),
+    /**
+     * Smallest value.
+     */
+    MIN(null),
+    /**
+     * Sum.
+     */
+    SUM(null);
+
+    private DataType m_type;
+
+    /**
+     * @param type Type of the aggregation column, null for columns that keep their type
+     */
+    private DBGroupByAggregationMethod(final DataType type) {
+        m_type = type;
     }
 
     /**
-     * {@inheritDoc}
+     * @param originalType Type of the column that will be aggregated
+     * @return The type of the aggregated column
      */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
+    DataType getType(final DataType originalType) {
+        if (m_type != null) {
+            return m_type;
+        } else {
+            return originalType;
+        }
     }
 
     /**
-     * {@inheritDoc}
+     * @return Names of all available aggregation methods
      */
-    @Override
-    public NodeView<DBReaderNodeModel> createNodeView(
-            final int viewIndex, final DBReaderNodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DBReaderDialogPane(true, true) {
-            /** {@inheritDoc} */
-            @Override
-            protected boolean runWithoutConfigure() {
-                return true;
-            }
-        };
+    static String[] getAllMethodNames() {
+        DBGroupByAggregationMethod[] methods = DBGroupByAggregationMethod.values();
+        String[] names = new String[methods.length];
+        for (int i = 0; i < names.length; i++) {
+            names[i] = methods[i].name();
+        }
+        return names;
     }
 
 }

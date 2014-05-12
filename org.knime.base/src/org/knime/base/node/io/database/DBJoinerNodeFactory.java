@@ -48,28 +48,22 @@
  */
 package org.knime.base.node.io.database;
 
-import org.knime.base.node.io.database.util.DBReaderDialogPane;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.database.DatabaseConnectionPortObject;
 
 /**
- *
- * @author Thomas Gabriel, University of Konstanz
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
+ * @since 2.10
  */
-public final class DBReaderNodeFactory
-        extends NodeFactory<DBReaderNodeModel> {
+public final class DBJoinerNodeFactory extends NodeFactory<DBJoinerNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DBReaderNodeModel createNodeModel() {
-        return new DBReaderNodeModel(new PortType[]{DatabaseConnectionPortObject.TYPE_OPTIONAL},
-            new PortType[]{BufferedDataTable.TYPE});
+    public DBJoinerNodeModel createNodeModel() {
+        return new DBJoinerNodeModel();
     }
 
     /**
@@ -84,8 +78,7 @@ public final class DBReaderNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public NodeView<DBReaderNodeModel> createNodeView(
-            final int viewIndex, final DBReaderNodeModel nodeModel) {
+    public NodeView<DBJoinerNodeModel> createNodeView(final int viewIndex, final DBJoinerNodeModel nodeModel) {
         return null;
     }
 
@@ -102,13 +95,6 @@ public final class DBReaderNodeFactory
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new DBReaderDialogPane(true, true) {
-            /** {@inheritDoc} */
-            @Override
-            protected boolean runWithoutConfigure() {
-                return true;
-            }
-        };
+        return new DBJoinerNodeDialog();
     }
-
 }

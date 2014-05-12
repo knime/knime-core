@@ -984,6 +984,16 @@
       <node
             after="org.knime.base.node.io.database.DBSorterNodeFactory"
             category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBGroupByNodeFactory"
+            id="org.knime.base.node.io.database.DBGroupByNodeFactory"/>
+      <node
+            after="org.knime.base.node.io.database.DBGroupByNodeFactory"
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBJoinerNodeFactory"
+            id="org.knime.base.node.io.database.DBJoinerNodeFactory"/>
+      <node
+            after="org.knime.base.node.io.database.DBJoinerNodeFactory"
+            category-path="/database"
             factory-class="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
             id="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"/>
       <node
@@ -1687,12 +1697,6 @@
               NodeFactory="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory">
            <FileExtension
                  extension=".pmml">
-           </FileExtension>
-        </FileExtensionMapping>
-        <FileExtensionMapping
-              NodeFactory="org.knime.base.node.io.database.DBReaderNodeFactory">
-           <FileExtension
-                 extension=".sqlite">
            </FileExtension>
         </FileExtensionMapping>
      </extension>   

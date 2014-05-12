@@ -106,6 +106,7 @@ public class ColumnPairsSelectionPanel extends JPanel {
 
     private final JButton m_persistentAddButton;
 
+    private boolean m_includeRowId = true;
 
     /**
      * Creates a new instance. Use updateData(...) to initialize the component.
@@ -133,6 +134,17 @@ public class ColumnPairsSelectionPanel extends JPanel {
                 updateLayout();
             }
         });
+    }
+
+    /**
+     * Creates a new instance. Use updateData(...) to initialize the component.
+     *
+     * @param includeRowId If false the RowIDs will not be available
+     * @since 2.10
+     */
+    public ColumnPairsSelectionPanel(final boolean includeRowId) {
+        this();
+        m_includeRowId = includeRowId;
     }
 
 
@@ -239,7 +251,9 @@ public class ColumnPairsSelectionPanel extends JPanel {
         DefaultComboBoxModel comboBoxModel =
             (DefaultComboBoxModel)comboBox.getModel();
         comboBoxModel.removeAllElements();
-        comboBoxModel.addElement(new RowKey(ROW_KEY_COL_NAME));
+        if (m_includeRowId) {
+            comboBoxModel.addElement(new RowKey(ROW_KEY_COL_NAME));
+        }
         comboBox.setSelectedIndex(-1);
         if (null != selected
                 && selected.equals(m_rowKeyIdentifier)) {

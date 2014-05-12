@@ -52,20 +52,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.sql.SQLException;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.knime.base.util.flowvariable.FlowVariableProvider;
 import org.knime.base.util.flowvariable.FlowVariableResolver;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.internal.KNIMEPath;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -110,26 +107,6 @@ class DBReaderNodeModel extends NodeModel implements FlowVariableProvider {
      */
     DBReaderNodeModel(final int ins, final int outs) {
         super(ins, outs);
-    }
-
-    /**
-     * Creates a new database reader with one data out-port.
-     * @param ins number data input ports
-     * @param outs number data output ports
-     * @param context The context
-     */
-    DBReaderNodeModel(final int ins, final int outs, final NodeCreationContext context) {
-        this(ins, outs);
-        String workspace = KNIMEPath.getWorkspaceDirPath().getAbsolutePath();
-        String url;
-        try {
-            url = "jdbc:sqlite:" + workspace + context.getUrl().toURI().getPath();
-        } catch (URISyntaxException e) {
-            url = "";
-        }
-        m_settings.setDriver("org.sqlite.JDBC");
-        m_settings.setJDBCUrl(url);
-        m_settings.setTimezone("current");
     }
 
     /**
