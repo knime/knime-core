@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -549,6 +549,7 @@ public class WrappedNodeDialog extends Dialog {
                 }
             } else {
                 // not executed
+                getShell().setCursor(Display.getCurrent().getSystemCursor(SWT.CURSOR_WAIT));
                 m_nodeContainer.applySettingsFromDialog();
                 return true;
             }
@@ -568,6 +569,8 @@ public class WrappedNodeDialog extends Dialog {
                     + t.getMessage());
             // SWT-AWT-Bridge doesn't properly repaint after dialog disappears
             m_dialogPane.getPanel().repaint();
+        } finally {
+            getShell().setCursor(null);
         }
         return false;
     }

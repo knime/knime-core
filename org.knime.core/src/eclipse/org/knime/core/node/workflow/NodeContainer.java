@@ -50,6 +50,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.awt.Cursor;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -949,12 +950,14 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         // TODO do we need to reset the node first??
         NodeSettings sett = new NodeSettings("node settings");
         NodeContext.pushContext(this);
+        getDialogPane().getPanel().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         try {
             getDialogPane().finishEditingAndSaveSettingsTo(sett);
+            m_parent.loadNodeSettings(getID(), sett);
         } finally {
             NodeContext.removeLastContext();
+            getDialogPane().getPanel().setCursor(Cursor.getDefaultCursor());
         }
-        m_parent.loadNodeSettings(getID(), sett);
     }
 
     public boolean areDialogSettingsValid() {
