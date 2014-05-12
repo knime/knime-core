@@ -92,8 +92,7 @@ public class DatabaseConnectionPortObjectSpec implements PortObjectSpec {
         }
 
         /**
-         * Reads the model content from the input stream
-         *
+         * Reads the model content from the input stream.
          * @param in an input stream
          * @return the model content containing the spec information
          * @throws IOException if an I/O error occurs
@@ -109,7 +108,6 @@ public class DatabaseConnectionPortObjectSpec implements PortObjectSpec {
 
         /**
          * Saves the given spec object into the output stream.
-         *
          * @param os an output stream
          * @param portObjectSpec the port spec
          * @throws IOException if an I/O error occurs

@@ -829,7 +829,7 @@ public class DatabaseConnectionSettings {
      * set to <tt>current</tt> the client's local timezone should be used. If the timezone is set to <tt>none</tt> no
      * correction is applied
      *
-     * @return a timezone identifier, <tt>current/tt>, or <tt>none</tt>
+     * @return a timezone identifier, <tt>current</tt>, or <tt>none</tt>
      * @since 2.10
      */
     public final String getTimezone() {
@@ -841,7 +841,7 @@ public class DatabaseConnectionSettings {
      * set to <tt>current</tt> the client's local timezone should be used. If the timezone is set to <tt>none</tt> no
      * correction is applied
      *
-     * @param tz a timezone identifier, <tt>current/tt>, or <tt>none</tt>
+     * @param tz a timezone identifier, <tt>current</tt>, or <tt>none</tt>
      * @since 2.10
      */
     public void setTimezone(final String tz) {

@@ -261,8 +261,8 @@ public final class DatabaseReaderConnection {
             final boolean autoCommit = conn.getAutoCommit();
             final Statement stmt = initStatement(cp, conn);
             try {
-                int fetchsize = (DatabaseConnectionSettings.FETCH_SIZE != null) ?
-                    DatabaseConnectionSettings.FETCH_SIZE : -1;
+                int fetchsize = (DatabaseConnectionSettings.FETCH_SIZE != null)
+                    ? DatabaseConnectionSettings.FETCH_SIZE : -1;
                 m_conn.getUtility().getStatementManipulator().setFetchSize(stmt, fetchsize);
                 final String[] oQueries = m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
                 // execute all except the last query
@@ -317,8 +317,8 @@ public final class DatabaseReaderConnection {
             try {
                 final String[] oQueries = m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
                 if (cachedNoRows < 0) {
-                    int fetchsize = (DatabaseConnectionSettings.FETCH_SIZE != null) ?
-                        DatabaseConnectionSettings.FETCH_SIZE : -1;
+                    int fetchsize = (DatabaseConnectionSettings.FETCH_SIZE != null)
+                        ? DatabaseConnectionSettings.FETCH_SIZE : -1;
                     m_conn.getUtility().getStatementManipulator().setFetchSize(stmt, fetchsize);
                 } else {
                     final int hashAlias = System.identityHashCode(this);
