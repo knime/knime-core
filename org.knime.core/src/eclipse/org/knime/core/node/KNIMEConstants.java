@@ -331,7 +331,7 @@ public final class KNIMEConstants {
         String stars = "**********************************************************************************************";
         String spaces = "                                    ";
 
-        String line1 = "***  Welcome to KNIME v" + VERSION + "  ***";
+        String line1 = "***       Welcome to KNIME v" + VERSION + "       ***";
         String line2 = "Copyright by KNIME GmbH, Konstanz, Germany";
         line2 =
             "***" + spaces.substring(0, (line1.length() - line2.length() - 6) / 2) + line2
