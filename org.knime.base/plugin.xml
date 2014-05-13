@@ -1007,6 +1007,11 @@
             factory-class="org.knime.base.node.io.database.DBDeleteRowsNodeFactory"
             id="org.knime.base.node.io.database.DBDeleteRowsNodeFactory"/>
       <node
+            after="org.knime.base.node.io.database.DBDeleteRowsNodeFactory"
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBSQLExecutorNodeFactory"
+            id="org.knime.base.node.io.database.DBSQLExecutorNodeFactory"/>
+      <node
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.cellsplitbypos.CellSplitterByPosNodeFactory"
             id="org.knime.base.node.preproc.cellsplitbypos.CellSplitterByPositionNodeFactory">
