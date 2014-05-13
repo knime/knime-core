@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,6 +50,7 @@
 package org.knime.base.data.statistics;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
@@ -180,6 +181,10 @@ class MedianTable {
             selectRank.setSortInMemory(m_inMemory);
             BufferedDataTable dataTable = selectRank.select(context);
             final CloseableRowIterator iterator = dataTable.iterator();
+            if (!iterator.hasNext()) {
+                Arrays.fill(m_medians, Double.NaN);
+                return m_medians.clone();
+            }
             try {
                 DataRow row1 = iterator.next();
                 DataRow row2 = iterator.next();

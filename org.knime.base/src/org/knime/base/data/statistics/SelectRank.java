@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -193,11 +193,15 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
      *            second-index.
      */
     public void setSelectRank(final Collection<String> inclList, final int[][] k) {
-        this.m_k = flip(k);
-        for (int[] is : this.m_k) {
-            Arrays.sort(is);
+        if ((inclList != null && inclList.isEmpty()) || (k.length > 0 || k[0].length == 0)) {
+            this.m_k = k.clone();
+        } else {
+            this.m_k = flip(k);
+            for (int[] is : this.m_k) {
+                Arrays.sort(is);
+            }
+            this.m_k = flip(this.m_k);
         }
-        this.m_k = flip(this.m_k);
         if (inclList == null) {
             throw new NullPointerException("Argument must not be null.");
         }
@@ -357,6 +361,10 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
 
         DataTableSpec newSpec = computeNewSpec(dataTable);
         final DataContainer dc = createDataContainer(newSpec, false);
+        if (!dataTable.iterator().hasNext()) {
+            dc.close();
+            return dc.getTable();
+        }
         ExecutionMonitor writeExec = exec.createSubProgress(0.5);
         progress = 0;
         for (int[] r : this.m_k) {

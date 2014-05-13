@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -507,7 +507,14 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
      */
     @Override
     protected int numOfNominalValues() {
-        // TODO Auto-generated method stub
         return super.numOfNominalValues();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int numOfNominalValuesOutput() {
+        return super.numOfNominalValuesOutput();
     }
 }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -415,6 +415,14 @@ public class Statistics3Table {
                 }
             }
         }
+        //Table is empty, but we should provide the nominal values an empty map.
+        if (!table.iterator().hasNext()) {
+            for (int c : colIndices) {
+                if (nominalValueColumnsSet.contains(m_spec.getColumnSpec(c).getName())) {
+                    nominalValues.set(c, Collections.<DataCell, MutableInteger> emptyMap());
+                }
+            }
+        }
 
         // init warning message
         if (warn.length() > 0) {
@@ -431,6 +439,7 @@ public class Statistics3Table {
                 m_maxValues[j] = Double.NaN;
                 m_meanValues[j] = Double.NaN;
                 m_varianceValues[j] = Double.NaN;
+                m_sum[j] = 0.0;
                 m_skewness[j] = Double.NaN;
                 m_kurtosis[j] = Double.NaN;
             } else {

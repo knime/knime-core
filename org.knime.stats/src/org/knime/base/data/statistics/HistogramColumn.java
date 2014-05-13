@@ -334,12 +334,8 @@ public class HistogramColumn implements Cloneable {
      * A class to store the statistics on a numeric column.
      */
     static class HistogramNumericModel extends HistogramModel<Pair<Double, Double>> {
-        private static class NumericBin extends Bin<Pair<Double, Double>> implements DisplayableBin {
-
-            private static final NumberFormat FORMAT = (NumberFormat)NumberFormat.getNumberInstance().clone();
-            static {
-                FORMAT.setMaximumFractionDigits(2);
-            }
+        private final NumberFormat m_format;
+        private class NumericBin extends Bin<Pair<Double, Double>> implements DisplayableBin {
 
             NumericBin(final double min, final double max) {
                 this(Pair.create(min, max));
@@ -375,7 +371,7 @@ public class HistogramColumn implements Cloneable {
              * @return The {@link String} formatted to two digits.
              */
             private synchronized String num(final Double num) {
-                return FORMAT.format(num);
+                return m_format.format(num);
             }
 
             /**
@@ -397,9 +393,12 @@ public class HistogramColumn implements Cloneable {
             m_min = min;
             m_max = max;
             m_width = (max - min) / numOfBins;
+            double[] binStarts = new double[numOfBins];
             for (int i = 0; i < numOfBins; ++i) {
-                getBins().add(new NumericBin(min + i * m_width, min + (i + 1) * m_width));
+                binStarts[i] = min + i * m_width;
+                getBins().add(new NumericBin(binStarts[i], min + (i + 1) * m_width));
             }
+            m_format = new FormatDoubles().formatterForNumbers(binStarts);
         }
 
         ///min and max values in the column.
@@ -771,9 +770,11 @@ public class HistogramColumn implements Cloneable {
     private void paint(final HistogramModel<?> histogramData, final Graphics2D g) {
         double binWidth = binWidth(histogramData);
         //g.setFont(Font.getFont("Arial").deriveFont((float)(binWidth * .8d)));
-        g.setColor(new Color(0, 0, 0, 0));
-        g.drawRect(0, 0, m_width, m_height);
         g.setColor(m_fillColor);
+        if (histogramData.getBins().isEmpty()) {
+            g.setColor(new Color(0, 0, 0, 0));
+            g.drawRect(0, 0, m_width, m_height);
+        }
         for (int i = histogramData.getBins().size(); i-- > 0;) {
             HistogramModel.Bin<?> bin = histogramData.getBins().get(i);
             int upperPosition = upperPosition(histogramData, bin);
@@ -1063,7 +1064,7 @@ public class HistogramColumn implements Cloneable {
             int[] binCounts = h.getIntArray(BIN_COUNTS);
             HistogramNumericModel histogramData = new HistogramNumericModel(min, max, binMins.length, colIdx, colName);
             for (int i = binMins.length; i-- > 0;) {
-                histogramData.getBins().set(i, new HistogramNumericModel.NumericBin(binMins[i], binMaxes[i]));
+                histogramData.getBins().set(i, histogramData.new NumericBin(binMins[i], binMaxes[i]));
                 histogramData.getBins().get(i).setCount(binCounts[i]);
             }
             histogramData.setMaxCount(maxCount);

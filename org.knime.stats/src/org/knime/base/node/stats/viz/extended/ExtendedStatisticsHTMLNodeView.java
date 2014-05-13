@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,6 +52,7 @@ package org.knime.base.node.stats.viz.extended;
 import java.awt.Component;
 import java.awt.Container;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -79,6 +80,7 @@ import org.knime.base.data.statistics.HistogramColumn;
 import org.knime.base.data.statistics.HistogramModel;
 import org.knime.base.data.statistics.Statistics3Table;
 import org.knime.base.node.util.DoubleFormat;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
@@ -97,6 +99,8 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
 
     private JEditorPane m_nominal = new JEditorPane("text/html", "<html></html>");
 
+    private JEditorPane m_topBottom = new JEditorPane("text/html", "<html></html>");
+
     private JTabbedPane m_tabs;
 
     /** The vertical alignment in the rows. */
@@ -112,6 +116,7 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
         m_tabs = new JTabbedPane();
         m_tabs.add("Numeric", new JScrollPane(m_numeric));
         m_tabs.add("Nominal", new JScrollPane(m_nominal));
+        m_tabs.add("Top/bottom", new JScrollPane(m_topBottom));
         setComponent(m_tabs);
     }
 
@@ -138,6 +143,7 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
         if (model.getStatTable() == null) {
             m_numeric.setText("");
             m_nominal.setText("");
+            m_topBottom.setText("");
         } else {
             //            m_numeric.setEditorKitForContentType("text/html", new NumericEditorKit(model));
             m_numeric.setEditorKit(new NumericEditorKit(model));
@@ -146,9 +152,114 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
             m_nominal.setEditorKit(new NominalEditorKit(model));
             m_nominal.setEditable(false);
             m_nominal.setText(createNominal(model));
+            m_topBottom.setText(createTopBottom(model));
         }
         m_numeric.revalidate();
         m_nominal.revalidate();
+        m_topBottom.revalidate();
+    }
+
+    /**
+     * @param model
+     * @return
+     */
+    private String createTopBottom(final ExtendedStatisticsNodeModel model) {
+        final List<String> columnNames = new ArrayList<>();
+        final List<Map<DataCell, Integer>> nominals = new ArrayList<>();
+        Statistics3Table statTable = model.getStatTable();
+        if (statTable != null) {
+            int colIdx = 0;
+            for (DataColumnSpec spec : statTable.getSpec()) {
+                if (model.getStatTable().getNominalValues(colIdx) != null) {
+                    columnNames.add(spec.getName());
+                    nominals.add(statTable.getNominalValues(colIdx));
+                }
+                ++colIdx;
+            }
+        }
+
+        if (columnNames.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder buffer = new StringBuilder();
+        buffer.append("<html>\n");
+        buffer.append("<body>\n");
+        buffer.append("<p>&nbsp</p>");
+        buffer.append("<table border = \"1\">");
+
+        for (int i = 0; i < columnNames.size(); i++) {
+            if (nominals.get(i) != null) {
+                buffer.append("<th style=\"white-space: nowrap\">"
+                        + columnNames.get(i) + "</th>");
+            }
+        }
+
+        buffer.append("<tr valign=\"top\">");
+        int[] missings = model.getStatTable().getNumberMissingValues();
+        for (int i = 0; i < columnNames.size(); i++) {
+            if (nominals.get(i) != null) {
+                buffer.append("<td style=\"white-space: nowrap\"><strong>"
+                        + "No. missings: </strong>"
+                        + missings[i] + "</td>");
+            }
+        }
+
+        buffer.append("</tr><tr valign=\"top\">");
+
+            final int numNomValues = model.numOfNominalValues();
+            for (Map<DataCell, Integer> map: nominals) {
+                if (map != null) {
+                    buffer.append("<td nowrap=\"nowrap\">");
+                    final int size = map.size();
+                    if (size == 0) {
+                        buffer.append("<i>contains more than "
+                                + getNodeModel().numOfNominalValuesOutput()
+                                + " nominal values</i>");
+                    } else {
+                        int cnt = 0;
+                        buffer.append("<strong>Top " + numNomValues
+                                + ":</strong><br>");
+                    for (Map.Entry<DataCell, Integer> e : map.entrySet()) {
+                        buffer.append(e.getKey() + " : " + e.getValue() + "<br>");
+                        if (++cnt == numNomValues) {
+                            break;
+                        }
+                    }
+                        buffer.append("</td>");
+                    }
+                }
+            }
+        buffer.append("</tr>");
+
+        buffer.append("</tr><tr valign=\"top\">");
+
+            for (Map<DataCell, Integer> map: nominals) {
+                if (map != null) {
+                    buffer.append("<td style=\"white-space: nowrap\">");
+                    buffer.append("<strong>Bottom " + numNomValues
+                            + ":</strong><br>");
+                    final int size = map.size();
+                    if (size >= numNomValues) {
+                        int cnt = 0;
+                        for (DataCell c : map.keySet()) {
+                            if (cnt >= Math.max(numNomValues, size - numNomValues)) {
+                                buffer.append(c.toString() + " : " + map.get(c) + "<br>");
+                            }
+                            cnt++;
+                        }
+                        buffer.append("</td>");
+                    }
+                }
+            }
+        buffer.append("</tr>");
+
+        buffer.append("</table>");
+        buffer.append("<p>&nbsp</p>");
+        buffer.append("</body>\n");
+        buffer.append("</html>\n");
+        buffer.append("");
+        return buffer.toString();
     }
 
     /**

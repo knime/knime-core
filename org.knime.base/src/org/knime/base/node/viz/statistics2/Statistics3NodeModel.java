@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -243,7 +243,7 @@ public class Statistics3NodeModel extends NodeModel {
     }
 
     /** @return number of nominal values for output table */
-    int numOfNominalValuesOutput() {
+    protected int numOfNominalValuesOutput() {
         return m_nominalValuesOutput.getIntValue();
     }
 

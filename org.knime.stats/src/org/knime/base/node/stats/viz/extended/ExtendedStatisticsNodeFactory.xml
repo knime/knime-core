@@ -76,8 +76,10 @@
 	<views>
 		<view index="0" name="Statistics View">
 			Displays all statistic moments (for all
-			numeric columns) and nominal
-			values (for all categorical columns).
+			numeric columns), nominal
+			values (for all selected categorical columns)
+			and the most frequent/infrequent values from the
+			categorical columns (Top/bottom).
 		</view>
 	</views>
 </knimeNode>
