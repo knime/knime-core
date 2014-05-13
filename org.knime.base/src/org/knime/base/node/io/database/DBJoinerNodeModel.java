@@ -192,8 +192,8 @@ final class DBJoinerNodeModel extends DBNodeModel {
         // Add columns from left table
         int index = 0;
         for (String oldName : leftColumns.keySet()) {
-            columnBuf.append(tableNameLeft + "." + manipulator.quoteColumn(oldName) + " AS ["
-                + leftColumns.get(oldName) + "]");
+            columnBuf.append(tableNameLeft + "." + manipulator.quoteColumn(oldName) + " AS "
+                + manipulator.quoteColumn(leftColumns.get(oldName)));
             if (++index < leftColumns.size() || !rightColumns.isEmpty()) {
                 columnBuf.append(", ");
             }
@@ -201,8 +201,8 @@ final class DBJoinerNodeModel extends DBNodeModel {
         // Add columns from right table
         index = 0;
         for (String oldName : rightColumns.keySet()) {
-            columnBuf.append(tableNameRight + "." + manipulator.quoteColumn(oldName) + " AS ["
-                + rightColumns.get(oldName) + "]");
+            columnBuf.append(tableNameRight + "." + manipulator.quoteColumn(oldName) + " AS "
+                + manipulator.quoteColumn(rightColumns.get(oldName)));
             if (++index < rightColumns.size()) {
                 columnBuf.append(", ");
             }
@@ -259,8 +259,9 @@ final class DBJoinerNodeModel extends DBNodeModel {
         if (!connectionLeft.getJDBCUrl().equals(connectionRight.getJDBCUrl())) {
             throw new InvalidSettingsException("Database URL is different.");
         }
-        if (!connectionLeft.getUserName(getCredentialsProvider()).equals(
-            connectionRight.getUserName(getCredentialsProvider()))) {
+        if (connectionLeft.getUserName(getCredentialsProvider()) != null
+            && !connectionLeft.getUserName(getCredentialsProvider()).equals(
+                connectionRight.getUserName(getCredentialsProvider()))) {
             throw new InvalidSettingsException("User is different.");
         }
     }

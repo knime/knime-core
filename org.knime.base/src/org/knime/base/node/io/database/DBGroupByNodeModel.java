@@ -48,6 +48,7 @@
  */
 package org.knime.base.node.io.database;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,6 +67,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
@@ -185,7 +187,8 @@ final class DBGroupByNodeModel extends DBNodeModel {
         DatabaseQueryConnectionSettings connection = inSpec.getConnectionSettings(getCredentialsProvider());
         String newQuery = createQuery(connection.getQuery(), connection.getUtility().getStatementManipulator());
         connection = createDBQueryConnection(inSpec, newQuery);
-        return new DatabasePortObjectSpec(createOutSpec(inSpec.getDataTableSpec()), connection.createConnectionModel());
+        DataTableSpec tableSpec = createOutSpec(inSpec.getDataTableSpec(), connection, newQuery);
+        return new DatabasePortObjectSpec(tableSpec, connection.createConnectionModel());
     }
 
     /**
@@ -218,7 +221,8 @@ final class DBGroupByNodeModel extends DBNodeModel {
             columnBuf.append(tableName + "." + manipulator.quoteColumn(m_aggregatedColumns[i]));
             columnBuf.append(")");
             columnBuf.append(" AS ");
-            columnBuf.append("[" + generateColumnName(m_aggregatedColumns[i], m_aggregationMethods[i]) + "]");
+            columnBuf.append(manipulator
+                .quoteColumn(generateColumnName(m_aggregatedColumns[i], m_aggregationMethods[i])));
             if (i + 1 < m_aggregatedColumns.length) {
                 columnBuf.append(", ");
             }
@@ -241,7 +245,16 @@ final class DBGroupByNodeModel extends DBNodeModel {
      * @param inSpec Spec of the input table
      * @return Spec of the output table
      */
-    private DataTableSpec createOutSpec(final DataTableSpec inSpec) {
+    private DataTableSpec createOutSpec(final DataTableSpec inSpec, final DatabaseConnectionSettings settings,
+        final String query) {
+        // Try get spec from database
+        try {
+            DatabaseQueryConnectionSettings querySettings = new DatabaseQueryConnectionSettings(settings, query);
+            DatabaseReaderConnection conn = new DatabaseReaderConnection(querySettings);
+            return conn.getDataTableSpec(getCredentialsProvider());
+        } catch (SQLException e) {
+            // Otherwise guess spec
+        }
         List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>();
         // Add all group by columns
         for (String col : m_groupByCols.getIncludeList()) {
