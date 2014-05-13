@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -51,8 +51,8 @@ package org.knime.base.node.image;
 import java.util.ArrayList;
 
 import org.knime.core.data.RowKey;
-import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -70,19 +70,27 @@ public class ImageToTableNodeDialog extends DefaultNodeSettingsPane {
      *
      */
     public ImageToTableNodeDialog() {
-        SettingsModelString model = createStringModel();
-        FlowVariableModel fvm = super.createFlowVariableModel(model);
-        ArrayList<String> list = new ArrayList<String>(1);
+        SettingsModelString rowIdModel = createStringModel();
+        ArrayList<String> list = new ArrayList<>(1);
         list.add(DEFAULT_ROWKEY.toString());
-        super.addDialogComponent(new DialogComponentStringSelection(
-                model, "Row Identifier: ", list, true, fvm));
+        super.addDialogComponent(new DialogComponentStringSelection(rowIdModel, "Row Identifier: ", list, true,
+            super.createFlowVariableModel(rowIdModel)));
+        final SettingsModelString colNameModel = createColumnNameModel();
+        super.addDialogComponent(new DialogComponentString(colNameModel, "Column Name: ", true, 15,
+            super.createFlowVariableModel(colNameModel)));
     }
 
     /** @return settings model string used to define the row key for the
      *          single output table row
      */
     static SettingsModelString createStringModel() {
-        return new SettingsModelString("generated_rowkey",
-                DEFAULT_ROWKEY.toString());
+        return new SettingsModelString("generated_rowkey", DEFAULT_ROWKEY.toString());
+    }
+
+    /**
+     * @return settings model used to define the column name
+     */
+    static SettingsModelString createColumnNameModel() {
+        return new SettingsModelString("columnName", "Image");
     }
 }

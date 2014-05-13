@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -60,6 +60,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.knime.core.node.FlowVariableModel;
+import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
@@ -85,6 +87,8 @@ public final class DialogComponentString extends DialogComponent {
 
     private final boolean m_disallowEmtpy;
 
+    private final FlowVariableModelButton m_fvmButton;
+
     /**
      * Constructor put label and JTextField into panel. It will accept empty
      * strings as legal input.
@@ -97,7 +101,7 @@ public final class DialogComponentString extends DialogComponent {
         this(stringModel, label, false, calcDefaultWidth(stringModel
                 .getStringValue()));
     }
-
+    
     /**
      * Constructor put label and JTextField into panel.
      *
@@ -110,6 +114,23 @@ public final class DialogComponentString extends DialogComponent {
     public DialogComponentString(final SettingsModelString stringModel,
             final String label, final boolean disallowEmptyString,
             final int compWidth) {
+        this(stringModel, label, disallowEmptyString, compWidth, null);
+    }
+    
+    /**
+     * Constructor put label and JTextField into panel.
+     *
+     * @param stringModel the model that stores the value for this component.
+     * @param label label for dialog in front of JTextField
+     * @param disallowEmptyString if set true, the component request a non-empty
+     *            string from the user.
+     * @param compWidth the width of the edit field (in columns/characters)
+     * @param fvm model exposed to choose from available flow variables
+     * @since 2.10
+     */
+    public DialogComponentString(final SettingsModelString stringModel,
+            final String label, final boolean disallowEmptyString,
+            final int compWidth, final FlowVariableModel fvm) {
         super(stringModel);
 
         m_disallowEmtpy = disallowEmptyString;
@@ -120,6 +141,7 @@ public final class DialogComponentString extends DialogComponent {
         m_valueField.setColumns(compWidth);
 
         m_valueField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void removeUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
@@ -128,6 +150,7 @@ public final class DialogComponentString extends DialogComponent {
                 }
             }
 
+            @Override
             public void insertUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
@@ -136,6 +159,7 @@ public final class DialogComponentString extends DialogComponent {
                 }
             }
 
+            @Override
             public void changedUpdate(final DocumentEvent e) {
                 try {
                     updateModel();
@@ -147,12 +171,27 @@ public final class DialogComponentString extends DialogComponent {
 
         // update the text field, whenever the model changes
         getModel().prependChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
         });
 
         getComponentPanel().add(m_valueField);
+
+        // add variable editor button if so desired
+        if (fvm != null) {
+            fvm.addChangeListener(new ChangeListener() {
+                @Override
+                public void stateChanged(final ChangeEvent evt) {
+                     getModel().setEnabled(!fvm.isVariableReplacementEnabled());
+                }
+            });
+            m_fvmButton = new FlowVariableModelButton(fvm);
+            getComponentPanel().add(m_fvmButton);
+        } else {
+            m_fvmButton = null;
+        }
 
         //call this method to be in sync with the settings model
         updateComponent();
@@ -168,7 +207,7 @@ public final class DialogComponentString extends DialogComponent {
             return FIELD_DEFWIDTH;
         }
         if (defaultValue.length() < FIELD_MINWIDTH) {
-            // the editfield should be at least 15 columns wide
+            // the edit field should be at least 15 columns wide
             return FIELD_MINWIDTH;
         }
         if (defaultValue.length() > FIELD_MAXWIDTH) {

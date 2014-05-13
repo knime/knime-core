@@ -13,6 +13,9 @@
 		<option name="Row Identifier">Specify the row key (ID) used for the 
 		  single row created by this node.
 		</option>
+        <option name="Column Name">
+            Specify the column name used for the image column created by this node.
+        </option>
 		
 	</fullDescription>
 	<ports>

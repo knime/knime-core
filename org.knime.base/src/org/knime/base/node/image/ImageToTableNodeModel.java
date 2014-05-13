@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -84,6 +84,9 @@ public class ImageToTableNodeModel extends NodeModel {
     private final SettingsModelString m_rowKeyModel =
         ImageToTableNodeDialog.createStringModel();
 
+    private final SettingsModelString m_columnNameModel =
+            ImageToTableNodeDialog.createColumnNameModel();
+
     /**
      * New node model with on image port input and a data table output.
      */
@@ -99,10 +102,12 @@ public class ImageToTableNodeModel extends NodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         ImagePortObjectSpec inspec = (ImagePortObjectSpec) inSpecs[0];
-        DataTableSpec outspec = new DataTableSpec(
-                new DataColumnSpecCreator("Image",
-                        inspec.getDataType()).createSpec());
+        DataTableSpec outspec = createResultSpec(inspec, m_columnNameModel.getStringValue());
         return new DataTableSpec[] {outspec};
+    }
+
+    private static DataTableSpec createResultSpec(final ImagePortObjectSpec inspec, final String colName) {
+        return new DataTableSpec(new DataColumnSpecCreator(colName, inspec.getDataType()).createSpec());
     }
 
     /**
@@ -112,9 +117,7 @@ public class ImageToTableNodeModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] inObjects,
             final ExecutionContext exec) throws Exception {
         ImagePortObject ipo = (ImagePortObject) inObjects[0];
-        DataTableSpec outspec = new DataTableSpec(
-                new DataColumnSpecCreator("Image",
-                        ipo.getSpec().getDataType()).createSpec());
+        DataTableSpec outspec = createResultSpec(ipo.getSpec(), m_columnNameModel.getStringValue());
         BufferedDataContainer buf = exec.createDataContainer(outspec);
         RowKey rowKey;
         String rowKeyValue = m_rowKeyModel.getStringValue();
@@ -155,6 +158,7 @@ public class ImageToTableNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_rowKeyModel.saveSettingsTo(settings);
+        m_columnNameModel.saveSettingsTo(settings);
     }
 
     /**
@@ -164,6 +168,14 @@ public class ImageToTableNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_rowKeyModel.validateSettings(settings);
+        if (settings.containsKey(m_columnNameModel.getKey())) {
+          //introduced in KNIME 2.10
+            final String colName =
+                    ((SettingsModelString)m_columnNameModel.createCloneWithValidatedValue(settings)).getStringValue();
+            if (colName == null || colName.trim().isEmpty()) {
+                throw new InvalidSettingsException("Please specify a column name.");
+            }
+        }
     }
 
     /**
@@ -173,6 +185,10 @@ public class ImageToTableNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_rowKeyModel.loadSettingsFrom(settings);
+        if (settings.containsKey(m_columnNameModel.getKey())) {
+            //introduced in KNIME 2.10
+            m_columnNameModel.loadSettingsFrom(settings);
+        }
     }
 
     /**
