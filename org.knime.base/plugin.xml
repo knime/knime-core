@@ -501,11 +501,6 @@
       </node>
       <node
             category-path="/statistics"
-            factory-class="org.knime.base.node.viz.statistics2.Statistics3NodeFactory"
-            id="org.knime.base.node.viz.statistics2.Statistics3NodeFactory"
-            after="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"/>
-      <node
-            category-path="/statistics"
             factory-class="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"
             id="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"
             after="org.knime.base.node.viz.statistics2.Statistics3NodeFactory"/>

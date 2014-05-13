@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -58,7 +58,9 @@ import org.knime.core.node.NodeView;
  * Factory class for the Statistics Node.
  *
  * @author Thomas Gabriel, University of Konstanz
+ * @deprecated in favor of the extended statistics node in org.knime.stats
  */
+@Deprecated
 public class Statistics3NodeFactory extends NodeFactory<Statistics3NodeModel> {
 
     /**

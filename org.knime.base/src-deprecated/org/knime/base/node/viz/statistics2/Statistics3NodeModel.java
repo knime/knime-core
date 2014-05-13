@@ -83,7 +83,9 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * table.
  *
  * @author Thomas Gabriel, University of Konstanz
+ * @deprecated in favor of the extended statistics node in org.knime.stats
  */
+@Deprecated
 public class Statistics3NodeModel extends NodeModel {
 
     /** Statistical values table. */

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -61,7 +61,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
  *
  * @author Thomas Gabriel, University of Konstanz
  * @since 2.8
+ * @deprecated in favor of the extended statistics node in org.knime.stats
  */
+@Deprecated
 public class Statistics3NodeDialogPane extends DefaultNodeSettingsPane {
 
 	private final SettingsModelFilterString m_filterModel;

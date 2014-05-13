@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -69,7 +69,9 @@ import org.knime.core.node.tableview.TableView;
  *
  * @author cebron, University of Konstanz
  * @since 2.8
+ * @deprecated in favor of the extended statistics node in org.knime.stats
  */
+@Deprecated
 public class Statistics3NodeView extends NodeView<Statistics3NodeModel> {
 
     /** Pane for first order moments. */

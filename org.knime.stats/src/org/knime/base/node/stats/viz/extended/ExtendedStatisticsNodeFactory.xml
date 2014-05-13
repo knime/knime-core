@@ -2,7 +2,7 @@
 <knimeNode icon="./extended_statistics.png" type="Visualizer"
 	xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-	<name>Extended Statistics</name>
+	<name>Statistics</name>
 
 	<shortDescription>
         Calculates statistic moments with their distributions as histograms and counts nominal
