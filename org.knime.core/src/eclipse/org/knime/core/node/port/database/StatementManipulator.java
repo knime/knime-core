@@ -65,9 +65,9 @@ import java.util.regex.Pattern;
  */
 public class StatementManipulator {
     /**
-     * Pattern for matching any whitespace character.
+     * Pattern for matching any character that needs escaping.
      */
-    protected static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+    protected static final Pattern ESCAPE_CHARACTER_PATTERN = Pattern.compile("(\\s|[()])+");
 
 
     private final Random m_rand = new Random();
@@ -116,7 +116,7 @@ public class StatementManipulator {
      * @return the column's name, possibly quoted
      */
     public String quoteColumn(final String colName) {
-        Matcher m = WHITESPACE_PATTERN.matcher(colName);
+        Matcher m = ESCAPE_CHARACTER_PATTERN.matcher(colName);
         if (m.find()) {
             return "\"" + colName + "\"";
         } else {
