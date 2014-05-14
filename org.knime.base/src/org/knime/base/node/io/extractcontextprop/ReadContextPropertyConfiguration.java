@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,6 +52,7 @@ package org.knime.base.node.io.extractcontextprop;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +64,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
 
 /**
  *
@@ -205,17 +207,26 @@ final class ReadContextPropertyConfiguration {
         if (CONTEXT_TEMP_LOCATION.equals(property)) {
             return manager.getContext().getTempLocation().getAbsolutePath();
         }
-        if (CONTEXT_AUTHOR.equals(property)) {
-            return manager.getAuthorInformation().getAuthor();
-        }
-        if (CONTEXT_EDITOR.equals(property)) {
-            return manager.getAuthorInformation().getLastEditor();
-        }
-        if (CONTEXT_CREATION_DATE.equals(property)) {
-            return manager.getAuthorInformation().getAuthoredDate().toString();
-        }
-        if (CONTEXT_LAST_MODIFIED.equals(property)) {
-                return manager.getAuthorInformation().getLastEditDate().toString();
+        AuthorInformation author = manager.getAuthorInformation();
+        if (author != null) {
+            if (CONTEXT_AUTHOR.equals(property)) {
+                return author.getAuthor();
+            }
+            if (CONTEXT_EDITOR.equals(property)) {
+                return author.getLastEditor();
+            }
+            if (CONTEXT_CREATION_DATE.equals(property)) {
+                Date creationDate = author.getAuthoredDate();
+                if (creationDate != null) {
+                    return creationDate.toString();
+                }
+            }
+            if (CONTEXT_LAST_MODIFIED.equals(property)) {
+                Date modDate = author.getLastEditDate();
+                if (modDate != null) {
+                    return modDate.toString();
+                }
+            }
         }
 
         return null;
