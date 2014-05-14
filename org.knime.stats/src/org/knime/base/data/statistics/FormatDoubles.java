@@ -105,9 +105,10 @@ public class FormatDoubles {
             if (Math.abs(Math.round(d) - d) < 1E-10) {
                 decimal[i] = 0;
             } else {
+                decimal[i] = 10;
                 for (int t = POWERS_OF_TEN.length; t-- > 0;) {
                     double mult = d * POWERS_OF_TEN[t];
-                    if (Math.abs(Math.round(mult) - mult) < 1E-10) {
+                    if (Math.abs(Math.round(mult) - mult) < 1E-9) {
                         decimal[i] = t + 1;
                     }
                 }

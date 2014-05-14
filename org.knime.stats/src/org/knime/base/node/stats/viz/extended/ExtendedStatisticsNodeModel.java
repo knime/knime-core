@@ -49,7 +49,10 @@
 package org.knime.base.node.stats.viz.extended;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -66,10 +69,10 @@ import org.knime.base.data.statistics.HistogramModel;
 import org.knime.base.data.statistics.Statistics3Table;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
-import org.knime.base.node.viz.statistics2.Statistics3NodeModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.DataValue;
@@ -77,14 +80,18 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -97,7 +104,42 @@ import org.knime.core.util.Pair;
  *
  * @author Gabor Bakos
  */
-class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
+class ExtendedStatisticsNodeModel extends NodeModel {
+    /**
+     *
+     */
+    private static final int DEFAULT_NUM_NOMINAL_VALUES_OUTPUT = 1000;
+
+    /**
+     *
+     */
+    private static final String CFGKEY_NUM_NOMINAL_VALUES_OUTPUT = "num_nominal-values_output";
+
+    /**
+     *
+     */
+    private static final int DEFAULT_NUM_NOMINAL_VALUES = 20;
+
+    /**
+     *
+     */
+    private static final String CFGKEY_NUM_NOMINAL_VALUES = "num_nominal-values";
+
+    /**
+     *
+     */
+    private static final boolean DEFAULT_COMPUTE_MEDIAN = false;
+
+    /**
+     *
+     */
+    private static final String CFGKEY_COMPUTE_MEDIAN = "compute_median";
+
+    /**
+     *
+     */
+    private static final String CFGKEY_FILTER_NOMINAL_COLUMNS = "filter_nominal_columns";
+
     /** Configuration key for the image format of histogram. */
     protected static final String CFGKEY_IMAGE_FORMAT = "image format";
 
@@ -180,6 +222,37 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
         return new SettingsModelBoolean(CFGKEY_ENABLE_HILITE, DEFAULT_ENABLE_HILITE);
     }
 
+    /**
+     * @return create nominal filter model
+     */
+    static SettingsModelColumnFilter2 createNominalFilterModel() {
+        return new SettingsModelColumnFilter2(CFGKEY_FILTER_NOMINAL_COLUMNS);
+    }
+
+    /**
+     * @return boolean model to compute median
+     */
+    static SettingsModelBoolean createMedianModel() {
+        return new SettingsModelBoolean(CFGKEY_COMPUTE_MEDIAN, DEFAULT_COMPUTE_MEDIAN);
+    }
+
+    /**
+     * @return int model to restrict number of nominal values
+     */
+    static SettingsModelIntegerBounded createNominalValuesModel() {
+        return new SettingsModelIntegerBounded(
+                CFGKEY_NUM_NOMINAL_VALUES, DEFAULT_NUM_NOMINAL_VALUES, 0, Integer.MAX_VALUE);
+    }
+
+    /**
+     * @return int model to restrict number of nominal values for the output
+     */
+    static SettingsModelIntegerBounded createNominalValuesModelOutput() {
+        return new SettingsModelIntegerBounded(
+                CFGKEY_NUM_NOMINAL_VALUES_OUTPUT, DEFAULT_NUM_NOMINAL_VALUES_OUTPUT, 0, Integer.MAX_VALUE);
+    }
+
+
     private SettingsModelString m_imageFormat = createImageFormat();
 
     private SettingsModelInteger m_histogramWidth = createHistogramWidth(),
@@ -200,6 +273,16 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
 
     private DataArray m_subTable;
 
+    private final SettingsModelBoolean m_computeMedian = createMedianModel();
+
+    private final SettingsModelIntegerBounded m_nominalValues = createNominalValuesModel();
+
+    private final SettingsModelIntegerBounded m_nominalValuesOutput = createNominalValuesModelOutput();
+
+    private final SettingsModelColumnFilter2 m_nominalFilter = createNominalFilterModel();
+
+    private Statistics3Table m_statTable;
+
     /**
      * Constructor for the node model.
      */
@@ -217,11 +300,20 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
         throws CanceledExecutionException {
         double initPercent = m_enableHiLite.getBooleanValue() ? .25 : .2;
         ExecutionContext init = exec.createSubExecutionContext(initPercent);
-        BufferedDataTable[] superTables = super.execute(inData, init);
+        DataTableSpec dataSpec = inData[0].getDataTableSpec();
+        List<String> includes = nominalColumns(dataSpec);
+        m_statTable =
+            new Statistics3Table(inData[0], m_computeMedian.getBooleanValue(), numOfNominalValuesOutput(), includes,
+                init);
+        if (getStatTable().getWarning() != null) {
+            setWarningMessage(getStatTable().getWarning());
+        }
+        BufferedDataTable outTableOccurrences =
+            exec.createBufferedDataTable(getStatTable().createNominalValueTable(includes), exec.createSubProgress(0.5));
+
         BufferedDataTable[] ret = new BufferedDataTable[3];
-        DataTableSpec superTableSpec = superTables[1].getSpec();
-        DataTableSpec newSpec = renamedOccurrencesSpec(superTableSpec);
-        ret[2] = exec.createSpecReplacerTable(superTables[1], newSpec);
+        DataTableSpec newSpec = renamedOccurrencesSpec(outTableOccurrences.getSpec());
+        ret[2] = exec.createSpecReplacerTable(outTableOccurrences, newSpec);
         ExecutionContext table = exec.createSubExecutionContext(initPercent);
         ret[0] = getStatTable().createStatisticsInColumnsTable(table);
         ExecutionContext histogram = exec.createSubExecutionContext(1.0 / 2);
@@ -233,26 +325,27 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
             if (min.isMissing()) {
                 mins[i] = Double.NaN;
             } else {
-                mins[i] = ((DoubleValue) min).getDoubleValue();
+                mins[i] = ((DoubleValue)min).getDoubleValue();
             }
 
             DataCell max = getStatTable().getNonInfMax(i);
             if (max.isMissing()) {
                 maxes[i] = Double.NaN;
             } else {
-                maxes[i] = ((DoubleValue) max).getDoubleValue();
+                maxes[i] = ((DoubleValue)max).getDoubleValue();
             }
         }
         Pair<BufferedDataTable, Map<Integer, ? extends HistogramModel<?>>> pair =
-            histogramColumn.process(histogram, inData[0], hlHandler, ret[0], mins, maxes, numOfNominalValues(), getColumnNames());
-//        final BufferedDataTable outTable =
-//            histogramColumn.appendNominal(pair.getFirst(), getStatTable(), hlHandler, exec, numOfNominalValues());
+            histogramColumn.process(histogram, inData[0], hlHandler, ret[0], mins, maxes, numOfNominalValues(),
+                getColumnNames());
+        //        final BufferedDataTable outTable =
+        //            histogramColumn.appendNominal(pair.getFirst(), getStatTable(), hlHandler, exec, numOfNominalValues());
         ret[0] = pair.getFirst();
         ret[1] = histogramColumn.nominalTable(getStatTable(), hlHandler, exec, numOfNominalValues());
         if (m_enableHiLite.getBooleanValue()) {
             double rest = 1 - initPercent * 2 - 1.0 / 2;
             ExecutionContext projection = exec.createSubExecutionContext(rest / 2);
-            ColumnRearranger rearranger = new ColumnRearranger(inData[0].getDataTableSpec());
+            ColumnRearranger rearranger = new ColumnRearranger(dataSpec);
             Set<String> colNames = new HashSet<String>(Arrays.asList(getColumnNames()));
             for (DataColumnSpec spec : rearranger.createSpec()) {
                 if ((!spec.getType().isCompatible(DoubleValue.class) && !spec.getType()
@@ -283,13 +376,24 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
     }
 
     /**
+     * @param dataSpec The input {@link DataTableSpec}.
+     * @return The selected nominal columns.
+     */
+    protected List<String> nominalColumns(final DataTableSpec dataSpec) {
+        return Arrays.asList(m_nominalFilter.applyTo(dataSpec).getIncludes());
+    }
+
+    /**
      * @param occurrencesSpec The original occurrences spec from the base class' implementation.
      * @return The '{@code ... count}' columns are renamed to '{@code Count (...)}'.
+     * @deprecated We will not need this once the replacement for Statistics3Table is present and give the correct
+     *             table.
      */
+    @Deprecated
     protected DataTableSpec renamedOccurrencesSpec(final DataTableSpec occurrencesSpec) {
         DataTableSpecCreator renameSpecCreator = new DataTableSpecCreator(occurrencesSpec);
         DataColumnSpec[] specs = new DataColumnSpec[occurrencesSpec.getNumColumns()];
-        for (int i = occurrencesSpec.getNumColumns(); i-->0;) {
+        for (int i = occurrencesSpec.getNumColumns(); i-- > 0;) {
             if (i % 2 == 1) {
                 DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(occurrencesSpec.getColumnSpec(i));
                 colSpecCreator.setName("Count (" + occurrencesSpec.getColumnSpec(i - 1).getName() + ")");
@@ -319,9 +423,63 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
      */
     @Override
     protected void reset() {
-        super.reset();
+        m_statTable = null;
         m_nominalKeys.clear();
         m_buckets.clear();
+
+    }
+
+    /**
+     * @return statistics table containing all statistic moments
+     */
+    final DataTable getStatsTable() {
+        return getStatTable().createStatisticMomentsTable();
+    }
+
+    /**
+     * @return columns used to count co-occurrences
+     */
+    String[] getNominalColumnNames() {
+        if (getStatTable() == null) {
+            return null;
+        }
+        return getStatTable().extractNominalColumns(
+                nominalColumns(m_statTable.getSpec()));
+    }
+
+    /**
+     * @return all column names
+     */
+    protected String[] getColumnNames() {
+        if (getStatTable() == null) {
+            return null;
+        }
+        return getStatTable().getColumnNames();
+    }
+
+    /**
+     * @return number of missing values
+     */
+    int[] getNumMissingValues() {
+        if (getStatTable() == null) {
+            return null;
+        }
+        return getStatTable().getNumberMissingValues();
+    }
+
+    /** @return number of nominal values computed */
+    protected int numOfNominalValues() {
+        return m_nominalValues.getIntValue();
+    }
+
+    /** @return number of nominal values for output table */
+    protected int numOfNominalValuesOutput() {
+        return m_nominalValuesOutput.getIntValue();
+    }
+
+    /** @return nominal value and frequency for each column */
+    List<Map<DataCell, Integer>> getNominals() {
+        return getStatTable().getNominalValues();
     }
 
     /**
@@ -329,7 +487,9 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        DataTableSpec[] superTables = super.configure(inSpecs);
+        List<String> nominalValues = Arrays.asList(m_nominalFilter.applyTo(inSpecs[0]).getIncludes());
+        DataTableSpec nominalSpec = createOutSpecNominal(inSpecs[0], nominalValues);
+
         DataTableSpec[] ret = new DataTableSpec[3];
         DataTableSpecCreator specCreator = new DataTableSpecCreator(Statistics3Table.getStatisticsSpecification());
         final HistogramColumn hc = createHistogramColumn();
@@ -337,8 +497,29 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
         specCreator.addColumns(histogramColumnSpec);
         ret[0] = specCreator.createSpec();
         ret[1] = hc.createNominalHistogramTableSpec();
-        ret[2] = renamedOccurrencesSpec(superTables[1]);
+        ret[2] = nominalSpec;
         return ret;
+    }
+
+    /**
+     * Create spec containing only nominal columns in same order as the input spec.
+     *
+     * @param inputSpec input spec
+     * @param nominalValues used in map of co-occurrences
+     * @return a new spec with all nominal columns (Counts are in the form: {@code Count (} nominal column name
+     *         {@code )}.)
+     */
+    private DataTableSpec createOutSpecNominal(final DataTableSpec inputSpec, final List<String> nominalValues) {
+        ArrayList<DataColumnSpec> cspecs = new ArrayList<DataColumnSpec>();
+        for (int i = 0; i < inputSpec.getNumColumns(); i++) {
+            DataColumnSpec cspec = inputSpec.getColumnSpec(i);
+            if (nominalValues.contains(cspec.getName())) {
+                    cspecs.add(cspec);
+                    String countCol = DataTableSpec.getUniqueColumnName(inputSpec, "Count (" + cspec.getName() + ")");
+                    cspecs.add(new DataColumnSpecCreator(countCol, IntCell.TYPE).createSpec());
+                }
+            }
+            return new DataTableSpec(cspecs.toArray(new DataColumnSpec[0]));
     }
 
     /**
@@ -346,7 +527,10 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        super.saveSettingsTo(settings);
+        m_computeMedian.saveSettingsTo(settings);
+        m_nominalValues.saveSettingsTo(settings);
+        m_nominalValuesOutput.saveSettingsTo(settings);
+        m_nominalFilter.saveSettingsTo(settings);
         getImageFormat().saveSettingsTo(settings);
         getHistogramWidth().saveSettingsTo(settings);
         getHistogramHeight().saveSettingsTo(settings);
@@ -358,7 +542,10 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        super.loadValidatedSettingsFrom(settings);
+        m_computeMedian.loadSettingsFrom(settings);
+        m_nominalValues.loadSettingsFrom(settings);
+        m_nominalValuesOutput.loadSettingsFrom(settings);
+        m_nominalFilter.loadSettingsFrom(settings);
         getImageFormat().loadSettingsFrom(settings);
         getHistogramWidth().loadSettingsFrom(settings);
         getHistogramHeight().loadSettingsFrom(settings);
@@ -370,7 +557,10 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        super.validateSettings(settings);
+        m_computeMedian.validateSettings(settings);
+        m_nominalValues.validateSettings(settings);
+        m_nominalValuesOutput.validateSettings(settings);
+        m_nominalFilter.validateSettings(settings);
         getImageFormat().validateSettings(settings);
         SettingsModelString tmpFormat = createImageFormat();
         tmpFormat.loadSettingsFrom(settings);
@@ -388,7 +578,13 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
      */
     @Override
     protected void loadInternals(final File internDir, final ExecutionMonitor exec) throws IOException {
-        super.loadInternals(internDir, exec);
+        NodeSettingsRO sett = NodeSettings.loadFromXML(new FileInputStream(
+            new File(internDir, "statistic.xml.gz")));
+    try {
+        m_statTable = Statistics3Table.load(sett);
+    } catch (InvalidSettingsException ise) {
+        throw new IOException(ise);
+    }
         if (m_enableHiLite.getBooleanValue()) {
             File histogramsGz = new File(internDir, HISTOGRAMS_GZ);
             File dataArrayGz = new File(internDir, DATA_ARRAY_GZ);
@@ -433,7 +629,10 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
     @Override
     protected void saveInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException {
-        super.saveInternals(internDir, exec);
+        NodeSettings sett = new NodeSettings("statistic.xml.gz");
+        getStatTable().save(sett);
+        sett.saveToXML(new FileOutputStream(
+                new File(internDir, sett.getKey())));
         if (m_enableHiLite.getBooleanValue()) {
             File histograms = new File(internDir, HISTOGRAMS_GZ);
             File dataArray = new File(internDir, DATA_ARRAY_GZ);
@@ -495,26 +694,9 @@ class ExtendedStatisticsNodeModel extends Statistics3NodeModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @return The used statistics table.
      */
-    @Override
     protected Statistics3Table getStatTable() {
-        return super.getStatTable();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int numOfNominalValues() {
-        return super.numOfNominalValues();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int numOfNominalValuesOutput() {
-        return super.numOfNominalValuesOutput();
+        return m_statTable;
     }
 }

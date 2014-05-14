@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -48,27 +48,42 @@
  */
 package org.knime.base.node.stats.viz.extended;
 
-import org.knime.base.node.viz.statistics2.Statistics3NodeDialogPane;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 
 /**
  * <code>NodeDialog</code> for the "ExtendedStatistics" Node. Calculates statistic moments with their distributions and
  * counts nominal values and their occurrences across all columns.
  *
- * This node dialog derives from {@link DefaultNodeSettingsPane} which allows creation of a simple dialog with standard
- * components. If you need a more complex dialog please derive directly from {@link org.knime.core.node.NodeDialogPane}.
- *
  * @author Gabor Bakos
  */
-public class ExtendedStatisticsNodeDialog extends Statistics3NodeDialogPane {
+class ExtendedStatisticsNodeDialog extends DefaultNodeSettingsPane {
+    private final SettingsModelColumnFilter2 m_filterModel;
 
     /**
      * New pane for configuring the ExtendedStatistics node.
      */
     protected ExtendedStatisticsNodeDialog() {
+        addDialogComponent(new DialogComponentBoolean(ExtendedStatisticsNodeModel.createMedianModel(),
+            "Calculate median values (computationally expensive)"));
+        createNewGroup("Nominal values");
+        m_filterModel = ExtendedStatisticsNodeModel.createNominalFilterModel();
+        addDialogComponent(new DialogComponentColumnFilter2(m_filterModel, 0, false));
+        DialogComponentNumber numNomValueComp =
+            new DialogComponentNumber(ExtendedStatisticsNodeModel.createNominalValuesModel(),
+                "Max no. of most frequent and infrequent values (in view): ", 5);
+        numNomValueComp.setToolTipText("Max no. of most frequent and infrequent "
+            + "values per column displayed in the node view.");
+        addDialogComponent(numNomValueComp);
+        DialogComponentNumber numNomValueCompOutput =
+            new DialogComponentNumber(ExtendedStatisticsNodeModel.createNominalValuesModelOutput(),
+                "Max no. of possible values per column (in output table): ", 5);
+        addDialogComponent(numNomValueCompOutput);
         addDialogComponent(new DialogComponentBoolean(ExtendedStatisticsNodeModel.createEnableHiLite(), "Enable HiLite"));
         createNewTab("Histogram");
         addDialogComponent(new DialogComponentStringSelection(ExtendedStatisticsNodeModel.createImageFormat(),

@@ -35,7 +35,6 @@
               id="org.knime.base.node.stats.testing.ttest.OneWayANOVANodeFactory">
         </node>
         <node
-              after="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"
               category-path="/statistics"
               factory-class="org.knime.base.node.stats.viz.extended.ExtendedStatisticsNodeFactory"
               id="org.knime.base.node.stats.viz.extended.ExtendedStatisticsNodeFactory"/>
