@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+<entry key="factory" type="xstring" value="org.knime.quickform.nodes.in.selection.column.ColumnFilterInputQuickFormInNodeFactory"/>
+<entry key="node-name" type="xstring" value="Column Filter QuickForm"/>
+<entry key="node-bundle-name" type="xstring" value="KNIME Nodes to create KNIME Quick Forms"/>
+<entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.quickform.nodes"/>
+<entry key="node-bundle-vendor" type="xstring" value="KNIME.com, Zurich, Switzerland"/>
+<config key="factory_settings"/>
+<entry key="node_file" type="xstring" value="settings.xml"/>
+<config key="flow_stack">
+<config key="Variable_0">
+<entry key="type" type="xstring" value="variable"/>
+<entry key="name" type="xstring" value="datetime_name"/>
+<entry key="class" type="xstring" value="STRING"/>
+<entry key="value" type="xstring" value=""/>
+</config>
+</config>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="label" type="xstring" value="Select datetime column (optional):"/>
+<entry key="description" type="xstring" value=""/>
+<entry key="variableName" type="xstring" value="datetime_name"/>
+<entry key="weight" type="xint" value="2"/>
+<entry key="hide_in_wizard" type="xboolean" value="false"/>
+<config key="value">
+<config key="values">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+</config>
+<config key="allValues">
+<entry key="array-size" type="xint" value="32"/>
+<entry key="0" type="xstring" value="cluster_11"/>
+<entry key="1" type="xstring" value="cluster_28"/>
+<entry key="2" type="xstring" value="cluster_24"/>
+<entry key="3" type="xstring" value="cluster_1"/>
+<entry key="4" type="xstring" value="cluster_12"/>
+<entry key="5" type="xstring" value="cluster_2"/>
+<entry key="6" type="xstring" value="cluster_23"/>
+<entry key="7" type="xstring" value="cluster_26"/>
+<entry key="8" type="xstring" value="cluster_21"/>
+<entry key="9" type="xstring" value="cluster_13"/>
+<entry key="10" type="xstring" value="cluster_5"/>
+<entry key="11" type="xstring" value="cluster_18"/>
+<entry key="12" type="xstring" value="cluster_0"/>
+<entry key="13" type="xstring" value="cluster_29"/>
+<entry key="14" type="xstring" value="cluster_19"/>
+<entry key="15" type="xstring" value="cluster_6"/>
+<entry key="16" type="xstring" value="cluster_16"/>
+<entry key="17" type="xstring" value="cluster_27"/>
+<entry key="18" type="xstring" value="cluster_10"/>
+<entry key="19" type="xstring" value="cluster_17"/>
+<entry key="20" type="xstring" value="cluster_14"/>
+<entry key="21" type="xstring" value="cluster_20"/>
+<entry key="22" type="xstring" value="cluster_4"/>
+<entry key="23" type="xstring" value="cluster_8"/>
+<entry key="24" type="xstring" value="cluster_7"/>
+<entry key="25" type="xstring" value="cluster_22"/>
+<entry key="26" type="xstring" value="cluster_25"/>
+<entry key="27" type="xstring" value="cluster_9"/>
+<entry key="28" type="xstring" value="cluster_15"/>
+<entry key="29" type="xstring" value="cluster_3"/>
+<entry key="30" type="xstring" value="datetime"/>
+<entry key="31" type="xstring" value="datetime_time"/>
+</config>
+</config>
+<config key="nodeAnnotation">
+<entry key="text" type="xstring" value="select %%00013%%00010datetime %%00013%%00010column"/>
+<entry key="bgcolor" type="xint" value="16777215"/>
+<entry key="x-coordinate" type="xint" value="133"/>
+<entry key="y-coordinate" type="xint" value="392"/>
+<entry key="width" type="xint" value="101"/>
+<entry key="height" type="xint" value="45"/>
+<entry key="alignment" type="xstring" value="CENTER"/>
+<config key="styles"/>
+</config>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="state" type="xstring" value="CONFIGURED"/>
+<entry key="name" type="xstring" value="Column Filter QuickForm"/>
+<entry key="hasContent" type="xboolean" value="false"/>
+<entry key="isInactive" type="xboolean" value="false"/>
+<config key="ports">
+<config key="port_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+</config>
+<config key="filestores">
+<entry key="file_store_location" type="xstring" isnull="true" value=""/>
+<entry key="file_store_id" type="xstring" isnull="true" value=""/>
+</config>
+</config>
