@@ -72,8 +72,8 @@ public class DefaultWebTemplate implements WebTemplate {
      * @since 2.10
      *
      */
-    public DefaultWebTemplate(final WebResourceLocator[] jsResources, final String namespace, final String initMethod, final String validateMethod, final String valueMethod) {
-        this.m_webResources = jsResources;
+    public DefaultWebTemplate(final WebResourceLocator[] webResources, final String namespace, final String initMethod, final String validateMethod, final String valueMethod) {
+        this.m_webResources = webResources;
         this.m_namespace = namespace;
         this.m_initMethod = initMethod;
         this.m_validateMethod = validateMethod;

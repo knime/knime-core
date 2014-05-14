@@ -139,6 +139,8 @@ public class JSONDataTableSpec {
     private Object[] m_minValues;
     private Object[] m_maxValues;
 
+    private String[] m_rowColorValues;
+
     /**
      * Empty default constructor for bean initialization.
      */
@@ -318,6 +320,22 @@ public class JSONDataTableSpec {
      */
     public void setMaxValues(final Object[] maxValues) {
         m_maxValues = maxValues;
+    }
+
+    /**
+     * @return the rowColorValues as hex strings
+     * @since 2.10
+     */
+    public String[] getRowColorValues() {
+        return m_rowColorValues;
+    }
+
+    /**
+     * @param rowColorValues the rowColorValues as hex strings to set
+     * @since 2.10
+     */
+    public void setRowColorValues(final String[] rowColorValues) {
+        m_rowColorValues = rowColorValues;
     }
 
 }

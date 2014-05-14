@@ -55,12 +55,24 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.ProgressAdapter;
@@ -77,6 +89,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.AbstractNodeView;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.interactive.ConfigureCallback;
 import org.knime.core.node.interactive.DefaultConfigureCallback;
@@ -90,6 +104,7 @@ import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WizardExecutionController;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.FileUtil;
 
 /** Standard implementation for interactive views which are launched on the client side via
  * an integrated browser. They only have indirect access to the NodeModel via get and
@@ -105,9 +120,14 @@ import org.knime.core.node.workflow.WorkflowManager;
 public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, REP extends WebViewContent,
         VAL extends WebViewContent> extends AbstractNodeView<T> implements InteractiveView<T, REP, VAL> {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WizardNodeView.class);
+
+    private static File tempFolder;
+
     private final InteractiveViewDelegate<VAL> m_delegate;
     private final WebTemplate m_template;
-    private File m_tempFolder;
+    private File m_tempIndexFile;
+    private String m_title;
 
     /**
      * @param nodeModel the underlying model
@@ -167,6 +187,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
      */
     @Override
     public final void callOpenView(final String title) {
+        m_title = (title == null ? "View" : title);
         final String jsonViewRepresentation;
         final String jsonViewValue;
         try {
@@ -188,7 +209,10 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
 
         Display display = Display.getCurrent();
         final Shell shell = new Shell(display);
-        shell.setText(title == null ? "View" : title);
+        shell.setText(m_title);
+        if (KNIMEConstants.KNIME16X16_SWT != null) {
+            shell.setImage(KNIMEConstants.KNIME16X16_SWT);
+        }
         GridLayout layout = new GridLayout();
         layout.numColumns = 1;
         shell.setLayout(layout);
@@ -239,8 +263,8 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         try {
             browser.setUrl(createWebResources());
         } catch (IOException e) {
-            if (m_tempFolder != null) {
-                deleteTempFolder(m_tempFolder);
+            if (m_tempIndexFile != null) {
+                deleteTempFile(m_tempIndexFile);
             }
             browser.setText(createErrorHTML(e));
         }
@@ -278,20 +302,31 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
      * @return
      */
     private String createWebResources() throws IOException {
-        m_tempFolder = createTempFolder();
-        File htmlFile = new File(m_tempFolder, "index.html");
-        htmlFile.createNewFile();
-        BufferedWriter writer = new BufferedWriter(new FileWriter(htmlFile));
+        if (tempFolder == null
+                || !tempFolder.exists()
+                || !tempFolder.isDirectory()) {
+            tempFolder = FileUtil.createTempDir("knimeViewContainer", null, true);
+            try {
+                copyWebResources();
+            } catch (IOException e) {
+                deleteTempFile(tempFolder);
+                tempFolder = null;
+                throw e;
+            }
+        }
+        m_tempIndexFile = new File(tempFolder, "index_" + System.currentTimeMillis() + ".html");
+        m_tempIndexFile.createNewFile();
+        BufferedWriter writer = new BufferedWriter(new FileWriter(m_tempIndexFile));
         writer.write(buildHTMLResource());
         writer.flush();
         writer.close();
-        copyWebResources();
-        return htmlFile.getAbsolutePath();
+        return m_tempIndexFile.getAbsolutePath();
     }
 
     private String buildHTMLResource() throws IOException {
 
         String setIEVersion = "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">";
+        //String inlineScript = "<script type=\"text/javascript\" charset=\"UTF-8\">%s</script>";
         //String debugScript = "<script type=\"text/javascript\" "
         //        + "src=\"https://getfirebug.com/firebug-lite.js#startOpened=true\"></script>";
         String scriptString = "<script type=\"text/javascript\" src=\"%s\" charset=\"UTF-8\"></script>";
@@ -299,34 +334,38 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
 
         StringBuilder pageBuilder = new StringBuilder();
         pageBuilder.append("<!doctype html><html><head>");
-        pageBuilder.append(setIEVersion);
         pageBuilder.append("<meta charset=\"UTF-8\">");
+        pageBuilder.append(setIEVersion);
+        //pageBuilder.append(String.format(inlineScript, "BASE_DIR = " + m_tempFolder));
         //pageBuilder.append(debugScript);
 
+        String bodyText = "";
+        if (m_template == null || m_template.getWebResources() == null || m_template.getWebResources().length < 1) {
+            bodyText = "ERROR: No view implementation available!";
+            LOGGER.error("No JavaScript view implementation available for view: " + m_title);
+        }
+
         for (WebResourceLocator resFile : getResourceFileList()) {
-            String path;
+            String path = resFile.getRelativePathTarget();
+            if (path.startsWith("/")) {
+                path = path.substring(1);
+            }
             switch (resFile.getType()) {
                 case CSS:
-                    path = resFile.getRelativePathTarget();
-                    if (path.startsWith("/")) {
-                        path = path.substring(1);
-                    }
                     pageBuilder.append(String.format(cssString, path));
                     break;
                 case JAVASCRIPT:
-                    path = resFile.getRelativePathTarget();
-                    if (path.startsWith("/")) {
-                        path = path.substring(1);
-                    }
                     pageBuilder.append(String.format(scriptString, path));
                     break;
                 case FILE:
                     break;
                 default:
-                    throw new IOException("Unrecognized resource type " + resFile.getType());
+                    LOGGER.error("Unrecognized resource type " + resFile.getType());
             }
         }
-        pageBuilder.append("</head><body></body></html>");
+        pageBuilder.append("</head><body>");
+        pageBuilder.append(bodyText);
+        pageBuilder.append("</body></html>");
         return pageBuilder.toString();
     }
 
@@ -345,24 +384,71 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     }
 
     private void copyWebResources() throws IOException {
-        for (WebResourceLocator resFile : getResourceFileList()) {
-            FileUtils.copyFileToDirectory(resFile.getResource(),
-                new File(m_tempFolder, FilenameUtils.separatorsToSystem(resFile.getRelativePathTarget()))
-                    .getParentFile());
+        for (Entry<File, String> copyEntry : getAllWebResources().entrySet()) {
+            File src = copyEntry.getKey();
+            File dest = new File(tempFolder, FilenameUtils.separatorsToSystem(copyEntry.getValue()));
+            if (src.isDirectory()) {
+                FileUtils.copyDirectory(src, dest);
+            } else {
+                FileUtils.copyFile(src, dest);
+            }
         }
     }
 
-    private File createTempFolder() throws IOException {
-        File tempDir = null;
-        String javaTmpDir = System.getProperty("java.io.tmpdir");
-        do {
-            tempDir = new File(javaTmpDir, m_template.getNamespace() + System.currentTimeMillis());
-        } while (tempDir.exists());
-        if (!tempDir.mkdirs()) {
-            throw new IOException("Cannot create temporary directory '" + tempDir.getCanonicalPath() + "'.");
-        }
+    private static final String ID_WEB_RES = "org.knime.js.core.webResources";
+    private static final String ELEM_BUNDLE = "webResourceBundle";
+    private static final String ELEM_RES = "webResource";
+    private static final String ATTR_BUNDLE_ID = "webResourceBundleID";
+    private static final String ATTR_SOURCE = "relativePathSource";
+    private static final String ATTR_TARGET = "relativePathTarget";
 
-        return tempDir;
+    private Map<File, String> getAllWebResources() throws IOException {
+        Map<File, String> copyLocations = new HashMap<File, String>();
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        IExtensionPoint point = registry.getExtensionPoint(ID_WEB_RES);
+        if (point == null) {
+            throw new IllegalStateException("Invalid extension point : " + ID_WEB_RES);
+        }
+        IExtension[] webResExtensions = point.getExtensions();
+        for (IExtension ext : webResExtensions) {
+
+            // get plugin path
+            File pluginFile = null;
+            String pluginName = ext.getContributor().getName();
+            URL pluginURL = FileLocator.find(Platform.getBundle(pluginName), new Path("/"), null);
+            if (pluginURL != null) {
+                try {
+                    pluginFile = new File(FileLocator.resolve(pluginURL).toURI());
+                } catch (URISyntaxException e) {
+                    throw new IOException("Plugin path could not be resolved: " + pluginURL.toString());
+                }
+            }
+            if (pluginFile == null) {
+                throw new IOException("Plugin path could not be resolved: " + pluginName);
+            }
+
+            // get relative paths and collect in map
+            IConfigurationElement[] bundleElements = ext.getConfigurationElements();
+            for (IConfigurationElement bundleElem : bundleElements) {
+                assert bundleElem.getName().equals(ELEM_BUNDLE);
+                for (IConfigurationElement resElement : bundleElem.getChildren(ELEM_RES)) {
+                    String relSource = resElement.getAttribute(ATTR_SOURCE);
+                    File source = new File(pluginFile, relSource);
+                    if (!source.exists()) {
+                        LOGGER.errorWithFormat("CODING ERROR: Source file does not exist: %s for bundle %s",
+                            source.getAbsolutePath(), bundleElem.getAttribute(ATTR_BUNDLE_ID));
+                        continue;
+                        //throw new IOException("Source file does not exist: " + source.getAbsolutePath());
+                    }
+                    String relTarget = resElement.getAttribute(ATTR_TARGET);
+                    if (relTarget == null || relTarget.isEmpty()) {
+                        relTarget = relSource;
+                    }
+                    copyLocations.put(source, relTarget);
+                }
+            }
+        }
+        return copyLocations;
     }
 
     /**
@@ -370,20 +456,22 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
      */
     @Override
     public final void callCloseView() {
-        if (m_tempFolder != null && m_tempFolder.exists()) {
-            deleteTempFolder(m_tempFolder);
+        if (m_tempIndexFile != null && m_tempIndexFile.exists()) {
+            deleteTempFile(m_tempIndexFile);
         }
     }
 
-    private void deleteTempFolder(final File tempFolder) {
-        for (File tempFile : tempFolder.listFiles()) {
-            if (tempFile.isDirectory()) {
-                deleteTempFolder(tempFile);
-            } else {
-                tempFile.delete();
+    private void deleteTempFile(final File tempFile) {
+        if (tempFile.isDirectory()) {
+            for (File file : tempFile.listFiles()) {
+                if (file.isDirectory()) {
+                    deleteTempFile(file);
+                } else {
+                    file.delete();
+                }
             }
         }
-        tempFolder.delete();
+        tempFile.delete();
     }
 
     private String initJSView(final String jsonViewRepresentation, final String jsonViewValue) {

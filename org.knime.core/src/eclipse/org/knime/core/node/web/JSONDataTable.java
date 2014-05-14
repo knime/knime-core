@@ -49,6 +49,7 @@
  */
 package org.knime.core.node.web;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Vector;
@@ -65,12 +66,20 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.image.png.PNGImageValue;
+import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.web.JSONDataTableSpec.JSTypes;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 
 
 /**
@@ -82,13 +91,14 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public class JSONDataTable {
 
+    private static final String KNIME_DATA_TABLE_JSON = "knimeDataTableJSON";
+
     /* serialized members */
     private JSONDataTableSpec m_spec;
-    private String[] m_rowKeys;
-    private Object[][] m_data;
+    private JSONDataTableRow[] m_rows;
     private Object[][] m_extensions;
 
-    /** Empty constructor for bean initialization. */
+    /** Empty serialization constructor. Don't use.*/
     public JSONDataTable() {
         // do nothing
     }
@@ -139,8 +149,8 @@ public class JSONDataTable {
         int currentRowNumber = 0;
         int numRows = 0;
 
-        ArrayList<String> rowKeyList = new ArrayList<String>();
-        ArrayList<Object[]> dataArray = new ArrayList<Object[]>();
+        ArrayList<String> rowColorList = new ArrayList<String>();
+        ArrayList<JSONDataTableRow> rowList = new ArrayList<JSONDataTableRow>();
 
         while ((rIter.hasNext()) && (currentRowNumber + firstRow - 1 < numOfRows)) {
             // get the next row
@@ -152,9 +162,10 @@ public class JSONDataTable {
                 continue;
             }
 
-            rowKeyList.add(row.getKey().getString());
+            rowColorList.add(cssHexStringFromColor(spec.getRowColor(row)));
 
-            dataArray.add(new Object[numOfColumns]);
+            String rowKey = row.getKey().getString();
+            rowList.add(new JSONDataTableRow(rowKey, numOfColumns));
             numRows++;
 
             // add cells, check min, max values and possible values for each column
@@ -168,7 +179,7 @@ public class JSONDataTable {
                     cellValue = null;
                 }
 
-                dataArray.get(currentRowNumber - firstRow)[c] = cellValue;
+                rowList.get(currentRowNumber - firstRow).getData()[c] = cellValue;
                 if (cellValue == null) {
                     continue;
                 }
@@ -214,10 +225,21 @@ public class JSONDataTable {
         jsonTableSpec.setPossibleValues(possValues);
 
         setSpec(jsonTableSpec);
-        setRowKeys(rowKeyList.toArray(new String[0]));
-        setData(getJSONDataArray(dataArray, numOfColumns));
+        getSpec().setRowColorValues(rowColorList.toArray(new String[0]));
+        setRows(rowList.toArray(new JSONDataTableRow[0]));
         setExtensions(extensionArray);
 
+    }
+
+    /**
+     * @param rowColor
+     * @return
+     */
+    private String cssHexStringFromColor(final ColorAttr colorAttr) {
+        //get color value, omit alpha
+        int colorValue = colorAttr.getColor().getRGB() & 0xFFFFFF;
+        //convert to CSS hex color string
+        return "#" + Integer.toHexString(colorValue).toUpperCase();
     }
 
     private Object getJSONCellValue(final DataCell cell) {
@@ -253,27 +275,17 @@ public class JSONDataTable {
     }
 
     /**
-     * @return the rowKeys
      * @since 2.10
      */
-    public String[] getRowKeys() {
-        return m_rowKeys;
+    public JSONDataTableRow[] getRows() {
+        return m_rows;
     }
 
     /**
-     * @param rowKeys the rowKeys to set
      * @since 2.10
      */
-    public void setRowKeys(final String[] rowKeys) {
-        m_rowKeys = rowKeys;
-    }
-
-    public Object[][] getData() {
-        return m_data;
-    }
-
-    public void setData(final Object[][] data) {
-        m_data = data;
+    public void setRows(final JSONDataTableRow[] rows) {
+        m_rows = rows;
     }
 
     public Object[][] getExtensions() {
@@ -282,5 +294,93 @@ public class JSONDataTable {
 
     public void setExtensions(final Object[][] extensions) {
         m_extensions = extensions;
+    }
+
+    @JsonAutoDetect
+    static class JSONDataTableRow {
+
+        private String m_rowKey;
+
+        private Object[] m_data;
+
+        /** Empty serialization constructor. Don't use.*/
+        public JSONDataTableRow() { }
+
+        public JSONDataTableRow(final String rowKey, final int numColumns) {
+            m_rowKey = rowKey;
+            m_data = new Object[numColumns];
+        }
+
+        public JSONDataTableRow(final String rowKey, final Object[] data) {
+            m_rowKey = rowKey;
+            m_data = data;
+        }
+
+        /**
+         * @return the rowKey
+         */
+        public String getRowKey() {
+            return m_rowKey;
+        }
+
+        /**
+         * @param rowKey the rowKey to set
+         */
+        public void setRowKey(final String rowKey) {
+            m_rowKey = rowKey;
+        }
+
+        /**
+         * @return the data
+         */
+        public Object[] getData() {
+            return m_data;
+        }
+
+        /**
+         * @param data the data to set
+         * @since 2.10
+         */
+        public void setData(final Object[] data) {
+            m_data = data;
+        }
+    }
+
+    /**
+     * @param settings the settings to load from
+     * @since 2.10
+     */
+    @JsonIgnore
+    public void saveJSONToNodeSettings(final NodeSettingsWO settings) {
+        ObjectMapper mapper = new ObjectMapper();
+        String tableString = null;
+        try {
+            tableString = mapper.writeValueAsString(this);
+        } catch (JsonProcessingException e) { /*do nothing*/ }
+        settings.addString(KNIME_DATA_TABLE_JSON, tableString);
+    }
+
+    /**
+     * Loads a table from the settings given. If any errors occur null is returned.
+     * @param settings the settings to load from
+     * @return the table
+     * @since 2.10
+     */
+    @JsonIgnore
+    public static JSONDataTable loadFromNodeSettings(final NodeSettingsRO settings) {
+        String tableString = settings.getString(KNIME_DATA_TABLE_JSON, null);
+        if (tableString == null) {
+            return null;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        JSONDataTable table = new JSONDataTable();
+        ObjectReader reader = mapper.readerForUpdating(table);
+        try {
+            reader.readValue(tableString);
+            return table;
+        } catch (IOException e) {
+            return null;
+        }
     }
 }
