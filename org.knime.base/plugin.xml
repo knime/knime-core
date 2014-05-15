@@ -150,7 +150,7 @@
             description="meta nodes"
             icon="icons/16x16/meta.png"
             level-id="meta"
-            name="Meta"
+            name="Meta Nodes"
             path="/"/>
       <category
             after="dtree"
@@ -180,7 +180,7 @@
             icon="icons/16x16/category_feature_elimination.png"
             level-id="features"
             name="Feature Selection"
-            path="/mining/meta-mining">
+            path="/mining/meta-mining/utility">
       </category>
       <category
             description="nodes for manual assembly of loops"
@@ -194,7 +194,7 @@
             icon="icons/16x16/category_cross_validation.png"
             level-id="crossvalidation"
             name="Cross Validation"
-            path="/mining/meta-mining">
+            path="/mining/meta-mining/utility">
       </category>
       <category
             after="meta"
@@ -283,8 +283,14 @@
             after="modeleval"
             icon="icons/missing.gif"
             level-id="meta-mining"
-            name="Meta"
+            name="Meta Nodes &amp; Loops"
             path="/mining">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="utility"
+            name="Utility Nodes"
+            path="/mining/meta-mining">
       </category>
       <category
             icon="icons/16x16/variables.png"
@@ -1070,13 +1076,13 @@
             id="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory">
       </node>
       <node
-            category-path="/mining/meta-mining/crossvalidation"
+            category-path="/mining/meta-mining/utility/crossvalidation"
             factory-class="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
             id="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory">
       </node>
       <node
             after="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
-            category-path="/mining/meta-mining/crossvalidation"
+            category-path="/mining/meta-mining/utility/crossvalidation"
             factory-class="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory"
             id="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory">
       </node>
@@ -1134,25 +1140,25 @@
             id="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory">
       </node>
       <node
-            category-path="/mining/meta-mining/features"
+            category-path="/mining/meta-mining/utility/features"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
-            category-path="/mining/meta-mining/features"
+            category-path="/mining/meta-mining/utility/features"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory"
-            category-path="/mining/meta-mining/features"
+            category-path="/mining/meta-mining/utility/features"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory"
-            category-path="/mining/meta-mining/features"
+            category-path="/mining/meta-mining/utility/features"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory">
       </node>
@@ -1624,12 +1630,21 @@
       
    <extension point="org.knime.workbench.repository.metanode">
        <PersistedMetaNode
-             category-path="/meta"
+             category-path="/mining/meta-mining"
              description="Provides a skeleton of nodes necessary for cross validation"
              icon="icons/meta_nodes/cross_validation_flow.png"
              id="cross_validation"
              name="X-Validation"
              workflowDir="metanode_templates/Cross Validation/">
+       </PersistedMetaNode>
+       <PersistedMetaNode
+             category-path="/mining/meta-mining"
+             description="Backward Feature Elimination"
+             icon="icons/meta_nodes/feature_elimination_flow.png"
+             id="feature_elimination"
+             name="Feature Elimination"
+             after="cross_validation"
+             workflowDir="metanode_templates/Feature Elimination/">
        </PersistedMetaNode>
        <PersistedMetaNode
              category-path="/meta"
@@ -1643,15 +1658,8 @@
              icon="icons/meta_nodes/variables_looper_db_flow.png"
              id="variables_loop_db"
              name="Variables Loop (Database)"
+             after="variables_loop"
              workflowDir="metanode_templates/Variables Loop (Database)/">
-       </PersistedMetaNode>
-       <PersistedMetaNode
-             category-path="/meta"
-             description="Backward Feature Elimination"
-             icon="icons/meta_nodes/feature_elimination_flow.png"
-             id="feature_elimination"
-             name="Feature Elimination"
-             workflowDir="metanode_templates/Feature Elimination/">
        </PersistedMetaNode>
        <PersistedMetaNode
              category-path="/meta"
@@ -1659,9 +1667,17 @@
              icon="icons/meta_nodes/looping_file_reader_flow.png"
              id="iterate_list_of_files"
              name="Iterate List of Files"
+             after="variables_loop_db"
              workflowDir="metanode_templates/Iterate list of files/">
        </PersistedMetaNode>
-       <PersistedMetaNode category-path="/meta" description="Executes the contained workflow multiple times. Aggregation method and termination criteration must be set using the loop start and end node contained in the workflow." icon="icons/meta_nodes/loop_x_times_flow.png" id="looper" name="Loop x-times" workflowDir="metanode_templates/Looper/">
+       <PersistedMetaNode 
+            category-path="/meta" 
+            description="Executes the contained workflow multiple times. Aggregation method and termination criteration must be set using the loop start and end node contained in the workflow." 
+            icon="icons/meta_nodes/loop_x_times_flow.png" 
+            id="looper" 
+            name="Loop x-times" 
+             after="iterate_list_of_files"
+            workflowDir="metanode_templates/Looper/">
        </PersistedMetaNode>
     </extension>
      <extension
