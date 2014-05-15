@@ -77,6 +77,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.ProgressAdapter;
 import org.eclipse.swt.browser.ProgressEvent;
+import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -106,10 +107,10 @@ import org.knime.core.node.workflow.WizardExecutionController;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.FileUtil;
 
-/** Standard implementation for interactive views which are launched on the client side via
- * an integrated browser. They only have indirect access to the NodeModel via get and
- * setViewContent methods and therefore simulate the behavior of the same view in the
- * WebPortal.
+/**
+ * Standard implementation for interactive views which are launched on the client side via an integrated browser. They
+ * only have indirect access to the NodeModel via get and setViewContent methods and therefore simulate the behavior of
+ * the same view in the WebPortal.
  *
  * @author B. Wiswedel, M. Berthold, Th. Gabriel, C. Albrecht
  * @param <T> requires a {@link NodeModel} implementing {@link WizardNode} as well
@@ -117,17 +118,19 @@ import org.knime.core.util.FileUtil;
  * @param <VAL>
  * @since 2.9
  */
-public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, REP extends WebViewContent,
-        VAL extends WebViewContent> extends AbstractNodeView<T> implements InteractiveView<T, REP, VAL> {
+public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, REP extends WebViewContent, VAL extends WebViewContent>
+    extends AbstractNodeView<T> implements InteractiveView<T, REP, VAL> {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WizardNodeView.class);
 
     private static File tempFolder;
 
     private final InteractiveViewDelegate<VAL> m_delegate;
+    private Browser m_browser;
     private final WebTemplate m_template;
     private File m_tempIndexFile;
     private String m_title;
+    private ProgressListener m_completedListener;
 
     /**
      * @param nodeModel the underlying model
@@ -168,7 +171,8 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         triggerReExecution(value, new DefaultReexecutionCallback());
     }
 
-    /** Set current ViewContent as new default settings of the underlying NodeModel.
+    /**
+     * Set current ViewContent as new default settings of the underlying NodeModel.
      */
     protected final void makeViewContentNewDefault() {
         m_delegate.setNewDefaultConfiguration(new DefaultConfigureCallback());
@@ -179,7 +183,45 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
      */
     @Override
     public void modelChanged() {
-        // TODO Auto-generated method stub
+        Display display = Display.getCurrent();
+        if (display == null && m_browser != null && !m_browser.isDisposed()) {
+            display = m_browser.getDisplay();
+        }
+        // view most likely disposed
+        if (display == null) {
+            return;
+        }
+        display.asyncExec(new Runnable() {
+
+            @Override
+            public void run() {
+                if (m_browser != null && !m_browser.isDisposed()) {
+                    synchronized (m_browser) {
+                        final String jsonViewRepresentation = getViewRepresentationFromModel();
+                        final String jsonViewValue = getViewValueFromModel();
+                        try {
+                            if (m_completedListener != null) {
+                                m_browser.removeProgressListener(m_completedListener);
+                            }
+                            m_completedListener = new ProgressAdapter() {
+                                @Override
+                                public void completed(final ProgressEvent event) {
+                                    m_browser
+                                        .evaluate(wrapInTryCatch(initJSView(jsonViewRepresentation, jsonViewValue)));
+                                }
+                            };
+                            m_browser.addProgressListener(m_completedListener);
+                            m_browser.setUrl(createWebResources());
+                        } catch (IOException e) {
+                            if (m_tempIndexFile != null) {
+                                deleteTempFile(m_tempIndexFile);
+                            }
+                            m_browser.setText(createErrorHTML(e));
+                        }
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -188,24 +230,8 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     @Override
     public final void callOpenView(final String title) {
         m_title = (title == null ? "View" : title);
-        final String jsonViewRepresentation;
-        final String jsonViewValue;
-        try {
-            REP rep = getNodeModel().getViewRepresentation();
-            if (rep != null) {
-                jsonViewRepresentation = ((ByteArrayOutputStream)rep.saveToStream()).toString("UTF-8");
-            } else {
-                jsonViewRepresentation = "null";
-            }
-            VAL val = getNodeModel().getViewValue();
-            if (val != null) {
-                jsonViewValue = ((ByteArrayOutputStream)val.saveToStream()).toString("UTF-8");
-            } else {
-                jsonViewValue = "null";
-            }
-        } catch (Exception e) {
-            throw new IllegalArgumentException("No view content available!");
-        }
+        final String jsonViewRepresentation = getViewRepresentationFromModel();
+        final String jsonViewValue = getViewValueFromModel();
 
         Display display = Display.getCurrent();
         final Shell shell = new Shell(display);
@@ -217,8 +243,8 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         layout.numColumns = 1;
         shell.setLayout(layout);
 
-        final Browser browser = new Browser(shell, SWT.NONE);
-        browser.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
+        m_browser = new Browser(shell, SWT.NONE);
+        m_browser.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 
         Composite buttonComposite = new Composite(shell, SWT.NONE);
         buttonComposite.setLayoutData(new GridData(GridData.END, GridData.END, false, false));
@@ -235,7 +261,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         applyButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                applyTriggered(browser);
+                applyTriggered(m_browser);
             }
         });
 
@@ -253,20 +279,21 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
             }
         });
 
-        browser.addProgressListener(new ProgressAdapter() {
+        m_completedListener = new ProgressAdapter() {
             @Override
             public void completed(final ProgressEvent event) {
-                browser.evaluate(wrapInTryCatch(initJSView(jsonViewRepresentation, jsonViewValue)));
+                m_browser.evaluate(wrapInTryCatch(initJSView(jsonViewRepresentation, jsonViewValue)));
             }
-        });
+        };
+        m_browser.addProgressListener(m_completedListener);
 
         try {
-            browser.setUrl(createWebResources());
+            m_browser.setUrl(createWebResources());
         } catch (IOException e) {
             if (m_tempIndexFile != null) {
                 deleteTempFile(m_tempIndexFile);
             }
-            browser.setText(createErrorHTML(e));
+            m_browser.setText(createErrorHTML(e));
         }
 
         shell.setSize(800, 600);
@@ -277,6 +304,33 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
             }
         });
         shell.open();
+    }
+
+    private String getViewRepresentationFromModel() {
+        try {
+            REP rep = getNodeModel().getViewRepresentation();
+            if (rep != null) {
+                return ((ByteArrayOutputStream)rep.saveToStream()).toString("UTF-8");
+            } else {
+                return "null";
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("No view representation available!");
+        }
+
+    }
+
+    private String getViewValueFromModel() {
+        try {
+            VAL val = getNodeModel().getViewValue();
+            if (val != null) {
+                return ((ByteArrayOutputStream)val.saveToStream()).toString("UTF-8");
+            } else {
+                return "null";
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("No view value available!");
+        }
     }
 
     /**
@@ -302,9 +356,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
      * @return
      */
     private String createWebResources() throws IOException {
-        if (tempFolder == null
-                || !tempFolder.exists()
-                || !tempFolder.isDirectory()) {
+        if (tempFolder == null || !tempFolder.exists() || !tempFolder.isDirectory()) {
             tempFolder = FileUtil.createTempDir("knimeViewContainer", null, true);
             try {
                 copyWebResources();
@@ -396,10 +448,15 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     }
 
     private static final String ID_WEB_RES = "org.knime.js.core.webResources";
+
     private static final String ELEM_BUNDLE = "webResourceBundle";
+
     private static final String ELEM_RES = "webResource";
+
     private static final String ATTR_BUNDLE_ID = "webResourceBundleID";
+
     private static final String ATTR_SOURCE = "relativePathSource";
+
     private static final String ATTR_TARGET = "relativePathTarget";
 
     private Map<File, String> getAllWebResources() throws IOException {
