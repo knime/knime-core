@@ -120,6 +120,7 @@
             name="Decision Tree"
             path="/mining"/>
       <category
+            after="featureselection"
             icon="icons/missing.gif"
             level-id="modeleval"
             name="Scoring"
@@ -147,12 +148,6 @@
             name="Matrix"
             path="/manipulation"/>
       <category
-            description="meta nodes"
-            icon="icons/16x16/meta.png"
-            level-id="meta"
-            name="Meta Nodes"
-            path="/"/>
-      <category
             after="dtree"
             description="miscellaneous classifiers"
             icon="icons/missing.gif"
@@ -176,28 +171,34 @@
             path="/mining">
       </category>
       <category
-            after="crossvalidation"
-            icon="icons/16x16/category_feature_elimination.png"
-            level-id="features"
+            after="svm"
+            icon="icons/missing.gif"
+            level-id="featureselection"
             name="Feature Selection"
-            path="/mining/meta-mining/utility">
+            path="/mining">
       </category>
       <category
-            description="nodes for manual assembly of loops"
-            icon="icons/16x16/category_loop_support.png"
-            level-id="loopsupport"
-            name="Loop Support"
-            path="/flowcontrol/">
+            icon="icons/16x16/meta.png"
+            level-id="meta"
+            name="Meta Nodes"
+            path="/mining/featureselection">
       </category>
       <category
             description="Nodes necessary for cross validation"
             icon="icons/16x16/category_cross_validation.png"
             level-id="crossvalidation"
             name="Cross Validation"
-            path="/mining/meta-mining/utility">
+            path="/mining/modeleval">
       </category>
       <category
-            after="meta"
+            description="Meta Nodes for Model Evaluation"
+            icon="icons/16x16/meta.png"
+            level-id="meta"
+            name="Meta Nodes"
+            path="/mining/modeleval">
+      </category>
+      <category
+            after="mining"
             description="miscellaneous nodes"
             icon="icons/16x16/category_misc.png"
             level-id="misc"
@@ -265,32 +266,12 @@
             path="/mining">
       </category>
       <category
-            after="meta"
+            after="misc"
             description="nodes for loops, switches and other flow control operations"
             icon="icons/16x16/flow_control.png"
             level-id="flowcontrol"
             name="Flow Control"
             path="/">
-      </category>
-      <category
-            description="Nodes for If/Case switch handling"
-            icon="icons/16x16/switches.png"
-            level-id="switches"
-            name="Switches"
-            path="/flowcontrol">
-      </category>
-      <category
-            after="modeleval"
-            icon="icons/missing.gif"
-            level-id="meta-mining"
-            name="Meta Nodes &amp; Loops"
-            path="/mining">
-      </category>
-      <category
-            icon="icons/missing.gif"
-            level-id="utility"
-            name="Utility Nodes"
-            path="/mining/meta-mining">
       </category>
       <category
             icon="icons/16x16/variables.png"
@@ -299,9 +280,34 @@
             path="/flowcontrol">
       </category>
       <category
+            after="variables"
+            description="nodes for manual assembly of loops"
+            icon="icons/16x16/category_loop_support.png"
+            level-id="loopsupport"
+            name="Loop Support"
+            path="/flowcontrol/">
+      </category>
+      <category
+            after="loopsupport"
+            description="Nodes for If/Case switch handling"
+            icon="icons/16x16/switches.png"
+            level-id="switches"
+            name="Switches"
+            path="/flowcontrol">
+      </category>
+      <category
+            after="switches"
             icon="icons/16x16/trycatch.png"
             level-id="trycatch"
             name="Error Handling"
+            path="/flowcontrol">
+      </category>
+      <category
+            after="trycatch"
+            description="General purpose meta nodes"
+            icon="icons/16x16/meta.png"
+            level-id="meta"
+            name="Meta Nodes"
             path="/flowcontrol">
       </category>
       <category
@@ -406,11 +412,6 @@
             category-path="/view"
             factory-class="org.knime.base.node.viz.table.TableNodeFactory"
             id="org.knime.base.node.viz.table.TableNodeFactory">
-      </node>
-      <node
-            category-path="/mining/modeleval"
-            factory-class="org.knime.base.node.mine.scorer.accuracy.AccuracyScorerNodeFactory"
-            id="org.knime.base.node.mine.scorer.scorer.AccuracyScorerNodeFactory">
       </node>
       <node
             category-path="/manipulation/column/binning"
@@ -685,10 +686,6 @@
              id="org.knime.base.node.mine.regression.linear2.predict.GeneralRegressionPredictorNodeFactory"
              after="org.knime.base.node.mine.regression.logistic.learner.LogRegLearnerNodeFactory"/> 
 	    <node
-	          category-path="/mining/modeleval"
-	          factory-class="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"
-	          id="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"/>
-	    <node
 	          after="org.knime.base.node.io.arffreader.ARFFReaderNodeFactory"
 	          category-path="/io/read"
 	          factory-class="org.knime.base.node.io.table.read.ReadTableNodeFactory"
@@ -813,14 +810,19 @@
             factory-class="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"
             id="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"/>
       <node
+            category-path="/mining/featureselection"
+            factory-class="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"
+            id="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"/>
+      <node
             after="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"
-            category-path="/statistics"
+            category-path="/mining/featureselection"
             factory-class="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"
             id="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"/>
       <node
-            category-path="/manipulation/column/column-filter"
+            category-path="/mining/featureselection"
             factory-class="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory"
-            id="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory"/>
+            id="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory"
+            after="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"/>
       <node
             category-path="/mining/mds"
             factory-class="org.knime.base.node.mine.mds.MDSNodeFactory"
@@ -829,10 +831,6 @@
             category-path="/mining/mds"
             factory-class="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"
             id="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionNodeFactory"/>
-      <node
-            category-path="/mining/modeleval"
-            factory-class="org.knime.base.node.viz.enrichment.EnrichmentPlotterFactory"
-            id="org.knime.chem.node.viz.enrich.EnrichmentPlotterFactory"/>
       <node
             category-path="/mining/svm"
             factory-class="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory"
@@ -933,13 +931,30 @@
       </node>
       <node
             category-path="/mining/modeleval"
-            factory-class="org.knime.base.node.viz.roc.ROCNodeFactory"
-            id="org.knime.base.node.viz.roc.ROCNodeFactory">
+            factory-class="org.knime.base.node.mine.scorer.accuracy.AccuracyScorerNodeFactory"
+            id="org.knime.base.node.mine.scorer.accuracy.AccuracyScorerNodeFactory">
       </node>
       <node
             category-path="/mining/modeleval"
             factory-class="org.knime.base.node.mine.scorer.numeric.NumericScorerNodeFactory"
-            id="org.knime.base.node.mine.scorer.numeric.NumericScorerNodeFactory"/>      
+            id="org.knime.base.node.mine.scorer.numeric.NumericScorerNodeFactory"
+            after="org.knime.base.node.mine.scorer.accuracy.AccuracyScorerNodeFactory"/>
+      <node
+            after="org.knime.base.node.mine.scorer.numeric.NumericScorerNodeFactory"
+            category-path="/mining/modeleval"
+            factory-class="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"
+            id="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"/>
+      <node
+            after="org.knime.base.node.mine.scorer.entrop.NewEntropyNodeFactory"
+            category-path="/mining/modeleval"
+            factory-class="org.knime.base.node.viz.roc.ROCNodeFactory"
+            id="org.knime.base.node.viz.roc.ROCNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.viz.roc.ROCNodeFactory"
+            category-path="/mining/modeleval"
+            factory-class="org.knime.base.node.viz.enrichment.EnrichmentPlotterFactory"
+            id="org.knime.chem.node.viz.enrich.EnrichmentPlotterFactory"/>
        <node
             category-path="/database"
             factory-class="org.knime.base.node.io.database.DBReaderNodeFactory"
@@ -1076,13 +1091,13 @@
             id="org.knime.base.node.preproc.setoperator.SetOperatorNodeFactory">
       </node>
       <node
-            category-path="/mining/meta-mining/utility/crossvalidation"
+            category-path="/mining/modeleval/crossvalidation"
             factory-class="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
             id="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory">
       </node>
       <node
             after="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
-            category-path="/mining/meta-mining/utility/crossvalidation"
+            category-path="/mining/modeleval/crossvalidation"
             factory-class="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory"
             id="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory">
       </node>
@@ -1140,25 +1155,26 @@
             id="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory">
       </node>
       <node
-            category-path="/mining/meta-mining/utility/features"
+            category-path="/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
-            id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory">
+            id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
+            after="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart1NodeFactory"
-            category-path="/mining/meta-mining/utility/features"
+            category-path="/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopStart2NodeFactory"
-            category-path="/mining/meta-mining/utility/features"
+            category-path="/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory">
       </node>
       <node
             after="org.knime.base.node.meta.feature.backwardelim.BWElimLoopEndNodeFactory"
-            category-path="/mining/meta-mining/utility/features"
+            category-path="/mining/featureselection"
             factory-class="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory"
             id="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory">
       </node>
@@ -1630,7 +1646,7 @@
       
    <extension point="org.knime.workbench.repository.metanode">
        <PersistedMetaNode
-             category-path="/mining/meta-mining"
+             category-path="/mining/modeleval/meta"
              description="Provides a skeleton of nodes necessary for cross validation"
              icon="icons/meta_nodes/cross_validation_flow.png"
              id="cross_validation"
@@ -1638,23 +1654,22 @@
              workflowDir="metanode_templates/Cross Validation/">
        </PersistedMetaNode>
        <PersistedMetaNode
-             category-path="/mining/meta-mining"
+             category-path="/mining/featureselection/meta"
              description="Backward Feature Elimination"
              icon="icons/meta_nodes/feature_elimination_flow.png"
              id="feature_elimination"
              name="Feature Elimination"
-             after="cross_validation"
              workflowDir="metanode_templates/Feature Elimination/">
        </PersistedMetaNode>
        <PersistedMetaNode
-             category-path="/meta"
+             category-path="/flowcontrol/meta"
              icon="icons/meta_nodes/variables_looper_flow.png"
              id="variables_loop"
              name="Variables Loop (Data)"
              workflowDir="metanode_templates/Variables Loop (Data)/">
        </PersistedMetaNode>
        <PersistedMetaNode
-             category-path="/meta"
+             category-path="/flowcontrol/meta"
              icon="icons/meta_nodes/variables_looper_db_flow.png"
              id="variables_loop_db"
              name="Variables Loop (Database)"
@@ -1662,7 +1677,7 @@
              workflowDir="metanode_templates/Variables Loop (Database)/">
        </PersistedMetaNode>
        <PersistedMetaNode
-             category-path="/meta"
+             category-path="/flowcontrol/meta"
              description="Iteratively executes the contained flow on a list of files. The list of files needs to be defined by the input table, whereby each row represents one individual file location."
              icon="icons/meta_nodes/looping_file_reader_flow.png"
              id="iterate_list_of_files"
@@ -1671,7 +1686,7 @@
              workflowDir="metanode_templates/Iterate list of files/">
        </PersistedMetaNode>
        <PersistedMetaNode 
-            category-path="/meta" 
+            category-path="/flowcontrol/meta" 
             description="Executes the contained workflow multiple times. Aggregation method and termination criteration must be set using the loop start and end node contained in the workflow." 
             icon="icons/meta_nodes/loop_x_times_flow.png" 
             id="looper" 
