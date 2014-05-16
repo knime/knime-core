@@ -81,7 +81,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory;
+import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectInNodeFactory;
 
 /**
  *
@@ -111,7 +111,7 @@ public class TableSorterTest {
     @Before
     public void setUp() throws Exception {
         NodeFactory<NodeModel> dummyFactory =
-            (NodeFactory)new VirtualPortObjectInNodeFactory(new PortType[0]);
+            (NodeFactory)new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0]);
         m_exec = new ExecutionContext(
                 new DefaultNodeProgressMonitor(),
                 new Node(dummyFactory),
