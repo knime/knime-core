@@ -63,7 +63,7 @@
    <extension
          point="org.knime.workbench.repository.categories">
       <category
-            after="meta"
+            after="mining"
             description="Time Series Utilities"
             icon="icons/category_time.png"
             level-id="timeseries"
@@ -71,7 +71,7 @@
             path="/"/>
       <category
             description="Meta Nodes for time series analysis"
-            icon="icons/category_time.png"
+            icon="icons/metanode.png"
             level-id="meta"
             locked="true"
             name="Meta Nodes"
