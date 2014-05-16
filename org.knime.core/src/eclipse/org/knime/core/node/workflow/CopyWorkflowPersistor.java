@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -67,7 +67,6 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  * @author Bernd Wiswedel, University of Konstanz
@@ -338,6 +337,11 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     @Override
     public InputStream decipherInput(final InputStream input) {
         throw new IllegalStateException("Method not to be called");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
     }
 
     /** {@inheritDoc} */

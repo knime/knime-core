@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -86,14 +86,15 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectHolder;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
+final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel implements PortObjectHolder {
 
     /** The file name where to write the internals to. */
     private static final String INTERNAL_DATASAMPLE_FILE = "datasample.zip";
@@ -104,7 +105,10 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
     /** The file name where to write the internals to. */
     private static final String INTERNAL_INFO_FILE = "info.xml";
 
-    private TreeEnsembleModel m_ensembleModel;
+    private TreeEnsembleModelPortObject m_ensembleModelPortObject;
+
+    /** Field assigned if we load a workflow older than 2.10 in which the model was saved as part of the internals. */
+    private TreeEnsembleModel m_oldStyleEnsembleModel_deprecated;
 
     private DataTable m_hiliteRowSample;
 
@@ -222,7 +226,7 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
         ColumnRearranger outOfBagRearranger = outOfBagPredictor.getPredictionRearranger();
         BufferedDataTable outOfBagTable = exec.createColumnRearrangeTable(t, outOfBagRearranger, outOfBagExec);
         BufferedDataTable colStatsTable = learner.createColumnStatisticTable(exec.createSubExecutionContext(0.0));
-        m_ensembleModel = model;
+        m_ensembleModelPortObject = modelPortObject;
         if (warn != null) {
             setWarningMessage(warn);
         }
@@ -232,7 +236,8 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void reset() {
-        m_ensembleModel = null;
+        m_ensembleModelPortObject = null;
+        m_oldStyleEnsembleModel_deprecated = null;
         m_viewMessage = null;
         m_hiliteRowSample = null;
     }
@@ -264,9 +269,14 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException {
         File file = new File(nodeInternDir, INTERNAL_TREES_FILE);
-        InputStream in = new GZIPInputStream(new FileInputStream(file));
-        m_ensembleModel = TreeEnsembleModel.load(in, exec);
-        in.close();
+        if (file.exists()) {
+            getLogger().info(
+                "Node was executed with KNIME version <2.10 - keep using old model type, re-execute node to update");
+            // workflow is older than 2.10
+            InputStream in = new GZIPInputStream(new FileInputStream(file));
+            m_oldStyleEnsembleModel_deprecated = TreeEnsembleModel.load(in, exec);
+            in.close();
+        }
 
         file = new File(nodeInternDir, INTERNAL_DATASAMPLE_FILE);
         if (file.exists()) {
@@ -283,11 +293,16 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException {
-        File file = new File(nodeInternDir, INTERNAL_TREES_FILE);
-        OutputStream out = new GZIPOutputStream(new FileOutputStream(file));
-        ExecutionMonitor sub = exec.createSubProgress(0.2);
-        m_ensembleModel.save(out, sub);
-        out.close();
+        File file;
+        ExecutionMonitor sub;
+        if (m_oldStyleEnsembleModel_deprecated != null) {
+            // old workflow (<2.10) loaded and saved ...
+            file = new File(nodeInternDir, INTERNAL_TREES_FILE);
+            OutputStream out = new GZIPOutputStream(new FileOutputStream(file));
+            sub = exec.createSubProgress(0.2);
+            m_oldStyleEnsembleModel_deprecated.save(out, sub);
+            out.close();
+        }
         if (m_hiliteRowSample != null) {
             file = new File(nodeInternDir, INTERNAL_DATASAMPLE_FILE);
             sub = exec.createSubProgress(0.2);
@@ -301,9 +316,26 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
         }
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public PortObject[] getInternalPortObjects() {
+        return new PortObject[] {m_ensembleModelPortObject};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setInternalPortObjects(final PortObject[] portObjects) {
+        m_ensembleModelPortObject = (TreeEnsembleModelPortObject)portObjects[0];
+    }
+
     /** @return the ensembleModel */
     public TreeEnsembleModel getEnsembleModel() {
-        return m_ensembleModel;
+        if (m_oldStyleEnsembleModel_deprecated != null) {
+            return m_oldStyleEnsembleModel_deprecated;
+        }
+        return m_ensembleModelPortObject == null ? null : m_ensembleModelPortObject.getEnsembleModel();
     }
 
     /** @return the hiliteRowSample */

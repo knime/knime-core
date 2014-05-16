@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -68,7 +68,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  * Persistor that is used to represent, for instance the clipboard content.
@@ -300,6 +299,11 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
             throws InvalidSettingsException, CanceledExecutionException,
             IOException {
         throwUnsupportedOperationException();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
     }
 
     /** {@inheritDoc} */

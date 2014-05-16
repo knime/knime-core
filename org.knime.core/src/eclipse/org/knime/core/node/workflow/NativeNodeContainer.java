@@ -90,6 +90,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.PortObject;
@@ -377,6 +378,109 @@ public class NativeNodeContainer extends SingleNodeContainer {
     }
 
     /* ---------------- Configuration/Execution ----------------- */
+
+    /** {@inheritDoc} */
+    @Override
+    boolean performStateTransitionPREEXECUTE() {
+        synchronized (m_nodeMutex) {
+            getProgressMonitor().reset();
+            switch (getInternalState()) {
+            case EXECUTED_QUEUED:
+            case CONFIGURED_QUEUED:
+                setInternalState(InternalNodeContainerState.PREEXECUTE);
+                return true;
+            default:
+                // ignore any other state: other states indicate that the node
+                // was canceled before it is actually run
+                // (this method is called from a worker thread, whereas cancel
+                // typically from the UI thread)
+                if (!Thread.currentThread().isInterrupted()) {
+                    LOGGER.debug("Execution of node " + getNameWithID()
+                            + " was probably canceled (node is " + getInternalState()
+                            + " during 'preexecute') but calling thread is not"
+                            + " interrupted");
+                }
+                return false;
+            }
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void performStateTransitionEXECUTING() {
+        synchronized (m_nodeMutex) {
+            switch (getInternalState()) {
+            case PREEXECUTE:
+                this.getNode().clearLoopContext();
+                if (findJobManager() instanceof ThreadNodeExecutionJobManager) {
+                    setInternalState(InternalNodeContainerState.EXECUTING);
+                } else {
+                    setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
+                }
+                break;
+            default:
+                throwIllegalStateException();
+            }
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void performStateTransitionPOSTEXECUTE() {
+        synchronized (m_nodeMutex) {
+            switch (getInternalState()) {
+            case PREEXECUTE: // in case of errors, e.g. flow stack problems
+                             // encountered during doBeforeExecution
+            case EXECUTING:
+            case EXECUTINGREMOTELY:
+                setInternalState(InternalNodeContainerState.POSTEXECUTE);
+                break;
+            default:
+                throwIllegalStateException();
+            }
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void performStateTransitionEXECUTED(
+            final NodeContainerExecutionStatus status) {
+        synchronized (m_nodeMutex) {
+            switch (getInternalState()) {
+            case POSTEXECUTE:
+                closeFileStoreHandlerAfterExecute(status.isSuccess());
+                if (status.isSuccess()) {
+                    if (this.getNode().getLoopContext() != null) {
+                        // loop not yet done - "stay" configured until done.
+                        assert this.getLoopStatus().equals(LoopStatus.RUNNING);
+                        setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
+                    } else {
+                        setInternalState(InternalNodeContainerState.EXECUTED);
+                        setExecutionEnvironment(null);
+                    }
+                } else {
+                    // node will be configured in doAfterExecute.
+                    // for now we assume complete failure and clean up (reset)
+                    // We do keep the message, though.
+                    NodeMessage oldMessage = getNodeMessage();
+                    NodeContext.pushContext(this);
+                    try {
+                        performReset();
+                    } finally {
+                        NodeContext.removeLastContext();
+                    }
+                    this.clearFileStoreHandler();
+                    setNodeMessage(oldMessage);
+                    setInternalState(InternalNodeContainerState.IDLE);
+                    setExecutionEnvironment(null);
+                }
+                setExecutionJob(null);
+                break;
+            default:
+                throwIllegalStateException();
+            }
+        }
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -817,16 +921,14 @@ public class NativeNodeContainer extends SingleNodeContainer {
     }
 
 
-    /** Get the tables that are kept by the underlying node. The return value
-     * is null if (a) the underlying node is not a
-     * {@link org.knime.core.node.BufferedDataTableHolder} or (b) the node
-     * is not executed.
+    /** Get the tables/portobjects kept by the underlying node. The return value is null if (a) the underlying node is
+     * not a {@link org.knime.core.node.BufferedDataTableHolder} or {@link org.knime.core.node.port.PortObjectHolder}
+     * or (b) the node is not executed.
      * @return The internally held tables.
-     * @see org.knime.core.node.BufferedDataTableHolder
-     * @see Node#getInternalHeldTables()
+     * @see Node#getInternalHeldPortObjects()
      */
-    public BufferedDataTable[] getInternalHeldTables() {
-        return getNode().getInternalHeldTables();
+    public PortObject[] getInternalHeldPortObjects() {
+        return getNode().getInternalHeldPortObjects();
     }
 
     /**

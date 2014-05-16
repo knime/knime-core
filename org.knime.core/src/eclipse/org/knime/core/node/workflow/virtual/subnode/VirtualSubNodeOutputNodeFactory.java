@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,134 +40,102 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  * History
- *   Aug 13, 2009 (wiswedel): created
+ *   Mar 30, 2011 (wiswedel): created
  */
-package org.knime.core.node;
+package org.knime.core.node.workflow.virtual.subnode;
 
-import org.knime.core.data.filestore.internal.IFileStoreHandler;
-import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.DynamicNodeFactory;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDescription;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.port.PortType;
 
-/**
- * A persistor cloning a node's settings. It does not retain port objects or
- * node internals. Used by copy&paste and undo.
- *
- * @author Bernd Wiswedel, University of Konstanz
+/** Factory to virtual subnode output node.
+ * <p>No API.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class CopyNodePersistor implements NodePersistor {
+public class VirtualSubNodeOutputNodeFactory extends DynamicNodeFactory<VirtualSubNodeOutputNodeModel> {
 
-    /** Apply the settings to the new node.
-     * @param node the node just created.
-     */
-    public void loadInto(final Node node) {
-        try {
-            node.load(this, new ExecutionMonitor(), new LoadResult("ignored"));
-        } catch (CanceledExecutionException e) {
-            // ignored, can't happen
+    private PortType[] m_inTypes;
+
+    /** Serialization constructor. */
+    public VirtualSubNodeOutputNodeFactory() {
+    }
+
+    /** @param inTypes subnode input port types. */
+    public VirtualSubNodeOutputNodeFactory(final PortType[] inTypes) {
+        if (inTypes == null) {
+            throw new NullPointerException(
+                    "Port type array argument must not be null");
         }
+        m_inTypes = inTypes;
+        init();
     }
 
     /** {@inheritDoc} */
     @Override
-    public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
-        return LoadNodeModelSettingsFailPolicy.IGNORE;
+    protected NodeDescription createNodeDescription() {
+        return super.parseNodeDescriptionFromFile();
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean isConfigured() {
-        return false;
+    public VirtualSubNodeOutputNodeModel createNodeModel() {
+        return new VirtualSubNodeOutputNodeModel(m_inTypes);
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean isDirtyAfterLoad() {
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeView<VirtualSubNodeOutputNodeModel> createNodeView(
+        final int viewIndex,
+        final VirtualSubNodeOutputNodeModel nodeModel) {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean hasDialog() {
         return true;
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean isExecuted() {
-        return false;
+    protected NodeDialogPane createNodeDialogPane() {
+        return new VirtualSubNodeOutputNodeDialogPane(m_inTypes.length);
     }
 
     /** {@inheritDoc} */
     @Override
-    public void setDirtyAfterLoad() {
+    public void loadAdditionalFactorySettings(final ConfigRO config) throws InvalidSettingsException {
+        super.loadAdditionalFactorySettings(config);
+        m_inTypes = VirtualSubNodeInputNodeFactory.loadPortTypeList(config);
     }
 
     /** {@inheritDoc} */
     @Override
-    public PortObject[] getInternalHeldPortObjects() {
-        return null;
+    public void saveAdditionalFactorySettings(final ConfigWO config) {
+        super.saveAdditionalFactorySettings(config);
+        VirtualSubNodeInputNodeFactory.savePortTypeList(m_inTypes, config);
     }
 
     /** {@inheritDoc} */
     @Override
-    public ReferencedFile getNodeInternDirectory() {
-        return null;
+    public org.knime.core.node.NodeFactory.NodeType getType() {
+        return NodeType.VirtualOut;
     }
-
-    /** {@inheritDoc} */
-    @Override
-    public PortObject getPortObject(final int outportIndex) {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public PortObjectSpec getPortObjectSpec(final int outportIndex) {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String getPortObjectSummary(final int outportIndex) {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String getWarningMessage() {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean hasContent() {
-        return false;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean mustWarnOnDataLoadError() {
-        return false;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean needsResetAfterLoad() {
-        return true;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void setNeedsResetAfterLoad() {
-    }
-
-    /** {@inheritDoc}
-     * @since 2.6*/
-    @Override
-    public IFileStoreHandler getFileStoreHandler() {
-        return null;
-    }
-
 }

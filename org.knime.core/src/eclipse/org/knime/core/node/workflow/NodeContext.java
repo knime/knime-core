@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -104,17 +104,19 @@ public final class NodeContext {
      * @return the workflow manager associated with the current node or <code>null</code>
      */
     public WorkflowManager getWorkflowManager() {
-        NodeContainer cont = getNodeContainer();
-        if (cont == null) {
+        NodeContainer nc = getNodeContainer();
+        if (nc == null) {
             return null;
         }
 
         // find the actual workflow and not the meta node the container may be in
-        WorkflowManager manager = (cont instanceof WorkflowManager) ? (WorkflowManager)cont : cont.getParent();
-        while (!manager.isProject()) {
-            manager = manager.getParent();
+        NodeContainerParent parent = nc instanceof WorkflowManager ? (WorkflowManager)nc : nc.getDirectNCParent();
+
+        while (!(parent instanceof WorkflowManager && ((WorkflowManager)parent).isProject())) {
+            assert parent != null : "Parent item can't be null as a project parent is expected";
+            parent = parent.getDirectNCParent();
         }
-        return manager;
+        return (WorkflowManager)parent;
     }
 
     /**

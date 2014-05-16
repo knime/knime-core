@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -494,6 +494,20 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             }
         }
 
+        // for sub node refresh all tooltips
+        if (getNodeContainer() instanceof SubNodeContainer) {
+            for (Object part : getChildren()) {
+                if (part instanceof NodeInPortEditPart) {
+                    NodeInPortEditPart inPortPart = (NodeInPortEditPart)part;
+                    inPortPart.rebuildTooltip();
+                }
+                if (part instanceof NodeOutPortEditPart) {
+                    NodeOutPortEditPart outPortPart = (NodeOutPortEditPart)part;
+                    outPortPart.rebuildTooltip();
+                }
+            }
+        }
+
         // always refresh visuals
         refreshVisuals();
 
@@ -703,6 +717,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     public void openDialog() {
         NodeContainer container = (NodeContainer)getModel();
         if (container instanceof WorkflowManager) {
+            openSubWorkflowEditor();
+        } else if (container instanceof SubNodeContainer) {
             openSubWorkflowEditor();
         } else {
             openNodeDialog();

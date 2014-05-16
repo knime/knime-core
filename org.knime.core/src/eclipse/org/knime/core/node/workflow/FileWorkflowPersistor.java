@@ -135,9 +135,12 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
             /** node.xml and settings.xml are one file, settings in SNC, meta data in workflow.knime.
              * @since 2.8 */
             V280("2.8.0"),
-            /** subnode support.
+            /** basic subnode support, never released (trunk code between 2.9 and 2.10).
              * @since 2.10 */
             V2100Pre("2.10.0Pre"),
+            /** better subnode support, PortObjectHolder, FileStorePortObject w/ array file stores.
+             * @since 2.10 */
+            V2100("2.10.0"),
             /** Try to be forward compatible.
              * @since 2.8 */
             FUTURE("<future>");
@@ -198,7 +201,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         }
     }
 
-    static final LoadVersion VERSION_LATEST = LoadVersion.V2100Pre;
+    static final LoadVersion VERSION_LATEST = LoadVersion.V2100;
 
     /** Format used to save author/edit infos. */
     static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
@@ -882,7 +885,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         ReferencedFile workflowKNIMEFile = getWorkflowKNIMEFile();
         if (workflowKNIMEFile == null || m_workflowSett == null) {
             setDirtyAfterLoad();
-            throw new IllegalStateException("The method preLoadNodeContainer " + "has either not been called or failed");
+            throw new IllegalStateException("The method preLoadNodeContainer has either not been called or failed");
         }
         /* read nodes */
         NodeSettingsRO nodes;
@@ -1804,6 +1807,12 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
 //        return new File(workflowDir, SAVED_WITH_DATA_FILE).isFile();
     }
 
+
+    /** {@inheritDoc} */
+    @Override
+    public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
+    }
+
     FileSingleNodeContainerPersistor createNativeNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new FileNativeNodeContainerPersistor(this, nodeFile, getLoadHelper(), getLoadVersion());
     }
@@ -1903,7 +1912,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         LockFailedException {
         Role r = wm.getTemplateInformation().getRole();
         String fName = Role.Template.equals(r) ? TEMPLATE_FILE : WORKFLOW_FILE;
-        fName = wm.getParent().getCipherFileName(fName);
+        fName = wm.getDirectNCParent().getCipherFileName(fName);
         if (!workflowDirRef.fileLockRootForVM()) {
             throw new LockFailedException("Can't write workflow to \"" + workflowDirRef
                 + "\" because the directory can't be locked");
@@ -1987,7 +1996,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
             new File(workflowDir, WorkflowCipher.getCipherFileName(toBeDeletedFileName)).delete();
 
             OutputStream os = new FileOutputStream(workflowFile);
-            os = wm.getParent().cipherOutput(os);
+            os = wm.getDirectNCParent().cipherOutput(os);
             settings.saveToXML(os);
             File saveWithDataFile = new File(workflowDir, SAVED_WITH_DATA_FILE);
             BufferedWriter o = new BufferedWriter(new FileWriter(saveWithDataFile));

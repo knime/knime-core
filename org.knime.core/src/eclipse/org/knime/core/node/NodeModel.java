@@ -698,21 +698,33 @@ public abstract class NodeModel {
         // ports are data ports!
 
         // (1) cast PortObjects to BufferedDataTable
+        BufferedDataTable[] inTables = toBDTArray(inObjects, "Input port",
+            "Likely reason: wrong version of NodeModel.execute() overwritten!");
+        // (2) call old-fashioned, data-only execute
+        BufferedDataTable[] outData = execute(inTables, exec);
+        // (3) return new POs (upcast from BDT automatic)
+        return outData;
+    }
+
+    /** Type casts the elements in the argument array to BDT and returns an array of it.
+     * @param inObjects The objects to type cast, all expected to be null or BDT.
+     * @param typeOfInputForError error message start, e.g. "Input port" or "Internal held object index"
+     * @param endErrorString appended to the error, like "wrong version of NodeModel.execute() overwritten!"
+     * @return ...
+     * @throws IOException If any element is not a BDT
+     */
+    static BufferedDataTable[] toBDTArray(final PortObject[] inObjects, final String typeOfInputForError,
+        final String endErrorString) throws IOException {
         BufferedDataTable[] inTables = new BufferedDataTable[inObjects.length];
         for (int i = 0; i < inObjects.length; i++) {
             try {
                 inTables[i] = (BufferedDataTable)inObjects[i];
             } catch (ClassCastException cce) {
-                throw new IOException("Input Port " + i
-                        + " does not hold data table specs. "
-                        + "Likely reason: wrong version"
-                        + " of NodeModel.execute() overwritten!");
+                throw new IOException(String.format("%s %d does not hold data table but %s; %s",
+                    typeOfInputForError, i, inObjects[i].getClass().getSimpleName(), endErrorString));
             }
         }
-        // (2) call old-fashioned, data-only execute
-        BufferedDataTable[] outData = execute(inTables, exec);
-        // (3) return new POs (upcast from BDT automatic)
-        return outData;
+        return inTables;
     }
 
     /**

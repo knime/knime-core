@@ -48,7 +48,7 @@
  * History
  *   Mar 30, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow.virtual;
+package org.knime.core.node.workflow.virtual.parchunk;
 
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.NodeID;
@@ -80,9 +80,9 @@ public final class ParallelizedChunkContent {
 		m_manager = manager;
 		// validate types of input/output node models
 		m_manager.castNodeModel(
-				virtualInputID, VirtualPortObjectInNodeModel.class);
+				virtualInputID, VirtualParallelizedChunkPortObjectInNodeModel.class);
 		m_manager.castNodeModel(
-				virtualOutputID, VirtualPortObjectOutNodeModel.class);
+				virtualOutputID, VirtualParallelizedChunkPortObjectOutNodeModel.class);
 		m_virtualInputID = virtualInputID;
 		m_virtualOutputID = virtualOutputID;
 		m_copiedLoopContent = copiedLoopContent;
@@ -172,8 +172,8 @@ public final class ParallelizedChunkContent {
      * @return array with PortObjects at the end node of this chunk.
      */
     public PortObject[] getOutportContent() {
-        VirtualPortObjectOutNodeModel vpoonm = m_manager.castNodeModel(
-                m_virtualOutputID, VirtualPortObjectOutNodeModel.class);
+        VirtualParallelizedChunkPortObjectOutNodeModel vpoonm = m_manager.castNodeModel(
+                m_virtualOutputID, VirtualParallelizedChunkPortObjectOutNodeModel.class);
         return vpoonm.getOutObjects();
     }
 }

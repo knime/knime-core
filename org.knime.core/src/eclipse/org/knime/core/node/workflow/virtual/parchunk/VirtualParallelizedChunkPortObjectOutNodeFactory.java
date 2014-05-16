@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,30 +44,102 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
- *   Mar 29, 2011 (wiswedel): created
+ *   Mar 30, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node.workflow.virtual.parchunk;
 
-import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContentMaster;
+import org.knime.core.node.DynamicNodeFactory;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDescription;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
-public interface LoopEndParallelizeNode
-extends LoopEndNode {
+public class VirtualParallelizedChunkPortObjectOutNodeFactory extends DynamicNodeFactory<VirtualParallelizedChunkPortObjectOutNodeModel> {
 
-    /** Set master object holding all parallel chunks.
-     * 
-     * @param pcm
-     */
-    void setParallelChunkMaster(ParallelizedChunkContentMaster pcm);
-    
-    /** During execution: notify node that status of some chunks
-     * has changed.
-     */
-    public void updateStatus();
+	private PortType[] m_inTypes;
 
+	/** Serialization constructor.
+	 * @since 2.10 */
+    public VirtualParallelizedChunkPortObjectOutNodeFactory() {
+    }
+
+	/**
+	 */
+	public VirtualParallelizedChunkPortObjectOutNodeFactory(final PortType[] inTypes) {
+		if (inTypes == null) {
+			throw new NullPointerException(
+					"Port type array argument must not be null");
+		}
+		m_inTypes = inTypes;
+		init();
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	protected NodeDescription createNodeDescription() {
+	    return super.parseNodeDescriptionFromFile();
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public VirtualParallelizedChunkPortObjectOutNodeModel createNodeModel() {
+		return new VirtualParallelizedChunkPortObjectOutNodeModel(m_inTypes);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	protected int getNrNodeViews() {
+		return 0;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public NodeView<VirtualParallelizedChunkPortObjectOutNodeModel> createNodeView(
+			final int viewIndex,
+			final VirtualParallelizedChunkPortObjectOutNodeModel nodeModel) {
+		return null;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	protected boolean hasDialog() {
+		return false;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	protected NodeDialogPane createNodeDialogPane() {
+		return null;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void loadAdditionalFactorySettings(final ConfigRO config) throws InvalidSettingsException {
+	    super.loadAdditionalFactorySettings(config);
+	    m_inTypes = VirtualParallelizedChunkPortObjectInNodeFactory.loadPortTypeList(config);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void saveAdditionalFactorySettings(final ConfigWO config) {
+	    super.saveAdditionalFactorySettings(config);
+	    VirtualParallelizedChunkPortObjectInNodeFactory.savePortTypeList(m_inTypes, config);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+    public org.knime.core.node.NodeFactory.NodeType getType() {
+	    return NodeType.VirtualOut;
+	}
 }

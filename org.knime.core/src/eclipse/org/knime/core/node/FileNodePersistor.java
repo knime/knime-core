@@ -90,8 +90,10 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FileNativeNodeContainerPersistor;
 import org.knime.core.node.workflow.FileWorkflowPersistor;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
@@ -161,7 +163,7 @@ public class FileNodePersistor implements NodePersistor {
 
     private String[] m_portObjectSummaries;
 
-    private BufferedDataTable[] m_internalHeldTables;
+    private PortObject[] m_internalHeldObjects;
 
     private IFileStoreHandler m_fileStoreHandler;
 
@@ -559,7 +561,8 @@ public class FileNodePersistor implements NodePersistor {
         /* In versions < V230 different PMMLPortObject classes existed which
          * got all replaced by a general PMMLPortObject. To stay backward
          * compatible we have to load the new object for them. */
-        if (getLoadVersion().ordinal() <= FileWorkflowPersistor.LoadVersion.V230.ordinal() && PMML_PORTOBJECT_CLASSES.contains(objectClass)) {
+        if (getLoadVersion().ordinal() <= FileWorkflowPersistor.LoadVersion.V230.ordinal()
+                && PMML_PORTOBJECT_CLASSES.contains(objectClass)) {
             objectClass = PMMLPortObject.class.getName();
         }
         return objectClass;
@@ -586,22 +589,9 @@ public class FileNodePersistor implements NodePersistor {
         return old + 1;
     }
 
-    /**
-     * Sub class hook to read internal tables.
-     *
-     * @param node Ignored.
-     * @param execMon Ignored.
-     * @param settings Ignored.
-     * @param loadTblRep Ignored.
-     * @param tblRep Ignored.
-     * @param fileStoreHandlerRepository Ignored
-     * @throws IOException Not actually thrown.
-     * @throws InvalidSettingsException Not actually thrown.
-     * @throws CanceledExecutionException Not actually thrown.
-     * @noreference
-     * @nooverride
-     */
-    void loadInternalHeldTables(final Node node, final ExecutionMonitor execMon, final NodeSettingsRO settings,
+    /** Reads internally held table in version {@link LoadVersion#V2100Pre} and before. Was replaced by
+     * #loadInternalHeldObjects then on. */
+    void loadInternalHeldTablesPre210(final Node node, final ExecutionMonitor execMon, final NodeSettingsRO settings,
         final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep,
         final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException, InvalidSettingsException,
         CanceledExecutionException {
@@ -640,7 +630,59 @@ public class FileNodePersistor implements NodePersistor {
             }
             subProgress.setProgress(1.0);
         }
-        setInternalHeldTables(result);
+        setInternalHeldPortObjects(result);
+    }
+
+    /** New with {@link LoadVersion#V2100}, supports {@link org.knime.core.node.port.PortObjectHolder}. */
+    void loadInternalHeldObjects(final Node node, final ExecutionMonitor execMon, final NodeSettingsRO settings,
+        final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep,
+        final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException, InvalidSettingsException,
+        CanceledExecutionException {
+        assert !getLoadVersion().isOlderThan(FileWorkflowPersistor.LoadVersion.V2100);
+        if (!settings.containsKey("internalObjects")) {
+            return;
+        }
+        NodeSettingsRO subSettings = settings.getNodeSettings("internalObjects");
+        String subDirName = subSettings.getString("location");
+        ReferencedFile subDirFile = new ReferencedFile(getNodeDirectory(), subDirName);
+        NodeSettingsRO portSettings = subSettings.getNodeSettings("content");
+        Set<String> keySet = portSettings.keySet();
+        PortObject[] result = new PortObject[keySet.size()];
+        for (String s : keySet) {
+            ExecutionMonitor subProgress = execMon.createSubProgress(1.0 / result.length);
+            NodeSettingsRO singlePortSetting = portSettings.getNodeSettings(s);
+            int index = singlePortSetting.getInt("index");
+            if (index < 0 || index >= result.length) {
+                throw new InvalidSettingsException("Invalid index: " + index);
+            }
+            String type = singlePortSetting.getString("type");
+            PortObject object = null;
+            if ("null".equals(type)) {
+                // object stays null
+            } else if ("table".equals(type)) {
+                String location = singlePortSetting.getString("table_dir_location");
+                if (location != null) {
+                    ReferencedFile portDirRef = new ReferencedFile(subDirFile, location);
+                    File portDir = portDirRef.getFile();
+                    if (!portDir.isDirectory() || !portDir.canRead()) {
+                        throw new IOException("Can not read table directory " + portDir.getAbsolutePath());
+                    }
+                    BufferedDataTable t = loadBufferedDataTable(
+                        portDirRef, subProgress, loadTblRep, tblRep, fileStoreHandlerRepository);
+                    t.setOwnerRecursively(node);
+                    object = t;
+                }
+            } else if ("referenced_output".equals(type)) {
+                int outputPortIndex = singlePortSetting.getInt("outport");
+                CheckUtils.checkSetting(outputPortIndex >= 0, "Port index must not < 0: $d", outputPortIndex);
+                object = m_portObjects[outputPortIndex];
+            } else {
+                CheckUtils.checkSetting(false, "Unknown object reference %s", type);
+            }
+            result[index] = object;
+            subProgress.setProgress(1.0);
+        }
+        setInternalHeldPortObjects(result);
     }
 
     IFileStoreHandler loadFileStoreHandler(final Node node, final ExecutionMonitor execMon,
@@ -965,7 +1007,13 @@ public class FileNodePersistor implements NodePersistor {
         loadExec.setProgress(1.0);
         try {
             if (!loadHelper.isTemplateFlow()) {
-                loadInternalHeldTables(node, loadIntTblsExec, m_settings, loadTblRep, tblRep, fileStoreHandlerRepository);
+                if (getLoadVersion().isOlderThan(LoadVersion.V2100)) {
+                    loadInternalHeldTablesPre210(node, loadIntTblsExec,
+                        m_settings, loadTblRep, tblRep, fileStoreHandlerRepository);
+                } else {
+                    loadInternalHeldObjects(node, loadIntTblsExec,
+                        m_settings, loadTblRep, tblRep, fileStoreHandlerRepository);
+                }
             }
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException) && !(e instanceof IOException)) {
@@ -1116,15 +1164,15 @@ public class FileNodePersistor implements NodePersistor {
 
     /** {@inheritDoc} */
     @Override
-    public BufferedDataTable[] getInternalHeldTables() {
-        return m_internalHeldTables;
+    public PortObject[] getInternalHeldPortObjects() {
+        return m_internalHeldObjects;
     }
 
     /**
-     * @param internalHeldTables the internalHeldTables to set
+     * @param internalHeldObjects the internalHeldTables to set
      */
-    void setInternalHeldTables(final BufferedDataTable[] internalHeldTables) {
-        m_internalHeldTables = internalHeldTables;
+    void setInternalHeldPortObjects(final PortObject[] internalHeldObjects) {
+        m_internalHeldObjects = internalHeldObjects;
     }
 
     /**
@@ -1247,12 +1295,12 @@ public class FileNodePersistor implements NodePersistor {
     private static void saveInternalHeldTables(final Node node, final ReferencedFile nodeDirRef,
         final NodeSettingsWO settings, final Set<Integer> savedTableIDs, final ExecutionMonitor exec,
         final boolean saveData) throws IOException, CanceledExecutionException {
-        BufferedDataTable[] internalTbls = node.getInternalHeldTables();
-        if (internalTbls == null || !saveData) {
+        PortObject[] internalObjects = node.getInternalHeldPortObjects();
+        if (internalObjects == null || !saveData) {
             return;
         }
-        final int internalTblsCount = internalTbls.length;
-        NodeSettingsWO subSettings = settings.addNodeSettings("internalTables");
+        final int internalTblsCount = internalObjects.length;
+        NodeSettingsWO subSettings = settings.addNodeSettings("internalObjects");
         String subDirName = INTERNAL_TABLE_FOLDER_PREFIX;
         ReferencedFile subDirFile = new ReferencedFile(nodeDirRef, subDirName);
         subSettings.addString("location", subDirName);
@@ -1260,27 +1308,45 @@ public class FileNodePersistor implements NodePersistor {
         FileUtil.deleteRecursively(subDirFile.getFile());
         subDirFile.getFile().mkdirs();
 
-        exec.setMessage("Saving internally held data");
+        exec.setMessage("Saving internally held objects");
         for (int i = 0; i < internalTblsCount; i++) {
-            BufferedDataTable t = internalTbls[i];
-            String tblName = "table_" + i;
+            PortObject t = internalObjects[i];
+            String tblName = "object_" + i;
             ExecutionMonitor subProgress = exec.createSubProgress(1.0 / internalTblsCount);
             NodeSettingsWO singlePortSetting = portSettings.addNodeSettings(tblName);
             singlePortSetting.addInt("index", i);
-            String tblDirName;
-            if (t != null) {
-                tblDirName = tblName;
+            if (t == null) {
+                singlePortSetting.addString("type", "null");
+            } else if (t instanceof BufferedDataTable) {
+                BufferedDataTable table = (BufferedDataTable)t;
+                String tblDirName = tblName;
                 ReferencedFile portDirRef = new ReferencedFile(subDirFile, tblDirName);
                 File portDir = portDirRef.getFile();
                 portDir.mkdir();
                 if (!portDir.isDirectory() || !portDir.canWrite()) {
                     throw new IOException("Can not write table directory " + portDir.getAbsolutePath());
                 }
-                saveBufferedDataTable(t, savedTableIDs, portDir, exec);
+                saveBufferedDataTable(table, savedTableIDs, portDir, exec);
+                singlePortSetting.addString("type", "table");
+                singlePortSetting.addString("table_dir_location", tblDirName);
             } else {
-                tblDirName = null;
+                // other type of port object - must be contained in an output port
+                int outputPortIndex = -1;
+                for (int p = 0; p < node.getNrOutPorts(); p++) {
+                    if (node.getOutputObject(p) == t) {
+                        outputPortIndex = p;
+                        break;
+                    }
+                }
+                if (outputPortIndex < 0) {
+                    // almost an assertion as same test is done in Node#execute
+                    String error = "Internally held port object (index " + i + ") not contained in output";
+                    NodeLogger.getLogger(FileNodePersistor.class).coding(error);
+                    throw new IOException(error);
+                }
+                singlePortSetting.addString("type", "referenced_output");
+                singlePortSetting.addInt("outport", outputPortIndex);
             }
-            singlePortSetting.addString("table_dir_location", tblDirName);
             subProgress.setProgress(1.0);
         }
     }

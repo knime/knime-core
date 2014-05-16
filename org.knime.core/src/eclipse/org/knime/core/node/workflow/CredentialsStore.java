@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -186,7 +186,7 @@ public final class CredentialsStore implements Observer {
             c.removeClient(nc);
         }
         WorkflowManager parent = m_manager.getParent();
-        while (parent != WorkflowManager.ROOT) {
+        while (parent != null) {
             CredentialsStore parentStore = parent.getCredentialsStore();
             for (Credentials c : parentStore.m_credentials.values()) {
                 c.removeClient(nc);

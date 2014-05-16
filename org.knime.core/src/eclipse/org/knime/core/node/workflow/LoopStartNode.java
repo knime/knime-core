@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -63,9 +63,10 @@ package org.knime.core.node.workflow;
  * node is executed) but the output tables are cleared; secondly, if a loop
  * start node defines new data that needs to be kept between loop iterations
  * it must implement the {@link org.knime.core.node.BufferedDataTableHolder}
- * interface and return the important tables in the corresponding get method
- * (it should return null _after_ the last iteration if the tables should not
- * be persisted with saving the workflow).
+ * or {@link org.knime.core.node.port.PortObjectHolder} interface and return
+ * the important tables in the corresponding get method (it should return
+ * null _after_ the last iteration if the tables should not be persisted
+ * with saving the workflow).
  *
  * @author M. Berthold, University of Konstanz & Bernd Wiswedel, KNIME.com
  */

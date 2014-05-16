@@ -66,6 +66,7 @@ import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
  *
@@ -210,6 +211,12 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      */
     public InputStream decipherInput(
             final InputStream input) throws IOException;
+
+    /** Called after all nodes have been instantiated but no configure storm is launched. Used to sneak some more
+     * data into some nodes (sub node container to push itself into the virtual in/out)
+     * @param wfm The workflow itself, as returned by {@link #getNodeContainer(WorkflowManager, NodeID)}. 
+     * @param loadResult TODO*/
+    void postLoad(WorkflowManager wfm, LoadResult loadResult);
 
     /** Helper class representing a connection. */
     static class ConnectionContainerTemplate {

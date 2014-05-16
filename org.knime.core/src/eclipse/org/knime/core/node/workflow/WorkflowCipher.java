@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -69,7 +69,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.WorkflowCipherPrompt.PromptCancelled;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.util.crypto.HexUtils;
 
 /** A cipher object associated with a meta node or workflow. Most workflows
@@ -207,7 +206,7 @@ final class WorkflowCipher implements Cloneable {
             return out;
         }
         OutputStream myOut = cipherOutput(out);
-        return wfm.getParent().cipherOutput(myOut);
+        return wfm.getDirectNCParent().cipherOutput(myOut);
     }
 
     /** @return if non null cipher. */

@@ -537,20 +537,23 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
     protected static String save(final SingleNodeContainer singleNC, final ReferencedFile nodeDirRef,
         final ExecutionMonitor exec, final boolean isSaveData)
                 throws CanceledExecutionException, IOException, LockFailedException {
-        String settingsDotXML = singleNC.getParent().getCipherFileName(SETTINGS_FILE_NAME);
+        String settingsDotXML = singleNC.getDirectNCParent().getCipherFileName(SETTINGS_FILE_NAME);
         ReferencedFile sncWorkingDirRef = singleNC.getNodeContainerDirectory();
         File nodeDir = nodeDirRef.getFile();
         boolean nodeDirExists = nodeDir.exists();
         if (nodeDirRef.equals(sncWorkingDirRef) && !singleNC.isDirty() && nodeDirExists) {
             return settingsDotXML;
         }
-        boolean nodeDirDeleted = deleteChildren(nodeDir, SingleNodeContainer.DROP_DIR_NAME);
+        boolean nodeDirDeleted = true;
+        if (singleNC instanceof NativeNodeContainer) {
+            nodeDirDeleted = deleteChildren(nodeDir, SingleNodeContainer.DROP_DIR_NAME);
+        }
         nodeDir.mkdirs();
         if (!nodeDir.isDirectory() || !nodeDir.canWrite()) {
             throw new IOException("Unable to write or create directory \"" + nodeDirRef + "\"");
         }
         String debug;
-        if (nodeDirExists) {
+        if (singleNC instanceof NativeNodeContainer && nodeDirExists) {
             if (nodeDirDeleted) {
                 debug = "Replaced node directory \"" + nodeDirRef + "\"";
             } else {
@@ -592,12 +595,11 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
                 isSaveData && singleNC.getInternalState().equals(InternalNodeContainerState.EXECUTED));
         } else {
             SubNodeContainer subnodeNC = (SubNodeContainer)singleNC;
-            FileSubNodeContainerPersistor.save(subnodeNC, settings, exec, nodeDirRef,
-                isSaveData && singleNC.getInternalState().equals(InternalNodeContainerState.EXECUTED));
+            FileSubNodeContainerPersistor.save(subnodeNC, settings, exec, nodeDirRef, isSaveData);
         }
         File nodeSettingsXMLFile = new File(nodeDir, settingsDotXML);
         OutputStream os = new FileOutputStream(nodeSettingsXMLFile);
-        os = singleNC.getParent().cipherOutput(os);
+        os = singleNC.getDirectNCParent().cipherOutput(os);
         settings.saveToXML(os);
         if (sncWorkingDirRef == null) {
             // set working dir so that we can unset the dirty flag
@@ -618,7 +620,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         // (contains the settings from this method argument) contains everything. We save the node_file so that
         // old KNIME instances can read new workflows
         String fileName = SETTINGS_FILE_NAME;
-        fileName = snc.getParent().getCipherFileName(fileName);
+        fileName = snc.getDirectNCParent().getCipherFileName(fileName);
         settings.addString("node_file", fileName);
         return new ReferencedFile(nodeDirectoryRef, fileName);
     }

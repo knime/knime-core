@@ -46,19 +46,63 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 7, 2014 (wiswedel): created
+ *   Mar 28, 2014 (wiswedel): created
  */
-package org.knime.core.node.workflow.virtual;
+package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectOutNodeFactory;
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
- * Empty extension of {@link VirtualSubNodeOutputNodeFactory} for backward compatibility reasons
- * (fully qualified name possibly saved in workflows).
+ * Interface used by embedded {@link WorkflowManager} instances to invoke actions on the parent item. The parent
+ * item is a {@link WorkflowManager} for meta nodes or projects. It is a {@link SubNodeContainer} for the instance
+ * that is used inside a sub node.
+ *
+ * <p>None of the methods are meant be public API.
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @deprecated Use super class instead
  */
-@Deprecated
-public final class VirtualPortObjectOutNodeFactory extends VirtualParallelizedChunkPortObjectOutNodeFactory {
+interface NodeContainerParent {
+
+
+    /** See {@link NodeContainer#getDirectNCParent()}.
+     * @return the direct node container parent.
+     */
+    public NodeContainerParent getDirectNCParent();
+
+    /** If a contained node contained (independent of its connections). Generally true but subnodes disallow
+     * node reset if there are downstream executing nodes.
+     * @return that property.
+     */
+    public boolean canResetContainedNodes();
+
+    /** @return the workflowMutex */
+    public Object getWorkflowMutex();
+
+    /** Is this workflow represents a linked meta node (locked for edit). This
+     * flag is only a hint for the UI -- non of the add/remove operations will
+     * read this flag.
+     * @return Whether edit operations are not permitted. */
+    public boolean isWriteProtected();
+
+    /** Private routine which assembles a stack of workflow variables all
+     * the way to the top of the workflow hierarchy.
+     */
+    public void pushWorkflowVariablesOnStack(final FlowObjectStack sos);
+
+    /** Returns the argument string unless this workflow or any of the parent wfms is encrypted.
+     * Then it appends ".encrypted" to the argument.
+     * @param fileName Suggest file name
+     * @return fileName, possibly appended with ".encrypted".
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public abstract String getCipherFileName(final String fileName);
+
+    /** @param out The output
+     * @return see {@link WorkflowCipher#cipherOutput(WorkflowManager, OutputStream)}.
+     * @throws IOException If fails
+     * @noreference This method is not intended to be referenced by clients. */
+    @SuppressWarnings("javadoc")
+    public abstract OutputStream cipherOutput(final OutputStream out) throws IOException;
 
 }

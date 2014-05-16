@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -58,7 +58,6 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.workflow.NodeContainer.State;
 
 /**
  *
@@ -114,12 +113,11 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
             setPortName(name);
             m_underlyingPort.addNodeStateChangeListener(this);
             // if not null -> query state and throw event
-            notifyNodeStateChangeListener(new NodeStateEvent(new NodeID(0),
-                                                             m_underlyingPort.getNodeState().mapToOldStyleState()));
+            notifyNodeStateChangeListener(new NodeStateEvent(new NodeID(0), m_underlyingPort.getNodeState()));
         } else {
             setPortName(null);
             // if null: disconnected set state -> idle
-            notifyNodeStateChangeListener(new NodeStateEvent(new NodeID(0), State.IDLE));
+            notifyNodeStateChangeListener(new NodeStateEvent(new NodeID(0), InternalNodeContainerState.IDLE));
         }
     }
 

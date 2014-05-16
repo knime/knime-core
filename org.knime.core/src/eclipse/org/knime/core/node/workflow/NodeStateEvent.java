@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -58,15 +58,22 @@ import java.util.EventObject;
  */
 public class NodeStateEvent extends EventObject {
 
-    private final NodeContainer.State m_state;
+    private final InternalNodeContainerState m_internalNCState;
+
+    /** A new event from the current node container ID and state.
+     * @param nc A node container to derive the state from (not null).
+     */
+    public NodeStateEvent(final NodeContainer nc) {
+        this(nc.getID(), nc.getInternalState());
+    }
 
     /**
      * @param src id of the node
-     * @param state the new state of the node
+     * @param newState the new state.
      */
-    public NodeStateEvent(final NodeID src, final NodeContainer.State state) {
+    NodeStateEvent(final NodeID src, final InternalNodeContainerState newState) {
         super(src);
-        m_state = state;
+        m_internalNCState = newState;
     }
 
     /**
@@ -76,13 +83,15 @@ public class NodeStateEvent extends EventObject {
      */
     @Deprecated
     public NodeContainer.State getState() {
-        return m_state;
+        return m_internalNCState.mapToOldStyleState();
     }
 
-    /**
-     *
-     * {@inheritDoc}
-     */
+    /** @return the internalNCState */
+    InternalNodeContainerState getInternalNCState() {
+        return m_internalNCState;
+    }
+
+    /** {@inheritDoc} */
     @Override
     public NodeID getSource() {
         return (NodeID)super.getSource();

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -125,6 +125,9 @@ public class ExecuteAllAction extends AbstractNodeAction {
     @Override
     protected boolean internalCalculateEnabled() {
         WorkflowManager wm = getManager();
+        if (wm.getParent() == null) {
+            return false;
+        }
         return wm.getParent().canExecuteNode(wm.getID());
     }
 

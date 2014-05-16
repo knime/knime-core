@@ -46,134 +46,76 @@
  * ------------------------------------------------------------------------
  * 
  * History
- *   Mar 30, 2011 (wiswedel): created
+ *   Mar 31, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow.virtual;
+package org.knime.core.node.workflow.virtual.parchunk;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.PortType;
-
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
- * 
+ * Utility object that represents the output objects of virtual input nodes.
  * @author wiswedel, University of Konstanz
  */
-public final class VirtualPortObjectOutNodeModel extends NodeModel {
+public final class VirtualParallelizedChunkNodeInput {
 	
-	private PortObjectSpec[] m_outSpecs;
-	private PortObject[] m_outObjects;
-	
+	private final PortObject[] m_inputObjects;
+	private final List<FlowVariable> m_flowVariables;
+	private final int m_chunkIndex;
 	/**
-	 * @param inTypes 
-	 * 
+	 * @param inputObjects
+	 * @param chunkIndex
 	 */
-	public VirtualPortObjectOutNodeModel(final PortType[] inTypes) {
-		super(inTypes, new PortType[0]);
+	@SuppressWarnings("unchecked")
+	public VirtualParallelizedChunkNodeInput(
+			final PortObject[] inputObjects, final int chunkIndex) {
+		this(inputObjects, Collections.EMPTY_LIST, chunkIndex);
 	}
 	
 	/**
-	 * {@inheritDoc}
+	 * @param inputObjects
+	 * @param flowVariables
+	 * @param chunkIndex
 	 */
-	@Override
-	protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-			throws InvalidSettingsException {
-		return new PortObjectSpec[0];
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
-			throws Exception {
-		m_outObjects = inObjects;
-		m_outSpecs = new PortObjectSpec[inObjects.length];
-		for (int i = 0; i < inObjects.length; i++) {
-		    if (inObjects[i] != null) {
-		        m_outSpecs[i] = inObjects[i].getSpec();
-		    } else {
-		        m_outSpecs[i] = null;
-		    }
+	public VirtualParallelizedChunkNodeInput(final PortObject[] inputObjects,
+			final List<FlowVariable> flowVariables, final int chunkIndex) {
+		if (Arrays.asList(inputObjects).contains(null)) {
+			throw new NullPointerException("Null elements not allowed");
 		}
-		return new PortObject[0];
+		if (flowVariables.contains(null)) {
+			throw new NullPointerException("Null elements not allowed");
+		}
+		if (chunkIndex < 0) {
+			throw new IllegalArgumentException(
+					"Illegal chunk index: " + chunkIndex);
+		}
+		m_inputObjects = inputObjects;
+		m_flowVariables = flowVariables;
+		m_chunkIndex = chunkIndex;
+	}
+
+	/**
+	 * @return the inputObjects
+	 */
+	public PortObject[] getInputObjects() {
+		return m_inputObjects;
+	}
+	/**
+	 * @return the flowVariables
+	 */
+	public List<FlowVariable> getFlowVariables() {
+		return m_flowVariables;
+	}
+	/**
+	 * @return the chunkIndex
+	 */
+	public int getChunkIndex() {
+		return m_chunkIndex;
 	}
 	
-	/**
-	 * @return the outObjects
-	 */
-	public PortObject[] getOutObjects() {
-		return m_outObjects;
-	}
-	
-	/**
-	 * @return the outSpecs
-	 */
-	public PortObjectSpec[] getOutSpecs() {
-		return m_outSpecs;
-	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void reset() {
-		// no internals
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveSettingsTo(final NodeSettingsWO settings) {
-		// no settings
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void validateSettings(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		// no settings
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-			throws InvalidSettingsException {
-		// no settings
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void loadInternals(final File nodeInternDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-		// no internals
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected void saveInternals(final File nodeInternDir,
-			final ExecutionMonitor exec) throws IOException,
-			CanceledExecutionException {
-		// no internals
-	}
 }

@@ -61,9 +61,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformation;
-import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -105,11 +104,29 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
         m_workflowPersistor = new FileWorkflowPersistor(workflowPersistor.getGlobalTableRepository(),
             workflowPersistor.getFileStoreHandlerRepository(),
             new ReferencedFile(nodeSettingsFile.getParent(), WorkflowPersistor.WORKFLOW_FILE),
-            getLoadHelper(), getLoadVersion(), false);
+            getLoadHelper(), getLoadVersion(), false) {
+                @Override
+                public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
+                    NodeContainerParent ncParent = wfm.getDirectNCParent();
+                    if (!(ncParent instanceof SubNodeContainer)) {
+                        String error = String.format("Parent is not instance of %s but %s",
+                            SubNodeContainer.class.getSimpleName(),
+                            ncParent == null ?  "<null>" : ncParent.getClass().getSimpleName());
+                        NodeLogger.getLogger(FileSingleNodeContainerPersistor.class).error(error);
+                        setNeedsResetAfterLoad();
+                        setDirtyAfterLoad();
+                        loadResult.addError(error);
+                    } else {
+                        SubNodeContainer subnode = (SubNodeContainer)ncParent;
+                        subnode.postLoadWFM();
+                    }
+                }
+        };
     }
 
     /**
-     * Called by {@link Node} to update the message field in the {@link NodeModel} class.
+     * Called by {@link org.knime.core.node.Node} to update the message field in the
+     * {@link org.knime.core.node.NodeModel} class.
      *
      * @return the msg or null.
      */
@@ -284,8 +301,6 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
         throws InvalidSettingsException, CanceledExecutionException, IOException {
         super.loadNodeContainer(tblRep, exec, result);
         m_workflowPersistor.loadNodeContainer(tblRep, exec, result);
-        Map<Integer, ? extends NodeContainerPersistor> nodeLoaderMap = m_workflowPersistor.getNodeLoaderMap();
-        NodeContainerPersistor virtualInPersistor = nodeLoaderMap.get(m_virtualInNodeIDSuffix);
     }
 
     /** {@inheritDoc} */

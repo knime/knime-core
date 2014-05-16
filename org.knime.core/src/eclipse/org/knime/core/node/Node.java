@@ -71,6 +71,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.UIManager;
 
 import org.apache.commons.io.output.DeferredFileOutputStream;
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.container.ContainerTable;
@@ -88,6 +89,7 @@ import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.missing.MissingNodeModel;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectHolder;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
@@ -124,6 +126,7 @@ import org.knime.core.node.workflow.ScopeEndNode;
 import org.knime.core.node.workflow.ScopeStartNode;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
+import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel;
 import org.knime.core.util.FileUtil;
 import org.w3c.dom.Element;
 
@@ -207,9 +210,9 @@ public final class Node implements NodeModelWarningListener {
     }
     private final Input[] m_inputs;
 
-    /** The array of BDTs, that has been given by the interface
-     * {@link BufferedDataTableHolder}. In most cases this is null. */
-    private BufferedDataTable[] m_internalHeldTables;
+    /** The array of PortObjects held internally by the NodeModel (also after save/load). Only set when model
+     * implements {@link BufferedDataTableHolder} or {@link PortObjectHolder}. In most cases this is null. */
+    private PortObject[] m_internalHeldPortObjects;
 
     /** The listeners that are interested in node state changes. */
     private final CopyOnWriteArraySet<NodeMessageListener> m_messageListeners;
@@ -354,10 +357,10 @@ public final class Node implements NodeModelWarningListener {
                 m_logger.error("Unable to save internals", ioe);
             }
         }
-        if (m_internalHeldTables != null) {
-            BufferedDataTable[] internalHeldTables = Arrays.copyOf(
-                    m_internalHeldTables, m_internalHeldTables.length);
-            result.setInternalHeldTables(internalHeldTables);
+        if (m_internalHeldPortObjects != null) {
+            PortObject[] internalHeldPortObjects =
+                    Arrays.copyOf(m_internalHeldPortObjects, m_internalHeldPortObjects.length);
+            result.setInternalHeldPortObjects(internalHeldPortObjects);
         }
         PortObject[] pos = new PortObject[getNrOutPorts()];
         PortObjectSpec[] poSpecs = new PortObjectSpec[getNrOutPorts()];
@@ -484,12 +487,25 @@ public final class Node implements NodeModelWarningListener {
                 internDirRef.unlock();
             }
         }
-        if (m_model instanceof BufferedDataTableHolder) {
-            m_internalHeldTables = loader.getInternalHeldTables();
-            if (m_internalHeldTables != null) {
-                BufferedDataTable[] copy = Arrays.copyOf(
-                        m_internalHeldTables, m_internalHeldTables.length);
-                ((BufferedDataTableHolder)m_model).setInternalTables(copy);
+        if (m_model instanceof BufferedDataTableHolder || m_model instanceof PortObjectHolder) {
+            m_internalHeldPortObjects = loader.getInternalHeldPortObjects();
+            if (m_internalHeldPortObjects != null) {
+                if (m_model instanceof PortObjectHolder) {
+                    PortObject[] copy = Arrays.copyOf(m_internalHeldPortObjects, m_internalHeldPortObjects.length);
+                    ((PortObjectHolder)m_model).setInternalPortObjects(copy);
+                } else {
+                    assert m_model instanceof BufferedDataTableHolder;
+                    BufferedDataTable[] copy;
+                    try {
+                        copy = NodeModel.toBDTArray(m_internalHeldPortObjects, "Internal held objects array index",
+                            m_model.getClass().getSimpleName() + " should implement "
+                                    + PortObjectHolder.class.getSimpleName() + " and not "
+                                    + BufferedDataTableHolder.class.getSimpleName());
+                        ((BufferedDataTableHolder)m_model).setInternalTables(copy);
+                    } catch (IOException e) {
+                        loadResult.addError(e.getMessage(), true);
+                    }
+                }
             }
         }
     }
@@ -727,13 +743,13 @@ public final class Node implements NodeModelWarningListener {
         return m_outputs[index].hiliteHdl;
     }
 
-    /** Get the current set of tables internally held by a NodeModel that
-     * implements {@link BufferedDataTableHolder}. It may be null or contain
-     * null elements. This array is modified upon load, execute and reset.
+    /** Get the current set of objects internally held by a NodeModel that implements {@link BufferedDataTableHolder} or
+     * {@link PortObjectHolder}. It may be null or contain null elements. This array is modified upon load, execute and
+     * reset.
      * @return that array.
      */
-    public BufferedDataTable[] getInternalHeldTables() {
-        return m_internalHeldTables;
+    public PortObject[] getInternalHeldPortObjects() {
+        return m_internalHeldPortObjects;
     }
 
     public void setInHiLiteHandler(final int index, final HiLiteHandler hdl) {
@@ -989,49 +1005,52 @@ public final class Node implements NodeModelWarningListener {
             m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p - 1);
         }
 
-        // there might be previous internal tables in a loop
-        // (tables are kept between loop iterations)
-        // they can be discarded if no longer needed (i.e. they are not part of
-        // the internal tables after this execution)
-        // (for instance used in group by loop start node)
-        BufferedDataTable[] previousInternalHeldTables = m_internalHeldTables;
-        if (previousInternalHeldTables != null
-                && !this.isModelCompatibleTo(LoopStartNode.class)) {
-            m_logger.coding("Found internal tables for non loop "
-                    + "start node: " + getName());
+        // there might be previous internal tables in a loop (tables are kept between loop iterations)
+        // they can be discarded if no longer needed (i.e. they are not part of the internal tables after
+        // this execution)
+        // used, for instance in group by loop start node
+        PortObject[] previousInternalHeldTables = m_internalHeldPortObjects;
+        if (previousInternalHeldTables != null && !this.isModelCompatibleTo(LoopStartNode.class)) {
+            m_logger.coding("Found internal tables for non loop start node: " + getName());
         }
 
-        if (m_model instanceof BufferedDataTableHolder) {
+        if (m_model instanceof BufferedDataTableHolder || m_model instanceof PortObjectHolder) {
             // copy the table array to prevent later modification by the user
-            BufferedDataTable[] internalTbls =
-                ((BufferedDataTableHolder)m_model).getInternalTables();
-            if (internalTbls != null) {
-                m_internalHeldTables =
-                    new BufferedDataTable[internalTbls.length];
-                for (int i = 0; i < internalTbls.length; i++) {
-                    BufferedDataTable t = internalTbls[i];
-                    if (t != null) {
-                        // if table is one of the input tables, wrap it in
-                        // WrappedTable (otherwise table get's copied)
+            PortObject[] internalObjects;
+            if (m_model instanceof PortObjectHolder) {
+                internalObjects = ((PortObjectHolder)m_model).getInternalPortObjects();
+            } else {
+                internalObjects = ((BufferedDataTableHolder)m_model).getInternalTables();
+            }
+            if (internalObjects != null) {
+                m_internalHeldPortObjects = new PortObject[internalObjects.length];
+                for (int i = 0; i < internalObjects.length; i++) {
+                    PortObject t = internalObjects[i];
+                    if (t instanceof BufferedDataTable) {
+                        // if table is one of the input tables, wrap it in WrappedTable (otherwise table get's copied)
                         for (int in = 0; in < inData.length; in++) {
                             if (t == inData[in]) {
-                                t = exec.createWrappedTable(t);
+                                t = exec.createWrappedTable((BufferedDataTable)t);
                                 break;
                             }
                         }
+                    } else {
+                        if (t != null && ArrayUtils.indexOf(rawOutData, t) < 0) {
+                            createErrorMessageAndNotify(String.format("Internally held port object at index %d (class "
+                                    + "%s) is not part of any output", i, t.getClass().getSimpleName()));
+                            return false;
+                        }
                     }
-                    m_internalHeldTables[i] = t;
+                    m_internalHeldPortObjects[i] = t;
                 }
             } else {
-                m_internalHeldTables = null;
+                m_internalHeldPortObjects = null;
             }
         }
         // see comment at variable declaration on what is done here
         if (previousInternalHeldTables != null) {
-            Set<BufferedDataTable> disposableTables =
-                collectTableAndReferences(previousInternalHeldTables);
-            disposableTables.removeAll(
-                    collectTableAndReferences(m_internalHeldTables));
+            Set<BufferedDataTable> disposableTables = collectTableAndReferences(previousInternalHeldTables);
+            disposableTables.removeAll(collectTableAndReferences(m_internalHeldPortObjects));
             disposableTables.removeAll(collectTableAndReferences(newOutData));
             for (BufferedDataTable t : disposableTables) {
                 t.clearSingle(this);
@@ -1386,9 +1405,9 @@ public final class Node implements NodeModelWarningListener {
             m_outputs[i].summary = null;
         }
 
-        if (m_internalHeldTables != null) {
+        if (m_internalHeldPortObjects != null) {
             Set<BufferedDataTable> internalTableSet =
-                collectTableAndReferences(m_internalHeldTables);
+                collectTableAndReferences(m_internalHeldPortObjects);
             // internal tables are also used by loop start implementations to
             // keep temporary tables between two loop iterations (e.g. the
             // the group loop start first sorts the table and then puts parts
@@ -1398,7 +1417,7 @@ public final class Node implements NodeModelWarningListener {
                 disposableTables.removeAll(internalTableSet);
             } else {
                 disposableTables.addAll(internalTableSet);
-                m_internalHeldTables = null;
+                m_internalHeldPortObjects = null;
             }
         }
         for (BufferedDataTable disposable : disposableTables) {
@@ -1436,15 +1455,11 @@ public final class Node implements NodeModelWarningListener {
         m_localTempTables.addAll(tempTables);
     }
 
-    /**
-     * Enumerates the output tables and puts them into the global workflow
-     * repository of tables. This method delegates from the NodeContainer class
-     * to access a package-scope method in BufferedDataTable.
-     *
+    /** Enumerates the output tables and puts them into the global workflow repository of tables. This method delegates
+     * from the NodeContainer class to access a package-scope method in BufferedDataTable.
      * @param rep The global repository.
      */
-    public void putOutputTablesIntoGlobalRepository(
-            final HashMap<Integer, ContainerTable> rep) {
+    public void putOutputTablesIntoGlobalRepository(final HashMap<Integer, ContainerTable> rep) {
         for (int i = 0; i < m_outputs.length; i++) {
             PortObject portObject = m_outputs[i].object;
             if (portObject instanceof BufferedDataTable) {
@@ -1452,15 +1467,13 @@ public final class Node implements NodeModelWarningListener {
                 t.putIntoTableRepository(rep);
             }
         }
-        if (m_internalHeldTables != null) {
-            // note: theoretically we don't need to put those into table rep
-            // as they are either also part of m_outputs or not
-            // available to downstream nodes. We do it anyway as we want to
-            // treat both m_outputs and the internal tables as similar as
-            // possible (particular during load)
-            for (BufferedDataTable t : m_internalHeldTables) {
-                if (t != null) {
-                    t.putIntoTableRepository(rep);
+        if (m_internalHeldPortObjects != null) {
+            // note: theoretically we don't need to put those into table rep as they are either also part of m_outputs
+            // or not available to downstream nodes. We do it anyway as we want to treat both m_outputs and the internal
+            // tables as similar as possible (particular during load)
+            for (PortObject t : m_internalHeldPortObjects) {
+                if (t instanceof BufferedDataTable) {
+                    ((BufferedDataTable)t).putIntoTableRepository(rep);
                 }
             }
         }
@@ -1472,8 +1485,7 @@ public final class Node implements NodeModelWarningListener {
      * @param rep The global table rep.
      * @return The number of tables effectively removed, used for assertions.
      */
-    public int removeOutputTablesFromGlobalRepository(
-            final HashMap<Integer, ContainerTable> rep) {
+    public int removeOutputTablesFromGlobalRepository(final HashMap<Integer, ContainerTable> rep) {
         int result = 0;
         for (int i = 0; i < m_outputs.length; i++) {
             PortObject portObject = m_outputs[i].object;
@@ -1872,8 +1884,13 @@ public final class Node implements NodeModelWarningListener {
                 corrInData[i - 1] = inData[i];
             }
         }
+        // the sub node virtual input node shows in its dialog all flow variables that are available to the rest
+        // of the subnode. It's the only case where the flow variables shown in the dialog are not the ones available
+        // to the node model class ...
+        final FlowObjectStack flowObjectStack = m_model instanceof VirtualSubNodeInputNodeModel
+                ? ((VirtualSubNodeInputNodeModel)m_model).getSubNodeContainerFlowObjectStack() : getFlowObjectStack();
         dialogPane.internalLoadSettingsFrom(settings, corrInSpecs, corrInData,
-                getFlowObjectStack(), getCredentialsProvider(),
+                flowObjectStack, getCredentialsProvider(),
                 isWriteProtected);
         return dialogPane;
     }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -68,13 +68,11 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.ConfigEditTreeModel;
-import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.FlowVariable.Scope;
-import org.knime.core.node.workflow.NativeNodeContainer.LoopStatus;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.w3c.dom.Element;
@@ -659,116 +657,6 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 break;
             case EXECUTED:
                 // ignore executed nodes
-                break;
-            default:
-                throwIllegalStateException();
-            }
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    boolean performStateTransitionPREEXECUTE() {
-        synchronized (m_nodeMutex) {
-            getProgressMonitor().reset();
-            switch (getInternalState()) {
-            case EXECUTED_QUEUED:
-            case CONFIGURED_QUEUED:
-                setInternalState(InternalNodeContainerState.PREEXECUTE);
-                return true;
-            default:
-                // ignore any other state: other states indicate that the node
-                // was canceled before it is actually run
-                // (this method is called from a worker thread, whereas cancel
-                // typically from the UI thread)
-                if (!Thread.currentThread().isInterrupted()) {
-                    LOGGER.debug("Execution of node " + getNameWithID()
-                            + " was probably canceled (node is " + getInternalState()
-                            + " during 'preexecute') but calling thread is not"
-                            + " interrupted");
-                }
-                return false;
-            }
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    void performStateTransitionEXECUTING() {
-        synchronized (m_nodeMutex) {
-            switch (getInternalState()) {
-            case PREEXECUTE:
-                if (this instanceof NativeNodeContainer) {
-                    ((NativeNodeContainer)this).getNode().clearLoopContext();
-                }
-                if (findJobManager() instanceof ThreadNodeExecutionJobManager) {
-                    setInternalState(InternalNodeContainerState.EXECUTING);
-                } else {
-                    setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
-                }
-                break;
-            default:
-                throwIllegalStateException();
-            }
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    void performStateTransitionPOSTEXECUTE() {
-        synchronized (m_nodeMutex) {
-            switch (getInternalState()) {
-            case PREEXECUTE: // in case of errors, e.g. flow stack problems
-                             // encountered during doBeforeExecution
-            case EXECUTING:
-            case EXECUTINGREMOTELY:
-                setInternalState(InternalNodeContainerState.POSTEXECUTE);
-                break;
-            default:
-                throwIllegalStateException();
-            }
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    void performStateTransitionEXECUTED(
-            final NodeContainerExecutionStatus status) {
-        synchronized (m_nodeMutex) {
-            switch (getInternalState()) {
-            case POSTEXECUTE:
-                if (this instanceof NativeNodeContainer) {
-                    ((NativeNodeContainer)this).closeFileStoreHandlerAfterExecute(status.isSuccess());
-                }
-                if (status.isSuccess()) {
-                    if ((this instanceof NativeNodeContainer)
-                         && (((NativeNodeContainer)this).getNode().getLoopContext() != null)) {
-                        // loop not yet done - "stay" configured until done.
-                        assert ((NativeNodeContainer)this).getLoopStatus().equals(LoopStatus.RUNNING);
-                        setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
-                    } else {
-                        setInternalState(InternalNodeContainerState.EXECUTED);
-                        setExecutionEnvironment(null);
-                    }
-                } else {
-                    // node will be configured in doAfterExecute.
-                    // for now we assume complete failure and clean up (reset)
-                    // We do keep the message, though.
-                    NodeMessage oldMessage = getNodeMessage();
-                    NodeContext.pushContext(this);
-                    try {
-                        performReset();
-                    } finally {
-                        NodeContext.removeLastContext();
-                    }
-                    if (this instanceof NativeNodeContainer) {
-                        ((NativeNodeContainer)this).clearFileStoreHandler();
-                    }
-                    setNodeMessage(oldMessage);
-                    setInternalState(InternalNodeContainerState.IDLE);
-                    setExecutionEnvironment(null);
-                }
-                setExecutionJob(null);
                 break;
             default:
                 throwIllegalStateException();

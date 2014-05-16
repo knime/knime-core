@@ -48,7 +48,7 @@
  * History
  *   Mar 30, 2011 (wiswedel): created
  */
-package org.knime.core.node.workflow.virtual;
+package org.knime.core.node.workflow.virtual.parchunk;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,50 +63,23 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.FlowVariable;
+
 
 /**
  * 
  * @author wiswedel, University of Konstanz
  */
-public class VirtualPortObjectInNodeModel extends NodeModel {
-
-	private VirtualNodeInput m_input;
-
-	/**
-	 * @param outPortTypes
-	 */
-	VirtualPortObjectInNodeModel(final PortType[] outPortTypes) {
-		super(new PortType[0], outPortTypes);
-	}
+public final class VirtualParallelizedChunkPortObjectOutNodeModel extends NodeModel {
+	
+	private PortObjectSpec[] m_outSpecs;
+	private PortObject[] m_outObjects;
 	
 	/**
-	 * {@inheritDoc}
+	 * @param inTypes 
+	 * 
 	 */
-	@Override
-	protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
-			throws Exception {
-		if (m_input == null) {
-			throw new Exception("Output objects in virtual input node have " 
-					+ "not been set");
-		}
-		for (FlowVariable f : m_input.getFlowVariables()) {
-			switch (f.getType()) {
-			case DOUBLE:
-				pushFlowVariableDouble(f.getName(), f.getDoubleValue());
-				break;
-			case INTEGER:
-				pushFlowVariableInt(f.getName(), f.getIntValue());
-				break;
-			case STRING:
-				pushFlowVariableString(f.getName(), f.getStringValue());
-				break;
-			default:
-				throw new Exception("Unsupported flow variable type: " 
-						+ f.getType());
-			}
-		}
-		return m_input.getInputObjects();
+	public VirtualParallelizedChunkPortObjectOutNodeModel(final PortType[] inTypes) {
+		super(inTypes, new PortType[0]);
 	}
 	
 	/**
@@ -115,18 +88,39 @@ public class VirtualPortObjectInNodeModel extends NodeModel {
 	@Override
 	protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
 			throws InvalidSettingsException {
-		// let's do everyting in execute (includes flow var population)
-		return null;
+		return new PortObjectSpec[0];
 	}
 	
-	public void setVirtualNodeInput(final VirtualNodeInput input) {
-		PortObject[] objects = input.getInputObjects();
-		if (objects.length != getNrOutPorts()) {
-			throw new IllegalArgumentException(
-					"Invalid length of output objects: expected: " 
-					+ getNrOutPorts() + " actual: " + objects.length);
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
+			throws Exception {
+		m_outObjects = inObjects;
+		m_outSpecs = new PortObjectSpec[inObjects.length];
+		for (int i = 0; i < inObjects.length; i++) {
+		    if (inObjects[i] != null) {
+		        m_outSpecs[i] = inObjects[i].getSpec();
+		    } else {
+		        m_outSpecs[i] = null;
+		    }
 		}
-		m_input = input;
+		return new PortObject[0];
+	}
+	
+	/**
+	 * @return the outObjects
+	 */
+	public PortObject[] getOutObjects() {
+		return m_outObjects;
+	}
+	
+	/**
+	 * @return the outSpecs
+	 */
+	public PortObjectSpec[] getOutSpecs() {
+		return m_outSpecs;
 	}
 
 	/**
@@ -134,7 +128,7 @@ public class VirtualPortObjectInNodeModel extends NodeModel {
 	 */
 	@Override
 	protected void reset() {
-		m_input = null;
+		// no internals
 	}
 
 	/**
@@ -182,5 +176,4 @@ public class VirtualPortObjectInNodeModel extends NodeModel {
 			CanceledExecutionException {
 		// no internals
 	}
-
 }

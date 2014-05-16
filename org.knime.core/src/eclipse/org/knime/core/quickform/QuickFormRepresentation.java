@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,82 +40,34 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
- * 
+ * ---------------------------------------------------------------------
+ *
  * History
- *   Mar 31, 2011 (wiswedel): created
+ *   May 15, 2014 ("Patrick Winter"): created
  */
-package org.knime.core.node.workflow.virtual;
+package org.knime.core.quickform;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.dialog.DialogNodeRepresentation;
+import org.knime.core.node.dialog.DialogNodeValue;
 
 /**
- * Utility object that represents the output objects of virtual input nodes.
- * @author wiswedel, University of Konstanz
+ * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
+ * @param <VAL> The value class handled by this representation
+ * @since 2.10
  */
-public final class VirtualNodeInput {
-	
-	private final PortObject[] m_inputObjects;
-	private final List<FlowVariable> m_flowVariables;
-	private final int m_chunkIndex;
-	/**
-	 * @param inputObjects
-	 * @param chunkIndex
-	 */
-	@SuppressWarnings("unchecked")
-	public VirtualNodeInput(
-			final PortObject[] inputObjects, final int chunkIndex) {
-		this(inputObjects, Collections.EMPTY_LIST, chunkIndex);
-	}
-	
-	/**
-	 * @param inputObjects
-	 * @param flowVariables
-	 * @param chunkIndex
-	 */
-	public VirtualNodeInput(final PortObject[] inputObjects,
-			final List<FlowVariable> flowVariables, final int chunkIndex) {
-		if (Arrays.asList(inputObjects).contains(null)) {
-			throw new NullPointerException("Null elements not allowed");
-		}
-		if (flowVariables.contains(null)) {
-			throw new NullPointerException("Null elements not allowed");
-		}
-		if (chunkIndex < 0) {
-			throw new IllegalArgumentException(
-					"Illegal chunk index: " + chunkIndex);
-		}
-		m_inputObjects = inputObjects;
-		m_flowVariables = flowVariables;
-		m_chunkIndex = chunkIndex;
-	}
+public interface QuickFormRepresentation<VAL extends DialogNodeValue> extends DialogNodeRepresentation<VAL> {
 
-	/**
-	 * @return the inputObjects
-	 */
-	public PortObject[] getInputObjects() {
-		return m_inputObjects;
-	}
-	/**
-	 * @return the flowVariables
-	 */
-	public List<FlowVariable> getFlowVariables() {
-		return m_flowVariables;
-	}
-	/**
-	 * @return the chunkIndex
-	 */
-	public int getChunkIndex() {
-		return m_chunkIndex;
-	}
-	
+    /**
+     * @return Label of the setting that is provided by this quick form
+     */
+    public String getLabel();
+
+    /**
+     * @return Description of the setting that is provided by this quick form
+     */
+    public String getDescription();
 
 }

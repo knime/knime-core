@@ -50,8 +50,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.virtual.ParallelizedChunkContentMaster;
-import org.knime.core.node.workflow.virtual.VirtualNodeInput;
+import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContentMaster;
+import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkNodeInput;
 
 /**
  * 
@@ -63,7 +63,7 @@ public interface LoopStartParallelizeNode extends LoopStartNode {
      * @param chunkIndex index
      * @return virtual input node for the given chunk
      */
-	public VirtualNodeInput getVirtualNodeInput(final int chunkIndex);
+	public VirtualParallelizedChunkNodeInput getVirtualNodeInput(final int chunkIndex);
 
 	/**
 	 * @return overall number of remote chunks (excluding the one that is

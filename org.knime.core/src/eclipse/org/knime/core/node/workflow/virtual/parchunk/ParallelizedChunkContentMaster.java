@@ -48,7 +48,7 @@
  * History
  *   04.04.2011 (mb): created
  */
-package org.knime.core.node.workflow.virtual;
+package org.knime.core.node.workflow.virtual.parchunk;
 
 import org.knime.core.node.workflow.LoopEndParallelizeNode;
 import org.knime.core.node.workflow.NodeContainer;

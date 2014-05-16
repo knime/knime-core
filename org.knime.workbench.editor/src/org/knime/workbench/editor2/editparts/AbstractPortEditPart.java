@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -69,7 +69,9 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeInPort;
 import org.knime.core.node.workflow.NodeOutPort;
+import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -421,18 +423,20 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * @return tooltip text for the port (with number of columns and rows)
      */
     protected String getTooltipText(final String portName,
-            final NodeOutPort port) {
+            final NodePort port) {
         String name = portName;
         if (portName == null) {
             name = port.getPortName();
         }
         StringBuilder sb = new StringBuilder();
         sb.append(name);
-        String portSummary = port.getPortSummary();
-        if (portSummary != null && portSummary.length() > 0) {
-            sb.append(" (");
-            sb.append(portSummary);
-            sb.append(")");
+        if (port instanceof NodeOutPort) {
+            String portSummary = ((NodeOutPort)port).getPortSummary();
+            if (portSummary != null && portSummary.length() > 0) {
+                sb.append(" (");
+                sb.append(portSummary);
+                sb.append(")");
+            }
         }
         return sb.toString();
     }
@@ -443,10 +447,18 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * of columns and rows.
      */
     public void rebuildTooltip() {
-        if (getIndex() < getNodeContainer().getNrOutPorts()) {
-            NodeOutPort port = getNodeContainer().getOutPort(getIndex());
-            String tooltip = getTooltipText(port.getPortName(), port);
-            ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
+        if (isInPort()) {
+            if (getIndex() < getNodeContainer().getNrInPorts()) {
+                NodeInPort port = getNodeContainer().getInPort(getIndex());
+                String tooltip = getTooltipText(port.getPortName(), port);
+                ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
+            }
+        } else {
+            if (getIndex() < getNodeContainer().getNrOutPorts()) {
+                NodeOutPort port = getNodeContainer().getOutPort(getIndex());
+                String tooltip = getTooltipText(port.getPortName(), port);
+                ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
+            }
         }
     }
 

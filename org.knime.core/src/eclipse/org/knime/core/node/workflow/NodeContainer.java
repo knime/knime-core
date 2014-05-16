@@ -208,9 +208,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         m_parent = parent;
         if (m_parent == null) {
             // make sure at least the top node knows how to execute stuff
-            m_jobManager =
-                    NodeExecutionJobManagerPool.getDefaultJobManagerFactory()
-                            .getInstance();
+            m_jobManager = NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance();
         }
         m_id = id;
         m_state = InternalNodeContainerState.IDLE;
@@ -222,11 +220,14 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     NodeContainer(final WorkflowManager parent, final NodeID id,
             final NodeContainerMetaPersistor persistor) {
         this(parent, id);
-        assert parent != null;
         assert persistor.getState() != null : "State of node \"" + id
         + "\" in \"" + persistor.getClass().getSimpleName() + "\" is null";
         m_state = persistor.getState();
         m_jobManager = persistor.getExecutionJobManager();
+        if (m_parent == null && m_jobManager == null) {
+            // make sure at least the top node knows how to execute stuff
+            m_jobManager = NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance();
+        }
         m_customDescription = persistor.getCustomDescription();
         NodeAnnotationData annoData = persistor.getNodeAnnotationData();
         if (annoData != null && !annoData.isDefault()) {
@@ -246,6 +247,15 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     public final WorkflowManager getParent() {
         return m_parent;
+    }
+
+    /** Returns the {@linkplain #getParent() parent workflow manager}. A {@link WorkflowManager} instance contained
+     * in a {@link SubNodeContainer} overrides it to return the subnode (which then is responsible for all the actions).
+     * @return the direct node container parent.
+     */
+    public NodeContainerParent getDirectNCParent() {
+        // overridden in wfm
+        return getParent();
     }
 
     /* ----------------- Job Manager ------------------ */
@@ -839,7 +849,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
             if (setDirty) {
                 setDirty();
             }
-            notifyStateChangeListeners(new NodeStateEvent(getID(), m_state.mapToOldStyleState()));
+            notifyStateChangeListeners(new NodeStateEvent(getID(), m_state));
             LOGGER.debug(this.getNameWithID() + " has new state: " + m_state);
         }
         return changesMade;
@@ -1291,9 +1301,12 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     protected abstract boolean isLocalWFM();
 
-    /**
-     * @return the isDeletable
-     */
+    /** @param value the isDeletable to set */
+    public void setDeletable(final boolean value) {
+        m_isDeletable = value;
+    }
+
+    /** @return the isDeletable */
     public boolean isDeletable() {
         return m_isDeletable;
     }

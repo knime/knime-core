@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 7, 2008 (mb): created
  */
@@ -54,24 +54,25 @@ package org.knime.core.node;
  * BufferedDataTables. The framework will make sure to retrieve this
  * table from the model and set them again, for example after the
  * workflow has been loaded.
- * 
+ *
  * USE WITH CARE! In all likelihood if you are using this interface you
  * really should not use it. Storing BDTs inside a NodeModel is bad
  * practice.
- * 
+ *
  * @author M. Berthold, University of Konstanz
+ * @see org.knime.core.node.port.PortObjectHolder
  */
 public interface BufferedDataTableHolder {
 
-    /** 
+    /**
      * @return array of BDTs which are held and used internally.
      */
     BufferedDataTable[] getInternalTables();
 
     /** Allows the WorkflowManager to set information about new BDTs, for
      * instance after load.
-     * 
+     *
      * @param tables the array of new tables
      */
-    void setInternalTables(final BufferedDataTable[] tables);  
+    void setInternalTables(final BufferedDataTable[] tables);
 }

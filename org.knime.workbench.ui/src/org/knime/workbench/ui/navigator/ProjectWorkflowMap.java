@@ -1,7 +1,7 @@
 /* This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright by 
+ * Copyright by
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -337,7 +337,7 @@ public final class ProjectWorkflowMap {
             WORKFLOW_CLIENTS.put(new MapWFKey(newPath), clientList);
         }
         WF_LISTENER.workflowChanged(new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED, nc.getID(), null, nc));
-        NSC_LISTENER.stateChanged(new NodeStateEvent(nc.getID(), nc.getState()));
+        NSC_LISTENER.stateChanged(new NodeStateEvent(nc));
     }
 
     /**

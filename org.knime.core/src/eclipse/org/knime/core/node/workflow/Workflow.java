@@ -306,7 +306,7 @@ class Workflow {
      * See also {@link #getBreadthFirstListOfNodeAndSuccessors()}
      *
      * @param id of node
-     * @param outPortIndices of node
+     * @param outPortIndices of node (empty set for all ports)
      * @param skipWFM if true, do not include WFM in the list
      * @return map as described above.
      */

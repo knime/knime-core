@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,7 +52,6 @@ package org.knime.core.node.workflow.execresult;
 
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeContentPersistor;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -63,7 +62,7 @@ import org.knime.core.node.port.PortObjectSpec;
  */
 public class NodeExecutionResult implements NodeContentPersistor {
 
-    private BufferedDataTable[] m_internalHeldTables;
+    private PortObject[] m_internalHeldPortObjects;
     private ReferencedFile m_nodeInternDir;
     private PortObject[] m_portObjects;
     private PortObjectSpec[] m_portObjectSpecs;
@@ -72,8 +71,8 @@ public class NodeExecutionResult implements NodeContentPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public BufferedDataTable[] getInternalHeldTables() {
-        return m_internalHeldTables;
+    public PortObject[] getInternalHeldPortObjects() {
+        return m_internalHeldPortObjects;
     }
 
     /** {@inheritDoc} */
@@ -127,9 +126,9 @@ public class NodeExecutionResult implements NodeContentPersistor {
     /**
      * @param internalHeldTables the internalHeldTables to set
      */
-    public void setInternalHeldTables(
-            final BufferedDataTable[] internalHeldTables) {
-        m_internalHeldTables = internalHeldTables;
+    public void setInternalHeldPortObjects(
+            final PortObject[] internalHeldTables) {
+        m_internalHeldPortObjects = internalHeldTables;
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -61,6 +61,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IRepositoryObject;
@@ -285,6 +286,12 @@ public final class DynamicNodeDescriptionCreator {
 
     private void addSubWorkflowDescription(final NodeContainer nc,
             final boolean useSingleLine, final StringBuilder bld) {
+        WorkflowManager wfm;
+        if (nc instanceof SubNodeContainer) {
+            wfm = ((SubNodeContainer)nc).getWorkflowManager();
+        } else {
+            wfm = (WorkflowManager)nc;
+        }
         if (!useSingleLine) {
             bld.append(getHeader());
             bld.append("<h1>");
@@ -295,7 +302,6 @@ public final class DynamicNodeDescriptionCreator {
                 bld.append("<p>" + nc.getCustomDescription() + "</p>");
             }
             bld.append("<h2>Contained nodes: </h2>");
-            WorkflowManager wfm = (WorkflowManager)nc;
             for (NodeContainer child : wfm.getNodeContainers()) {
                 addDescription(child, true, bld);
             }
@@ -306,7 +312,6 @@ public final class DynamicNodeDescriptionCreator {
             bld.append("</b></dt>");
             bld.append("<dd>");
             bld.append("<dl>");
-            WorkflowManager wfm = (WorkflowManager)nc;
             for (NodeContainer child : wfm.getNodeContainers()) {
                 addDescription(child, true, bld);
             }

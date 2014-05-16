@@ -74,7 +74,7 @@ public interface NodeContentPersistor {
     PortObjectSpec getPortObjectSpec(final int outportIndex);
     PortObject getPortObject(final int outportIndex);
     String getPortObjectSummary(final int outportIndex);
-    BufferedDataTable[] getInternalHeldTables();
+    PortObject[] getInternalHeldPortObjects();
     /** @since 2.6 */
     IFileStoreHandler getFileStoreHandler();
     String getWarningMessage();

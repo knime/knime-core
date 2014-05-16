@@ -164,7 +164,7 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
-import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -430,11 +430,17 @@ public class WorkflowEditor extends GraphicalEditor implements
             return editors;
         }
         for (NodeContainer child : m_manager.getNodeContainers()) {
-            if (child instanceof SingleNodeContainer) {
+            WorkflowManager manager;
+            if (child instanceof SubNodeContainer) {
+                SubNodeContainer subnode = (SubNodeContainer) child;
+                manager = subnode.getWorkflowManager();
+            } else if (child instanceof WorkflowManager) {
+                manager = (WorkflowManager) child;
+            } else {
                 continue;
             }
             WorkflowManagerInput in =
-                    new WorkflowManagerInput((WorkflowManager)child, this);
+                    new WorkflowManagerInput(manager, this);
             if (PlatformUI.getWorkbench().getActiveWorkbenchWindow() != null) {
                 for (IWorkbenchPage p : PlatformUI.getWorkbench()
                         .getActiveWorkbenchWindow().getPages()) {
