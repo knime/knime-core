@@ -961,8 +961,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         } catch (InvalidSettingsException e) {
             // no valid settings available, skip
         }
-        oldVNode.setDeletable(true);
-        m_wfm.removeNode(getVirtualInNodeID());
         m_virtualInNodeIDSuffix = m_wfm.addNode(new VirtualSubNodeInputNodeFactory(this, portTypes)).getIndex();
         NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualInNodeID());
         newVNode.setUIInformation(oldVNode.getUIInformation());
@@ -972,6 +970,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         } catch (InvalidSettingsException e) {
             // ignore
         }
+        oldVNode.setDeletable(true);
+        m_wfm.removeNode(getVirtualInNodeID());
         getInPort(0).setPortName("Variable Inport");
         newVNode.addNodeStateChangeListener(new RefreshPortNamesListener());
         refreshPortNames();
@@ -1016,8 +1016,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         } catch (InvalidSettingsException e) {
             // no valid settings available, skip
         }
-        oldVNode.setDeletable(true);
-        m_wfm.removeNode(oldVNode.getID());
         m_virtualOutNodeIDSuffix = m_wfm.addNode(new VirtualSubNodeOutputNodeFactory(portTypes)).getIndex();
         NodeContainer newVNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
         newVNode.setUIInformation(oldVNode.getUIInformation());
@@ -1027,6 +1025,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         } catch (InvalidSettingsException e) {
             // ignore
         }
+        oldVNode.setDeletable(true);
+        m_wfm.removeNode(oldVNode.getID());
         getOutPort(0).setPortName("Variable Outport");
         newVNode.addNodeStateChangeListener(new RefreshPortNamesListener());
         refreshPortNames();
