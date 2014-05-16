@@ -210,6 +210,46 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.virtual.ParallelizedChunkContent">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.virtual.ParallelizedChunkContent"/>
+                <message_argument value="org.knime.base_2.9.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.virtual.ParallelizedChunkContentMaster">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.virtual.ParallelizedChunkContentMaster"/>
+                <message_argument value="org.knime.base_2.9.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.virtual.VirtualNodeInput">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.virtual.VirtualNodeInput"/>
+                <message_argument value="org.knime.base_2.9.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeModel">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeModel"/>
+                <message_argument value="org.knime.base_2.9.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeModel">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeModel"/>
+                <message_argument value="org.knime.base_2.9.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src-deprecated/org/knime/base/node/preproc/columnTrans/AbstractMany2OneCellFactory.java" type="org.knime.base.node.preproc.columnTrans.AbstractMany2OneCellFactory">
         <filter id="305365105">
             <message_arguments>

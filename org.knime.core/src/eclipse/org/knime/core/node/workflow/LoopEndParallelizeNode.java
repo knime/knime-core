@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 29, 2011 (wiswedel): created
  */
@@ -53,18 +53,17 @@ package org.knime.core.node.workflow;
 import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContentMaster;
 
 /**
- * 
+ * NO API!
  * @author wiswedel, University of Konstanz
  */
-public interface LoopEndParallelizeNode
-extends LoopEndNode {
+public interface LoopEndParallelizeNode extends LoopEndNode {
 
     /** Set master object holding all parallel chunks.
-     * 
+     *
      * @param pcm
      */
     void setParallelChunkMaster(ParallelizedChunkContentMaster pcm);
-    
+
     /** During execution: notify node that status of some chunks
      * has changed.
      */

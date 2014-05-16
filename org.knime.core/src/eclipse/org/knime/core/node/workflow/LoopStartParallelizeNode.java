@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 29, 2011 (wiswedel): created
  */
@@ -54,11 +54,11 @@ import org.knime.core.node.workflow.virtual.parchunk.ParallelizedChunkContentMas
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkNodeInput;
 
 /**
- * 
+ * NO API!
  * @author wiswedel, University of Konstanz
  */
 public interface LoopStartParallelizeNode extends LoopStartNode {
-	
+
     /**
      * @param chunkIndex index
      * @return virtual input node for the given chunk
@@ -73,7 +73,7 @@ public interface LoopStartParallelizeNode extends LoopStartNode {
 
     /** Set parallel chunk master so the start node has access to clean up
      * when reset.
-     * 
+     *
      * @param pccm matching @see{ParallelizedChunkContentMaster}
      */
     public void setChunkMaster(final ParallelizedChunkContentMaster pccm);

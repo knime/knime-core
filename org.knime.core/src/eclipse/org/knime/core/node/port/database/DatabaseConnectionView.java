@@ -56,7 +56,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.knime.core.node.ModelContentRO;
 
 @SuppressWarnings("serial")
@@ -87,7 +87,7 @@ final class DatabaseConnectionView extends JPanel {
         String sql = sett.getString("statement", null);
         if (sql != null) {
             buf.append("<strong>SQL Statement:</strong><br/>");
-            final String query = StringEscapeUtils.escapeHtml(sql);
+            final String query = StringEscapeUtils.escapeHtml4(sql);
             buf.append("<tt>" + query + "</tt>");
         }
         buf.append("</body></html>");

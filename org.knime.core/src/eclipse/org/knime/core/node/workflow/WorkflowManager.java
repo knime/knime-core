@@ -2653,7 +2653,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param nc To queue if possible
      * @return whether successfully queued.
      */
-    public boolean queueIfQueuable(final NodeContainer nc) {
+    private boolean queueIfQueuable(final NodeContainer nc) {
         if (nc.isLocalWFM()) {
             return false;
         }

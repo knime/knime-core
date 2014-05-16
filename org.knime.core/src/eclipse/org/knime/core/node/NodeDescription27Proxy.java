@@ -71,10 +71,9 @@ import org.w3c.dom.Element;
  * information from the XML file.<br />
  * If assertions are enabled (see {@link KNIMEConstants#ASSERTIONS_ENABLED} it also checks the contents of the XML for
  * against the XML schema and reports errors via the logger.
- * 
- * <p>No API.
+ *
+ * <p>No API!
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 2.8
  */
 public final class NodeDescription27Proxy extends NodeDescription {
     private static final NodeLogger logger = NodeLogger.getLogger(NodeDescription27Proxy.class);
