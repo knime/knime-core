@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -138,7 +138,7 @@ public class AndElementOperator extends AggregationOperator {
                 //we have to check this only for the first set since the result
                 //can't get bigger
                 if (valCells.size() >= getMaxUniqueValues()) {
-                    setSkipMessage("Group contains to many unique values");
+                    setSkipMessage("Group contains too many unique values");
                     return true;
                 }
                 m_vals.addAll(valCells);

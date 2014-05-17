@@ -74,7 +74,7 @@
             All aggregation methods get a * appended if the missing value option 
             is not ticked in the aggregation settings in order to distinguish
             between columns that considered missing values in the aggregation
-            process and columns that does not.
+            process and columns that do not.
         </option>
         <option name="Enable hiliting">
 			If enabled, the hiliting of a group row will hilite all rows of this

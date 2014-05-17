@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -119,7 +119,7 @@ public class MedianDateOperator extends AggregationOperator {
     @Override
     protected boolean computeInternal(final DataCell cell) {
         if (m_cells.size() >= getMaxUniqueValues()) {
-            setSkipMessage("Group contains to many values");
+            setSkipMessage("Group contains too many values");
             return true;
         }
         m_cells.add(cell);

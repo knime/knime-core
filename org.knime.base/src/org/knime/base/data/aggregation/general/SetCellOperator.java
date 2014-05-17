@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -126,7 +126,7 @@ public class SetCellOperator extends AggregationOperator {
         //check if the set contains more values than allowed
         //before adding the new value
         if (m_cells.size() >= getMaxUniqueValues()) {
-            setSkipMessage("Group contains to many unique values");
+            setSkipMessage("Group contains too many unique values");
             return true;
         }
         m_cells.add(cell);

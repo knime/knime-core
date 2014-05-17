@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -129,7 +129,7 @@ public class ModeOperator extends AggregationOperator {
             //check if the maps contains more values than allowed
             //before adding a new value
             if (m_valCounter.size() >= getMaxUniqueValues()) {
-                setSkipMessage("Group contains to many unique values");
+                setSkipMessage("Group contains too many unique values");
                 return true;
             }
             counter = new MutableInteger(0);

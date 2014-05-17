@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -140,7 +140,7 @@ public class UniqueConcatenateWithCountOperator
         //check if the map contains more values than allowed
         //before adding a new value
         if (m_vals.size() >= getMaxUniqueValues()) {
-            setSkipMessage("Group contains to many unique values");
+            setSkipMessage("Group contains too many unique values");
             return true;
         }
         m_vals.put(cell, new MutableInteger(1));
