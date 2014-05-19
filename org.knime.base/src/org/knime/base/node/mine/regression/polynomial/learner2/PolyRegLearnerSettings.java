@@ -47,14 +47,19 @@
  */
 package org.knime.base.node.mine.regression.polynomial.learner2;
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.knime.base.node.mine.regression.MissingValueHandling;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.filter.NameFilterConfiguration;
+import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 
 /**
  * This class holds the settings for the polynomial regression learner node.
@@ -69,15 +74,9 @@ public class PolyRegLearnerSettings {
 
     private String m_targetColumn;
 
-    private final Set<String> m_selectedColumnNames =
-        new LinkedHashSet<String>();
-
-    private boolean m_includeAll = false;
+    private final DataColumnSpecFilterConfiguration m_filterConfiguration = new DataColumnSpecFilterConfiguration("column filter", new DataTypeColumnFilter(DoubleValue.class), DataColumnSpecFilterConfiguration.FILTER_BY_DATATYPE | NameFilterConfiguration.FILTER_BY_NAMEPATTERN);
 
     private MissingValueHandling m_missingValueHandling = MissingValueHandling.fail;
-
-    private final Set<String> m_unmodSelectedColumnNames = Collections
-            .unmodifiableSet(m_selectedColumnNames);
 
     private static final String CFG_MISSING_VALUE_HANDLING = "missing_value_handling";
 
@@ -112,17 +111,80 @@ public class PolyRegLearnerSettings {
         m_degree = settings.getInt("degree");
         m_targetColumn = settings.getString("targetColumn");
         m_maxRowsForView = settings.getInt("maxViewRows");
-        m_includeAll = settings.getBoolean("includeAll", false); // added v2.1
+        boolean includeAll = settings.getBoolean("includeAll", false); // added v2.1
         // added in 2.10
-        m_missingValueHandling = MissingValueHandling.valueOf(
-            settings.getString(CFG_MISSING_VALUE_HANDLING, MissingValueHandling.ignore.name()));
+        m_missingValueHandling =
+            MissingValueHandling.valueOf(settings.getString(CFG_MISSING_VALUE_HANDLING,
+                MissingValueHandling.ignore.name()));
 
-        m_selectedColumnNames.clear();
-        if (!m_includeAll) {
-            for (String s : settings.getStringArray("selectedColumns")) {
-                m_selectedColumnNames.add(s);
+        if (settings.containsKey("selectedColumns")) {
+            //removed in 2.10
+            String[] included = settings.getStringArray("selectedColumns");
+            //we were able to load the old settings
+            String[] excluded = new String[0];
+            //but convert to new:
+            NodeSettings fakeSettings =
+                    createFakeSettings(m_filterConfiguration.getConfigRootName(), included, excluded, includeAll);
+            //added in 2.10
+            m_filterConfiguration.loadConfigurationInModel(fakeSettings);
+        } else {
+            //no previous config: we should use the new config
+            //added in 2.10
+            NodeSettingsRO filterSettings = settings.getNodeSettings(m_filterConfiguration.getConfigRootName());
+            NodeSettingsRO dtSettings = filterSettings.getNodeSettings("datatype");
+            NodeSettingsRO tlSettings = dtSettings.getNodeSettings("typelist");
+            if (!tlSettings.keySet().contains(DoubleValue.class.getName())) {
+                NodeSettings fakeSettings =
+                    createFakeSettings(m_filterConfiguration.getConfigRootName(), new String[0], new String[0],
+                        false);
+                m_filterConfiguration.loadConfigurationInModel(fakeSettings);
+            } else {
+                m_filterConfiguration.loadConfigurationInModel(settings);
             }
         }
+    }
+
+    /**
+     * Loads the settings from the node settings object.
+     *
+     * @param settings the node settings
+     * @param spec The {@link DataTableSpec} of input table.
+     *
+     * @throws InvalidSettingsException if one of the settings is missing
+     */
+    public void loadSettingsInDialog(final NodeSettingsRO settings, final DataTableSpec spec)
+            throws InvalidSettingsException {
+        m_degree = settings.getInt("degree");
+        m_targetColumn = settings.getString("targetColumn");
+        m_maxRowsForView = settings.getInt("maxViewRows");
+        // added in 2.10
+        m_missingValueHandling =
+            MissingValueHandling.valueOf(settings.getString(CFG_MISSING_VALUE_HANDLING,
+                MissingValueHandling.ignore.name()));
+        //added in 2.10, replacing includeAll and column names
+        m_filterConfiguration.loadConfigurationInDialog(settings, spec);
+    }
+
+    /**
+     * Creates a fake configuration to help migrating the old configuration.
+     *
+     * @param configName Name of the {@link NodeSettings} to create.
+     * @param included The included column names.
+     * @param excluded The excluded column names.
+     * @param includeAll Should we include all columns that are not in the exclude list ({@code true}), or use the include list ({@code false})?
+     * @return The fake {@link NodeSettings}.
+     */
+    static NodeSettings createFakeSettings(final String configName, final String[] included, final String[] excluded, final boolean includeAll) {
+        NodeSettings fakeSettings = new NodeSettings("FakeRoot");
+        NodeSettings filterSettings = (NodeSettings)fakeSettings.addNodeSettings(configName);
+        filterSettings.addString("filter-type", "STANDARD");
+        filterSettings.addStringArray("included_names", included);
+        filterSettings.addStringArray("excluded_names", excluded);
+        filterSettings.addString("enforce_option", (includeAll ? EnforceOption.EnforceExclusion : EnforceOption.EnforceInclusion).name());
+        NodeSettings datatypeSettings = (NodeSettings)filterSettings.addNodeSettings("datatype");
+        NodeSettingsWO typelist = datatypeSettings.addNodeSettings("typelist");
+        typelist.addBoolean(DoubleValue.class.getName(), true);
+        return fakeSettings;
     }
 
     /**
@@ -136,11 +198,7 @@ public class PolyRegLearnerSettings {
             settings.addString("targetColumn", m_targetColumn);
             settings.addInt("maxViewRows", m_maxRowsForView);
             settings.addString(CFG_MISSING_VALUE_HANDLING, m_missingValueHandling.name());
-            settings.addBoolean("includeAll", m_includeAll);
-            if (!m_includeAll) {
-                settings.addStringArray("selectedColumns", m_selectedColumnNames
-                        .toArray(new String[m_selectedColumnNames.size()]));
-            }
+            m_filterConfiguration.saveConfiguration(settings);
         }
     }
 
@@ -185,35 +243,40 @@ public class PolyRegLearnerSettings {
      * target column name must not be among these columns!
      *
      * @param columnNames a set with the selected column names
+     * @deprecated use {@link #getFilterConfiguration()}
      */
+    @Deprecated
     public void setSelectedColumns(final Set<String> columnNames) {
-        m_selectedColumnNames.clear();
-        for (String s : columnNames) {
-            m_selectedColumnNames.add(s);
-        }
+        throw new UnsupportedOperationException();
     }
 
     /**
-     * Returns an (unmodifieable) set of the select column names.
+     * Returns an (unmodifiable) set of the select column names.
      *
-     * @return a set with the selectec column names
+     * @return a set with the selected column names
+     * @deprecated use {@link #getFilterConfiguration()}
      */
+    @Deprecated
     public Set<String> getSelectedColumns() {
-        return m_unmodSelectedColumnNames;
+        throw new UnsupportedOperationException();
     }
 
     /**
      * @return the includeAll
+     * @deprecated use {@link #getFilterConfiguration()}
      */
+    @Deprecated
     public boolean isIncludeAll() {
-        return m_includeAll;
+        throw new UnsupportedOperationException();
     }
 
     /**
      * @param includeAll the includeAll to set
+     * @deprecated Use {@link #getFilterConfiguration()}
      */
+    @Deprecated
     public void setIncludeAll(final boolean includeAll) {
-        m_includeAll = includeAll;
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -228,5 +291,12 @@ public class PolyRegLearnerSettings {
      */
     public void setMissingValueHandling(final MissingValueHandling missingValueHandling) {
         this.m_missingValueHandling = missingValueHandling;
+    }
+
+    /**
+     * @return the filterConfiguration
+     */
+    public DataColumnSpecFilterConfiguration getFilterConfiguration() {
+        return m_filterConfiguration;
     }
 }

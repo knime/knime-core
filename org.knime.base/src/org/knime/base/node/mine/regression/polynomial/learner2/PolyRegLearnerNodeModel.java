@@ -95,6 +95,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -105,6 +106,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.xml.sax.SAXException;
 
 /**
@@ -115,6 +117,7 @@ import org.xml.sax.SAXException;
  * @since 2.10
  */
 public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
+    private static final NodeLogger m_logger = NodeLogger.getLogger(PolyRegLearnerNodeModel.class);
     private final PolyRegLearnerSettings m_settings = new PolyRegLearnerSettings();
 
     private double[] m_betas;
@@ -623,29 +626,38 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
      * @throws InvalidSettingsException If no valid columns are in the spec.
      */
     private String[] computeSelectedColumns(final DataTableSpec spec) throws InvalidSettingsException {
-        String[] includes;
         String target = m_settings.getTargetColumn();
-        if (m_settings.isIncludeAll()) {
-            List<String> includeList = new ArrayList<String>();
-            for (DataColumnSpec s : spec) {
-                if (s.getType().isCompatible(DoubleValue.class)) {
-                    String name = s.getName();
-                    if (!name.equals(target)) {
-                        includeList.add(name);
+        FilterResult filterResult = m_settings.getFilterConfiguration().applyTo(spec);
+        String[] includes = filterResult.getIncludes();
+//        boolean targetIsPresetSet = target != null;
+        if (target == null) {
+            if (spec.containsCompatibleType(DoubleValue.class)) {
+                for (DataColumnSpec colSpec : spec) {
+                    if (colSpec.getType().isCompatible(DoubleValue.class)) {
+                        target = colSpec.getName();
                     }
                 }
+            } else {
+                throw new InvalidSettingsException("No target column selected");
             }
-            includes = includeList.toArray(new String[includeList.size()]);
-            if (includes.length == 0) {
-                throw new InvalidSettingsException("No double-compatible "
-                    + "variables (learning columns) in input table");
-            }
-        } else {
-            Set<String> selSettings = m_settings.getSelectedColumns();
-            if (selSettings == null || selSettings.isEmpty()) {
-                throw new InvalidSettingsException("No settings available");
-            }
-            includes = selSettings.toArray(new String[selSettings.size()]);
+            m_settings.setTargetColumn(target);
+        }
+        boolean targetIsIncluded = false;
+        for (String incl : includes) {
+            targetIsIncluded |= incl.equals(target);
+        }
+        if (targetIsIncluded) {
+//            String warningMessage = "The selected columns " + Arrays.asList(includes)+" also contain the target column: " + target +", removing target!";
+//            if (targetIsPresetSet) {
+//                m_logger.warn(warningMessage);
+//                setWarningMessage(warningMessage);
+//            }
+            List<String>tmp = new ArrayList<>(Arrays.asList(includes));
+            tmp.remove(target);
+            includes = tmp.toArray(new String[includes.length - 1]);
+        }
+        if (includes.length == 0) {
+            throw new InvalidSettingsException("No double-compatible variables (learning columns) in input table");
         }
         return includes;
     }

@@ -72,12 +72,14 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.ColumnFilterPanel;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
 /**
  * This is the dialog for the polynomial regression learner node. The user can
@@ -102,8 +104,8 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
             10000, 1, Integer.MAX_VALUE, 10));
 
     @SuppressWarnings("unchecked")
-    private final ColumnFilterPanel m_colSelectionPanel = new ColumnFilterPanel(
-            true, DoubleValue.class);
+    private final DataColumnSpecFilterPanel m_colSelectionPanel = new DataColumnSpecFilterPanel(
+            false, DoubleValue.class);
 
     private JRadioButton m_missingValueHandlingIgnore;
     private JRadioButton m_missingValueHandlingFail;
@@ -127,7 +129,7 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
                 if (m_targetColumn.getSelectedItem() != null) {
                     m_colSelectionPanel.resetHiding();
                     m_colSelectionPanel
-                            .hideColumns((DataColumnSpec)m_targetColumn
+                            .hideNames((DataColumnSpec)m_targetColumn
                                     .getSelectedItem());
                 }
             }
@@ -204,7 +206,7 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
             final PortObjectSpec[] specs) throws NotConfigurableException {
         DataTableSpec dataTableSpec = (DataTableSpec)specs[0];
         try {
-            m_settings.loadSettingsFrom(settings);
+            m_settings.loadSettingsInDialog(settings, dataTableSpec);
         } catch (InvalidSettingsException ex) {
             LinkedHashSet<String> defSelected = new LinkedHashSet<String>();
             for (DataColumnSpec s : dataTableSpec) {
@@ -212,17 +214,22 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
                     defSelected.add(s.getName());
                 }
             }
-            m_settings.setSelectedColumns(defSelected);
+            NodeSettings fakeSettings =
+                PolyRegLearnerSettings.createFakeSettings("column filter", defSelected.toArray(new String[0]),
+                    new String[0], false/*includeAll*/);
+            DataColumnSpecFilterConfiguration conf = new DataColumnSpecFilterConfiguration("column filter");
+            conf.loadConfigurationInDialog(fakeSettings, dataTableSpec);
+            m_settings.getFilterConfiguration().loadConfigurationInDialog(fakeSettings, dataTableSpec);
             // for the rest: ignore it, defaults are used instead
         }
         m_targetColumn.update(dataTableSpec, m_settings.getTargetColumn());
         m_degree.getModel().setValue(m_settings.getDegree());
         m_viewRows.getModel().setValue(m_settings.getMaxRowsForView());
-        m_colSelectionPanel
-                .update(dataTableSpec, false, m_settings.getSelectedColumns());
-        m_colSelectionPanel.hideColumns((DataColumnSpec)m_targetColumn
+        m_colSelectionPanel.loadConfiguration(m_settings.getFilterConfiguration(), dataTableSpec);
+
+        m_colSelectionPanel.resetHiding();
+        m_colSelectionPanel.hideNames((DataColumnSpec)m_targetColumn
                 .getSelectedItem());
-        m_colSelectionPanel.setKeepAllSelected(m_settings.isIncludeAll());
         m_missingValueHandlingIgnore.setSelected(
             m_settings.getMissingValueHandling().equals(MissingValueHandling.ignore));
         m_missingValueHandlingFail.setSelected(
@@ -239,9 +246,7 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
         m_settings.setTargetColumn(m_targetColumn.getSelectedColumn());
         m_settings.setDegree((Integer)m_degree.getModel().getValue());
         m_settings.setMaxRowsForView((Integer)m_viewRows.getModel().getValue());
-        m_settings.setIncludeAll(m_colSelectionPanel.isKeepAllSelected());
-        m_settings.setSelectedColumns(
-                m_colSelectionPanel.getIncludedColumnSet());
+        m_colSelectionPanel.saveConfiguration(m_settings.getFilterConfiguration());
         if (m_missingValueHandlingFail.isSelected()) {
             m_settings.setMissingValueHandling(MissingValueHandling.fail);
         } else {
