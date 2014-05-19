@@ -715,7 +715,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
      *
      */
     public void openDialog() {
-        openNodeDialog();
+        NodeContainer container = (NodeContainer)getModel();
+        if (container instanceof WorkflowManager) {
+            openSubWorkflowEditor();
+        } else {
+            openNodeDialog();
+        }
     }
 
     /**
