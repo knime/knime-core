@@ -164,7 +164,8 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
         return null;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 2.10*/
     @Override
     public FileWorkflowPersistor.LoadVersion getLoadVersion() {
         throwUnsupportedOperationException();
@@ -301,7 +302,8 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
         throwUnsupportedOperationException();
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 2.10*/
     @Override
     public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
     }
