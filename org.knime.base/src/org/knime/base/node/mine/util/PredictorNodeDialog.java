@@ -192,7 +192,9 @@ public class PredictorNodeDialog extends NodeDialogPane {
             public void stateChanged(final ChangeEvent e) {
                 if (!customPrediction.isEnabled()) {
                     PredictorHelper ph = PredictorHelper.getInstance();
-                    customPrediction.setStringValue(ph.computePredictionDefault(getLastTargetColumn().getName()));
+                    DataColumnSpec lastTargetColumn = getLastTargetColumn();
+                    customPrediction.setStringValue(ph.computePredictionDefault(lastTargetColumn == null ? ""
+                        : lastTargetColumn.getName()));
                 }
             }
         });
@@ -342,6 +344,7 @@ public class PredictorNodeDialog extends NodeDialogPane {
             m_predictionColModel.setEnabled(m_overridePredModel.getBooleanValue());
             m_predictionColModel.setStringValue("");
         }
+        m_overridePred.getModel().setSelected(m_overridePredModel.getBooleanValue());
         try {
             m_addProbsModel.loadSettingsFrom(settings);
         } catch (InvalidSettingsException _) {
@@ -349,6 +352,7 @@ public class PredictorNodeDialog extends NodeDialogPane {
             m_addProbsModel.setEnabled(true);
             m_addProbsModel.setBooleanValue(true);
         }
+        m_addProbs.getModel().setSelected(m_addProbsModel.getBooleanValue());
         try {
             m_suffixModel.loadSettingsFrom(settings);
         } catch (InvalidSettingsException _) {
@@ -376,6 +380,8 @@ public class PredictorNodeDialog extends NodeDialogPane {
         if (specs[MODEL_PORT] instanceof PMMLPortObjectSpec) {
             PMMLPortObjectSpec spec = (PMMLPortObjectSpec)specs[MODEL_PORT];
             setLastTargetColumn(spec.getTargetCols().iterator().next());
+        } else if (specs[MODEL_PORT] == null) {
+            setLastTargetColumn(null);
         } else {
             throw new IllegalStateException("Please implement this method properly for the class:\n" + this.getClass());
         }

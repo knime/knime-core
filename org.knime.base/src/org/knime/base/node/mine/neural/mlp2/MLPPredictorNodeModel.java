@@ -102,6 +102,7 @@ import org.w3c.dom.Node;
  * and the trained Neural Network.
  * <p>Despite being public no official API.
  * @author Nicolas Cebron, University of Konstanz
+ * @since 2.10 (since 2.9 really)
  */
 public final class MLPPredictorNodeModel extends NodeModel {
     /** The node logger for this class. */
@@ -135,7 +136,7 @@ public final class MLPPredictorNodeModel extends NodeModel {
     private static final String CFGKEY_APPEND_PROBS = "append probabilities";
     private static final boolean DEFAULT_APPEND_PROBS = true;
     /**
-     * @return The
+     * @return The "append probabilities" node model.
      */
     static SettingsModelBoolean createAppendProbs() {
         return new SettingsModelBoolean(CFGKEY_APPEND_PROBS, DEFAULT_APPEND_PROBS);

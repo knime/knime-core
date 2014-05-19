@@ -98,7 +98,8 @@ import org.xml.sax.helpers.AttributesImpl;
  *
  * @author Dominik Morent, KNIME.com AG, Zurich, Switzerland
  * @author wenlin, Zementis, May 2011
- * <p>Despite being public no official API.
+ * <p><strike>Despite being public no official API.</strike>
+ * @since 2.10 (since 2.9 really)
  */
 public final class PMMLNeuralNetworkTranslator implements PMMLTranslator {
 
