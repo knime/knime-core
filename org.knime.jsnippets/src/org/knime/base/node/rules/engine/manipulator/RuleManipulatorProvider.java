@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -172,7 +172,9 @@ public class RuleManipulatorProvider implements ManipulatorProvider {
             + "<br/>For example: <tt>$Col0$ LIKE \"H?llo*\"</tt>");
         m_operatorDescriptions.put(Operators.LT, String.format(compareFormat, "&lt;"));
         m_operatorDescriptions.put(Operators.MATCHES,
-            "The string on the left matches the regular expression on the right.");
+            "The string on the left matches the regular expression on the right. The regular expression can be " +
+            "enclosed in double quotes (\") or in slashes (/). The latter allows for escaping with backslash, e.g. " +
+            "if you want to match a slash itself.");
         m_operatorDescriptions.put(Operators.MISSING,
             "Checks whether the argument (a column) contains a missing value or not.");
         m_operatorDescriptions.put(Operators.NOT, "Logical negation of a boolean expression.");

@@ -260,7 +260,13 @@ public class AbstractRuleParser implements Parser {
         public Token getTokenList(final Segment text, final int initialTokenType, final int startOffset) {
             Token tokenList = m_wrapped.getTokenList(text, initialTokenType, startOffset);
             Token token = tokenList;
+            boolean perlStyleMode = false, escape = false;
             while (token != null && token.isPaintable()) {
+                String lexeme = token.getLexeme();
+                if (lexeme.equals("/")) {
+                    perlStyleMode = (!escape && !perlStyleMode) || escape;
+                }
+                escape = lexeme.equals("\\") && perlStyleMode;
                 switch (token.type) {
                     case TokenTypes.RESERVED_WORD:
                     case TokenTypes.RESERVED_WORD_2:
@@ -282,6 +288,9 @@ public class AbstractRuleParser implements Parser {
                 }
                 if (m_operators.contains(token.getLexeme())) {
                     token.type = TokenTypes.RESERVED_WORD;
+                }
+                if (perlStyleMode || lexeme.equals("/")) {
+                    token.type = TokenTypes.LITERAL_STRING_DOUBLE_QUOTE;
                 }
                 token = token.getNextToken();
             }

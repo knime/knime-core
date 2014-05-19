@@ -84,7 +84,9 @@ import org.knime.core.node.workflow.FlowVariable;
  * OP := '&gt;' | '&lt;' | '&gt;=' | '&lt;=' |
  *       '=' | 'LIKE' | 'MATCHES'
  * LOP := 'IN'
- * STRING := '&quot;' [^&quot;]* '&quot;'
+ * STRING := NON_QUOTE_STRING | PERL_QUOTE_STRING
+ * NON_QUOTE_STRING = '&quot;' [^&quot;]* '&quot;'
+ * PERL_QUOTE_STRING = '/' ([^\\/](\\/)?)* '/'
  * NUMBER := '-'? POSITIVE
  * POSITIVE := ([0-9]*\.[0-9]*('E''-'?[1-9][0-9]*)?) |
  *             [0-9]+('E''-'?[1-9][0-9]*)? | 'Infinity'

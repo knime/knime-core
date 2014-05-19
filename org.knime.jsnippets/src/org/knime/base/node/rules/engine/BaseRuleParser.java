@@ -158,8 +158,24 @@ public class BaseRuleParser<PredicateType> {
             final int startPosition = m_position;
             expect('"');
             consume();
-            final String collected = collectTill('"', startPosition/*, '\\'*/);
+            final String collected = collectTill('"', startPosition);
             expect('"');
+            consume();
+            return collected;
+        }
+
+        /**
+         * Reads a Perl style pattern.
+         *
+         * @return The string with possible escape of '/' with '\\'.
+         * @throws ParseException Not a string comes.
+         */
+        public String readPerlString() throws ParseException {
+            final int startPosition = m_position;
+            expect('/');
+            consume();
+            final String collected = collectTill('/', startPosition, '\\');
+            expect('/');
             consume();
             return collected;
         }
@@ -1013,6 +1029,9 @@ public class BaseRuleParser<PredicateType> {
             final char ch = state.peekChar();
             if (ch == '"') {
                 String text = state.readString();
+                left = m_factoryRef.constant(text, StringCell.TYPE);
+            } else if (ch == '/') {
+                String text = state.readPerlString();
                 left = m_factoryRef.constant(text, StringCell.TYPE);
             } else if (ch == '-' || (ch >= '0' && ch <= '9') || ch == '.'
                 || state.peekText(Double.toString(Double.POSITIVE_INFINITY))) {
