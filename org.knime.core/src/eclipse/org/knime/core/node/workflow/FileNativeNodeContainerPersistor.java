@@ -192,7 +192,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             getLogger().error(error);
             // setDirtyAfterLoad(); // don't set dirty, missing node placeholder
 
-            throw new NodeFactoryUnknownException(nodeInfo, additionalFactorySettings, e);
+            throw new NodeFactoryUnknownException(error, nodeInfo, additionalFactorySettings, e);
         }
         m_node = new Node(nodeFactory);
     }

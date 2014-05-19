@@ -66,7 +66,6 @@ import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
  *
@@ -214,7 +213,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
     /** Called after all nodes have been instantiated but no configure storm is launched. Used to sneak some more
      * data into some nodes (sub node container to push itself into the virtual in/out)
-     * @param wfm The workflow itself, as returned by {@link #getNodeContainer(WorkflowManager, NodeID)}. 
+     * @param wfm The workflow itself, as returned by {@link #getNodeContainer(WorkflowManager, NodeID)}.
      * @param loadResult TODO*/
     void postLoad(WorkflowManager wfm, LoadResult loadResult);
 
@@ -660,14 +659,25 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         private final NodeSettingsRO m_additionalFactorySettings;
 
         /**
+         * @param message ...
+         * @param nodeAndBundleInformation ...
+         * @param additionalFactorySettings ...
+         * @param cause ... */
+        NodeFactoryUnknownException(final String message, final NodeAndBundleInformation nodeAndBundleInformation,
+                final NodeSettingsRO additionalFactorySettings, final Throwable cause) {
+            super(message, cause);
+            m_nodeAndBundleInformation = nodeAndBundleInformation;
+            m_additionalFactorySettings = additionalFactorySettings;
+        }
+
+        /**
          * @param nodeAndBundleInformation ...
          * @param additionalFactorySettings ...
          * @param cause ... */
         NodeFactoryUnknownException(final NodeAndBundleInformation nodeAndBundleInformation,
                 final NodeSettingsRO additionalFactorySettings, final Throwable cause) {
-            super(nodeAndBundleInformation.getErrorMessageWhenNodeIsMissing(), cause);
-            m_nodeAndBundleInformation = nodeAndBundleInformation;
-            m_additionalFactorySettings = additionalFactorySettings;
+            this(nodeAndBundleInformation.getErrorMessageWhenNodeIsMissing(),
+                nodeAndBundleInformation, additionalFactorySettings, cause);
         }
 
         /**
