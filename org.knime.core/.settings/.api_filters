@@ -1672,13 +1672,13 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/virtual/VirtualPortObjectInNodeFactory.java" type="org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory">
-        <filter comment="changes required to support subnode - no API anyway" id="305365105">
+        <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory"/>
                 <message_argument value="org.knime.core_2.10.0"/>
             </message_arguments>
         </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="305422471">
+        <filter id="305422471">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory"/>
                 <message_argument value="org.knime.base_2.9.2"/>
@@ -1686,13 +1686,13 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/virtual/VirtualPortObjectOutNodeFactory.java" type="org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory">
-        <filter comment="changes required to support subnode - no API anyway" id="305365105">
+        <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory"/>
                 <message_argument value="org.knime.core_2.10.0"/>
             </message_arguments>
         </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="305422471">
+        <filter id="305422471">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory"/>
                 <message_argument value="org.knime.base_2.9.2"/>
