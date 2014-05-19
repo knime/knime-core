@@ -7,6 +7,12 @@
                 <message_argument value="2.9.2"/>
             </message_arguments>
         </filter>
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="2.10.0"/>
+                <message_argument value="2.9.3"/>
+            </message_arguments>
+        </filter>
         <filter comment="persistor code rewrite - not meant as public api" id="923795461">
             <message_arguments>
                 <message_argument value="2.9.0"/>

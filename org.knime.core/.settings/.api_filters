@@ -1,155 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<component id="org.knime.core" version="2">
-    <resource path="META-INF/MANIFEST.MF">
-        <filter id="923795461">
-            <message_arguments>
-                <message_argument value="2.10.0"/>
-                <message_argument value="2.9.0"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="923795461">
-            <message_arguments>
-                <message_argument value="2.10.0"/>
-                <message_argument value="2.9.2"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="923795461">
-            <message_arguments>
-                <message_argument value="2.9.0"/>
-                <message_argument value="2.8.2"/>
-            </message_arguments>
-        </filter>
-        <filter id="924844039">
-            <message_arguments>
-                <message_argument value="2.8.2"/>
-                <message_argument value="2.8.0"/>
-            </message_arguments>
-        </filter>
-        <filter id="924844039">
-            <message_arguments>
-                <message_argument value="2.8.3"/>
-                <message_argument value="2.8.2"/>
-            </message_arguments>
-        </filter>
-        <filter id="927989779">
-            <message_arguments>
-                <message_argument value="2.8.0"/>
-                <message_argument value="org.knime.core.util"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.NodePersistorVersion1xx">
-        <filter comment="changes to non-api persistor code" id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.NodePersistorVersion1xx"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.NodePersistorVersion200">
-        <filter comment="persistor code rewrite - not meant as public api" id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.NodePersistorVersion200"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.NodePostConfigure">
-        <filter comment="workflow version/persistor change" id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.NodePostConfigure"/>
-                <message_argument value="org.knime.core_2.8.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.DefaultWebViewTemplate">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.DefaultWebViewTemplate"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.InteractiveWebNode">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.InteractiveWebNode"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.InteractiveWebNodeFactoryExtension">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.InteractiveWebNodeFactoryExtension"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.InteractiveWebNodeView">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.InteractiveWebNodeView"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.JSONViewContent">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.JSONViewContent"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.QuickFormNode">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.QuickFormNode"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.WebDependency">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.WebDependency"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.WebResourceLocator">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.WebResourceLocator"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.WebViewContent">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.WebViewContent"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.interactive.WebViewTemplate">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.WebViewTemplate"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.InactiveBranchFlowLoopContext">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.InactiveBranchFlowLoopContext"/>
-                <message_argument value="org.knime.core_2.8.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
+<?xml version="1.0" encoding="UTF-8"?><component id="org.knime.core" version="2">
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.ObsoleteMetaNodeWorkflowPersistorVersion1xx">
         <filter comment="renaming persistor classes - no API anyway" id="305324134">
             <message_arguments>
@@ -158,35 +7,11 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx">
-        <filter comment="changes to non-api persistor code" id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200">
-        <filter comment="persistor code rewrite - not meant as public api" id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.WorkflowPersistorVersion1xx">
         <filter id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowPersistorVersion1xx"/>
                 <message_argument value="org.knime.core_2.10.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.WorkflowPersistorVersion200">
-        <filter comment="persistor code rewrite - not meant as public api" id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.WorkflowPersistorVersion200"/>
-                <message_argument value="org.knime.core_2.9.0"/>
             </message_arguments>
         </filter>
     </resource>
@@ -227,81 +52,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeModel"/>
                 <message_argument value="org.knime.core_2.10.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="schemaorg_apache_xmlbeans.system.sEF316ABABAA840DCBC7DB6F63E1CF526.TypeSystemHolder">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="schemaorg_apache_xmlbeans.system.sEF316ABABAA840DCBC7DB6F63E1CF526.TypeSystemHolder"/>
-                <message_argument value="org.knime.core_2.8.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/DataTableSpecCreator.java" type="org.knime.core.data.DataTableSpecCreator">
-        <filter comment="return type added - not used in partner code (pretty confident)" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.DataTableSpecCreator"/>
-                <message_argument value="dropAllDomains()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="return type added - not used in partner code (pretty confident)" id="1141899266">
-            <message_arguments>
-                <message_argument value="2.8"/>
-                <message_argument value="2.9"/>
-                <message_argument value="dropAllDomains()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreUtil.java" type="org.knime.core.data.filestore.FileStoreUtil">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
-                <message_argument value="invokeFlush(FileStoreCell)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/sort/MemoryService.java" type="org.knime.core.data.sort.MemoryService">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.sort.MemoryService"/>
-                <message_argument value="createTestCaseMemoryService(long)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/util/memory/MemoryAlertObject.java" type="org.knime.core.data.util.memory.MemoryAlertObject">
-        <filter comment="made public in 2.8.2 to allow text processing to use it (part of bug fix)" id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.util.memory.MemoryAlertObject"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/util/memory/MemoryObjectTracker.java" type="org.knime.core.data.util.memory.MemoryObjectTracker">
-        <filter comment="made public in 2.8.2 to allow text processing to use it (part of bug fix)" id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.util.memory.MemoryObjectTracker"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/util/memory/MemoryReleasable.java" type="org.knime.core.data.util.memory.MemoryReleasable">
-        <filter comment="made public in 2.8.2 to allow text processing to use it (part of bug fix)" id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.util.memory.MemoryReleasable"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/util/memory/MemoryWarningSystem.java" type="org.knime.core.data.util.memory.MemoryWarningSystem">
-        <filter comment="made public in 2.8.2 to allow text processing to use it (part of bug fix)" id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.util.memory.MemoryWarningSystem"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/data/vector/bitvector/BitVectorValue.java" type="org.knime.core.data.vector.bitvector.BitVectorValue">
-        <filter id="403767336">
-            <message_arguments>
-                <message_argument value="org.knime.core.data.vector.bitvector.BitVectorValue"/>
-                <message_argument value="MAX_DISPLAY_BITS"/>
             </message_arguments>
         </filter>
     </resource>
@@ -359,11 +109,6 @@
                 <message_argument value="getLoadVersion()"/>
             </message_arguments>
         </filter>
-        <filter comment="changes to non-api persistor code" id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.FileNodePersistor"/>
-            </message_arguments>
-        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="FileNodePersistor(FileNativeNodeContainerPersistor, FileWorkflowPersistor.LoadVersion, NodeSettingsRO)"/>
@@ -381,22 +126,10 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.Node"/>
-                <message_argument value="getInteractiveWebViewTemplate()"/>
-            </message_arguments>
-        </filter>
         <filter comment="changes required to support subnode - no API anyway" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.Node"/>
                 <message_argument value="getInternalHeldTables()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.Node"/>
-                <message_argument value="hasInteractiveWebView()"/>
             </message_arguments>
         </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
@@ -410,12 +143,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.NodeAndBundleInformation"/>
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.NodeAndBundleInformation"/>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -521,12 +248,6 @@
                 <message_argument value="8"/>
             </message_arguments>
         </filter>
-        <filter id="439378009">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.dialog.DialogNodeRepresentation"/>
-                <message_argument value="VAL"/>
-            </message_arguments>
-        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/dialog/DialogNodeValue.java" type="org.knime.core.node.dialog.DialogNodeValue">
         <filter id="337809484">
@@ -574,18 +295,6 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
-                <message_argument value="loadViewContent(VAL)"/>
-            </message_arguments>
-        </filter>
-        <filter id="403804204">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
-                <message_argument value="loadViewContent(VC)"/>
-            </message_arguments>
-        </filter>
-        <filter id="403804204">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
                 <message_argument value="loadViewValue(VAL)"/>
             </message_arguments>
         </filter>
@@ -613,12 +322,6 @@
                 <message_argument value="loadViewContent(VC)"/>
             </message_arguments>
         </filter>
-        <filter id="405901410">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
-                <message_argument value="reExecute(V, PortObject[], ExecutionContext)"/>
-            </message_arguments>
-        </filter>
         <filter id="437350426">
             <message_arguments>
                 <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
@@ -630,13 +333,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
                 <message_argument value="VC"/>
-            </message_arguments>
-        </filter>
-        <filter id="1209008130">
-            <message_arguments>
-                <message_argument value="2.9"/>
-                <message_argument value="2.10"/>
-                <message_argument value="getViewRepresentation()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -703,26 +399,6 @@
                 <message_argument value="org.knime.core.node.interactive.ViewContent"/>
                 <message_argument value="4"/>
                 <message_argument value="8"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/util/filter/NameFilterConfiguration.java" type="org.knime.core.node.util.filter.NameFilterConfiguration">
-        <filter id="421654647">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.util.filter.NameFilterConfiguration"/>
-                <message_argument value="loadConfigurationInDialog(NodeSettingsRO, String[])"/>
-            </message_arguments>
-        </filter>
-        <filter id="421654647">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.util.filter.NameFilterConfiguration"/>
-                <message_argument value="loadConfigurationInModel(NodeSettingsRO)"/>
-            </message_arguments>
-        </filter>
-        <filter id="421654647">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.util.filter.NameFilterConfiguration"/>
-                <message_argument value="saveConfiguration(NodeSettingsWO)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -802,12 +478,6 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.WizardNode"/>
-                <message_argument value="getLayoutInfo()"/>
-            </message_arguments>
-        </filter>
-        <filter id="403804204">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
                 <message_argument value="getViewRepresentation()"/>
             </message_arguments>
         </filter>
@@ -815,12 +485,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.WizardNode"/>
                 <message_argument value="getViewValue()"/>
-            </message_arguments>
-        </filter>
-        <filter id="403804204">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
-                <message_argument value="setLayoutInfo(WizardNodeLayoutInfo)"/>
             </message_arguments>
         </filter>
         <filter id="403902496">
@@ -910,20 +574,9 @@
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.Annotation"/>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
-            </message_arguments>
-        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -934,20 +587,9 @@
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.AnnotationData"/>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
-            </message_arguments>
-        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -958,27 +600,9 @@
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.ConnectionUIInformation"/>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
-            </message_arguments>
-        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/CopyNativeNodeContainerPersistor.java" type="org.knime.core.node.workflow.CopyNativeNodeContainerPersistor">
-        <filter comment="changes to non-api persistor code" id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.CopyNativeNodeContainerPersistor"/>
             </message_arguments>
         </filter>
     </resource>
@@ -989,20 +613,9 @@
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.EditorUIInformation"/>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
-            </message_arguments>
-        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1019,16 +632,6 @@
                 <message_argument value="FileNativeNodeContainerPersistor(WorkflowPersistorVersion1xx, ReferencedFile, WorkflowLoadHelper, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
-        <filter comment="changes to non-api persistor code" id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.FileNativeNodeContainerPersistor"/>
-            </message_arguments>
-        </filter>
-        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="FileNativeNodeContainerPersistor(FileWorkflowPersistor, FileNodeContainerMetaPersistor, FileWorkflowPersistor.LoadVersion)"/>
-            </message_arguments>
-        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="FileNativeNodeContainerPersistor(FileWorkflowPersistor, ReferencedFile, WorkflowLoadHelper, FileWorkflowPersistor.LoadVersion)"/>
@@ -1036,11 +639,6 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/FileSingleNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileSingleNodeContainerPersistor">
-        <filter comment="changes to non-api persistor code" id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.FileSingleNodeContainerPersistor"/>
-            </message_arguments>
-        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="getLoadVersion()"/>
@@ -1121,20 +719,9 @@
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.MetaNodeTemplateInformation"/>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
-            </message_arguments>
-        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1158,12 +745,6 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainer.java" type="org.knime.core.node.workflow.NodeContainer">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.NodeContainer"/>
-                <message_argument value="getInteractiveWebViewTemplate()"/>
-            </message_arguments>
-        </filter>
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.NodeContainer"/>
@@ -1209,20 +790,9 @@
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.NodeUIInformation"/>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
-            </message_arguments>
-        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1238,179 +808,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
                 <message_argument value="getLoadVersion()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1143996420">
-            <message_arguments>
-                <message_argument value="getLoadVersion()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="postLoad(WorkflowManager, WorkflowPersistor.LoadResult)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/SingleNodeContainer.java" type="org.knime.core.node.workflow.SingleNodeContainer">
-        <filter id="336695337">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getOutputHiLiteHandler(int)"/>
-            </message_arguments>
-        </filter>
-        <filter id="336695337">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getOutputObject(int)"/>
-            </message_arguments>
-        </filter>
-        <filter id="336695337">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getOutputObjectSummary(int)"/>
-            </message_arguments>
-        </filter>
-        <filter id="336695337">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getOutputSpec(int)"/>
-            </message_arguments>
-        </filter>
-        <filter id="336695337">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getOutputType(int)"/>
-            </message_arguments>
-        </filter>
-        <filter id="337764418">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="clearFileStoreHandler()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="createExecutionResult(ExecutionMonitor)"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getInteractiveWebViewTemplate()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getInternalHeldTables()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getLoopRole()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getLoopStatus()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getNode()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getNodeModel()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getNodeReferenceBug2136()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338886760">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer.LoopStatus"/>
-                <message_argument value="org.knime.core_2.9.0"/>
-            </message_arguments>
-        </filter>
-        <filter id="421650549">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="createExecutionContext()"/>
-            </message_arguments>
-        </filter>
-        <filter id="421650549">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getFlowObjectStack()"/>
-            </message_arguments>
-        </filter>
-        <filter id="421650549">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getOutgoingFlowObjectStack()"/>
-            </message_arguments>
-        </filter>
-        <filter id="421650549">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getXMLDescription()"/>
-            </message_arguments>
-        </filter>
-        <filter id="421650549">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="isInactive()"/>
-            </message_arguments>
-        </filter>
-        <filter id="421650549">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="isInactiveBranchConsumer()"/>
-            </message_arguments>
-        </filter>
-        <filter id="421650549">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="isModelCompatibleTo(Class&lt;?&gt;)"/>
-            </message_arguments>
-        </filter>
-        <filter id="421650549">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="performExecuteNode(PortObject[])"/>
-            </message_arguments>
-        </filter>
-        <filter id="1227882500">
-            <message_arguments>
-                <message_argument value="getFlowObjectStack()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/SingleNodeContainer.java" type="org.knime.core.node.workflow.SingleNodeContainer$SingleNodeContainerSettings">
-        <filter comment="changes to non-api persistor code" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings"/>
-                <message_argument value="setModelSettings(NodeSettings)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes to non-api persistor code" id="1143996420">
-            <message_arguments>
-                <message_argument value="setModelSettings(NodeSettingsRO)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1436,11 +833,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.SubNodeContainer"/>
                 <message_argument value="getWebTemplate()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor save/load" id="1143996420">
-            <message_arguments>
-                <message_argument value="SubNodeContainer(WorkflowManager, NodeID, WorkflowManager, String)"/>
             </message_arguments>
         </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
@@ -1523,32 +915,15 @@
                 <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
             </message_arguments>
         </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="403804204">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.UIInformation"/>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
-            </message_arguments>
-        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="405901410">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.UIInformation"/>
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="405901410">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.UIInformation"/>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion200.LoadVersion)"/>
-            </message_arguments>
-        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="1211105284">
             <message_arguments>
                 <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1211105284">
-            <message_arguments>
-                <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1678,24 +1053,12 @@
                 <message_argument value="org.knime.core_2.10.0"/>
             </message_arguments>
         </filter>
-        <filter id="305422471">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory"/>
-                <message_argument value="org.knime.base_2.9.2"/>
-            </message_arguments>
-        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/virtual/VirtualPortObjectOutNodeFactory.java" type="org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory">
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory"/>
                 <message_argument value="org.knime.core_2.10.0"/>
-            </message_arguments>
-        </filter>
-        <filter id="305422471">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory"/>
-                <message_argument value="org.knime.base_2.9.2"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1745,13 +1108,6 @@
         <filter comment="changes required to support subnode - no API anyway" id="1110441988">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectOutNodeModel"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/util/FileUtil.java" type="org.knime.core.util.FileUtil">
-        <filter id="1143996420">
-            <message_arguments>
-                <message_argument value="createTempDir(String, File, boolean)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1990,237 +1346,6 @@
         <filter id="1110441988">
             <message_arguments>
                 <message_argument value="org.knime.node.v210.ViewsDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/ADocument.java" type="org.knime.node.v28.ADocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.ADocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/AbstractView.java" type="org.knime.node.v28.AbstractView">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.AbstractView"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/BDocument.java" type="org.knime.node.v28.BDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.BDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/BrDocument.java" type="org.knime.node.v28.BrDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.BrDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/FullDescriptionDocument.java" type="org.knime.node.v28.FullDescriptionDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.FullDescriptionDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/H3Document.java" type="org.knime.node.v28.H3Document">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.H3Document"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/H4Document.java" type="org.knime.node.v28.H4Document">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.H4Document"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/HDocument.java" type="org.knime.node.v28.HDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.HDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/IDocument.java" type="org.knime.node.v28.IDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.IDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/InPortDocument.java" type="org.knime.node.v28.InPortDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.InPortDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/IntroDocument.java" type="org.knime.node.v28.IntroDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.IntroDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/KnimeNodeDocument.java" type="org.knime.node.v28.KnimeNodeDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.KnimeNodeDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/LiDocument.java" type="org.knime.node.v28.LiDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.LiDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/NameDocument.java" type="org.knime.node.v28.NameDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.NameDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/OlDocument.java" type="org.knime.node.v28.OlDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.OlDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/OptionDocument.java" type="org.knime.node.v28.OptionDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.OptionDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/OutPortDocument.java" type="org.knime.node.v28.OutPortDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.OutPortDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/PDocument.java" type="org.knime.node.v28.PDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.PDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/PortsDocument.java" type="org.knime.node.v28.PortsDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.PortsDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/PreDocument.java" type="org.knime.node.v28.PreDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.PreDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/ShortDescriptionDocument.java" type="org.knime.node.v28.ShortDescriptionDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.ShortDescriptionDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/SubDocument.java" type="org.knime.node.v28.SubDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.SubDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/SupDocument.java" type="org.knime.node.v28.SupDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.SupDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/TabDocument.java" type="org.knime.node.v28.TabDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.TabDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/TableDocument.java" type="org.knime.node.v28.TableDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.TableDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/TdDocument.java" type="org.knime.node.v28.TdDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.TdDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/ThDocument.java" type="org.knime.node.v28.ThDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.ThDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/TrDocument.java" type="org.knime.node.v28.TrDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.TrDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/TtDocument.java" type="org.knime.node.v28.TtDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.TtDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/UDocument.java" type="org.knime.node.v28.UDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.UDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/UlDocument.java" type="org.knime.node.v28.UlDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.UlDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/ViewDocument.java" type="org.knime.node.v28.ViewDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.ViewDocument"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node/v28/ViewsDocument.java" type="org.knime.node.v28.ViewsDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node.v28.ViewsDocument"/>
             </message_arguments>
         </filter>
     </resource>
