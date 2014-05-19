@@ -82,6 +82,8 @@ import org.knime.core.util.LockFailedException;
 public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersistor implements
     SubNodeContainerPersistor {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(FileSubNodeContainerPersistor.class);
+
     private WorkflowPortTemplate[] m_inPortTemplates;
 
     private WorkflowPortTemplate[] m_outPortTemplates;
@@ -112,13 +114,22 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
                         String error = String.format("Parent is not instance of %s but %s",
                             SubNodeContainer.class.getSimpleName(),
                             ncParent == null ?  "<null>" : ncParent.getClass().getSimpleName());
-                        NodeLogger.getLogger(FileSingleNodeContainerPersistor.class).error(error);
+                        LOGGER.error(error);
                         setNeedsResetAfterLoad();
                         setDirtyAfterLoad();
                         loadResult.addError(error);
                     } else {
                         SubNodeContainer subnode = (SubNodeContainer)ncParent;
-                        subnode.postLoadWFM();
+                        try {
+                            subnode.postLoadWFM();
+                        } catch (Exception e) {
+                            String error = String.format("Post-load error (%s): %s",
+                                e.getClass().getSimpleName(), e.getMessage());
+                            LOGGER.error(error, e);
+                            loadResult.addError(error, false);
+                            setDirtyAfterLoad();
+                            setNeedsResetAfterLoad();
+                        }
                     }
                 }
         };

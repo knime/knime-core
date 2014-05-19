@@ -112,6 +112,7 @@ import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
 import org.knime.core.quickform.QuickFormRepresentation;
+import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
@@ -234,26 +235,61 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         }
         m_outputs[0] = new Output(FlowVariablePortObject.TYPE);
         m_outports[0] = new NodeContainerOutPort(this, FlowVariablePortObject.TYPE, 0);
+        Pair<int[], int[]> minMaxCoordinates = getMinMaxCoordinates();
         // add virtual in/out nodes and connect them
-        NodeID inNodeID = m_wfm.addNode(new VirtualSubNodeInputNodeFactory(this, inTypes));
-        m_wfm.getNodeContainer(inNodeID).setDeletable(false);
+        NodeID inNodeID = addVirtualInNode(inTypes, minMaxCoordinates);
         for (ConnectionContainer cc : content.getWorkflow().getConnectionsBySource(content.getID())) {
             m_wfm.addConnection(inNodeID, cc.getSourcePort() + 1, oldIDsHash.get(cc.getDest()), cc.getDestPort());
         }
         m_virtualInNodeIDSuffix = inNodeID.getIndex();
-        NodeID outNodeID = m_wfm.addNode(new VirtualSubNodeOutputNodeFactory(outTypes));
-        m_wfm.getNodeContainer(outNodeID).setDeletable(false);
+        NodeID outNodeID = addVirtualOutNode(outTypes, getMinMaxCoordinates());
         for (ConnectionContainer cc : content.getWorkflow().getConnectionsByDest(content.getID())) {
             m_wfm.addConnection(oldIDsHash.get(cc.getSource()), cc.getSourcePort(), outNodeID, cc.getDestPort() + 1);
         }
         m_virtualOutNodeIDSuffix = outNodeID.getIndex();
         getVirtualInNodeModel().setSubNodeContainer(this);
+        m_wfmStateChangeListener = createAndAddStateListener();
+        setInternalState(m_wfm.getInternalState());
+    }
 
-        int xmin = Integer.MAX_VALUE;
-        int ymin = Integer.MAX_VALUE;
-        int xmax = Integer.MIN_VALUE;
-        int ymax = Integer.MIN_VALUE;
-        for (NodeContainer nc : m_wfm.getNodeContainers()) {
+    /** Adds new/empty instance of a virtual input node and returns its ID. */
+    private NodeID addVirtualInNode(final PortType[] inTypes, final Pair<int[], int[]> minMaxCoordinates) {
+        NodeID inNodeID = m_wfm.addNode(new VirtualSubNodeInputNodeFactory(this, inTypes));
+        final NodeContainer inNodeNC = m_wfm.getNodeContainer(inNodeID);
+        inNodeNC.setDeletable(false);
+
+        int[] minCoordinates = minMaxCoordinates.getFirst();
+        int[] maxCoordinates = minMaxCoordinates.getSecond();
+        int x = minCoordinates[0] - 100;
+        int y = (minCoordinates[1] + maxCoordinates[1]) / 2;
+        inNodeNC.setUIInformation(new NodeUIInformation(x, y, 0, 0, true));
+        return inNodeID;
+    }
+
+    /** Adds new/empty instance of a virtual output node and returns its ID. */
+    private NodeID addVirtualOutNode(final PortType[] outTypes, final Pair<int[], int[]> minMaxCoordinates) {
+        NodeID outNodeID = m_wfm.addNode(new VirtualSubNodeOutputNodeFactory(outTypes));
+        final NodeContainer outNodeNC = m_wfm.getNodeContainer(outNodeID);
+        outNodeNC.setDeletable(false);
+
+        int[] minCoordinates = minMaxCoordinates.getFirst();
+        int[] maxCoordinates = minMaxCoordinates.getSecond();
+        int x = maxCoordinates[0] + 100;
+        int y = (minCoordinates[1] + maxCoordinates[1]) / 2;
+        outNodeNC.setUIInformation(new NodeUIInformation(x, y, 0, 0, true));
+        return outNodeID;
+    }
+
+    /** Iterates all nodes and determines min and max x,y coordinates. Used to place virtual in & output nodes.
+     * @return 1st: {minX, minY}, 2nd: {maxX, maxY} */
+    private Pair<int[], int[]> getMinMaxCoordinates() {
+        final Collection<NodeContainer> nodeContainers = m_wfm.getNodeContainers();
+        final int nodeCount = nodeContainers.size();
+        int xmin = nodeCount > 0 ? Integer.MAX_VALUE : 0;
+        int ymin = nodeCount > 0 ? Integer.MAX_VALUE : 50;
+        int xmax = nodeCount > 0 ? Integer.MIN_VALUE : 100;
+        int ymax = nodeCount > 0 ? Integer.MIN_VALUE : 50;
+        for (NodeContainer nc : nodeContainers) {
             NodeUIInformation uii = nc.getUIInformation();
             if (uii != null) {
                 int[] bounds = uii.getBounds();
@@ -265,17 +301,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 }
             }
         }
-
-        // move virtual in/out nodes
-        NodeContainer inNode = m_wfm.getNodeContainer(getVirtualInNodeID());
-        int x = xmin - 100;
-        int y = (ymin + ymax) / 2;
-        inNode.setUIInformation(new NodeUIInformation(x, y, 0, 0, true));
-        NodeContainer outNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
-        x = xmax + 100;
-        outNode.setUIInformation(new NodeUIInformation(x, y, 0, 0, true));
-        m_wfmStateChangeListener = createAndAddStateListener();
-        setInternalState(m_wfm.getInternalState());
+        return Pair.create(new int[] {xmin, ymin}, new int[] {xmax, ymax});
     }
 
     /** Creates listener, adds it to m_wfm and sets the class field. */
@@ -1146,15 +1172,9 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /** Callback from persistor. */
      void postLoadWFM() {
          getVirtualInNodeModel().setSubNodeContainer(this);
-         getInPort(0).setPortName("Variable Inport");
-         getOutPort(0).setPortName("Variable Outport");
-         getVirtualInNode().addNodeStateChangeListener(new RefreshPortNamesListener());
-         getVirtualOutNode().addNodeStateChangeListener(new RefreshPortNamesListener());
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     WorkflowCopyContent performLoadContent(final SingleNodeContainerPersistor nodePersistor,
         final Map<Integer, BufferedDataTable> tblRep, final FlowObjectStack inStack, final ExecutionMonitor exec,
@@ -1163,6 +1183,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         WorkflowPersistor workflowPersistor = subNodePersistor.getWorkflowPersistor();
         // TODO pass in a filter input stack
         m_wfm.loadContent(workflowPersistor, tblRep, inStack, exec, loadResult, preserveNodeMessage);
+        checkInOutNodesAfterLoad(subNodePersistor, loadResult);
         // put data input output node if it was executed;
         final NativeNodeContainer virtualOutNode = getVirtualOutNode();
         if (virtualOutNode.getInternalState().isExecuted()) {
@@ -1173,8 +1194,104 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         }
         setVirtualOutputIntoOutport(m_wfm.getInternalState());
         m_wfmStateChangeListener = createAndAddStateListener();
+        getInPort(0).setPortName("Variable Inport");
+        getOutPort(0).setPortName("Variable Outport");
+        getVirtualInNode().addNodeStateChangeListener(new RefreshPortNamesListener());
+        getVirtualOutNode().addNodeStateChangeListener(new RefreshPortNamesListener());
         refreshPortNames();
         return null;
+    }
+
+    /** Fixes in- and output nodes after loading (in case they don't exist or have errors). */
+    private void checkInOutNodesAfterLoad(
+        final SubNodeContainerPersistor subNodePersistor, final LoadResult loadResult) {
+        /* Fix output node */
+        NodeID virtualOutID = getVirtualOutNodeID();
+        String error = null;                  // non null in case not is not present of of wrong type
+        NodeSettings outputSettings = null;   // settings of previous node if present or null
+        Pair<int[], int[]> minMaxCoordinates; // assigned with node insertion, used for node placement
+        if (m_wfm.containsNodeContainer(virtualOutID)) {
+            NodeContainer virtualOutNC = m_wfm.getNodeContainer(virtualOutID);
+            if (virtualOutNC instanceof NativeNodeContainer) {
+                NodeModel virtualOutModel = ((NativeNodeContainer)virtualOutNC).getNodeModel();
+                if (!(virtualOutModel instanceof VirtualSubNodeOutputNodeModel)) {
+                    // this is very likely a missing node (placeholder)
+                    error = String.format("Virtual output node is not of expected type (expected %s, actual %s)",
+                        VirtualSubNodeOutputNodeModel.class.getName(), virtualOutModel.getClass().getName());
+                    try {
+                        NodeSettings temp = new NodeSettings("temp");
+                        m_wfm.saveNodeSettings(virtualOutID, temp);
+                        outputSettings = temp;
+                    } catch (InvalidSettingsException ise) {
+                        // silently ignore; this is minor given that the node is not there.
+                    }
+                }
+            } else {
+                error = String.format("Virtual output node with ID %s is not a native node", virtualOutID);
+            }
+        } else {
+            error = String.format("Virtual output node with ID %s does not exist", virtualOutID);
+        }
+
+        if (error != null) {
+            minMaxCoordinates = getMinMaxCoordinates();
+            m_virtualOutNodeIDSuffix = addVirtualOutNode(
+                Output.getPortTypesNoFlowVariablePort(m_outputs), minMaxCoordinates).getIndex();
+            error = error.concat(String.format(" - creating new instance (ID %s)", m_virtualOutNodeIDSuffix));
+            loadResult.addError(error);
+            if (outputSettings != null) {
+                try {
+                    m_wfm.loadNodeSettings(getVirtualOutNodeID(), outputSettings);
+                } catch (InvalidSettingsException e) {
+                    // again, ignore as the node was missing, which is much more critical
+                }
+            }
+        }
+
+        /* Fix input node */
+        NodeID virtualInID = getVirtualInNodeID();
+        error = null;                         // non null in case not is not present of of wrong type
+        NodeSettings inputSettings = null;    // settings of previous node if present or null
+        if (m_wfm.containsNodeContainer(virtualInID)) {
+            NodeContainer virtualInNC = m_wfm.getNodeContainer(virtualInID);
+            if (virtualInNC instanceof NativeNodeContainer) {
+                NodeModel virtualInModel = ((NativeNodeContainer)virtualInNC).getNodeModel();
+                if (!(virtualInModel instanceof VirtualSubNodeInputNodeModel)) {
+                    // this is very likely a missing node (placeholder)
+                    error = String.format("Virtual input node is not of expected type (expected %s, actual %s)",
+                        VirtualSubNodeInputNodeModel.class.getName(), virtualInModel.getClass().getName());
+                    try {
+                        NodeSettings temp = new NodeSettings("temp");
+                        m_wfm.saveNodeSettings(virtualInID, temp);
+                        inputSettings = temp;
+                    } catch (InvalidSettingsException ise) {
+                        // silently ignore; this is minor given that the node is not there.
+                    }
+                }
+            } else {
+                error = String.format("Virtual input node with ID %s is not a native node", virtualInID);
+            }
+        } else {
+            error = String.format("Virtual input node with ID %s does not exist", virtualInID);
+        }
+
+        if (error != null) {
+            minMaxCoordinates = getMinMaxCoordinates();
+            PortType[] inportTypes = new PortType[getNrInPorts() - 1]; // skip flow var port
+            for (int i = 1; i < getNrInPorts(); i++) {
+                inportTypes[i - 1] = getInPort(i).getPortType();
+            }
+            m_virtualInNodeIDSuffix = addVirtualInNode(inportTypes, minMaxCoordinates).getIndex();
+            error = error.concat(String.format(" - creating new instance (ID %s)", m_virtualInNodeIDSuffix));
+            loadResult.addError(error);
+            if (inputSettings != null) {
+                try {
+                    m_wfm.loadNodeSettings(getVirtualInNodeID(), inputSettings);
+                } catch (InvalidSettingsException e) {
+                    // again, ignore as the node was missing, which is much more critical
+                }
+            }
+        }
     }
 
     /**
@@ -1471,6 +1588,13 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             m_object = null;
             m_hiliteHdl = null;
             m_summary = null;
+        }
+        static PortType[] getPortTypesNoFlowVariablePort(final Output[] outputs) {
+            PortType[] result = new PortType[outputs.length - 1];
+            for (int i = 1; i < outputs.length; i++) {
+                result[i - 1] = outputs[i].getType();
+            }
+            return result;
         }
 
     }

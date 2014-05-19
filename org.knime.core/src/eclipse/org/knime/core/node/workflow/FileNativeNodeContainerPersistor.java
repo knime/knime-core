@@ -189,8 +189,10 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             }
         } catch (Exception e) {
             error = "Unable to load additional factory settings into node factory (node \"" + nodeInfo + "\")";
-            setDirtyAfterLoad();
-            throw new InvalidSettingsException(error, e);
+            getLogger().error(error);
+            // setDirtyAfterLoad(); // don't set dirty, missing node placeholder
+
+            throw new NodeFactoryUnknownException(nodeInfo, additionalFactorySettings, e);
         }
         m_node = new Node(nodeFactory);
     }
