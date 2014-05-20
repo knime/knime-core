@@ -482,6 +482,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return m_directNCParent;
     }
 
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public WorkflowContext getProjectContext() {
+        if (isProject()) {
+            return this.getContext();
+        } else {
+            return getDirectNCParent().getProjectContext();
+        }
+    }
+
 //    public WorkflowManager getProjectFor(final NodeContainer nc) {
 //        NodeContainerParent ncParent;
 //        do {
@@ -6142,8 +6155,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         final boolean recurse, final boolean stopRecursionAtLinkedMetaNodes) {
         for (NodeID id : m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet()) {
             NodeContainer nc = getNodeContainer(id);
+            WorkflowManager wm = null;
             if (nc instanceof WorkflowManager) {
-                WorkflowManager wm = (WorkflowManager)nc;
+                wm = (WorkflowManager)nc;
+            } else if (nc instanceof SubNodeContainer) {
+                wm = ((SubNodeContainer)nc).getWorkflowManager();
+            }
+            if (wm != null) {
                 if (wm.getTemplateInformation().getRole().equals(Role.Link)) {
                     mapToFill.put(wm.getID(), wm);
                     if (stopRecursionAtLinkedMetaNodes) {
@@ -8677,11 +8695,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 return getNodeContainer(id);
             } else if (id.hasPrefix(getID())) {
                 NodeContainer parentNC = findNodeContainer(prefix);
-                if (!(parentNC instanceof WorkflowManager)) {
-                    throw new IllegalArgumentException("NodeID " + id + " is not contained in workflow "
-                            + getNameWithID() + " - parent node is not meta node");
+                if (parentNC instanceof WorkflowManager) {
+                    return ((WorkflowManager)parentNC).getNodeContainer(id);
                 }
-                return ((WorkflowManager)parentNC).getNodeContainer(id);
+                if (parentNC instanceof SubNodeContainer) {
+                    return ((SubNodeContainer)parentNC).getWorkflowManager();
+                }
+                throw new IllegalArgumentException("NodeID " + id + " is not contained in workflow "
+                        + getNameWithID() + " - parent node is not meta node");
             } else {
                 throw new IllegalArgumentException("NodeID " + id
                         + " is not contained in workflow " + getNameWithID());

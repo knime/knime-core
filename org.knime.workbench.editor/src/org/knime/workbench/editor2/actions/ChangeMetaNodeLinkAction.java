@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -74,6 +74,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.workbench.editor2.ImageRepository;
@@ -168,12 +169,9 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
         }
         // we can change absolute links if the mount points of flow and template are the same
         AbstractContentProvider workflowMountPoint = null;
-        WorkflowManager wfm = metaNode;
-        while (!wfm.isProject()) {
-            wfm = wfm.getParent();
-        }
+        WorkflowContext wfc = metaNode.getProjectContext();
         LocalExplorerFileStore fs =
-            ExplorerFileSystem.INSTANCE.fromLocalFile(wfm.getContext().getMountpointRoot());
+            ExplorerFileSystem.INSTANCE.fromLocalFile(wfc.getMountpointRoot());
         if (fs != null) {
             workflowMountPoint = fs.getContentProvider();
         }

@@ -1599,4 +1599,13 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
 
     }
 
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public WorkflowContext getProjectContext() {
+        return getParent().getProjectContext();
+    }
+
 }

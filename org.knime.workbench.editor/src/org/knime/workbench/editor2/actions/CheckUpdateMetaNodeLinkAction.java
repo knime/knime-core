@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -70,7 +70,9 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -163,14 +165,42 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
         List<NodeID> list = new ArrayList<NodeID>();
         for (NodeContainerEditPart p : getSelectedParts(NodeContainerEditPart.class)) {
             Object model = p.getModel();
+            WorkflowManager wm = null;
             if (model instanceof WorkflowManager) {
-                WorkflowManager wm = (WorkflowManager)model;
+                wm = (WorkflowManager)model;
+            } else if (model instanceof SubNodeContainer) {
+                wm = ((SubNodeContainer)model).getWorkflowManager();
+            }
+            if (wm != null) {
                 if (wm.getTemplateInformation().getRole().equals(Role.Link)) {
                     if (!getManager().canUpdateMetaNodeLink(wm.getID())) {
                         return Collections.emptyList();
                     }
                     list.add(wm.getID());
                 }
+                list.addAll(getMetaNodesToCheck(wm));
+            }
+        }
+        return list;
+    }
+
+    private List<NodeID> getMetaNodesToCheck(final WorkflowManager workflowManager) {
+        List<NodeID> list = new ArrayList<NodeID>();
+        for (NodeContainer nc : workflowManager.getNodeContainers()) {
+            WorkflowManager wm = null;
+            if (nc instanceof WorkflowManager) {
+                wm = (WorkflowManager)nc;
+            } else if (nc instanceof SubNodeContainer) {
+                wm = ((SubNodeContainer)nc).getWorkflowManager();
+            }
+            if (wm != null) {
+                if (wm.getTemplateInformation().getRole().equals(Role.Link)) {
+                    if (!workflowManager.canUpdateMetaNodeLink(wm.getID())) {
+                        return Collections.emptyList();
+                    }
+                    list.add(wm.getID());
+                }
+                list.addAll(getMetaNodesToCheck(wm));
             }
         }
         return list;

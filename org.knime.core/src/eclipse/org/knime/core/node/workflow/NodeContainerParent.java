@@ -105,4 +105,9 @@ interface NodeContainerParent {
     @SuppressWarnings("javadoc")
     public abstract OutputStream cipherOutput(final OutputStream out) throws IOException;
 
+    /**
+     * @return The root workflow manager of the project containing this workflow manager
+     */
+    public abstract WorkflowContext getProjectContext();
+
 }
