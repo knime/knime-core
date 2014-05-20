@@ -84,16 +84,16 @@
 <entry key="EnabledStatus" type="xboolean" value="true"/>
 </config>
 <entry key="CFG_FAILONMISS" type="xstring" value="Fail"/>
-<config key="CFG_Double_Internals">
-<entry key="SettingsModelID" type="xstring" value="SMID_double"/>
-<entry key="EnabledStatus" type="xboolean" value="false"/>
-</config>
-<entry key="CFG_Double" type="xdouble" value="0.0"/>
 <config key="CFG_Integer_Internals">
 <entry key="SettingsModelID" type="xstring" value="SMID_integer"/>
 <entry key="EnabledStatus" type="xboolean" value="false"/>
 </config>
 <entry key="CFG_Integer" type="xint" value="0"/>
+<config key="CFG_Double_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_double"/>
+<entry key="EnabledStatus" type="xboolean" value="false"/>
+</config>
+<entry key="CFG_Double" type="xdouble" value="0.0"/>
 <config key="CFG_String_Internals">
 <entry key="SettingsModelID" type="xstring" value="SMID_string"/>
 <entry key="EnabledStatus" type="xboolean" value="false"/>
@@ -124,6 +124,6 @@
 </config>
 <config key="filestores">
 <entry key="file_store_location" type="xstring" isnull="true" value=""/>
-<entry key="file_store_id" type="xstring" value="4054fc1c-fb6f-4af7-b1a3-5cb8e2344d04"/>
+<entry key="file_store_id" type="xstring" isnull="true" value=""/>
 </config>
 </config>

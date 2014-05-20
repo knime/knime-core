@@ -58,7 +58,7 @@
 </config>
 </config>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
-<entry key="state" type="xstring" value="IDLE"/>
+<entry key="state" type="xstring" value="CONFIGURED"/>
 <entry key="factory" type="xstring" value="org.knime.testing.internal.nodes.differ.DifferenceCheckerNodeFactory"/>
 <entry key="node-name" type="xstring" value="Table Difference Checker"/>
 <entry key="node-bundle-name" type="xstring" value="Test-Node extension for KNIME Workbench"/>
