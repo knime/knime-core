@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -244,7 +244,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
      */
     public static final String DEFAULT_PRUNING_METHOD = PRUNING_NO;
 
-    /** The default flag for reduced error pruning, is true. 
+    /** The default flag for reduced error pruning, is true.
      * @since 2.8 */
     public static final boolean DEFAULT_REDUCED_ERROR_PRUNING = true;
 
@@ -937,6 +937,11 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         if (settings.containsKey(KEY_NOTRUECHILD) && settings.containsKey(KEY_MISSINGSTRATEGY)) {
             m_noTrueChild.loadSettingsFrom(settings);
             m_missingValues.loadSettingsFrom(settings);
+            if (m_missingValues.getStringValue().equals(PMMLMissingValueStrategy.DEFAULT_CHILD.toString())) {
+                // bug 4780 for backward compatibility the missing value strategy is set to the
+                // default last prediction.
+                m_missingValues.setStringValue(PMMLMissingValueStrategy.LAST_PREDICTION.toString());
+            }
         } else {
             // previous always Missing values = null was produced
             m_noTrueChild.setStringValue(PMMLNoTrueChildStrategy.RETURN_NULL_PREDICTION.toString());

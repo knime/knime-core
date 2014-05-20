@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
-5 *  Copyright by 
+5 *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -181,9 +181,10 @@ public class DecisionTreeLearnerNodeDialog2 extends DefaultNodeSettingsPane {
         closeCurrentGroup();
         createNewGroup("Missing Value Strategy");
         String[] methodsMV =
-            {PMMLMissingValueStrategy.LAST_PREDICTION.toString(),
+            {
+            PMMLMissingValueStrategy.LAST_PREDICTION.toString(),
 //                PMMLMissingValueStrategy.NULL_PREDICTION.toString(),// not supported in predictor
-                PMMLMissingValueStrategy.DEFAULT_CHILD.toString(),
+//                PMMLMissingValueStrategy.DEFAULT_CHILD.toString(),  // bug 4780 not supported by learner
 //                PMMLMissingValueStrategy.WEIGHTED_CONFIDENCE.toString(), // not supported in predictor
 //                PMMLMissingValueStrategy.AGGREGATE_NODES.toString(), // not supported in predictor
                 PMMLMissingValueStrategy.NONE.toString()
