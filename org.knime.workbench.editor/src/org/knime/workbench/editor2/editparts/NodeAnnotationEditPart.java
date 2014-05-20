@@ -24,6 +24,7 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -49,74 +50,79 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
      */
     @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
-        WorkflowRootEditPart parent = (WorkflowRootEditPart)getParent();
-        NodeAnnotation anno = (NodeAnnotation)getModel();
-        AnnotationFigure3 annoFig = (AnnotationFigure3)getFigure();
-        annoFig.newContent(anno);
-        // node annotation ignores its x/y ui info and hooks itself to its node
-        NodeContainer node = anno.getNodeContainer();
-        NodeUIInformation nodeUI = node.getUIInformation();
-        int x = anno.getX();
-        int y = anno.getY();
-        int w = anno.getWidth();
-        int h = anno.getHeight();
-        boolean update = false; // update only if anno has no ui info
-        if (w <= 0 || h <= 0) {
-            /* this code can be removed (but not for a bug fix release) as this
-             * method is called at least twice during activation and the 2nd
-             * invocation has valid bounds. To reproduce: create flow w/ v2.4,
-             * load in v2.5+ and set a break point
-             *
-             * TODO: remove if block + don't save bounds in node annotation
-             * (always computed automatically)
-             */
-            update = true;
-            // if the annotation has no width, make it as wide as the node
-            if (nodeUI != null && nodeUI.getBounds()[2] > 0) {
-                // pre2.5 flows used the node width as label width
-                w = nodeUI.getBounds()[2];
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                WorkflowRootEditPart parent = (WorkflowRootEditPart)getParent();
+                NodeAnnotation anno = (NodeAnnotation)getModel();
+                AnnotationFigure3 annoFig = (AnnotationFigure3)getFigure();
+                annoFig.newContent(anno);
+                // node annotation ignores its x/y ui info and hooks itself to its node
+                NodeContainer node = anno.getNodeContainer();
+                NodeUIInformation nodeUI = node.getUIInformation();
+                int x = anno.getX();
+                int y = anno.getY();
+                int w = anno.getWidth();
+                int h = anno.getHeight();
+                boolean update = false; // update only if anno has no ui info
+                if (w <= 0 || h <= 0) {
+                    /* this code can be removed (but not for a bug fix release) as this
+                     * method is called at least twice during activation and the 2nd
+                     * invocation has valid bounds. To reproduce: create flow w/ v2.4,
+                     * load in v2.5+ and set a break point
+                     *
+                     * TODO: remove if block + don't save bounds in node annotation
+                     * (always computed automatically)
+                     */
+                    update = true;
+                    // if the annotation has no width, make it as wide as the node
+                    if (nodeUI != null && nodeUI.getBounds()[2] > 0) {
+                        // pre2.5 flows used the node width as label width
+                        w = nodeUI.getBounds()[2];
+                    }
+                    // make it at least wide enough to hold "Node 9999xxxxxxxxx"
+                    w = Math.max(w, getNodeAnnotationMinWidth());
+                    h = getNodeAnnotationMinHeight();
+                } else {
+                    // recalculate the dimension according to the default font (which
+                    // could change through the pref page or on different OS)
+                    Font currDefFont = AnnotationEditPart.getNodeAnnotationDefaultFont();
+                    if (!currDefFont.equals(m_lastDefaultFont)) {
+                        m_lastDefaultFont = currDefFont;
+                        Dimension textBounds = annoFig.getPreferredSize();
+                        h = Math.max(textBounds.height, getNodeAnnotationMinHeight());
+                        w = Math.max(textBounds.width, getNodeAnnotationMinWidth());
+                    }
+                }
+                if (nodeUI != null) {
+                    NodeContainerEditPart nodePart =
+                        (NodeContainerEditPart)getViewer().getEditPartRegistry().get(node);
+                    Point offset;
+                    int nodeHeight;
+                    int symbFigWidth;
+                    if (nodePart != null) {
+                        NodeContainerFigure fig = (NodeContainerFigure)nodePart.getFigure();
+                        offset = fig.getOffsetToRefPoint(nodeUI);
+                        nodeHeight = fig.getPreferredSize().height;
+                        symbFigWidth = fig.getSymbolFigure().getPreferredSize().width;
+                    } else {
+                        offset = new Point(65, 35);
+                        nodeHeight = NodeContainerFigure.HEIGHT;
+                        symbFigWidth = 32;
+                    }
+                    int[] nodeBounds = nodeUI.getBounds();
+                    int mid = nodeBounds[0] + (symbFigWidth / 2);
+                    x = mid - (w / 2);
+                    y = nodeBounds[1] + nodeHeight + 1 - offset.y;
+                    update = true;
+                }
+                if (update) {
+                    anno.setDimensionNoNotify(x, y, w, h);
+                }
+                parent.setLayoutConstraint(NodeAnnotationEditPart.this, annoFig, new Rectangle(x, y, w, h));
+                refreshVisuals();
             }
-            // make it at least wide enough to hold "Node 9999xxxxxxxxx"
-            w = Math.max(w, getNodeAnnotationMinWidth());
-            h = getNodeAnnotationMinHeight();
-        } else {
-            // recalculate the dimension according to the default font (which
-            // could change through the pref page or on different OS)
-            Font currDefFont = AnnotationEditPart.getNodeAnnotationDefaultFont();
-            if (!currDefFont.equals(m_lastDefaultFont)) {
-                m_lastDefaultFont = currDefFont;
-                Dimension textBounds = annoFig.getPreferredSize();
-                h = Math.max(textBounds.height, getNodeAnnotationMinHeight());
-                w = Math.max(textBounds.width, getNodeAnnotationMinWidth());
-            }
-        }
-        if (nodeUI != null) {
-            NodeContainerEditPart nodePart =
-                (NodeContainerEditPart)getViewer().getEditPartRegistry().get(node);
-            Point offset;
-            int nodeHeight;
-            int symbFigWidth;
-            if (nodePart != null) {
-                NodeContainerFigure fig = (NodeContainerFigure)nodePart.getFigure();
-                offset = fig.getOffsetToRefPoint(nodeUI);
-                nodeHeight = fig.getPreferredSize().height;
-                symbFigWidth = fig.getSymbolFigure().getPreferredSize().width;
-            } else {
-                offset = new Point(65, 35);
-                nodeHeight = NodeContainerFigure.HEIGHT;
-                symbFigWidth = 32;
-            }
-            int[] nodeBounds = nodeUI.getBounds();
-            int mid = nodeBounds[0] + (symbFigWidth / 2);
-            x = mid - (w / 2);
-            y = nodeBounds[1] + nodeHeight + 1 - offset.y;
-            update = true;
-        }
-        if (update) {
-            anno.setDimensionNoNotify(x, y, w, h);
-        }
-        parent.setLayoutConstraint(this, annoFig, new Rectangle(x, y, w, h));
-        refreshVisuals();
+        });
     }
 
 
