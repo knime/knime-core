@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 13, 2014 ("Patrick Winter"): created
  */
@@ -57,11 +57,11 @@ import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 
 /**
- * 
+ *
  * @author "Patrick Winter", University of Konstanz
  */
 public class Bug4890_reconfigureSubNode extends WorkflowTestCase {
-    
+
     private NodeID m_subNode;
     private NodeID m_varSource;
     private NodeID m_varTarget;
@@ -74,7 +74,7 @@ public class Bug4890_reconfigureSubNode extends WorkflowTestCase {
     protected void setUp() throws Exception {
         super.setUp();
         NodeID baseID = loadAndSetWorkflow();
-        m_subNode = new NodeID(baseID, 8);
+        m_subNode = new NodeID(baseID, 16);
         m_varSource = new NodeID(baseID, 11);
         m_varTarget = new NodeID(baseID, 12);
         m_diffChecker1 = new NodeID(baseID, 5);

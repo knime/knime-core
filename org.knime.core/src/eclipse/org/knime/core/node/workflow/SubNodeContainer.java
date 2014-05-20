@@ -997,7 +997,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             // ignore
         }
         oldVNode.setDeletable(true);
-        m_wfm.removeNode(getVirtualInNodeID());
+        m_wfm.removeNode(oldVNode.getID());
         getInPort(0).setPortName("Variable Inport");
         newVNode.addNodeStateChangeListener(new RefreshPortNamesListener());
         refreshPortNames();
