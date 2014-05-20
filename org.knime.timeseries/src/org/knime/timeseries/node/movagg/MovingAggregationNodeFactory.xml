@@ -13,6 +13,10 @@
             <option name="Window length"> The number of samples to include in 
             the moving window. Minimum value: 2 samples. Maximum Value: Time Series length.
             </option>
+            <option name="Resolve missing values in the beginning">
+                If selected the aggregation values of the first rows until the time window is full, 
+                are computed based on the data rows visited so far.
+            </option>
             <option name = "Remove aggregation columns">
               If selected the columns used to aggregate are filtered from the output table.
             </option>

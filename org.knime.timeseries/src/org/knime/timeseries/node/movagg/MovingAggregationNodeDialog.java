@@ -84,6 +84,9 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
 
     private final AggregationColumnPanel m_aggrColPanel = new AggregationColumnPanel(null);
 
+    private final DialogComponent m_handleMissings = new DialogComponentBoolean(
+        MovingAggregationNodeModel.createHandleMissingsModel(), "Resolve missing values in the beginning");
+
     private final DialogComponent m_winLength =
             new DialogComponentNumberEdit(MovingAggregationNodeModel.createWindowLengthModel(), "Window length", 8);
 
@@ -113,6 +116,7 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
         generalSettingsBox.setBorder(
             BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " General settings "));
         generalSettingsBox.add(m_winLength.getComponentPanel());
+        generalSettingsBox.add(m_handleMissings.getComponentPanel());
         generalSettingsBox.add(m_removeAggrCols.getComponentPanel());
         generalSettingsBox.add(m_removeRetainedCols.getComponentPanel());
 
@@ -155,6 +159,7 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
             return;
         }
         m_winLength.loadSettingsFrom(settings, specs);
+        m_handleMissings.loadSettingsFrom(settings, specs);
         m_removeRetainedCols.loadSettingsFrom(settings, specs);
         m_removeAggrCols.loadSettingsFrom(settings, specs);
         m_columnNamePolicy.loadSettingsFrom(settings, specs);
@@ -173,6 +178,7 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         m_winLength.saveSettingsTo(settings);
+        m_handleMissings.saveSettingsTo(settings);
         m_removeRetainedCols.saveSettingsTo(settings);
         m_removeAggrCols.saveSettingsTo(settings);
         m_columnNamePolicy.saveSettingsTo(settings);

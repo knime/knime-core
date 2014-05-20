@@ -86,6 +86,7 @@ public class MovingAggregationCellFactory implements CellFactory {
     private final DataColumnSpec[] m_specs;
     private final Set<String> m_aggregationCols;
     private Set<String> m_retainedCols;
+    private boolean m_handleMissings;
 
     /**
      * @param spec the {@link DataTableSpec} of the table to process
@@ -93,13 +94,16 @@ public class MovingAggregationCellFactory implements CellFactory {
      * @param colNamePolicy the {@link ColumnNamePolicy}
      * @param aggregators list with {@link ColumnAggregator}s to use
      * @param windowLength the length of the aggregation window
+     * @param handleMissings if true, a smaller window size is used in the beginning to handle missing values.
      * @throws IllegalArgumentException if the selected {@link ColumnAggregator}s and the {@link ColumnNamePolicy}
      * results in duplicate column names
      */
     MovingAggregationCellFactory(final DataTableSpec spec, final GlobalSettings globalSettings,
-        final ColumnNamePolicy colNamePolicy, final List<ColumnAggregator> aggregators, final int windowLength) {
+        final ColumnNamePolicy colNamePolicy, final List<ColumnAggregator> aggregators, final int windowLength,
+        final boolean handleMissings) {
         m_window = new LinkedList<>();
         m_windowLength = windowLength;
+        m_handleMissings = handleMissings;
         m_aggrColIdxs = new int[aggregators.size()];
         m_ops = new AggregationOperator[aggregators.size()];
         m_specs = new DataColumnSpec[aggregators.size()];
@@ -129,8 +133,8 @@ public class MovingAggregationCellFactory implements CellFactory {
     public DataCell[] getCells(final DataRow row) {
         m_window.add(row);
         final DataCell[] cells = new DataCell[m_ops.length];
-        final boolean windowFull = m_window.size() >= m_windowLength;
-        if (windowFull) {
+        final boolean windowFull = (m_window.size() >= m_windowLength);
+        if (windowFull || m_handleMissings) {
             for (int i = 0, length = m_ops.length; i < length; i++) {
                 int colIdx = m_aggrColIdxs[i];
                 final AggregationOperator op = m_ops[i];
@@ -141,7 +145,11 @@ public class MovingAggregationCellFactory implements CellFactory {
                 op.reset();
                 cells[i] = resultCell;
             }
-            m_window.removeFirst();
+            if (windowFull) {
+                //remove the first row only when the window is full
+                //not during the missing value handling phase!
+                m_window.removeFirst();
+            }
         } else {
             //the window is not yet full return missing cells
             Arrays.fill(cells, DataType.getMissingCell());

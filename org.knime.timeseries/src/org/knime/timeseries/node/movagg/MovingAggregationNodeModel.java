@@ -89,6 +89,7 @@ public class MovingAggregationNodeModel extends NodeModel {
     private final List<ColumnAggregator> m_columnAggregators = new LinkedList<>();
 
     private final SettingsModelInteger m_winLength = createWindowLengthModel();
+    private final SettingsModelBoolean m_handleMissings = createHandleMissingsModel();
 
     private final SettingsModelInteger m_maxUniqueVals = createMaxUniqueValModel();
 
@@ -123,6 +124,13 @@ public class MovingAggregationNodeModel extends NodeModel {
      */
     static SettingsModelIntegerBounded createWindowLengthModel() {
         return new SettingsModelIntegerBounded("windowLength", 21, 2, Integer.MAX_VALUE);
+    }
+
+    /**
+     * @return the model for handling missing values
+     */
+    static SettingsModelBoolean createHandleMissingsModel() {
+        return new SettingsModelBoolean("handleMissings", false);
     }
 
     /**
@@ -191,7 +199,7 @@ public class MovingAggregationNodeModel extends NodeModel {
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(m_columnNamePolicy.getStringValue());
         final ColumnRearranger colRearranger = new ColumnRearranger(spec);
         final MovingAggregationCellFactory cellFactory =  new MovingAggregationCellFactory(spec, globalSettings,
-            colNamePolicy, m_columnAggregators2Use, m_winLength.getIntValue());
+            colNamePolicy, m_columnAggregators2Use, m_winLength.getIntValue(), m_handleMissings.getBooleanValue());
         if (m_removeAggregationCols.getBooleanValue()) {
             colRearranger.remove(cellFactory.getAggregationColNames().toArray(new String[0]));
         }
@@ -231,6 +239,7 @@ public class MovingAggregationNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_winLength.saveSettingsTo(settings);
+        m_handleMissings.saveSettingsTo(settings);
         m_removeRetainedCols.saveSettingsTo(settings);
         m_removeAggregationCols.saveSettingsTo(settings);
         m_maxUniqueVals.saveSettingsTo(settings);
@@ -245,6 +254,7 @@ public class MovingAggregationNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_winLength.validateSettings(settings);
+        m_handleMissings.validateSettings(settings);
         m_removeRetainedCols.validateSettings(settings);
         m_maxUniqueVals.validateSettings(settings);
         m_valueDelimiter.validateSettings(settings);
@@ -275,6 +285,7 @@ public class MovingAggregationNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_winLength.loadSettingsFrom(settings);
+        m_handleMissings.loadSettingsFrom(settings);
         m_removeRetainedCols.loadSettingsFrom(settings);
         m_removeAggregationCols.loadSettingsFrom(settings);
         m_maxUniqueVals.loadSettingsFrom(settings);
