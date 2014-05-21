@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -333,9 +334,23 @@ public final class NodeExecutionJobManagerPool {
                 LOGGER.error("include it in the LD_LIBRARY_PATH variable.");
                 LOGGER.error("Extension " + jobMgr + " ('" + decl
                         + "') ignored.", ule);
+            } catch (CoreException ex) {
+                Throwable cause = ex.getStatus().getException();
+                if (cause != null) {
+                    LOGGER.error(
+                        "Problems during initialization of job manager (with id '" + jobMgr + "'): "
+                            + cause.getMessage(), ex);
+                    if (decl != null) {
+                        LOGGER.error("Extension " + decl + " ignored.");
+                    }
+                } else {
+                    LOGGER.error("Problems during initialization of job manager (with id '" + jobMgr + "')", ex);
+                    if (decl != null) {
+                        LOGGER.error("Extension " + decl + " ignored.");
+                    }
+                }
             } catch (Throwable t) {
-                LOGGER.error("Problems during initialization of "
-                        + "job manager (with id '" + jobMgr + "'.)", t);
+                LOGGER.error("Problems during initialization of job manager (with id '" + jobMgr + "')", t);
                 if (decl != null) {
                     LOGGER.error("Extension " + decl + " ignored.");
                 }

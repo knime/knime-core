@@ -251,7 +251,7 @@ public final class ImageRepository {
          *
          * @return a URL
          */
-        URL getUrl() {
+        public URL getUrl() {
             return m_url;
         }
     }
