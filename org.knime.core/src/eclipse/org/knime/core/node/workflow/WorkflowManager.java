@@ -1509,6 +1509,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer newConn = p.getSecond();
                 m_workflow.addConnection(newConn);
+                resetAndConfigureNode(newConn.getDest());
                 notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
@@ -1517,6 +1518,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     new ConnectionContainer(snc.getVirtualInNodeID(), p.getSecond().getSourcePort(), p.getSecond()
                         .getDest(), p.getSecond().getDestPort(), p.getSecond().getType());
                 subFlow.addConnection(newConn);
+                snc.getWorkflowManager().resetAndConfigureNode(newConn.getDest());
                 snc.getWorkflowManager().notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
@@ -1560,6 +1562,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer newConn = p.getSecond();
                 m_workflow.addConnection(newConn);
+                resetAndConfigureNode(newConn.getDest());
                 notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
@@ -1568,6 +1571,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     new ConnectionContainer(p.getSecond().getSource(), p.getSecond().getSourcePort(),
                         snc.getVirtualOutNodeID(), p.getSecond().getDestPort(), p.getSecond().getType());
                 subFlow.addConnection(newConn);
+                snc.getWorkflowManager().resetAndConfigureNode(newConn.getDest());
                 snc.getWorkflowManager().notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
