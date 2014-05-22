@@ -173,6 +173,8 @@ public final class ImageRepository {
         FavoriteNodesFrequentlyUsed("icons/fav/folder_freq.png"),
         /** Icon for the last used nodes category. */
         FavoriteNodesLastUsed("icons/fav/folder_last.png"),
+        /** Icon with a green OK check mark. */
+        Ok("icons/ok.png"),
         /** Icon for all kinds of warnings. */
         Warning("icons/warning.png"),
         /** Icon for information messages. */
