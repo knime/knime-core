@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -51,80 +51,97 @@
 package org.knime.testing.data.filestore;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Random;
 
+import org.apache.commons.io.FileUtils;
 import org.knime.core.data.filestore.FileStore;
 
-/**
- *
+/** Held in {@link LargeFileStoreCell} and {@link LargeFileStorePortObject} - it contains the "content" (a seed hidden
+ * in binary garbage).
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class LargeFile {
 
     public static final int SIZE_OF_FILE = 1024;
 
+    /** Non null if kept in memory (special option in create node). */
+    private byte[] m_binaryContent;
     private final FileStore m_fileStore;
-    private final long m_seed;
-    private boolean m_isWritten = false;
 
-    public static LargeFile create(final FileStore fs, final long seed, boolean keepInMemory) throws IOException {
-        LargeFile lf = new LargeFile(fs, seed);
-        if (!keepInMemory ) {
-            lf.write();
-        }
-        return lf;
+    /** Constructor like factory method. */
+    public static LargeFile create(final FileStore fs, final long seed, final boolean keepInMemory) throws IOException {
+        return new LargeFile(fs, seed, keepInMemory);
     }
 
-    public static LargeFile restore(final FileStore fs, final long seed) {
-        return new LargeFile(fs, seed);
+    /** Deserialization factory method. */
+    public static LargeFile restore(final FileStore fs) {
+        return new LargeFile(fs);
     }
 
-    /**
-     *  */
-    private LargeFile(final FileStore fs, final long seed) {
+    /** Deserialization constructor. */
+    LargeFile(final FileStore fs) {
         m_fileStore = fs;
-        m_seed = seed;
     }
 
-    /** @return the seed */
-    public long getSeed() {
-        return m_seed;
+    private LargeFile(final FileStore fs, final Long seed, final boolean keepInMemory) throws IOException {
+        m_fileStore = fs;
+        OutputStream output;
+        if (keepInMemory) {
+            output = new ByteArrayOutputStream();
+        } else {
+            File file = m_fileStore.getFile();
+            output = new FileOutputStream(file);
+        }
+        write(seed, output);
+        if (keepInMemory) {
+            m_binaryContent = ((ByteArrayOutputStream)output).toByteArray();
+        }
     }
 
     /** @return the fileStore */
     public FileStore getFileStore() {
         return m_fileStore;
     }
-    
-    void write() throws IOException {
-        if (!m_isWritten) {
-            Random random = new Random(m_seed);
-            File file = m_fileStore.getFile();
-            DataOutputStream out = new DataOutputStream(new FileOutputStream(file));
-            byte[] ar = new byte[SIZE_OF_FILE / 2];
-            random.nextBytes(ar);
-            out.write(ar);
-            out.writeUTF(Long.toString(m_seed));
-            random.nextBytes(ar);
-            out.write(ar);
-            out.close();
-            m_isWritten = true;
+
+    public void flushToFileStore() throws IOException {
+        if (m_binaryContent != null) {
+            FileUtils.writeByteArrayToFile(m_fileStore.getFile(), m_binaryContent);
+            m_binaryContent = null;
         }
     }
 
+    void write(final long seed, final OutputStream output) throws IOException {
+        Random random = new Random(seed);
+        DataOutputStream out = new DataOutputStream(output);
+        byte[] ar = new byte[SIZE_OF_FILE / 2];
+        random.nextBytes(ar);
+        out.write(ar);
+        out.writeUTF(Long.toString(seed));
+        random.nextBytes(ar);
+        out.write(ar);
+        out.close();
+    }
+
+    /** Read the seed that is hidden in the underlying file store. Used by nodes to compare to the reference seed.
+     * @return the seed in the binary content.
+     * @throws IOException If reading fails due to I/O issues. */
     public long read() throws IOException {
-        if (!m_isWritten) {
-            return m_seed;
+        DataInputStream input;
+        if (m_binaryContent != null) {
+            input = new DataInputStream(new ByteArrayInputStream(m_binaryContent));
+        } else {
+            File file = m_fileStore.getFile();
+            input = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
         }
-        File file = m_fileStore.getFile();
-        DataInputStream input = new DataInputStream(
-                new BufferedInputStream(new FileInputStream(file)));
         for (int i = 0; i < SIZE_OF_FILE / 2; i++) {
             input.readByte();
         }
@@ -132,8 +149,8 @@ public final class LargeFile {
         for (int i = 0; i < SIZE_OF_FILE / 2; i++) {
             input.readByte();
         }
-        input.close(); 
-        m_isWritten = true;
+        input.close();
         return Long.parseLong(identifier);
     }
+
 }

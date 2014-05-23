@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Other">
+	<name>Test FileStore Port Object to Table</name>
+	
+	<shortDescription>
+	Used in automated tests to test the handling of file stores.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			<p>
+			Used in automated tests to test the handling of file stores.
+			</p>
+		</intro>
+	</fullDescription>
+	
+	<ports>
+	<inPort name="Filestore object" index="0">Usually the output of the FS loop end node.</inPort>
+	<outPort name="Table with FS cells" index="0">Contains a row per file store in the input object.</outPort>
+	</ports>	
+</knimeNode>

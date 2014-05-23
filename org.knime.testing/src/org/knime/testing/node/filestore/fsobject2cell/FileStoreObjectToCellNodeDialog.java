@@ -45,21 +45,18 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  *
- * History
- *   Jun 27, 2012 (wiswedel): created
  */
-package org.knime.testing.data.filestore;
+package org.knime.testing.node.filestore.fsobject2cell;
 
-import org.knime.core.data.DataValue;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
-/** Access interface for a {@link LargeFileStoreCell}. It has a (long) seed and a {@link LargeFile}, which contains
- * the same seed (subject to test).
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- */
-public interface LargeFileStoreValue extends DataValue {
+final class FileStoreObjectToCellNodeDialog extends DefaultNodeSettingsPane {
+    
+    FileStoreObjectToCellNodeDialog() {
+        SettingsModelString createColNameModel = FileStoreObjectToCellNodeModel.createColNameModel();
+        addDialogComponent(new DialogComponentString(createColNameModel, "Output column name"));
+    }
 
-    /** @return the large file containing the seed. */
-    LargeFile getLargeFile();
-    /** @return the expected seed value. */
-    long getSeed();
 }

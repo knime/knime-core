@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright by 
+ * Copyright by
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -31,7 +31,7 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
@@ -151,7 +151,7 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
             if (object instanceof Category) {
                 Category c = (Category)object;
                 writer.write(topLevel ? "<strong>" : "");
-                writer.append(StringEscapeUtils.escapeHtml(c.getName()));
+                writer.append(StringEscapeUtils.escapeHtml4(c.getName()));
                 writer.write(topLevel ? "</strong>" : "");
                 writer.write("<ul>");
                 for (IRepositoryObject child : c.getChildren()) {
@@ -175,7 +175,7 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
                     writer.append("<a href=\"./" + DETAIL_DIR_NAME + "/"
                             + detailFileName  + "\" target=\"_blank\">");
                 }
-                writer.append(StringEscapeUtils.escapeHtml(nodeName));
+                writer.append(StringEscapeUtils.escapeHtml4(nodeName));
                 if (m_createDir) {
                     writer.append("</a>");
                 }
@@ -198,7 +198,7 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
             } else if (object instanceof MetaNodeTemplate) {
                 MetaNodeTemplate m = (MetaNodeTemplate)object;
                 writer.write("<em>");
-                writer.append(StringEscapeUtils.escapeHtml(m.getName()));
+                writer.append(StringEscapeUtils.escapeHtml4(m.getName()));
                 writer.write("</em>");
                 String description = m.getDescription();
                 if (description != null) {

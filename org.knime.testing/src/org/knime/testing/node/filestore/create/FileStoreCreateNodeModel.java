@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -79,7 +79,7 @@ import org.knime.testing.data.filestore.LargeFileStoreCell;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class FileStoreCreateNodeModel extends NodeModel {
-    
+
     private final SettingsModelBoolean m_keepInMemorySettingsModel = createKeepInMemorySettingsModel();
 
     /**
@@ -182,7 +182,7 @@ public class FileStoreCreateNodeModel extends NodeModel {
         // TODO Auto-generated method stub
 
     }
-    
+
     static SettingsModelBoolean createKeepInMemorySettingsModel() {
         return new SettingsModelBoolean("keepInMemory", false);
     }

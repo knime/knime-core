@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -57,11 +57,10 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
-import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 
 /**
- *
+ * A cell implementation that mimics a file store cell - it has "large" binary content with some information.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class LargeFileStoreCell extends FileStoreCell implements LargeFileStoreValue {
@@ -69,7 +68,7 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
     public static final DataType TYPE = DataType.getType(LargeFileStoreCell.class);
 
     private final long m_seed;
-    
+
     private LargeFile m_largeFile;
 
     public static DataCellSerializer<LargeFileStoreCell> getCellSerializer() {
@@ -87,7 +86,7 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
             @Override
             public void serialize(final LargeFileStoreCell cell, final DataCellDataOutput output)
                     throws IOException {
-                cell.m_largeFile.write();
+                cell.m_largeFile.flushToFileStore(); // does nothing if already written (handles "keepInMemory")
                 output.writeLong(cell.m_seed);
             }
         };
@@ -96,8 +95,7 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
     /** {@inheritDoc} */
     @Override
     public LargeFile getLargeFile() {
-        FileStore fs = getFileStore();
-        return LargeFile.restore(fs, m_seed);
+        return m_largeFile;
     }
 
     /** {@inheritDoc} */
@@ -105,30 +103,30 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
     public long getSeed() {
         return m_seed;
     }
-    
-    /**
+
+    /** Deserialization constructor.
      * @param input
      * @throws IOException */
     LargeFileStoreCell(final long seed) throws IOException {
         m_seed = seed;
     }
 
-    /**
-     * @param largeFile */
+    /** @param largeFile
+     * @param seed the expected seed as hidden in largeFile. */
     public LargeFileStoreCell(final LargeFile largeFile, final long seed) {
         super(largeFile.getFileStore());
         m_largeFile = largeFile;
         m_seed = seed;
     }
-    
+
     @Override
     protected void postConstruct() throws IOException {
-        m_largeFile = LargeFile.restore(getFileStore(), m_seed);
+        m_largeFile = LargeFile.restore(getFileStore());
     }
 
     @Override
     protected void flushToFileStore() throws IOException {
-        m_largeFile.write();
+        m_largeFile.flushToFileStore();
     }
 
     /** {@inheritDoc} */

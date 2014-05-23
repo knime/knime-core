@@ -40,26 +40,45 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * --------------------------------------------------------------------- *
  *
- * History
- *   Jun 27, 2012 (wiswedel): created
  */
-package org.knime.testing.data.filestore;
+package org.knime.testing.node.filestore.fsloopend;
 
-import org.knime.core.data.DataValue;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
-/** Access interface for a {@link LargeFileStoreCell}. It has a (long) seed and a {@link LargeFile}, which contains
- * the same seed (subject to test).
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- */
-public interface LargeFileStoreValue extends DataValue {
+public final class LoopEndFileStorePortObjectTestNodeFactory 
+    extends NodeFactory<LoopEndFileStorePortObjectTestNodeModel> {
 
-    /** @return the large file containing the seed. */
-    LargeFile getLargeFile();
-    /** @return the expected seed value. */
-    long getSeed();
+    @Override
+    public LoopEndFileStorePortObjectTestNodeModel createNodeModel() {
+        return new LoopEndFileStorePortObjectTestNodeModel();
+    }
+
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    @Override
+    public NodeView<LoopEndFileStorePortObjectTestNodeModel> createNodeView(int viewIndex,
+        LoopEndFileStorePortObjectTestNodeModel nodeModel) {
+        return null;
+    }
+
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new LoopEndFileStorePortObjectTestNodeDialog();
+    }
+
 }

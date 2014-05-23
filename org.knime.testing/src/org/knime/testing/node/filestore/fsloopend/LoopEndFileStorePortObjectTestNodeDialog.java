@@ -40,26 +40,25 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * --------------------------------------------------------------------- *
  *
- * History
- *   Jun 27, 2012 (wiswedel): created
  */
-package org.knime.testing.data.filestore;
+package org.knime.testing.node.filestore.fsloopend;
 
-import org.knime.core.data.DataValue;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.testing.data.filestore.LargeFileStoreValue;
 
-/** Access interface for a {@link LargeFileStoreCell}. It has a (long) seed and a {@link LargeFile}, which contains
- * the same seed (subject to test).
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- */
-public interface LargeFileStoreValue extends DataValue {
+final class LoopEndFileStorePortObjectTestNodeDialog extends DefaultNodeSettingsPane {
+    
+    LoopEndFileStorePortObjectTestNodeDialog() {
+        SettingsModelString fsColNameModel = LoopEndFileStorePortObjectTestNodeModel.createFSColNameModel();
+        addDialogComponent(new DialogComponentColumnNameSelection(
+            fsColNameModel, "File Store Column", 0, LargeFileStoreValue.class));
+    }
 
-    /** @return the large file containing the seed. */
-    LargeFile getLargeFile();
-    /** @return the expected seed value. */
-    long getSeed();
 }
