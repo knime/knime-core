@@ -234,7 +234,7 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
     }
 
     private void init() {
-        m_typePanel = new TypeFilterPanelImpl(m_filter);
+        m_typePanel = new TypeFilterPanelImpl(this, m_filter);
         m_typePanel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {

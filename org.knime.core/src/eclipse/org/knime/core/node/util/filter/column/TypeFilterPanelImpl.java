@@ -50,6 +50,7 @@
 package org.knime.core.node.util.filter.column;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -79,6 +81,7 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.util.filter.FilterIncludeExcludePreview;
 import org.knime.core.node.util.filter.InputFilter;
 
 /**
@@ -104,16 +107,29 @@ final class TypeFilterPanelImpl extends JPanel {
 
     private Map<String, Boolean> m_selectionValues = new LinkedHashMap<String, Boolean>();
 
+    private DataColumnSpecFilterPanel m_parent;
+
+    private DataTableSpec m_tableSpec;
+
+    private FilterIncludeExcludePreview<DataColumnSpec> m_preview;
+
     /**
      * Creates a DataValue filter panel.
      *
+     * @param parent The filter that is parent to this type filter
      * @param filter The filter to use, if null no filter will be applied.
      */
-    TypeFilterPanelImpl(final InputFilter<DataColumnSpec> filter) {
+    @SuppressWarnings("unchecked")
+    TypeFilterPanelImpl(final DataColumnSpecFilterPanel parent, final InputFilter<DataColumnSpec> filter) {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        m_parent = parent;
         m_filter = filter;
         m_selectionPanel = new JPanel(new GridLayout(0, 2));
         m_selections = new LinkedHashMap<String, JCheckBox>();
         add(m_selectionPanel);
+        m_preview = new FilterIncludeExcludePreview<DataColumnSpec>(m_parent.getListCellRenderer());
+        m_preview.setListSize(new Dimension(365, 195));
+        add(m_preview);
     }
 
     /**
@@ -125,9 +141,13 @@ final class TypeFilterPanelImpl extends JPanel {
         for (JCheckBox checkBox : m_selections.values()) {
             checkBox.setEnabled(enabled);
         }
+        m_preview.setEnabled(enabled);
     }
 
+    /** @param config to load from
+     * @param spec specs of the available columns that will be shown in the selection preview */
     void loadConfiguration(final TypeFilterConfigurationImpl config, final DataTableSpec spec) {
+        m_tableSpec = spec;
         clearTypes();
         addDataValues(DEFAULT_TYPES);
         addDataColumns(spec);
@@ -146,8 +166,10 @@ final class TypeFilterPanelImpl extends JPanel {
                 m_selections.put(valueClassName, newCheckBox);
             }
         }
+        update();
     }
 
+    /** @param config to save to */
     void saveConfiguration(final TypeFilterConfigurationImpl config) {
         LinkedHashMap<String, Boolean> mapping = new LinkedHashMap<String, Boolean>();
         for (String key : m_selections.keySet()) {
@@ -177,6 +199,7 @@ final class TypeFilterPanelImpl extends JPanel {
             }
         }
     }
+
     /**
      * Add data values to the selection.
      *
@@ -270,11 +293,43 @@ final class TypeFilterPanelImpl extends JPanel {
     }
 
     private void fireFilteringChangedEvent() {
+        update();
         if (m_listeners != null) {
             for (ChangeListener listener : m_listeners) {
                 listener.stateChanged(new ChangeEvent(this));
             }
         }
+    }
+
+    /**
+     * Update the preview.
+     */
+    private void update() {
+        List<DataColumnSpec> includes = new ArrayList<DataColumnSpec>();
+        List<DataColumnSpec> excludes = new ArrayList<DataColumnSpec>();
+        for (DataColumnSpec spec : m_tableSpec) {
+            // Check if type is filtered out by filter of the node
+            if (m_filter != null) {
+                if (!m_filter.include(spec)) {
+                    continue;
+                }
+            }
+            final Class<? extends DataValue> preferredValueClass = spec.getType().getPreferredValueClass();
+            boolean toInclude = false;
+            // Check if type would be included with the current settings
+            if (preferredValueClass != null) {
+                String key = preferredValueClass.getName();
+                if (m_selections.containsKey(key) && m_selections.get(key).isSelected()) {
+                    toInclude = true;
+                }
+            }
+            if (toInclude) {
+                includes.add(spec);
+            } else {
+                excludes.add(spec);
+            }
+        }
+        m_preview.update(includes, excludes);
     }
 
 }

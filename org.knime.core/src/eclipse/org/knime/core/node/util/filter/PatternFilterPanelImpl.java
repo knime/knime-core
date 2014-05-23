@@ -54,24 +54,18 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
-import javax.swing.DefaultListModel;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.border.Border;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.ChangeEvent;
@@ -99,18 +93,6 @@ final class PatternFilterPanelImpl<T> extends JPanel {
 
     private static final Dimension NORMAL_LIST = new Dimension(150, 170);
 
-    private static final Border BORDER_INCLUDE_ENABLED = BorderFactory.createTitledBorder(
-        BorderFactory.createLineBorder(new Color(0, 221, 0), 2), MATCH_LABEL);
-
-    private static final Border BORDER_INCLUDE_DISABLED = BorderFactory.createTitledBorder(
-        BorderFactory.createLineBorder(Color.GRAY, 2), MATCH_LABEL);
-
-    private static final Border BORDER_EXCLUDE_ENABLED = BorderFactory.createTitledBorder(
-        BorderFactory.createLineBorder(new Color(240, 0, 0), 2), NON_MATCH_LABEL);
-
-    private static final Border BORDER_EXCLUDE_DISABLED = BorderFactory.createTitledBorder(
-        BorderFactory.createLineBorder(Color.GRAY, 2), NON_MATCH_LABEL);
-
     private JTextField m_pattern;
 
     private JRadioButton m_regex;
@@ -120,18 +102,6 @@ final class PatternFilterPanelImpl<T> extends JPanel {
     private JCheckBox m_caseSensitive;
 
     private JLabel m_invalid;
-
-    private JList m_includeList;
-
-    private DefaultListModel m_includeListModel;
-
-    private JScrollPane m_includePane;
-
-    private JList m_excludeList;
-
-    private DefaultListModel m_excludeListModel;
-
-    private JScrollPane m_excludePane;
 
     private List<ChangeListener> m_listeners;
 
@@ -147,12 +117,15 @@ final class PatternFilterPanelImpl<T> extends JPanel {
 
     private InputFilter<T> m_filter;
 
+    private FilterIncludeExcludePreview<T> m_preview;
+
     /**
      * Create the pattern filter panel.
      *
      * @param parentFilter The filter that is parent to this pattern filter
      * @param filter The filter that filters out Ts that are not available for selection
      */
+    @SuppressWarnings("unchecked")
     PatternFilterPanelImpl(final NameFilterPanel<T> parentFilter, final InputFilter<T> filter) {
         setLayout(new BorderLayout());
         m_parentFilter = parentFilter;
@@ -230,27 +203,14 @@ final class PatternFilterPanelImpl<T> extends JPanel {
             }
         });
         // Add preview twin list
-        JPanel previewPanel = new JPanel();
-        previewPanel.setLayout(new GridLayout(1, 2));
-        m_includeListModel = new DefaultListModel();
-        m_includeList = new JList(m_includeListModel);
-        m_includeList.setSelectionBackground(super.getBackground());
-        m_includeList.setBackground(super.getBackground());
-        m_excludeListModel = new DefaultListModel();
-        m_excludeList = new JList(m_excludeListModel);
-        m_excludeList.setSelectionBackground(super.getBackground());
-        m_excludeList.setBackground(super.getBackground());
-        m_includeList.setCellRenderer(m_parentFilter.getListCellRenderer());
-        m_excludeList.setCellRenderer(m_parentFilter.getListCellRenderer());
-        m_includePane = new JScrollPane(m_includeList);
-        m_excludePane = new JScrollPane(m_excludeList);
-        previewPanel.add(m_excludePane);
-        previewPanel.add(m_includePane);
+        m_preview =
+            new FilterIncludeExcludePreview<T>(MATCH_LABEL, NON_MATCH_LABEL, m_parentFilter.getListCellRenderer());
+        m_preview.setListSize(NORMAL_LIST);
         gbc.insets = new Insets(0, 0, 0, 0);
         gbc.gridy++;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 1;
-        panel.add(previewPanel, gbc);
+        panel.add(m_preview, gbc);
         // Add invalid pattern label
         m_invalid = new JLabel();
         m_invalid.setForeground(Color.RED);
@@ -271,6 +231,7 @@ final class PatternFilterPanelImpl<T> extends JPanel {
         m_regex.setEnabled(enabled);
         m_wildcard.setEnabled(enabled);
         m_caseSensitive.setEnabled(enabled);
+        update();
     }
 
     /** @param config to load from
@@ -344,9 +305,8 @@ final class PatternFilterPanelImpl<T> extends JPanel {
      * Updates the preview lists and the error message.
      */
     private void update() {
-        // Clear the lists
-        m_includeListModel.clear();
-        m_excludeListModel.clear();
+        List<T> includes = new ArrayList<T>();
+        List<T> excludes = new ArrayList<T>();
         boolean patternInvalid = false;
         try {
             // Create regex, this will throw an exception if the current pattern is invalid
@@ -362,9 +322,9 @@ final class PatternFilterPanelImpl<T> extends JPanel {
                     }
                 }
                 if (regex.matcher(name).matches()) {
-                    m_includeListModel.addElement(t);
+                    includes.add(t);
                 } else {
-                    m_excludeListModel.addElement(t);
+                    excludes.add(t);
                 }
             }
         } catch (PatternSyntaxException e) {
@@ -383,28 +343,19 @@ final class PatternFilterPanelImpl<T> extends JPanel {
                         continue;
                     }
                 }
-                m_excludeListModel.addElement(t);
+                excludes.add(t);
             }
         }
+        m_preview.update(includes, excludes);
         // Show error if pattern was invalid
         m_invalid.setVisible(patternInvalid);
         // Disable twin lists if pattern was invalid
-        m_includeList.setEnabled(!patternInvalid);
-        m_includePane.setEnabled(!patternInvalid);
-        m_excludeList.setEnabled(!patternInvalid);
-        m_excludePane.setEnabled(!patternInvalid);
-        // Change border style so they look gray if disabled or colorful if enabled and change size to make place for
-        // the error message
+        m_preview.setEnabled(!patternInvalid && super.isEnabled());
+        // Change size to make place for the error message
         if (patternInvalid) {
-            m_includePane.setBorder(BORDER_INCLUDE_DISABLED);
-            m_excludePane.setBorder(BORDER_EXCLUDE_DISABLED);
-            m_includePane.setPreferredSize(SMALL_LIST);
-            m_excludePane.setPreferredSize(SMALL_LIST);
+            m_preview.setListSize(SMALL_LIST);
         } else {
-            m_includePane.setBorder(BORDER_INCLUDE_ENABLED);
-            m_excludePane.setBorder(BORDER_EXCLUDE_ENABLED);
-            m_includePane.setPreferredSize(NORMAL_LIST);
-            m_excludePane.setPreferredSize(NORMAL_LIST);
+            m_preview.setListSize(NORMAL_LIST);
         }
     }
 
