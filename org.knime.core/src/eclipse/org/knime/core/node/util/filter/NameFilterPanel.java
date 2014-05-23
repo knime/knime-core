@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -203,6 +203,10 @@ public abstract class NameFilterPanel<T> extends JPanel {
     private JRadioButton m_patternButton;
 
     private TreeMap<Integer, String> m_typePriorities = new TreeMap<Integer, String>();
+
+    private List<String> m_invalidIncludes = new ArrayList<String>(0);
+
+    private List<String> m_invalidExcludes = new ArrayList<String>(0);
 
     /**
      * Creates a panel allowing the user to select elements.
@@ -409,6 +413,18 @@ public abstract class NameFilterPanel<T> extends JPanel {
         // add force incl/excl buttons
         m_enforceInclusion = new JRadioButton("Enforce inclusion");
         m_enforceExclusion = new JRadioButton("Enforce exclusion");
+        m_enforceInclusion.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent arg0) {
+                cleanInvalidValues();
+            }
+        });
+        m_enforceExclusion.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent arg0) {
+                cleanInvalidValues();
+            }
+        });
         if (!showSelectionListsOnly) {
             final ButtonGroup forceGroup = new ButtonGroup();
             m_enforceInclusion.setToolTipText("Force the set of included names to stay the same.");
@@ -518,6 +534,10 @@ public abstract class NameFilterPanel<T> extends JPanel {
     public void loadConfiguration(final NameFilterConfiguration config, final String[] names) {
         final List<String> ins = Arrays.asList(config.getIncludeList());
         final List<String> exs = Arrays.asList(config.getExcludeList());
+        if (supportsInvalidValues()) {
+            m_invalidIncludes = new ArrayList<String>(Arrays.asList(config.getRemovedFromIncludeList()));
+            m_invalidExcludes = new ArrayList<String>(Arrays.asList(config.getRemovedFromExcludeList()));
+        }
         this.update(ins, exs, names);
         switch (config.getEnforceOption()) {
             case EnforceExclusion:
@@ -565,6 +585,17 @@ public abstract class NameFilterPanel<T> extends JPanel {
         m_exclMdl.removeAllElements();
         m_hideNames.clear();
 
+        for (final String name : m_invalidIncludes) {
+            final T t = getTforName(name);
+            m_inclMdl.addElement(t);
+            m_order.add(t);
+        }
+        for (final String name : m_invalidExcludes) {
+            final T t = getTforName(name);
+            m_exclMdl.addElement(t);
+            m_order.add(t);
+        }
+
         for (final String name : names) {
             final T t = getTforName(name);
 
@@ -583,6 +614,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
             }
             m_order.add(t);
         }
+
         repaint();
     }
 
@@ -616,6 +648,10 @@ public abstract class NameFilterPanel<T> extends JPanel {
             exs[index++] = getNameForT(t);
         }
         config.setExcludeList(exs);
+
+        config.setRemovedFromIncludeList(getInvalidIncludes());
+        config.setRemovedFromExcludeList(getInvalidExcludes());
+
         try {
             config.setType(m_currentType);
         } catch (InvalidSettingsException e) {
@@ -631,7 +667,9 @@ public abstract class NameFilterPanel<T> extends JPanel {
         for (int i = 0; i < m_inclMdl.getSize(); i++) {
             @SuppressWarnings("unchecked")
             T t = (T)m_inclMdl.getElementAt(i);
-            list.add(t);
+            if (!isInvalidValue(getNameForT(t))) {
+                list.add(t);
+            }
         }
         return list;
     }
@@ -642,9 +680,51 @@ public abstract class NameFilterPanel<T> extends JPanel {
         for (int i = 0; i < m_exclMdl.getSize(); i++) {
             @SuppressWarnings("unchecked")
             T t = (T)m_exclMdl.getElementAt(i);
-            list.add(t);
+            if (!isInvalidValue(getNameForT(t))) {
+                list.add(t);
+            }
         }
         return list;
+    }
+
+    /**
+     * Get the invalid values in the include list.
+     */
+    private String[] getInvalidIncludes() {
+        List<String> list = new ArrayList<String>();
+        for (int i = 0; i < m_inclMdl.getSize(); i++) {
+            @SuppressWarnings("unchecked")
+            String name = getNameForT((T)m_inclMdl.getElementAt(i));
+            if (isInvalidValue(name)) {
+                list.add(name);
+            }
+        }
+        return list.toArray(new String[list.size()]);
+    }
+
+    /**
+     * Get the invalid values in the exclude list.
+     */
+    private String[] getInvalidExcludes() {
+        List<String> list = new ArrayList<String>();
+        for (int i = 0; i < m_exclMdl.getSize(); i++) {
+            @SuppressWarnings("unchecked")
+            String name = getNameForT((T)m_exclMdl.getElementAt(i));
+            if (isInvalidValue(name)) {
+                list.add(name);
+            }
+        }
+        return list.toArray(new String[list.size()]);
+    }
+
+    /**
+     * Check if a value is invalid.
+     *
+     * @param value The value to check
+     * @return true if the given name is invalid, false otherwise
+     */
+    private boolean isInvalidValue(final String value) {
+        return m_invalidIncludes.contains(value) || m_invalidExcludes.contains(value);
     }
 
     /**
@@ -919,6 +999,19 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
+     * Checks if class supports the creation of invalid values.
+     *
+     * If the class does support invalid values it must return an object representing the invalid value in the
+     * getTForName() method and must be able to recreate the name from this object in the getNameForT() method.
+     *
+     * @return true if the class supports invalid values, false otherwise
+     * @since 2.10
+     */
+    protected boolean supportsInvalidValues() {
+        return false;
+    }
+
+    /**
      * Called by the 'remove >>' button to exclude the selected elements from the include list.
      */
     @SuppressWarnings("unchecked")
@@ -939,9 +1032,14 @@ public abstract class NameFilterPanel<T> extends JPanel {
         for (T c : m_order) {
             if (hash.contains(c)) {
                 m_exclMdl.addElement(c);
+                String name = getNameForT(c);
+                if (m_invalidIncludes.remove(name)) {
+                    m_invalidExcludes.add(name);
+                }
             }
         }
         if (changed) {
+            cleanInvalidValues();
             fireFilteringChangedEvent();
         }
     }
@@ -954,12 +1052,15 @@ public abstract class NameFilterPanel<T> extends JPanel {
         boolean changed = m_inclMdl.elements().hasMoreElements();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
+        m_invalidExcludes.addAll(m_invalidIncludes);
+        m_invalidIncludes.clear();
         for (T c : m_order) {
             if (!m_hideNames.contains(c)) {
                 m_exclMdl.addElement(c);
             }
         }
         if (changed) {
+            cleanInvalidValues();
             fireFilteringChangedEvent();
         }
     }
@@ -985,9 +1086,14 @@ public abstract class NameFilterPanel<T> extends JPanel {
         for (T c : m_order) {
             if (hash.contains(c)) {
                 m_inclMdl.addElement(c);
+                String name = getNameForT(c);
+                if (m_invalidExcludes.remove(name)) {
+                    m_invalidIncludes.add(name);
+                }
             }
         }
         if (changed) {
+            cleanInvalidValues();
             fireFilteringChangedEvent();
         }
     }
@@ -1000,13 +1106,39 @@ public abstract class NameFilterPanel<T> extends JPanel {
         boolean changed = m_exclMdl.elements().hasMoreElements();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
+        m_invalidIncludes.addAll(m_invalidExcludes);
+        m_invalidExcludes.clear();
         for (T c : m_order) {
             if (!m_hideNames.contains(c)) {
                 m_inclMdl.addElement(c);
             }
         }
         if (changed) {
+            cleanInvalidValues();
             fireFilteringChangedEvent();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void cleanInvalidValues() {
+        if (m_enforceExclusion.isSelected()) {
+            for (int i = 0; i < m_inclMdl.getSize(); i++) {
+                String name = getNameForT((T)m_inclMdl.getElementAt(i));
+                if (isInvalidValue(name)) {
+                    m_invalidIncludes.remove(name);
+                    m_order.remove(m_inclMdl.getElementAt(i));
+                    m_inclMdl.remove(i--);
+                }
+            }
+        } else {
+            for (int i = 0; i < m_exclMdl.getSize(); i++) {
+                String name = getNameForT((T)m_exclMdl.getElementAt(i));
+                if (isInvalidValue(name)) {
+                    m_invalidExcludes.remove(name);
+                    m_order.remove(m_exclMdl.getElementAt(i));
+                    m_exclMdl.remove(i--);
+                }
+            }
         }
     }
 

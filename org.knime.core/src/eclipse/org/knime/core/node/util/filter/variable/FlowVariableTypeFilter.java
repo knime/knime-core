@@ -52,6 +52,7 @@ package org.knime.core.node.util.filter.variable;
 import java.util.Arrays;
 import java.util.List;
 
+import org.knime.core.node.util.FlowVariableListCellRenderer.FlowVariableCell;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.workflow.FlowVariable;
 
@@ -61,7 +62,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  * @since 2.9
  */
-public class FlowVariableTypeFilter extends InputFilter<FlowVariable> {
+public class FlowVariableTypeFilter extends InputFilter<FlowVariableCell> {
 
     private final FlowVariable.Type[] m_filterTypes;
 
@@ -81,7 +82,23 @@ public class FlowVariableTypeFilter extends InputFilter<FlowVariable> {
         m_filterTypes = filterValueTypes;
     }
 
+    /**
+     * @param flowVariableCell The cell containing the flow variable
+     * @return true if the flow variable cell should be included, false otherwise
+     * @since 2.10
+     */
     @Override
+    public final boolean include(final FlowVariableCell flowVariableCell) {
+        if (flowVariableCell.isValid()) {
+            return include(flowVariableCell.getFlowVariable());
+        }
+        return true;
+    }
+
+    /**
+     * @param flowVariable The flow variable to check
+     * @return true if the flow variable should be included, false otherwise
+     */
     public final boolean include(final FlowVariable flowVariable) {
         for (final FlowVariable.Type ty : m_filterTypes) {
             if (flowVariable.getType() == ty) {

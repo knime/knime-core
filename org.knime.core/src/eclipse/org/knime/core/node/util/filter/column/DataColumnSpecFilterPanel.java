@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -198,10 +198,14 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
     /** {@inheritDoc} */
     @Override
     protected DataColumnSpec getTforName(final String name) {
-        if (m_spec == null) {
-            return null;
+        DataColumnSpec colSpec = null;
+        if (m_spec != null) {
+            colSpec = m_spec.getColumnSpec(name);
         }
-        return m_spec.getColumnSpec(name);
+        if (colSpec == null) {
+            colSpec = DataColumnSpecListCellRenderer.createInvalidSpec(name);
+        }
+        return colSpec;
     }
 
     /** {@inheritDoc} */
@@ -219,6 +223,14 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
             return m_typePanel;
         }
         return super.getFilterPanel(type);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean supportsInvalidValues() {
+        return true;
     }
 
     private void init() {

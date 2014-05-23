@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
@@ -100,6 +101,10 @@ public class NameFilterConfiguration implements Cloneable {
     private String[] m_includeList = new String[0];
 
     private String[] m_excludeList = new String[0];
+
+    private String[] m_removedFromIncludeList = new String[0];
+
+    private String[] m_removedFromExcludeList = new String[0];
 
     private EnforceOption m_enforceOption = EnforceOption.EnforceExclusion;
 
@@ -295,8 +300,15 @@ public class NameFilterConfiguration implements Cloneable {
     public final void saveConfiguration(final NodeSettingsWO settings) {
         NodeSettingsWO subSettings = settings.addNodeSettings(m_configRootName);
         subSettings.addString(KEY_FILTER_TYPE, m_type);
-        subSettings.addStringArray(KEY_INCLUDED_NAMES, m_includeList);
-        subSettings.addStringArray(KEY_EXCLUDED_NAMES, m_excludeList);
+        // Only add removed list for selected enforce option
+        String[] includes =
+            m_enforceOption == EnforceOption.EnforceInclusion ? (String[])ArrayUtils.addAll(m_includeList,
+                m_removedFromIncludeList) : m_includeList;
+        subSettings.addStringArray(KEY_INCLUDED_NAMES, includes);
+        String[] excludes =
+            m_enforceOption == EnforceOption.EnforceExclusion ? (String[])ArrayUtils.addAll(m_excludeList,
+                m_removedFromExcludeList) : m_excludeList;
+        subSettings.addStringArray(KEY_EXCLUDED_NAMES, excludes);
         subSettings.addString(KEY_ENFORCE_OPTION, m_enforceOption.name());
         NodeSettingsWO configSettings = subSettings.addNodeSettings(PatternFilterConfigurationImpl.TYPE);
         m_patternConfig.saveConfiguration(configSettings);
@@ -346,6 +358,12 @@ public class NameFilterConfiguration implements Cloneable {
             return false;
         }
         if (!Arrays.equals(m_includeList, other.m_includeList)) {
+            return false;
+        }
+        if (!Arrays.equals(m_removedFromExcludeList, other.m_removedFromExcludeList)) {
+            return false;
+        }
+        if (!Arrays.equals(m_removedFromIncludeList, other.m_removedFromIncludeList)) {
             return false;
         }
         if (!m_type.equals(other.m_type)) {
@@ -468,6 +486,12 @@ public class NameFilterConfiguration implements Cloneable {
 
         m_includeList = applyTo.getIncludes();
         m_excludeList = applyTo.getExcludes();
+        // Only keep removed names from enforced option
+        if (m_enforceOption == EnforceOption.EnforceInclusion) {
+            m_removedFromIncludeList = applyTo.getRemovedFromIncludes();
+        } else if (m_enforceOption == EnforceOption.EnforceExclusion) {
+            m_removedFromExcludeList = applyTo.getRemovedFromExcludes();
+        }
         loadConfigurationInDialogChild(subSettings, names);
     }
 
@@ -491,8 +515,12 @@ public class NameFilterConfiguration implements Cloneable {
     protected FilterResult applyTo(final String[] names) {
         if (TYPE.equals(m_type)) {
             final EnforceOption enforceOption = getEnforceOption();
-            final LinkedHashSet<String> inclsHash = new LinkedHashSet<String>(Arrays.asList(getIncludeList()));
-            final LinkedHashSet<String> exclsHash = new LinkedHashSet<String>(Arrays.asList(getExcludeList()));
+            final LinkedHashSet<String> inclsHash =
+                new LinkedHashSet<String>(Arrays.asList(ArrayUtils.addAll(getIncludeList(),
+                    m_removedFromIncludeList)));
+            final LinkedHashSet<String> exclsHash =
+                new LinkedHashSet<String>(Arrays.asList(ArrayUtils.addAll(getExcludeList(),
+                    m_removedFromExcludeList)));
             final List<String> incls = new ArrayList<String>();
             final List<String> excls = new ArrayList<String>();
 
@@ -558,6 +586,38 @@ public class NameFilterConfiguration implements Cloneable {
      */
     protected void setExcludeList(final String[] excludeList) {
         m_excludeList = excludeList;
+    }
+
+    /**
+     * @return list of names that were explicitly included but are no longer available
+     * @since 2.10
+     */
+    protected String[] getRemovedFromIncludeList() {
+        return m_removedFromIncludeList;
+    }
+
+    /**
+     * @param removedFromIncludeList list of names that were explicitly included but are no longer available
+     * @since 2.10
+     */
+    protected void setRemovedFromIncludeList(final String[] removedFromIncludeList) {
+        m_removedFromIncludeList = removedFromIncludeList;
+    }
+
+    /**
+     * @return list of names that were explicitly excluded but are no longer available
+     * @since 2.10
+     */
+    protected String[] getRemovedFromExcludeList() {
+        return m_removedFromExcludeList;
+    }
+
+    /**
+     * @param removedFromExcludeList list of names that were explicitly excluded but are no longer available
+     * @since 2.10
+     */
+    protected void setRemovedFromExcludeList(final String[] removedFromExcludeList) {
+        m_removedFromExcludeList = removedFromExcludeList;
     }
 
     /**

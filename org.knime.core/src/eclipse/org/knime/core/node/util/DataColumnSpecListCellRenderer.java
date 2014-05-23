@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -161,19 +161,22 @@ public class DataColumnSpecListCellRenderer extends DefaultListCellRenderer {
                 isSelected, cellHasFocus);
         assert (c == this);
         String text = null;
+        String tooltipText = null;
         if (value instanceof DataColumnSpec) {
             final DataColumnSpec spec = (DataColumnSpec)value;
             text = spec.getName().toString();
+            tooltipText = text;
             setText(text);
             setIcon(spec.getType().getIcon());
             if (isInvalid(spec)) {
                 //this is an invalid data column
                 setBorder(BorderFactory.createLineBorder(Color.red));
+                tooltipText = tooltipText + " (invalid)";
             } else {
                 setBorder(null);
             }
         }
-        list.setToolTipText(text);
+        list.setToolTipText(tooltipText);
         return this;
     }
 }

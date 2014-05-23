@@ -55,6 +55,7 @@ import java.util.Set;
 import javax.swing.ListCellRenderer;
 
 import org.knime.core.node.util.FlowVariableListCellRenderer;
+import org.knime.core.node.util.FlowVariableListCellRenderer.FlowVariableCell;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterPanel;
 import org.knime.core.node.workflow.FlowVariable;
@@ -66,7 +67,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * @since 2.9
  */
 @SuppressWarnings("serial")
-public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariable> {
+public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariableCell> {
 
     private Map<String, FlowVariable> m_variables;
 
@@ -117,7 +118,7 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariable> {
      *            force-include-option, etc.
      * @param filter The filter specifying which variables are shown and which not.
      */
-    public FlowVariableFilterPanel(final boolean showSelectionListsOnly, final InputFilter<FlowVariable> filter) {
+    public FlowVariableFilterPanel(final boolean showSelectionListsOnly, final InputFilter<FlowVariableCell> filter) {
         super(showSelectionListsOnly, filter);
     }
 
@@ -127,7 +128,7 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariable> {
      *
      * @param filter The filter specifying which variables are shown and which not.
      */
-    public FlowVariableFilterPanel(final InputFilter<FlowVariable> filter) {
+    public FlowVariableFilterPanel(final InputFilter<FlowVariableCell> filter) {
         super(false, filter);
     }
 
@@ -144,15 +145,20 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariable> {
      * {@inheritDoc}
      */
     @Override
-    protected FlowVariable getTforName(final String name) {
-        return m_variables.get(name);
+    protected FlowVariableCell getTforName(final String name) {
+        FlowVariable flowVariable = m_variables.get(name);
+        if (flowVariable != null) {
+            return new FlowVariableCell(m_variables.get(name));
+        } else {
+            return new FlowVariableCell(name);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected String getNameForT(final FlowVariable t) {
+    protected String getNameForT(final FlowVariableCell t) {
         return t.getName();
     }
 
@@ -167,6 +173,14 @@ public class FlowVariableFilterPanel extends NameFilterPanel<FlowVariable> {
         m_variables = flowVariables;
         Set<String> keys = flowVariables.keySet();
         super.loadConfiguration(config, keys.toArray(new String[keys.size()]));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean supportsInvalidValues() {
+        return true;
     }
 
 }

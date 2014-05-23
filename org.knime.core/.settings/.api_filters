@@ -458,6 +458,30 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/util/filter/variable/FlowVariableFilterPanel.java" type="org.knime.core.node.util.filter.variable.FlowVariableFilterPanel">
+        <filter comment="bug 4601 - col filter: red border for invalid (not used as recently added)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.filter.variable.FlowVariableFilterPanel"/>
+                <message_argument value="getNameForT(FlowVariable)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="bug 4601 - col filter: red border for invalid (not used as recently added)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.filter.variable.FlowVariableFilterPanel"/>
+                <message_argument value="getTforName(String)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="bug 4601 - col filter: red border for invalid (not used as recently added)" id="1143996420">
+            <message_arguments>
+                <message_argument value="getNameForT(FlowVariableListCellRenderer.FlowVariableCell)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="bug 4601 - col filter: red border for invalid (not used as recently added)" id="1143996420">
+            <message_arguments>
+                <message_argument value="getTforName(String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/web/DefaultWebTemplate.java" type="org.knime.core.node.web.DefaultWebTemplate">
         <filter id="338722907">
             <message_arguments>

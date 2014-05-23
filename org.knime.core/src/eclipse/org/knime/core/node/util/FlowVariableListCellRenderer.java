@@ -44,14 +44,16 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 26, 2008 (wiswedel): created
  */
 package org.knime.core.node.util;
 
+import java.awt.Color;
 import java.awt.Component;
 
+import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -76,6 +78,9 @@ public class FlowVariableListCellRenderer extends DefaultListCellRenderer {
     public static final Icon FLOW_VAR_INT_ICON;
     /** Icon representing string flow variables. */
     public static final Icon FLOW_VAR_STRING_ICON;
+    /** Icon representing invalid flow variables.
+     * @since 2.10*/
+    public static final Icon FLOW_VAR_INVALID_ICON;
     
     static {
         FLOW_VAR_DOUBLE_ICON = loadIcon(
@@ -84,6 +89,8 @@ public class FlowVariableListCellRenderer extends DefaultListCellRenderer {
                 Node.class, "/icon/flowvar_integer.png");
         FLOW_VAR_STRING_ICON = loadIcon(
                 Node.class, "/icon/flowvar_string.png");
+        FLOW_VAR_INVALID_ICON = loadIcon(
+                Node.class, "/icon/flowvar_default.png");
     }
     
     private static Icon loadIcon(
@@ -115,43 +122,116 @@ public class FlowVariableListCellRenderer extends DefaultListCellRenderer {
         Component c =
                 super.getListCellRendererComponent(list, value, index,
                         isSelected, cellHasFocus);
-        if (value instanceof FlowVariable) {
-            FlowVariable v = (FlowVariable)value;
-            Icon icon;
-            setText(v.getName());
-            String curValue;
-            switch (v.getType()) {
-            case DOUBLE:
-                icon = FLOW_VAR_DOUBLE_ICON;
-                curValue = Double.toString(v.getDoubleValue());
-                break;
-            case INTEGER:
-                icon = FLOW_VAR_INT_ICON;
-                curValue = Integer.toString(v.getIntValue());
-                break;
-            case STRING:
-                icon = FLOW_VAR_STRING_ICON;
-                curValue = v.getStringValue();
-                break;
-            default:
-                icon = DataValue.UTILITY.getIcon();
-                curValue = v.toString();
-            }
-            setIcon(icon);
-            StringBuilder b = new StringBuilder(v.getName());
-            b.append(" (");
-            if (v.getName().startsWith("knime.")) { // constant
-                b.append("constant: ");
+        if (value instanceof FlowVariableCell) {
+            FlowVariableCell flowVariableCell = (FlowVariableCell)value;
+            if (flowVariableCell.isValid()) {
+                FlowVariable v = flowVariableCell.getFlowVariable();
+                Icon icon;
+                setText(v.getName());
+                String curValue;
+                switch (v.getType()) {
+                case DOUBLE:
+                    icon = FLOW_VAR_DOUBLE_ICON;
+                    curValue = Double.toString(v.getDoubleValue());
+                    break;
+                case INTEGER:
+                    icon = FLOW_VAR_INT_ICON;
+                    curValue = Integer.toString(v.getIntValue());
+                    break;
+                case STRING:
+                    icon = FLOW_VAR_STRING_ICON;
+                    curValue = v.getStringValue();
+                    break;
+                default:
+                    icon = DataValue.UTILITY.getIcon();
+                    curValue = v.toString();
+                }
+                setIcon(icon);
+                StringBuilder b = new StringBuilder(v.getName());
+                b.append(" (");
+                if (v.getName().startsWith("knime.")) { // constant
+                    b.append("constant: ");
+                } else {
+                    b.append("current value: ");
+                }
+                b.append(curValue);
+                b.append(")");
+                setToolTipText(b.toString());
             } else {
-                b.append("current value: ");
+                setText(flowVariableCell.getName());
+                setIcon(FLOW_VAR_INVALID_ICON);
+                setToolTipText(null);
+                setBorder(BorderFactory.createLineBorder(Color.red));
             }
-            b.append(curValue);
-            b.append(")");
-            setToolTipText(b.toString());
         } else {
             setToolTipText(null);
         }
         return c;
+    }
+
+    /**
+     * Cell representing a valid or invalid flow variable.
+     *
+     * @author "Patrick Winter"
+     * @since 2.10
+     */
+    public static class FlowVariableCell {
+
+        private boolean m_isValid;
+
+        private FlowVariable m_flowVariable;
+
+        private String m_name;
+
+        /**
+         * Creates an invalid flow variable cell.
+         *
+         * @param name Name of the cell
+         */
+        public FlowVariableCell(final String name) {
+            m_isValid = false;
+            m_flowVariable = null;
+            m_name = name;
+        }
+
+        /**
+         * Creates a valid flow variable cell.
+         *
+         * @param flowVariable The actual flow variable or null if this cell is invalid
+         */
+        public FlowVariableCell(final FlowVariable flowVariable) {
+            m_isValid = true;
+            m_flowVariable = flowVariable;
+            m_name = flowVariable.getName();
+        }
+
+        /**
+         * Returns if this cell is valid.
+         *
+         * @return true if the cell is valid and contains an actual flow variable, false otherwise
+         */
+        public boolean isValid() {
+            return m_isValid;
+        }
+
+        /**
+         * Returns the contained flow variable.
+         *
+         * @return The contained flow variable or null if the cell is invalid
+         */
+        public FlowVariable getFlowVariable() {
+            return m_flowVariable;
+        }
+
+        /**
+         * Returns the name of this cell.
+         *
+         * @return The name
+         */
+        public String getName() {
+            return m_name;
+        }
+
     }
 
 }
