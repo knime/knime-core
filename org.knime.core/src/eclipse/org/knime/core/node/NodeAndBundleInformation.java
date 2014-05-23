@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -53,9 +53,10 @@ package org.knime.core.node;
 import java.util.Dictionary;
 
 import org.knime.core.eclipseUtil.OSGIHelper;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FileWorkflowPersistor;
-import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Version;
 
 /** Information object to a node. Contains bundle information and node name.
  * Used in persistor to store extra information.
@@ -70,9 +71,11 @@ public final class NodeAndBundleInformation {
     private final String m_bundleVendor;
     private final String m_nodeName;
     private final String m_factoryClass;
+    private final Version m_bundleVersion;
 
-    /** @param node .. */
-    NodeAndBundleInformation(final Node node) {
+    /** @param node ...
+     * @since 2.10 */
+    public NodeAndBundleInformation(final Node node) {
         final Class<? extends NodeFactory> facClass = node.getFactory().getClass();
         Bundle bundle = OSGIHelper.getBundle(facClass);
         if (bundle != null) {
@@ -80,25 +83,27 @@ public final class NodeAndBundleInformation {
             m_bundleSymbolicName = bundle.getSymbolicName();
             m_bundleName = headers.get("Bundle-Name");
             m_bundleVendor = headers.get("Bundle-Vendor");
+            m_bundleVersion = bundle.getVersion();
         } else {
             m_bundleSymbolicName = null;
             m_bundleName = null;
             m_bundleVendor = null;
+            m_bundleVersion = null;
         }
         m_nodeName = node.getName();
         m_factoryClass = facClass.getName();
     }
 
-    /** Init from string array. All args except the factoryClass may be null.
-     * @param factoryClass
-     * @param bundleSymbolicName
-     * @param bundleName
-     * @param bundleVendor
-     * @param nodeName
-     * @noreference */
-    public NodeAndBundleInformation(final String factoryClass,
+    /** @param factoryClass Non null factory class name.
+     * @noreference This constructor is not intended to be referenced by clients. */
+    public NodeAndBundleInformation(final String factoryClass) {
+        this(factoryClass, null, null, null, null, null);
+    }
+
+    /** Init from string array. All args except the factoryClass may be null. */
+    private NodeAndBundleInformation(final String factoryClass,
             final String bundleSymbolicName, final String bundleName,
-            final String bundleVendor, final String nodeName) {
+            final String bundleVendor, final String nodeName, final Version version) {
         if (factoryClass == null) {
             throw new NullPointerException("factory class must not be null");
         }
@@ -106,10 +111,9 @@ public final class NodeAndBundleInformation {
         m_bundleName = bundleName;
         m_bundleVendor = bundleVendor;
         m_nodeName = nodeName;
+        m_bundleVersion = version;
         m_factoryClass = factoryClass;
     }
-
-
 
     /** @return the name */
     public String getBundleName() {
@@ -124,6 +128,12 @@ public final class NodeAndBundleInformation {
     /** @return the vendor */
     public String getBundleVendor() {
         return m_bundleVendor;
+    }
+
+    /** @return the bundle version
+     * @since 2.10 */
+    public Version getBundleVersion() {
+        return m_bundleVersion;
     }
 
     /** @return non null node name.
@@ -162,6 +172,8 @@ public final class NodeAndBundleInformation {
         settings.addString("node-bundle-name", getBundleName());
         settings.addString("node-bundle-symbolic-name", getBundleSymbolicName());
         settings.addString("node-bundle-vendor", getBundleVendor());
+        // new in 2.10
+        settings.addString("node-bundle-version", getBundleVersion().toString());
     }
 
     /** Restores, used in persistor.
@@ -180,6 +192,7 @@ public final class NodeAndBundleInformation {
         String bundleName;
         String bundleVendor;
         String nodeName;
+        Version bundleVersion;
         if (version.ordinal() < FileWorkflowPersistor.LoadVersion.V260.ordinal()) {
             nodeName = null;
             bundleName = null;
@@ -191,8 +204,18 @@ public final class NodeAndBundleInformation {
             bundleSymbolicName = settings.getString("node-bundle-symbolic-name");
             bundleVendor = settings.getString("node-bundle-vendor");
         }
+        if (version.isOlderThan(FileWorkflowPersistor.LoadVersion.V2100)) {
+            bundleVersion = Version.emptyVersion;
+        } else {
+            String versionS = settings.getString("node-bundle-version", Version.emptyVersion.toString());
+            try {
+                bundleVersion = Version.parseVersion(versionS);
+            } catch (IllegalArgumentException iae) {
+                throw new InvalidSettingsException("Invalid version \"" + versionS + "\"", iae);
+            }
+        }
         return new NodeAndBundleInformation(factoryClass, bundleSymbolicName,
-                bundleName, bundleVendor, nodeName);
+                bundleName, bundleVendor, nodeName, bundleVersion);
     }
 
     /** {@inheritDoc} */

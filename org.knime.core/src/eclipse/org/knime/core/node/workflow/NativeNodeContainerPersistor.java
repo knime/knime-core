@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,6 +50,7 @@
 package org.knime.core.node.workflow;
 
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeAndBundleInformation;
 
 /**
  *
@@ -65,5 +66,9 @@ interface NativeNodeContainerPersistor extends SingleNodeContainerPersistor {
      * @return The unconfigured node instance.
      */
     Node getNode();
+
+    /** @return bundle info to the underlying null. May be null for idle/configured nodes (so always during copy&paste).
+     * @since 2.10 */
+    NodeAndBundleInformation getNodeAndBundleInformation();
 
 }

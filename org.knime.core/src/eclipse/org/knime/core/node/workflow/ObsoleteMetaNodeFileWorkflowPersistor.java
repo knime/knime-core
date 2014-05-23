@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -447,7 +447,7 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
                     newClass =
                         "org.knime.base.node.meta.looper.ForLoopTailNodeFactory";
                 }
-                f = new NodeAndBundleInformation(newClass, null, null, null, null);
+                f = new NodeAndBundleInformation(newClass);
                 break;
             case CROSSVALIDATION:
                 // the x-partitioner and aggregator node have the same name

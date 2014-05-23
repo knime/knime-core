@@ -112,6 +112,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     }
 
     private Node m_node;
+
+    private NodeAndBundleInformation m_nodeAndBundleInformation;
     /**
      * @param workflowPersistor
      * @param nodeSettingsFile
@@ -139,6 +141,12 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     @Override
     public Node getNode() {
         return m_node;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeAndBundleInformation getNodeAndBundleInformation() {
+        return m_nodeAndBundleInformation;
     }
 
     FileNodePersistor createNodePersistor(final NodeSettingsRO settings) {
@@ -194,6 +202,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
 
             throw new NodeFactoryUnknownException(error, nodeInfo, additionalFactorySettings, e);
         }
+        m_nodeAndBundleInformation = nodeInfo;
         m_node = new Node(nodeFactory);
     }
 
@@ -295,7 +304,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 || "org.knime.ext.weka.j48.WEKAJ48NodeFactory".equals(factoryName)) {
                 factoryName = "org.knime.ext.weka.knimeJ48.KnimeJ48NodeFactory";
             }
-            return new NodeAndBundleInformation(factoryName, null, null, null, null);
+            return new NodeAndBundleInformation(factoryName);
         } else {
             return NodeAndBundleInformation.load(settings, getLoadVersion());
         }
@@ -498,7 +507,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     private static void saveNodeFactory(final NodeSettingsWO settings, final NativeNodeContainer nnc) {
         final Node node = nnc.getNode();
         // node info to missing node is the info to the actual instance, not MissingNodeFactory
-        NodeAndBundleInformation nodeInfo = node.getNodeAndBundleInformation();
+        NodeAndBundleInformation nodeInfo = nnc.getNodeAndBundleInformation();
         nodeInfo.save(settings);
 
         NodeSettingsWO subSets = settings.addNodeSettings("factory_settings");

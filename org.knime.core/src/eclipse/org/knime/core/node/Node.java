@@ -86,7 +86,6 @@ import org.knime.core.node.interactive.InteractiveNodeFactoryExtension;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
-import org.knime.core.node.missing.MissingNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectHolder;
 import org.knime.core.node.port.PortObjectSpec;
@@ -2123,7 +2122,7 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * NOTE: it is not recommended to call this method anywhere else than in the
+     * NOTE: it is not recommended to call this method anywhere else than in them
      * core. The port indices in the factory don't encounter for the implicit
      * flow variable ports!
      *
@@ -2132,16 +2131,6 @@ public final class Node implements NodeModelWarningListener {
      */
     public NodeFactory<NodeModel> getFactory() {
         return m_factory;
-    }
-
-    /** @return non-null meta bundle and node information to this instance.
-     * @since 2.6
-     * @noreference This method is not intended to be referenced by clients. */
-    public NodeAndBundleInformation getNodeAndBundleInformation() {
-        if (m_model instanceof MissingNodeModel) {
-            return ((MissingNodeModel)m_model).getNodeAndBundleInformation();
-        }
-        return new NodeAndBundleInformation(this);
     }
 
     /** @return the underlying node model. */

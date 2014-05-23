@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -56,6 +56,7 @@ import org.knime.core.node.CopyNodePersistor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -116,6 +117,11 @@ public class CopyNativeNodeContainerPersistor extends CopySingleNodeContainerPer
         return node;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public NodeAndBundleInformation getNodeAndBundleInformation() {
+        return null; // copy & paste only for idle/configured nodes - no need to keep bundle version
+    }
 
     /** {@inheritDoc} */
     @Override

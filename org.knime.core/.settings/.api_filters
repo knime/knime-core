@@ -188,6 +188,12 @@
                 <message_argument value="getInternalHeldTables()"/>
             </message_arguments>
         </filter>
+        <filter comment="bug 5207 - Save plug-in version for each node in workflow" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="getNodeAndBundleInformation()"/>
+            </message_arguments>
+        </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="getInternalHeldPortObjects()"/>
@@ -195,6 +201,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/NodeAndBundleInformation.java" type="org.knime.core.node.NodeAndBundleInformation">
+        <filter comment="bug 5207 - Save plug-in version for each node in workflow" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodeAndBundleInformation"/>
+                <message_argument value="NodeAndBundleInformation(String, String, String, String, String)"/>
+            </message_arguments>
+        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.NodeAndBundleInformation"/>
@@ -686,6 +698,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/CopyNativeNodeContainerPersistor.java" type="org.knime.core.node.workflow.CopyNativeNodeContainerPersistor">
+        <filter comment="bug 5207 - Save plug-in version for each node in workflow" id="1143996420">
+            <message_arguments>
+                <message_argument value="getNodeAndBundleInformation()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/EditorUIInformation.java" type="org.knime.core.node.workflow.EditorUIInformation">
         <filter comment="renaming persistor classes - no API anyway" id="338792546">
             <message_arguments>
@@ -715,6 +734,11 @@
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="FileNativeNodeContainerPersistor(FileWorkflowPersistor, ReferencedFile, WorkflowLoadHelper, FileWorkflowPersistor.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="bug 5207 - Save plug-in version for each node in workflow" id="1143996420">
+            <message_arguments>
+                <message_argument value="getNodeAndBundleInformation()"/>
             </message_arguments>
         </filter>
     </resource>
