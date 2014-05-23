@@ -536,7 +536,7 @@ public class BatchExecutorTestcase {
 
         // setup a teamspace for the metanode
         File licenseFile = findInPlugin("/files/teamspace_license.xml");
-        LicenseStore.getDefaultStore().addLicense(new FileInputStream(licenseFile));
+        LicenseStore.getDefaultStore().addLicense(licenseFile.toPath(), false);
         String providerId = new TeamSpaceContentProviderFactory().getID();
         File teamspaceLocation = findInPlugin("/files/originalMetanode");
         ExplorerMountTable.mount("org.knime.core.testing", providerId, teamspaceLocation.getAbsolutePath());
