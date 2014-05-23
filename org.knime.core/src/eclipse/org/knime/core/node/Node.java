@@ -78,7 +78,6 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerException;
 import org.knime.core.data.filestore.FileStorePortObject;
 import org.knime.core.data.filestore.FileStoreUtil;
-import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
@@ -1010,8 +1009,9 @@ public final class Node implements NodeModelWarningListener {
         // this execution)
         // used, for instance in group by loop start node
         PortObject[] previousInternalHeldTables = m_internalHeldPortObjects;
-        if (previousInternalHeldTables != null && !this.isModelCompatibleTo(LoopStartNode.class)) {
-            m_logger.coding("Found internal tables for non loop start node: " + getName());
+        if (previousInternalHeldTables != null
+                && !(this.isModelCompatibleTo(LoopStartNode.class) || this.isModelCompatibleTo(LoopEndNode.class))) {
+            m_logger.coding("Found internal tables for non loop node: " + getName());
         }
 
         if (m_model instanceof BufferedDataTableHolder || m_model instanceof PortObjectHolder) {
@@ -1240,10 +1240,8 @@ public final class Node implements NodeModelWarningListener {
         objIn.close();
         if (portObject instanceof FileStorePortObject) {
             FileStorePortObject sourceFSObj = (FileStorePortObject)portObject;
-            FileStoreProxy sourceFSProxy = FileStoreUtil.getFileStoreProxy(sourceFSObj);
             FileStorePortObject resultFSObj = (FileStorePortObject)result;
-            FileStoreUtil.retrieveFileStoreHandlerFrom(resultFSObj, sourceFSProxy.getFileStoreKey(),
-                sourceFSProxy.getFileStoreHandler().getFileStoreHandlerRepository());
+            FileStoreUtil.retrieveFileStoreHandlers(sourceFSObj, resultFSObj);
         }
         if (!deferredOutputStream.isInMemory()) {
             deferredOutputStream.getFile().delete();

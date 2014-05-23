@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><component id="org.knime.core" version="2">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.core" version="2">
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.ObsoleteMetaNodeWorkflowPersistorVersion1xx">
         <filter comment="renaming persistor classes - no API anyway" id="305324134">
             <message_arguments>
@@ -52,6 +53,61 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeModel"/>
                 <message_argument value="org.knime.core_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStorePortObject.java" type="org.knime.core.data.filestore.FileStorePortObject">
+        <filter comment="bug 5227 - files stores and port objects" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStorePortObject"/>
+                <message_argument value="FileStorePortObject(FileStore)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="bug 5227 - files stores and port objects" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStorePortObject"/>
+                <message_argument value="getFileStore()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="bug 5227 - files stores and port objects" id="1143996420">
+            <message_arguments>
+                <message_argument value="FileStorePortObject(List&lt;FileStore&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="bug 5227 - files stores and port objects" id="1143996420">
+            <message_arguments>
+                <message_argument value="getFileStore(int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="bug 5227 - files stores and port objects" id="1143996420">
+            <message_arguments>
+                <message_argument value="getFileStoreCount()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreUtil.java" type="org.knime.core.data.filestore.FileStoreUtil">
+        <filter comment="bug 5227 - files stores and port objects" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="getFileStore(FileStorePortObject)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="bug 5227 - files stores and port objects" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="getFileStoreProxy(FileStorePortObject)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="bug 5227 - files stores and port objects" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="retrieveFileStoreHandlerFrom(FileStorePortObject, FileStoreKey, FileStoreHandlerRepository)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="bug 5227 - files stores and port objects" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreUtil"/>
+                <message_argument value="translateToLocal(FileStorePortObject)"/>
             </message_arguments>
         </filter>
     </resource>

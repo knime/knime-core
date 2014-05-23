@@ -56,6 +56,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -438,9 +439,20 @@ public class FileNodePersistor implements NodePersistor {
                         File fileStoreXML = new File(objectFile.getParent(), "filestore.xml");
                         final ModelContentRO fileStoreModelContent =
                                 ModelContent.loadFromXML(new FileInputStream(fileStoreXML));
-                        FileStoreKey fileStoreKey = FileStoreKey.load(fileStoreModelContent);
+                        List<FileStoreKey> fileStoreKeys = new ArrayList<FileStoreKey>();
+                        if (getLoadVersion().isOlderThan(LoadVersion.V2100)) {
+                            // only one filestore in <2.10 (bug 5227)
+                            FileStoreKey fileStoreKey = FileStoreKey.load(fileStoreModelContent);
+                            fileStoreKeys.add(fileStoreKey);
+                        } else {
+                            ModelContentRO keysContent = fileStoreModelContent.getModelContent("filestore_keys");
+                            for (String id : keysContent.keySet()) {
+                                ModelContentRO keyContent = keysContent.getModelContent(id);
+                                fileStoreKeys.add(FileStoreKey.load(keyContent));
+                            }
+                        }
                         FileStoreUtil.retrieveFileStoreHandlerFrom(
-                            (FileStorePortObject)object, fileStoreKey, fileStoreHandlerRepository);
+                            (FileStorePortObject)object, fileStoreKeys, fileStoreHandlerRepository);
                     }
                     in.close();
                 }
@@ -1418,10 +1430,15 @@ public class FileNodePersistor implements NodePersistor {
                     PortObjectSerializer serializer = PortUtil.getPortObjectSerializer(object.getClass());
                     serializer.savePortObject(object, out, exec);
                     if (object instanceof FileStorePortObject) {
-                        FileStoreKey fileStoreKey = FileStoreUtil.translateToLocal((FileStorePortObject)object);
+                        List<FileStoreKey> fileStoreKeys = FileStoreUtil.translateToLocal((FileStorePortObject)object);
                         File fileStoreXML = new File(objectDir, "filestore.xml");
                         final ModelContent fileStoreModelContent = new ModelContent("filestore");
-                        fileStoreKey.save(fileStoreModelContent);
+                        ModelContentWO keysContent = fileStoreModelContent.addModelContent("filestore_keys");
+                        for (int i = 0; i < fileStoreKeys.size(); i++) {
+                            FileStoreKey key = fileStoreKeys.get(i);
+                            ModelContentWO keyContent = keysContent.addModelContent("filestore_key_" + i);
+                            key.save(keyContent);
+                        }
                         fileStoreModelContent.saveToXML(new FileOutputStream(fileStoreXML));
                     }
                     out.close();

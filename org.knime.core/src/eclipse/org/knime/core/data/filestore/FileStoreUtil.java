@@ -51,6 +51,8 @@
 package org.knime.core.data.filestore;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.FileStoreKey;
@@ -83,18 +85,8 @@ public final class FileStoreUtil {
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
-    public static FileStoreProxy getFileStoreProxy(final FileStorePortObject object) {
-        return object.getFileStoreProxy();
-    }
-
-    /** @noreference This method is not intended to be referenced by clients. */
     public static FileStore getFileStore(final FileStoreCell cell) {
         return cell.getFileStore();
-    }
-
-    /** @noreference This method is not intended to be referenced by clients. */
-    public static FileStore getFileStore(final FileStorePortObject po) {
-        return po.getFileStore();
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
@@ -129,14 +121,38 @@ public final class FileStoreUtil {
 
     /** @noreference This method is not intended to be referenced by clients. */
     public static void retrieveFileStoreHandlerFrom(final FileStorePortObject object,
-        final FileStoreKey key, final FileStoreHandlerRepository repos) throws IOException {
-        object.retrieveFileStoreHandlerFrom(key, repos);
+        final List<FileStoreKey> keys, final FileStoreHandlerRepository repos) throws IOException {
+        object.retrieveFileStoreHandlerFrom(keys, repos);
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
-    public static FileStoreKey translateToLocal(final FileStorePortObject object) {
-        FileStoreProxy fileStoreProxy = object.getFileStoreProxy();
-        return fileStoreProxy.translateToLocal(object);
+    public static void retrieveFileStoreHandlers(
+        final FileStorePortObject sourceFSObj, final FileStorePortObject resultFSObj) throws IOException {
+        List<FileStoreProxy> sourceFSProxies = sourceFSObj.getFileStoreProxies();
+        List<FileStoreKey> sourceFSKeys = new ArrayList<FileStoreKey>(sourceFSProxies.size());
+        FileStoreHandlerRepository commonFSHandlerRepo = null;
+        for (FileStoreProxy proxy : sourceFSProxies) {
+            sourceFSKeys.add(proxy.getFileStoreKey());
+            FileStoreHandlerRepository fsHandlerRepo = proxy.getFileStoreHandler().getFileStoreHandlerRepository();
+            if (commonFSHandlerRepo == null) {
+                commonFSHandlerRepo = fsHandlerRepo;
+            } else {
+                assert commonFSHandlerRepo == fsHandlerRepo : "File Stores in port object have different file "
+                        + "store handler repositories: " + commonFSHandlerRepo + " vs. " + fsHandlerRepo;
+            }
+        }
+        resultFSObj.retrieveFileStoreHandlerFrom(sourceFSKeys, commonFSHandlerRepo);
+    }
+
+
+    /** @noreference This method is not intended to be referenced by clients. */
+    public static List<FileStoreKey> translateToLocal(final FileStorePortObject object) {
+        List<FileStoreProxy> fileStoreProxy = object.getFileStoreProxies();
+        List<FileStoreKey> fileStoreKeys = new ArrayList<FileStoreKey>(fileStoreProxy.size());
+        for (FileStoreProxy proxy : fileStoreProxy) {
+            fileStoreKeys.add(proxy.translateToLocal(object));
+        }
+        return fileStoreKeys;
     }
 
     /** @noreference This method is not intended to be referenced by clients. */

@@ -50,6 +50,8 @@
 package org.knime.core.data.filestore;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.FileStoreKey;
@@ -57,6 +59,7 @@ import org.knime.core.data.filestore.internal.FileStoreProxy;
 import org.knime.core.data.filestore.internal.FileStoreProxy.FlushCallback;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * Abstract super class of {@link PortObject}, which reference files.
@@ -69,23 +72,41 @@ public abstract class FileStorePortObject implements PortObject, FlushCallback {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(FileStorePortObject.class);
 
-    private FileStoreProxy m_fileStoreProxy;
+    private ArrayList<FileStoreProxy> m_fileStoreProxies;
 
     /** Standard client constructor.
-     * @param fileStore Non null file store object to wrap. */
-    protected FileStorePortObject(final FileStore fileStore) {
-        m_fileStoreProxy = new FileStoreProxy(fileStore);
+     * @param fileStores Non null list of file store objects to wrap. */
+    protected FileStorePortObject(final List<FileStore> fileStores) {
+        m_fileStoreProxies = new ArrayList<FileStoreProxy>(fileStores.size());
+        FileStoreHandlerRepository commonFSHandlerRepository = null;
+        for (FileStore fs : fileStores) {
+            m_fileStoreProxies.add(new FileStoreProxy(fs));
+            FileStoreHandlerRepository fsHandlerRepository = fs.getFileStoreHandler().getFileStoreHandlerRepository();
+            if (commonFSHandlerRepository == null) {
+                commonFSHandlerRepository = fsHandlerRepository;
+            } else if (commonFSHandlerRepository != fsHandlerRepository) {
+                throw new IllegalStateException("File Stores passed in constructor don't have the same file store "
+                        + "handler repository: " + commonFSHandlerRepository + " vs. " + fsHandlerRepository);
+            }
+        }
     }
 
     /** Used when read from persisted stream. */
     protected FileStorePortObject() {
-        m_fileStoreProxy = new FileStoreProxy();
+        m_fileStoreProxies = new ArrayList<FileStoreProxy>();
     }
 
     /** @noreference This method is not intended to be referenced by clients. */
-    final void retrieveFileStoreHandlerFrom(final FileStoreKey key,
+    final void retrieveFileStoreHandlerFrom(final List<FileStoreKey> keys,
             final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
-        m_fileStoreProxy.retrieveFileStoreHandlerFrom(key, fileStoreHandlerRepository);
+        assert m_fileStoreProxies.isEmpty() : "FileStore list expected to be empty after construction: "
+            + ConvenienceMethods.getShortStringFrom(m_fileStoreProxies, 3);
+        for (FileStoreKey key : keys) {
+            FileStoreProxy proxy = new FileStoreProxy();
+            proxy.retrieveFileStoreHandlerFrom(key, fileStoreHandlerRepository);
+            m_fileStoreProxies.add(proxy);
+        }
+        m_fileStoreProxies.trimToSize();
         postConstruct();
     }
 
@@ -110,16 +131,23 @@ public abstract class FileStorePortObject implements PortObject, FlushCallback {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return m_fileStoreProxy.toString();
+        return m_fileStoreProxies.toString();
+    }
+
+    /** @return the number of files store stored in this object; corresponds to the size of the collection argument
+     * passed in the constructor. */
+    protected int getFileStoreCount() {
+        return m_fileStoreProxies.size();
     }
 
     /** Access to the underlying file store. Derived class will use it to read the content of the file when needed.
      * This method must not be called in the {@link #FileStorePortObject() serialization constructor}
      * (use {@link #postConstruct()} instead.
+     * @param index The index of the file store (see {@link #getFileStoreCount()}.
      * @return The file store
      */
-    protected FileStore getFileStore() {
-        return m_fileStoreProxy.getFileStore();
+    protected FileStore getFileStore(final int index) {
+        return m_fileStoreProxies.get(index).getFileStore();
     }
 
     /** {@inheritDoc} */
@@ -131,18 +159,18 @@ public abstract class FileStorePortObject implements PortObject, FlushCallback {
         if (!(obj instanceof FileStorePortObject)) {
             return false;
         }
-        return m_fileStoreProxy.equals(((FileStorePortObject)obj).m_fileStoreProxy);
+        return m_fileStoreProxies.equals(((FileStorePortObject)obj).m_fileStoreProxies);
     }
 
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return m_fileStoreProxy.hashCode();
+        return m_fileStoreProxies.hashCode();
     }
 
-    /** @return the fileStoreProxy */
-    FileStoreProxy getFileStoreProxy() {
-        return m_fileStoreProxy;
+    /** @return the fileStoreProxies */
+    List<FileStoreProxy> getFileStoreProxies() {
+        return m_fileStoreProxies;
     }
 
 
