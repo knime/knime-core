@@ -25,8 +25,10 @@
 			Depending on the choice, you will then have to adjust the filter parameters in the right-hand panel.
 		</option>
 		<option name="Column value matching">If filter by attribute value is 
-			selected, select the name of the column whose value should be matched. Then,
-			either enter a pattern for string matching, or a value range,
+			selected, select the name of the column whose value should be matched.
+            If the selected column is a collection column the filter based on collection elements option
+            allows to filter each row based on the elements of the collection instead of its string representation.
+            Then, either enter a pattern for string matching, or a value range,
 			for range filtering. When using a pattern match, you can set checkmarks
 			according to whether the pattern contains wildcards or is a regular 
 			expression. Wildcard patterns contain '*' (matching any sequence of

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,7 +50,12 @@
  */
 package org.knime.base.node.preproc.filter.row.rowfilter;
 
+import java.util.Stack;
+
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -68,7 +73,11 @@ public abstract class AttrValueRowFilter extends RowFilter {
 
     private static final String CFGKEY_COLNAME = "ColumnName";
 
+    private static final String CFGKEY_DEEP_FILTERING = "deepFiltering";
+
     private boolean m_include;
+
+    private boolean m_deepFiltering;
 
     private String m_colName;
 
@@ -91,12 +100,27 @@ public abstract class AttrValueRowFilter extends RowFilter {
      *            rows
      */
     protected AttrValueRowFilter(final String colName, final boolean include) {
+        this(colName, include, false);
+    }
+
+    /**
+     * The super class stores the class name and the include flag for all
+     * filters checking the attribute value in some way.
+     *
+     * @param colName the name of the column to test
+     * @param include flag indicating whether to include or exclude matching
+     *            rows
+     * @param deepFiltering flag indicating whether to perform a deep search for collection columns
+     * @since 2.10
+     */
+    protected AttrValueRowFilter(final String colName, final boolean include, final boolean deepFiltering) {
         if (colName == null) {
             throw new NullPointerException("Column name can't be null");
         }
         m_colName = colName;
         m_colIdx = -1;
         m_include = include;
+        m_deepFiltering = deepFiltering;
     }
 
     /**
@@ -130,6 +154,11 @@ public abstract class AttrValueRowFilter extends RowFilter {
                     + "NodeSettings object contains no column name");
         }
         m_include = cfg.getBoolean(CFGKEY_INCLUDE);
+
+        if (cfg.containsKey(CFGKEY_DEEP_FILTERING)) {
+            //introduced in KNIME 2.9+
+            m_deepFiltering = cfg.getBoolean(CFGKEY_DEEP_FILTERING);
+        }
     }
 
     /**
@@ -139,6 +168,7 @@ public abstract class AttrValueRowFilter extends RowFilter {
     protected void saveSettings(final NodeSettingsWO cfg) {
         cfg.addString(CFGKEY_COLNAME, m_colName);
         cfg.addBoolean(CFGKEY_INCLUDE, m_include);
+        cfg.addBoolean(CFGKEY_DEEP_FILTERING, m_deepFiltering);
     }
 
     /**
@@ -163,4 +193,57 @@ public abstract class AttrValueRowFilter extends RowFilter {
         return m_include;
     }
 
+    /**
+     * @return the deep filtering flag
+     * @since 2.10
+     */
+    public boolean getDeepFiltering() {
+        return m_deepFiltering;
+    }
+
+    /**
+     * {@inheritDoc}
+     * Attribute value based filters (based on the value of a cell) must implement this and should use the
+     * {@link #performDeepFiltering(CollectionDataValue)} if the cell is a collection. In order for the deep
+     * filtering to work they MUST overwrite the default implementation of {@link #matches(DataCell)}!
+     */
+    @Override
+    public abstract boolean matches(DataRow row, int rowIndex) throws EndOfTableException, IncludeFromNowOn;
+
+
+    /**
+     * @param theCell {@link CollectionDataValue} to process
+     * @return <code>true</code> if one of the elements of the given {@link CollectionDataValue} matches the
+     * filter criterion otherwise it returns <code>false</code>
+     * @since 2.10
+     */
+    protected boolean performDeepFiltering(final CollectionDataValue theCell) {
+        //use a LIFO queue to perform a depth first search through all elements of the collections
+        final Stack<CollectionDataValue> collCells = new Stack<CollectionDataValue>();
+        collCells.push(theCell);
+        while (!collCells.isEmpty()) {
+            final CollectionDataValue collCell = collCells.pop();
+            for (final DataCell cell : collCell) {
+                if (cell instanceof CollectionDataValue) {
+                    collCells.push((CollectionDataValue)cell);
+                } else if (matches(cell)) {
+                    //if we find a match we can return otherwise we have to keep on comparing till the end
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Implementations should overwrite this for {@link #performDeepFiltering(CollectionDataValue)} to work. Also see
+     * {@link #matches(DataRow, int)}.
+     *
+     * @param theCell the {@link DataCell} to check
+     * @return <code>true</code> if the cell matches the filter criterion
+     * @since 2.10
+     */
+    protected boolean matches(final DataCell theCell) {
+        return false;
+    }
 }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -115,6 +115,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
 
     private ColumnSelectionComboxBox m_colCombo;
 
+    private JCheckBox m_deepFiltering;
+
     private JRadioButton m_useRange;
 
     private JRadioButton m_useRegExpr;
@@ -181,7 +183,15 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         idxBox.add(Box.createHorizontalGlue());
         idxBox.add(m_colCombo);
         idxBox.add(Box.createHorizontalGlue());
-        panel.add(idxBox);
+        Box deepFilteringBox = Box.createHorizontalBox();
+        deepFilteringBox.add(m_deepFiltering);
+        deepFilteringBox.add(Box.createHorizontalGlue());
+        Box topIdxBox = Box.createVerticalBox();
+        topIdxBox.add(Box.createVerticalGlue());
+        topIdxBox.add(idxBox);
+        topIdxBox.add(deepFilteringBox);
+        topIdxBox.add(Box.createVerticalGlue());
+        panel.add(topIdxBox);
         m_colCombo.setPreferredSize(new Dimension(150, 25));
         m_colCombo.setMinimumSize(new Dimension(75, 25));
         m_colCombo.setMaximumSize(new Dimension(6000, 25));
@@ -299,6 +309,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
                 selectedColChanged();
             }
         });
+        m_deepFiltering = new JCheckBox("filter based on collection elements");
         /* the selectors for what kind of checking will be done */
         m_useRange = new JRadioButton("use range checking");
         m_useRegExpr = new JRadioButton("use pattern matching");
@@ -582,6 +593,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
      * Called when the user selects a new column.
      */
     protected void selectedColChanged() {
+        //enable/disable the deep filtering option if the selected column is a collection column
+        updateDeepFiltering();
 
         /*
          * fill the regExpr combo with the new possible values
@@ -602,6 +615,31 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
          * trigger bounds check
          */
         boundsChanged();
+    }
+
+    /**
+     * Updates the state (enabled/disabled) of the deep filtering option depending on the currently selected
+     * filter column.
+     */
+    private void updateDeepFiltering() {
+        if (m_colCombo == null) {
+            return;
+        }
+        final String col = m_colCombo.getSelectedColumn();
+        if (col == null) {
+            return;
+        }
+        if (m_tSpec == null) {
+            return;
+        }
+        final DataColumnSpec spec = m_tSpec.getColumnSpec(col);
+        if (spec == null) {
+            return;
+        }
+        if (m_deepFiltering == null) {
+            return;
+        }
+        m_deepFiltering.setEnabled(spec.getType().isCollectionType());
     }
 
     /**
@@ -648,6 +686,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
             if (colName != null) {
                 m_colCombo.setSelectedColumn(colName);
             }
+            m_deepFiltering.setSelected(avFilter.getDeepFiltering());
+            updateDeepFiltering();
 
             if (filter instanceof StringCompareRowFilter) {
                 StringCompareRowFilter f = (StringCompareRowFilter)filter;
@@ -733,6 +773,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
             validate();
             throw new InvalidSettingsException(getErrMsg());
         }
+        boolean deepFiltering = getDeepFiltering();
 
         if (m_useRange.isSelected()) {
             DataCell loBound = getLowerBoundCell();
@@ -743,7 +784,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
                 throw new InvalidSettingsException(getErrMsg());
             }
 
-            return new RangeRowFilter(colName, include, loBound, hiBound);
+            return new RangeRowFilter(colName, include, deepFiltering, loBound, hiBound);
         }
 
         if (m_useRegExpr.isSelected()) {
@@ -754,16 +795,23 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
                 throw new InvalidSettingsException(getErrMsg());
             }
             return new StringCompareRowFilter(regExpr, colName,
-                    include, m_caseSensitive.isSelected(), m_hasWildCards
+                    include, deepFiltering, m_caseSensitive.isSelected(), m_hasWildCards
                             .isSelected(), m_isRegExpr.isSelected());
         }
 
         if (m_useMissValue.isSelected()) {
-            return new MissingValueRowFilter(colName, include);
+            return new MissingValueRowFilter(colName, include, deepFiltering);
         }
 
         throw new InvalidSettingsException("Internal Error. "
                 + "Please change some settings and try again. Sorry");
+    }
+
+    /**
+     * @return the deep filtering flag
+     */
+    private boolean getDeepFiltering() {
+        return m_deepFiltering.isSelected();
     }
 
     /**

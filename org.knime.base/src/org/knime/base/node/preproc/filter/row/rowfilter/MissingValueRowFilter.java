@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,6 +52,7 @@ package org.knime.base.node.preproc.filter.row.rowfilter;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.collection.CollectionDataValue;
 
 /**
  * Filters rows with a missing value in a certain column.<br>
@@ -61,6 +62,7 @@ import org.knime.core.data.DataRow;
  * @author ohl, University of Konstanz
  */
 public class MissingValueRowFilter extends AttrValueRowFilter {
+
 
     /**
      * Creates a row filter that includes or excludes (depending on the
@@ -74,7 +76,24 @@ public class MissingValueRowFilter extends AttrValueRowFilter {
      *
      */
     public MissingValueRowFilter(final String colName, final boolean include) {
-        super(colName, include);
+        this(colName, include, false);
+    }
+    /**
+     * Creates a row filter that includes or excludes (depending on the
+     * corresponding argument) rows with a missing value in the specified
+     * column.
+     *
+     *
+     * @param colName the column name of the cell to match
+     * @param include if true, matching rows are included, if false, they are
+     *            excluded.
+     * @param deepFiltering if true, the filtering is applied to the elements of a collection cell, if false,
+     *            the filter is applied to the collection cell as a whole
+     * @since 2.10
+     *
+     */
+    public MissingValueRowFilter(final String colName, final boolean include, final boolean deepFiltering) {
+        super(colName, include, deepFiltering);
     }
 
     /**
@@ -95,8 +114,19 @@ public class MissingValueRowFilter extends AttrValueRowFilter {
         assert getColIdx() >= 0;
 
         DataCell theCell = row.getCell(getColIdx());
-        boolean match = theCell.isMissing();
+        boolean match = matches(theCell);
+        if (!match && getDeepFiltering() && (theCell instanceof CollectionDataValue)) {
+            match = performDeepFiltering((CollectionDataValue) theCell);
+        }
         return ((getInclude() && match) || (!getInclude() && !match));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean matches(final DataCell theCell) {
+        return theCell.isMissing();
     }
 
     /**

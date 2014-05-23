@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -56,6 +56,7 @@ import java.util.regex.Pattern;
 import org.knime.base.util.WildcardMatcher;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -122,7 +123,43 @@ public class StringCompareRowFilter extends AttrValueRowFilter {
             final String colName, final boolean include,
             final boolean caseSensitive, final boolean hasWildcards,
             final boolean isRegExpr) {
-        super(colName, include);
+        this(strPattern, colName, include, false, caseSensitive, hasWildcards, isRegExpr);
+    }
+
+    /**
+     * Creates a row filter that compares the string representation of the cell
+     * in the specified column with the given string pattern. Matching rows are
+     * included or excluded, depending on the corresponding argument. The
+     * pattern will either be matched exactly, or case insensitive, or may
+     * contain wildcards. A wildcard is the asterisk (*) matching any number
+     * (including zero) of any character, and the question mark (?) matching any
+     * (but exactly one) character. Cells with missing values never match!
+     *
+     *
+     * @param strPattern the pattern that is matched against the string
+     *            representation of the data cell
+     * @param colName the column name of the cell to match
+     * @param include if true, matching rows are included, if false, they are
+     *            excluded.
+     * @param deepFiltering if true, the filtering is applied to the elements of a collection cell, if false,
+     *            the filter is applied to the collection cell as a whole
+     * @param caseSensitive if true a case sensitive match is performed,
+     *            otherwise characters of different case match, too.
+     * @param hasWildcards if true, '*' and '?' is interpreted as wildcard
+     *            matching any character sequence or any character respectively.
+     *            If false, '*' and '?' are treated as regular characters and
+     *            match '*' and '?' in the value.
+     * @param isRegExpr if true, the pattern argument is treated as regular
+     *            expression. Can't be true when the hasWildcard argument is
+     *            true
+     * @since 2.10
+     *
+     */
+    public StringCompareRowFilter(final String strPattern,
+            final String colName, final boolean include, final boolean deepFiltering,
+            final boolean caseSensitive, final boolean hasWildcards,
+            final boolean isRegExpr) {
+        super(colName, include, deepFiltering);
         if (strPattern == null) {
             throw new NullPointerException("Pattern to match can't be null.");
         }
@@ -243,7 +280,23 @@ public class StringCompareRowFilter extends AttrValueRowFilter {
         if (theCell.isMissing()) {
             match = false;
 
-        } else if (m_regExpr != null) {
+        } else {
+            if (getDeepFiltering() && (theCell instanceof CollectionDataValue)) {
+                match = performDeepFiltering((CollectionDataValue) theCell);
+            } else {
+                match = matches(theCell);
+            }
+        }
+        return ((getInclude() && match) || (!getInclude() && !match));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean matches(final DataCell theCell) {
+        boolean match;
+        if (m_regExpr != null) {
             // if we have a regular expression - use it
             Matcher matcher = m_regExpr.matcher(theCell.toString());
             match = matcher.matches();
@@ -256,7 +309,7 @@ public class StringCompareRowFilter extends AttrValueRowFilter {
             }
 
         }
-        return ((getInclude() && match) || (!getInclude() && !match));
+        return match;
     }
 
     /*

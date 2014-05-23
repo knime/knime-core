@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by 
+ *  Copyright by
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -55,6 +55,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -115,7 +116,40 @@ public class RangeRowFilter extends AttrValueRowFilter {
      */
     public RangeRowFilter(final String colName, final boolean include,
             final DataCell lowerBound, final DataCell upperBound) {
-        super(colName, include);
+        this(colName, include, false, lowerBound, upperBound);
+    }
+
+    /**
+     * Creates a filter that compares the value of a data cell in the specified
+     * column with the specified range. If the value is in that range the row is
+     * included (or excluded, depending on the corresponding flag). It is
+     * possible to set only one bound of the range, an open interval is assumed
+     * then (an exception will fly, if no bound is set though).
+     * <p>
+     * NOTE: This filter must be configured before it can be applied (there, the
+     * index of the selected column is determined and the comparator is
+     * retrieved from the column. The comparator is used to do the range
+     * checking).
+     *
+     * @see #configure(DataTableSpec)
+     *
+     * @param colName the column name of the cell to match
+     * @param include if true, matching rows are included, if false, they are
+     *            excluded.
+     * @param deepFiltering if true, the filtering is applied to the elements of a collection cell, if false,
+     *            the filter is applied to the collection cell as a whole
+     * @param lowerBound the lower bound of the range the value will be checked
+     *            against. Could be null (if the upper bound is not null) which
+     *            indicates that there is no lower bound for the range.
+     * @param upperBound the upper bound of the range the value will be checked
+     *            against. Could be null (if the lower bound is not null) which
+     *            indicates that there is no upper bound for the range.
+     * @since 2.10
+     *
+     */
+    public RangeRowFilter(final String colName, final boolean include, final boolean deepFiltering,
+            final DataCell lowerBound, final DataCell upperBound) {
+        super(colName, include, deepFiltering);
 
         if (lowerBound == null && upperBound == null) {
             throw new NullPointerException("At least one bound of the range"
@@ -207,17 +241,31 @@ public class RangeRowFilter extends AttrValueRowFilter {
             match = false;
 
         } else {
-            if (m_lowerBound != null) {
-                match = (m_comparator.compare(m_lowerBound, theCell) <= 0);
+            if (getDeepFiltering() && (theCell instanceof CollectionDataValue)) {
+                match = performDeepFiltering((CollectionDataValue) theCell);
             } else {
-                // if no lowerBound is specified - its always above the minimum
-                match = true;
-            }
-            if (m_upperBound != null) {
-                match &= (m_comparator.compare(theCell, m_upperBound) <= 0);
+                match = matches(theCell);
             }
         }
         return ((getInclude() && match) || (!getInclude() && !match));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean matches(final DataCell theCell) {
+        boolean match;
+        if (m_lowerBound != null) {
+            match = (m_comparator.compare(m_lowerBound, theCell) <= 0);
+        } else {
+            // if no lowerBound is specified - its always above the minimum
+            match = true;
+        }
+        if (m_upperBound != null) {
+            match &= (m_comparator.compare(theCell, m_upperBound) <= 0);
+        }
+        return match;
     }
 
     /**
