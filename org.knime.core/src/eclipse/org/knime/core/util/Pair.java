@@ -1,9 +1,6 @@
 /* Created on Jun 27, 2006 3:54:35 PM by thor
  * ------------------------------------------------------------------------
- *
- *  Copyright by 
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify

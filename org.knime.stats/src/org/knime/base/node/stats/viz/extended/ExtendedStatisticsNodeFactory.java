@@ -1,9 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- *
- *  Copyright by 
- *  University of Konstanz, Germany and
- *  KNIME GmbH, Konstanz, Germany
+ *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -43,8 +40,7 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * --------------------------------------------------------------------- *
- *
+ * ------------------------------------------------------------------------
  */
 package org.knime.base.node.stats.viz.extended;
 
