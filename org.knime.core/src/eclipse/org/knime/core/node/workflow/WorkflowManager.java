@@ -7692,17 +7692,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /**
      * @param connections
      * @param loadResult
-     * @param translationMap */
-    private void addConnectionsFromTemplates(
-            final Set<ConnectionContainerTemplate> connections,
-            final LoadResult loadResult,
-            final Map<Integer, NodeID> translationMap,
-            final boolean currentlyLoadingFlow) {
+     * @param translationMap
+     */
+    private void addConnectionsFromTemplates(final Set<ConnectionContainerTemplate> connections,
+        final LoadResult loadResult, final Map<Integer, NodeID> translationMap, final boolean currentlyLoadingFlow) {
         for (ConnectionContainerTemplate c : connections) {
             int sourceSuffix = c.getSourceSuffix();
             int destSuffix = c.getDestSuffix();
             assert sourceSuffix == -1 || sourceSuffix != destSuffix
-                : "Can't insert connection, source and destination are equal";
+                    : "Can't insert connection, source and destination are equal";
             ConnectionType type = ConnectionType.STD;
             NodeID source;
             NodeID dest;
@@ -7722,15 +7720,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 dest = translationMap.get(destSuffix);
                 source = translationMap.get(sourceSuffix);
             }
-            if (!canAddConnection(source, c.getSourcePort(),
-                    dest, c.getDestPort(), true, currentlyLoadingFlow)) {
+            if (!canAddConnection(source, c.getSourcePort(), dest, c.getDestPort(), true, currentlyLoadingFlow)) {
                 String warn = "Unable to insert connection \"" + c + "\"";
                 LOGGER.warn(warn);
                 loadResult.addError(warn);
                 continue;
             }
-            ConnectionContainer cc = addConnection(source, c.getSourcePort(),
-                    dest, c.getDestPort(), currentlyLoadingFlow);
+            ConnectionContainer cc =
+                addConnection(source, c.getSourcePort(), dest, c.getDestPort(), currentlyLoadingFlow);
             cc.setUIInfo(c.getUiInfo());
             cc.setDeletable(c.isDeletable());
             assert cc.getType().equals(type);
@@ -7738,8 +7735,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /**
-     * Saves the workflow to a new location, setting the argument directory as the new NC dir. It will
-     * first copy the "old" directory, point the NC dir to the new location and then do an incremental save.
+     * Saves the workflow to a new location, setting the argument directory as the new NC dir. It will first copy the
+     * "old" directory, point the NC dir to the new location and then do an incremental save.
+     *
      * @param directory new directory, not null
      * @param exec The execution monitor
      * @throws IOException If an IO error occured
@@ -7771,13 +7769,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 ncDirRef.writeLock(); // cannot be null
                 try {
                     ExecutionMonitor copyExec = exec.createSubProgress(0.5);
-                    final String copymsg = String.format("Copying existing workflow to new location "
-                            + "(from \"%s\" to \"%s\")", ncDir, directory);
+                    final String copymsg = String.format(
+                        "Copying existing workflow to new location " + "(from \"%s\" to \"%s\")", ncDir, directory);
                     exec.setMessage(copymsg);
                     LOGGER.debug(copymsg);
                     copyExec.setProgress(1.0);
-                    FileUtils.copyDirectory(ncDir, directory, /* all but .knimeLock */FileFilterUtils.notFileFilter(
-                        FileFilterUtils.nameFileFilter(VMFileLocker.LOCK_FILE, IOCase.SENSITIVE)));
+                    FileUtils.copyDirectory(ncDir, directory, /* all but .knimeLock */FileFilterUtils
+                        .notFileFilter(FileFilterUtils.nameFileFilter(VMFileLocker.LOCK_FILE, IOCase.SENSITIVE)));
                     exec.setMessage("Incremental save");
                     ncDirRef.changeRoot(directory);
                     m_isWorkflowDirectoryReadonly = false;
@@ -7800,9 +7798,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws CanceledExecutionException If the execution was canceled
      * @throws LockFailedException If locking failed
      */
-    public void save(final File directory, final ExecutionMonitor exec,
-        final boolean isSaveData)
-                throws IOException, CanceledExecutionException, LockFailedException {
+    public void save(final File directory, final ExecutionMonitor exec, final boolean isSaveData) throws IOException,
+        CanceledExecutionException, LockFailedException {
         if (this == ROOT) {
             throw new IOException("Can't save root workflow");
         }
@@ -7819,15 +7816,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             workflowDirRef.writeLock();
             try {
-                final boolean isWorkingDirectory =
-                        workflowDirRef.equals(getNodeContainerDirectory());
+                final boolean isWorkingDirectory = workflowDirRef.equals(getNodeContainerDirectory());
                 final LoadVersion saveVersion = FileWorkflowPersistor.VERSION_LATEST;
-                if (m_loadVersion != null
-                        && !m_loadVersion.equals(saveVersion)) {
-                    LOGGER.info("Workflow was created with another version "
-                            + "of KNIME (workflow version " + m_loadVersion
-                            + "), converting to current version. This may "
-                            + "take some time.");
+                if (m_loadVersion != null && !m_loadVersion.equals(saveVersion)) {
+                    LOGGER.info("Workflow was created with another version of KNIME (workflow version "
+                        + m_loadVersion + "), converting to current version. This may take some time.");
                     setDirtyAll();
                 }
                 if (isWorkingDirectory) {
@@ -7839,28 +7832,25 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     m_authorInformation = new AuthorInformation(m_authorInformation);
                 }
                 workflowDirRef.getFile().mkdirs();
-                FileWorkflowPersistor.save(
-                    this, workflowDirRef, exec, isSaveData);
+                FileWorkflowPersistor.save(this, workflowDirRef, exec, isSaveData);
             } finally {
                 workflowDirRef.writeUnlock();
             }
         }
     }
-    /** Delete directories of removed nodes. This is part of the save routine to
-     * commit the changes. Called from the saving persistor class */
+
+    /**
+     * Delete directories of removed nodes. This is part of the save routine to commit the changes. Called from the
+     * saving persistor class
+     */
     void deleteObsoleteNodeDirs() {
-        for (ReferencedFile deletedNodeDir
-                : m_deletedNodesFileLocations) {
+        for (ReferencedFile deletedNodeDir : m_deletedNodesFileLocations) {
             File f = deletedNodeDir.getFile();
             if (f.exists()) {
                 if (FileUtil.deleteRecursively(f)) {
-                    LOGGER.debug(
-                            "Deleted obsolete node directory \""
-                            + f.getAbsolutePath() + "\"");
+                    LOGGER.debug("Deleted obsolete node directory \"" + f.getAbsolutePath() + "\"");
                 } else {
-                    LOGGER.warn(
-                            "Deletion of obsolete node directory \""
-                            + f.getAbsolutePath() + "\" failed");
+                    LOGGER.warn("Deletion of obsolete node directory \"" + f.getAbsolutePath() + "\" failed");
                 }
             }
         }
