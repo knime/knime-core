@@ -42,6 +42,14 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
+package org.knime.workbench.editor2;
+
+import java.net.URL;
+
+import org.knime.core.node.ContextAwareNodeFactory;
+import org.knime.core.node.NodeModel;
+
+
 public class ReaderNodeSettings {
     private final ContextAwareNodeFactory<NodeModel> m_factory;
     private final URL m_url;

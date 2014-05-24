@@ -42,6 +42,10 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
+package org.knime.workbench.editor2;
+
+import org.eclipse.gef.requests.CreationFactory;
+
 public class ReaderNodeCreationFactory implements CreationFactory {
     private ReaderNodeSettings m_settings;
 

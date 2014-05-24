@@ -42,6 +42,28 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
+package org.knime.core.data.xml;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLStreamException;
+
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellSerializer;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.StringValue;
+import org.knime.core.pmml.PMMLModelType;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
+
+
 @SuppressWarnings("serial")
 public class PMMLCell extends DataCell implements PMMLValue, StringValue {
     /**

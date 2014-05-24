@@ -42,6 +42,28 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
+package org.knime.base.node.preproc.pmml;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.dmg.pmml.DATATYPE;
+import org.dmg.pmml.DerivedFieldDocument.DerivedField;
+import org.dmg.pmml.FieldRefDocument.FieldRef;
+import org.dmg.pmml.LocalTransformationsDocument.LocalTransformations;
+import org.dmg.pmml.OPTYPE;
+import org.dmg.pmml.TransformationDictionaryDocument.TransformationDictionary;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator;
+import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
+import org.knime.core.node.port.pmml.preproc.PMMLPreprocTranslator;
+
 public class PMMLStringConversionTranslator implements PMMLPreprocTranslator {
     private final DerivedFieldMapper m_mapper;
     private DataType m_parseType;
@@ -141,7 +163,7 @@ public class PMMLStringConversionTranslator implements PMMLPreprocTranslator {
     }
 
     private DerivedField[] createDerivedFields() {
-        Enum dataType = PMMLDataDictionaryTranslator.getPMMLDataType(
+        DATATYPE.Enum dataType = PMMLDataDictionaryTranslator.getPMMLDataType(
                 m_parseType);
         OPTYPE.Enum optype = PMMLDataDictionaryTranslator.getOptype(
                 m_parseType);

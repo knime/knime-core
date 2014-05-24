@@ -42,6 +42,11 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
+package org.knime.core.node.port.pmml.preproc;
+
+import java.util.Map;
+import java.util.TreeMap;
+
 public enum PMMLTransformation {
     Constant,
     FieldRef,

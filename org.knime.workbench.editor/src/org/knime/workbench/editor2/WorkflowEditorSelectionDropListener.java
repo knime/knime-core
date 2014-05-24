@@ -42,6 +42,20 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
+package org.knime.workbench.editor2;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import org.eclipse.gef.EditPartViewer;
+import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DropTargetEvent;
+import org.eclipse.swt.dnd.Transfer;
+import org.knime.core.node.NodeLogger;
+import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
+import org.knime.workbench.explorer.view.ContentObject;
+
 public class WorkflowEditorSelectionDropListener extends
         WorkflowEditorDropTargetListener<ReaderNodeCreationFactory> {
     private static final NodeLogger LOGGER = NodeLogger

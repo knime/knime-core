@@ -42,6 +42,24 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
+package org.knime.workbench.repository.util;
+
+import java.util.Map;
+import java.util.TreeMap;
+
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.InvalidRegistryObjectException;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.swt.graphics.Image;
+import org.knime.core.node.ContextAwareNodeFactory;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.core.util.Pair;
+import org.knime.workbench.core.util.ImageRepository;
+
+
 public final class ContextAwareNodeFactoryMapper {
     private ContextAwareNodeFactoryMapper() {
         // utility class should not be instantiated

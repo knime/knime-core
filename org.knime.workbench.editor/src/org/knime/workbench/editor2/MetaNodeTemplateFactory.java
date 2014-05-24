@@ -42,6 +42,8 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
+package org.knime.workbench.editor2;
+
 public class MetaNodeTemplateFactory extends IFileStoreFactory {
     /* Meta node factory type to distinguish between meta node drops and
      * ordinary file drops. */

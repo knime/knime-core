@@ -42,6 +42,10 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
+package org.knime.base.node.preproc.pmml.normalize;
+
+import org.knime.base.data.normalize.AffineTransConfiguration;
+
 public class NormalizerPMMLDeNodeModel extends NormalizerPMMLApplyNodeModel {
     /**
     *
@@ -55,13 +59,13 @@ public class NormalizerPMMLDeNodeModel extends NormalizerPMMLApplyNodeModel {
     * {@inheritDoc}
     */
     protected AffineTransConfiguration getAffineTrans(
-            final AffineTransConfiguration affineTransConfig) {            
+            final AffineTransConfiguration affineTransConfig) {
         return NormalizerPMMLDeNodeModel.
                     deNormalizeConfiguration(affineTransConfig);
     }
-    
+
     /**
-     * This method takes the given configuration and transforms it into 
+     * This method takes the given configuration and transforms it into
      * a denormalization configuration.
      * @param affineTransConfig normalization configuration.
      * @return denormalization configuration.
@@ -69,11 +73,11 @@ public class NormalizerPMMLDeNodeModel extends NormalizerPMMLApplyNodeModel {
     public static AffineTransConfiguration deNormalizeConfiguration(
             final AffineTransConfiguration affineTransConfig) {
         // change the transform here
-           double[] scales = affineTransConfig.getScales(); 
+           double[] scales = affineTransConfig.getScales();
             double[] translations = affineTransConfig.getTranslations();
-             double[] min = affineTransConfig.getMin(); 
+             double[] min = affineTransConfig.getMin();
              double[] max = affineTransConfig.getMax();
-            
+
             for (int i = 0; i < scales.length; i++) {
                 // otherwise:
                 double onethroughscale = 1.0 / scales[i];
@@ -82,13 +86,13 @@ public class NormalizerPMMLDeNodeModel extends NormalizerPMMLApplyNodeModel {
                 min[i] = scales[i] * min[i] + translations[i];
                 max[i] = scales[i] * max[i] + translations[i];
             }
-            
+
         return new AffineTransConfiguration(
-                affineTransConfig.getNames(), 
-                scales, 
-                translations, 
+                affineTransConfig.getNames(),
+                scales,
+                translations,
                 min,
-                max, 
+                max,
                 affineTransConfig.getSummary());
     }
 }

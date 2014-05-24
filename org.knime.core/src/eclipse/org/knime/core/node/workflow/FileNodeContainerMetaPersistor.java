@@ -42,6 +42,23 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
+package org.knime.core.node.workflow;
+
+import java.io.File;
+import java.io.IOException;
+
+import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.FileNodePersistor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
+import org.knime.core.node.workflow.NodeMessage.Type;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.util.FileUtil;
+
 class FileNodeContainerMetaPersistor implements NodeContainerMetaPersistor {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(FileNodeContainerMetaPersistor.class);

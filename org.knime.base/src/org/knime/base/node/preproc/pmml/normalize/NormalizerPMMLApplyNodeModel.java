@@ -42,6 +42,19 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
+package org.knime.base.node.preproc.pmml.normalize;
+
+import org.knime.base.data.normalize.AffineTransConfiguration;
+import org.knime.base.data.normalize.AffineTransTable;
+import org.knime.base.data.normalize.PMMLNormalizeTranslator;
+import org.knime.base.node.preproc.normalize.NormalizerApplyNodeModel;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.pmml.PMMLPortObject;
+
 public class NormalizerPMMLApplyNodeModel extends NormalizerApplyNodeModel {
     /**
     *
@@ -61,7 +74,7 @@ public class NormalizerPMMLApplyNodeModel extends NormalizerApplyNodeModel {
        * of those fields contain normalize operations. Hence we cannot
        * determine the data table output spec at this point.
        * Bug 2985
-       * 
+       *
        */
       return new PortObjectSpec[]{inSpecs[0], null};
    }
