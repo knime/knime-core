@@ -42,6 +42,13 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
+package org.knime.workbench.core;
+
+import java.util.List;
+
+import org.eclipse.gef.dnd.SimpleObjectTransfer;
+import org.knime.core.node.workflow.WorkflowManager;
+
 public final class WorkflowManagerTransfer extends SimpleObjectTransfer {
     private static final String TYPE_NAME
             = "workflow-manager-transfer-format" + System.currentTimeMillis();
