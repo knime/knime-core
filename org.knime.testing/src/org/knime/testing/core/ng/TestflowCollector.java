@@ -68,29 +68,36 @@ import org.knime.core.util.FileUtil;
 public class TestflowCollector {
     private static NodeLogger logger = NodeLogger.getLogger(TestflowCollector.class);
 
-    private final String m_pattern;
+    private final String m_namePattern;
+
+    private final String m_pathPattern;
 
     private final Collection<File> m_testRootDirs = new ArrayList<File>();
 
     /**
-     * Registry for all testing workflows.
+     * Registry for all testing workflows. Note that only of the first two arguments should be non-null.
      *
      * @param testNamePattern the pattern test names are matched against (regular expression). If <code>null</code> (or
      *            empty) all tests are run.
+     * @param testPathPattern the pattern workflow paths are matched against (regular expression). If <code>null</code>
+     *            or empty all tests are run.
      * @param testRootDir a directory that is recursively searched for workflows
      */
-    public TestflowCollector(final String testNamePattern, final File testRootDir) {
-        this(testNamePattern, Collections.singleton(testRootDir));
+    public TestflowCollector(final String testNamePattern, final String testPathPattern, final File testRootDir) {
+        this(testNamePattern, testPathPattern, Collections.singleton(testRootDir));
     }
 
     /**
-     * Registry for all testing workflows.
+     * Registry for all testing workflows. Note that only of the first two arguments should be non-null.
      *
-     * @param testNamePattern the pattern test names are matched against (regular expression). If <code>null</code> or
-     *            empty all tests are run.
+     * @param testNamePattern the pattern workflow names are matched against (regular expression). If <code>null</code>
+     *            or empty all tests are run.
+     * @param testPathPattern the pattern workflow paths are matched against (regular expression). If <code>null</code>
+     *            or empty all tests are run.
      * @param testRootDirs a collection of directories that are recursively searched for workflows
      */
-    public TestflowCollector(final String testNamePattern, final Collection<File> testRootDirs) {
+    public TestflowCollector(final String testNamePattern, final String testPathPattern,
+        final Collection<File> testRootDirs) {
         if (testRootDirs == null) {
             throw new IllegalArgumentException("Root dir for tests must not be null");
         }
@@ -100,10 +107,15 @@ public class TestflowCollector {
             }
         }
 
-        if ((testNamePattern == null) || (testNamePattern.length() == 0)) {
-            m_pattern = ".*";
+        if ((testNamePattern == null) || testNamePattern.isEmpty()) {
+            m_namePattern = ".*";
         } else {
-            m_pattern = testNamePattern;
+            m_namePattern = testNamePattern;
+        }
+        if ((testPathPattern == null) || testPathPattern.isEmpty()) {
+            m_pathPattern = ".*";
+        } else {
+            m_pathPattern = testPathPattern;
         }
 
         m_testRootDirs.addAll(testRootDirs);
@@ -118,7 +130,7 @@ public class TestflowCollector {
      * @throws IOException if an I/O error occurs
      */
     public Collection<WorkflowTestSuite> collectTestCases(final TestrunConfiguration runConfiguration)
-            throws IOException {
+        throws IOException {
         Collection<WorkflowTestSuite> workflowTests = new ArrayList<WorkflowTestSuite>();
         Collection<File> rootDirSnapshot = new ArrayList<File>(m_testRootDirs);
         // m_testRootDirs may be changed during search for zipped workflows
@@ -139,17 +151,19 @@ public class TestflowCollector {
      * @throws IOException if an I/O error occurs
      */
     private void searchDirectory(final File currentDir, final File rootDir, final Collection<WorkflowTestSuite> tests,
-                                 final TestrunConfiguration runConfiguration) throws IOException {
+        final TestrunConfiguration runConfiguration) throws IOException {
         File workflowFile = new File(currentDir, WorkflowPersistor.WORKFLOW_FILE);
 
         if (workflowFile.exists()) {
-            String name = currentDir.getName();
-            if (name.matches(m_pattern)) {
+            String workflowName = currentDir.getName();
+            String workflowPath = currentDir.getAbsolutePath().substring(rootDir.getAbsolutePath().length());
+            if (workflowName.matches(m_namePattern) && workflowPath.matches(m_pathPattern)) {
                 WorkflowTestSuite testCase =
-                        new WorkflowTestSuite(workflowFile.getParentFile(), rootDir, runConfiguration, null);
+                    new WorkflowTestSuite(workflowFile.getParentFile(), rootDir, runConfiguration, null);
                 tests.add(testCase);
             } else {
-                logger.info("Skipping testcase '" + name + "' (doesn't match pattern '" + m_pattern + "').");
+                logger.info("Skipping testcase '" + workflowPath + "' (doesn't match name pattern '" + m_namePattern
+                    + "'" + " and/or path pattern '" + m_pathPattern + "').");
             }
         } else {
             // recursively search directories
@@ -169,8 +183,10 @@ public class TestflowCollector {
                 return;
             }
             for (int i = 0; i < zipList.length; i++) {
-                String name = zipList[i].getName();
-                if (name.matches(m_pattern)) {
+                String workflowName = zipList[i].getName();
+                String workflowPath = zipList[i].getAbsolutePath().substring(rootDir.getAbsolutePath().length());
+
+                if (workflowName.matches(m_namePattern) && workflowPath.matches(workflowPath)) {
                     File tempDir = FileUtil.createTempDir("UnzippedTestflows");
                     m_testRootDirs.add(tempDir);
                     FileUtil.unzip(zipList[i], tempDir);

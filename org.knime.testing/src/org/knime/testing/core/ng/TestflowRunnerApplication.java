@@ -81,7 +81,9 @@ import com.knime.enterprise.client.filesystem.util.WorkflowDownloadApplication;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class TestflowRunnerApplication implements IApplication {
-    private String m_testNamePattern;
+    private String m_workflowNamePattern;
+
+    private String m_workflowPathPattern;
 
     private final Collection<File> m_rootDirs = new ArrayList<File>();
 
@@ -202,7 +204,7 @@ public class TestflowRunnerApplication implements IApplication {
      * @throws TransformerException if the results cannot be written properly
      */
     private int runAllTests(final AbstractXMLResultWriter resultWriter) throws IOException, TransformerException {
-        TestflowCollector registry = new TestflowCollector(m_testNamePattern, m_rootDirs);
+        TestflowCollector registry = new TestflowCollector(m_workflowNamePattern, m_workflowPathPattern, m_rootDirs);
         Collection<WorkflowTestSuite> allTestFlows = registry.collectTestCases(m_runConfiguration);
 
         if (allTestFlows.size() == 0) {
@@ -281,10 +283,13 @@ public class TestflowRunnerApplication implements IApplication {
 
         int i = 0;
         while (i < stringArgs.length) {
-            // the "-pattern" argument sets the test name pattern (reg exp)
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-pattern")) {
-                if (m_testNamePattern != null) {
-                    System.err.println("Multiple -pattern arguments not allowed");
+            if (stringArgs[i] == null) {
+                continue;
+            } else if (stringArgs[i].equals("-pattern")) {
+                System.err.println("-pattern is now depreacted try using -include instead which matches against the " +
+                		"path from the workflow root of each workflow");
+                if ((m_workflowNamePattern != null) || (m_workflowPathPattern != null)) {
+                    System.err.println("Multiple -pattern/-include arguments not allowed");
                     return false;
                 }
                 i++;
@@ -293,12 +298,20 @@ public class TestflowRunnerApplication implements IApplication {
                     System.err.println("Missing pattern for tests to run.");
                     return false;
                 }
-                m_testNamePattern = stringArgs[i++];
-                continue;
-            }
-
-            // "-root" specifies the root dir of all testcases
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-root")) {
+                m_workflowNamePattern = stringArgs[i++];
+            } else if (stringArgs[i].equals("-include")) {
+                if ((m_workflowNamePattern != null) || (m_workflowPathPattern != null)) {
+                    System.err.println("Multiple -pattern/-include arguments not allowed");
+                    return false;
+                }
+                i++;
+                // requires another argument
+                if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
+                    System.err.println("Missing pattern for tests to run.");
+                    return false;
+                }
+                m_workflowPathPattern = stringArgs[i++];
+            } else if (stringArgs[i].equals("-root")) {
                 i++;
                 // requires another argument
                 if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
@@ -306,11 +319,7 @@ public class TestflowRunnerApplication implements IApplication {
                     return false;
                 }
                 m_rootDirs.add(new File(stringArgs[i++]));
-                continue;
-            }
-
-            // "-server" specifies a workflow group on a server
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-server")) {
+            } else if (stringArgs[i].equals("-server")) {
                 if (m_serverUri != null) {
                     System.err.println("Multiple -server arguments not allowed");
                     return false;
@@ -323,11 +332,7 @@ public class TestflowRunnerApplication implements IApplication {
                     return false;
                 }
                 m_serverUri = stringArgs[i++];
-                continue;
-            }
-
-            // "-xmlResult" specifies the result file
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-xmlResult")) {
+            } else if (stringArgs[i].equals("-xmlResult")) {
                 if (m_xmlResultFile != null) {
                     System.err.println("Multiple -xmlResult arguments not allowed");
                     return false;
@@ -340,11 +345,7 @@ public class TestflowRunnerApplication implements IApplication {
                     return false;
                 }
                 m_xmlResultFile = stringArgs[i++];
-                continue;
-            }
-
-            // "-xmlResultDir" specifies the result directory
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-xmlResultDir")) {
+            } else if (stringArgs[i].equals("-xmlResultDir")) {
                 if (m_xmlResultDir != null) {
                     System.err.println("Multiple -xmlResultDir arguments not allowed");
                     return false;
@@ -357,11 +358,7 @@ public class TestflowRunnerApplication implements IApplication {
                     return false;
                 }
                 m_xmlResultDir = stringArgs[i++];
-                continue;
-            }
-
-            // "-save" specifies the destination directory for saved workflows
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-save")) {
+            } else if (stringArgs[i].equals("-save")) {
                 if (m_runConfiguration.getSaveLocation() != null) {
                     System.err.println("Multiple -save arguments not allowed");
                     return false;
@@ -374,10 +371,7 @@ public class TestflowRunnerApplication implements IApplication {
                     return false;
                 }
                 m_runConfiguration.setSaveLocation(new File(stringArgs[i++]));
-                continue;
-            }
-
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-timeout")) {
+            } else if (stringArgs[i].equals("-timeout")) {
                 i++;
                 // requires another argument
                 if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
@@ -385,16 +379,10 @@ public class TestflowRunnerApplication implements IApplication {
                     return false;
                 }
                 m_runConfiguration.setTimeout(Integer.parseInt(stringArgs[i++]));
-                continue;
-            }
-
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-stacktraceOnTimeout")) {
+            } else if (stringArgs[i].equals("-stacktraceOnTimeout")) {
                 m_runConfiguration.setStacktraceOnTimeout(true);
                 i++;
-                continue;
-            }
-
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-untestedNodes")) {
+            } else if (stringArgs[i].equals("-untestedNodes")) {
                 i++;
                 // requires another argument
                 if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
@@ -402,10 +390,7 @@ public class TestflowRunnerApplication implements IApplication {
                     return false;
                 }
                 m_untestedNodesTest = new UntestedNodesTest(Pattern.compile(stringArgs[i++]));
-                continue;
-            }
-
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-memLeaks")) {
+            } else if (stringArgs[i].equals("-memLeaks")) {
                 i++;
                 // requires another argument
                 if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
@@ -413,54 +398,28 @@ public class TestflowRunnerApplication implements IApplication {
                     return false;
                 }
                 m_runConfiguration.setAllowedMemoryIncrease(Integer.parseInt(stringArgs[i++]));
-                continue;
-            }
-
-
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-dialogs")) {
+            } else if (stringArgs[i].equals("-dialogs")) {
                 m_runConfiguration.setTestDialogs(true);
                 i++;
-                continue;
-            }
-
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-views")) {
+            } else if (stringArgs[i].equals("-views")) {
                 m_runConfiguration.setTestViews(true);
                 i++;
-                continue;
-            }
-
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-logMessages")) {
+            } else if (stringArgs[i].equals("-logMessages")) {
                 m_runConfiguration.setCheckLogMessages(true);
                 i++;
-                continue;
-            }
-
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-ignoreNodeMessages")) {
+            } else if (stringArgs[i].equals("-ignoreNodeMessages")) {
                 m_runConfiguration.setCheckNodeMessages(false);
                 i++;
-                continue;
-            }
-
-
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-deprecated")) {
+            } else if (stringArgs[i].equals("-deprecated")) {
                 m_runConfiguration.setReportDeprecatedNodes(true);
                 i++;
-                continue;
-            }
-
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-loadSaveLoad")) {
+            } else if (stringArgs[i].equals("-loadSaveLoad")) {
                 m_runConfiguration.setLoadSaveLoad(true);
                 i++;
-                continue;
+            } else {
+                System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
+                return false;
             }
-
-
-            System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
-            return false;
-        }
-
-        if (m_testNamePattern == null) {
-            m_testNamePattern = ".+";
         }
 
         return true;
@@ -469,7 +428,9 @@ public class TestflowRunnerApplication implements IApplication {
     private void printUsage() {
         System.err.println("Valid arguments:");
 
-        System.err.println("    -pattern <regex>: only test matching the regular expression <regex> will be run.");
+        System.err.println("    -include <regex>: only tests matching the regular expression <regex> will be run. "
+                + "The complete path of each testcase starting from the testflows' root directory is matched, "
+                + "e.g. '/Misc/Workflow'.");
         System.err.println("    -root <dir_name>: optional, specifies the root dir where all testcases are located in."
                 + " Multiple root arguments may be present.");
         System.err.println("    -server <uri>: optional, a KNIME server from which workflows should be downloaded"
