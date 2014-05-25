@@ -882,8 +882,7 @@ propagated with or for interoperation with KNIME.
          id="com.fasterxml.jackson"
          download-size="0"
          install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
    <plugin
          id="org.apache.commons.math3"
