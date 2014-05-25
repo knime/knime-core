@@ -115,7 +115,7 @@ public class TestflowCollector {
         if ((testPathPattern == null) || testPathPattern.isEmpty()) {
             m_pathPattern = ".*";
         } else {
-            m_pathPattern = testPathPattern;
+            m_pathPattern = testPathPattern.replace('/', File.separatorChar); // fix path separators under Windows
         }
 
         m_testRootDirs.addAll(testRootDirs);
