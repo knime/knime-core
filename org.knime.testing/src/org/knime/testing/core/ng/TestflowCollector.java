@@ -115,7 +115,12 @@ public class TestflowCollector {
         if ((testPathPattern == null) || testPathPattern.isEmpty()) {
             m_pathPattern = ".*";
         } else {
-            m_pathPattern = testPathPattern.replace('/', File.separatorChar); // fix path separators under Windows
+            if (File.separatorChar == '\\') {
+                // fix path separators under Windows
+                m_pathPattern = testPathPattern.replace("/", "\\\\");
+            } else {
+                m_pathPattern = testPathPattern;
+            }
         }
 
         m_testRootDirs.addAll(testRootDirs);
