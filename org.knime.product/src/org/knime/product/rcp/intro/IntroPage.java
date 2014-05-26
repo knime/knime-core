@@ -86,12 +86,15 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
@@ -103,6 +106,7 @@ import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.WorkbenchPlugin;
 import org.eclipse.ui.internal.browser.BrowserViewer;
+import org.eclipse.ui.internal.browser.SystemBrowserInstance;
 import org.eclipse.ui.internal.browser.WebBrowserEditor;
 import org.eclipse.ui.internal.browser.WebBrowserEditorInput;
 import org.knime.core.node.KNIMEConstants;
@@ -114,8 +118,10 @@ import org.knime.workbench.explorer.view.ContentDelegator;
 import org.knime.workbench.explorer.view.ExplorerView;
 import org.knime.workbench.explorer.view.actions.NewWorkflowWizard;
 import org.knime.workbench.explorer.view.actions.NewWorkflowWizardPage;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.p2.actions.InvokeInstallSiteAction;
 import org.knime.workbench.ui.p2.actions.InvokeUpdateAction;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.w3c.dom.DOMException;
@@ -314,6 +320,7 @@ public class IntroPage implements LocationListener {
         if ((m_introFile != null) && (force || !m_workbenchModified)) {
             try {
                 IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().createBrowser(BROWSER_ID);
+                checkMissingBrowserWarning(browser);
                 browser.openURL(m_introFile.toURI().toURL());
             } catch (PartInitException ex) {
                 LOGGER.error("Could not open web browser with first intro page: " + ex.getMessage(), ex);
@@ -323,6 +330,31 @@ public class IntroPage implements LocationListener {
         }
 
         attachLocationListener();
+    }
+
+    private void checkMissingBrowserWarning(final IWebBrowser browser) {
+        if (browser instanceof SystemBrowserInstance) {
+            IPersistentPreferenceStore prefStore =
+                (IPersistentPreferenceStore)KNIMEUIPlugin.getDefault().getPreferenceStore();
+            boolean omitWarnings = prefStore.getBoolean(PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING);
+            if (!omitWarnings) {
+                MessageDialogWithToggle dialog =
+                    MessageDialogWithToggle.openWarning(Display.getDefault().getActiveShell(),
+                        "Missing browser integration",
+                        "KNIME is unable to display web pages in an internal browser. This may be caused by missing "
+                            + "system libraries. Please visit http://www.knime.org/faq#q6 for details.\n"
+                            + "Some web pages may open in an external browser now.", "Do not show again", false,
+                        prefStore, PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING);
+                if (dialog.getToggleState()) {
+                    prefStore.setValue(PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING, true);
+                    try {
+                        prefStore.save();
+                    } catch (IOException ex) {
+                        // too bad, ignore it
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -379,15 +411,17 @@ public class IntroPage implements LocationListener {
                     XPath xpath = m_xpathFactory.newXPath();
 
                     NodeList editorList =
-                        (NodeList)xpath.evaluate("//page/editors/editor", doc.getDocumentElement(), XPathConstants.NODESET);
+                        (NodeList)xpath.evaluate("//page/editors/editor", doc.getDocumentElement(),
+                            XPathConstants.NODESET);
                     if (editorList.getLength() > 0) {
                         resortEditorList(editorList);
                     }
                     editorList =
-                        (NodeList)xpath.evaluate("//page/editors/editor", doc.getDocumentElement(), XPathConstants.NODESET);
+                        (NodeList)xpath.evaluate("//page/editors/editor", doc.getDocumentElement(),
+                            XPathConstants.NODESET);
 
                     NodeList partList =
-                            (NodeList)xpath.evaluate("//editors//part", doc.getDocumentElement(), XPathConstants.NODESET);
+                        (NodeList)xpath.evaluate("//editors//part", doc.getDocumentElement(), XPathConstants.NODESET);
                     if (partList.getLength() > 0) {
                         Node parent = partList.item(0).getParentNode();
                         Element newPart = doc.createElement("part");
@@ -407,7 +441,6 @@ public class IntroPage implements LocationListener {
             }
         }
     }
-
 
     private void resortEditorList(final NodeList editorList) throws DOMException, MalformedURLException {
         // find last active workflow editor
@@ -559,9 +592,9 @@ public class IntroPage implements LocationListener {
                 }
                 try {
                     URL u = new URL(workflowUri);
-                    IDE.openEditor(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(), new URI(
-                        u.getProtocol(), u.getHost(), u.getPath(), u.getQuery()), WorkflowEditor.ID, true);
-                } catch (URISyntaxException  | MalformedURLException ex) {
+                    IDE.openEditor(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(),
+                        new URI(u.getProtocol(), u.getHost(), u.getPath(), u.getQuery()), WorkflowEditor.ID, true);
+                } catch (URISyntaxException | MalformedURLException ex) {
                     LOGGER.error("Invalid workflow URI '" + workflowUri + "': " + ex.getMessage(), ex);
                 } catch (PartInitException ex) {
                     LOGGER.error("Could not open workflow '" + workflowUri + "': " + ex.getMessage(), ex);
@@ -682,6 +715,7 @@ public class IntroPage implements LocationListener {
 
         IEditorInput input = ref.getEditorInput();
         return (input instanceof WebBrowserEditorInput)
-            && ((WebBrowserEditorInput)input).getURL().getPath().endsWith(m_introFile.getAbsolutePath().replace("\\", "/"));
+            && ((WebBrowserEditorInput)input).getURL().getPath()
+                .endsWith(m_introFile.getAbsolutePath().replace("\\", "/"));
     }
 }

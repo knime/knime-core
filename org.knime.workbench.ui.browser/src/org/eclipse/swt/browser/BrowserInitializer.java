@@ -111,7 +111,7 @@ public class BrowserInitializer {
                 } else {
                     // Disable xulrunner
                     System.setProperty(XUL, "/dev/null");
-                    logger.error("No Xulrunner installation found.");
+                    logger.error("No browser integration found! Please visit http://www.knime.org/faq#q6 for details.");
                 }
             } catch (IOException e) {
                 // Disable xulrunner

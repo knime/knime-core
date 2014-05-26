@@ -134,5 +134,6 @@ public interface PreferenceConstants {
     /** Default to {@link #P_WRAP_TABLE_HEADER} ({@value #P_WRAP_TABLE_HEADER_DEFAULT}). */
     public static final boolean P_WRAP_TABLE_HEADER_DEFAULT = false;
 
-
+    /** Preference constant for omitting the missing browser warning during startup. */
+    public static final String P_OMIT_MISSING_BROWSER_WARNING = "knime.ui.omit-missing-browser-warning";
 }

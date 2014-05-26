@@ -199,6 +199,9 @@ public class MainPreferencePage extends FieldEditorPreferencePage
                 }, getFieldEditorParent());
         addField(updateMetaNodeLinkOnLoadEditor);
 
+        addField(new HorizontalLineField(parent));
+        addField(new BooleanFieldEditor(PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING,
+            "Suppress warnings about missing browser integration", parent));
     }
 
     /** {@inheritDoc} */
