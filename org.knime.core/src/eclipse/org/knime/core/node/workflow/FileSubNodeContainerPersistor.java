@@ -49,6 +49,7 @@ package org.knime.core.node.workflow;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,6 +67,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
@@ -90,6 +92,8 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
     private int m_virtualInNodeIDSuffix = -1;
 
     private int m_virtualOutNodeIDSuffix = -1;
+
+    private Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
 
     /**
      * @param workflowPersistor
@@ -180,6 +184,12 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
     @Override
     public int getVirtualOutNodeIDSuffix() {
         return m_virtualOutNodeIDSuffix;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Map<Integer, WizardNodeLayoutInfo> getLayoutInfo() {
+        return m_layoutInfo;
     }
 
     /** {@inheritDoc} */
@@ -287,6 +297,25 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
             }
         }
 
+        Set<String> layoutSetKeys = Collections.emptySet();
+        m_layoutInfo = new HashMap<Integer, WizardNodeLayoutInfo>();
+        NodeSettingsRO layoutSettings = null;
+        try {
+            layoutSettings = nodeSettings.getNodeSettings("layoutInfos");
+            layoutSetKeys = layoutSettings.keySet();
+            for (String key : layoutSetKeys) {
+                NodeSettingsRO singleLayoutSetting = layoutSettings.getNodeSettings(key);
+                int nodeID = singleLayoutSetting.getInt("nodeID");
+                WizardNodeLayoutInfo layoutInfo = WizardNodeLayoutInfo.loadFromNodeSettings(singleLayoutSetting);
+                m_layoutInfo.put(nodeID, layoutInfo);
+            }
+        } catch (InvalidSettingsException e) {
+            String error = "Could not load subnode layout information: " + e.getMessage();
+            //result.addError(error);
+            getLogger().error(error, e);
+            //setDirtyAfterLoad();
+        }
+
         m_workflowPersistor.preLoadNodeContainer(parentPersistor, parentSettings, result);
     }
 
@@ -388,6 +417,14 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
             inportSetting.addInt("index", i - 1);
             NodeSettingsWO portTypeSettings = inportSetting.addNodeSettings("type");
             virtualOutNode.getInPort(i).getPortType().save(portTypeSettings);
+        }
+        Map<Integer, WizardNodeLayoutInfo> layoutInfoMap = subnodeNC.getLayoutInfo();
+        Integer[] layoutIDs = layoutInfoMap.keySet().toArray(new Integer[0]);
+        NodeSettingsWO layoutInfoSettings = settings.addNodeSettings("layoutInfos");
+        for (int i = 0; i < layoutInfoMap.size(); i++) {
+            NodeSettingsWO curLayoutInfoSettings = layoutInfoSettings.addNodeSettings("layoutInfo_" + (i));
+            curLayoutInfoSettings.addInt("nodeID", layoutIDs[i]);
+            WizardNodeLayoutInfo.saveToNodeSettings(curLayoutInfoSettings, layoutInfoMap.get(layoutIDs[i]));
         }
         WorkflowManager workflowManager = subnodeNC.getWorkflowManager();
         FileWorkflowPersistor.save(workflowManager, nodeDirRef, exec, saveHelper);

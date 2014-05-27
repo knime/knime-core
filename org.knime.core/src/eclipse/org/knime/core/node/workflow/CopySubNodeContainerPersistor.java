@@ -48,11 +48,13 @@ package org.knime.core.node.workflow;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 
@@ -69,6 +71,7 @@ public class CopySubNodeContainerPersistor
     private final WorkflowPortTemplate[] m_outPortTemplates;
     private final int m_virtualInNodeIDSuffix;
     private final int m_virtualOutNodeIDSuffix;
+    private final Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
 
     /**
      * @param original
@@ -94,6 +97,13 @@ public class CopySubNodeContainerPersistor
         }
         m_virtualInNodeIDSuffix = original.getVirtualInNode().getID().getIndex();
         m_virtualOutNodeIDSuffix = original.getVirtualOutNode().getID().getIndex();
+        m_layoutInfo = new HashMap<Integer, WizardNodeLayoutInfo>();
+        Map<Integer, WizardNodeLayoutInfo> orgLayoutInfo = original.getLayoutInfo();
+        for (Entry<Integer, WizardNodeLayoutInfo> layoutEntry : orgLayoutInfo.entrySet()) {
+            Integer id = new Integer(layoutEntry.getKey());
+            WizardNodeLayoutInfo newInfo = layoutEntry.getValue().clone();
+            m_layoutInfo.put(id, newInfo);
+        }
     }
 
     /** {@inheritDoc} */
@@ -137,6 +147,12 @@ public class CopySubNodeContainerPersistor
     @Override
     public int getVirtualOutNodeIDSuffix() {
         return m_virtualOutNodeIDSuffix;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Map<Integer, WizardNodeLayoutInfo> getLayoutInfo() {
+        return m_layoutInfo;
     }
 
 }

@@ -1,6 +1,9 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *
+ *  Copyright by
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -40,39 +43,28 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
- * Created on Oct 5, 2013 by wiswedel
+ * History
+ *   10.11.2005 (Florian Georg): created
  */
-package org.knime.core.node.workflow;
+package org.knime.workbench.editor2.actions.delegates;
 
-import java.util.Map;
-
-import org.knime.core.node.wizard.WizardNodeLayoutInfo;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.actions.AbstractNodeAction;
+import org.knime.workbench.editor2.actions.SubnodeLayoutAction;
 
 /**
- * Describes persistor for {@link SubNodeContainer}.
+ * Editor action for layouting the views contained in a subnode.
  *
- * <p>Not to be extended or used by clients.
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @noimplement This interface is not intended to be implemented by clients.
- * @noextend This interface is not intended to be extended by clients.
- * @since 2.9
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor {
-
-    /** @return the wrapped workflow manager's persistor. */
-    WorkflowPersistor getWorkflowPersistor();
-
-    WorkflowPortTemplate[] getInPortTemplates();
-
-    WorkflowPortTemplate[] getOutPortTemplates();
-
-    int getVirtualInNodeIDSuffix();
-
-    int getVirtualOutNodeIDSuffix();
-
-    /** @since 2.10 */
-    Map<Integer, WizardNodeLayoutInfo> getLayoutInfo();
+public class SubnodeLayoutEditorAction extends AbstractEditorAction {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected AbstractNodeAction createAction(final WorkflowEditor editor) {
+        return new SubnodeLayoutAction(editor);
+    }
 }

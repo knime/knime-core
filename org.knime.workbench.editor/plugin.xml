@@ -20,6 +20,12 @@
             name="Toggle Snap to Grid"/>
       <command
             categoryId="knime.command.category"
+            description="Opens the settings dialog for the subnode layout."
+            id="knime.commands.editor.subnodeLayout"
+            name="Subnode Layout">
+      </command>
+      <command
+            categoryId="knime.command.category"
             description="Moves the selected nodes up"
             id="knime.commands.editor.moveNodesUp"
             name="Move Nodes Up"/>
@@ -343,6 +349,18 @@
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group2"
                tooltip="Configure all the selected nodes (JobManager only)"/>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.SubnodeLayoutEditorAction"
+               definitionId="knime.commands.editor.subnodeLayout"
+               disabledIcon="icons/layout_16_bw.png"
+               icon="icons/layout_16.png"
+               id="org.knime.workbench.editor.actions.subnodeLayout"
+               label="Subnode Layout"
+               menubarPath="org.knime.workbench.editor.menu/group2"
+               style="push"
+               toolbarPath="org.knime.workbench.editor.menu/group2"
+               tooltip="Opens dialog to edit layout of subnode views.">
+         </action>
          
          
          <action

@@ -96,6 +96,7 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
@@ -144,6 +145,9 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * is triggered via {@link #performExecuteNode(PortObject[])} or reset via {@link #performReset()}. */
     private boolean m_isPerformingActionCalledFromParent;
 
+    /** Layout info */
+    private Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
+
     /** Load workflow from persistor.
      *
      * @param parent ...
@@ -170,6 +174,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         m_inports = new NodeInPort[inPortTemplates.length];
         m_virtualInNodeIDSuffix = persistor.getVirtualInNodeIDSuffix();
         m_virtualOutNodeIDSuffix = persistor.getVirtualOutNodeIDSuffix();
+        m_layoutInfo = persistor.getLayoutInfo();
         PortType[] inTypes = new PortType[inPortTemplates.length];
         for (int i = 0; i < inPortTemplates.length; i++) {
             inTypes[i] = inPortTemplates[i].getPortType();
@@ -1358,6 +1363,30 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     @Override
     public FlowObjectStack getOutgoingFlowObjectStack() {
         return m_outgoingStack;
+    }
+
+    /* -------------- Layouting --------- */
+
+    /**
+     * @return the layoutInfo
+     * @since 2.10
+     */
+    public Map<Integer, WizardNodeLayoutInfo> getLayoutInfo() {
+        if (m_layoutInfo == null) {
+            m_layoutInfo = new HashMap<Integer, WizardNodeLayoutInfo>();
+        }
+        return m_layoutInfo;
+    }
+
+    /**
+     * @param layoutInfo the layoutInfo to set
+     * @since 2.10
+     */
+    public void setLayoutInfo(final Map<Integer, WizardNodeLayoutInfo> layoutInfo) {
+        if (ObjectUtils.notEqual(m_layoutInfo, layoutInfo)) {
+            m_layoutInfo = layoutInfo;
+            setDirty();
+        }
     }
 
     /* -------------- SingleNodeContainer methods without meaningful equivalent --------- */

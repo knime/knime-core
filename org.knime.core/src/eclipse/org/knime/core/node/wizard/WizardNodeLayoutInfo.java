@@ -57,7 +57,7 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @since 2.10
  */
-public class WizardNodeLayoutInfo {
+public class WizardNodeLayoutInfo implements Cloneable {
 
     private String m_x;
     private String m_y;
@@ -158,6 +158,78 @@ public class WizardNodeLayoutInfo {
             }
         }
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((m_padding == null) ? 0 : m_padding.hashCode());
+        result = prime * result + ((m_x == null) ? 0 : m_x.hashCode());
+        result = prime * result + ((m_y == null) ? 0 : m_y.hashCode());
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        WizardNodeLayoutInfo other = (WizardNodeLayoutInfo)obj;
+        if (m_padding == null) {
+            if (other.m_padding != null) {
+                return false;
+            }
+        } else if (!m_padding.equals(other.m_padding)) {
+            return false;
+        }
+        if (m_x == null) {
+            if (other.m_x != null) {
+                return false;
+            }
+        } else if (!m_x.equals(other.m_x)) {
+            return false;
+        }
+        if (m_y == null) {
+            if (other.m_y != null) {
+                return false;
+            }
+        } else if (!m_y.equals(other.m_y)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "WizardNodeLayoutInfo [x=" + m_x + ", y=" + m_y + ", padding=" + m_padding + "]";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WizardNodeLayoutInfo clone() {
+        try {
+            return (WizardNodeLayoutInfo)super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException("Clone failed", e);
+        }
     }
 
 }
