@@ -47,7 +47,6 @@
 package org.knime.core.node.workflow;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -108,7 +107,7 @@ public final class WizardExecutionController {
 
     private static final String ID_DEPENDENCY = "webDependency";
 
-    private static final String ATTR_JS_ID = "jsObjectID";
+    private static final String ATTR_JS_ID = "javascriptComponentID";
 
     private static final String ATTR_NAMESPACE = "namespace";
 
