@@ -293,8 +293,13 @@ public class JSONDataTable {
         m_extensions = extensions;
     }
 
+    /**
+     *
+     * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+     * @since 2.10
+     */
     @JsonAutoDetect
-    static class JSONDataTableRow {
+    public static class JSONDataTableRow {
 
         private String m_rowKey;
 

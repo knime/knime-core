@@ -135,4 +135,71 @@ public final class WebResourceLocator {
         File dir = new File(FileLocator.resolve(url).getFile());
         return new File(dir, m_relativePathSource);
     }
+
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "WebResourceLocator [m_pluginName=" + m_pluginName + ", m_relativePathTarget=" + m_relativePathTarget
+            + ", m_relativePathSource=" + m_relativePathSource + ", m_type=" + m_type + "]";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((m_pluginName == null) ? 0 : m_pluginName.hashCode());
+        result = prime * result + ((m_relativePathSource == null) ? 0 : m_relativePathSource.hashCode());
+        result = prime * result + ((m_relativePathTarget == null) ? 0 : m_relativePathTarget.hashCode());
+        result = prime * result + ((m_type == null) ? 0 : m_type.hashCode());
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        WebResourceLocator other = (WebResourceLocator)obj;
+        if (m_pluginName == null) {
+            if (other.m_pluginName != null) {
+                return false;
+            }
+        } else if (!m_pluginName.equals(other.m_pluginName)) {
+            return false;
+        }
+        if (m_relativePathSource == null) {
+            if (other.m_relativePathSource != null) {
+                return false;
+            }
+        } else if (!m_relativePathSource.equals(other.m_relativePathSource)) {
+            return false;
+        }
+        if (m_relativePathTarget == null) {
+            if (other.m_relativePathTarget != null) {
+                return false;
+            }
+        } else if (!m_relativePathTarget.equals(other.m_relativePathTarget)) {
+            return false;
+        }
+        if (m_type != other.m_type) {
+            return false;
+        }
+        return true;
+    }
 }

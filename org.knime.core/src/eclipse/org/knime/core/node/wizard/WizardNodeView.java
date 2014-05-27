@@ -52,6 +52,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -119,12 +121,12 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     extends AbstractNodeView<T> implements InteractiveView<T, REP, VAL> {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WizardNodeView.class);
-
     private static File tempFolder;
 
     private final InteractiveViewDelegate<VAL> m_delegate;
+    private Shell m_shell;
     private Browser m_browser;
-    private final WebTemplate m_template;
+    private WebTemplate m_template;
     private File m_tempIndexFile;
     private String m_title;
     private ProgressListener m_completedListener;
@@ -137,6 +139,17 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         super(nodeModel);
         m_template = WizardExecutionController.getWebTemplateFromJSObjectID(getNodeModel().getJavascriptObjectID());
         m_delegate = new InteractiveViewDelegate<VAL>();
+    }
+
+    private static boolean isDebug() {
+        RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+        if (runtimeBean != null && runtimeBean.getInputArguments() != null) {
+            String inputArguments = runtimeBean.getInputArguments().toString();
+            if (inputArguments != null && !inputArguments.isEmpty()) {
+                return inputArguments.indexOf("jdwp") >= 0;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -231,19 +244,21 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         final String jsonViewValue = getViewValueFromModel();
 
         Display display = Display.getCurrent();
-        final Shell shell = new Shell(display);
-        shell.setText(m_title);
+        m_shell = new Shell(display, SWT.ON_TOP | SWT.RESIZE | SWT.MIN | SWT.MAX | SWT.CLOSE);
+        m_shell.setFullScreen(true);
+        m_shell.setText(m_title);
+
         if (KNIMEConstants.KNIME16X16_SWT != null) {
-            shell.setImage(KNIMEConstants.KNIME16X16_SWT);
+            m_shell.setImage(KNIMEConstants.KNIME16X16_SWT);
         }
         GridLayout layout = new GridLayout();
         layout.numColumns = 1;
-        shell.setLayout(layout);
+        m_shell.setLayout(layout);
 
-        m_browser = new Browser(shell, SWT.NONE);
+        m_browser = new Browser(m_shell, SWT.NONE);
         m_browser.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
 
-        Composite buttonComposite = new Composite(shell, SWT.NONE);
+        Composite buttonComposite = new Composite(m_shell, SWT.NONE);
         buttonComposite.setLayoutData(new GridData(GridData.END, GridData.END, false, false));
         buttonComposite.setLayout(new RowLayout());
 
@@ -272,7 +287,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         closeButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                shell.dispose();
+                m_shell.dispose();
             }
         });
 
@@ -293,14 +308,14 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
             m_browser.setText(createErrorHTML(e));
         }
 
-        shell.setSize(800, 600);
-        shell.addDisposeListener(new DisposeListener() {
+        m_shell.setSize(800, 600);
+        m_shell.addDisposeListener(new DisposeListener() {
             @Override
             public void widgetDisposed(final DisposeEvent e) {
                 callCloseView();
             }
         });
-        shell.open();
+        m_shell.open();
     }
 
     private String getViewRepresentationFromModel() {
@@ -353,7 +368,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
      * @return
      */
     private String createWebResources() throws IOException {
-        if (tempFolder == null || !tempFolder.exists() || !tempFolder.isDirectory()) {
+        if (!viewTempDirExists()) {
             tempFolder = FileUtil.createTempDir("knimeViewContainer", null, true);
             try {
                 copyWebResources();
@@ -370,6 +385,16 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         writer.flush();
         writer.close();
         return m_tempIndexFile.getAbsolutePath();
+    }
+
+    /**
+     * @return
+     */
+    private boolean viewTempDirExists() {
+        return !isDebug()
+               && tempFolder != null
+               && tempFolder.exists()
+               && tempFolder.isDirectory();
     }
 
     private String buildHTMLResource() throws IOException {
@@ -510,6 +535,9 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
      */
     @Override
     public final void callCloseView() {
+        m_shell = null;
+        m_browser = null;
+        m_template = null;
         if (m_tempIndexFile != null && m_tempIndexFile.exists()) {
             deleteTempFile(m_tempIndexFile);
         }
