@@ -49,8 +49,6 @@ package org.knime.core.node.workflow;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,12 +59,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
@@ -80,6 +76,7 @@ import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.wizard.WizardNode;
+import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 
 /**
@@ -138,16 +135,28 @@ public final class WizardExecutionController {
      * @return A template object, being used to assamble views.
      */
     public static WebTemplate getWebTemplateFromJSObjectID(final String jsObjectID) {
-        List<WebResourceLocator> webResList = new ArrayList<WebResourceLocator>();
+        LinkedHashSet<WebResourceLocator> webResList = new LinkedHashSet<WebResourceLocator>();
         IConfigurationElement jsComponentExtension = getConfigurationFromID(ID_JS_COMP, ATTR_JS_ID, jsObjectID);
+        if (jsComponentExtension == null) {
+            return getEmptyWebTemplate();
+        }
         String bundleID = jsComponentExtension.getAttribute(ID_IMPL_BUNDLE);
         IConfigurationElement implementationExtension =
             getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, bundleID);
-        List<WebResourceLocator> implementationRes = getResourcesFromExtension(implementationExtension);
+        if (implementationExtension == null) {
+            return getEmptyWebTemplate();
+        }
+        LinkedHashSet<WebResourceLocator> implementationRes = getResourcesFromExtension(implementationExtension);
         for (IConfigurationElement dependencyConf : jsComponentExtension.getChildren(ID_DEPENDENCY)) {
             String dependencyID = dependencyConf.getAttribute(ATTR_RES_BUNDLE_ID);
-            IConfigurationElement dependencyExtension = getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, dependencyID);
-            List<WebResourceLocator> dependencyRes = getResourcesFromExtension(dependencyExtension);
+            IConfigurationElement dependencyExtension =
+                    getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, dependencyID);
+            if (dependencyExtension == null) {
+                LOGGER.error("Web ressource dependency could not be found: " + dependencyID
+                    + ". This is most likely an implementation error.");
+                continue;
+            }
+            LinkedHashSet<WebResourceLocator> dependencyRes = getResourcesFromExtension(dependencyExtension);
             webResList.addAll(dependencyRes);
         }
         webResList.addAll(implementationRes);
@@ -155,7 +164,12 @@ public final class WizardExecutionController {
         String initMethodName = jsComponentExtension.getAttribute(ATTR_INIT_METHOD_NAME);
         String validateMethodName = jsComponentExtension.getAttribute(ATTR_VALIDATE_METHOD_NAME);
         String valueMethodName = jsComponentExtension.getAttribute(ATTR_GETCOMPONENTVALUE_METHOD_NAME);
-        return new DefaultWebTemplate(webResList.toArray(new WebResourceLocator[0]), namespace, initMethodName, validateMethodName, valueMethodName);
+        return new DefaultWebTemplate(webResList.toArray(new WebResourceLocator[0]),
+            namespace, initMethodName, validateMethodName, valueMethodName);
+    }
+
+    private static WebTemplate getEmptyWebTemplate() {
+        return new DefaultWebTemplate(new WebResourceLocator[0], "", "", "", "");
     }
 
     private static IConfigurationElement getConfigurationFromID(final String extensionPointId,
@@ -178,11 +192,23 @@ public final class WizardExecutionController {
         return resMap;
     }
 
-    private static List<WebResourceLocator> getResourcesFromExtension(final IConfigurationElement resConfig) {
+    private static LinkedHashSet<WebResourceLocator> getResourcesFromExtension(final IConfigurationElement resConfig) {
         String pluginName = resConfig.getContributor().getName();
-        List<WebResourceLocator> locators = new ArrayList<WebResourceLocator>();
+        LinkedHashSet<WebResourceLocator> locators = new LinkedHashSet<WebResourceLocator>();
         Map<String, String> resMap = getWebResources(resConfig);
         Set<String> imports = new HashSet<String>();
+        // collect dependencies
+        for (IConfigurationElement depElement : resConfig.getChildren(ID_DEPENDENCY)) {
+            String dependencyID = depElement.getAttribute(ATTR_RES_BUNDLE_ID);
+            IConfigurationElement depConfig = getConfigurationFromID(ID_WEB_RES, ATTR_RES_BUNDLE_ID, dependencyID);
+            if (depConfig == null) {
+                LOGGER.error("Web ressource dependency could not be found: " + dependencyID
+                    + ". This is most likely an implementation error.");
+                continue;
+            }
+            locators.addAll(getResourcesFromExtension(depConfig));
+        }
+        // collect own import files
         for (IConfigurationElement resElement : resConfig.getChildren(ID_IMPORT_RES)) {
             String path = resElement.getAttribute(ATTR_PATH);
             String type = resElement.getAttribute(ATTR_TYPE);
@@ -205,7 +231,9 @@ public final class WizardExecutionController {
                 imports.add(sourcePath);
             }
         }
-        for (Entry<String, String> entry :resMap.entrySet()) {
+
+        // Add additional ressources from directories
+        /* for (Entry<String, String> entry :resMap.entrySet()) {
             String targetPath = entry.getKey();
             String sourcePath = entry.getValue();
             try {
@@ -215,12 +243,10 @@ public final class WizardExecutionController {
                 if (file.exists()) {
                     addLocators(pluginName, locators, imports, file, sourcePath, targetPath);
                 }
-            } catch (MalformedURLException e) {
-                LOGGER.warn("", e);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 LOGGER.warn("Could not resolve web resource " + sourcePath, e);
             }
-        }
+        }*/
         return locators;
     }
 
@@ -234,7 +260,7 @@ public final class WizardExecutionController {
      * @param sourcePath The source path of the locator
      * @param targetPath The target path of the locator
      */
-    private static void addLocators(final String pluginName, final List<WebResourceLocator> locators,
+    /*private static void addLocators(final String pluginName, final Set<WebResourceLocator> locators,
         final Set<String> imports, final File file, final String sourcePath, final String targetPath) {
         if (file.isDirectory()) {
             for (File innerFile : file.listFiles()) {
@@ -247,7 +273,7 @@ public final class WizardExecutionController {
                 locators.add(new WebResourceLocator(pluginName, sourcePath, targetPath, WebResourceType.FILE));
             }
         }
-    }
+    }*/
 
     /** Temporary workaround to check if the argument workflow contains sub nodes and hence can be used
      * with the {@link WizardNode} execution.
@@ -324,7 +350,7 @@ public final class WizardExecutionController {
             NodeIDSuffix idSuffix = NodeIDSuffix.create(m_manager.getID(), entry.getKey());
             resultMap.put(idSuffix.toString(), entry.getValue());
         }
-        return new WizardPageContent(resultMap);
+        return new WizardPageContent(resultMap, subNC.getLayoutInfo());
     }
 
     public static final NodeModelFilter<WizardNode> NOT_HIDDEN_FILTER = new NodeModelFilter<WizardNode>() {
@@ -505,13 +531,15 @@ public final class WizardExecutionController {
 
         @SuppressWarnings("rawtypes")
         private final Map<String, WizardNode> m_pageMap;
+        private final Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
 
         /**
          * @param pageMap
          */
         @SuppressWarnings("rawtypes")
-        WizardPageContent(final Map<String, WizardNode> pageMap) {
+        WizardPageContent(final Map<String, WizardNode> pageMap, final Map<Integer, WizardNodeLayoutInfo> layoutInfo) {
             m_pageMap = pageMap;
+            m_layoutInfo = layoutInfo;
         }
 
         /**
@@ -520,6 +548,13 @@ public final class WizardExecutionController {
         @SuppressWarnings("rawtypes")
         public Map<String, WizardNode> getPageMap() {
             return m_pageMap;
+        }
+
+        /**
+         * @return the layoutInfo
+         */
+        public Map<Integer, WizardNodeLayoutInfo> getLayoutInfo() {
+            return m_layoutInfo;
         }
 
     }
