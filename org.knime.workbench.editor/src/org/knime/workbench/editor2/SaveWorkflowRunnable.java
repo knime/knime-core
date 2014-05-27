@@ -60,6 +60,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowSaveHelper;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
 /**
@@ -84,6 +85,8 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
 
     private IProgressMonitor m_monitor;
 
+    private final WorkflowSaveHelper m_saveHelper;
+
     /**
      * Creates a runnable that saves the worfklow.
      *
@@ -93,15 +96,17 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
      *            the file to save the workflow to
      * @param exceptionMessage
      *            holding an exception message
+     * @param saveHelper Save options.
      * @param monitor
      *            the progress monitor to report the progress to
      */
     public SaveWorkflowRunnable(final WorkflowEditor editor,
             final File workflowFile, final StringBuilder exceptionMessage,
-            final IProgressMonitor monitor) {
+            final WorkflowSaveHelper saveHelper, final IProgressMonitor monitor) {
         m_editor = editor;
         m_workflowFile = workflowFile;
         m_exceptionMessage = exceptionMessage;
+        m_saveHelper = saveHelper;
         m_monitor = monitor;
     }
 
@@ -120,10 +125,10 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
             final ReferencedFile oldWorkflowPathRef = wfm.getWorkingDir();
             final File oldWorkflowPath = oldWorkflowPathRef == null ? null : oldWorkflowPathRef.getFile();
             final ExecutionMonitor exec = new ExecutionMonitor(progressMonitor);
-            if (oldWorkflowPath != null && !oldWorkflowPath.equals(workflowPath)) {
+            if (!m_saveHelper.isAutoSave() && oldWorkflowPath != null && !oldWorkflowPath.equals(workflowPath)) {
                 wfm.saveAs(workflowPath, exec);
             } else {
-                wfm.save(workflowPath, exec, true);
+                wfm.save(workflowPath, m_saveHelper, exec);
             }
             // the refresh used to take place in WorkflowEditor#saveTo but
             // was moved to this runnable as part of bug fix 3028

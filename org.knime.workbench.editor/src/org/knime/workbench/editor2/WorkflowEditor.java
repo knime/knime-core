@@ -46,6 +46,7 @@
 package org.knime.workbench.editor2;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URL;
@@ -57,13 +58,20 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -144,14 +152,17 @@ import org.eclipse.ui.progress.IProgressService;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodePropertyChangedEvent;
@@ -166,7 +177,9 @@ import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.node.workflow.WorkflowSaveHelper;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.Pair;
 import org.knime.core.util.Pointer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
@@ -253,6 +266,16 @@ public class WorkflowEditor extends GraphicalEditor implements
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowEditor.class);
 
+    private static final AtomicInteger AUTO_SAVE_INCREMENT = new AtomicInteger();
+
+    private static final ScheduledExecutorService AUTO_SAVE_SCHEDULER = Executors.newSingleThreadScheduledExecutor(
+    new ThreadFactory() {
+        @Override
+        public Thread newThread(final Runnable r) {
+            return new Thread(r, "KNIME-Auto-Save-" + AUTO_SAVE_INCREMENT.incrementAndGet());
+        }
+    });
+
     /** Clipboard name. */
     public static final String CLIPBOARD_ROOT_NAME = "clipboard";
 
@@ -310,6 +333,13 @@ public class WorkflowEditor extends GraphicalEditor implements
     private boolean m_closed;
 
     private String m_manuallySetToolTip;
+
+    /** Auto save is possible when this editor is for a workflow (not a meta node) and no other auto-save copy
+     * is detected when the workflow is opened (see assignment of variable for additional requirements). */
+    private boolean m_isAutoSaveAllowed;
+
+    /** Pair of the scheduled job (for cancelation) and a boolean indicating wheather data should be saved also. */
+    private Pair<ScheduledFuture<?>, Boolean> m_autoSaveScheduledJobPair;
 
     /**
      * No arg constructor, creates the edit domain for this editor.
@@ -492,14 +522,19 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
             }
         }
+        final ReferencedFile autoSaveDirectory;
+        if (m_manager != null && m_parentEditor == null && m_fileResource != null) {
+            autoSaveDirectory = m_manager.getAutoSaveDirectory();
+        } else {
+            autoSaveDirectory = null;
+        }
         // remember that this editor has been closed
         m_closed = true;
         for (IEditorPart child : getSubEditors()) {
             child.getEditorSite().getPage().closeEditor(child, false);
         }
         NodeProvider.INSTANCE.removeListener(this);
-        getSite().getWorkbenchWindow().getSelectionService()
-                .removeSelectionListener(this);
+        getSite().getWorkbenchWindow().getSelectionService().removeSelectionListener(this);
         if (m_parentEditor != null && m_manager != null) {
             // Store the editor settings with the meta node
             if (getWorkflowManager().isDirty()) {
@@ -516,6 +551,24 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
         }
         setWorkflowManager(null); // unregisters wfm listeners
+        if (m_autoSaveScheduledJobPair != null) {
+            m_autoSaveScheduledJobPair.getFirst().cancel(false);
+            m_autoSaveScheduledJobPair = null;
+        }
+        if (autoSaveDirectory != null) {
+            AUTO_SAVE_SCHEDULER.execute(new Runnable() {
+                @Override
+                public void run() {
+                    LOGGER.infoWithFormat("Deleting auto-saved copy (\"%s\")...", autoSaveDirectory);
+                    try {
+                        FileUtils.deleteDirectory(autoSaveDirectory.getFile());
+                    } catch (IOException e) {
+                        LOGGER.error(String.format("Failed to delete auto-saved copy of workflow (folder \"%s\"): %s",
+                            autoSaveDirectory, e.getMessage()), e);
+                    }
+                }
+            });
+        }
         getCommandStack().removeCommandStackListener(this);
         IPreferenceStore prefStore =
             KNIMEUIPlugin.getDefault().getPreferenceStore();
@@ -831,6 +884,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             setWorkflowManagerInput((WorkflowManagerInput)input);
         } else if (input instanceof IURIEditorInput) {
             File wfFile;
+            AbstractExplorerFileStore wfFileFileStore = null;
             File mountPointRoot = null;
             URI uri = ((IURIEditorInput)input).getURI();
             if (input instanceof RemoteWorkflowInput) {
@@ -842,8 +896,9 @@ public class WorkflowEditor extends GraphicalEditor implements
                     LocalExplorerFileStore fs = ExplorerFileSystem.INSTANCE.fromLocalFile(wfFile);
                     if ((fs == null) || (fs.getContentProvider() == null)) {
                         LOGGER.info("Could not determine mount point root for " + wfFile.getParent()
-                            + ", looks like it is a linked ressource");
+                            + ", looks like it is a linked resource");
                     } else {
+                        wfFileFileStore = fs;
                         mountPointRoot = fs.getContentProvider().getFileStore("/").toLocalFile();
                     }
                 } catch (CoreException ex) {
@@ -857,6 +912,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                     openErrorDialogAndCloseEditor("Could not find filestore for URI " + uri);
                     return;
                 }
+                wfFileFileStore = filestore;
                 try {
                     wfFile = filestore.toLocalFile();
                 } catch (CoreException ex) {
@@ -885,10 +941,11 @@ public class WorkflowEditor extends GraphicalEditor implements
             URI oldFileResource = m_fileResource;
             WorkflowManager oldManager = m_manager;
 
-            m_fileResource = wfFile.getParentFile().toURI();
+            final File wfDir = wfFile.getParentFile();
+            m_fileResource = wfDir.toURI();
 
             LOGGER.debug("Resource File's project: " + m_fileResource);
-
+            boolean isEnableAutoSave = true;
             try {
                 if (oldManager != null) { // doSaveAs called
                     assert oldFileResource != null;
@@ -901,16 +958,95 @@ public class WorkflowEditor extends GraphicalEditor implements
                                 oldFileResource, m_fileResource, oldManager, managerForOldResource));
                     }
                     ProjectWorkflowMap.replace(m_fileResource, oldManager, oldFileResource);
+                    isEnableAutoSave = false;
                 } else {
                     m_manager = (WorkflowManager)ProjectWorkflowMap.getWorkflow(m_fileResource);
                 }
 
                 if (m_manager != null) {
+                    isEnableAutoSave = false;
                     // in case the workflow manager was edited somewhere else
                     if (m_manager.isDirty()) {
                         markDirty();
                     }
                 } else {
+                    File autoSaveDirectory = WorkflowSaveHelper.getAutoSaveDirectory(new ReferencedFile(wfDir));
+                    if (autoSaveDirectory.exists()) {
+                        if (!autoSaveDirectory.isDirectory() || !autoSaveDirectory.canRead()) {
+                            LOGGER.warnWithFormat("Found existing auto-save location to workflow \"%s\" (\"%s\") but %s"
+                                + " - disabling auto-save", wfDir.getName(), autoSaveDirectory.getAbsolutePath(),
+                                (!autoSaveDirectory.isDirectory() ? "it is not a directory" : "cannot read it"));
+                            isEnableAutoSave = false;
+                        } else {
+                            // this is the file store object to autoSaveDirectory - if we can resolve it
+                            // we use it below in user messages and to do the rename in order to trigger a refresh
+                            // in the explorer tree - if we can't resolve it (dunno why) we use java.io.File operation
+                            AbstractExplorerFileStore autoSaveDirFileStore = null;
+                            if (wfFileFileStore != null) {
+                                try {
+                                    // first parent is workflow dir, parent of that is the workflow group
+                                    AbstractExplorerFileStore parFS = wfFileFileStore.getParent().getParent();
+                                    AbstractExplorerFileStore temp = parFS.getChild(autoSaveDirectory.getName());
+                                    if (autoSaveDirectory.equals(temp.toLocalFile())) {
+                                        autoSaveDirFileStore = temp;
+                                    }
+                                } catch (CoreException e) {
+                                    LOGGER.warn("Unable to resolve parent file store for \""
+                                            + wfFileFileStore + "\"", e);
+                                }
+                            }
+                            int action = openQuestionDialogWhenLoadingWorkflowWithAutoSaveCopy(
+                                autoSaveDirFileStore != null ? autoSaveDirFileStore.getMountIDWithFullPath()
+                                    : autoSaveDirectory.getAbsolutePath());
+                            switch (action) {
+                                case 0: // Rename & Open Copy
+                                    File parentDir = autoSaveDirectory.getParentFile();
+                                    String newName = wfDir.getName() + "(Auto-Save Copy)";
+                                    int unique = 1;
+                                    File newDir;
+                                    while ((newDir = new File(parentDir, newName)).exists()) {
+                                        newName = wfDir.getName() + "(Auto-Save Copy - " + (unique++) + ")";
+                                    }
+                                    if (autoSaveDirFileStore != null) { // preferred way to rename
+                                        try {
+                                            final AbstractExplorerFileStore parent = autoSaveDirFileStore.getParent();
+                                            AbstractExplorerFileStore newFS = parent.getChild(newName);
+                                            autoSaveDirFileStore.move(newFS, EFS.NONE, null);
+                                        } catch (CoreException e) {
+                                            String message = "Could not rename auto-save copy\n"
+                                                    + "from\n  " + autoSaveDirFileStore.getMountIDWithFullPath()
+                                                    + "\nto\n  " + newName + "\nCanceling opening.";
+                                                openErrorDialogAndCloseEditor(message);
+                                                throw new OperationCanceledException(message);
+                                        }
+                                    } else {
+                                        LOGGER.warnWithFormat("Could not resolve explorer file store to \"%s\" - "
+                                                + "renaming on file system directly",
+                                                autoSaveDirectory.getAbsolutePath());
+                                        // could not resolve explorer file store, just rename on file system and
+                                        // ignore explorer tree
+                                        if (!autoSaveDirectory.renameTo(newDir)) {
+                                            String message = "Could not rename auto-save copy\n"
+                                                + "from\n  " + autoSaveDirectory.getAbsolutePath() + "\nto\n  "
+                                                + newDir.getAbsolutePath() + "\nCanceling opening.";
+                                            openErrorDialogAndCloseEditor(message);
+                                            throw new OperationCanceledException(message);
+                                        }
+                                    }
+                                    m_fileResource = newDir.toURI();
+                                    wfFile = new File(newDir, wfFile.getName());
+                                    break;
+                                case 1: // Open original
+                                    isEnableAutoSave = false;
+                                    break;
+                                default:
+                                    String error = "Canceling due to auto-save copy conflict";
+                                    openErrorDialogAndCloseEditor(error);
+                                    throw new OperationCanceledException(error);
+                            }
+                        }
+                    }
+
                     IWorkbench wb = PlatformUI.getWorkbench();
                     IProgressService ps = wb.getProgressService();
                     // this one sets the workflow manager in the editor
@@ -924,8 +1060,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                             openErrorDialogAndCloseEditor(cancelError);
                             throw new OperationCanceledException(cancelError);
                         } else if (loadWorkflowRunnable.getThrowable() != null) {
-                            throw new RuntimeException(
-                                    loadWorkflowRunnable.getThrowable());
+                            throw new RuntimeException(loadWorkflowRunnable.getThrowable());
                         }
                     }
                     ProjectWorkflowMap.putWorkflow(m_fileResource, m_manager);
@@ -940,6 +1075,9 @@ public class WorkflowEditor extends GraphicalEditor implements
                 LOGGER.fatal("Workflow could not be loaded.", e);
             }
 
+            m_isAutoSaveAllowed = m_parentEditor == null && isEnableAutoSave;
+            setupAutoSaveSchedule();
+
             m_manuallySetToolTip = null;
             updatePartName();
             if (getGraphicalViewer() != null) {
@@ -952,6 +1090,60 @@ public class WorkflowEditor extends GraphicalEditor implements
         } else {
             throw new IllegalArgumentException("Unsupported editor input: " + input.getClass());
         }
+    }
+
+    private void setupAutoSaveSchedule() {
+        IPreferenceStore prefStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        Boolean wasSavingWithData = null;
+        if (m_autoSaveScheduledJobPair != null) {
+            LOGGER.debugWithFormat("Clearing auto-save job for %s", m_manager.getName());
+            m_autoSaveScheduledJobPair.getFirst().cancel(false);
+            wasSavingWithData = m_autoSaveScheduledJobPair.getSecond();
+            m_autoSaveScheduledJobPair = null;
+        }
+        if (m_isAutoSaveAllowed && prefStore.getBoolean(PreferenceConstants.P_AUTO_SAVE_ENABLE)) {
+            int interval = prefStore.getInt(PreferenceConstants.P_AUTO_SAVE_INTERVAL);
+            final boolean saveWithData = prefStore.getBoolean(PreferenceConstants.P_AUTO_SAVE_DATA);
+            if (wasSavingWithData != null && wasSavingWithData.booleanValue() != saveWithData) {
+                m_manager.setAutoSaveDirectoryDirtyRecursivly();
+            }
+            ScheduledFuture<?> autoSaveScheduledJob = AUTO_SAVE_SCHEDULER.scheduleWithFixedDelay(new Runnable() {
+                @Override
+                public void run() {
+                    long start = System.currentTimeMillis();
+                    if (autoSave(saveWithData)) {
+                        long delay = System.currentTimeMillis() - start;
+                        LOGGER.infoWithFormat("Auto-saved workflow %s (took %s)",
+                            m_manager.getName(), StringFormat.formatElapsedTime(delay));
+                    }
+                }
+            }, interval, interval, TimeUnit.SECONDS);
+            m_autoSaveScheduledJobPair =
+                    new Pair<ScheduledFuture<?>, Boolean>(autoSaveScheduledJob, Boolean.valueOf(saveWithData));
+            LOGGER.infoWithFormat("Scheduled auto-save job for %s (every %d secs %s data)", m_manager.getName(),
+                interval, (saveWithData ? "with" : "without"));
+        }
+
+    }
+
+    /** Opens dialog to ask user for action when auto-save copy is found.
+     * @param autoSavePath to print in message
+     * @return 0: Rename Copy &amp; Open, 1: Open Original, any other value: Cancel
+     */
+    private int openQuestionDialogWhenLoadingWorkflowWithAutoSaveCopy(final String autoSavePath) {
+        String[] buttons = new String[]{"Open Co&py", "Open &Original", "&Cancel"};
+        StringBuilder m = new StringBuilder("Workflow was not properly closed; found auto-save copy:\n");
+        m.append("  \"").append(autoSavePath).append("\"\n\n");
+        m.append("What do you want to do?\n");
+        m.append("Open Copy - Moves auto-save folder to new location and opens it.\n");
+        m.append("     (The original workflow will stay unmodified.)\n");
+        m.append("Open Original - Opens the original workflow leaving the auto-save copy in place.\n");
+        m.append("     (Note that auto-saving will be disabled until the auto-save copy is deleted.)\n");
+        m.append("Cancel - Cancels the current operation.\n");
+        Shell sh = Display.getDefault().getActiveShell();
+        MessageDialog d = new MessageDialog(sh, "Detected auto-save copy", null,
+                        m.toString(), MessageDialog.QUESTION, buttons, 0);
+        return d.open();
     }
 
     private void updateJobManagerDisplay() {
@@ -1234,9 +1426,16 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
     }
 
-    private void saveTo(final URI fileResource,
-            final IProgressMonitor monitor) {
-        LOGGER.debug("Saving workflow ...");
+    /** Save workflow to resource.
+     * @param fileResource .. the resource, usually m_fileResource or m_autoSaveFileResource
+     *        or soon-to-be m_fileResource (for save-as)
+     * @param monitor ...
+     * @param isAutoSave ... (don't save data)
+     * @param saveWithData ... save data also
+     */
+    private void saveTo(final URI fileResource, final IProgressMonitor monitor, final boolean isAutoSave,
+        final boolean saveWithData) {
+        LOGGER.debug((isAutoSave ? "Auto-" : "") + "Saving workflow ...");
 
         // Exception messages from the inner thread
         final StringBuilder exceptionMessage = new StringBuilder();
@@ -1276,14 +1475,14 @@ public class WorkflowEditor extends GraphicalEditor implements
             // except when cancellation occurred
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
-            SaveWorkflowRunnable saveWorflowRunnable =
-                    new SaveWorkflowRunnable(this, file, exceptionMessage,
-                            monitor);
+            WorkflowSaveHelper saveHelper = new WorkflowSaveHelper(saveWithData, isAutoSave);
+            SaveWorkflowRunnable saveWorkflowRunnable =
+                    new SaveWorkflowRunnable(this, file, exceptionMessage, saveHelper, monitor);
 
             NodeContainerState state = m_manager.getNodeContainerState();
             wasInProgress = state.isExecutionInProgress() && !state.isExecutingRemotely();
 
-            ps.run(true, false, saveWorflowRunnable);
+            ps.run(true, false, saveWorkflowRunnable);
             // this code is usually (always?) run in the UI thread but in case it's not we schedule in UI thread
             // (SVG export always in UI thread)
             Display.getDefault().syncExec(new Runnable() {
@@ -1295,38 +1494,38 @@ public class WorkflowEditor extends GraphicalEditor implements
                     }
                 }
             });
-            // after saving the workflow, check for the import marker
-            // and delete it
 
-            // mark command stack (no undo beyond this point)
-            getCommandStack().markSaveLocation();
+            if (!isAutoSave) {
+                // mark command stack (no undo beyond this point)
+                getCommandStack().markSaveLocation();
+            }
 
         } catch (Exception e) {
             LOGGER.error("Could not save workflow: " + exceptionMessage, e);
 
             // inform the user
             if (exceptionMessage.length() > 0) {
-                showInfoMessage("Workflow could not be saved ...",
-                        exceptionMessage.toString());
+                showInfoMessage("Workflow could not be saved ...", exceptionMessage.toString());
             }
 
-            throw new OperationCanceledException("Workflow was not saved: "
-                    + exceptionMessage.toString());
+            throw new OperationCanceledException("Workflow was not saved: " + exceptionMessage.toString());
         }
 
-        Display.getDefault().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                if (!Display.getDefault().isDisposed()) {
-                    // mark all sub editors as saved
-                    for (IEditorPart subEditor : getSubEditors()) {
-                        final WorkflowEditor editor = (WorkflowEditor)subEditor;
-                        ((WorkflowEditor)subEditor).setIsDirty(false);
-                        editor.firePropertyChange(IEditorPart.PROP_DIRTY);
+        if (!isAutoSave) {
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    if (!Display.getDefault().isDisposed()) {
+                        // mark all sub editors as saved
+                        for (IEditorPart subEditor : getSubEditors()) {
+                            final WorkflowEditor editor = (WorkflowEditor)subEditor;
+                            ((WorkflowEditor)subEditor).setIsDirty(false);
+                            editor.firePropertyChange(IEditorPart.PROP_DIRTY);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
         monitor.done();
 
@@ -1334,7 +1533,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // check if the workflow manager is in execution
         // this happens if the user pressed "Yes" on save confirmation dialog
         // or simply saves (Ctrl+S)
-        if (wasInProgress) {
+        if (!isAutoSave && wasInProgress) {
             markDirty();
             final Pointer<Boolean> abortPointer = new Pointer<Boolean>();
             abortPointer.set(Boolean.FALSE);
@@ -1401,7 +1600,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 doSaveAs();
             }
         } else {
-            saveTo(m_fileResource, monitor);
+            saveTo(m_fileResource, monitor, false, true);
         }
     }
 
@@ -1436,7 +1635,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (newWorkflowDir instanceof RemoteExplorerFileStore) {
             // selected a remote location: save + upload
             if (isDirty()) {
-                saveTo(m_fileResource, new NullProgressMonitor());
+                saveTo(m_fileResource, new NullProgressMonitor(), false, true);
             }
             AbstractExplorerFileStore localFS = getFileStore(fileResource);
             if (localFS == null || !(localFS instanceof LocalExplorerFileStore)) {
@@ -1466,13 +1665,45 @@ public class WorkflowEditor extends GraphicalEditor implements
                 return;
             }
 
-            saveTo(localNewWorkflowDir.toURI(), new NullProgressMonitor());
+            saveTo(localNewWorkflowDir.toURI(), new NullProgressMonitor(), false, true);
             setInput(new FileStoreEditorInput(newWorkflowFile));
             if (newWorkflowDir.getParent() != null) {
                 newWorkflowDir.getParent().refresh();
             }
             registerProject(localNewWorkflowDir);
         }
+    }
+
+    private boolean autoSave(final boolean withData) {
+        assert m_parentEditor == null : "No auto save on meta node";
+        ReferencedFile autoSaveDir = getWorkflowManager().getAutoSaveDirectory();
+        if (autoSaveDir == null) {
+            if (!isDirty()) {
+                return false;
+            }
+            final ReferencedFile ncDirRef = getWorkflowManager().getNodeContainerDirectory();
+            autoSaveDir = new ReferencedFile(WorkflowSaveHelper.getAutoSaveDirectory(ncDirRef));
+            autoSaveDir.setDirty(true);
+            getWorkflowManager().setAutoSaveDirectory(autoSaveDir);
+        }
+        if (!autoSaveDir.isDirty()) {
+            return false;
+        }
+        final URI autoSaveURI = autoSaveDir.getFile().toURI();
+        Display.getDefault().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                NodeContext.pushContext(m_manager);
+                try {
+                    saveTo(autoSaveURI, new NullProgressMonitor(), true, withData);
+                } catch (Exception e) {
+                    LOGGER.error("Failed auto-saving " + m_manager.getNameWithID(), e);
+                } finally {
+                    NodeContext.removeLastContext();
+                }
+            }
+        });
+        return true;
     }
 
     /**
@@ -2539,9 +2770,9 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Marks this editor as dirty and notifies the registered listeners.
      */
     public void markDirty() {
+        m_manager.setDirty(); // call anyway to allow auto-save copy to be dirty
         if (!m_isDirty) {
             m_isDirty = true;
-            m_manager.setDirty();
 
             SyncExecQueueDispatcher.asyncExec(new Runnable() {
                 @Override
@@ -2698,17 +2929,31 @@ public class WorkflowEditor extends GraphicalEditor implements
     /** {@inheritDoc} */
     @Override
     public void propertyChange(final PropertyChangeEvent event) {
-        // nothing in the properties would affect an open editor
+        switch (event.getProperty()) {
+            case PreferenceConstants.P_AUTO_SAVE_DATA:
+            case PreferenceConstants.P_AUTO_SAVE_ENABLE:
+            case PreferenceConstants.P_AUTO_SAVE_INTERVAL:
+                setupAutoSaveSchedule();
+                break;
+            default:
+        }
     }
 
 
     private void openErrorDialogAndCloseEditor(final String message) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                JOptionPane.showMessageDialog(null, message, "Workflow could not be opened", JOptionPane.ERROR_MESSAGE);
-            }
-        });
+        final String errorTitle = "Workflow could not be opened";
+        if (Display.getDefault().getThread() == Thread.currentThread()) {
+            MessageDialog.openError(Display.getDefault().getActiveShell(), errorTitle, message);
+        } else {
+            // 20140525 - dunno why we ever use Swing here - keep unmodified to be sure
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    JOptionPane.showMessageDialog(null, message,
+                        errorTitle, JOptionPane.ERROR_MESSAGE);
+                }
+            });
+        }
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {

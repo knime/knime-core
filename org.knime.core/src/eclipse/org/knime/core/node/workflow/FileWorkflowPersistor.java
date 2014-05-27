@@ -1901,9 +1901,10 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         uiInfo.save(subConfig);
     }
 
-    public static String save(final WorkflowManager wm, final ReferencedFile workflowDirRef,
-        final ExecutionMonitor execMon, final boolean isSaveData) throws IOException, CanceledExecutionException,
-        LockFailedException {
+    public static String save(final WorkflowManager wm, final ReferencedFile rawWorkflowDirRef,
+        final ExecutionMonitor execMon, final WorkflowSaveHelper saveHelper)
+                throws IOException, CanceledExecutionException, LockFailedException {
+        ReferencedFile workflowDirRef = rawWorkflowDirRef;
         Role r = wm.getTemplateInformation().getRole();
         String fName = Role.Template.equals(r) ? TEMPLATE_FILE : WORKFLOW_FILE;
         fName = wm.getDirectNCParent().getCipherFileName(fName);
@@ -1912,13 +1913,25 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
                 + "\" because the directory can't be locked");
         }
         try {
-            if (workflowDirRef.equals(wm.getNodeContainerDirectory()) && !wm.isDirty()) {
-                return fName;
+            final ReferencedFile nodeContainerDirectory = wm.getNodeContainerDirectory();
+            final ReferencedFile autoSaveDirectory = wm.getAutoSaveDirectory();
+            if (!saveHelper.isAutoSave() && workflowDirRef.equals(nodeContainerDirectory)) {
+                if (!nodeContainerDirectory.isDirty()) {
+                    return fName;
+                } else {
+                    workflowDirRef = nodeContainerDirectory; // update variable assignment to do changes on member
+                    // delete "old" node directories if not saving to the working
+                    // directory -- do this before saving the nodes (dirs newly created)
+                    WorkflowManager.deleteObsoleteNodeDirs(nodeContainerDirectory.getDeletedNodesFileLocations());
+                }
             }
-            // delete "old" node directories if not saving to the working
-            // directory -- do this before saving the nodes (dirs newly created)
-            if (workflowDirRef.equals(wm.getNodeContainerDirectory())) {
-                wm.deleteObsoleteNodeDirs();
+            if (saveHelper.isAutoSave() && workflowDirRef.equals(autoSaveDirectory)) {
+                if (!autoSaveDirectory.isDirty()) {
+                    return fName;
+                } else {
+                    workflowDirRef = autoSaveDirectory;
+                    WorkflowManager.deleteObsoleteNodeDirs(autoSaveDirectory.getDeletedNodesFileLocations());
+                }
             }
             File workflowDir = workflowDirRef.getFile();
             workflowDir.mkdirs();
@@ -1946,7 +1959,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
                 ExecutionMonitor subExec = execMon.createSubProgress(progRatio);
                 execMon.setMessage(nextNode.getNameWithID());
                 NodeSettingsWO sub = nodesSettings.addNodeSettings("node_" + id);
-                saveNodeContainer(sub, workflowDirRef, nextNode, subExec, isSaveData);
+                saveNodeContainer(sub, workflowDirRef, nextNode, subExec, saveHelper);
                 subExec.setProgress(1.0);
             }
 
@@ -1992,24 +2005,30 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
             OutputStream os = new FileOutputStream(workflowFile);
             os = wm.getDirectNCParent().cipherOutput(os);
             settings.saveToXML(os);
-            File saveWithDataFile = new File(workflowDir, SAVED_WITH_DATA_FILE);
-            BufferedWriter o = new BufferedWriter(new FileWriter(saveWithDataFile));
-            o.write("Do not delete this file!");
-            o.newLine();
-            o.write("This file serves to indicate that the workflow was "
-                + "written as part of the usual save routine " + "(not exported).");
-            o.newLine();
-            o.newLine();
-            o.write("Workflow was last saved by user ");
-            o.write(System.getProperty("user.name"));
-            o.write(" on " + new Date());
-            o.close();
-            if (wm.getNodeContainerDirectory() == null) {
+            if (saveHelper.isSaveData()) {
+                File saveWithDataFile = new File(workflowDir, SAVED_WITH_DATA_FILE);
+                BufferedWriter o = new BufferedWriter(new FileWriter(saveWithDataFile));
+                o.write("Do not delete this file!");
+                o.newLine();
+                o.write("This file serves to indicate that the workflow was written as part of the usual save "
+                        + "routine (not exported).");
+                o.newLine();
+                o.newLine();
+                o.write("Workflow was last saved by user ");
+                o.write(System.getProperty("user.name"));
+                o.write(" on " + new Date());
+                o.close();
+            }
+            if (saveHelper.isAutoSave() && autoSaveDirectory == null) {
+                wm.setAutoSaveDirectory(workflowDirRef);
+            }
+            if (!saveHelper.isAutoSave() && nodeContainerDirectory == null) {
                 wm.setNodeContainerDirectory(workflowDirRef);
             }
-            if (workflowDirRef.equals(wm.getNodeContainerDirectory())) {
+            if (workflowDirRef.equals(nodeContainerDirectory)) {
                 wm.unsetDirty();
             }
+            workflowDirRef.setDirty(false);
             execMon.setProgress(1.0);
             return fName;
         } finally {
@@ -2128,7 +2147,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
     }
 
     protected static void saveNodeContainer(final NodeSettingsWO settings, final ReferencedFile workflowDirRef,
-        final NodeContainer container, final ExecutionMonitor exec, final boolean isSaveData)
+        final NodeContainer container, final ExecutionMonitor exec, final WorkflowSaveHelper saveHelper)
         throws CanceledExecutionException, IOException, LockFailedException {
         WorkflowManager parent = container.getParent();
         ReferencedFile workingDir = parent.getNodeContainerDirectory();
@@ -2155,10 +2174,10 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         ReferencedFile nodeDirectoryRef = new ReferencedFile(workflowDirRef, nodeDirID);
         String fileName;
         if (container instanceof WorkflowManager) {
-            fileName = FileWorkflowPersistor.save((WorkflowManager)container, nodeDirectoryRef, exec, isSaveData);
+            fileName = FileWorkflowPersistor.save((WorkflowManager)container, nodeDirectoryRef, exec, saveHelper);
         } else {
             fileName =  FileSingleNodeContainerPersistor.save(
-                (SingleNodeContainer)container, nodeDirectoryRef, exec, isSaveData);
+                (SingleNodeContainer)container, nodeDirectoryRef, exec, saveHelper);
         }
         saveFileLocation(settings, nodeDirID + "/" + fileName);
         saveNodeType(settings, container);

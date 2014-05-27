@@ -160,7 +160,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     private ReferencedFile m_nodeContainerDirectory;
 
-    private boolean m_isDirty;
+    private ReferencedFile m_autoSaveDirectory;
 
     private final NodeAnnotation m_annotation;
 
@@ -1324,7 +1324,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      * @return the isDirty
      */
     public final boolean isDirty() {
-        return m_isDirty || internalIsDirty();
+        final ReferencedFile ncDirectory = getNodeContainerDirectory();
+        return ncDirectory == null || ncDirectory.isDirty() || internalIsDirty();
     }
 
     /**
@@ -1335,22 +1336,36 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         return false;
     }
 
-    /**
-     * Mark this node container to be changed, that is, it needs to be saved.
+    /** Sets the dirty flag on the referenced file (node container directory or auto save directory).
+     * @param directory either the auto save directory or the node container directory (asserted)
+     * @return true if this changed the dirty state; that is, the location was previously marked as clean. It returns
+     *         false if the location is not set yet (as it is dirty by definition then)
      */
-    public void setDirty() {
-        if (!m_isDirty) {
-            LOGGER.debug("Setting dirty flag on " + getNameWithID());
-        }
-        m_isDirty = true;
-        if (m_parent != null) {
-            m_parent.setDirty();
-        }
+    boolean setDirty(final ReferencedFile directory) {
+        assert directory == null || directory.equals(getAutoSaveDirectory())
+                || directory.equals(getNodeContainerDirectory())
+                : "Location must be either auto-save or node container directory: " + directory;
+        return directory != null && directory.setDirty(true);
     }
 
     /** Called from persistor when node has been saved. */
     void unsetDirty() {
-        m_isDirty = false;
+        final ReferencedFile ncDirectory = getNodeContainerDirectory();
+        assert ncDirectory != null : "NC directory must not be null at this point";
+        ncDirectory.setDirty(false);
+    }
+
+    /**
+     * Mark this node container to be changed, that is, it needs to be saved.
+     */
+    public void setDirty() {
+        if (setDirty(getNodeContainerDirectory())) {
+            LOGGER.debug("Setting dirty flag on " + getNameWithID());
+        }
+        setDirty(getAutoSaveDirectory());
+        if (m_parent != null) {
+            m_parent.setDirty();
+        }
     }
 
     /** Get a new persistor that is used to copy this node (copy&paste action).
@@ -1373,12 +1388,19 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     /**
      * @param directory the nodeContainerDirectory to set
      */
-    protected void setNodeContainerDirectory(
-            final ReferencedFile directory) {
+    protected void setNodeContainerDirectory(final ReferencedFile directory) {
         if (directory == null || !directory.getFile().isDirectory()) {
             throw new IllegalArgumentException("Not a directory: " + directory);
         }
         m_nodeContainerDirectory = directory;
+    }
+
+    /**
+     * @param autoSaveDirectory the autoSaveDirectory to set
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public void setAutoSaveDirectory(final ReferencedFile autoSaveDirectory) {
+        m_autoSaveDirectory = autoSaveDirectory;
     }
 
     /**
@@ -1390,6 +1412,12 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     public final ReferencedFile getNodeContainerDirectory() {
         return m_nodeContainerDirectory;
+    }
+
+    /** @return The directory for auto-saving (or null if not auto-saved yet).
+     * @noreference This method is not intended to be referenced by clients. */
+    public final ReferencedFile getAutoSaveDirectory() {
+        return m_autoSaveDirectory;
     }
 
     /** Restore content from persistor. This represents the second step

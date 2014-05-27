@@ -129,6 +129,19 @@ public interface PreferenceConstants {
     /** Default grid distance. */
     public static final int P_GRID_DEFAULT_SIZE_Y = 120;
 
+    /** Pref constant whether to enable auto save for workflows. */
+    public static final String P_AUTO_SAVE_ENABLE = "knime.autosave.enable";
+    /** Pref constant auto save interval (in secs). */
+    public static final String P_AUTO_SAVE_INTERVAL = "knime.autosave.interval";
+    /** Pref constant whether to save data with auto-save. */
+    public static final String P_AUTO_SAVE_DATA = "knime.autosave.data";
+    /** Default auto save enablement. */
+    public static final boolean P_AUTO_SAVE_DEFAULT_ENABLE = true;
+    /** Default auto save interval in seconds ({@value #P_AUTO_SAVE_DEFAULT_INTERVAL_SECS}). */
+    public static final int P_AUTO_SAVE_DEFAULT_INTERVAL_SECS = 180;
+    /** Default auto save data property: true = save with data (default is {@value #P_AUTO_SAVE_DEFAULT_DATA}). */
+    public static final boolean P_AUTO_SAVE_DEFAULT_WITH_DATA = false;
+
     /** Pref constant to wrap column headers in table views (interactive table view & outport view). */
     public static final String P_WRAP_TABLE_HEADER = "knime.table.header.wrap";
     /** Default to {@link #P_WRAP_TABLE_HEADER} ({@value #P_WRAP_TABLE_HEADER_DEFAULT}). */

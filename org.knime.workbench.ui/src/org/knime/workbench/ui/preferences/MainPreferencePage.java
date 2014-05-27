@@ -77,6 +77,8 @@ public class MainPreferencePage extends FieldEditorPreferencePage
     private RadioGroupFieldEditor m_consoleLogEditor;
 
     private StringFieldEditor m_nodeLabelPrefix;
+    private IntegerFieldEditor m_autoSaveIntervalEditor;
+    private BooleanFieldEditor m_autoSaveWithDataEditor;
 
     private BooleanFieldEditor m_emptyNodeLabel;
 
@@ -184,6 +186,24 @@ public class MainPreferencePage extends FieldEditorPreferencePage
         addField(gridSizeYEditor);
         addField(new LabelField(parent, "To change the grid settings of a workflow, use the 'Editor Grid Settings' "
                 + "toolbar button."));
+
+        addField(new HorizontalLineField(parent));
+        final BooleanFieldEditor enableAutoSaveBooleanField = new BooleanFieldEditor(
+            PreferenceConstants.P_AUTO_SAVE_ENABLE, "Auto Save open workflows", parent) {
+            @Override
+            protected void valueChanged(final boolean old, final boolean neu) {
+                m_autoSaveIntervalEditor.setEnabled(neu, parent);
+                m_autoSaveWithDataEditor.setEnabled(neu, parent);
+            }
+        };
+        m_autoSaveIntervalEditor = new IntegerFieldEditor(PreferenceConstants.P_AUTO_SAVE_INTERVAL,
+            "Auto-Save Interval (in secs)", parent);
+        m_autoSaveWithDataEditor = new BooleanFieldEditor(PreferenceConstants.P_AUTO_SAVE_DATA,
+            "Save with data", parent);
+        addField(enableAutoSaveBooleanField);
+        addField(m_autoSaveIntervalEditor);
+        addField(m_autoSaveWithDataEditor);
+
         addField(new HorizontalLineField(parent));
         addField(new BooleanFieldEditor(PreferenceConstants.P_WRAP_TABLE_HEADER,
                                         "Wrap Column Header in Table Views", parent));

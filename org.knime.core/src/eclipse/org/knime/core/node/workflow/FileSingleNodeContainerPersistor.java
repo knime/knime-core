@@ -528,15 +528,30 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         }
     }
 
-    protected static String save(final SingleNodeContainer singleNC, final ReferencedFile nodeDirRef,
-        final ExecutionMonitor exec, final boolean isSaveData)
+    /** @noreference This method is not intended to be referenced by clients. */
+    protected static String save(final SingleNodeContainer singleNC, final ReferencedFile rawNodeDirRef,
+        final ExecutionMonitor exec, final WorkflowSaveHelper saveHelper)
                 throws CanceledExecutionException, IOException, LockFailedException {
         String settingsDotXML = singleNC.getDirectNCParent().getCipherFileName(SETTINGS_FILE_NAME);
+        ReferencedFile nodeDirRef = rawNodeDirRef;
         ReferencedFile sncWorkingDirRef = singleNC.getNodeContainerDirectory();
+        ReferencedFile sncAutoSaveDirRef = singleNC.getAutoSaveDirectory();
         File nodeDir = nodeDirRef.getFile();
         boolean nodeDirExists = nodeDir.exists();
-        if (nodeDirRef.equals(sncWorkingDirRef) && !singleNC.isDirty() && nodeDirExists) {
-            return settingsDotXML;
+        // the if-checks below also update the nodeDirRef so that we can make changes on that object
+        if (!saveHelper.isAutoSave() && nodeDirRef.equals(sncWorkingDirRef)) {
+            if (!sncWorkingDirRef.isDirty() && nodeDirExists) {
+                return settingsDotXML;
+            } else {
+                nodeDirRef = sncWorkingDirRef;
+            }
+        }
+        if (saveHelper.isAutoSave() && nodeDirRef.equals(sncAutoSaveDirRef)) {
+            if (!sncAutoSaveDirRef.isDirty() && nodeDirExists) {
+                return settingsDotXML;
+            } else {
+                nodeDirRef = sncAutoSaveDirRef;
+            }
         }
         boolean nodeDirDeleted = true;
         if (singleNC instanceof NativeNodeContainer) {
@@ -572,7 +587,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
             //   (its (freshly copied) drop folder is currently in /tmp)
             // - Node is saved into new location (saveAs) -- need to copy
             //   the drop folder there (either from /tmp or from working dir)
-            File dropInSource = nodeDropDirRef.getFile();
+            File dropInSource = nodeDropDirInWDRef.getFile();
             File dropInTarget = new File(nodeDir, SingleNodeContainer.DROP_DIR_NAME);
             if (dropInSource.exists()) {
                 FileUtil.copyDir(dropInSource, dropInTarget);
@@ -586,20 +601,25 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         if (singleNC instanceof NativeNodeContainer) {
             NativeNodeContainer nativeNC = (NativeNodeContainer)singleNC;
             FileNativeNodeContainerPersistor.save(nativeNC, settings, exec, nodeDirRef,
-                isSaveData && singleNC.getInternalState().equals(InternalNodeContainerState.EXECUTED));
+                saveHelper.isSaveData() && singleNC.getInternalState().equals(InternalNodeContainerState.EXECUTED));
         } else {
             SubNodeContainer subnodeNC = (SubNodeContainer)singleNC;
-            FileSubNodeContainerPersistor.save(subnodeNC, settings, exec, nodeDirRef, isSaveData);
+            FileSubNodeContainerPersistor.save(subnodeNC, settings, exec, nodeDirRef, saveHelper);
         }
         File nodeSettingsXMLFile = new File(nodeDir, settingsDotXML);
         OutputStream os = new FileOutputStream(nodeSettingsXMLFile);
         os = singleNC.getDirectNCParent().cipherOutput(os);
         settings.saveToXML(os);
-        if (sncWorkingDirRef == null) {
+        if (saveHelper.isAutoSave() && sncAutoSaveDirRef == null) {
+            sncAutoSaveDirRef = nodeDirRef;
+            singleNC.setAutoSaveDirectory(sncAutoSaveDirRef);
+        }
+        if (!saveHelper.isAutoSave() && sncWorkingDirRef == null) {
             // set working dir so that we can unset the dirty flag
             sncWorkingDirRef = nodeDirRef;
             singleNC.setNodeContainerDirectory(sncWorkingDirRef);
         }
+        nodeDirRef.setDirty(false);
         if (nodeDirRef.equals(sncWorkingDirRef)) {
             singleNC.unsetDirty();
         }

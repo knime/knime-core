@@ -48,6 +48,8 @@
 package org.knime.core.internal;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.knime.core.util.VMFileLocker;
@@ -61,6 +63,12 @@ import org.knime.core.util.VMFileLocker;
 public final class ReferencedFile {
 
     private final ReferencedFileDelegate m_delegate;
+
+    private boolean m_isDirty;
+
+    /** see {@link #getDeletedNodesFileLocations()}. */
+    // init lazy on get
+    private List<ReferencedFile> m_deletedNodesFileLocations;
 
     private ReferencedFile(final ReferencedFileDelegate delegate) {
         m_delegate = delegate;
@@ -121,6 +129,37 @@ public final class ReferencedFile {
 
     public boolean isRootFileLockedForVM() {
         return m_delegate.isRootFileLockedForVM();
+    }
+
+    /** A list maintained by the Workflow Manager to remember child locations which are obsolete. These files
+     * can be finally deleted when the workflow is saved.
+     * @return the pointer to the live list (maintained outside this class), never null
+     * @since 2.10 */
+    public List<ReferencedFile> getDeletedNodesFileLocations() {
+        if (m_deletedNodesFileLocations == null) {
+            m_deletedNodesFileLocations = new ArrayList<>();
+        }
+        return m_deletedNodesFileLocations;
+    }
+
+    /** Helper method used in the workflow manager to mark the node associated with this directory as dirty. Saving
+     * that information on the file instance allows different dirty flags for the ordinary workflow location and
+     * an auto-save copy.
+     * @param newDirty The new dirty to set.
+     * @return True if the previous dirty state is different to the new state
+     * @since 2.10
+     */
+    public boolean setDirty(final boolean newDirty) {
+        boolean wasDirty = m_isDirty;
+        m_isDirty = newDirty;
+        return wasDirty != newDirty;
+    }
+
+    /** Getter for {@link #setDirty(boolean)}.
+     * @return dirty state.
+     * @since 2.10 */
+    public boolean isDirty() {
+        return m_isDirty;
     }
 
     /** Renames this (base) element as an atomic operation. &quot;This&quot;

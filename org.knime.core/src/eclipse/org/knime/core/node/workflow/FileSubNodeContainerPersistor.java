@@ -361,13 +361,13 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
      * @param settings
      * @param exec
      * @param nodeDirRef
-     * @param b
+     * @param saveHelper
      * @throws LockFailedException
      * @throws CanceledExecutionException
      * @throws IOException
      */
     static void save(final SubNodeContainer subnodeNC, final NodeSettings settings, final ExecutionMonitor exec,
-        final ReferencedFile nodeDirRef, final boolean b) throws IOException, CanceledExecutionException,
+        final ReferencedFile nodeDirRef, final WorkflowSaveHelper saveHelper) throws IOException, CanceledExecutionException,
         LockFailedException {
         NativeNodeContainer virtualInNode = subnodeNC.getVirtualInNode();
         settings.addInt("virtual-in-ID", virtualInNode.getID().getIndex());
@@ -390,7 +390,7 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
             virtualOutNode.getInPort(i).getPortType().save(portTypeSettings);
         }
         WorkflowManager workflowManager = subnodeNC.getWorkflowManager();
-        FileWorkflowPersistor.save(workflowManager, nodeDirRef, exec, b);
+        FileWorkflowPersistor.save(workflowManager, nodeDirRef, exec, saveHelper);
     }
 
 

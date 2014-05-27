@@ -241,9 +241,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * (contained meta nodes have their own password store). */
     private final CredentialsStore m_credentialsStore;
 
-    private final List<ReferencedFile> m_deletedNodesFileLocations
-        = new ArrayList<ReferencedFile>();
-
     /** The version as read from workflow.knime file during load
      * (or null if not loaded but newly created). This field is used to
      * determine whether the workflow needs to be converted to any newer version
@@ -674,17 +671,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // and finally remove node itself as well.
             nc = m_workflow.removeNode(nodeID);
             nc.cleanup();
-            ReferencedFile ncDir = nc.getNodeContainerDirectory();
             // update list of obsolete node directories for non-root wfm
-            if (this != ROOT && ncDir != null) {
-                m_deletedNodesFileLocations.add(ncDir);
+            ReferencedFile ncDir = nc.getNodeContainerDirectory();
+            if (this != ROOT && ncDir != null && getNodeContainerDirectory() != null) {
+                getNodeContainerDirectory().getDeletedNodesFileLocations().add(ncDir);
+            }
+            ReferencedFile autoSaveDir = nc.getAutoSaveDirectory();
+            if (this != ROOT && autoSaveDir != null && getAutoSaveDirectory() != null) {
+                getAutoSaveDirectory().getDeletedNodesFileLocations().add(autoSaveDir);
             }
             checkForNodeStateChanges(true);
         }
         setDirty();
-        notifyWorkflowListeners(
-                new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED,
-                getID(), nc, null));
+        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED, getID(), nc, null));
     }
 
     /** Creates new meta node. We will automatically find the next available
@@ -7378,10 +7377,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final LoadResult loadResult, final boolean preserveNodeMessage)
         throws CanceledExecutionException {
         if (!(nodePersistor instanceof WorkflowPersistor)) {
-            throw new IllegalStateException("Expected "
-                    + WorkflowPersistor.class.getSimpleName()
-                    + " persistor object, got "
-                    + nodePersistor.getClass().getSimpleName());
+            throw new IllegalStateException("Expected " + WorkflowPersistor.class.getSimpleName()
+                + " persistor object, got " + nodePersistor.getClass().getSimpleName());
         }
         WorkflowPersistor persistor = (WorkflowPersistor)nodePersistor;
         assert this != ROOT || persistor.getConnectionSet().isEmpty()
@@ -7411,14 +7408,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (persistor.needsResetAfterLoad() || persistor.isDirtyAfterLoad()) {
             setDirty();
         }
-        m_deletedNodesFileLocations.addAll(
-                persistor.getObsoleteNodeDirectories());
+        ReferencedFile ncDirectory = getNodeContainerDirectory();
+        if (ncDirectory != null) {
+            ncDirectory.getDeletedNodesFileLocations().addAll(persistor.getObsoleteNodeDirectories());
+        }
+        ReferencedFile autoSaveDirectory = getAutoSaveDirectory();
+        if (autoSaveDirectory != null) {
+            autoSaveDirectory.getDeletedNodesFileLocations().addAll(persistor.getObsoleteNodeDirectories());
+        }
         Collection<NodeID> resultColl = persistorMap.keySet();
         NodeID[] newIDs = resultColl.toArray(new NodeID[resultColl.size()]);
-        WorkflowAnnotation[] newAnnotations =
-            annos.toArray(new WorkflowAnnotation[annos.size()]);
-        addConnectionsFromTemplates(persistor.getAdditionalConnectionSet(),
-                loadResult, translationMap, false);
+        WorkflowAnnotation[] newAnnotations = annos.toArray(new WorkflowAnnotation[annos.size()]);
+        addConnectionsFromTemplates(persistor.getAdditionalConnectionSet(), loadResult, translationMap, false);
         WorkflowCopyContent result = new WorkflowCopyContent();
         result.setAnnotation(newAnnotations);
         result.setNodeIDs(newIDs);
@@ -7652,9 +7653,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         };
 
+        List<ReferencedFile> deletedFilesInNCDir = getNodeContainerDirectory() == null
+                ? Collections.<ReferencedFile>emptyList() : getNodeContainerDirectory().getDeletedNodesFileLocations();
+        List<ReferencedFile> deletedFilesInAutoSaveDir = getAutoSaveDirectory() == null
+                ? Collections.<ReferencedFile>emptyList() : getAutoSaveDirectory().getDeletedNodesFileLocations();
+
         for (Map.Entry<Integer, ? extends NodeContainerPersistor> nodeEntry : loaderMap.entrySet()) {
             int suffix = nodeEntry.getKey();
             NodeID subId = new NodeID(getID(), suffix);
+
             // the mutex may be already held here. It is not held if we load
             // a completely new project (for performance reasons when loading
             // 100+ workflows simultaneously in a cluster environment)
@@ -7665,14 +7672,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContainerPersistor pers = nodeEntry.getValue();
                 translationMap.put(suffix, subId);
                 NodeContainer container = pers.getNodeContainer(this, subId);
-                NodeContainerMetaPersistor metaPersistor =
-                    pers.getMetaPersistor();
-                ReferencedFile ncRefDir =
-                    metaPersistor.getNodeContainerDirectory();
+                NodeContainerMetaPersistor metaPersistor = pers.getMetaPersistor();
+                ReferencedFile ncRefDir = metaPersistor.getNodeContainerDirectory();
                 if (ncRefDir != null) {
-                    // the nc dir is in the deleted locations list if the node
-                    // was deleted and is now restored (undo)
-                    m_deletedNodesFileLocations.remove(ncRefDir);
+                    // the nc dir is in the deleted locations list if the node was deleted and is now restored (undo)
+                    deletedFilesInNCDir.remove(ncRefDir);
+                    deletedFilesInAutoSaveDir.remove(ncRefDir);
                 }
                 addNodeContainer(container, false);
                 if (pers.isDirtyAfterLoad()) {
@@ -7797,23 +7802,37 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void save(final File directory, final ExecutionMonitor exec, final boolean isSaveData) throws IOException,
         CanceledExecutionException, LockFailedException {
+        save(directory, new WorkflowSaveHelper(false, isSaveData), exec);
+    }
+
+    /**
+     * @param directory The directory to save in
+     * @param exec The execution monitor
+     * @param saveHelper ...
+     * @throws IOException If an IO error occured
+     * @throws CanceledExecutionException If the execution was canceled
+     * @throws LockFailedException If locking failed
+     * @since 2.10
+     */
+    public void save(final File directory, final WorkflowSaveHelper saveHelper,
+        final ExecutionMonitor exec) throws IOException, CanceledExecutionException, LockFailedException {
         if (this == ROOT) {
             throw new IOException("Can't save root workflow");
         }
         if (m_isWorkflowDirectoryReadonly) {
             throw new IOException("Workflow is read-only, can't save");
         }
-        // TODO GUI must only provide directory
         synchronized (m_workflowMutex) {
-            ReferencedFile workflowDirRef = new ReferencedFile(directory);
-            // if it's the location associated with the workflow we will
-            // use same reference since a lock will be acquired
-            if (workflowDirRef.equals(getNodeContainerDirectory())) {
-                workflowDirRef = getNodeContainerDirectory();
+            ReferencedFile directoryReference = new ReferencedFile(directory);
+            // if it's the location associated with the workflow we will use the same instance (due to VM lock)
+            if (directoryReference.equals(getNodeContainerDirectory())) {
+                directoryReference = getNodeContainerDirectory();
+            } else if (saveHelper.isAutoSave() && directoryReference.equals(getAutoSaveDirectory())) {
+                directoryReference = getAutoSaveDirectory();
             }
-            workflowDirRef.writeLock();
+            directoryReference.writeLock();
             try {
-                final boolean isWorkingDirectory = workflowDirRef.equals(getNodeContainerDirectory());
+                final boolean isWorkingDirectory = directoryReference.equals(getNodeContainerDirectory());
                 final LoadVersion saveVersion = FileWorkflowPersistor.VERSION_LATEST;
                 if (m_loadVersion != null && !m_loadVersion.equals(saveVersion)) {
                     LOGGER.info("Workflow was created with another version of KNIME (workflow version "
@@ -7828,20 +7847,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 } else {
                     m_authorInformation = new AuthorInformation(m_authorInformation);
                 }
-                workflowDirRef.getFile().mkdirs();
-                FileWorkflowPersistor.save(this, workflowDirRef, exec, isSaveData);
+                directoryReference.getFile().mkdirs();
+                FileWorkflowPersistor.save(this, directoryReference, exec, saveHelper);
             } finally {
-                workflowDirRef.writeUnlock();
+                directoryReference.writeUnlock();
             }
         }
     }
 
     /**
      * Delete directories of removed nodes. This is part of the save routine to commit the changes. Called from the
-     * saving persistor class
+     * saving persistor class. The argument list is cleared when this method returns.
      */
-    void deleteObsoleteNodeDirs() {
-        for (ReferencedFile deletedNodeDir : m_deletedNodesFileLocations) {
+    static void deleteObsoleteNodeDirs(final List<ReferencedFile> deletedNodesFileLocations) {
+        for (ReferencedFile deletedNodeDir : deletedNodesFileLocations) {
             File f = deletedNodeDir.getFile();
             if (f.exists()) {
                 if (FileUtil.deleteRecursively(f)) {
@@ -7852,7 +7871,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         // bug fix 1857: this list must be cleared upon save
-        m_deletedNodesFileLocations.clear();
+        deletedNodesFileLocations.clear();
     }
 
     /** Performs sanity check on workflow. This is necessary upon load.
@@ -7978,6 +7997,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     protected boolean isLocalWFM() {
         return findJobManager() instanceof ThreadNodeExecutionJobManager;
+    }
+
+    /** Marks the workflow and all nodes contained as dirty in the auto-save location.
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 2.10 */
+    public void setAutoSaveDirectoryDirtyRecursivly() {
+        synchronized (m_workflowMutex) {
+            ReferencedFile autoSaveDirectory = getAutoSaveDirectory();
+            setDirty(autoSaveDirectory);
+            if (autoSaveDirectory != null) {
+                for (NodeContainer nc : getNodeContainers()) {
+                    nc.setDirty(nc.getAutoSaveDirectory());
+                }
+            }
+        }
     }
 
     private void setDirtyAll() {
@@ -8300,9 +8334,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void setNodeContainerDirectory(final ReferencedFile directory) {
         ReferencedFile ncDir = getNodeContainerDirectory();
