@@ -46,6 +46,7 @@ package org.knime.base.node.io.pmml.read;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -133,7 +134,10 @@ public class PMMLImport {
             urlToString = url.toString();
         }
         PMMLDocument pmmlDoc = null;
-        XmlObject xmlDoc = XmlObject.Factory.parse(url.openStream());
+        XmlObject xmlDoc;
+        try (InputStream inStream = url.openStream()) {
+            xmlDoc = XmlObject.Factory.parse(inStream);
+        }
         if (xmlDoc instanceof PMMLDocument) {
             pmmlDoc = (PMMLDocument)xmlDoc;
         } else {
