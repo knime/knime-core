@@ -50,7 +50,6 @@ package org.knime.core.node;
 import java.util.Dictionary;
 
 import org.knime.core.eclipseUtil.OSGIHelper;
-import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
@@ -170,7 +169,8 @@ public final class NodeAndBundleInformation {
         settings.addString("node-bundle-symbolic-name", getBundleSymbolicName());
         settings.addString("node-bundle-vendor", getBundleVendor());
         // new in 2.10
-        settings.addString("node-bundle-version", getBundleVersion().toString());
+        final Version bundleVersion = getBundleVersion() != null ? getBundleVersion() : Version.emptyVersion;
+        settings.addString("node-bundle-version", bundleVersion.toString());
     }
 
     /** Restores, used in persistor.
