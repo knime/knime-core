@@ -841,11 +841,14 @@ public class BatchExecutor {
                 }
             } else if (config.outputFile != null) { // save as Zip
                 File outputTempDir = FileUtil.createTempDir("BatchExecutorOutput");
-                wfm.save(outputTempDir, new ExecutionMonitor(), true);
+                File workflowOutDir =
+                    new File(outputTempDir, config.outputFile.getName().replaceAll("\\.(?:zip|ZIP)$", ""));
+
+                wfm.save(workflowOutDir, new ExecutionMonitor(), true);
                 LOGGER.debug("Workflow saved: " + outputTempDir.getAbsolutePath());
 
                 // to be saved into new output zip file
-                FileUtil.zipDir(config.outputFile, outputTempDir, 9, WORKFLOW_ZIP_FILTER, null);
+                FileUtil.zipDir(config.outputFile, workflowOutDir, 9, WORKFLOW_ZIP_FILTER, null);
                 LOGGER.info("Saved workflow availabe at: " + config.outputFile.getAbsolutePath());
             } else if (config.outputDir != null) { // save into dir
                 // copy current workflow dir
