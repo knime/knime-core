@@ -455,7 +455,7 @@ public class BatchExecutorTestcase {
             BatchExecutor.mainRun(new String[]{"-workflowFile=" + destFile.getAbsolutePath(),
                 "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
         assertEquals("Non-zero return value", 0, ret);
-        assertTrue("ZIP file is too small", destFile.length() > standardTestWorkflowZip.length());
+        assertTrue("ZIP file is too small", destFile.length() > 0.9 * standardTestWorkflowZip.length());
         // check if it is really a zip file
         new ZipFile(destFile);
         assertTrue("Workflow not altered after in-place save", destFile.lastModified() > timestamp);
