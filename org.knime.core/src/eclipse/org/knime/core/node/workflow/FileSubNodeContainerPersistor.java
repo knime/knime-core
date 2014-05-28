@@ -311,9 +311,9 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
             }
         } catch (InvalidSettingsException e) {
             String error = "Could not load subnode layout information: " + e.getMessage();
-            //result.addError(error);
+            result.addError(error);
             getLogger().error(error, e);
-            //setDirtyAfterLoad();
+            setDirtyAfterLoad();
         }
 
         m_workflowPersistor.preLoadNodeContainer(parentPersistor, parentSettings, result);
