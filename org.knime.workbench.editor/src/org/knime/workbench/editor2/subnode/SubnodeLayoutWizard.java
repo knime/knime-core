@@ -55,7 +55,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.Wizard;
 import org.knime.core.node.wizard.WizardNode;
@@ -72,17 +71,13 @@ import org.knime.workbench.editor2.ImageRepository;
 public class SubnodeLayoutWizard extends Wizard {
 
     private final SubNodeContainer m_subNodeContainer;
-    private final EditPartViewer m_viewer;
     private SubnodeLayoutPage m_page;
 
     /**
-     * @param viewer the viewer
      * @param container the subnode container
      *
      */
-    public SubnodeLayoutWizard(final EditPartViewer viewer, final SubNodeContainer container) {
-        super();
-        m_viewer = viewer;
+    public SubnodeLayoutWizard(final SubNodeContainer container) {
         m_subNodeContainer = container;
         setHelpAvailable(false);
     }

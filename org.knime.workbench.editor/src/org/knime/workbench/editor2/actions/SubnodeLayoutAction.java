@@ -54,15 +54,15 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.wizard.WizardNode;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.subnode.SubnodeLayoutWizard;
 
 /**
- * Action to execute all nodes that are executable.
+ * Action to define layout of wizard nodes in subnode.
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
@@ -129,31 +129,22 @@ public class SubnodeLayoutAction extends AbstractNodeAction {
      */
     @Override
     protected boolean internalCalculateEnabled() {
-        //TODO: determine if subnode selected or open and not locked
-        NodeContainerEditPart[] nodes = getSelectedParts(NodeContainerEditPart.class);
-        if (nodes.length != 1) {
+        final WorkflowManager manager = getManager();
+        if (manager.isWriteProtected()) {
             return false;
         }
-        NodeContainer nc = nodes[0].getNodeContainer();
-        if (nc instanceof SubNodeContainer) {
-            return !((SubNodeContainer)nc).getWorkflowManager().findNodes(WizardNode.class, true).isEmpty();
+        if (manager.getDirectNCParent() instanceof SubNodeContainer) {
+            return !manager.findNodes(WizardNode.class, false).isEmpty();
         }
         return false;
     }
 
-    /**
-     * This starts an execution job for all executable nodes. Note that this is
-     * all controlled by the WorkflowManager object of the currently open
-     * editor. The passed nodeParts are not needed here, as not only the
-     * selected parts are executed but all executable nodes.
-     *
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        NodeContainerEditPart ep = nodeParts[0];
-        SubnodeLayoutWizard wizard =
-                new SubnodeLayoutWizard(ep.getViewer(), (SubNodeContainer)ep.getModel());
+        WorkflowManager manager = getManager();
+        SubNodeContainer subnode = (SubNodeContainer)manager.getDirectNCParent();
+        SubnodeLayoutWizard wizard = new SubnodeLayoutWizard(subnode);
         WizardDialog dlg = new WizardDialog(Display.getCurrent().getActiveShell(), wizard);
         dlg.create();
         dlg.open();
