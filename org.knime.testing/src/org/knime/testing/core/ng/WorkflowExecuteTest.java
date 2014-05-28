@@ -149,40 +149,38 @@ class WorkflowExecuteTest extends WorkflowTest {
     }
 
     private static void fillStackFromThread(final ThreadInfo ti, final StringBuilder buf) {
-        StringBuilder sb =
-                new StringBuilder("\"" + ti.getThreadName() + "\"" + " Id=" + ti.getThreadId() + " "
-                        + ti.getThreadState());
+        buf.append("\"" + ti.getThreadName() + "\"" + " Id=" + ti.getThreadId() + " " + ti.getThreadState());
         if (ti.getLockName() != null) {
-            sb.append(" on " + ti.getLockName());
+            buf.append(" on " + ti.getLockName());
         }
         if (ti.getLockOwnerName() != null) {
-            sb.append(" owned by \"" + ti.getLockOwnerName() + "\" Id=" + ti.getLockOwnerId());
+            buf.append(" owned by \"" + ti.getLockOwnerName() + "\" Id=" + ti.getLockOwnerId());
         }
         if (ti.isSuspended()) {
-            sb.append(" (suspended)");
+            buf.append(" (suspended)");
         }
         if (ti.isInNative()) {
-            sb.append(" (in native)");
+            buf.append(" (in native)");
         }
-        sb.append('\n');
+        buf.append('\n');
         int i = 0;
         for (StackTraceElement ste : ti.getStackTrace()) {
-            sb.append("\tat " + ste.toString());
-            sb.append('\n');
+            buf.append("\tat " + ste.toString());
+            buf.append('\n');
             if (i == 0 && ti.getLockInfo() != null) {
                 Thread.State ts = ti.getThreadState();
                 switch (ts) {
                     case BLOCKED:
-                        sb.append("\t-  blocked on " + ti.getLockInfo());
-                        sb.append('\n');
+                        buf.append("\t-  blocked on " + ti.getLockInfo());
+                        buf.append('\n');
                         break;
                     case WAITING:
-                        sb.append("\t-  waiting on " + ti.getLockInfo());
-                        sb.append('\n');
+                        buf.append("\t-  waiting on " + ti.getLockInfo());
+                        buf.append('\n');
                         break;
                     case TIMED_WAITING:
-                        sb.append("\t-  waiting on " + ti.getLockInfo());
-                        sb.append('\n');
+                        buf.append("\t-  waiting on " + ti.getLockInfo());
+                        buf.append('\n');
                         break;
                     default:
                 }
@@ -190,22 +188,22 @@ class WorkflowExecuteTest extends WorkflowTest {
 
             for (MonitorInfo mi : ti.getLockedMonitors()) {
                 if (mi.getLockedStackDepth() == i) {
-                    sb.append("\t-  locked " + mi);
-                    sb.append('\n');
+                    buf.append("\t-  locked " + mi);
+                    buf.append('\n');
                 }
             }
         }
 
         LockInfo[] locks = ti.getLockedSynchronizers();
         if (locks.length > 0) {
-            sb.append("\n\tNumber of locked synchronizers = " + locks.length);
-            sb.append('\n');
+            buf.append("\n\tNumber of locked synchronizers = " + locks.length);
+            buf.append('\n');
             for (LockInfo li : locks) {
-                sb.append("\t- " + li);
-                sb.append('\n');
+                buf.append("\t- " + li);
+                buf.append('\n');
             }
         }
-        sb.append('\n');
+        buf.append('\n');
     }
 
     /**
