@@ -180,7 +180,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         });
         // m_numericRadio.setSelected(true);
         m_stringRadio = new JRadioButton(
-                "Parse bitvectors from strings (one column)");
+                "Parse Bit Vectors from strings (one column)");
         m_stringRadio.addItemListener(new ItemListener() {
             /**
              * {@inheritDoc}
@@ -235,7 +235,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
     private JPanel createReplacePanel() {
         JPanel panel = new JPanel();
         m_replaceBox = new JCheckBox(
-                "Remove column(s) used for bit vector creation", false);
+                "Remove column(s) used for Bit Vector creation", false);
         panel.add(m_replaceBox);
         return panel;
     }

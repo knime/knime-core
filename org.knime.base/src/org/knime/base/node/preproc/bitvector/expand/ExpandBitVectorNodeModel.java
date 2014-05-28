@@ -83,7 +83,7 @@ public class ExpandBitVectorNodeModel extends ExpandVectorNodeModel {
      * Constructor for the node model.
      */
     protected ExpandBitVectorNodeModel() {
-        super(createOutputPrefix());
+        super(createOutputPrefix(), BitVectorValue.class);
     }
 
     /**

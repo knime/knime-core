@@ -1,21 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <knimeNode icon="./expandByteVector.png" type="Manipulator" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
-    <name>Expand byte vector</name>
+    <name>Expand Byte Vector</name>
     
     <shortDescription>
-        Expands the byte vector to individual integer columns.
+        Expands the Byte Vector to individual integer columns.
     </shortDescription>
     
     <fullDescription>
-        <intro><p>This node splits the byte vector to integer columns.</p><p>
-        The <b>Create byte vector</b> node generates some position and name information as column properties. You can use that information in this node.
+        <intro><p>This node splits the Byte Vector to integer columns.</p><p>
+        The <b>Create Byte Vector</b> node generates name information as column metadata. You can use that information in this node.
         </p>
         </intro>
         <tab name="Standard Options">
             <option name="Byte vector column">The column containing the byte vectors</option>
             <option name="Remove original column?">Should we remove the selected byte vector column?</option>
-            <option name="Use the column indexes specified in properties?">The new columns will be put to the specified indices if they are available.</option>
-            <option name="Use the column names specified in properties?">The available names are used instead of the generated if possible.</option>
+            <option name="Use the original column names">The column names metadata from the generation of the original columns are used instead of the generated if possible.</option>
             <option name="Prefix of output columns">New column names start with this prefix.</option>
             <option name="Start index for the first new column">The numeric part of the column will start from this index.</option>
             <option name="Maximum number of new columns">The values after this index in the byte vector will be omitted from the output table.</option>
@@ -23,7 +22,7 @@
     </fullDescription>
     
     <ports>
-        <inPort index="0" name="Data with byte vector">Table containing at least one byte vector column.</inPort>
+        <inPort index="0" name="Data with byte vector">Table containing at least one Byte Vector column.</inPort>
         <outPort index="0" name="Data table">Table with generated columns.</outPort>
     </ports>    
 </knimeNode>

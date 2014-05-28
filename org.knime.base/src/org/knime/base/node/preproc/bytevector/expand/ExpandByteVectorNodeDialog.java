@@ -50,7 +50,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.util.ExpandVectorNodeModel;
-import org.knime.base.node.util.SourceColumnsAsProperties;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.vector.bytevector.ByteVectorValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
@@ -78,12 +77,9 @@ public class ExpandByteVectorNodeDialog extends DefaultNodeSettingsPane {
                 true, false, ByteVectorValue.class);
         addDialogComponent(input);
         addDialogComponent(new DialogComponentBoolean(ExpandVectorNodeModel.createRemoveOriginal(),
-            "Remove original column?"));
-        final DialogComponentBoolean useIndices = new DialogComponentBoolean(ExpandVectorNodeModel.createUseIndices(),
-            "Use the column indexes specified in properties?");
-        addDialogComponent(useIndices);
+            "Remove original column"));
         final DialogComponentBoolean useColumnNames = new DialogComponentBoolean(ExpandVectorNodeModel.createUseNames(),
-            "Use the column names specified in properties?");
+            "Use the original column names");
         addDialogComponent(useColumnNames);
         closeCurrentGroup();
         createNewGroup("Output");
@@ -101,7 +97,6 @@ public class ExpandByteVectorNodeDialog extends DefaultNodeSettingsPane {
                     return;
                 }
                 useColumnNames.getModel().setEnabled(!selected.getElementNames().isEmpty());
-                useIndices.getModel().setEnabled(SourceColumnsAsProperties.indicesFrom(selected).length > 0);
             }
         });
     }

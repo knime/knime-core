@@ -116,7 +116,7 @@ public class BitVectorGeneratorView
     private void setTextArea() {
         BitVectorGeneratorNodeModel model = getNodeModel();
         StringBuffer buffer = new StringBuffer("<html></body>");
-        buffer.append("<h2>BitVector Generator Information:</h2>");
+        buffer.append("<h2>Bit Vector Generator Information:</h2>");
         buffer.append("<hr>");
         buffer.append("<table>");
         buffer.append("<tr><td>Number of processed rows: </td>"

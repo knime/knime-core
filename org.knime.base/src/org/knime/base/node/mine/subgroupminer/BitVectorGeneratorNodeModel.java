@@ -52,9 +52,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.knime.base.data.bitvector.BitString2BitVectorCellFactory;
 import org.knime.base.data.bitvector.BitVectorCellFactory;
@@ -62,9 +60,7 @@ import org.knime.base.data.bitvector.Hex2BitVectorCellFactory;
 import org.knime.base.data.bitvector.IdString2BitVectorCellFactory;
 import org.knime.base.data.bitvector.Numeric2BitVectorMeanCellFactory;
 import org.knime.base.data.bitvector.Numeric2BitVectorThresholdCellFactory;
-import org.knime.base.node.util.SourceColumnsAsProperties;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -611,15 +607,6 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                 name, DenseBitVectorCell.TYPE);
         final String[] includes = nameMapping.toArray(new String[nameMapping.size()]);
         creator.setElementNames(includes);
-        final int[] sourceColumnIndices = SourceColumnsAsProperties.indices(includes, spec);
-        for (int i = sourceColumnIndices.length; i-- > 0;) {
-            if (sourceColumnIndices[i] < 0) {
-                throw new IllegalStateException("Unknown column: " + includes[i]);
-            }
-        }
-        final Map<String, String> map = new LinkedHashMap<>();
-        map.put(SourceColumnsAsProperties.PROPKEY_SOURCE_COLUMN_INDICES, SourceColumnsAsProperties.indicesAsString(sourceColumnIndices));
-        creator.setProperties(new DataColumnProperties(map));
         return creator.createSpec();
     }
 
@@ -677,7 +664,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
      * @return the settings model for output column name
      */
     static SettingsModelString createOutputColumnModel() {
-        return new SettingsModelString("output.column", "BitVectors");
+        return new SettingsModelString("output.column", "Bit Vector");
     }
 
 }

@@ -82,7 +82,7 @@ public class ExpandByteVectorNodeModel extends ExpandVectorNodeModel {
      * Constructor for the node model.
      */
     protected ExpandByteVectorNodeModel() {
-        super(createOutputPrefix());
+        super(createOutputPrefix(), ByteVectorValue.class);
     }
 
     /**

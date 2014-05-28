@@ -48,11 +48,9 @@ package org.knime.base.node.preproc.bytevector.create;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 
 import org.knime.base.node.util.SourceColumnsAsProperties;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -88,7 +86,7 @@ public class CreateByteVectorNodeModel extends NodeModel {
 
     private static final String CFGKEY_OUTPUT_COLUMN = "output";
 
-    private static final String DEFAULT_OUTPUT_COLUMN = "ByteVector";
+    private static final String DEFAULT_OUTPUT_COLUMN = "Byte Vector";
 
     private static final String CFGKEY_FAIL_ON_MISSING = "fail on missing";
 
@@ -149,14 +147,12 @@ public class CreateByteVectorNodeModel extends NodeModel {
             new DataColumnSpecCreator(DataTableSpec.getUniqueColumnName(inSpec, m_outputColumn.getStringValue()),
                 DenseByteVectorCell.TYPE);
         newCol.setElementNames(includes);
-        //newCol.setProperties(SourceColumnsAsProperties.toProperties(m_inputColumns, inSpec));
         final int[] sourceColumnIndices = SourceColumnsAsProperties.indices(m_inputColumns.applyTo(inSpec), inSpec);
         for (int i = sourceColumnIndices.length; i-- > 0;) {
             if (sourceColumnIndices[i] < 0) {
                 throw new IllegalStateException("Unknown column: " + includes[i]);
             }
         }
-        newCol.setProperties(new DataColumnProperties(Collections.singletonMap(SourceColumnsAsProperties.PROPKEY_SOURCE_COLUMN_INDICES, SourceColumnsAsProperties.indicesAsString(sourceColumnIndices))));
         ret.append(new SingleCellFactory(newCol.createSpec()) {
 
             @Override

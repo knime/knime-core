@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./bitvector.png" type="Manipulator">
-	<name>Bitvector Generator</name>
+	<name>Bit Vector Generator</name>
 	
 	<shortDescription>
-			    Generates bitvectors either from a table containing numerical values, 
+			    Generates Bit Vectors either from a table containing numerical values, 
 			    or from a string column containing the bit positions to set, 
 			    hexadecimal or binary strings.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>
-		Generates bitvectors either from a table containing numerical values, 
+		Generates Bit Vectors either from a table containing numerical values, 
 		or from a string column containing the bit positions to set, 
 		hexadecimal or binary strings.
 		<h3>Numeric input (many columns)</h3>
 		In the case of a numerical input the columns correspond to the bit positions
-		in the resulting bitvector, i.e. if only one numerical column is available 
-		all bitvectors will have length 1.
+		in the resulting Bit Vector, i.e. if only one numerical column is available 
+		all Bit Vectors will have length 1.
 		All numeric columns in the table are considered. 
 		There are two options to determine if the bit is set for the value in 
 		the corresponding column or not: 
@@ -71,11 +71,11 @@
             Specify which percentage of the mean a value should have in order to be set.
         </option>				
 
-		<option name="Parse bitvectors from string column">
-			Check, if the input for the bitvectors is a string column that should be converted 
-			into a bitvector (see description above for valid input formats). 
+		<option name="Parse Bit Vectors from string column">
+			Check, if the input for the Bit Vectors is a string column that should be converted 
+			into a Bit Vector (see description above for valid input formats). 
 			Uncheck, if the data is a table with numerical data that should be 
-			converted into bitvectors. All numerical columns will be considered, 
+			converted into Bit Vectors. All numerical columns will be considered, 
 			all others are irgnored.
 		</option>		
 		
@@ -89,21 +89,21 @@
         	ID (bit positions) or BIT (binary strings). See description above.
         </option>
                 
-        <option name="Remove column(s) used for bit vector creation:">
+        <option name="Remove column(s) used for Bit Vector creation:">
         If it is checked the generating column(s) (included columns if numeric input was used
         or the selected string column) are removed.
-        If it is unchecked the generated bitvectors are appended to the input table.
+        If it is unchecked the generated Bit Vectors are appended to the input table.
         </option>
         <option name="Output column">Name of the output column.</option>
 	</fullDescription>
 	
 	<ports>
-		<inPort index="0" name="Input data to create bit vectors from">Datatable with numerical data or a string column to be parsed.</inPort>
-		<outPort index="0" name="Bit vector data">Datatable with the generated bitvectors.</outPort>
+		<inPort index="0" name="Input data to create Bit Vectors from">Datatable with numerical data or a string column to be parsed.</inPort>
+		<outPort index="0" name="Bit vector data">Datatable with the generated Bit Vectors.</outPort>
 	</ports>	
 	<views>
 		<view index="0" name="Statistics View">
-			 Provides information about the generation of the bitvectors from  
+			 Provides information about the generation of the Bit Vectors from  
 			 the data. In particular this is the number of processed rows, 
 			 the total number of generated zeros and ones and the resulting 
 			 ratio of 1s to 0s.

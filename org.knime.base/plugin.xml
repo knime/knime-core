@@ -696,11 +696,11 @@
 	          factory-class="org.knime.base.node.io.table.write.WriteTableNodeFactory"
 	          id="org.knime.base.node.io.table.write.WriteTableNodeFactory"/>
      <node
-           category-path="/manipulation/row/row-transform"
+           category-path="/manipulation/column/column-split+combine"
            factory-class="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"
            id="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"/>
      <node
-           category-path="/manipulation/row/row-transform"
+           category-path="/manipulation/column/column-split+combine"
            factory-class="org.knime.base.node.preproc.bitvector.expand.ExpandBitVectorNodeFactory"
            id="org.knime.base.node.preproc.bitvector.expand.ExpandBitVectorNodeFactory"/>
      <node

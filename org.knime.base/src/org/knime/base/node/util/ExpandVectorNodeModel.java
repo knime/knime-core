@@ -48,13 +48,13 @@ package org.knime.base.node.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.IntCell;
@@ -67,7 +67,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -82,32 +81,47 @@ import org.knime.core.node.port.PortType;
 public abstract class ExpandVectorNodeModel extends NodeModel {
 
     private static final String CFGKEY_INPUT_COLUMN = "input column";
+
     private static final String DEFAULT_INPUT_COLUMN = "ByteVector";
+
     private static final String CFGKEY_REMOVE_ORIGINAL = "remove original column?";
+
     private static final boolean DEFAULT_REMOVE_ORIGINAL = true;
+
     /** Configuration key for the output column prefixes. */
     protected static final String CFGKEY_OUTPUT_PREFIX = "output prefix";
+
     private static final String CFGKEY_START_INDEX = "start index";
+
     private static final int DEFAULT_START_INDEX = 0;
+
     private static final String CFGKEY_MAX_NEW_COLUMNS = "maximum number of new columns";
+
     private static final int DEFAULT_MAX_NEW_COLUMNS = 40000;
+
     private static final String CFGKEY_USE_NAMES = "use names from properties";
+
     private static final boolean DEFAULT_USE_NAMES = true;
-    private static final String CFGKEY_USE_INDICES = "use indices from properties";
-    private static final boolean DEFAULT_USE_INDICES = true;
-    private final SettingsModelColumnName m_inputColumn = createInputColumn();
+
+    private final SettingsModelString m_inputColumn = createInputColumn();
+
     private final SettingsModelBoolean m_removeOriginal = createRemoveOriginal();
+
     private final SettingsModelString m_outputPrefix;
+
     private final SettingsModelInteger m_startIndex = createStartIndex();
+
     private final SettingsModelInteger m_maxNewColumns = createMaxNewColumns();
+
     private final SettingsModelBoolean m_useNames = createUseNames();
-    private final SettingsModelBoolean m_useIndices = createUseIndices();
+
+    private final Class<? extends DataValue> m_valueType;
 
     /**
      * @return The input column name model.
      */
-    public static SettingsModelColumnName createInputColumn() {
-        return new SettingsModelColumnName(CFGKEY_INPUT_COLUMN, DEFAULT_INPUT_COLUMN);
+    public static SettingsModelString createInputColumn() {
+        return new SettingsModelString(CFGKEY_INPUT_COLUMN, DEFAULT_INPUT_COLUMN);
     }
 
     /**
@@ -139,61 +153,70 @@ public abstract class ExpandVectorNodeModel extends NodeModel {
     }
 
     /**
-     * @return Whether to use the indices from the spec or not model.
-     */
-    public static SettingsModelBoolean createUseIndices() {
-        return new SettingsModelBoolean(CFGKEY_USE_INDICES, DEFAULT_USE_INDICES);
-    }
-
-    /**
      * The constructor primarily intended to extend.
+     *
      * @param outputPrefix The output prefix {@link SettingsModelString}.
+     * @param expandedValueType Class of the {@link DataValue} to expand.
      */
-    protected ExpandVectorNodeModel(final SettingsModelString outputPrefix) {
+    protected ExpandVectorNodeModel(final SettingsModelString outputPrefix,
+        final Class<? extends DataValue> expandedValueType) {
         super(1, 1);
         m_outputPrefix = outputPrefix;
+        this.m_valueType = expandedValueType;
     }
 
     /**
-     * @param nrInDataPorts
-     * @param nrOutDataPorts
+     * @param nrInDataPorts number of input data ports.
+     * @param nrOutDataPorts number of output data ports.
      * @param outputPrefix The output prefix {@link SettingsModelString}.
+     * @param expandedValueType Class of the {@link DataValue} to expand.
      */
-    protected ExpandVectorNodeModel(final int nrInDataPorts, final int nrOutDataPorts, final SettingsModelString outputPrefix) {
+    protected ExpandVectorNodeModel(final int nrInDataPorts, final int nrOutDataPorts,
+        final SettingsModelString outputPrefix, final Class<? extends DataValue> expandedValueType) {
         super(nrInDataPorts, nrOutDataPorts);
         m_outputPrefix = outputPrefix;
+        this.m_valueType = expandedValueType;
     }
 
     /**
-     * @param inPortTypes
-     * @param outPortTypes
+     * @param inPortTypes input port types.
+     * @param outPortTypes output port types.
      * @param outputPrefix The output prefix {@link SettingsModelString}.
+     * @param expandedValueType Class of the {@link DataValue} to expand.
      */
-    protected ExpandVectorNodeModel(final PortType[] inPortTypes, final PortType[] outPortTypes, final SettingsModelString outputPrefix) {
+    protected ExpandVectorNodeModel(final PortType[] inPortTypes, final PortType[] outPortTypes,
+        final SettingsModelString outputPrefix, final Class<? extends DataValue> expandedValueType) {
         super(inPortTypes, outPortTypes);
         m_outputPrefix = outputPrefix;
+        this.m_valueType = expandedValueType;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec) throws Exception {
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
+        throws Exception {
         return new BufferedDataTable[]{exec.createColumnRearrangeTable(inData[0], createRearranger(inData[0], exec),
             exec.createSubProgress(.75))};
     }
 
     /**
-     * @param spec
-     * @return
-     * @throws CanceledExecutionException
+     * Creates the {@link ColumnRearranger} to perform the computation.
+     *
+     * @param table The input table.
+     * @param exec An {@link ExecutionMonitor}.
+     * @return The {@link ColumnRearranger}.
+     * @throws CanceledExecutionException Execution cancelled.
      */
-    private ColumnRearranger createRearranger(final BufferedDataTable table, final ExecutionMonitor exec) throws CanceledExecutionException {
+    private ColumnRearranger createRearranger(final BufferedDataTable table, final ExecutionMonitor exec)
+        throws CanceledExecutionException {
         DataTableSpec spec = table.getSpec();
         final ColumnRearranger ret = new ColumnRearranger(spec);
         ExecutionMonitor subRead = exec.createSubProgress(.25);
         int maxOutput = 0;
-        final int colIndex = spec.findColumnIndex(m_inputColumn.getColumnName());
+        String inputColumnName = findInputColumnName(spec);
+        final int colIndex = spec.findColumnIndex(inputColumnName);
         for (DataRow dataRow : table) {
             subRead.checkCanceled();
             DataCell cell = dataRow.getCell(colIndex);
@@ -204,18 +227,9 @@ public abstract class ExpandVectorNodeModel extends NodeModel {
             maxOutput = Math.max(maxOutput, (int)length);
         }
         final String[] colNames = new String[maxOutput];
-        final DataColumnSpec inputSpec = spec.getColumnSpec(m_inputColumn.getColumnName());
+        final DataColumnSpec inputSpec = spec.getColumnSpec(inputColumnName);
         final int namedColumns;
-        if (useIndices()) {
-            int[] indices = SourceColumnsAsProperties.indicesFrom(inputSpec);
-            if (useNames()) {
-                String[] origNames = SourceColumnsAsProperties.sortNamesAccordingToIndex(inputSpec.getElementNames(), indices).toArray(new String[0]);
-                System.arraycopy(origNames, 0, colNames, 0, Math.min(maxOutput, origNames.length));
-                namedColumns = origNames.length;
-            } else {
-                namedColumns = 0;
-            }
-        } else if (useNames()) {
+        if (useNames()) {
             String[] origNames = inputSpec.getElementNames().toArray(new String[0]);
             System.arraycopy(origNames, 0, colNames, 0, Math.min(maxOutput, origNames.length));
             namedColumns = origNames.length;
@@ -231,39 +245,30 @@ public abstract class ExpandVectorNodeModel extends NodeModel {
             dataColumnSpecCreator.setName(DataTableSpec.getUniqueColumnName(spec, colNames[idx]));
             outputColumns[idx] = dataColumnSpecCreator.createSpec();
         }
-        final int inputIndex = spec.findColumnIndex(m_inputColumn.getColumnName());
-        ret.append(createCellFactory(colNames, outputColumns, inputIndex));
+        ret.append(createCellFactory(colNames, outputColumns, colIndex));
         if (m_removeOriginal.getBooleanValue()) {
-            ret.remove(m_inputColumn.getColumnName());
-        }
-        if (useIndices()) {
-            int[] indices = SourceColumnsAsProperties.indicesFrom(inputSpec);
-            int splitPoint =
-                useNames() ? Math.min(indices.length, inputSpec.getElementNames().size()) : 0;
-            //We used the lower set of indices sorted, so we have to sort them separately.
-            int[] lower = new int[splitPoint], higher = new int[indices.length - splitPoint];
-            System.arraycopy(indices, 0, lower, 0, splitPoint);
-            Arrays.sort(lower);
-            //Important to go backwards
-            for (int i = 0; i < Math.min(lower.length, outputColumns.length); ++i) {
-                ret.move(spec.getNumColumns() - (m_removeOriginal.getBooleanValue() ? 1 : 0) + i, lower[i]);
-            }
-            System.arraycopy(indices, splitPoint, higher, 0, higher.length);
-            Arrays.sort(higher);
-            //Important to go backwards
-            for (int i = 0; i < Math.min(higher.length - lower.length, outputColumns.length); ++i) {
-                ret.move(spec.getNumColumns() - (m_removeOriginal.getBooleanValue() ? 1 : 0) + lower.length + i,
-                    higher[i]);
-            }
+            ret.remove(inputColumnName);
         }
         return ret;
     }
 
     /**
-     * @return The {@link #m_useIndices} settings is enabled and should use it.
+     * Guesses the input column name if it was not specified. It will find the last compatible to the class of the
+     * expected {@link DataValue}.
+     *
+     * @param spec The input {@link DataTableSpec}.
+     * @return The name of the last column compatible with the specified {@link DataValue}.
      */
-    private boolean useIndices() {
-        return m_useIndices.isEnabled() && m_useIndices.getBooleanValue();
+    private String findInputColumnName(final DataTableSpec spec) {
+        String inputColumnName = m_inputColumn.getStringValue();
+        if (spec.findColumnIndex(inputColumnName) < 0) {
+            for (DataColumnSpec colSpec : spec) {
+                if (colSpec.getType().isCompatible(m_valueType)) {
+                    inputColumnName = colSpec.getName();
+                }
+            }
+        }
+        return inputColumnName;
     }
 
     /**
@@ -302,6 +307,13 @@ public abstract class ExpandVectorNodeModel extends NodeModel {
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+        String inputColumnName = m_inputColumn.getStringValue();
+        if (inSpecs[0].findColumnIndex(inputColumnName) < 0) {
+            if (!inSpecs[0].containsCompatibleType(m_valueType)) {
+                throw new InvalidSettingsException("No compatible column found!");
+            }
+        }
+
         // We do not know how many columns will be created.
         //Maybe if we have the domain computed, can guess it?
         return new DataTableSpec[]{null};
@@ -318,7 +330,6 @@ public abstract class ExpandVectorNodeModel extends NodeModel {
         m_startIndex.saveSettingsTo(settings);
         m_maxNewColumns.saveSettingsTo(settings);
         m_useNames.saveSettingsTo(settings);
-        m_useIndices.saveSettingsTo(settings);
     }
 
     /**
@@ -332,7 +343,6 @@ public abstract class ExpandVectorNodeModel extends NodeModel {
         m_startIndex.loadSettingsFrom(settings);
         m_maxNewColumns.loadSettingsFrom(settings);
         m_useNames.loadSettingsFrom(settings);
-        m_useIndices.loadSettingsFrom(settings);
     }
 
     /**
@@ -346,14 +356,14 @@ public abstract class ExpandVectorNodeModel extends NodeModel {
         m_startIndex.validateSettings(settings);
         m_maxNewColumns.validateSettings(settings);
         m_useNames.validateSettings(settings);
-        m_useIndices.validateSettings(settings);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File internDir, final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+    protected void loadInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
         // Nothing to do, no internal state.
     }
 
@@ -361,14 +371,15 @@ public abstract class ExpandVectorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File internDir, final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+    protected void saveInternals(final File internDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
         // Nothing to do, no internal state.
     }
 
     /**
      * @return the inputColumn
      */
-    protected SettingsModelColumnName getInputColumn() {
+    protected SettingsModelString getInputColumn() {
         return m_inputColumn;
     }
 
@@ -398,13 +409,6 @@ public abstract class ExpandVectorNodeModel extends NodeModel {
      */
     protected SettingsModelInteger getStartIndex() {
         return m_startIndex;
-    }
-
-    /**
-     * @return the useIndices
-     */
-    protected SettingsModelBoolean getUseIndices() {
-        return m_useIndices;
     }
 
     /**

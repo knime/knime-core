@@ -72,11 +72,11 @@ public class CreateByteVectorNodeDialog extends DefaultNodeSettingsPane {
     protected CreateByteVectorNodeDialog() {
         createNewGroup("Input");
         addDialogComponent(new DialogComponentColumnFilter2(CreateByteVectorNodeModel.createInputColumns(), 0));
-        addDialogComponent(new DialogComponentBoolean(CreateByteVectorNodeModel.createRemoveInput(), "Remove input columns?"));
-        DialogComponentBoolean failOnMissing = new DialogComponentBoolean(CreateByteVectorNodeModel.createFailOnMissing(), "Fail on missing values?");
+        addDialogComponent(new DialogComponentBoolean(CreateByteVectorNodeModel.createRemoveInput(), "Remove input columns"));
+        DialogComponentBoolean failOnMissing = new DialogComponentBoolean(CreateByteVectorNodeModel.createFailOnMissing(), "Fail on missing values");
         addDialogComponent(failOnMissing);
         failOnMissing.setToolTipText("<html>If unchecked, the value <b><tt>0</tt></b> will be used instead.<html>");
-        DialogComponentBoolean failOnOutOfInterval = new DialogComponentBoolean(CreateByteVectorNodeModel.createFailOnOutOfInterval(), "Fail on values outside [0,255]?");
+        DialogComponentBoolean failOnOutOfInterval = new DialogComponentBoolean(CreateByteVectorNodeModel.createFailOnOutOfInterval(), "Fail on values outside [0,255]");
         failOnOutOfInterval.setToolTipText("<html>If unchecked, the value <b><tt>0</tt></b> will be used instead.<html>");
         addDialogComponent(failOnOutOfInterval);
         closeCurrentGroup();
