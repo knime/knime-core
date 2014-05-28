@@ -93,6 +93,7 @@ import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeGraphAnnotation;
 import org.knime.core.node.workflow.NodeOutPort;
@@ -536,8 +537,21 @@ public class NodeMonitorView extends ViewPart
             TableColumn column = new TableColumn(m_table, SWT.NONE);
             column.setText(titles[i]);
         }
-        Stack<Pair<Iterator<String>, ConfigBase>> stack
-                         = new Stack<Pair<Iterator<String>, ConfigBase>>();
+        // add information about plugin and version to list (in show all/expert mode only)
+        if ((nc instanceof NativeNodeContainer) && showAll) {
+            NativeNodeContainer nnc = (NativeNodeContainer)nc;
+            TableItem item1 = new TableItem(m_table, SWT.NONE);
+            item1.setText(0, "bundle name");
+            item1.setText(1, nnc.getNodeAndBundleInformation().getBundleName());
+            TableItem item2 = new TableItem(m_table, SWT.NONE);
+            item2.setText(0, "bundle symbolic name");
+            item2.setText(1, nnc.getNodeAndBundleInformation().getBundleSymbolicName());
+            TableItem item3 = new TableItem(m_table, SWT.NONE);
+            item3.setText(0, "version");
+            item3.setText(1, nnc.getNodeAndBundleInformation().getBundleVersion().toString());
+        }
+        // add settings to table
+        Stack<Pair<Iterator<String>, ConfigBase>> stack = new Stack<Pair<Iterator<String>, ConfigBase>>();
         Iterator<String> it = settings.keySet().iterator();
         if (it.hasNext()) {
             stack.push(new Pair<Iterator<String>, ConfigBase>(it, settings));
@@ -556,8 +570,7 @@ public class NodeMonitorView extends ViewPart
                 if ((!val.endsWith("_Internals")) || showAll) {
                     Iterator<String> it2 = ((ConfigBase)ace).iterator();
                     if (it2.hasNext()) {
-                        stack.push(new Pair<Iterator<String>, ConfigBase>(
-                                                        it2, (ConfigBase)ace));
+                        stack.push(new Pair<Iterator<String>, ConfigBase>(it2, (ConfigBase)ace));
                     }
                 } else {
                    noexpertskip = true;
