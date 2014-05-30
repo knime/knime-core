@@ -6,18 +6,15 @@
     
     <fullDescription>
         <intro>
-        This nodes forwards the input from the first port if the execution was
-        successful. If execution on the top branch failed (and a matching try
-        node was connected before the failing node!) then the input from the
-        second port will be forwarded and the second variable outport will contain
-        information about the observed error.
+            Inverts status of a branch: inactive becomes active and vice versa. This is useful in conjunction with 
+            "Try"/"Catch" nodes when certain workflow branches (usually the "fail" branch) should only be executed when
+            the main workflow branch ran into an error.
         </intro>
     </fullDescription>
     
     <ports>
-        <inPort index="0" name="Original input">The original input</inPort>
-        <inPort index="1" name="Default input">The input to be used when execution on the main branch failed.</inPort>
-        <outPort index="0" name="Output">Original input or default if execution failed.</outPort>
-        <outPort index="1" name="Failure">Reasons for Failure (if any).</outPort>
+        <inPort index="0" name="Input">Active or inactive input</inPort>
+        <outPort index="0" name="Output">A flow variable port. 
+            It will be active only if the input is inactive.</outPort>
     </ports>
 </knimeNode>
