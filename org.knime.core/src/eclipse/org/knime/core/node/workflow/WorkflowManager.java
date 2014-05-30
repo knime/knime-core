@@ -7802,7 +7802,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void save(final File directory, final ExecutionMonitor exec, final boolean isSaveData) throws IOException,
         CanceledExecutionException, LockFailedException {
-        save(directory, new WorkflowSaveHelper(false, isSaveData), exec);
+        save(directory, new WorkflowSaveHelper(isSaveData, false), exec);
     }
 
     /**
