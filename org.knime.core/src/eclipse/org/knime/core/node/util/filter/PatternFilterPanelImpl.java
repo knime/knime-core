@@ -356,4 +356,12 @@ final class PatternFilterPanelImpl<T> extends JPanel {
         }
     }
 
+    /**
+     * @param filter The filter that filters out Ts that are not available for selection
+     */
+    void setFilter(final InputFilter<T> filter) {
+        m_filter = filter;
+        update();
+    }
+
 }

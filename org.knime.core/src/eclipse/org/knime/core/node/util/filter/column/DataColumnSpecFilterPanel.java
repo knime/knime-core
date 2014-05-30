@@ -104,7 +104,11 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
      * columns which are shown and can be included or excluded.
      *
      * @param filterValueClasses The {@link DataValue} of the columns to show.
+     *
+     * @deprecated Use {@link #DataColumnSpecFilterPanel()} instead and specify filter in configuration given to
+     *             {@link #loadConfiguration(DataColumnSpecFilterConfiguration, DataTableSpec)}
      */
+    @Deprecated
     public DataColumnSpecFilterPanel(final Class<? extends DataValue>... filterValueClasses) {
         super(false, new DataTypeColumnFilter(filterValueClasses));
         m_filter = new DataTypeColumnFilter(filterValueClasses);
@@ -118,7 +122,11 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
      * @param showSelectionListsOnly if true, the panel shows no additional options like search box,
      *            force-include-option, etc.
      * @param filterValueClasses The {@link DataValue} of the columns to show.
+     *
+     * @deprecated Use {@link #DataColumnSpecFilterPanel(boolean)} instead and specify filter in configuration given to
+     *             {@link #loadConfiguration(DataColumnSpecFilterConfiguration, DataTableSpec)}
      */
+    @Deprecated
     public DataColumnSpecFilterPanel(final boolean showSelectionListsOnly,
         final Class<? extends DataValue>... filterValueClasses) {
         super(showSelectionListsOnly, new DataTypeColumnFilter(filterValueClasses));
@@ -133,7 +141,11 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
      * @param showSelectionListsOnly if true, the panel shows no additional options like search box,
      *            force-include-option, etc.
      * @param filter The filter specifying which columns are shown and which not.
+     *
+     * @deprecated Use {@link #DataColumnSpecFilterPanel(boolean)} instead and specify filter in configuration given to
+     *             {@link #loadConfiguration(DataColumnSpecFilterConfiguration, DataTableSpec)}
      */
+    @Deprecated
     public DataColumnSpecFilterPanel(final boolean showSelectionListsOnly, final InputFilter<DataColumnSpec> filter) {
         super(showSelectionListsOnly, filter);
         m_filter = filter;
@@ -145,7 +157,11 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
      * included or excluded and which not, based on the underlying type data type of the column.
      *
      * @param filter The filter specifying which columns are shown and which not.
+     *
+     * @deprecated Use {@link #DataColumnSpecFilterPanel()} instead and specify filter in configuration given to
+     *             {@link #loadConfiguration(DataColumnSpecFilterConfiguration, DataTableSpec)}
      */
+    @Deprecated
     public DataColumnSpecFilterPanel(final InputFilter<DataColumnSpec> filter) {
         super(false, filter);
         m_filter = filter;
@@ -162,6 +178,7 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
         m_spec = spec;
         m_typePanel.loadConfiguration(config.getTypeConfig(), spec);
         setTypeFilterEnabled(config.isTypeFilterEnabled());
+        setNameFilter(config.getFilter());
         super.loadConfiguration(config, spec == null ? new String[0] : spec.getColumnNames());
     }
 

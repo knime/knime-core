@@ -205,6 +205,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
     private List<String> m_invalidExcludes = new ArrayList<String>(0);
 
+    private String[] m_availableNames = new String[0];
+
     /**
      * Creates a panel allowing the user to select elements.
      */
@@ -576,6 +578,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     @SuppressWarnings("unchecked")
     public void update(final List<String> ins, final List<String> exs, final String[] names) {
+        m_availableNames = names;
         // clear internal member
         m_order.clear();
         m_inclMdl.removeAllElements();
@@ -828,14 +831,11 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * @param filter the new {@link InputFilter} to use
      */
     public void setNameFilter(final InputFilter<T> filter) {
-        m_filter = filter;
-
         List<String> inclList = new ArrayList<String>(getIncludedNamesAsSet());
         List<String> exclList = new ArrayList<String>(getExcludedNamesAsSet());
-        String[] allNames = new String[inclList.size() + exclList.size()];
-        for (int i = 0; i < allNames.length; i++) {
-            allNames[i] = inclList.get(i);
-        }
+        m_filter = filter;
+        m_patternPanel.setFilter(filter);
+        update(inclList, exclList, m_availableNames);
     }
 
     /**
