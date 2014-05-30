@@ -48,10 +48,13 @@
 package org.knime.base.node.mine.regression.linear2.learner;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 
 /**
  * This class hold the settings for the Linear Learner Node.
@@ -95,8 +98,11 @@ final class LinReg2LearnerSettings {
     /**
      * Create a new instance.
      */
+    @SuppressWarnings("unchecked")
     public LinReg2LearnerSettings() {
-        m_columnFilter = new DataColumnSpecFilterConfiguration(CFG_COLUMN_FILTER);
+        m_columnFilter =
+            new DataColumnSpecFilterConfiguration(CFG_COLUMN_FILTER, new DataTypeColumnFilter(DoubleValue.class,
+                NominalValue.class));
         m_includeConstant = true;
         m_offsetValue = 0;
         m_scatterPlotFirstRow = 1;

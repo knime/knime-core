@@ -71,7 +71,6 @@ import org.knime.base.node.mine.regression.MissingValueHandling;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.NominalValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -107,7 +106,7 @@ final class LinReg2LearnerNodeDialogPane extends NodeDialogPane {
     @SuppressWarnings("unchecked")
     public LinReg2LearnerNodeDialogPane() {
         super();
-        m_filterPanel = new DataColumnSpecFilterPanel(DoubleValue.class, NominalValue.class);
+        m_filterPanel = new DataColumnSpecFilterPanel();
         m_selectionPanel = new ColumnSelectionPanel(new EmptyBorder(0, 0, 0, 0),
                 DoubleValue.class);
         JPanel panel = new JPanel(new GridBagLayout());
