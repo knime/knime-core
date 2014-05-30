@@ -136,6 +136,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                         /**
                          * {@inheritDoc}
                          */
+                        @Override
                         public void stateChanged(final ChangeEvent e) {
                             Set<String>incl = props.getColumnFilter()
                             .getIncludedColumnSet();
@@ -159,6 +160,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                     /**
                      * {@inheritDoc}
                      */
+                    @Override
                     public void itemStateChanged(final ItemEvent e) {
                         ((ParallelCoordinateDrawingPane)getDrawingPane())
                             .setShowDots(showBox.isSelected());
@@ -171,6 +173,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 /**
                  * {@inheritDoc}
                  */
+                @Override
                 public void itemStateChanged(final ItemEvent e) {
                     boolean changed = (m_skipMissingValues != skipRow.
                             isSelected());
@@ -187,6 +190,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 /**
                  * {@inheritDoc}
                  */
+                @Override
                 public void itemStateChanged(final ItemEvent e) {
                     ((ParallelCoordinateDrawingPane)getDrawingPane())
                         .setSkipValues(skipValue.isSelected());
@@ -199,6 +203,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 /**
                  * {@inheritDoc}
                  */
+                @Override
                 public void itemStateChanged(final ItemEvent e) {
                     ((ParallelCoordinateDrawingPane)getDrawingPane())
                     .setShowMissingValues(showBtn.isSelected());
@@ -211,6 +216,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 /**
                  * {@inheritDoc}
                  */
+                @Override
                 public void itemStateChanged(final ItemEvent e) {
                     ((ParallelCoordinateDrawingPane)getDrawingPane())
                         .setDrawCurves(curves.isSelected());
@@ -224,6 +230,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 /**
                  * {@inheritDoc}
                  */
+                @Override
                 public void stateChanged(final ChangeEvent e) {
                      ((ParallelCoordinateDrawingPane)getDrawingPane())
                          .setLineThickness((Integer)thickness.getValue());
@@ -250,7 +257,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         m_axes = null;
         m_selected = new HashSet<RowKey>();
         m_columnNames = null;
-        m_lines = null;
+        m_lines = new ArrayList<>();
         ((ParallelCoordinateDrawingPane)getDrawingPane()).setAxes(null);
         ((ParallelCoordinateDrawingPane)getDrawingPane()).setLines(null);
     }
@@ -266,6 +273,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
             /**
              * {@inheritDoc}
              */
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_hide = false;
                 if (getDrawingPane() instanceof ParallelCoordinateDrawingPane) {
@@ -287,6 +295,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
             /**
              * {@inheritDoc}
              */
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_hide = true;
                 if (getDrawingPane() instanceof ParallelCoordinateDrawingPane) {
@@ -308,6 +317,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
             /**
              * {@inheritDoc}
              */
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_hide = false;
                 if (getDrawingPane() instanceof ParallelCoordinateDrawingPane) {
@@ -427,6 +437,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void unHiLiteAll(final KeyEvent event) {
         for (LineInfo line : m_lines) {
             line.setHilite(false);
