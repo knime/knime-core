@@ -9,48 +9,12 @@ h1 {
 }
 
 h2 {
-	font-size: 130%;
+	font-size: 120%;
 }
 
 a {
     color: #F4AB27;
 }
-
-
-div#mru {
-    width: 80%;
-    max-width: 1000px;
-    margin: 10px auto 30px auto;
-}
-
-ul#mruList li {
-	font-size: 16pt;
-	font-weight: bold;
-	list-style-image: url(img/workflow.png);
-	margin-bottom: 5px;
-}
-
-ul#mruList li a {
-    text-decoration: none;
-}
-
-
-#intro {
-	margin: 10px auto 0;
-	width: 80%;
-	max-width: 1000px;
-}
-
-#update {
-	width: 80%;
-	font-weight: bold;
-	font-size: 14pt;
-	padding: 0.6em;
-	margin: 1em auto 0 auto;
-	border: 2px groove #888;
-	background-color: #EEFFEE;
-}
-
 
 body > h2 {
     margin: 30px auto 20px;
@@ -58,39 +22,76 @@ body > h2 {
     max-width: 1000px;
 }
 
-div.link-block {
+#intro {
+	margin: 0 auto 10 auto;
+	padding-top: 13px;
 	width: 80%;
+	max-width: 1000px;
+}
+
+#update {
+	width: 80%;
+	max-width: 1000px;
+	font-weight: bold;
+	padding: 0.6em;
+	margin: 1em auto 1em auto;
+	background-color: #EEFFEE;
+	border-radius: 6px;
+}
+
+div#links-and-mru {
+	width: 80%;
+	max-width: 1000px;
+	margin: 10 auto 20 auto;
+}
+
+
+div#links {
+    float: left;
+    width: 45%;
 	overflow: hidden;
 	margin: 0 auto;
 }
 
-div.floating-link {
-    float: left;
-    width: 45%;
-    max-width: 500px;
-    min-width: 300px;
-    padding-right: 20px;
-    margin-bottom: 20px;
-    color: #666;
-}
-
-.floating-link a {
-	color: #666;
-	display: block;
-	height: 48px;
-	text-decoration: none;
-	padding: 4;
-}
-
 a .link-label {
-	padding-left: 75px;
+	padding-left: 40px;
 	font-size: 16px;
 	font-weight: bold;
+	vertical-align: middle;
 }
 
 a .text {
 	padding-left: 75px;
 }
+
+div#mru {
+    min-width: 45%;
+    float: left;
+    padding-left: 20px;
+    margin: 10px auto 30px auto;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+div#mruScrollBox {
+    height: 160px;
+    width: auto;
+    overflow: auto;
+}
+
+ul#mruList {
+	padding-left: 22px;
+}
+
+ul#mruList li {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+ul#mruList li a {
+    text-decoration: none;
+}
+
 
 div#news h2 {
     border-bottom: 1px solid #888;
@@ -106,52 +107,82 @@ span.field-content {
 	font-weight: bold;
 }
 
+div.floating-link {
+    max-width: 400px;
+    min-width: 250px;
+    padding-right: 20px;
+}
+
+.floating-link a {
+    height: 24px;
+	vertical-align: middle;
+	padding-top: 8px;
+    background: url(img/arrow.png) no-repeat 5px center;
+    color: #666;
+    display: block;
+    text-decoration: none;
+}
+
+.floating-link > a:hover {
+    background: #eee url(img/arrow.png) no-repeat 5px center;
+}
+
+
 #news {
 	width: 80%;
-	max-width: 700px;
-	margin: 0 auto;
-	margin-bottom: 20px;
+	max-width: 1000px;
+    margin: 20 auto;
 	padding: 5px 5px;
 	background: #eee;
+	border-radius: 6px;
 }
 
 #tips {
     width: 80%;
-    max-width: 700px;
-    margin: 0 auto;
+    max-width: 1000px;
+    margin: 20 auto;
     padding: 5px 5px;
     background: #eee;
+    border-radius: 6px;
 }
 
 
-#install {
-	background: url(img/icon_inactive.png) no-repeat 5px center;
+#properties {
+	clear: both;
+	color: #666;
+	margin-top: 1em;
+	border-top: 1px solid grey;
 }
 
-#install:hover {
-	background: #eee url(img/icon_active.png) no-repeat 5px center;
+
+
+.hide-button {
+    float: right;
+    display: none;
 }
 
-#examples {
-	background: url(img/icon_inactive.png) no-repeat 5px center;
+.hide-button:hover {
+	cursor: pointer;
 }
 
-#examples:hover {
-	background: #eee url(img/icon_active.png) no-repeat 5px center;
+
+#intro .hide-button {
+    margin-top: -10px;
+}
+#intro:hover .hide-button {
+	display: block;
 }
 
-#learning-hub {
-	background: url(img/icon_inactive.png) no-repeat 5px center;
+#update .hide-button {
+    margin-top: -2px;
+    margin-right: -2px;
+}
+#update:hover .hide-button {
+	display: block;
 }
 
-#learning-hub:hover {
-	background: #eee url(img/icon_active.png) no-repeat 5px center;
+#links-and-mru .hide-button {
 }
-
-#new-workflow {
-	background: url(img/icon_inactive.png) no-repeat 5px center;
-}
-
-#new-workflow:hover {
-	background: #eee url(img/icon_active.png) no-repeat 5px center;
+#links-and-mru:hover .hide-button {
+	display: block;
 }

@@ -160,6 +160,9 @@ public class IntroPage implements LocationListener {
 
     private File m_introFile;
 
+    private final IEclipsePreferences m_prefs = InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass())
+        .getSymbolicName());
+
     private IntroPage() {
         IPath path = WorkbenchPlugin.getDefault().getDataLocation();
         if (path != null) {
@@ -238,8 +241,6 @@ public class IntroPage implements LocationListener {
      * @param doc the document
      */
     private void processIntroProperties(final XPath xpath, final Document doc) throws XPathExpressionException {
-        IEclipsePreferences prefs =
-            InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
         NodeList checkBoxes =
             (NodeList)xpath.evaluate("//div[@id='properties']//input[@type='checkbox']", doc.getDocumentElement(),
                 XPathConstants.NODESET);
@@ -250,7 +251,7 @@ public class IntroPage implements LocationListener {
 
             Element div =
                 (Element)xpath.evaluate("//div[@id='" + name + "']", doc.getDocumentElement(), XPathConstants.NODE);
-            if (prefs.getBoolean(key, true)) {
+            if (m_prefs.getBoolean(key, true)) {
                 cb.setAttribute("checked", "checked");
                 div.removeAttribute("style");
             } else {
@@ -624,11 +625,8 @@ public class IntroPage implements LocationListener {
     }
 
     private void setIntroProperty(final URI command) {
-        IEclipsePreferences prefs =
-            InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
-
         for (NameValuePair param : URLEncodedUtils.parse(command, "UTF-8")) {
-            prefs.putBoolean("org.knime.product.intro." + param.getName(), Boolean.parseBoolean(param.getValue()));
+            m_prefs.putBoolean("org.knime.product.intro." + param.getName(), Boolean.parseBoolean(param.getValue()));
         }
     }
 

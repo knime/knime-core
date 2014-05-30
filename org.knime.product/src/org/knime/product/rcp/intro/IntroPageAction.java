@@ -56,8 +56,8 @@ import org.eclipse.jface.action.Action;
  */
 public class IntroPageAction extends Action {
     public IntroPageAction() {
-        super("KNIME Intro Page");
-        setToolTipText("Opens the KNIME intro page");
+        super("Welcome Page");
+        setToolTipText("Opens the KNIME welcome page");
         setId("KNIMEIntroPageAction");
     }
 
