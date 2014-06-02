@@ -140,7 +140,6 @@ import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
 import org.knime.workbench.editor2.pervasive.PervasiveJobExecutorHelper;
 import org.knime.workbench.ui.KNIMEUIPlugin;
-import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
@@ -389,7 +388,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         // and leave the work to the previously started thread. This
         // works because we are retrieving the current state information!
         if (m_updateInProgress.compareAndSet(false, true)) {
-            SyncExecQueueDispatcher.asyncExec(new Runnable() {
+            Display display = Display.getDefault();
+            if (display.isDisposed()) {
+                return;
+            }
+            display.asyncExec(new Runnable() {
                 @Override
                 public void run() {
                     // let others know we are in the middle of processing
@@ -430,7 +433,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     @Override
     public void messageChanged(final NodeMessageEvent ignored) {
         if (m_messageUpdateInProgress.compareAndSet(false, true)) {
-            SyncExecQueueDispatcher.asyncExec(new Runnable() {
+            Display display = Display.getDefault();
+            if (display.isDisposed()) {
+                return;
+            }
+            display.asyncExec(new Runnable() {
                 @Override
                 public void run() {
                     Display.getDefault().asyncExec(new Runnable() {

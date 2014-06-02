@@ -53,6 +53,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -61,7 +62,6 @@ import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.workbench.editor2.figures.NodeOutPortFigure;
-import org.knime.workbench.ui.SyncExecQueueDispatcher;
 
 /**
  * Edit part for a {@link NodeOutPort}. Model: {@link NodeOutPort} View:
@@ -161,7 +161,11 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
     @Override
     public void stateChanged(final NodeStateEvent state) {
         if (m_updateInProgressFlag.compareAndSet(false, true)) {
-            SyncExecQueueDispatcher.asyncExec(new Runnable() {
+            Display display = Display.getDefault();
+            if (display.isDisposed()) {
+                return;
+            }
+            display.asyncExec(new Runnable() {
                 @Override
                 public void run() {
                     if (!isActive()) {

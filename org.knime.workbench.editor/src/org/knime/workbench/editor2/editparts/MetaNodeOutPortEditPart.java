@@ -53,6 +53,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
@@ -62,7 +63,6 @@ import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowOutPort;
 import org.knime.workbench.editor2.figures.MetaNodeOutPortFigure;
-import org.knime.workbench.ui.SyncExecQueueDispatcher;
 
 /**
  * Represent edit part for meta node outport (attached to a node icon, decorated
@@ -172,7 +172,11 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
     @Override
     public void stateChanged(final NodeStateEvent state) {
         if (m_updateInProgress.compareAndSet(false, true)) {
-            SyncExecQueueDispatcher.asyncExec(new Runnable() {
+            Display display = Display.getDefault();
+            if (display.isDisposed()) {
+                return;
+            }
+            display.asyncExec(new Runnable() {
                 @Override
                 public void run() {
                     m_updateInProgress.set(false);
