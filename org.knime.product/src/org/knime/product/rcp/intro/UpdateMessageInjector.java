@@ -170,9 +170,19 @@ class UpdateMessageInjector implements Runnable {
         Document doc = parser.parse(m_templateFile);
 
         XPath xpath = m_xpathFactory.newXPath();
+        Element updateNode =
+                (Element)xpath.evaluate("//div[@id='update']", doc.getDocumentElement(), XPathConstants.NODE);
+
         Element noUpdatesSpan =
-            (Element)xpath.evaluate("//span[@id='no-updates']", doc.getDocumentElement(), XPathConstants.NODE);
+            (Element)xpath.evaluate("//span[@id='no-updates']", updateNode, XPathConstants.NODE);
         noUpdatesSpan.removeAttribute("style"); // removes the "hidden" style
+
+        IEclipsePreferences prefs =
+            InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
+        if (prefs.getBoolean("org.knime.product.intro.update", true)) {
+            updateNode.removeAttribute("style"); // removes the "hidden" style
+        }
+
         serialize(doc);
     }
 
@@ -182,12 +192,13 @@ class UpdateMessageInjector implements Runnable {
         Document doc = parser.parse(m_templateFile);
 
         XPath xpath = m_xpathFactory.newXPath();
+        Element updateNode =
+                (Element)xpath.evaluate("//div[@id='update']", doc.getDocumentElement(), XPathConstants.NODE);
+
         Element updatesAvailableSpan =
-            (Element)xpath.evaluate("//span[@id='updates-available']", doc.getDocumentElement(), XPathConstants.NODE);
+            (Element)xpath.evaluate("//span[@id='updates-available']", updateNode, XPathConstants.NODE);
         updatesAvailableSpan.removeAttribute("style"); // removes the "hidden" style
 
-        Element updateNode =
-            (Element)xpath.evaluate("//div[@id='update']", doc.getDocumentElement(), XPathConstants.NODE);
 
         Element updateList = (Element)xpath.evaluate(".//ul[@id='update-list']", updateNode, XPathConstants.NODE);
         boolean updatePossible = true;
@@ -212,7 +223,7 @@ class UpdateMessageInjector implements Runnable {
         IEclipsePreferences prefs =
             InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
         if (prefs.getBoolean("org.knime.product.intro.update", true)) {
-            updateNode.removeAttribute("style");  // removes the "hidden" style
+            updateNode.removeAttribute("style"); // removes the "hidden" style
         }
 
         serialize(doc);
