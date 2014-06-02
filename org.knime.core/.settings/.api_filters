@@ -798,6 +798,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/FileSingleNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileSingleNodeContainerPersistor">
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="getLoadVersion()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/FileWorkflowPersistor.java" type="org.knime.core.node.workflow.FileWorkflowPersistor">
         <filter comment="changing persistor api" id="1110441988">
             <message_arguments>
@@ -867,6 +874,11 @@
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NativeNodeContainer.java" type="org.knime.core.node.workflow.NativeNodeContainer">
         <filter comment="changes required to support subnode - no API anyway" id="338792546">
@@ -881,12 +893,27 @@
                 <message_argument value="getWebTemplate()"/>
             </message_arguments>
         </filter>
+        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="getInternalHeldPortObjects()"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainer.java" type="org.knime.core.node.workflow.NodeContainer">
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.NodeContainer"/>
                 <message_argument value="getWebTemplate()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="getDirectNCParent()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="setDeletable(boolean)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -965,6 +992,16 @@
         </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
             <message_arguments>
+                <message_argument value="canResetContainedNodes()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="cipherOutput(OutputStream)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
+            <message_arguments>
                 <message_argument value="fetchInputDataFromParent()"/>
             </message_arguments>
         </filter>
@@ -975,12 +1012,32 @@
         </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
             <message_arguments>
+                <message_argument value="getCipherFileName(String)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
+            <message_arguments>
                 <message_argument value="getVirtualInNodeID()"/>
             </message_arguments>
         </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="getVirtualOutNodeID()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="getWorkflowMutex()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="isWriteProtected()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="pushWorkflowVariablesOnStack(FlowObjectStack)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1054,6 +1111,31 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
                 <message_argument value="reExecuteNode(NodeID, ViewContent, ReexecutionCallback)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="canResetContainedNodes()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="createLoadPersistor(File, WorkflowLoadHelper)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="getWorkflowMutex()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+            <message_arguments>
+                <message_argument value="load(FileWorkflowPersistor, ExecutionMonitor, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes required to support subnode - no API anyway" id="1227882500">
+            <message_arguments>
+                <message_argument value="pushWorkflowVariablesOnStack(FlowObjectStack)"/>
             </message_arguments>
         </filter>
     </resource>
