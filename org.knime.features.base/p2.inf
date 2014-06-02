@@ -16,8 +16,8 @@ org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${
 org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/commercial/server/3.8/,enabled\:false,name\:KNIME Server Update Site);\
 org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/commercial/teamspace/3.3/,enabled\:false,name\:KNIME TeamSpace Update Site);\
 org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/commercial/teamspace/3.3/,enabled\:false,name\:KNIME TeamSpace Update Site);\
-org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/store/update/1.0/,enabled\:false,name\:KNIME Store Update Site);\
-org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/store/update/1.0/,enabled\:false,name\:KNIME Store Update Site);
+org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/store/update/1.0/,enabled\:true,name\:KNIME Store Update Site);\
+org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/store/update/1.0/,enabled\:true,name\:KNIME Store Update Site);
 
 instructions.unconfigure=org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.9/);\
 org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.9/);\
