@@ -52,6 +52,8 @@ import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.node.NodeLogger;
 
 
 /**
@@ -159,7 +161,7 @@ public class DefaultDataValueRenderer extends DefaultTableCellRenderer implement
             setForeground(list.getForeground());
         }
 
-        setValue(value);
+        setValueCatchingException(value);
         setEnabled(list.isEnabled());
         setFont(list.getFont());
         setBorder((cellHasFocus)
@@ -173,8 +175,27 @@ public class DefaultDataValueRenderer extends DefaultTableCellRenderer implement
      */
     @Override
     public Component getRendererComponent(final Object val) {
-        setValue(val);
+        setValueCatchingException(val);
         return this;
+    }
+
+    private void setValueCatchingException(final Object value) {
+        try {
+            setValue(value);
+        } catch (Exception e) {
+            String valS = value != null ? value.toString() : "<null>";
+            if (valS.length() > 20) {
+                valS = valS.substring(0, 20).concat("...");
+            }
+            StringBuilder b = new StringBuilder("Failed setting new value (\"");
+            b.append(valS).append("\"");
+            if (value != null) {
+                b.append(" - class ").append(value.getClass().getSimpleName());
+            }
+            b.append(")");
+            NodeLogger.getLogger(getClass()).coding(b.toString(), e);
+            setValue(DataType.getMissingCell());
+        }
     }
 
     /**
