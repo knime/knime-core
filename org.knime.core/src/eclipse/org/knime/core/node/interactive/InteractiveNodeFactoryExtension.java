@@ -53,7 +53,8 @@ import org.knime.core.node.NodeModel;
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold
  * @param <T> requires NodeModel implementing InteractiveNode
- * @param <REP>
+ * @param <REP> The view representation.
+ * @param <VAL> The view value.
  * @since 2.8
  */
 public interface InteractiveNodeFactoryExtension<T extends NodeModel & InteractiveNode<REP, VAL>, REP extends ViewContent, VAL extends ViewContent> {

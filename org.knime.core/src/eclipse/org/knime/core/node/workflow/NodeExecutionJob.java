@@ -189,7 +189,7 @@ public abstract class NodeExecutionJob implements Runnable {
         }
         try {
             // sets state POSTEXECUTE
-            m_nc.notifyParentPostExecuteStart();
+            m_nc.notifyParentPostExecuteStart(status);
             if (!executeInactive) {
                 afterExecute();
             }

@@ -81,11 +81,10 @@ public final class InteractiveViewDelegate<V extends ViewContent> {
         return m_wfm.canReExecuteNode(m_nodeID);
     }
 
-    public void triggerReExecution(final V vc, final ReexecutionCallback rec) {
-        m_wfm.reExecuteNode(m_nodeID, vc, rec);
+    /**
+     * @since 2.10
+     */
+    public void triggerReExecution(final V vc, final boolean useAsNewDefault, final ReexecutionCallback rec) {
+        m_wfm.reExecuteNode(m_nodeID, vc, useAsNewDefault, rec);
     }
-
-    public void setNewDefaultConfiguration(final ConfigureCallback ccb) {
-        m_wfm.saveNodeSettingsToDefault(m_nodeID);
-     }
 }

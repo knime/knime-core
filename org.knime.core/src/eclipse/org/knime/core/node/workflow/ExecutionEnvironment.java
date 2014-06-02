@@ -59,22 +59,26 @@ public class ExecutionEnvironment {
 
     private boolean m_reExecute;
     private ViewContent m_viewContent;
+    private boolean m_useAsNewDefault;
 
     /** Default constructor: no re-execution, don't preload ViewContent.
      */
     public ExecutionEnvironment() {
         m_reExecute = false;
         m_viewContent = null;
+        m_useAsNewDefault = false;
     }
 
     /** Setup default environment with new parameters.
      *
      * @param reExecute flag indicating if nodes is to be re-executed.
      * @param preExecVC view content to be loaded into node before execution
+     * @since 2.10
      */
-    public ExecutionEnvironment(final boolean reExecute, final ViewContent preExecVC) {
+    public ExecutionEnvironment(final boolean reExecute, final ViewContent preExecVC, final boolean useAsNewDefault) {
         m_reExecute = reExecute;
         m_viewContent = preExecVC;
+        m_useAsNewDefault = useAsNewDefault;
     }
 
     /**
@@ -89,6 +93,14 @@ public class ExecutionEnvironment {
      */
     public ViewContent getPreExecuteViewContent() {
         return m_viewContent;
+    }
+
+    /**
+     * @return the useAsNewDefault
+     * @since 2.10
+     */
+    public boolean getUseAsDefault() {
+        return m_useAsNewDefault;
     }
 
 }

@@ -555,7 +555,7 @@ public abstract class NodeModel {
             if (this instanceof InteractiveNode) {
                 InteractiveNode iThis = (InteractiveNode)this;
                 ViewContent viewContent = exEnv.getPreExecuteViewContent();
-                iThis.loadViewValue(viewContent);
+                iThis.loadViewValue(viewContent, exEnv.getUseAsDefault());
                 outData = execute(data, exec);
             } else if (this instanceof LoopStartNode) {
                 outData = execute(data, exec);

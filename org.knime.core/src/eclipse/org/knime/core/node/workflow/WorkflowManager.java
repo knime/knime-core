@@ -1802,7 +1802,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         if (markExecutedNodes) {
                             // in case of loop bodies that asked not to be reset.
                             changed = true;
-                            snc.markForReExecution(new ExecutionEnvironment(true, null));
+                            snc.markForReExecution(new ExecutionEnvironment(true, null, false));
                             break;
                         }
                     default:
@@ -2308,10 +2308,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @param id the node
      * @param vc the view content to be loaded into the node before re-execution
+     * @param useAsNewDefault true if the view content is to be used as new node settings
      * @param rec callback object for user interaction (do you really want to reset...)
-     * @since 2.8
+     * @since 2.10
      */
-    public void reExecuteNode(final NodeID id, final ViewContent vc, final ReexecutionCallback rec) {
+    public void reExecuteNode(final NodeID id, final ViewContent vc, final boolean useAsNewDefault, final ReexecutionCallback rec) {
         synchronized (m_workflowMutex) {
             if (!canReExecuteNode(id)) {
                 throw new IllegalArgumentException("Can't reexecute executing nodes.");
@@ -2319,7 +2320,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer(id);
             resetSuccessors(id);
             configureNodeAndPortSuccessors(id, null, false, true);
-            snc.markForReExecution(new ExecutionEnvironment(true, vc));
+            snc.markForReExecution(new ExecutionEnvironment(true, vc, useAsNewDefault));
             assert snc.getInternalState().equals(InternalNodeContainerState.EXECUTED_MARKEDFOREXEC);
             queueIfQueuable(snc);
         }
@@ -2745,11 +2746,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * called with a remotely executed meta node.
      * @param nc node whose execution is ending (and is now copying
      *   result data, e.g.)
+     * @param status ...
      */
-    void doBeforePostExecution(final NodeContainer nc) {
+    void doBeforePostExecution(final NodeContainer nc, final NodeContainerExecutionStatus status) {
         assert !nc.isLocalWFM() : "No execution of local meta nodes";
         synchronized (m_workflowMutex) {
             LOGGER.debug(nc.getNameWithID() + " doBeforePostExecution");
+            if (nc instanceof NativeNodeContainer && status.isSuccess()) {
+                NativeNodeContainer nnc = (NativeNodeContainer)nc;
+                if (nnc.getExecutionEnvironment().getUseAsDefault()) {
+                    // interactive nodes may have new defaults
+                    nnc.saveNodeSettingsToDefault();
+                }
+            }
             nc.performStateTransitionPOSTEXECUTE();
             checkForNodeStateChanges(true);
         }
@@ -3014,7 +3023,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // NOTE: if we ever queue nodes asynchronosly this might cause problems.
         NativeNodeContainer headNNC = ((NativeNodeContainer)headNode);
         assert headNNC.isModelCompatibleTo(LoopStartNode.class);
-        headNNC.markForReExecution(new ExecutionEnvironment(true, null));
+        headNNC.markForReExecution(new ExecutionEnvironment(true, null, false));
         // clean up all newly added objects on FlowVariable Stack
         // (otherwise we will push the same variables many times...
         // push ISLC back onto the stack is done in doBeforeExecute()!
@@ -3114,7 +3123,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (nc instanceof SingleNodeContainer) {
                     // make sure it's not already done...
                     if (nc.getInternalState().equals(InternalNodeContainerState.EXECUTED)) {
-                        ((SingleNodeContainer)nc).markForReExecution(new ExecutionEnvironment(false, null));
+                        ((SingleNodeContainer)nc).markForReExecution(new ExecutionEnvironment(false, null, false));
                     }
                 } else {
                     // Mark executed nodes for re-execution (will also mark

@@ -92,17 +92,10 @@ extends NodeView<T> implements InteractiveView<T, REP, VAL> {
 
     /**
      * {@inheritDoc}
+     * @since 2.10
      */
     @Override
-    public void triggerReExecution(final VAL val, final ReexecutionCallback callback) {
-        m_delegate.triggerReExecution(val, callback);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setNewDefaultConfiguration(final ConfigureCallback callback) {
-        m_delegate.setNewDefaultConfiguration(callback);
+    public void triggerReExecution(final VAL val, final boolean useAsNewDefault, final ReexecutionCallback callback) {
+        m_delegate.triggerReExecution(val, useAsNewDefault, callback);
     }
 }

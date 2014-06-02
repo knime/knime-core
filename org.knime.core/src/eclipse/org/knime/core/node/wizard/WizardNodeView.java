@@ -92,8 +92,6 @@ import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.interactive.ConfigureCallback;
-import org.knime.core.node.interactive.DefaultConfigureCallback;
 import org.knime.core.node.interactive.DefaultReexecutionCallback;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.InteractiveViewDelegate;
@@ -162,30 +160,12 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         return m_delegate.canReExecute();
     }
 
-    @Override
-    public void triggerReExecution(final VAL value, final ReexecutionCallback callback) {
-        m_delegate.triggerReExecution(value, callback);
-    }
-
-    @Override
-    public void setNewDefaultConfiguration(final ConfigureCallback callback) {
-        m_delegate.setNewDefaultConfiguration(callback);
-    }
-
     /**
-     * Load a new ViewValue into the underlying NodeModel.
-     *
-     * @param value the new value of the view.
+     * @since 2.10
      */
-    protected final void loadViewValueIntoNode(final VAL value) {
-        triggerReExecution(value, new DefaultReexecutionCallback());
-    }
-
-    /**
-     * Set current ViewContent as new default settings of the underlying NodeModel.
-     */
-    protected final void makeViewContentNewDefault() {
-        m_delegate.setNewDefaultConfiguration(new DefaultConfigureCallback());
+    @Override
+    public void triggerReExecution(final VAL value, final boolean useAsNewDefault, final ReexecutionCallback callback) {
+        m_delegate.triggerReExecution(value, useAsNewDefault, callback);
     }
 
     /**
@@ -273,14 +253,14 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         applyButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                applyTriggered(m_browser);
+                applyTriggered(m_browser, false);
             }
         });
 
         newDefaultButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
-                makeViewContentNewDefault();
+                applyTriggered(m_browser, true);
             }
         });
 
@@ -586,7 +566,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         return builder.toString();
     }
 
-    private void applyTriggered(final Browser browser) {
+    private void applyTriggered(final Browser browser, final boolean useAsDefault) {
         boolean valid = true;
         String validateMethod = m_template.getValidateMethodName();
         if (validateMethod != null && !validateMethod.isEmpty()) {
@@ -601,7 +581,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
             try {
                 VAL viewValue = getNodeModel().createEmptyViewValue();
                 viewValue.loadFromStream(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
-                loadViewValueIntoNode(viewValue);
+                triggerReExecution(viewValue, useAsDefault, new DefaultReexecutionCallback());
             } catch (Exception e) {
                 //TODO error message
             }

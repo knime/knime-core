@@ -156,7 +156,7 @@ public class InteractiveHiLiteCollectorNodeView extends InteractiveClientNodeVie
         if (anno != null && !anno.isEmpty()) {
             getNodeModel().appendAnnotation(anno, newColumn);
             //FIXME: Put annotation map in view content
-            triggerReExecution(new InteractiveHiLiteCollectorViewContent(), new DefaultReexecutionCallback());
+            triggerReExecution(new InteractiveHiLiteCollectorViewContent(), false, new DefaultReexecutionCallback());
         }
     }
 

@@ -475,7 +475,7 @@ public final class WizardExecutionController {
             }
             try {
                 newViewValue.loadFromStream(new ByteArrayInputStream(entry.getValue().getBytes()));
-                wizardNode.loadViewValue(newViewValue);
+                wizardNode.loadViewValue(newViewValue, false);
             } catch (IOException e) {
                 // do nothing, exception not possible
             }

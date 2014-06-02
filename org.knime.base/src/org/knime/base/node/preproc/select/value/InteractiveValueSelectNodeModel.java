@@ -95,7 +95,6 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Wizard
 
     private DataColumnSpec colSpec = new DataColumnSpecCreator("Selected Values", StringCell.TYPE).createSpec();
 
-
     /**
      *
      */
@@ -221,7 +220,8 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Wizard
     /**
      * {@inheritDoc}
      */
-    public void loadViewValue(final InteractiveValueSelectViewContent viewContent) {
+    @Override
+    public void loadViewValue(final InteractiveValueSelectViewContent viewContent, final boolean useAsDefault) {
         // TODO Auto-generated method stub
 
     }
@@ -237,6 +237,7 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Wizard
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getJavascriptObjectID() {
         // TODO Auto-generated method stub
         return null;
@@ -245,6 +246,7 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Wizard
     /**
      * {@inheritDoc}
      */
+    @Override
     public InteractiveValueSelectViewContent getViewValue() {
         // TODO Auto-generated method stub
         return null;
@@ -253,6 +255,7 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Wizard
     /**
      * {@inheritDoc}
      */
+    @Override
     public InteractiveValueSelectViewContent createEmptyViewValue() {
         // TODO Auto-generated method stub
         return null;

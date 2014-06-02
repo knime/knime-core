@@ -84,8 +84,9 @@ public interface InteractiveNode<REP extends ViewContent, VAL extends ViewConten
 
     /**
      * @param viewContent The view content to load.
+     * @param useAsDefault True if node settings are to be updated by view content.
      * @since 2.10
      */
-    void loadViewValue(VAL viewContent);
+    void loadViewValue(VAL viewContent, boolean useAsDefault);
 
 }

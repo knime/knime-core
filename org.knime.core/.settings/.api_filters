@@ -333,6 +333,18 @@
                 <message_argument value="VAL"/>
             </message_arguments>
         </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveClientNodeView"/>
+                <message_argument value="setNewDefaultConfiguration(ConfigureCallback)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveClientNodeView"/>
+                <message_argument value="triggerReExecution(V, ReexecutionCallback)"/>
+            </message_arguments>
+        </filter>
         <filter id="437350426">
             <message_arguments>
                 <message_argument value="org.knime.core.node.interactive.InteractiveClientNodeView"/>
@@ -363,7 +375,7 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.interactive.InteractiveNode"/>
-                <message_argument value="loadViewValue(VAL)"/>
+                <message_argument value="loadViewValue(VAL, boolean)"/>
             </message_arguments>
         </filter>
         <filter id="403804204">
@@ -432,6 +444,18 @@
                 <message_argument value="VAL"/>
             </message_arguments>
         </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveView"/>
+                <message_argument value="setNewDefaultConfiguration(ConfigureCallback)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveView"/>
+                <message_argument value="triggerReExecution(V, ReexecutionCallback)"/>
+            </message_arguments>
+        </filter>
         <filter id="437350426">
             <message_arguments>
                 <message_argument value="org.knime.core.node.interactive.InteractiveView"/>
@@ -447,6 +471,18 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/interactive/InteractiveViewDelegate.java" type="org.knime.core.node.interactive.InteractiveViewDelegate">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveViewDelegate"/>
+                <message_argument value="setNewDefaultConfiguration(ConfigureCallback)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.interactive.InteractiveViewDelegate"/>
+                <message_argument value="triggerReExecution(V, ReexecutionCallback)"/>
+            </message_arguments>
+        </filter>
         <filter id="437350426">
             <message_arguments>
                 <message_argument value="org.knime.core.node.interactive.InteractiveViewDelegate"/>
@@ -645,6 +681,18 @@
                 <message_argument value="WizardNodeView(T, WebTemplate)"/>
             </message_arguments>
         </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNodeView"/>
+                <message_argument value="setNewDefaultConfiguration(ConfigureCallback)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNodeView"/>
+                <message_argument value="triggerReExecution(VC, ReexecutionCallback)"/>
+            </message_arguments>
+        </filter>
         <filter id="437350426">
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.WizardNodeView"/>
@@ -718,6 +766,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/ExecutionEnvironment.java" type="org.knime.core.node.workflow.ExecutionEnvironment">
+        <filter id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ExecutionEnvironment"/>
+                <message_argument value="ExecutionEnvironment(boolean, ViewContent)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/FileNativeNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileNativeNodeContainerPersistor">
         <filter comment="renaming persistor classes - no API anyway" id="338722907">
             <message_arguments>
@@ -739,18 +795,6 @@
         <filter comment="bug 5207 - Save plug-in version for each node in workflow" id="1143996420">
             <message_arguments>
                 <message_argument value="getNodeAndBundleInformation()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/FileSingleNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileSingleNodeContainerPersistor">
-        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="getLoadVersion()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="subnode save/load" id="1143996420">
-            <message_arguments>
-                <message_argument value="save(SingleNodeContainer, ReferencedFile, ExecutionMonitor, boolean)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -823,11 +867,6 @@
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
-        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
-            </message_arguments>
-        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NativeNodeContainer.java" type="org.knime.core.node.workflow.NativeNodeContainer">
         <filter comment="changes required to support subnode - no API anyway" id="338792546">
@@ -842,27 +881,12 @@
                 <message_argument value="getWebTemplate()"/>
             </message_arguments>
         </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="getInternalHeldPortObjects()"/>
-            </message_arguments>
-        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainer.java" type="org.knime.core.node.workflow.NodeContainer">
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.NodeContainer"/>
                 <message_argument value="getWebTemplate()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="getDirectNCParent()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="setDeletable(boolean)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -941,16 +965,6 @@
         </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
             <message_arguments>
-                <message_argument value="canResetContainedNodes()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="cipherOutput(OutputStream)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
-            <message_arguments>
                 <message_argument value="fetchInputDataFromParent()"/>
             </message_arguments>
         </filter>
@@ -961,32 +975,12 @@
         </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
             <message_arguments>
-                <message_argument value="getCipherFileName(String)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
-            <message_arguments>
                 <message_argument value="getVirtualInNodeID()"/>
             </message_arguments>
         </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="getVirtualOutNodeID()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="getWorkflowMutex()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="isWriteProtected()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="pushWorkflowVariablesOnStack(FlowObjectStack)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1056,29 +1050,10 @@
                 <message_argument value="load(WorkflowPersistorVersion1xx, ExecutionMonitor, boolean)"/>
             </message_arguments>
         </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
+        <filter id="338792546">
             <message_arguments>
-                <message_argument value="canResetContainedNodes()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="createLoadPersistor(File, WorkflowLoadHelper)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="getWorkflowMutex()"/>
-            </message_arguments>
-        </filter>
-        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="load(FileWorkflowPersistor, ExecutionMonitor, boolean)"/>
-            </message_arguments>
-        </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1227882500">
-            <message_arguments>
-                <message_argument value="pushWorkflowVariablesOnStack(FlowObjectStack)"/>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="reExecuteNode(NodeID, ViewContent, ReexecutionCallback)"/>
             </message_arguments>
         </filter>
     </resource>

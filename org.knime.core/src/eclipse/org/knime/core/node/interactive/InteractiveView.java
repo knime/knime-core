@@ -83,19 +83,10 @@ public interface InteractiveView<T extends NodeModel & InteractiveNode<REP, VAL>
      * - execute node but not successors (can be canceled by user of fail during execution!)
      *
      * @param vc
+     * @param useAsNewDefault
      * @param callback Callback for confirm messages and progress information.
+     * @since 2.10
      */
-    public void triggerReExecution(final VAL vc, final ReexecutionCallback callback);
-
-    /**
-     * Make sure current node internals are used as new default NodeSettings.<br>
-     * Results in:<br>
-     * - reset of node and successors (ask user first!)<br>
-     * - NodeModel.saveSettingsTo()<br>
-     * - configure node and successors
-     *
-     * @param callback Callback for confirm messages.
-     */
-    public void setNewDefaultConfiguration(final ConfigureCallback callback);
+    public void triggerReExecution(final VAL vc, final boolean useAsNewDefault, final ReexecutionCallback callback);
 
 }

@@ -387,7 +387,7 @@ public class InteractiveHiLiteCollectorNodeModel extends NodeModel
      * @since 2.10
      */
     @Override
-    public void loadViewValue(final InteractiveHiLiteCollectorViewContent viewContent) {
+    public void loadViewValue(final InteractiveHiLiteCollectorViewContent viewContent, final boolean useAsDefault) {
         // TODO Auto-generated method stub
 
     }
@@ -396,6 +396,7 @@ public class InteractiveHiLiteCollectorNodeModel extends NodeModel
      * {@inheritDoc}
      * @since 2.10
      */
+    @Override
     public InteractiveHiLiteCollectorViewContent getViewValue() {
         // TODO Auto-generated method stub
         return null;

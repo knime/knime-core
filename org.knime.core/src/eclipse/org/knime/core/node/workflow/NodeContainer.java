@@ -387,7 +387,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
                 } catch (IllegalFlowObjectStackException e) {
                     // ignore, we have something more serious to deal with
                 }
-                notifyParentPostExecuteStart();
+                notifyParentPostExecuteStart(NodeContainerExecutionStatus.FAILURE);
                 notifyParentExecuteFinished(NodeContainerExecutionStatus.FAILURE);
             }
             return;
@@ -515,13 +515,14 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
 
     /**
      * Invoked by job manager when the execution is finishing. This method will
-     * invoke the {@link WorkflowManager#doBeforePostExecution(NodeContainer)}
+     * invoke the {@link WorkflowManager#doBeforePostExecution(NodeContainer, NodeContainerExecutionStatus)}
      * method in this node's parent. It will then call back on
      * {@link #performStateTransitionPOSTEXECUTE()} to allow for a synchronized
      * state transition.
+     * @param status The execution status.
      */
-    void notifyParentPostExecuteStart() {
-        getParent().doBeforePostExecution(this);
+    void notifyParentPostExecuteStart(final NodeContainerExecutionStatus status) {
+        getParent().doBeforePostExecution(this, status);
     }
 
     /**
