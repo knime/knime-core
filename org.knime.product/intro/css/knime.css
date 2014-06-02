@@ -18,19 +18,16 @@ a {
 
 body > h2 {
     margin: 30px auto 20px;
-    width: 80%;
     max-width: 1000px;
 }
 
 #intro {
 	margin: 0 auto 10 auto;
 	padding-top: 13px;
-	width: 80%;
 	max-width: 1000px;
 }
 
 #update {
-	width: 80%;
 	max-width: 1000px;
 	font-weight: bold;
 	padding: 0.6em;
@@ -40,7 +37,6 @@ body > h2 {
 }
 
 div#links-and-mru {
-	width: 80%;
 	max-width: 1000px;
 	margin: 10 auto 20 auto;
 }
@@ -129,7 +125,6 @@ div.floating-link {
 
 
 #news {
-	width: 80%;
 	max-width: 1000px;
     margin: 20 auto;
 	padding: 5px 5px;
@@ -138,7 +133,6 @@ div.floating-link {
 }
 
 #tips {
-    width: 80%;
     max-width: 1000px;
     margin: 20 auto;
     padding: 5px 5px;
@@ -153,7 +147,6 @@ div.floating-link {
 	margin-top: 1em;
 	border-top: 1px solid grey;
 }
-
 
 
 .hide-button {
