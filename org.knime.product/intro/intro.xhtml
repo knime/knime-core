@@ -34,12 +34,22 @@ function showUpdate(show) {
     document.getElementById('show-update').checked = show;
     window.location.href='intro://setProperty/?update=' + show;
 }
+
+
+var reloadTimer = setInterval('reload', 1000);
+function reload() {
+	if (document.getElementById('tips').style.display == 'none') {
+		location.reload();
+	} else {
+		window.clearInterval(reloadTimer);
+	}
+}
 </script>
 <title>Welcome to KNIME</title>
 <link rel="stylesheet" href="knime.css" type="text/css" />
 </head>
 <!-- This page is shown upon each startup. -->
-<body>
+<body onload="javascript:setTimeout('reload()', 5000);">
     <img src="img/KNIME_logo.png" />
 
     <div id="intro">
