@@ -247,6 +247,10 @@ public class IntroPage implements LocationListener {
         for (int i = 0; i < checkBoxes.getLength(); i++) {
             Element cb = (Element)checkBoxes.item(i);
             String name = cb.getAttribute("name");
+            if (m_freshWorkspace && "update".equals(name)) {
+                continue;
+            }
+
             String key = "org.knime.product.intro." + name;
 
             Element div =
