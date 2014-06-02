@@ -101,6 +101,14 @@ class WorkflowExecuteTest extends WorkflowTest {
 
                 @Override
                 public void run() {
+                    try {
+                        internalRun();
+                    } catch (Exception ex) {
+                        result.addError(WorkflowExecuteTest.this, ex);
+                    }
+                }
+
+                private void internalRun() {
                     if (m_progressMonitor.isCanceled()) {
                         result.addError(WorkflowExecuteTest.this, new InterruptedException("Testflow canceled by user"));
                         m_context.getWorkflowManager().getParent().cancelExecution(m_context.getWorkflowManager());
