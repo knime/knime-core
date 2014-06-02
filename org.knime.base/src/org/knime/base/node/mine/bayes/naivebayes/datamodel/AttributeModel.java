@@ -40,10 +40,7 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- *
- * History
- *    24.03.2007 (Tobias Koetter): created
+ * ------------------------------------------------------------------------
  */
 
 package org.knime.base.node.mine.bayes.naivebayes.datamodel;
@@ -54,11 +51,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.dmg.pmml.BayesInputDocument.BayesInput;
+import org.dmg.pmml.PairCountsDocument.PairCounts;
+import org.dmg.pmml.TargetValueStatsDocument.TargetValueStats;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
+
 
 
 /**
@@ -68,10 +68,10 @@ import org.knime.core.node.config.Config;
  */
 public abstract class AttributeModel implements Comparable<AttributeModel> {
 
-    private static final String ATTRIBUTE_NAME = "attributeName";
     private static final String MODEL_TYPE = "type";
-    private static final String SKIP_MISSING_VALUES = "skipMissingVals";
-    private static final String NO_OF_MISSING_VALUES = "numberOfMissingValues";
+    static final String ATTRIBUTE_NAME = "attributeName";
+    static final String IGNORE_MISSING_VALUES = "skipMissingVals";
+    static final String NO_OF_MISSING_VALUES = "numberOfMissingValues";
     private static final String INVALID_CAUSE = "invalidCause";
     private static final String MODEL_DATA_SECTION = "data";
 
@@ -91,7 +91,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
 
     private final String m_attributeName;
 
-    private final boolean m_skipMissingVals;
+    private final boolean m_ignoreMissingVals;
 
     private int m_noOfMissingVals;
 
@@ -101,17 +101,16 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
     /**Constructor for class ClassValue.
      * @param attributeName the name of the attribute
      * @param noOfMissingVals the number of missing values
-     * @param skipMissingVals set to <code>true</code> if the missing values
+     * @param ignoreMissingVals set to <code>true</code> if the missing values
      * should be skipped during learning and prediction
      */
-    AttributeModel(final String attributeName, final int noOfMissingVals,
-            final boolean skipMissingVals) {
+    AttributeModel(final String attributeName, final int noOfMissingVals, final boolean ignoreMissingVals) {
         if (attributeName == null) {
             throw new NullPointerException("classValue must not be null");
         }
         m_attributeName = attributeName;
         m_noOfMissingVals = noOfMissingVals;
-        m_skipMissingVals = skipMissingVals;
+        m_ignoreMissingVals = ignoreMissingVals;
     }
 
     /**
@@ -123,7 +122,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
     throws InvalidSettingsException {
         final String attrName = config.getString(ATTRIBUTE_NAME);
         final String modelType = config.getString(MODEL_TYPE);
-        final boolean skipMissing = config.getBoolean(SKIP_MISSING_VALUES);
+        final boolean skipMissing = config.getBoolean(IGNORE_MISSING_VALUES);
         final int noOfMissingVals = config.getInt(NO_OF_MISSING_VALUES);
         final String invalidCause = config.getString(INVALID_CAUSE);
         final Config modelConfig = config.getConfig(MODEL_DATA_SECTION);
@@ -154,12 +153,59 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
     void saveModel(final Config config) {
         config.addString(ATTRIBUTE_NAME, getAttributeName());
         config.addString(MODEL_TYPE, getType());
-        config.addBoolean(SKIP_MISSING_VALUES, m_skipMissingVals);
+        config.addBoolean(IGNORE_MISSING_VALUES, m_ignoreMissingVals);
         config.addInt(NO_OF_MISSING_VALUES, m_noOfMissingVals);
         config.addString(INVALID_CAUSE, getInvalidCause());
         final Config internalConfig = config.addConfig(MODEL_DATA_SECTION);
         saveModelInternal(internalConfig);
     }
+
+    /**
+     * @param bayesInput the <code>BayesInput</code> object to read from
+     * @return the attribute model for the given <code>Config</code> object
+     * @throws InvalidSettingsException if the settings are invalid
+     */
+    static AttributeModel loadModel(final BayesInput bayesInput) throws InvalidSettingsException {
+        final String attrName = bayesInput.getFieldName();
+        final Map<String, String> extensionMap =
+                PMMLNaiveBayesModelTranslator.convertToMap(bayesInput.getExtensionList());
+        boolean skipMissing = true;
+        int noOfMissingVals = 0;
+        if (extensionMap.containsKey(NO_OF_MISSING_VALUES)) {
+            skipMissing = false;
+            noOfMissingVals = PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, NO_OF_MISSING_VALUES);
+        }
+        final List<PairCounts> pairCounts = bayesInput.getPairCountsList();
+        final AttributeModel model;
+        if (pairCounts != null && !pairCounts.isEmpty()) {
+            model = new NominalAttributeModel(attrName, noOfMissingVals, skipMissing, bayesInput);
+        } else {
+            final TargetValueStats stats = bayesInput.getTargetValueStats();
+            if (stats != null) {
+                model = new NumericalAttributeModel(attrName, skipMissing, noOfMissingVals, bayesInput);
+            } else {
+                throw new InvalidSettingsException("Invalid model type for field " + bayesInput.getFieldName());
+            }
+        }
+        return model;
+    }
+
+    /**
+     * @param bayesInput the PMML {@link BayesInput} object to export this model to
+     */
+    protected void exportToPMML(final BayesInput bayesInput) {
+        bayesInput.setFieldName(getAttributeName());
+        if (!m_ignoreMissingVals) {
+            PMMLNaiveBayesModelTranslator.setIntExtension(bayesInput.addNewExtension(), NO_OF_MISSING_VALUES,
+                m_noOfMissingVals);
+        }
+        exportToPMMLInternal(bayesInput);
+    }
+
+    /**
+     * @param bayesInput the PMML {@link BayesInput} object to export this model to
+     */
+    abstract void exportToPMMLInternal(BayesInput bayesInput);
 
     /**
      * @param config the config object to save to
@@ -201,12 +247,12 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         }
         if (attrValue.isMissing()) {
             m_noOfMissingVals++;
-            if (m_skipMissingVals) {
+            if (m_ignoreMissingVals) {
                 return;
             }
         } else if (!attrValue.getType().isCompatible(getCompatibleType())) {
             throw new IllegalArgumentException(
-                m_attributeName + ": Attribute value type is not compatible");
+                    "Attribute value type is not compatible");
         }
         addValueInternal(classValue, attrValue);
     }
@@ -230,12 +276,19 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
     }
 
     /**
+     * @return the skipMissingVals
+     */
+    boolean ignoreMissingVals() {
+        return m_ignoreMissingVals;
+    }
+
+    /**
      * @param colNames all column names of the table to check for uniqueness
      * @return the missing value header or <code>null</code> if this model
      * contains no missing attribute values
      */
     String getMissingValueHeader(final Collection<String>colNames) {
-        if (!m_skipMissingVals && getNoOfMissingVals() > 0) {
+        if (!m_ignoreMissingVals && getNoOfMissingVals() > 0) {
             String missingHeading = MISSING_VALUE_NAME;
             int i = 1;
             while (colNames.contains(missingHeading)) {
@@ -265,20 +318,23 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * probability for. Could be a missing value.
      * @param laplaceCorrector the Laplace corrector to use. A value greater 0
      * overcomes zero counts.
+     * @param useLog <code>true</code> if log sum should be used to
+     * combine probabilities
      * @return the calculated probability or null if the cell was a missing
      * one and missing values should be skipped
      */
     Double getProbability(final String classValue,
-            final DataCell attributeValue, final double laplaceCorrector) {
+            final DataCell attributeValue, final double laplaceCorrector,
+            final boolean useLog) {
         if (!attributeValue.getType().isCompatible(getCompatibleType())) {
             throw new IllegalArgumentException(
-                    m_attributeName + ": Attribute value type is not compatible");
+                    "Attribute value type is not compatible");
         }
-        if (attributeValue.isMissing() && m_skipMissingVals) {
+        if (attributeValue.isMissing() && m_ignoreMissingVals) {
             return null;
         }
         return new Double(getProbabilityInternal(classValue, attributeValue,
-                laplaceCorrector));
+                laplaceCorrector, useLog));
     }
 
     /**
@@ -288,10 +344,13 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * probability for. Could be a missing value.
      * @param laplaceCorrector the Laplace corrector to use. A value greater 0
      * overcomes zero counts.
+     * @param useLog <code>true</code> if log sum should be used to
+     * combine probabilities
      * @return the calculated probability
      */
     abstract double getProbabilityInternal(final String classValue,
-            final DataCell attributeValue, double laplaceCorrector);
+            final DataCell attributeValue, double laplaceCorrector,
+            boolean useLog);
 
     /**
      * @param totalNoOfRecs the total number of records in the training data
@@ -307,8 +366,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         if (vals == null) {
             return null;
         }
-        final List<String> sortedValues =
-            new ArrayList<String>(vals.size());
+        final List<String> sortedValues = new ArrayList<>(vals.size());
         for (final String classVal : vals) {
             sortedValues.add(classVal);
         }
@@ -359,12 +417,14 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @param addLineBreak if each sub table should be displayed on a new line
      * @return a html table with the keys and values of the given map
      */
-    static String createHTMLTable(final String tableHeading, final String keyHeading, final String valueHeading,
-            final int noOfRows, final Map<String, ? extends Object> map, final boolean addLineBreak) {
+    static String createHTMLTable(final String tableHeading,
+            final String keyHeading, final String valueHeading,
+            final int noOfRows, final Map<String, ? extends Object> map,
+            final boolean addLineBreak) {
         //create the partial maps
         final List<String> sortedClassValues = sortCollection(map.keySet());
-        final List<String> keys = new ArrayList<String>(noOfRows);
-        final List<Object> vals = new ArrayList<Object>(noOfRows);
+        final List<String> keys = new ArrayList<>(noOfRows);
+        final List<Object> vals = new ArrayList<>(noOfRows);
         final StringBuilder buf = new StringBuilder();
         final int noOfVals = map.size();
         //copy the number of rows from the original map to the value map
@@ -377,7 +437,8 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             keys.add(classVal);
             vals.add(map.get(classVal));
             if (i % noOfRows == noOfRows - 1 || i == noOfVals - 1) {
-                buf.append(createPartialHTMLTable(tableHeading, keyHeading, valueHeading, keys, vals));
+                buf.append(createPartialHTMLTable(tableHeading, keyHeading,
+                        valueHeading, keys, vals));
                 if (addLineBreak) {
                     buf.append("<br>");
                 }
@@ -386,8 +447,9 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         return buf.toString();
     }
 
-    private static String createPartialHTMLTable(final String tableHeading, final String keyHeading,
-        final String valueHeading, final List<String> keys, final List<Object> vals) {
+    private static String createPartialHTMLTable(final String tableHeading,
+            final String keyHeading, final String valueHeading,
+            final List<String> keys, final List<Object> vals) {
         final boolean rowHeading = (keyHeading != null || valueHeading != null);
         final int noOfVals = vals.size();
         final int tableHeadColspan;
@@ -401,7 +463,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         if (tableHeading != null) {
             buf.append("<tr>");
             buf.append("<th colspan='" + tableHeadColspan + "'>");
-            buf.append(StringEscapeUtils.escapeHtml(tableHeading));
+            buf.append(tableHeading);
             buf.append("</th>");
             buf.append("</tr>");
         }
@@ -410,7 +472,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             if (rowHeading) {
                 buf.append("<th>");
                 if (keyHeading != null) {
-                    buf.append(StringEscapeUtils.escapeHtml(keyHeading));
+                    buf.append(keyHeading);
                 } else {
                     buf.append("&nbsp;");
                 }
@@ -419,7 +481,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             if (keys != null) {
                 for (final String classVal : keys) {
                     buf.append("<th>");
-                    buf.append(StringEscapeUtils.escapeHtml(classVal));
+                    buf.append(classVal);
                     buf.append("</th>");
                 }
             }
@@ -429,7 +491,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         if (rowHeading) {
             buf.append("<th>");
             if (valueHeading != null) {
-                buf.append(StringEscapeUtils.escapeHtml(valueHeading));
+                buf.append(valueHeading);
             } else {
                 buf.append("&nbsp;");
             }
@@ -437,7 +499,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         }
         for (final Object classVal : vals) {
             buf.append("<td align='center'>");
-            buf.append(StringEscapeUtils.escapeHtml(classVal.toString()));
+            buf.append(classVal.toString());
             buf.append("</td>");
         }
         buf.append("</tr>");
@@ -457,18 +519,18 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         buf.append("<tr>");
         if (firstHeading != null) {
             buf.append("<th>");
-            buf.append(StringEscapeUtils.escapeHtml(firstHeading));
+            buf.append(firstHeading);
             buf.append("</th>");
         }
         //create the header
         for (final String attrVal : headings) {
             buf.append("<th>");
-            buf.append(StringEscapeUtils.escapeHtml(attrVal));
+            buf.append(attrVal);
             buf.append("</th>");
         }
         if (lastHeading != null) {
             buf.append("<th>");
-            buf.append(StringEscapeUtils.escapeHtml(lastHeading));
+            buf.append(lastHeading);
             buf.append("</th>");
         }
         buf.append("</tr>");

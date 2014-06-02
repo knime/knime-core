@@ -40,11 +40,13 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  */
 
 package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,6 +56,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.dmg.pmml.BayesInputDocument.BayesInput;
+import org.dmg.pmml.BayesInputsDocument.BayesInputs;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -66,6 +70,9 @@ import org.knime.core.util.MutableInteger;
  * @author Tobias Koetter, University of Konstanz
  */
 public class BitVectorAttributeModel extends AttributeModel {
+
+    private static final long serialVersionUID = 1L;
+
     /**
      * The unique type of this model used for saving/loading.
      */
@@ -75,7 +82,9 @@ public class BitVectorAttributeModel extends AttributeModel {
 
     private static final String CLASS_VALUE_SECTION = "classValueData_";
 
-    private final class BitVectorClassValue {
+    private final class BitVectorClassValue implements Serializable {
+
+        private static final long serialVersionUID = 1L;
 
         private static final String CLASS_VALUE = "classValue";
 
@@ -85,21 +94,26 @@ public class BitVectorAttributeModel extends AttributeModel {
 
         private static final String BIT_COUNTS = "bitCounts";
 
-        private final String m_classValue;
+        private String m_classValue;
 
         private int m_noOfRows = 0;
 
-        private final MutableInteger m_missingValueRecs;
+        private MutableInteger m_missingValueRecs = new MutableInteger(0);
 
         private int[] m_bitCounts = null;
 
+        /**
+         * Constructor used for serialization.
+         */
+        private BitVectorClassValue() {
+            this("");
+        }
 
         /**Constructor for class BitVectorClassValue.
          * @param classValue
          */
         BitVectorClassValue(final String classValue) {
             m_classValue = classValue;
-            m_missingValueRecs = new MutableInteger(0);
         }
 
         /**Constructor for class NumericalClassValue.
@@ -109,8 +123,7 @@ public class BitVectorAttributeModel extends AttributeModel {
         BitVectorClassValue(final Config config)
             throws InvalidSettingsException {
             m_classValue = config.getString(CLASS_VALUE);
-            m_missingValueRecs =
-                new MutableInteger(config.getInt(MISSING_VALUE_COUNTER));
+            m_missingValueRecs.setValue(config.getInt(MISSING_VALUE_COUNTER));
             m_noOfRows = config.getInt(NO_OF_ROWS);
             m_bitCounts = config.getIntArray(BIT_COUNTS);
         }
@@ -123,6 +136,20 @@ public class BitVectorAttributeModel extends AttributeModel {
             config.addInt(MISSING_VALUE_COUNTER, m_missingValueRecs.intValue());
             config.addInt(NO_OF_ROWS, m_noOfRows);
             config.addIntArray(BIT_COUNTS, m_bitCounts);
+        }
+
+        private void writeObject(final java.io.ObjectOutputStream out) throws IOException {
+            out.writeObject(m_classValue);
+            out.writeObject(m_missingValueRecs);
+            out.writeInt(m_noOfRows);
+            out.writeObject(m_bitCounts);
+        }
+
+        private void readObject(final java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+            m_classValue = (String)in.readObject();
+            m_missingValueRecs = (MutableInteger)in.readObject();
+            m_noOfRows = in.readInt();
+            m_bitCounts = (int[])in.readObject();
         }
 
         /**
@@ -257,15 +284,22 @@ public class BitVectorAttributeModel extends AttributeModel {
 
     private final Map<String, BitVectorClassValue> m_classValues;
 
+    /**
+     * Constructor used during serialization.
+     */
+    protected BitVectorAttributeModel() {
+        this("", false);
+    }
+
     /**Constructor for class BitVectorAttributeModel.
      * @param attributeName the name of the attribute
      * @param skipMissingVals set to <code>true</code> if the missing values
      * should be skipped during learning and prediction
      */
-    BitVectorAttributeModel(final String attributeName,
+    public BitVectorAttributeModel(final String attributeName,
             final boolean skipMissingVals) {
         super(attributeName, 0, skipMissingVals);
-        m_classValues = new HashMap<String, BitVectorClassValue>();
+        m_classValues = new HashMap<>();
     }
 
 
@@ -283,7 +317,7 @@ public class BitVectorAttributeModel extends AttributeModel {
             final Config config) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
         final int noOfClasses = config.getInt(CLASS_VALUE_COUNTER);
-        m_classValues = new HashMap<String, BitVectorClassValue>(noOfClasses);
+        m_classValues = new HashMap<>(noOfClasses);
         final int noOfClassVals = config.getInt(CLASS_VALUE_COUNTER);
         for (int i = 0; i < noOfClassVals; i++) {
             final Config classConfig =
@@ -292,6 +326,12 @@ public class BitVectorAttributeModel extends AttributeModel {
                 new BitVectorClassValue(classConfig);
             m_classValues.put(classVal.getClassValue(), classVal);
         }
+    }
+
+    private BitVectorAttributeModel(final String attributeName, final boolean ignoreMissingVals, final int missingVals,
+        final Map<String, BitVectorClassValue> classVals) {
+        super(attributeName, missingVals, ignoreMissingVals);
+        m_classValues = classVals;
     }
 
     /**
@@ -307,6 +347,54 @@ public class BitVectorAttributeModel extends AttributeModel {
             classVal.saveModel(classConfig);
             i++;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    void exportToPMMLInternal(final BayesInput bayesInput) {
+        throw new UnsupportedOperationException("BitVector not supported by PMML model");
+    }
+
+    /**
+     * Stores the {@link BitVectorAttributeModel} information as an extension since the PMML standard
+     * does not support bit vector columns.
+     * @param inputs {@link BayesInputs} to write to
+     * @param prefix the prefix to use
+     * @see #readExtension(Map, String)
+     */
+    void writeExtension(final BayesInputs inputs, final String prefix) {
+        PMMLNaiveBayesModelTranslator.setStringExtension(inputs.addNewExtension(), prefix + ATTRIBUTE_NAME,
+            getAttributeName());
+        PMMLNaiveBayesModelTranslator.setBooleanExtension(inputs.addNewExtension(), prefix + IGNORE_MISSING_VALUES,
+            ignoreMissingVals());
+        PMMLNaiveBayesModelTranslator.setIntExtension(inputs.addNewExtension(), prefix + NO_OF_MISSING_VALUES,
+            getNoOfMissingVals());
+        PMMLNaiveBayesModelTranslator.setObjectExtension(inputs.addNewExtension(), prefix + CLASS_VALUE_SECTION,
+            m_classValues);
+    }
+
+    /**
+     * Reads the model information from an extension map since the PMML standard does not support bit vector columns.
+     * @param extensionMap the map with extension values to read from
+     * @param prefix the prefix to use
+     * @return the {@link BitVectorAttributeModel}
+     * @throws InvalidSettingsException if the given extensions are invalid
+     * @see #writeExtension(BayesInputs, String)
+     */
+    static BitVectorAttributeModel readExtension(final Map<String, String> extensionMap, final String prefix)
+            throws InvalidSettingsException {
+        final String attributeName =
+                PMMLNaiveBayesModelTranslator.getStringExtension(extensionMap, prefix + ATTRIBUTE_NAME);
+        final boolean ignoreMissingVals =
+                PMMLNaiveBayesModelTranslator.getBooleanExtension(extensionMap, prefix + IGNORE_MISSING_VALUES);
+        final int missingVals =
+                PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, prefix + NO_OF_MISSING_VALUES);
+        Map<String, BitVectorClassValue> classVals =
+                (Map<String, BitVectorClassValue>) PMMLNaiveBayesModelTranslator.getObjectExtension(extensionMap,
+                    prefix + CLASS_VALUE_SECTION);
+        return new BitVectorAttributeModel(attributeName, ignoreMissingVals, missingVals, classVals);
     }
 
     /**
@@ -394,7 +482,7 @@ public class BitVectorAttributeModel extends AttributeModel {
      */
     @Override
     double getProbabilityInternal(final String classValue,
-            final DataCell attributeValue, final double laplaceCorrector) {
+            final DataCell attributeValue, final double laplaceCorrector, final boolean useLog) {
         final BitVectorClassValue classModel = m_classValues.get(classValue);
         if (classModel == null) {
             return 0;
@@ -423,7 +511,7 @@ public class BitVectorAttributeModel extends AttributeModel {
         }
         final int bitVectorLength = getVectorLength();
         final String classHeading = "Class/" + getAttributeName();
-        final LinkedList<String> columnNames = new LinkedList<String>();
+        final LinkedList<String> columnNames = new LinkedList<>();
         columnNames.add(getAttributeName());
         final String missingHeading = getMissingValueHeader(columnNames);
         final StringBuilder buf = new StringBuilder();
@@ -468,7 +556,7 @@ public class BitVectorAttributeModel extends AttributeModel {
             buf.append("<th>");
             buf.append(StringEscapeUtils.escapeHtml(classVal));
             buf.append("</th>");
-            for(int i = 0; i < bitVectorLength; i++) {
+            for (int i = 0; i < bitVectorLength; i++) {
                 //the bit vector value section
                 buf.append("<td align='center'>");
                 final int zeroCount = classValue.getZeroCount(i);
@@ -498,7 +586,7 @@ public class BitVectorAttributeModel extends AttributeModel {
         buf.append("<th>");
         buf.append("Rate:");
         buf.append("</th>");
-        for(int i = 0; i < bitVectorLength; i++) {
+        for (int i = 0; i < bitVectorLength; i++) {
             //the bit vector value section
             buf.append("<td align='center'>");
             buf.append(
