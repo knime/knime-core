@@ -49,7 +49,6 @@ package org.knime.base.util.coordinate;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.knime.core.data.DataCell;
@@ -195,8 +194,6 @@ public class AscendingNumericTickPolicyStrategy extends PolicyStrategy {
             coordMapping[i] =
                     new DoubleCoordinateMapping(stringRepresentation,
                             values[i], mappedValue);
-            // System.out.println(stringRepresentation + " = " + values[i]
-            // + " -> " + mappedValue);
         }
         return coordMapping;
     }
@@ -304,28 +301,37 @@ public class AscendingNumericTickPolicyStrategy extends PolicyStrategy {
     public CoordinateMapping[] getTickPositions(final int absoluteLength,
             final int minDomainValue, final int maxDomainValue,
             final int tickDistance) {
-        int nrTicks =
-                Math.min(absoluteLength / tickDistance, (maxDomainValue
-                        - minDomainValue + 1));
+        // if the domain is quite large computations with ints may overflow leading to wrong results or endless loops.
+        // Therefore we use longs except where it is clear that a value fits in an int.
+        final long longMinDomainValue = minDomainValue;
+        final long longMaxDomainValue = maxDomainValue;
+
+        // nrTicks is strictly an integer because of the first argument
+        int nrTicks = (int) Math.min(absoluteLength / tickDistance, (longMaxDomainValue - longMinDomainValue + 1));
         if (nrTicks < 1) {
             nrTicks = 1;
         }
-        int diff = Math.max((maxDomainValue - minDomainValue) / nrTicks, 1);
+        long stepSize = Math.max((longMaxDomainValue - longMinDomainValue) / nrTicks, 1);
 
-        List<CoordinateMapping> mapping = new LinkedList<CoordinateMapping>();
-        for (int i = 0; minDomainValue + i * diff <= maxDomainValue; i++) {
-            int domValue = minDomainValue + i * diff;
-            if (domValue + diff > maxDomainValue) {
-                domValue = maxDomainValue;
+        List<CoordinateMapping> mapping =
+            new ArrayList<CoordinateMapping>((int)((longMaxDomainValue - longMinDomainValue) / stepSize + 1));
+
+        // the domValue always fits in an int but for the computations below it's more safe and efficient to use a long
+        long domValue = minDomainValue;
+        do {
+            if (domValue + stepSize > longMaxDomainValue) {
+                domValue = longMaxDomainValue;
             }
+
             int mappedValue =
-                    (int)calculateMappedValue(new IntCell(domValue),
-                            absoluteLength, minDomainValue, maxDomainValue);
+                    (int)calculateMappedValue(new IntCell((int) domValue),
+                        absoluteLength, minDomainValue, maxDomainValue);
+            mapping.add(new IntegerCoordinateMapping("" + domValue, (int) domValue,
+                mappedValue));
 
-            mapping.add(new IntegerCoordinateMapping("" + domValue, domValue,
-                    mappedValue));
-        }
+            domValue += stepSize;
+        } while (domValue < longMaxDomainValue);
 
-        return mapping.toArray(new CoordinateMapping[0]);
+        return mapping.toArray(new CoordinateMapping[mapping.size()]);
     }
 }
