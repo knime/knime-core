@@ -50,7 +50,9 @@ import org.knime.core.node.NodeFactory;
  * <code>NodeFactory</code> for the "Naive Bayes Learner" node.
 
  * @author Tobias Koetter
+ * @deprecated the new version uses PMML as data transfer protocol instead of a proprietary one
  */
+@Deprecated
 public class NaiveBayesLearnerNodeFactory
     extends NodeFactory<NaiveBayesLearnerNodeModel> {
     /**

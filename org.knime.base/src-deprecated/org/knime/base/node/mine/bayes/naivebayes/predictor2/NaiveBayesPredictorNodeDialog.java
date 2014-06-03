@@ -58,7 +58,9 @@ import org.knime.core.node.port.PortObjectSpec;
  * <code>NodeDialog</code> for the "Naive Bayes Predictor" Node.
  *
  * @author Tobias Koetter
+ * @deprecated the new version uses PMML as data transfer protocol instead of a proprietary one
  */
+@Deprecated
 public class NaiveBayesPredictorNodeDialog extends PredictorNodeDialog {
     /**
      * New pane for configuring BayesianClassifier node dialog.

@@ -56,7 +56,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * <code>NodeDialog</code> for the "Naive Bayes Learner" node.
  *
  * @author Tobias Koetter
+ * @deprecated the new version uses PMML as data transfer protocol instead of a proprietary one
  */
+@Deprecated
 public class NaiveBayesLearnerNodeDialog extends DefaultNodeSettingsPane {
 
     /**

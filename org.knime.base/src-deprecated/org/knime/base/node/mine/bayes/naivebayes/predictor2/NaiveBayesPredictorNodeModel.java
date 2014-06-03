@@ -78,7 +78,9 @@ import org.knime.core.node.port.PortType;
  * "Naive Bayes Predictor" node.
  *
  * @author Tobias Koetter
+ * @deprecated the new version uses PMML as data transfer protocol instead of a proprietary one
  */
+@Deprecated
 public class NaiveBayesPredictorNodeModel extends NodeModel {
 
     // our logger instance
@@ -149,7 +151,8 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
         final double laplaceCorrector = m_laplaceCorrector.getDoubleValue();
         PredictorHelper predictorHelper = PredictorHelper.getInstance();
         String classColumnName = model.getClassColumnName();
-        String predictionColName = m_overridePredicted.getBooleanValue() ? m_predictionColumnName.getStringValue() : predictorHelper.computePredictionDefault(classColumnName);
+        String predictionColName = m_overridePredicted.getBooleanValue()
+                ? m_predictionColumnName.getStringValue() : predictorHelper.computePredictionDefault(classColumnName);
         final NaiveBayesCellFactory appender =
             new NaiveBayesCellFactory(model, predictionColName, data.getDataTableSpec(),
                     m_inclProbVals.getBooleanValue(), laplaceCorrector, m_probabilitySuffix.getStringValue());
@@ -262,7 +265,7 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
 
     private List<String> check4MissingCols(final DataTableSpec trainingSpec,
             final String classCol, final DataTableSpec spec) {
-        final List<String> missingInputCols = new ArrayList<String>();
+        final List<String> missingInputCols = new ArrayList<>();
         for (final DataColumnSpec trainColSpec : trainingSpec) {
             if (!trainColSpec.getName().equals(classCol)) {
                 //check only for none class value columns
@@ -280,7 +283,7 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
             throw new NullPointerException("TableSpec must not be null");
         }
 
-        final List<String> unknownCols = new ArrayList<String>();
+        final List<String> unknownCols = new ArrayList<>();
         for (final DataColumnSpec colSpec : spec) {
             final DataColumnSpec trainColSpec =
                 trainingSpec.getColumnSpec(colSpec.getName());

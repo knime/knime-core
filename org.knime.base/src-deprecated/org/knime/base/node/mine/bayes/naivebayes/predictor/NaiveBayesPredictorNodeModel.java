@@ -254,7 +254,7 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
 
     private List<String> check4MissingCols(final DataTableSpec trainingSpec,
             final String classCol, final DataTableSpec spec) {
-        final List<String> missingInputCols = new ArrayList<String>();
+        final List<String> missingInputCols = new ArrayList<>();
         for (final DataColumnSpec trainColSpec : trainingSpec) {
             if (!trainColSpec.getName().equals(classCol)) {
                 //check only for none class value columns
@@ -272,7 +272,7 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
             throw new NullPointerException("TableSpec must not be null");
         }
 
-        final List<String> unknownCols = new ArrayList<String>();
+        final List<String> unknownCols = new ArrayList<>();
         for (final DataColumnSpec colSpec : spec) {
             final DataColumnSpec trainColSpec =
                 trainingSpec.getColumnSpec(colSpec.getName());

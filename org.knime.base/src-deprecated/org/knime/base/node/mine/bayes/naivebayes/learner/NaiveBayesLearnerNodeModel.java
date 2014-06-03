@@ -81,7 +81,9 @@ import org.knime.core.node.port.PortType;
  * "Naive Bayes Learner" node.
  *
  * @author Tobias Koetter
+ * @deprecated the new version uses PMML as data transfer protocol instead of a proprietary one
  */
+@Deprecated
 public class NaiveBayesLearnerNodeModel extends NodeModel {
 
     // our logger instance
@@ -238,7 +240,7 @@ public class NaiveBayesLearnerNodeModel extends NodeModel {
         //and check each nominal column with a valid domain
         //if it contains more values than allowed
         boolean containsNominalCol = false;
-        final List<String> toBigNominalColumns = new ArrayList<String>();
+        final List<String> toBigNominalColumns = new ArrayList<>();
         for (int i = 0, length = tableSpec.getNumColumns();
                 i < length; i++) {
             final DataColumnSpec colSpec = tableSpec.getColumnSpec(i);

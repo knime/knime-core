@@ -60,7 +60,9 @@ import org.knime.core.node.port.PortType;
  * The Naive Bayes specific port object implementation.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @deprecated the new version uses PMML as data transfer protocol instead of a proprietary one
  */
+@Deprecated
 public class NaiveBayesPortObject extends AbstractSimplePortObject {
 
     /**The {@link PortType}.*/

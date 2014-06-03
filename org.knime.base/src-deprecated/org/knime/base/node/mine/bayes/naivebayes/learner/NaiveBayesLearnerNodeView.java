@@ -55,7 +55,9 @@ import org.knime.core.node.NodeView;
  * <code>NodeView</code> for the "Naive Bayes Learner" Node.
  *
  * @author Tobias Koetter
+ * @deprecated the new version uses PMML as data transfer protocol instead of a proprietary one
  */
+@Deprecated
 public class NaiveBayesLearnerNodeView
 extends NodeView<NaiveBayesLearnerNodeModel> {
 

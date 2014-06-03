@@ -57,7 +57,9 @@ import org.knime.core.node.port.AbstractSimplePortObjectSpec;
  * The Naive Bayes specific port object specification implementation.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @deprecated the new version uses PMML as data transfer protocol instead of a proprietary one
  */
+@Deprecated
 public class NaiveBayesPortObjectSpec extends AbstractSimplePortObjectSpec {
 
     private static final String CNFG_CLASS_COL = "classCol";

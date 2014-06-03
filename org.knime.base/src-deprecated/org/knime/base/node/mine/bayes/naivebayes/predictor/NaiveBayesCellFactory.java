@@ -159,7 +159,7 @@ CellFactory {
         }
         final List<String> classValues = model.getSortedClassValues();
         final Collection<DataColumnSpec> colSpecs =
-            new ArrayList<DataColumnSpec>(classValues.size() + 1);
+            new ArrayList<>(classValues.size() + 1);
         colSpecs.add(classColSpec);
         colSpecCreator.setType(DoubleCell.TYPE);
         for (final String classVal : classValues) {
@@ -237,7 +237,7 @@ CellFactory {
             return new DataCell[] {classCell};
         }
         final Collection<DataCell> resultCells =
-            new ArrayList<DataCell>(m_sortedClassVals.size() + 1);
+            new ArrayList<>(m_sortedClassVals.size() + 1);
         //add the class cell first
         resultCells.add(classCell);
         final double[] classProbs = m_model.getClassProbabilities(
