@@ -286,6 +286,7 @@ public class BitVectorAttributeModel extends AttributeModel {
 
     /**
      * Constructor used during serialization.
+     * @since 2.10
      */
     protected BitVectorAttributeModel() {
         this("", false);
@@ -295,6 +296,7 @@ public class BitVectorAttributeModel extends AttributeModel {
      * @param attributeName the name of the attribute
      * @param skipMissingVals set to <code>true</code> if the missing values
      * should be skipped during learning and prediction
+     * @since 2.10
      */
     public BitVectorAttributeModel(final String attributeName,
             final boolean skipMissingVals) {

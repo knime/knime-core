@@ -157,6 +157,7 @@ public class NaiveBayesModel {
      * @throws CanceledExecutionException if the user presses the cancel
      * button during model creation
      * @throws InvalidSettingsException if the input data contains no rows
+     * @since 2.10
      */
     public NaiveBayesModel(final BufferedDataTable data, final String classColName, final ExecutionContext exec,
             final int maxNoOfNominalVals, final boolean ignoreMissingVals, final boolean pmmlCompatible)
@@ -229,6 +230,7 @@ public class NaiveBayesModel {
      * @param pmmlCompatible flag that indicates if the model should be PMML compliant
      * @return the corresponding {@link AttributeModel} or <code>null</code> if the data type of the given column
      * is not supported
+     * @since 2.10
      */
     public static AttributeModel getCompatibleModel(final DataColumnSpec colSpec, final String classColName,
         final int maxNoOfNominalVals, final boolean ignoreMissingVals, final boolean pmmlCompatible) {
@@ -611,6 +613,7 @@ public class NaiveBayesModel {
      * by adding the logs
      * @return the probability values in the same order like the
      * class values
+     * @since 2.10
      */
     public double[] getClassProbabilities(final String[] attributeNames, final DataRow row,
         final List<String> classValues, final boolean normalize, final double laplaceCorrector, final boolean useLog) {
@@ -812,6 +815,7 @@ public class NaiveBayesModel {
 
     /**
      * @return {@link List} with all PMML compatible learning columns
+     * @since 2.10
      */
     public List<String> getPMMLLearningCols() {
         final List<String> names = new LinkedList<>();
@@ -827,6 +831,7 @@ public class NaiveBayesModel {
 
     /**
      * @return {@link List} with all attribute names
+     * @since 2.10
      */
     public List<String> getAttributeNames() {
         final List<String> names = new LinkedList<>();
@@ -869,6 +874,7 @@ public class NaiveBayesModel {
      * by adding the logs
      * @return the class attribute with the highest probability for the given
      * attribute values.
+     * @since 2.10
      */
     public String getMostLikelyClass(final String[] attrNames, final DataRow row, final double laplaceCorrector,
         final boolean useLog) {

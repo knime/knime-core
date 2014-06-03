@@ -192,6 +192,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
 
     /**
      * @param bayesInput the PMML {@link BayesInput} object to export this model to
+     * @since 2.10
      */
     protected void exportToPMML(final BayesInput bayesInput) {
         bayesInput.setFieldName(getAttributeName());
