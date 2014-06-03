@@ -83,7 +83,13 @@ public abstract class JSONViewContent implements WebViewContent {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         ObjectReader reader = mapper.readerForUpdating(this);
-        reader.readValue(viewContentStream);
+        ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+            reader.readValue(viewContentStream);
+        } finally {
+            Thread.currentThread().setContextClassLoader(oldLoader);
+        }
     }
 
     /**

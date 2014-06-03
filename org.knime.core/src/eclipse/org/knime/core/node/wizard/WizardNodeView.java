@@ -540,8 +540,10 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         String escapedRepresentation = jsonViewRepresentation.replace("\\", "\\\\").replace("'", "\\'");
         String escapedValue = jsonViewValue.replace("\\", "\\\\").replace("'", "\\'");
         String initMethod = m_template.getInitMethodName();
-        return getNamespacePrefix() + initMethod + "(JSON.parse('" + escapedRepresentation + "'), JSON.parse('"
-            + escapedValue + "'));";
+        String initCall = getNamespacePrefix() + initMethod + "(JSON.parse('" + escapedRepresentation
+                + "'), JSON.parse('" + escapedValue + "'));";
+        //LOGGER.warn(initCall);
+        return initCall;
     }
 
     private String getNamespacePrefix() {

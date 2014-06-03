@@ -52,6 +52,7 @@ import java.util.LinkedHashSet;
 import java.util.Vector;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -66,6 +67,7 @@ import org.knime.core.data.image.png.PNGImageValue;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.web.JSONDataTableSpec.JSTypes;
@@ -89,6 +91,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 public class JSONDataTable {
 
     private static final String KNIME_DATA_TABLE_JSON = "knimeDataTableJSON";
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(JSONDataTable.class);
 
     /* serialized members */
     private JSONDataTableSpec m_spec;
@@ -236,7 +239,8 @@ public class JSONDataTable {
         //get color value, omit alpha
         int colorValue = colorAttr.getColor().getRGB() & 0xFFFFFF;
         //convert to CSS hex color string
-        return "#" + Integer.toHexString(colorValue).toUpperCase();
+        String hexString = Integer.toHexString(colorValue);
+        return "#" + StringUtils.leftPad(hexString, 6, '0').toUpperCase();
     }
 
     private Object getJSONCellValue(final DataCell cell) {
@@ -378,11 +382,16 @@ public class JSONDataTable {
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         JSONDataTable table = new JSONDataTable();
         ObjectReader reader = mapper.readerForUpdating(table);
+        ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
         try {
+            Thread.currentThread().setContextClassLoader(table.getClass().getClassLoader());
             reader.readValue(tableString);
             return table;
         } catch (IOException e) {
+            LOGGER.error("Unable to load JSON data table: " + e.getMessage(), e);
             return null;
+        } finally {
+            Thread.currentThread().setContextClassLoader(oldLoader);
         }
     }
 }
