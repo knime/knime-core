@@ -88,7 +88,7 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
  * @author Nicolas Cebron, University of Konstanz
  * @author Marcel Hanser, University of Konstanz
  */
-final class Normalizer3NodeModel extends NodeModel {
+public class Normalizer3NodeModel extends NodeModel {
     private static final int MAX_UNKNOWN_COLS = 3;
 
     /** Configuration. */
