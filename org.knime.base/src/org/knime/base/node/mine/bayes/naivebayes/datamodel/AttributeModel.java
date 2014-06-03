@@ -68,10 +68,13 @@ import org.knime.core.node.config.Config;
  */
 public abstract class AttributeModel implements Comparable<AttributeModel> {
 
-    private static final String MODEL_TYPE = "type";
+    /**Config key for the attribute name.*/
     static final String ATTRIBUTE_NAME = "attributeName";
+    /**Config key for the ignore missing value flag.*/
     static final String IGNORE_MISSING_VALUES = "skipMissingVals";
+    /**Config key for the number of missing values.*/
     static final String NO_OF_MISSING_VALUES = "numberOfMissingValues";
+    private static final String MODEL_TYPE = "type";
     private static final String INVALID_CAUSE = "invalidCause";
     private static final String MODEL_DATA_SECTION = "data";
 
@@ -192,7 +195,6 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
 
     /**
      * @param bayesInput the PMML {@link BayesInput} object to export this model to
-     * @since 2.10
      */
     protected void exportToPMML(final BayesInput bayesInput) {
         bayesInput.setFieldName(getAttributeName());

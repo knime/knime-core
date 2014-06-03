@@ -83,7 +83,7 @@ class ClassAttributeModel extends AttributeModel {
     private static final String CLASS_RECS_COUNTER = "classRecordCounter";
 
 
-    /**
+    /*
      *Saves the number of rows per class attribute.
      *<dl>
      *  <dt>Key:</dt>

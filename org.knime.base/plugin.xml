@@ -796,16 +796,16 @@
             id="org.knime.base.node.preproc.pivot.Pivot2NodeFactory"/>
       <node
             category-path="/mining/bayes"
-            factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor2.NaiveBayesPredictorNodeFactory"
-            id="org.knime.base.node.mine.bayes.naivebayes.predictor2.NaiveBayesPredictorNodeFactory"/>
+            factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor3.NaiveBayesPredictorNodeFactory2"
+            id="org.knime.base.node.mine.bayes.naivebayes.predictor3.NaiveBayesPredictorNodeFactory2"/>
       <!--node deprecated
             category-path="/mining/bayes"
             factory-class="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory"
             id="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory"/-->
       <node
             category-path="/mining/bayes"
-            factory-class="org.knime.base.node.mine.bayes.naivebayes.learner.NaiveBayesLearnerNodeFactory"
-            id="org.knime.base.node.bayes.mine.naivebayes.learner.NaiveBayesLearnerNodeFactory"/>
+            factory-class="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory2"
+            id="org.knime.base.node.mine.bayes.naivebayes.learner2.NaiveBayesLearnerNodeFactory2"/>
       <node
             category-path="/statistics"
             factory-class="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"

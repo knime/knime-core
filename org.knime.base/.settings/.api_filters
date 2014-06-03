@@ -256,6 +256,86 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/learner/NaiveBayesLearnerNodeDialog.java" type="org.knime.base.node.mine.bayes.naivebayes.learner.NaiveBayesLearnerNodeDialog">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.learner.NaiveBayesLearnerNodeDialog"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/learner/NaiveBayesLearnerNodeFactory.java" type="org.knime.base.node.mine.bayes.naivebayes.learner.NaiveBayesLearnerNodeFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.learner.NaiveBayesLearnerNodeFactory"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/learner/NaiveBayesLearnerNodeModel.java" type="org.knime.base.node.mine.bayes.naivebayes.learner.NaiveBayesLearnerNodeModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.learner.NaiveBayesLearnerNodeModel"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/learner/NaiveBayesLearnerNodeView.java" type="org.knime.base.node.mine.bayes.naivebayes.learner.NaiveBayesLearnerNodeView">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.learner.NaiveBayesLearnerNodeView"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/port/NaiveBayesPortObject.java" type="org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObject">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObject"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/port/NaiveBayesPortObjectSpec.java" type="org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObjectSpec">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObjectSpec"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/predictor/NaiveBayesCellFactory.java" type="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesCellFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesCellFactory"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/predictor/NaiveBayesPredictorNodeDialog.java" type="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeDialog">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeDialog"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/predictor/NaiveBayesPredictorNodeFactory.java" type="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeFactory"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src-deprecated/org/knime/base/node/mine/bayes/naivebayes/predictor/NaiveBayesPredictorNodeModel.java" type="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.predictor.NaiveBayesPredictorNodeModel"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src-deprecated/org/knime/base/node/preproc/columnTrans/AbstractMany2OneCellFactory.java" type="org.knime.base.node.preproc.columnTrans.AbstractMany2OneCellFactory">
         <filter id="305365105">
             <message_arguments>
@@ -432,6 +512,38 @@
             <message_arguments>
                 <message_argument value="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeDialog"/>
                 <message_argument value="getOnMissing()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/bayes/naivebayes/datamodel/AttributeModel.java" type="org.knime.base.node.mine.bayes.naivebayes.datamodel.AttributeModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.datamodel.AttributeModel"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/bayes/naivebayes/datamodel/BitVectorAttributeModel.java" type="org.knime.base.node.mine.bayes.naivebayes.datamodel.BitVectorAttributeModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.datamodel.BitVectorAttributeModel"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/bayes/naivebayes/datamodel/NaiveBayesModel.java" type="org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel"/>
+                <message_argument value="org.knime.base_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/bayes/naivebayes/datamodel/TooManyValuesException.java" type="org.knime.base.node.mine.bayes.naivebayes.datamodel.TooManyValuesException">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.bayes.naivebayes.datamodel.TooManyValuesException"/>
+                <message_argument value="org.knime.base_2.10.0"/>
             </message_arguments>
         </filter>
     </resource>

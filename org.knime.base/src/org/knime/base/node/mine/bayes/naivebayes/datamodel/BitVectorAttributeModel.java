@@ -71,8 +71,6 @@ import org.knime.core.util.MutableInteger;
  */
 public class BitVectorAttributeModel extends AttributeModel {
 
-    private static final long serialVersionUID = 1L;
-
     /**
      * The unique type of this model used for saving/loading.
      */
@@ -101,13 +99,6 @@ public class BitVectorAttributeModel extends AttributeModel {
         private MutableInteger m_missingValueRecs = new MutableInteger(0);
 
         private int[] m_bitCounts = null;
-
-        /**
-         * Constructor used for serialization.
-         */
-        private BitVectorClassValue() {
-            this("");
-        }
 
         /**Constructor for class BitVectorClassValue.
          * @param classValue
@@ -191,21 +182,22 @@ public class BitVectorAttributeModel extends AttributeModel {
         void addValue(final DataCell attrValue) {
             if (attrValue.isMissing()) {
                 m_missingValueRecs.inc();
-            }
-            final BitVectorValue bitVec = (BitVectorValue)attrValue;
-            if (m_bitCounts == null) {
-                if (bitVec.length() > Integer.MAX_VALUE) {
-                    throw new IllegalArgumentException(
-                            "BitVector attribute does not support long vectors");
+            } else {
+                final BitVectorValue bitVec = (BitVectorValue)attrValue;
+                if (m_bitCounts == null) {
+                    if (bitVec.length() > Integer.MAX_VALUE) {
+                        throw new IllegalArgumentException(
+                                "BitVector attribute does not support long vectors");
+                    }
+                    m_bitCounts  = new int[(int)bitVec.length()];
+                    Arrays.fill(m_bitCounts, 0);
+                } else if (bitVec.length() != m_bitCounts.length) {
+                    throw new IllegalArgumentException("Illegal bit vector length");
                 }
-                m_bitCounts  = new int[(int)bitVec.length()];
-                Arrays.fill(m_bitCounts, 0);
-            } else if (bitVec.length() != m_bitCounts.length) {
-                throw new IllegalArgumentException("Illegal bit vector length");
-            }
-            for (int i = 0; i < m_bitCounts.length; i++) {
-                if (bitVec.get(i)) {
-                    m_bitCounts[i] += 1;
+                for (int i = 0; i < m_bitCounts.length; i++) {
+                    if (bitVec.get(i)) {
+                        m_bitCounts[i] += 1;
+                    }
                 }
             }
             m_noOfRows++;
@@ -218,13 +210,14 @@ public class BitVectorAttributeModel extends AttributeModel {
          * A value greater 0 overcomes zero counts.
          * @return the probability for the given attribute value
          */
-        double getProbability(final DataCell attributeValue,
-                final double laplaceCorrector) {
+        double getProbability(final DataCell attributeValue, final double laplaceCorrector) {
             final int noOfRows4Class = getNoOfRows();
             if (noOfRows4Class == 0) {
-                throw new IllegalStateException("Model for attribute "
-                        + getAttributeName() + " contains no rows for class "
-                        + m_classValue);
+                return 0;
+            }
+            if (attributeValue.isMissing()) {
+                // TODO Can we add laplace correction here?
+                return (double)m_missingValueRecs.intValue() / noOfRows4Class;
             }
             final BitVectorValue bitVec = (BitVectorValue)attributeValue;
             if (bitVec.length() != m_bitCounts.length) {
@@ -232,10 +225,8 @@ public class BitVectorAttributeModel extends AttributeModel {
             }
             double combinedProbability = 1;
             for (int i = 0, length = (int)bitVec.length(); i < length; i++) {
-                final double noOfRows = laplaceCorrector +
-                    getNoOfRows4AttributeValue(i, bitVec.get(i));
-                combinedProbability *= noOfRows
-                                    / (noOfRows4Class + 2 * laplaceCorrector);
+                final double noOfRows = laplaceCorrector + getNoOfRows4AttributeValue(i, bitVec.get(i));
+                combinedProbability *= noOfRows / (noOfRows4Class + 2 * laplaceCorrector);
             }
             return combinedProbability;
         }
@@ -284,19 +275,10 @@ public class BitVectorAttributeModel extends AttributeModel {
 
     private final Map<String, BitVectorClassValue> m_classValues;
 
-    /**
-     * Constructor used during serialization.
-     * @since 2.10
-     */
-    protected BitVectorAttributeModel() {
-        this("", false);
-    }
-
     /**Constructor for class BitVectorAttributeModel.
      * @param attributeName the name of the attribute
      * @param skipMissingVals set to <code>true</code> if the missing values
      * should be skipped during learning and prediction
-     * @since 2.10
      */
     public BitVectorAttributeModel(final String attributeName,
             final boolean skipMissingVals) {

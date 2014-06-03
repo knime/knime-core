@@ -71,7 +71,6 @@ import org.knime.core.node.port.pmml.PMMLTranslator;
  * Helper class translate between the internal used naive Bayes model and the PMML standard.
  * The class also provides helper methods to read/write extensions.
  * @author Tobias Koetter
- * @since 2.10
  */
 public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
 

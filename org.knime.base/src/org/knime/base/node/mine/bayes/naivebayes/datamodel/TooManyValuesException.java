@@ -72,7 +72,7 @@ public class TooManyValuesException extends Exception {
     }
 
     /**Constructor for class TooManyValuesException.
-     * @param cause teh cause
+     * @param cause the cause
      */
     public TooManyValuesException(final Throwable cause) {
         super(cause);
