@@ -50,12 +50,16 @@ package org.knime.testing.internal.nodes.differ;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -284,7 +288,26 @@ class DifferenceCheckerNodeDialog extends NodeDialogPane {
         c.weighty = 0.2;
         p.add(m_columnConfigPanel, c);
 
+        JPanel generalSettingsPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints constr = new GridBagConstraints();
+        constr.gridx = 0;
+        constr.gridy = 0;
+        constr.anchor = GridBagConstraints.NORTHWEST;
+        constr.weightx = 1;
+        constr.weighty = 1;
+        constr.insets = new Insets(10, 10, 5, 5);
+        final JCheckBox cb = new JCheckBox("Check domain", m_settings.getCheckDomain());
+        cb.addItemListener(new ItemListener() {
+
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                m_settings.setCheckDomain(cb.isSelected());
+            }
+        });
+        generalSettingsPanel.add(cb, constr);
+
         addTab("Column Configuration", p);
+        addTab("General Settings", generalSettingsPanel);
     }
 
     void updateInternalsPanel(final int rowIndex) {

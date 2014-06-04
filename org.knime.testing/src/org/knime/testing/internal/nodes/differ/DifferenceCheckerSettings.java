@@ -69,9 +69,14 @@ import org.knime.testing.internal.diffcheckers.EqualityChecker;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class DifferenceCheckerSettings {
+
+    private static final String CFG_CHECK_DOMAIN = "checkDomain";
+
     private final Map<String, String> m_checkerPerColumn = new HashMap<String, String>();
 
     private final Map<String, NodeSettings> m_perColumnConfig = new HashMap<String, NodeSettings>();
+
+    private boolean m_checkDomain = true;
 
     /**
      * Returns a collection with all configured columns.
@@ -168,6 +173,10 @@ class DifferenceCheckerSettings {
         m_checkerPerColumn.clear();
         m_perColumnConfig.clear();
 
+        if (settings.containsKey(CFG_CHECK_DOMAIN)) { // added in 2.10
+            m_checkDomain = settings.getBoolean(CFG_CHECK_DOMAIN);
+        }
+
         for (String key : settings) {
             if (key.startsWith("columnConfig_")) {
                 NodeSettingsRO columnConfig = settings.getNodeSettings(key);
@@ -194,6 +203,8 @@ class DifferenceCheckerSettings {
     public void loadSettingsForDialog(final NodeSettingsRO settings, final DataTableSpec spec) {
         m_checkerPerColumn.clear();
         m_perColumnConfig.clear();
+
+        m_checkDomain = settings.getBoolean(CFG_CHECK_DOMAIN, true); // added in 2.10
 
         for (DataColumnSpec dcs : spec) {
             String colName = dcs.getName();
@@ -232,6 +243,7 @@ class DifferenceCheckerSettings {
      * @param settings a node settings object
      */
     public void saveSettings(final NodeSettingsWO settings) {
+        settings.addBoolean(CFG_CHECK_DOMAIN, m_checkDomain);
         for (String columnName : m_checkerPerColumn.keySet()) {
             NodeSettingsWO columnConfig = settings.addNodeSettings("columnConfig_" + columnName);
             columnConfig.addString("checkerFactory", m_checkerPerColumn.get(columnName));
@@ -241,5 +253,23 @@ class DifferenceCheckerSettings {
                 columnConfig.addNodeSettings(internals);
             }
         }
+    }
+
+
+
+    /**
+     * Gets a value determining whether the domain of columns should be checked
+     * @return a boolean value determining whether the domain of columns should be checked
+     */
+    public boolean getCheckDomain() {
+        return m_checkDomain;
+    }
+
+    /**
+     * Sets a value determining whether the domain of columns should be checked
+     * @param check if true, the domain of columns is checked
+     */
+    public void setCheckDomain(final boolean check) {
+        m_checkDomain = check;
     }
 }

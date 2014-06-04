@@ -144,7 +144,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
         }
 
         exec.setMessage("Comparing table specs");
-        checkTableSpecs(testTable.getDataTableSpec(), refTable.getDataTableSpec(), true);
+        checkTableSpecs(testTable.getDataTableSpec(), refTable.getDataTableSpec(), m_settings.getCheckDomain());
 
         if (testTable.getRowCount() != refTable.getRowCount()) {
             throw new IllegalStateException("Wrong number of rows: expected " + refTable.getRowCount() + ", got "
