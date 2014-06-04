@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.base.node.mine.bayes.naivebayes.predictor3;
+package org.knime.base.node.mine.bayes.naivebayes.predictor2;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,9 +67,10 @@ import org.knime.core.node.ExecutionMonitor;
  * Naive Bayes <code>AppendCellFactory</code> class which uses the given
  * <code>NaiveBayesModel</code> to predict the class membership of each row.
  * @author Tobias Koetter, University of Konstanz
+ * @deprecated the new version uses PMML as data transfer protocol instead of a proprietary one
  */
-public class NaiveBayesCellFactory implements AppendedCellFactory,
-CellFactory {
+@Deprecated
+public class NaiveBayesCellFactory implements AppendedCellFactory, CellFactory {
 
     /**
      * The <code>NaiveBayesModel</code> which holds all necessary information
@@ -85,6 +86,8 @@ CellFactory {
 
     private final boolean m_inclClassProbVals;
 
+    private final double m_laplaceCorrector;
+
     private final String m_columnName;
 
     private final String m_suffix;
@@ -96,10 +99,13 @@ CellFactory {
      * @param tableSpec the basic table specification
      * @param inclClassProbVals if the probability per class instance should
      * be appended as columns
+     * @param laplaceCorrector the Laplace corrector to use. A value greater 0
+     * overcomes zero counts
      * @param suffix the suffix for the probability columns
      */
     public NaiveBayesCellFactory(final NaiveBayesModel model, final String columnName,
-            final DataTableSpec tableSpec, final boolean inclClassProbVals, final String suffix) {
+            final DataTableSpec tableSpec, final boolean inclClassProbVals,
+            final double laplaceCorrector, final String suffix) {
         this.m_columnName = columnName;
         this.m_suffix = suffix;
         if (model == null) {
@@ -116,6 +122,11 @@ CellFactory {
         for (int i = 0, length = tableSpec.getNumColumns(); i < length; i++) {
             m_attributeNames[i] = tableSpec.getColumnSpec(i).getName();
         }
+        if (laplaceCorrector < 0) {
+            throw new IllegalArgumentException(
+                    "Laplace corrector should be positive");
+        }
+        m_laplaceCorrector = laplaceCorrector;
     }
 
     /**
@@ -208,7 +219,7 @@ CellFactory {
      */
     @Override
     public DataCell[] getCells(final DataRow row) {
-        final String mostLikelyClass = m_model.getMostLikelyClass(m_attributeNames, row, true);
+        final String mostLikelyClass = m_model.getMostLikelyClass(m_attributeNames, row, m_laplaceCorrector);
         if (mostLikelyClass == null) {
             throw new IllegalStateException("No class found for row with id " + row.getKey());
         }
@@ -216,8 +227,10 @@ CellFactory {
         if (!m_inclClassProbVals) {
             return new DataCell[] {classCell};
         }
-        final Collection<DataCell> resultCells = new ArrayList<>(m_sortedClassVals.size() + 1);
-        final double[] classProbs = m_model.getClassProbabilities(m_attributeNames, row, m_sortedClassVals, true, true);
+        final Collection<DataCell> resultCells =
+            new ArrayList<>(m_sortedClassVals.size() + 1);
+        final double[] classProbs = m_model.getClassProbabilities(m_attributeNames, row, m_sortedClassVals, true,
+                m_laplaceCorrector);
         //add the probability per class
         for (final double classVal : classProbs) {
             resultCells.add(new DoubleCell(classVal));

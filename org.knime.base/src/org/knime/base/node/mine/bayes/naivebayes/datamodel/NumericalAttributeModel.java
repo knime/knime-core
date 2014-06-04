@@ -185,9 +185,6 @@ class NumericalAttributeModel extends AttributeModel {
                 PMMLNaiveBayesModelTranslator.setIntExtension(targetValueStat.addNewExtension(), NO_OF_ROWS,
                     getNoOfRows());
             }
-//            PMMLNaiveBayesModelTranslator.setDoubleExtension(targetValueStat.addNewExtension(), SUM, m_sum);
-//            PMMLNaiveBayesModelTranslator.setDoubleExtension(targetValueStat.addNewExtension(), SQUARE_SUM,
-//                m_squareSum);
             final GaussianDistribution distribution = targetValueStat.addNewGaussianDistribution();
             distribution.setMean(getMean());
             distribution.setVariance(getVariance());
@@ -243,8 +240,7 @@ class NumericalAttributeModel extends AttributeModel {
             if (attrVal.isMissing()) {
                 m_missingValueRecs.inc();
             } else {
-                final double doubleValue =
-                    ((DoubleValue)attrVal).getDoubleValue();
+                final double doubleValue = ((DoubleValue)attrVal).getDoubleValue();
                 m_sum += doubleValue;
                 m_squareSum += (doubleValue * doubleValue);
                 m_recompute = true;
@@ -281,9 +277,8 @@ class NumericalAttributeModel extends AttributeModel {
             }
             if (m_probabilityDenominator == 0) {
                 //this should never happen since we check the standard deviation
-                throw new IllegalStateException("Error while calculating "
-                        + "probability for attribute " + getAttributeName()
-                        + ": Probability denominator was zero");
+                throw new IllegalStateException("Error while calculating probability for attribute "
+                + getAttributeName() + ": Probability denominator was zero");
             }
             //we do not use the probability factor
             //1 / (PROB_FACT_DEN * m_stdDeviation) which ensures that the area
@@ -292,9 +287,7 @@ class NumericalAttributeModel extends AttributeModel {
             //with a very low variance the probability is > 1 which might result
             //in a number overflow for many of such columns like described
             //in forum post http://www.knime.org/node/949
-            final double prob =
-                Math.exp(-(diff * diff
-                        / m_probabilityDenominator));
+            final double prob = Math.exp(-(diff * diff / m_probabilityDenominator));
             return prob;
         }
 
@@ -537,8 +530,7 @@ class NumericalAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
-    double getProbabilityInternal(final String classValue,
-            final DataCell attributeValue, final double laplaceCorrector,
+    double getProbabilityInternal(final String classValue, final DataCell attributeValue, final double laplaceCorrector,
             final boolean useLog) {
         final NumericalClassValue classModel = m_classValues.get(classValue);
         if (classModel == null) {

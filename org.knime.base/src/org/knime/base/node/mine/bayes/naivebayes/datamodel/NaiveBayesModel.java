@@ -57,7 +57,8 @@ import java.util.Map;
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.BayesInputsDocument.BayesInputs;
 import org.dmg.pmml.BayesOutputDocument.BayesOutput;
-import org.dmg.pmml.PMMLDocument.PMML;
+import org.dmg.pmml.MININGFUNCTION;
+import org.dmg.pmml.NaiveBayesModelDocument;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -94,6 +95,7 @@ public class NaiveBayesModel {
     private static final String BIT_VECTOR_MODEL_COUNT = "BitVectorModelCount";
     private static final String BIT_VECTOR_MODEL_PREFIX = "BitVectorModel_";
     private static final String CLASS_COL_NAME = "ClassColumnName";
+    private static final String THRESHOLD = "Threshold";
     private static final String IGNORE_MISSING_VALS = "skipMissingVals";
     private static final String SKIPPED_ATTRIBUTE_SECTION = "SkippedAttributes";
     private static final String SKIPPED_ATTRIBUTE_COUNTER = "SkippedAttributesCounter";
@@ -122,6 +124,8 @@ public class NaiveBayesModel {
 
     private String m_htmlView = null;
 
+    private final double m_threshold;
+
     /**Constructor which iterates through the <code>DataTable</code> to
      * calculate the needed Bayes variables.
      *
@@ -140,7 +144,7 @@ public class NaiveBayesModel {
     public NaiveBayesModel(final BufferedDataTable data, final String classColName, final ExecutionContext exec,
             final int maxNoOfNominalVals, final boolean ignoreMissingVals)
         throws CanceledExecutionException, InvalidSettingsException {
-        this(data, classColName, exec, maxNoOfNominalVals, ignoreMissingVals, false);
+        this(data, classColName, exec, maxNoOfNominalVals, ignoreMissingVals, false, Double.NaN);
     }
     /**Constructor which iterates through the <code>DataTable</code> to
      * calculate the needed Bayes variables.
@@ -154,14 +158,20 @@ public class NaiveBayesModel {
      * @param ignoreMissingVals set to <code>true</code> if the missing values
      * should be ignored during learning and prediction
      * @param pmmlCompatible flag that indicates that a PMML compatible model should be learned
+     * @param threshold the threshold to use for zero probability of an attribute values
      * @throws CanceledExecutionException if the user presses the cancel
      * button during model creation
      * @throws InvalidSettingsException if the input data contains no rows
      * @since 2.10
      */
     public NaiveBayesModel(final BufferedDataTable data, final String classColName, final ExecutionContext exec,
-            final int maxNoOfNominalVals, final boolean ignoreMissingVals, final boolean pmmlCompatible)
+            final int maxNoOfNominalVals, final boolean ignoreMissingVals, final boolean pmmlCompatible,
+            final double threshold)
         throws CanceledExecutionException, InvalidSettingsException {
+        if (threshold < 0) {
+            throw new IllegalArgumentException(
+                    "Laplace corrector should be positive");
+        }
         if (data == null) {
             throw new NullPointerException("Training table must not be null.");
         }
@@ -186,6 +196,7 @@ public class NaiveBayesModel {
         //initialise the row values
         m_modelByAttrName =
                 createModelMap(tableSpec, classColName, maxNoOfNominalVals, ignoreMissingVals, pmmlCompatible);
+        m_threshold = threshold;
         //end of initialise all internal variable
         ExecutionMonitor subExec = null;
         if (exec != null) {
@@ -365,6 +376,7 @@ public class NaiveBayesModel {
         }
         m_classColName = predParams.getString(CLASS_COL_NAME);
         m_ignoreMissingVals = predParams.getBoolean(IGNORE_MISSING_VALS);
+        m_threshold = predParams.getDouble(THRESHOLD, Double.NaN);
         //load the skipped models
         final Config skippedConfig = predParams.getConfig(SKIPPED_ATTRIBUTE_SECTION);
         final int noOfSkipped = skippedConfig.getInt(SKIPPED_ATTRIBUTE_COUNTER);
@@ -392,6 +404,7 @@ public class NaiveBayesModel {
         //Save the classifier column
         predParams.addString(CLASS_COL_NAME, m_classColName);
         predParams.addBoolean(IGNORE_MISSING_VALS, m_ignoreMissingVals);
+        predParams.addDouble(THRESHOLD, m_threshold);
         //create the skipped attributes section
         final Config skippedConfig = predParams.addConfig(SKIPPED_ATTRIBUTE_SECTION);
         //save the number of skipped attribute models
@@ -415,20 +428,16 @@ public class NaiveBayesModel {
     }
 
     /**
-     * @param pmml the {@link PMML} document to read from
+     * @param bayesModel the {@link NaiveBayesModelDocument} document to read from
      * @throws InvalidSettingsException if the document contains invalid settings
      */
-    NaiveBayesModel(final PMML pmml) throws InvalidSettingsException {
+    NaiveBayesModel(final org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel bayesModel)
+            throws InvalidSettingsException {
         //set ignore missing values to true as it has no effect on the prediction
         m_ignoreMissingVals = true;
-        final List<org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel> naiveBayesModelList =
-                pmml.getNaiveBayesModelList();
-        if (naiveBayesModelList.size() != 1) {
-            throw new IllegalArgumentException("Only one Naive Bayes model supported per PMML document");
-        }
-        org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel naiveBayesModel = naiveBayesModelList.get(0);
+        m_threshold = bayesModel.getThreshold();
         m_skippedAttributes = null;
-        final BayesInputs inputs = naiveBayesModel.getBayesInputs();
+        final BayesInputs inputs = bayesModel.getBayesInputs();
         m_modelByAttrName = new HashMap<>(inputs.getBayesInputList().size() + 1);
         for (BayesInput input : inputs.getBayesInputList()) {
             final AttributeModel attributeModel = AttributeModel.loadModel(input);
@@ -445,18 +454,20 @@ public class NaiveBayesModel {
                 m_modelByAttrName.put(model.getAttributeName(), model);
             }
         }
-        BayesOutput output = naiveBayesModel.getBayesOutput();
+        BayesOutput output = bayesModel.getBayesOutput();
         ClassAttributeModel classModel = ClassAttributeModel.loadClassAttributeFromPMML(output);
         m_classColName = classModel.getAttributeName();
         m_modelByAttrName.put(m_classColName, classModel);
     }
 
     /**
-     * @param pmml the {@link PMML} document to export to
+     * @param bayesModel the {@link NaiveBayesModelDocument} document to export to
      */
-    void exportToPMML(final PMML pmml) {
-        final org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel bayesModel = pmml.addNewNaiveBayesModel();
+    void exportToPMML(final org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel bayesModel) {
         bayesModel.setIsScorable(true);
+        bayesModel.setModelName("KNIME PMML Naive Bayes model");
+        bayesModel.setThreshold(m_threshold);
+        bayesModel.setFunctionName(MININGFUNCTION.CLASSIFICATION);
         final BayesInputs bayesInputs = bayesModel.addNewBayesInputs();
         final Collection<AttributeModel> models = getAttributeModels();
         ClassAttributeModel classAttributeModel = null;
@@ -580,77 +591,6 @@ public class NaiveBayesModel {
     }
 
     /**
-     * @param attributeNames the name of the attributes we want the normalized
-     * probability values for
-     * @param row the row with the values in the same order like the
-     * attribute names
-     * @param classValues the class values to calculate the probability for
-     * @param normalize set to <code>true</code> if the probability values
-     * should be normalized
-     * @param laplaceCorrector the Laplace corrector to use. A value greater 0
-     *   tolerates zero counts (i.e. does not produce 0 probabilities)
-     * @return the probability values in the same order like the
-     * class values
-     * @deprecated see {@link #getClassProbabilities(String[], DataRow, List, boolean, double, boolean)}
-     */
-    @Deprecated
-    public double[] getClassProbabilities(final String[] attributeNames, final DataRow row,
-            final List<String> classValues, final boolean normalize, final double laplaceCorrector) {
-        return getClassProbabilities(attributeNames, row, classValues, normalize, laplaceCorrector, false);
-    }
-
-    /**
-     * @param attributeNames the name of the attributes we want the normalized
-     * probability values for
-     * @param row the row with the values in the same order like the
-     * attribute names
-     * @param classValues the class values to calculate the probability for
-     * @param normalize set to <code>true</code> if the probability values
-     * should be normalized
-     * @param laplaceCorrector the Laplace corrector to use. A value greater 0
-     *   tolerates zero counts (i.e. does not produce 0 probabilities)
-     * @param useLog <code>true</code> if probabilities should be combined
-     * by adding the logs
-     * @return the probability values in the same order like the
-     * class values
-     * @since 2.10
-     */
-    public double[] getClassProbabilities(final String[] attributeNames, final DataRow row,
-        final List<String> classValues, final boolean normalize, final double laplaceCorrector, final boolean useLog) {
-        if (row == null) {
-            throw new NullPointerException("Row must not be null");
-        }
-        if (classValues == null || classValues.size() < 1) {
-            throw new IllegalArgumentException("Class value list must not be empty");
-        }
-        if (attributeNames == null) {
-            throw new NullPointerException("ColumSpec must not be null");
-        }
-        if (attributeNames.length != row.getNumCells()) {
-            throw new IllegalArgumentException("Attribute names array and data row must be the same size");
-        }
-        final double[] probs = new double[classValues.size()];
-        double sum = 0;
-        for (int i = 0, length = classValues.size(); i < length; i++) {
-            probs[i] = getClassProbability(attributeNames, row, classValues.get(i), laplaceCorrector, useLog);
-            sum += probs[i];
-        }
-        if (sum == 0) {
-            //all classes have a combined probability of zero -> use only
-            //the prior probability
-            for (int i = 0, length = classValues.size(); i < length; i++) {
-                probs[i] = getClassPriorProbability(classValues.get(i));
-            }
-        } else if (normalize) {
-            for (int i = 0, length = probs.length; i < length; i++) {
-                probs[i] = probs[i] / sum;
-            }
-        }
-        return probs;
-    }
-
-
-    /**
      * @return the total number of training records
      */
     public int getNoOfRecs() {
@@ -714,12 +654,17 @@ public class NaiveBayesModel {
         buf.append("<div>");
         buf.append("<h3>");
         buf.append(classModel.getHTMLViewHeadLine());
-//        buf.append("\t|\t");
-//        buf.append(model.getType());
         buf.append("</h3>");
         buf.append(classModel.getHTMLView(getNoOfRecs()));
         buf.append("<hr>");
         buf.append("</div>");
+        if (!Double.isNaN(m_threshold)) {
+            buf.append("<div>");
+            buf.append("<b>Threshold used for zero probabilities:</b> ");
+            buf.append(m_threshold);
+            buf.append("<hr>");
+            buf.append("</div>");
+        }
         final List<AttributeModel> skippedAttrs = getSkippedAttributes();
         if (skippedAttrs.size() > 0) {
             buf.append("<div>");
@@ -755,8 +700,6 @@ public class NaiveBayesModel {
             buf.append("<hr>");
             buf.append("</div>");
         }
-//        buf.append("<h2 align='center'>Probabilities</h2>");
-        //sort the attribute models by name
         final List<AttributeModel> models = new ArrayList<>();
         models.addAll(m_modelByAttrName.values());
         Collections.sort(models);
@@ -767,8 +710,6 @@ public class NaiveBayesModel {
             buf.append("<div>");
             buf.append("<h3>");
             buf.append(model.getHTMLViewHeadLine());
-//            buf.append("\t|\t");
-//            buf.append(model.getType());
             buf.append("</h3>");
             buf.append(model.getHTMLView(getNoOfRecs()));
             buf.append("<br><hr>");
@@ -791,7 +732,6 @@ public class NaiveBayesModel {
         return missingModels;
     }
 
-
     /**
      * @param attributeName the name of the attribute
      * @return the model for the given attribute name or <code>null</code>
@@ -811,7 +751,6 @@ public class NaiveBayesModel {
     public Collection<AttributeModel> getAttributeModels() {
         return Collections.unmodifiableCollection(m_modelByAttrName.values());
     }
-
 
     /**
      * @return {@link List} with all PMML compatible learning columns
@@ -844,23 +783,97 @@ public class NaiveBayesModel {
     }
 
     /**
-     * Returns the name of the class with the highest probability for the
-     * given row.
-     * @param attrNames the attribute names in the same order
-     * they appear in the given data row
-     * @param row the row with the attributes in the same order like in the
-     * training data table
+     * @param attributeNames the name of the attributes we want the normalized
+     * probability values for
+     * @param row the row with the values in the same order like the
+     * attribute names
+     * @param classValues the class values to calculate the probability for
+     * @param normalize set to <code>true</code> if the probability values
+     * should be normalized
      * @param laplaceCorrector the Laplace corrector to use. A value greater 0
-     * overcomes zero counts
-     * @return the class attribute with the highest probability for the given
-     * attribute values.
-     * @deprecated see {@link #getMostLikelyClass(String[], DataRow, double, boolean)}
+     *   tolerates zero counts (i.e. does not produce 0 probabilities)
+     * @return the probability values in the same order like the
+     * class values
+     * @deprecated see {@link #getClassProbabilities(String[], DataRow, List, boolean, boolean)}
      */
     @Deprecated
-    public String getMostLikelyClass(final String[] attrNames,
-            final DataRow row, final double laplaceCorrector) {
-        return getMostLikelyClass(attrNames, row, laplaceCorrector, false);
+    public double[] getClassProbabilities(final String[] attributeNames, final DataRow row,
+            final List<String> classValues, final boolean normalize, final double laplaceCorrector) {
+        return getClassProbabilities(attributeNames, row, classValues, normalize, false, laplaceCorrector, false);
     }
+
+    /**
+     * @param attributeNames the name of the attributes we want the normalized
+     * probability values for
+     * @param row the row with the values in the same order like the
+     * attribute names
+     * @param classValues the class values to calculate the probability for
+     * @param normalize set to <code>true</code> if the probability values
+     * should be normalized
+     * @param useLog <code>true</code> if probabilities should be combined
+     * by adding the logs
+     * @return the probability values in the same order like the
+     * class values
+     * @since 2.10
+     */
+    public double[] getClassProbabilities(final String[] attributeNames, final DataRow row,
+        final List<String> classValues, final boolean normalize, final boolean useLog) {
+        return getClassProbabilities(attributeNames, row, classValues, normalize, true, m_threshold, useLog);
+    }
+
+    /**
+     * @param attributeNames the name of the attributes we want the normalized
+     * probability values for
+     * @param row the row with the values in the same order like the
+     * attribute names
+     * @param classValues the class values to calculate the probability for
+     * @param normalize set to <code>true</code> if the probability values
+     * should be normalized
+     * @param pmmlCorrector flag that indicates if the corrector is a pmml threshold or the old Laplace corrector.
+     * @param corrector the corrector to use. A value greater 0 tolerates zero counts
+     * (i.e. does not produce 0 probabilities)
+     * @param useLog <code>true</code> if probabilities should be combined
+     * by adding the logs
+     * @return the probability values in the same order like the class values
+     */
+    private double[] getClassProbabilities(final String[] attributeNames, final DataRow row,
+        final List<String> classValues, final boolean normalize, final boolean pmmlCorrector, final double corrector,
+        final boolean useLog) {
+        if (Double.isNaN(corrector) || corrector < 0) {
+            throw new IllegalArgumentException("Invalid corrector");
+        }
+        if (row == null) {
+            throw new NullPointerException("Row must not be null");
+        }
+        if (classValues == null || classValues.size() < 1) {
+            throw new IllegalArgumentException("Class value list must not be empty");
+        }
+        if (attributeNames == null) {
+            throw new NullPointerException("ColumSpec must not be null");
+        }
+        if (attributeNames.length != row.getNumCells()) {
+            throw new IllegalArgumentException("Attribute names array and data row must be the same size");
+        }
+        final double[] probs = new double[classValues.size()];
+        double sum = 0;
+        for (int i = 0, length = classValues.size(); i < length; i++) {
+            probs[i] = getClassProbability(attributeNames, row, classValues.get(i), pmmlCorrector, corrector, useLog);
+            sum += probs[i];
+        }
+        if (sum == 0) {
+            //all classes have a combined probability of zero -> use only
+            //the prior probability
+            for (int i = 0, length = classValues.size(); i < length; i++) {
+                probs[i] = getClassPriorProbability(classValues.get(i));
+            }
+        } else if (normalize) {
+            for (int i = 0, length = probs.length; i < length; i++) {
+                probs[i] = probs[i] / sum;
+            }
+        }
+        return probs;
+    }
+
     /**
      * Returns the name of the class with the highest probability for the
      * given row.
@@ -870,14 +883,52 @@ public class NaiveBayesModel {
      * training data table
      * @param laplaceCorrector the Laplace corrector to use. A value greater 0
      * overcomes zero counts
+     * @return the class attribute with the highest probability for the given
+     * attribute values.
+     * @deprecated see {@link #getMostLikelyClass(String[], DataRow, boolean)}
+     */
+    @Deprecated
+    public String getMostLikelyClass(final String[] attrNames,
+            final DataRow row, final double laplaceCorrector) {
+        return getMostLikelyClass(attrNames, row, false, laplaceCorrector, false);
+    }
+
+    /**
+     * Returns the name of the class with the highest probability for the
+     * given row.
+     * @param attrNames the attribute names in the same order
+     * they appear in the given data row
+     * @param row the row with the attributes in the same order like in the
+     * training data table
      * @param useLog <code>true</code> if probabilities should be combined
      * by adding the logs
      * @return the class attribute with the highest probability for the given
      * attribute values.
      * @since 2.10
      */
-    public String getMostLikelyClass(final String[] attrNames, final DataRow row, final double laplaceCorrector,
-        final boolean useLog) {
+    public String getMostLikelyClass(final String[] attrNames, final DataRow row, final boolean useLog) {
+        return getMostLikelyClass(attrNames, row, true, m_threshold, useLog);
+    }
+
+    /**
+     * Returns the name of the class with the highest probability for the
+     * given row.
+     * @param attrNames the attribute names in the same order
+     * they appear in the given data row
+     * @param row the row with the attributes in the same order like in the
+     * training data table
+     * @param pmmlCorrector flag that indicates if the corrector is a pmml threshold or the old Laplace corrector.
+     * @param corrector the corrector to use. A value greater 0 overcomes zero counts.
+     * @param useLog <code>true</code> if probabilities should be combined
+     * by adding the logs
+     * @return the class attribute with the highest probability for the given
+     * attribute values.
+     */
+    private String getMostLikelyClass(final String[] attrNames, final DataRow row, final boolean pmmlCorrector,
+        final double corrector, final boolean useLog) {
+        if (Double.isNaN(corrector) || corrector < 0) {
+            throw new IllegalArgumentException("Invalid laplace corrector");
+        }
         if (row == null) {
             throw new NullPointerException("Row must not be null");
         }
@@ -891,7 +942,8 @@ public class NaiveBayesModel {
         String mostLikelyClass = null;
         final Collection<String> classValues = getClassValues();
         for (final String classValue : classValues) {
-            final double classProbability = getClassProbability(attrNames, row, classValue, laplaceCorrector, useLog);
+            final double classProbability =
+                    getClassProbability(attrNames, row, classValue, pmmlCorrector, corrector, useLog);
             if (classProbability >= maxProbability) {
                 maxProbability = classProbability;
                 mostLikelyClass = classValue;
@@ -914,7 +966,6 @@ public class NaiveBayesModel {
         return mostLikelyClass;
     }
 
-
     /**
      * Returns the probability of the row to be member of the given class.
      * All not known attributes are skipped. If none of the given attributes
@@ -923,17 +974,25 @@ public class NaiveBayesModel {
      * @param row the row with the value per attribute in the same order
      * like the attribute names
      * @param classValue the class value to compute the probability for
-     * @param laplaceCorrector the Laplace corrector to use. A value greater 0
-     * overcomes zero counts
      * @param useLog <code>true</code> if probabilities should be combined
      * by adding the logs
+     * @param pmmlCorrector flag that indicates if the corrector is a pmml threshold or the old Laplace corrector.
+     * @param corrector the corrector to use. A value greater 0 overcomes zero counts
      * @return the probability of this row to belong to the given class value
      */
     private double getClassProbability(final String[] attrNames, final DataRow row, final String classValue,
-            final double laplaceCorrector, final boolean useLog) {
+            final boolean pmmlCorrector, final double corrector, final boolean useLog) {
         double combinedProbability = getClassPriorProbability(classValue);
         if (useLog) {
             combinedProbability = Math.log(combinedProbability);
+        }
+        final double laplaceCorrector;
+        if (pmmlCorrector) {
+            //set the laplace corrector to zero if the pmml threshold method should be used
+            laplaceCorrector = 0;
+        } else {
+            //this is the old behaviour where the corrector is the laplace corrector
+            laplaceCorrector = corrector;
         }
         for (int i = 0, length = row.getNumCells(); i < length; i++) {
             final String attrName = attrNames[i];
@@ -947,8 +1006,13 @@ public class NaiveBayesModel {
                 continue;
             }
             final DataCell cell = row.getCell(i);
-            final Double probability = model.getProbability(classValue, cell, laplaceCorrector, useLog);
+            Double probability = model.getProbability(classValue, cell, laplaceCorrector, useLog);
             if (probability != null) {
+                if (pmmlCorrector && probability.doubleValue() <= 0) {
+                    //set the probability to the given corrector if the probability is zero and the pmml threshold
+                    //method should be used
+                    probability = Double.valueOf(corrector);
+                }
                 if (useLog) {
                     combinedProbability += Math.log(probability.doubleValue());
                 } else {

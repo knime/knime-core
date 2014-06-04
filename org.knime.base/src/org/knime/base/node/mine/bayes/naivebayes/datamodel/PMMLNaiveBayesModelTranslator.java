@@ -64,6 +64,7 @@ import org.dmg.pmml.ExtensionDocument.Extension;
 import org.dmg.pmml.PMMLDocument;
 import org.dmg.pmml.PMMLDocument.PMML;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLTranslator;
 
@@ -101,8 +102,15 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
     @Override
     public void initializeFrom(final PMMLDocument pmmlDoc) {
         final PMML pmml = pmmlDoc.getPMML();
+
+        final List<org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel> naiveBayesModelList =
+                pmml.getNaiveBayesModelList();
+        if (naiveBayesModelList.size() != 1) {
+            throw new IllegalArgumentException("Only one Naive Bayes model supported per PMML document");
+        }
+        org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel bayesModel = naiveBayesModelList.get(0);
         try {
-            m_model = new NaiveBayesModel(pmml);
+            m_model = new NaiveBayesModel(bayesModel);
         } catch (InvalidSettingsException e) {
             throw new IllegalStateException(e);
         }
@@ -117,7 +125,9 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
             throw new NullPointerException("No model found to serialize");
         }
         final PMML pmml = pmmlDoc.getPMML();
-        m_model.exportToPMML(pmml);
+        final org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel bayesModel = pmml.addNewNaiveBayesModel();
+        PMMLMiningSchemaTranslator.writeMiningSchema(spec, bayesModel);
+        m_model.exportToPMML(bayesModel);
         return org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel.type;
     }
 

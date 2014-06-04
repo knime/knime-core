@@ -74,6 +74,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
@@ -131,19 +133,22 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
      */
     public static final int BAYES_MODEL_PORT = 0;
 
-
-
-    /**
-     * The name of the column which contains the classification Information.
-     */
     private final SettingsModelString m_classifyColumnName = createClassifyColumnModel();
 
     private final SettingsModelBoolean m_pmmlCompatible = createPMMLCompatibilityFlagModel();
 
     private final SettingsModelBoolean m_ignoreMissingVals = createIgnoreMissingValsModel();
 
-    private final SettingsModelIntegerBounded m_maxNoOfNominalVals =
-    createMaxNominalValsModel();
+    private final SettingsModelIntegerBounded m_maxNoOfNominalVals = createMaxNominalValsModel();
+
+    private final SettingsModelDouble m_threshold = createThresholdModel();
+
+    /**
+     * @return the Laplace corrector model
+     */
+    static SettingsModelDoubleBounded createThresholdModel() {
+        return new SettingsModelDoubleBounded("threshold", 0.0, 0.0, Double.MAX_VALUE);
+    }
 
     /**
      * @return the maximum number of nominal values
@@ -296,11 +301,9 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            InvalidSettingsException {
-        LOGGER.debug("Entering execute of "
-                + NaiveBayesLearnerNodeModel2.class.getName());
+    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec)
+            throws CanceledExecutionException, InvalidSettingsException {
+        LOGGER.debug("Entering execute of " + NaiveBayesLearnerNodeModel2.class.getName());
         assert (inData != null && inData.length == 2 && inData[TRAINING_DATA_PORT] != null);
         final PortObject inObject = inData[TRAINING_DATA_PORT];
         if (!(inObject instanceof BufferedDataTable)) {
@@ -311,7 +314,8 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
         final boolean ignoreMissingVals = m_ignoreMissingVals.getBooleanValue();
         final boolean pmmlCompatible = m_pmmlCompatible.getBooleanValue();
         final int maxNoOfNomVals = m_maxNoOfNominalVals.getIntValue();
-        m_model = new NaiveBayesModel(trainingTable, colName, exec, maxNoOfNomVals, ignoreMissingVals, pmmlCompatible);
+        m_model = new NaiveBayesModel(trainingTable, colName, exec, maxNoOfNomVals, ignoreMissingVals,
+            pmmlCompatible, m_threshold.getDoubleValue());
         final List<String> missingModels = m_model.getAttributesWithMissingVals();
         if (missingModels.size() > 0) {
             final StringBuilder buf = new StringBuilder();
@@ -372,11 +376,11 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        assert (settings != null);
         m_classifyColumnName.saveSettingsTo(settings);
         m_ignoreMissingVals.saveSettingsTo(settings);
         m_maxNoOfNominalVals.saveSettingsTo(settings);
         m_pmmlCompatible.saveSettingsTo(settings);
+        m_threshold.saveSettingsTo(settings);
     }
 
     /**
@@ -389,6 +393,7 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
         m_ignoreMissingVals.loadSettingsFrom(settings);
         m_maxNoOfNominalVals.loadSettingsFrom(settings);
         m_pmmlCompatible.loadSettingsFrom(settings);
+        m_threshold.loadSettingsFrom(settings);
     }
 
     /**
@@ -407,6 +412,7 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
             throw new InvalidSettingsException("Maximum number of unique nominal values should be a positive number");
         }
         m_pmmlCompatible.validateSettings(settings);
+        m_threshold.validateSettings(settings);
     }
 
     /**

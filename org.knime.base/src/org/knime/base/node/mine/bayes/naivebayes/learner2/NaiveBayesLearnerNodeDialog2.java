@@ -53,6 +53,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -64,8 +65,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class NaiveBayesLearnerNodeDialog2 extends DefaultNodeSettingsPane {
 
-    private SettingsModelBoolean m_pmmlCompatible;
-    private SettingsModelBoolean m_ignoreMissingVals;
+    private SettingsModelBoolean m_pmmlCompatible = NaiveBayesLearnerNodeModel2.createPMMLCompatibilityFlagModel();
+    private SettingsModelBoolean m_ignoreMissingVals = NaiveBayesLearnerNodeModel2.createIgnoreMissingValsModel();
+    private final SettingsModelDouble m_threshold = NaiveBayesLearnerNodeModel2.createThresholdModel();
 
     /**
      * New pane for configuring BayesianClassifier node dialog.
@@ -73,8 +75,6 @@ public class NaiveBayesLearnerNodeDialog2 extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
     public NaiveBayesLearnerNodeDialog2() {
         super();
-        m_pmmlCompatible = NaiveBayesLearnerNodeModel2.createPMMLCompatibilityFlagModel();
-        m_ignoreMissingVals = NaiveBayesLearnerNodeModel2.createIgnoreMissingValsModel();
         m_pmmlCompatible.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -90,6 +90,10 @@ public class NaiveBayesLearnerNodeDialog2 extends DefaultNodeSettingsPane {
          final DialogComponentColumnNameSelection selectionBox = new DialogComponentColumnNameSelection(columnName,
                  "Classification Column:", NaiveBayesLearnerNodeModel2.TRAINING_DATA_PORT, NominalValue.class);
          addDialogComponent(selectionBox);
+         final DialogComponentNumber laplaceCorrectorComponent = new DialogComponentNumber(
+             m_threshold, "Default probability: ", new Double(0.001), 5);
+         laplaceCorrectorComponent.setToolTipText("Set to zero for no correction");
+         addDialogComponent(laplaceCorrectorComponent);
          final SettingsModelInteger noMo = NaiveBayesLearnerNodeModel2.createMaxNominalValsModel();
          final DialogComponentNumber maxNomVals = new DialogComponentNumber(noMo,
              "Maximum number of unique nominal values per attribute: ", 1);

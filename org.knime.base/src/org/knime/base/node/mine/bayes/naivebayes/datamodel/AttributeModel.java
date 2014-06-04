@@ -326,18 +326,15 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @return the calculated probability or null if the cell was a missing
      * one and missing values should be skipped
      */
-    Double getProbability(final String classValue,
-            final DataCell attributeValue, final double laplaceCorrector,
+    Double getProbability(final String classValue, final DataCell attributeValue, final double laplaceCorrector,
             final boolean useLog) {
         if (!attributeValue.getType().isCompatible(getCompatibleType())) {
-            throw new IllegalArgumentException(
-                    "Attribute value type is not compatible");
+            throw new IllegalArgumentException("Attribute value type is not compatible");
         }
         if (attributeValue.isMissing() && m_ignoreMissingVals) {
             return null;
         }
-        return new Double(getProbabilityInternal(classValue, attributeValue,
-                laplaceCorrector, useLog));
+        return new Double(getProbabilityInternal(classValue, attributeValue, laplaceCorrector, useLog));
     }
 
     /**
@@ -351,9 +348,8 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * combine probabilities
      * @return the calculated probability
      */
-    abstract double getProbabilityInternal(final String classValue,
-            final DataCell attributeValue, double laplaceCorrector,
-            boolean useLog);
+    abstract double getProbabilityInternal(final String classValue, final DataCell attributeValue,
+        double laplaceCorrector, boolean useLog);
 
     /**
      * @param totalNoOfRecs the total number of records in the training data

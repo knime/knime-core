@@ -20,10 +20,6 @@
 			is calculated by assuming a normal distribution per attribute.
 			</p>
 		</intro>
-		<option name="Laplace corrector">
-            Initial count for nominal attributes to overcome zero counts.
-            Set to zero for no correction.
-        </option>
         <option name="Change prediction column name">
             When set, you can change the name of the prediction column.(The
             default is: <tt>Prediction (</tt>trainingColumn<tt>)</tt>.)

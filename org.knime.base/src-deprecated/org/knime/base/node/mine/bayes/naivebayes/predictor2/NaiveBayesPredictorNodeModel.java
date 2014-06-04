@@ -52,7 +52,6 @@ import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
 import org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObject;
 import org.knime.base.node.mine.bayes.naivebayes.port.NaiveBayesPortObjectSpec;
-import org.knime.base.node.mine.bayes.naivebayes.predictor3.NaiveBayesCellFactory;
 import org.knime.base.node.mine.util.PredictorHelper;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;

@@ -46,11 +46,8 @@ package org.knime.base.node.mine.bayes.naivebayes.predictor3;
 
 import java.util.List;
 
-import javax.swing.JPanel;
-
 import org.knime.base.node.mine.util.PredictorNodeDialog;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
@@ -85,19 +82,5 @@ public class NaiveBayesPredictorNodeDialog2 extends PredictorNodeDialog {
         } else {
             throw new IllegalStateException(specs[0].getClass().toString());
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void addOtherControls(final JPanel panel) {
-        super.addOtherControls(panel);
-        final DialogComponentNumber laplaceCorrectorComponent =
-                new DialogComponentNumber(NaiveBayesPredictorNodeModel2.createLaplaceCorrectorModel(),
-                        "Laplace corrector: ", new Double(0.1), 5);
-        laplaceCorrectorComponent.setToolTipText("Set to zero for no correction");
-        addDialogComponent(panel, laplaceCorrectorComponent);
-
     }
 }

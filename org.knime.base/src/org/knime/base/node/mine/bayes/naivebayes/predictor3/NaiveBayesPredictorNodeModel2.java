@@ -65,8 +65,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
-import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -98,15 +96,6 @@ public class NaiveBayesPredictorNodeModel2 extends NodeModel {
      */
     static SettingsModelBoolean createProbabilityColumnModel() {
         return new SettingsModelBoolean("inclProbVals", false);
-    }
-
-    private final SettingsModelDouble m_laplaceCorrector = createLaplaceCorrectorModel();
-
-    /**
-     * @return the Laplace corrector model
-     */
-    static SettingsModelDoubleBounded createLaplaceCorrectorModel() {
-        return new SettingsModelDoubleBounded("laplaceCorrector", 0.0, 0.0, Double.MAX_VALUE);
     }
 
     /**
@@ -159,14 +148,13 @@ public class NaiveBayesPredictorNodeModel2 extends NodeModel {
         final PMMLNaiveBayesModelTranslator translator = new PMMLNaiveBayesModelTranslator();
         modelPort.initializeModelTranslator(translator);
         final NaiveBayesModel model = translator.getModel();
-        final double laplaceCorrector = m_laplaceCorrector.getDoubleValue();
         PredictorHelper predictorHelper = PredictorHelper.getInstance();
         final String classColumnName = model.getClassColumnName();
         final String predictionColName = m_overridePredicted.getBooleanValue()
                 ? m_predictionColumnName.getStringValue() : predictorHelper.computePredictionDefault(classColumnName);
         final NaiveBayesCellFactory appender =
             new NaiveBayesCellFactory(model, predictionColName, data.getDataTableSpec(),
-                    m_inclProbVals.getBooleanValue(), laplaceCorrector, m_probabilitySuffix.getStringValue());
+                    m_inclProbVals.getBooleanValue(), m_probabilitySuffix.getStringValue());
         final ColumnRearranger rearranger = new ColumnRearranger(data.getDataTableSpec());
         rearranger.append(appender);
         final BufferedDataTable returnVal = exec.createColumnRearrangeTable(data, rearranger, exec);
@@ -286,7 +274,6 @@ public class NaiveBayesPredictorNodeModel2 extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_inclProbVals.saveSettingsTo(settings);
-        m_laplaceCorrector.saveSettingsTo(settings);
         m_predictionColumnName.saveSettingsTo(settings);
         m_overridePredicted.saveSettingsTo(settings);
         m_probabilitySuffix.saveSettingsTo(settings);
@@ -299,7 +286,6 @@ public class NaiveBayesPredictorNodeModel2 extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         m_inclProbVals.loadSettingsFrom(settings);
-        m_laplaceCorrector.loadSettingsFrom(settings);
         m_predictionColumnName.loadSettingsFrom(settings);
         m_overridePredicted.loadSettingsFrom(settings);
         m_probabilitySuffix.loadSettingsFrom(settings);
@@ -312,7 +298,6 @@ public class NaiveBayesPredictorNodeModel2 extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         m_inclProbVals.validateSettings(settings);
-        m_laplaceCorrector.validateSettings(settings);
         m_predictionColumnName.validateSettings(settings);
         m_overridePredicted.validateSettings(settings);
         m_probabilitySuffix.validateSettings(settings);

@@ -208,15 +208,15 @@ public class BitVectorAttributeModel extends AttributeModel {
          * probability for
          * @param laplaceCorrector the Laplace corrector to use.
          * A value greater 0 overcomes zero counts.
+         * @param useLog flag that indicates if log sum should be used instead of product to combine probabilities
          * @return the probability for the given attribute value
          */
-        double getProbability(final DataCell attributeValue, final double laplaceCorrector) {
+        double getProbability(final DataCell attributeValue, final double laplaceCorrector, final boolean useLog) {
             final int noOfRows4Class = getNoOfRows();
             if (noOfRows4Class == 0) {
                 return 0;
             }
             if (attributeValue.isMissing()) {
-                // TODO Can we add laplace correction here?
                 return (double)m_missingValueRecs.intValue() / noOfRows4Class;
             }
             final BitVectorValue bitVec = (BitVectorValue)attributeValue;
@@ -226,7 +226,15 @@ public class BitVectorAttributeModel extends AttributeModel {
             double combinedProbability = 1;
             for (int i = 0, length = (int)bitVec.length(); i < length; i++) {
                 final double noOfRows = laplaceCorrector + getNoOfRows4AttributeValue(i, bitVec.get(i));
-                combinedProbability *= noOfRows / (noOfRows4Class + 2 * laplaceCorrector);
+                final double probability = noOfRows / (noOfRows4Class + 2 * laplaceCorrector);
+                if (useLog) {
+                    combinedProbability += Math.log(probability);
+                } else {
+                    combinedProbability *= probability;
+                }
+            }
+            if (useLog) {
+                combinedProbability = Math.exp(combinedProbability);
             }
             return combinedProbability;
         }
@@ -465,13 +473,13 @@ public class BitVectorAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
-    double getProbabilityInternal(final String classValue,
-            final DataCell attributeValue, final double laplaceCorrector, final boolean useLog) {
+    double getProbabilityInternal(final String classValue, final DataCell attributeValue,
+        final double laplaceCorrector, final boolean useLog) {
         final BitVectorClassValue classModel = m_classValues.get(classValue);
         if (classModel == null) {
             return 0;
         }
-        return classModel.getProbability(attributeValue, laplaceCorrector);
+        return classModel.getProbability(attributeValue, laplaceCorrector, useLog);
     }
 
     /**

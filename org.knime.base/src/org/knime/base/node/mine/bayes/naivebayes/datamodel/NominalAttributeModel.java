@@ -233,22 +233,18 @@ class NominalAttributeModel extends AttributeModel {
          * A value greater 0 overcomes zero counts.
          * @return the probability for the given attribute value
          */
-        double getProbability(final DataCell attrVal,
-                final double laplaceCorrector) {
+        double getProbability(final DataCell attrVal, final double laplaceCorrector) {
             final int noOfRows4Class = getNoOfRows();
             if (noOfRows4Class == 0) {
-                throw new IllegalStateException("Model for attribute "
-                        + getAttributeName() + " contains no rows for class "
-                        + m_classValue);
+                throw new IllegalStateException("Model for attribute " + getAttributeName()
+                    + " contains no rows for class " + m_classValue);
             }
             double noOfRows = laplaceCorrector;
-            final MutableInteger noOfRows4Attr =
-                getNoOfRows4AttributeValue(attrVal);
+            final MutableInteger noOfRows4Attr = getNoOfRows4AttributeValue(attrVal);
             if (noOfRows4Attr != null) {
                 noOfRows += noOfRows4Attr.intValue();
             }
-            return noOfRows / (noOfRows4Class
-                    + m_attributeVals.size() * laplaceCorrector);
+            return noOfRows / (noOfRows4Class + m_attributeVals.size() * laplaceCorrector);
         }
         /**
          * @return the missingValueRecs
@@ -400,8 +396,7 @@ class NominalAttributeModel extends AttributeModel {
         config.addStringArray(ATTRIBUTE_VALUES, attrVals);
         int i = 0;
         for (final NominalClassValue classVal : m_classValues.values()) {
-            final Config classConfig =
-                config.addConfig(CLASS_VALUE_SECTION + i);
+            final Config classConfig = config.addConfig(CLASS_VALUE_SECTION + i);
             classVal.saveModel(classConfig);
             i++;
         }
@@ -438,8 +433,7 @@ class NominalAttributeModel extends AttributeModel {
             if (!m_attributeVals.contains(attrValString)) {
                 //check the different number of attribute values
                 if (m_attributeVals.size() >= m_maxNoOfAttrVals) {
-                    throw new TooManyValuesException("Attribute value "
-                                + attrValString + " doesn't fit into model");
+                    throw new TooManyValuesException("Attribute value " + attrValString + " doesn't fit into model");
                 }
                 m_attributeVals.add(attrValString);
             }
@@ -487,8 +481,7 @@ class NominalAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
-    double getProbabilityInternal(final String classValue,
-            final DataCell attributeValue, final double laplaceCorrector,
+    double getProbabilityInternal(final String classValue, final DataCell attributeValue, final double laplaceCorrector,
             final boolean useLog) {
         final NominalClassValue classVal = m_classValues.get(classValue);
         if (classVal == null) {
