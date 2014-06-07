@@ -4114,17 +4114,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     boolean canPerformReset() {
         synchronized (m_workflowMutex) {
-        // check for at least one executed and resetable node!
-        for (NodeContainer nc : m_workflow.getNodeValues()) {
-            if (nc.getInternalState().isExecutionInProgress()) {
-                return false;
-            }
-            if (nc.canPerformReset()) {
+            final Collection<NodeContainer> nodeValues = m_workflow.getNodeValues();
+            // no nodes but executed (through connections and outputs populated - see checkForNodeStateChanges)
+            if (nodeValues.isEmpty() && getInternalState().isExecuted()) {
                 return true;
             }
+            // check for at least one executed and resetable node!
+            for (NodeContainer nc : nodeValues) {
+                if (nc.getInternalState().isExecutionInProgress()) {
+                    return false;
+                }
+                if (nc.canPerformReset()) {
+                    return true;
+                }
+            }
+            return false;
         }
-        return false;
-    }
     }
 
     /** {@inheritDoc} */
