@@ -664,7 +664,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
      * @return the settings model for output column name
      */
     static SettingsModelString createOutputColumnModel() {
-        return new SettingsModelString("output.column", "Bit Vector");
+        return new SettingsModelString("output.column", "BitVectors");
     }
 
 }
