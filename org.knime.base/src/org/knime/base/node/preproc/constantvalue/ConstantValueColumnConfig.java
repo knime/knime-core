@@ -156,11 +156,11 @@ final class ConstantValueColumnConfig {
      * @throws InvalidSettingsException If invalid.
      */
     void loadInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_replacedColumn = settings.getString(REPLACED_COLUMN, null);
-        m_newColumnName = settings.getString(NEW_COLUMN_NAME, null);
+        m_replacedColumn = settings.getString(REPLACED_COLUMN);
+        m_newColumnName = settings.getString(NEW_COLUMN_NAME);
         m_value = settings.getString(VALUE);
         m_cellFactory = getEnum(settings.getString(TYPE));
-        m_dateFormat = settings.getString(DATE_FORMAT, null);
+        m_dateFormat = settings.getString(DATE_FORMAT);
     }
 
     /**

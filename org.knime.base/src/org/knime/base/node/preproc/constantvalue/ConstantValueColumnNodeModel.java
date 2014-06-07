@@ -143,7 +143,7 @@ final class ConstantValueColumnNodeModel extends SimpleStreamableFunctionNodeMod
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_config.getNewColumnName() != null) {
+        if (m_config.getValue() != null) {
             m_config.save(settings);
         }
     }
