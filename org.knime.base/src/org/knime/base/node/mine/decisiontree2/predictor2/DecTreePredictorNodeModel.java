@@ -340,20 +340,6 @@ public final class DecTreePredictorNodeModel extends NodeModel {
         return new BufferedDataTable[]{outData.getTable()};
     }
 
-    /** This class is also used in the generic PMML predictor, which sets the column name to something hard-coded
-     * in order to retain backward compatibility.
-     * @param name The name to use - null for default behavior (derived from model)
-     * @noreference This method is not intended to be referenced by clients.
-     */
-    public void setPredictionColumnName(final String name) {
-        if (name == null) {
-            m_overridePrediction.setBooleanValue(false);
-        } else {
-            m_overridePrediction.setBooleanValue(true);
-            m_predictionColumn.setStringValue(name);
-        }
-    }
-
     /**
      * @param spec
      * @return
