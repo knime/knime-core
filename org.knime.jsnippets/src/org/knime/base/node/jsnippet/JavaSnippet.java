@@ -359,6 +359,7 @@ public final class JavaSnippet {
         classes.add(Type.class);
         classes.add(TypeException.class);
         classes.add(NodeLogger.class);
+        classes.add(KNIMEConstants.class);
 
         // create tree structure for classes
         DefaultMutableTreeNode root = createTree(classes);
