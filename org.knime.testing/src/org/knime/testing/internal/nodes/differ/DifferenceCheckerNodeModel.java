@@ -144,7 +144,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
         }
 
         exec.setMessage("Comparing table specs");
-        checkTableSpecs(testTable.getDataTableSpec(), refTable.getDataTableSpec(), m_settings.getCheckDomain());
+        checkTableSpecs(testTable.getDataTableSpec(), refTable.getDataTableSpec());
 
         if (testTable.getRowCount() != refTable.getRowCount()) {
             throw new IllegalStateException("Wrong number of rows: expected " + refTable.getRowCount() + ", got "
@@ -294,8 +294,8 @@ class DifferenceCheckerNodeModel extends NodeModel {
         m_checkers.clear();
     }
 
-    private void checkTableSpecs(final DataTableSpec testTable, final DataTableSpec referenceTable,
-                                 final boolean checkDomain) throws InvalidSettingsException {
+    private void checkTableSpecs(final DataTableSpec testTable, final DataTableSpec referenceTable)
+        throws InvalidSettingsException {
         Set<String> columnNames = new HashSet<String>();
 
         for (int i = 0; i < referenceTable.getNumColumns(); i++) {
@@ -314,11 +314,10 @@ class DifferenceCheckerNodeModel extends NodeModel {
             if (!refColSpec.getType().equals(testColSpec.getType())) {
                 throw new IllegalStateException("Expected type '" + refColSpec.getType() + "' for column "
                         + refColSpec.getName() + " in test table");
+            }
 
-            }
-            if (checkDomain) {
-                checkDomain(testColSpec, refColSpec);
-            }
+            checkDomain(testColSpec, refColSpec);
+
             if (!ConvenienceMethods.areEqual(refColSpec.getColorHandler(), testColSpec.getColorHandler())) {
                 throw new IllegalStateException("Unexpected color handler in column '" + refColSpec.getName() + "'");
             }

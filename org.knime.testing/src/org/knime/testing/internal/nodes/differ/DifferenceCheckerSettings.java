@@ -254,22 +254,4 @@ class DifferenceCheckerSettings {
             }
         }
     }
-
-
-
-    /**
-     * Gets a value determining whether the domain of columns should be checked
-     * @return a boolean value determining whether the domain of columns should be checked
-     */
-    public boolean getCheckDomain() {
-        return m_checkDomain;
-    }
-
-    /**
-     * Sets a value determining whether the domain of columns should be checked
-     * @param check if true, the domain of columns is checked
-     */
-    public void setCheckDomain(final boolean check) {
-        m_checkDomain = check;
-    }
 }
