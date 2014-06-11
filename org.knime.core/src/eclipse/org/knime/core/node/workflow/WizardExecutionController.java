@@ -47,7 +47,6 @@
 package org.knime.core.node.workflow;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,11 +68,11 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.web.DefaultWebTemplate;
-import org.knime.core.node.web.JSONViewContent;
 import org.knime.core.node.web.ValidationError;
 import org.knime.core.node.web.WebResourceLocator;
 import org.knime.core.node.web.WebResourceLocator.WebResourceType;
 import org.knime.core.node.web.WebTemplate;
+import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.wizard.WizardNode;
 import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
@@ -443,7 +442,7 @@ public final class WizardExecutionController {
                 throw new IllegalStateException(String.format("No wizard node with ID %s in sub node, valid IDs are: "
                         + "%s", id, ConvenienceMethods.getShortStringFrom(wizardNodeSet.entrySet(), 10)));
             }
-            JSONViewContent newViewValue = (JSONViewContent)wizardNode.createEmptyViewValue();
+            WebViewContent newViewValue = wizardNode.createEmptyViewValue();
             if (newViewValue == null) {
                 // node has no view value
                 continue;
@@ -452,7 +451,7 @@ public final class WizardExecutionController {
             try {
                 newViewValue.loadFromStream(new ByteArrayInputStream(entry.getValue().getBytes()));
                 validationError = wizardNode.validateViewValue(newViewValue);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 resultMap.put(entry.getKey(), new ValidationError("Could not deserialize JSON value: " + entry.getValue()));
             }
             if (validationError != null) {
@@ -468,7 +467,7 @@ public final class WizardExecutionController {
             NodeIDSuffix suffix = NodeIDSuffix.fromString(entry.getKey());
             NodeID id = suffix.prependParent(m_manager.getID());
             WizardNode wizardNode = wizardNodeSet.get(id);
-            JSONViewContent newViewValue = (JSONViewContent)wizardNode.createEmptyViewValue();
+            WebViewContent newViewValue = wizardNode.createEmptyViewValue();
             if (newViewValue == null) {
                 // node has no view value
                 continue;
@@ -476,8 +475,8 @@ public final class WizardExecutionController {
             try {
                 newViewValue.loadFromStream(new ByteArrayInputStream(entry.getValue().getBytes()));
                 wizardNode.loadViewValue(newViewValue, false);
-            } catch (IOException e) {
-                // do nothing, exception not possible
+            } catch (Exception e) {
+                // do nothing
             }
         }
         m_manager.executeUpToHere(currentID);

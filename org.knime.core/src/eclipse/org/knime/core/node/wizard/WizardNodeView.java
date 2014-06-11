@@ -74,8 +74,6 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
-import org.eclipse.swt.browser.ProgressAdapter;
-import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -173,12 +171,9 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
      */
     @Override
     public void modelChanged() {
-        Display display = Display.getCurrent();
-        if (display == null && m_browser != null && !m_browser.isDisposed()) {
-            display = m_browser.getDisplay();
-        }
-        // view most likely disposed
+        Display display = getDisplay();
         if (display == null) {
+            // view most likely disposed
             return;
         }
         display.asyncExec(new Runnable() {
@@ -190,7 +185,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
                         final String jsonViewRepresentation = getViewRepresentationFromModel();
                         final String jsonViewValue = getViewValueFromModel();
                         try {
-                            if (m_completedListener != null) {
+                            /*if (m_completedListener != null) {
                                 m_browser.removeProgressListener(m_completedListener);
                             }
                             m_completedListener = new ProgressAdapter() {
@@ -200,8 +195,9 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
                                         .evaluate(wrapInTryCatch(initJSView(jsonViewRepresentation, jsonViewValue)));
                                 }
                             };
-                            m_browser.addProgressListener(m_completedListener);
-                            m_browser.setUrl(createWebResources());
+                            m_browser.addProgressListener(m_completedListener);*/
+                            m_browser.setUrl(createWebResources(jsonViewRepresentation, jsonViewValue));
+                            //org.eclipse.swt.program.Program.launch(createWebResources(jsonViewRepresentation, jsonViewValue));
                         } catch (IOException e) {
                             if (m_tempIndexFile != null) {
                                 deleteTempFile(m_tempIndexFile);
@@ -214,6 +210,15 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         });
     }
 
+    private Display getDisplay() {
+        //Display display = new Display();
+        Display display = Display.getCurrent();
+        if (display == null && m_browser != null && !m_browser.isDisposed()) {
+            display = m_browser.getDisplay();
+        }
+        return display;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -223,7 +228,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         final String jsonViewRepresentation = getViewRepresentationFromModel();
         final String jsonViewValue = getViewValueFromModel();
 
-        Display display = Display.getCurrent();
+        Display display = getDisplay();
         m_shell = new Shell(display, SWT.ON_TOP | SWT.RESIZE | SWT.MIN | SWT.MAX | SWT.CLOSE);
         m_shell.setFullScreen(true);
         m_shell.setText(m_title);
@@ -271,16 +276,26 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
             }
         });
 
-        m_completedListener = new ProgressAdapter() {
+        /*m_completedListener = new ProgressAdapter() {
             @Override
             public void completed(final ProgressEvent event) {
-                m_browser.evaluate(wrapInTryCatch(initJSView(jsonViewRepresentation, jsonViewValue)));
+                Display d = getDisplay();
+                if (d != null) {
+                    d.asyncExec(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            m_browser.evaluate(wrapInTryCatch(initJSView(jsonViewRepresentation, jsonViewValue)));
+                        }
+                    });
+                }
             }
         };
-        m_browser.addProgressListener(m_completedListener);
+        m_browser.addProgressListener(m_completedListener);*/
 
         try {
-            m_browser.setUrl(createWebResources());
+            m_browser.setUrl(createWebResources(jsonViewRepresentation, jsonViewValue));
+            //org.eclipse.swt.program.Program.launch(createWebResources(jsonViewRepresentation, jsonViewValue));
         } catch (IOException e) {
             if (m_tempIndexFile != null) {
                 deleteTempFile(m_tempIndexFile);
@@ -347,7 +362,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     /**
      * @return
      */
-    private String createWebResources() throws IOException {
+    private String createWebResources(final String jsonViewRepresentation, final String jsonViewValue) throws IOException {
         if (!viewTempDirExists()) {
             tempFolder = FileUtil.createTempDir("knimeViewContainer", null, true);
             try {
@@ -361,7 +376,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         m_tempIndexFile = new File(tempFolder, "index_" + System.currentTimeMillis() + ".html");
         m_tempIndexFile.createNewFile();
         BufferedWriter writer = new BufferedWriter(new FileWriter(m_tempIndexFile));
-        writer.write(buildHTMLResource());
+        writer.write(buildHTMLResource(jsonViewRepresentation, jsonViewValue));
         writer.flush();
         writer.close();
         return m_tempIndexFile.getAbsolutePath();
@@ -377,10 +392,10 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
                && tempFolder.isDirectory();
     }
 
-    private String buildHTMLResource() throws IOException {
+    private String buildHTMLResource(final String jsonViewRepresentation, final String jsonViewValue) throws IOException {
 
         String setIEVersion = "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">";
-        //String inlineScript = "<script type=\"text/javascript\" charset=\"UTF-8\">%s</script>";
+        String inlineScript = "<script type=\"text/javascript\" charset=\"UTF-8\">%s</script>";
         //String debugScript = "<script type=\"text/javascript\" "
         //        + "src=\"https://getfirebug.com/firebug-lite.js#startOpened=true\"></script>";
         String scriptString = "<script type=\"text/javascript\" src=\"%s\" charset=\"UTF-8\"></script>";
@@ -417,7 +432,10 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
                     LOGGER.error("Unrecognized resource type " + resFile.getType());
             }
         }
-        pageBuilder.append("</head><body>");
+        String loadScript = "function loadWizardNodeView(){%s};";
+        loadScript = String.format(loadScript, wrapInTryCatch(initJSView(jsonViewRepresentation, jsonViewValue)));
+        pageBuilder.append(String.format(inlineScript, loadScript));
+        pageBuilder.append("</head><body onload=\"loadWizardNodeView();\">");
         pageBuilder.append(bodyText);
         pageBuilder.append("</body></html>");
         return pageBuilder.toString();
@@ -539,11 +557,14 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     private String initJSView(final String jsonViewRepresentation, final String jsonViewValue) {
         String escapedRepresentation = jsonViewRepresentation.replace("\\", "\\\\").replace("'", "\\'");
         String escapedValue = jsonViewValue.replace("\\", "\\\\").replace("'", "\\'");
+        String repParseCall = /*"console.time('parse representation');" +*/ "var parsedRepresentation = JSON.parse('" + escapedRepresentation + "');"/* + "console.timeEnd('parse representation');"*/;
+        String valParseCall = /*"console.time('parse value');" +*/ "var parsedValue = JSON.parse('" + escapedValue + "');"/* + "console.timeEnd('parse value');"*/;
         String initMethod = m_template.getInitMethodName();
-        String initCall = getNamespacePrefix() + initMethod + "(JSON.parse('" + escapedRepresentation
-                + "'), JSON.parse('" + escapedValue + "'));";
+        /*String initCall = getNamespacePrefix() + initMethod + "(JSON.parse('" + escapedRepresentation
+                + "'), JSON.parse('" + escapedValue + "'));";*/
         //LOGGER.warn(initCall);
-        return initCall;
+        String initCall = /*"console.time('init view');" +*/ getNamespacePrefix() + initMethod + "(parsedRepresentation, parsedValue);"/* + "console.timeEnd('init view');"*/;
+        return repParseCall + valParseCall + initCall;
     }
 
     private String getNamespacePrefix() {

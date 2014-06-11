@@ -1571,13 +1571,6 @@
             factory-class="org.knime.base.node.flowvariable.tablecoltovariable.TableColumnToVariableNodeFactory"
             id="org.knime.base.node.flowvariable.tablecoltovariable.TableColumnToVariableNodeFactory">
       </node>      
-      <!--
-      <node
-            expert-flag="false"
-            factory-class="org.knime.base.node.preproc.select.value.InteractiveValueSelectNodeFactory"
-            id="org.knime.base.node.preproc.select.value.InteractiveValueSelectNodeFactory">
-      </node>
-      -->
       <!-- new ones -->
       <node
             after="org.knime.base.node.io.extractsysprop.ReadSysPropertyNodeFactory"

@@ -1,5 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.web.JSONDataTable">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.web.JSONDataTable"/>
+                <message_argument value="org.knime.core_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.web.JSONDataTableSpec">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.web.JSONDataTableSpec"/>
+                <message_argument value="org.knime.core_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.web.JSONViewContent">
+        <filter id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.web.JSONViewContent"/>
+                <message_argument value="org.knime.core_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.ObsoleteMetaNodeWorkflowPersistorVersion1xx">
         <filter comment="renaming persistor classes - no API anyway" id="305324134">
             <message_arguments>
@@ -541,27 +565,6 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.web.DefaultWebTemplate"/>
                 <message_argument value="getDependencies()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/web/JSONDataTable.java" type="org.knime.core.node.web.JSONDataTable">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.web.JSONDataTable"/>
-                <message_argument value="getData()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.web.JSONDataTable"/>
-                <message_argument value="setData(Object[][])"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/web/JSONViewContent.java" type="org.knime.core.node.web.JSONViewContent">
-        <filter id="338849923">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.web.JSONViewContent"/>
             </message_arguments>
         </filter>
     </resource>
