@@ -229,8 +229,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         final String jsonViewValue = getViewValueFromModel();
 
         Display display = getDisplay();
-        m_shell = new Shell(display, SWT.ON_TOP | SWT.RESIZE | SWT.MIN | SWT.MAX | SWT.CLOSE);
-        m_shell.setFullScreen(true);
+        m_shell = new Shell(display, SWT.SHELL_TRIM);
         m_shell.setText(m_title);
 
         if (KNIMEConstants.KNIME16X16_SWT != null) {
