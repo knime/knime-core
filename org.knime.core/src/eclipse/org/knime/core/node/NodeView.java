@@ -85,6 +85,9 @@ import org.knime.core.node.workflow.NodeContext;
  */
 public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         implements NodeModelWarningListener {
+    static {
+        MacFileChooserFixer.installFixer();
+    }
 
     /** Default background color. */
     public static final Color COLOR_BACKGROUND = Color.LIGHT_GRAY;

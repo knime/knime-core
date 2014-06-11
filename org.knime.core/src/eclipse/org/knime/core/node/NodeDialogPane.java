@@ -128,6 +128,9 @@ import org.knime.core.util.MutableInteger;
  * @see org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane
  */
 public abstract class NodeDialogPane {
+    static {
+        MacFileChooserFixer.installFixer();
+    }
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             NodeDialogPane.class);
