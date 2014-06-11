@@ -67,6 +67,7 @@ import org.knime.core.node.workflow.SubNodeContainer;
  * Factory to subnode virtual input node.
  * <p> No API!
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.10
  */
 public final class VirtualSubNodeInputNodeFactory extends DynamicNodeFactory<VirtualSubNodeInputNodeModel> {
 

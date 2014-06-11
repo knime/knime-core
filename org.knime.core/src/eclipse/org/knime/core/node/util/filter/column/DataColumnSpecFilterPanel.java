@@ -53,6 +53,7 @@ import javax.swing.event.ChangeListener;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
@@ -191,6 +192,16 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
             m_typePanel.saveConfiguration(((DataColumnSpecFilterConfiguration)config).getTypeConfig());
         }
         super.saveConfiguration(config);
+    }
+
+    public void updateWithNewConfiguration(final DataColumnSpecFilterConfiguration newConfig) {
+        DataColumnSpecFilterConfiguration tempConfiguration =
+                new DataColumnSpecFilterConfiguration(newConfig.getConfigRootName());
+        saveConfiguration(tempConfiguration);
+        NodeSettings tempSettings = new NodeSettings("tempSettings");
+        tempConfiguration.saveConfiguration(tempSettings);
+        newConfig.loadConfigurationInDialog(tempSettings, m_spec);
+        loadConfiguration(tempConfiguration, m_spec);
     }
 
     /**

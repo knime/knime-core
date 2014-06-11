@@ -196,8 +196,8 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
     @Override
     protected FileSingleNodeContainerPersistor
         createNativeNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
-        return new ObsoleteSpecialNodeFileNativeNodeContainerPersistor(
-                this, nodeFile, getLoadHelper(), getLoadVersion());
+        return new ObsoleteSpecialNodeFileNativeNodeContainerPersistor(nodeFile, getLoadHelper(), getLoadVersion(),
+            getGlobalTableRepository(), getFileStoreHandlerRepository(), mustWarnOnDataLoadError());
     }
 
     /** {@inheritDoc} */
@@ -419,11 +419,14 @@ public class ObsoleteMetaNodeFileWorkflowPersistor extends
          *
          */
         public ObsoleteSpecialNodeFileNativeNodeContainerPersistor(
-                final FileWorkflowPersistor workflowPersistor,
                 final ReferencedFile nodeSettingsFile,
                 final WorkflowLoadHelper loadHelper,
-                final FileWorkflowPersistor.LoadVersion version) {
-            super(workflowPersistor, nodeSettingsFile, loadHelper, version);
+                final FileWorkflowPersistor.LoadVersion version,
+                final HashMap<Integer, ContainerTable> globalTableRepository,
+                final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
+                final boolean mustWarnOnDataLoadError) {
+            super(nodeSettingsFile, loadHelper, version, globalTableRepository,
+                fileStoreHandlerRepository, mustWarnOnDataLoadError);
         }
 
         /** {@inheritDoc} */

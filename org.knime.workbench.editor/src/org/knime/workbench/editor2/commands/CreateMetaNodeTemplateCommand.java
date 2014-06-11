@@ -63,7 +63,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowOrTemplateLoadResult;
 import org.knime.workbench.editor2.LoadMetaNodeTemplateRunnable;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 
@@ -112,8 +112,7 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
         if (m_location == null || m_templateKNIMEFolder == null) {
             return false;
         }
-        return AbstractExplorerFileStore.isWorkflowTemplate(
-                m_templateKNIMEFolder);
+        return AbstractExplorerFileStore.isWorkflowTemplate(m_templateKNIMEFolder);
     }
 
     /** {@inheritDoc} */
@@ -125,14 +124,12 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
             // this one sets the workflow manager in the editor
-            loadRunnable = new LoadMetaNodeTemplateRunnable(getHostWFM(),
-                    m_templateKNIMEFolder);
+            loadRunnable = new LoadMetaNodeTemplateRunnable(getHostWFM(), m_templateKNIMEFolder);
             ps.busyCursorWhile(loadRunnable);
-            WorkflowLoadResult result = loadRunnable.getWorkflowLoadResult();
-            m_container = result.getWorkflowManager();
+            WorkflowOrTemplateLoadResult result = loadRunnable.getLoadResult();
+            m_container = (NodeContainer)result.getLoadedInstance();
             if (m_container == null) {
-                throw new RuntimeException("No template returned by load "
-                        + "routine, see log for details");
+                throw new RuntimeException("No template returned by load routine, see log for details");
             }
             // create extra info and set it
             NodeUIInformation info = new NodeUIInformation(
@@ -166,6 +163,8 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
             } else if ((cause instanceof CanceledExecutionException) || (cause instanceof InterruptedException)) {
                 LOGGER.info("Metanode loading was canceled by the user", cause);
             } else {
+                LOGGER.error(String.format("Metanode loading failed with %s: %s",
+                    cause.getClass().getSimpleName(), cause.getMessage()), cause);
                 error += ": " + cause.getMessage();
                 MessageDialog.openError(Display.getDefault().
                         getActiveShell(), "Node cannot be created.", error);

@@ -1,7 +1,9 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *  Copyright by
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -44,20 +46,68 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 7, 2014 (wiswedel): created
+ *   May 23, 2014 ("Patrick Winter"): created
  */
-package org.knime.core.node.workflow.virtual;
+package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectOutNodeFactory;
-import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Collection;
+import java.util.Map;
+
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
+import org.knime.core.util.LockFailedException;
+
 
 /**
- * Empty extension of {@link VirtualSubNodeOutputNodeFactory} for backward compatibility reasons
- * (fully qualified name possibly saved in workflows).
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @deprecated Use super class instead
+ *
+ * @author "Patrick Winter"
+ * @since 2.10
  */
-@Deprecated
-public final class VirtualPortObjectOutNodeFactory extends VirtualParallelizedChunkPortObjectOutNodeFactory {
+public interface NodeContainerTemplate {
+
+    /**
+     * @param directory The directory to save in
+     * @param exec The execution monitor
+     * @return Information about the meta node template
+     * @throws IOException If an IO error occurs
+     * @throws CanceledExecutionException If execution is canceled during the operation
+     * @throws LockFailedException If locking failed
+     */
+    public MetaNodeTemplateInformation saveAsTemplate(final File directory, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException, LockFailedException;
+
+    /** Set new template info (not null!), fire events.
+     * @param tI the new templateInformation */
+    public void setTemplateInformation(MetaNodeTemplateInformation tI);
+
+    public MetaNodeTemplateInformation getTemplateInformation();
+
+    public WorkflowCipher getWorkflowCipher();
+
+    public NodeID getID();
+
+    public void updateMetaNodeLinkInternalRecursively(final ExecutionMonitor exec,
+        final WorkflowLoadHelper loadHelper, final Map<URI, NodeContainerTemplate> visitedTemplateMap,
+        final NodeContainerTemplateLinkUpdateResult loadRes) throws Exception;
+
+    public WorkflowManager getParent();
+
+    public String getNameWithID();
+
+    public void notifyTemplateConnectionChangedListener();
+
+    public abstract Map<NodeID, NodeContainerTemplate> fillLinkedTemplateNodesList(final Map<NodeID, NodeContainerTemplate> mapToFill, final boolean recurse, final boolean stopRecursionAtLinkedMetaNodes);
+
+    /** @return collection of NodeContainers in this node. */
+    public Collection<NodeContainer> getNodeContainers();
+
+    /** @return true if this workflow or its child workflows contain at least
+     * one executed node. */
+    public boolean containsExecutedNode();
+
 
 }

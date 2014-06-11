@@ -74,6 +74,7 @@ import org.knime.core.node.workflow.SubNodeContainer;
  * NodeModel of the subnode virtual end node.
  * <p>No API.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.10
  */
 public final class VirtualSubNodeInputNodeModel extends NodeModel {
 
@@ -156,13 +157,17 @@ public final class VirtualSubNodeInputNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        CheckUtils.checkNotNull(m_subNodeContainer, "No subnode container set");
+        CheckUtils.checkSetting(m_subNodeContainer != null, "No subnode container set");
         if (m_configuration == null) {
             setWarningMessage("Guessing defaults (excluding all variables)");
             m_configuration = VirtualSubNodeInputConfiguration.newDefault(m_numberOfPorts);
         }
         PortObjectSpec[] specsFromParent = m_subNodeContainer.fetchInputSpecFromParent();
-        return ArrayUtils.removeAll(specsFromParent, 0);
+        final PortObjectSpec[] specsFromParentNoFlowVar = ArrayUtils.removeAll(specsFromParent, 0);
+        int firstNullIndex = ArrayUtils.indexOf(specsFromParentNoFlowVar, null);
+        CheckUtils.checkSetting(firstNullIndex < 0,
+            "Subnode input port %d is not connected or doesn't have meta data", firstNullIndex);
+        return specsFromParentNoFlowVar;
     }
 
     /**

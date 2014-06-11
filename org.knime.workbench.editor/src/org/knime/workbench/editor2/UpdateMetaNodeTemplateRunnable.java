@@ -58,10 +58,11 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeContainerTemplate;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
-import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
+import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 
 
 /**
@@ -101,7 +102,7 @@ public class UpdateMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
         m_undoPersistors = new ArrayList<WorkflowPersistor>();
         // create progress monitor
         ProgressHandler progressHandler =
-            new ProgressHandler(pm, 101, "Updating meta node links...");
+            new ProgressHandler(pm, 101, "Updating node links...");
         final CheckCancelNodeProgressMonitor progressMonitor
         = new CheckCancelNodeProgressMonitor(pm);
         progressMonitor.addProgressListener(progressHandler);
@@ -110,27 +111,27 @@ public class UpdateMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
         IStatus[] stats = new IStatus[m_ids.length];
         for (int i = 0; i < m_ids.length; i++) {
             NodeID id = m_ids[i];
-            WorkflowManager wm =
-                (WorkflowManager)m_parentWFM.findNodeContainer(id);
-            LOGGER.debug("Updating " + wm.getNameWithID() + " from "
-                    + wm.getTemplateInformation().getSourceURI());
+            NodeContainerTemplate tnc =
+                (NodeContainerTemplate)m_parentWFM.findNodeContainer(id);
+            LOGGER.debug("Updating " + tnc.getNameWithID() + " from "
+                    + tnc.getTemplateInformation().getSourceURI());
             ExecutionMonitor subExec =
                 exec.createSubProgress(1.0 / m_ids.length);
-            String progMsg = "Meta Node Link \"" + wm.getNameWithID() + "\"";
+            String progMsg = "Node Link \"" + tnc.getNameWithID() + "\"";
             exec.setMessage(progMsg);
             GUIWorkflowLoadHelper loadHelper = new GUIWorkflowLoadHelper(d, progMsg, null, null, true);
-            MetaNodeLinkUpdateResult updateMetaNodeLinkResult;
+            NodeContainerTemplateLinkUpdateResult updateMetaNodeLinkResult;
             try {
                 updateMetaNodeLinkResult =
-                    wm.getParent().updateMetaNodeLink(id, subExec, loadHelper);
+                    tnc.getParent().updateMetaNodeLink(id, subExec, loadHelper);
             } catch (CanceledExecutionException e) {
-                String message = "Meta node update canceled";
+                String message = "Node update canceled";
                 LOGGER.warn(message, e);
                 throw new InterruptedException(message);
             }
             WorkflowPersistor p = updateMetaNodeLinkResult.getUndoPersistor();
             if (p != null) { // no error
-                m_newIDs.add(updateMetaNodeLinkResult.getMetaNode().getID());
+                m_newIDs.add(updateMetaNodeLinkResult.getNCTemplate().getID());
                 m_undoPersistors.add(p);
             }
             // meta nodes don't have data
@@ -154,17 +155,17 @@ public class UpdateMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
         }
         pm.done();
         final IStatus status =
-            createMultiStatus("Update meta node links", stats);
+            createMultiStatus("Update node links", stats);
         final String message;
         switch (status.getSeverity()) {
         case IStatus.OK:
-            message = "No problems during meta node link update.";
+            message = "No problems during node link update.";
             break;
         case IStatus.WARNING:
-            message = "Warnings during meta node link update";
+            message = "Warnings during node link update";
             break;
         default:
-            message = "Errors during meta node link update";
+            message = "Errors during node link update";
         }
 
         Display.getDefault().asyncExec(new Runnable() {
@@ -173,7 +174,7 @@ public class UpdateMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
                 // will not open if status is OK.
                 ErrorDialog.openError(
                         Display.getDefault().getActiveShell(),
-                        "Update Meta Node Links", message, status);
+                        "Update Node Links", message, status);
             }
         });
     }

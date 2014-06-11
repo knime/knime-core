@@ -51,9 +51,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
 /**
  * Additional information that is associated with a meta node that are used
@@ -76,9 +78,29 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         Link
     }
 
-    /**
-     *
-     */
+    /** Class instance saved as part of the settings to properly read them back later. */
+    public enum TemplateType {
+        /** Instance of {@link WorkflowManager}. */
+        MetaNode,
+        /** Instance of {@link SubNodeContainer}. */
+        SubNode;
+
+        /** Map class to template type, fail with runtime exception if not supported.
+         * @param cl Non null class (WFM or sub node).
+         * @return The non-null template type.
+         * @throws IllegalArgumentException If unsupported. */
+        static TemplateType get(final Class<? extends NodeContainerTemplate> cl) {
+            if (WorkflowManager.class.isAssignableFrom(cl)) {
+                return MetaNode;
+            } else if (SubNodeContainer.class.isAssignableFrom(cl)) {
+                return SubNode;
+            } else {
+                throw new IllegalArgumentException(String.format("Instances of %s cannot be saved as template", cl));
+            }
+        }
+    }
+
+    /** */
     public enum UpdateStatus {
         /** Up to date. */
         UpToDate,
@@ -89,26 +111,27 @@ public final class MetaNodeTemplateInformation implements Cloneable {
     }
 
     /** Default info object (no template). */
-    public static final MetaNodeTemplateInformation NONE =
-        new MetaNodeTemplateInformation();
+    public static final MetaNodeTemplateInformation NONE = new MetaNodeTemplateInformation();
 
     private final Role m_role;
+    private final TemplateType m_type;
     private final Date m_timestamp;
     private final URI m_sourceURI;
 
     /** see {@link #getUpdateStatus()}. */
     private UpdateStatus m_updateStatus = UpdateStatus.UpToDate;
 
+
     /** Create new meta node template (role {@link Role#None}). */
     private MetaNodeTemplateInformation() {
-        this(Role.None, null, null);
+        this(Role.None, null, null, null);
     }
 
     /** Create new template with all infos.
      * @param role The role.
+     * @param type the type (non-null for templates, null for links)
      */
-    private MetaNodeTemplateInformation(final Role role,
-            final URI uri, final Date timestamp) {
+    private MetaNodeTemplateInformation(final Role role, final TemplateType type, final URI uri, final Date timestamp) {
         if (role == null) {
             throw new NullPointerException("Role must not be null");
         }
@@ -117,24 +140,20 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         case None:
             m_sourceURI = null;
             m_timestamp = null;
+            m_type = null;
             break;
         case Template:
+            CheckUtils.checkNotNull(timestamp, "Template timestamp must not be null");
+            CheckUtils.checkNotNull(type, "Type must not be null");
             m_sourceURI = null;
-            if (timestamp == null) {
-                throw new NullPointerException(
-                        "Template timestamp must not be null");
-            }
+            m_type = type;
             m_timestamp = timestamp;
             break;
         case Link:
-            if (uri == null) {
-                throw new NullPointerException("Link URI must not be null");
-            }
+            CheckUtils.checkNotNull(uri, "Link URI must not be null");
+            CheckUtils.checkNotNull(timestamp, "Meta node link timestamp must not be null");
             m_sourceURI = uri;
-            if (timestamp == null) {
-                throw new NullPointerException(
-                    "Meta node link timestamp must not be null");
-            }
+            m_type = null;
             m_timestamp = timestamp;
             break;
         default:
@@ -167,6 +186,11 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         return m_role;
     }
 
+    /** @return the type (non-null only for templates). */
+    public TemplateType getNodeContainerTemplateType() {
+        return m_type;
+    }
+
     /** Transient field that is set by the update checker. It will be valid
      * if this template info represents a valid link to a template.
      * @return status of a potential update to the latest template. */
@@ -192,9 +216,8 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      * @param sourceURI The sourceURI, must not be null.
      * @return a new template linking to the argument URI, using the timestamp
      *         of this object.
-     * @throws InvalidSettingsException If this object is not a template. */
-    public MetaNodeTemplateInformation createLink(final URI sourceURI)
-        throws InvalidSettingsException {
+     * @throws IllegalStateException If this object is not a template. */
+    public MetaNodeTemplateInformation createLink(final URI sourceURI) {
         if (sourceURI == null) {
             throw new NullPointerException("Can't create link to null URI");
         }
@@ -202,9 +225,9 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         case Template:
             Date ts = getTimestamp();
             assert ts != null : "Templates must not have null timestamp";
-            return new MetaNodeTemplateInformation(Role.Link, sourceURI, ts);
+            return new MetaNodeTemplateInformation(Role.Link, null, sourceURI, ts);
         default:
-            throw new InvalidSettingsException("Can't link to meta node of role"
+            throw new IllegalStateException("Can't link to meta node of role"
                     + " \"" + getRole() + "\" (URI: \"" + sourceURI + "\")");
         }
     }
@@ -227,7 +250,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         case Link:
             Date ts = getTimestamp();
             assert ts != null : "Templates must not have null timestamp";
-            MetaNodeTemplateInformation newInfo = new MetaNodeTemplateInformation(Role.Link, newSource, ts);
+            MetaNodeTemplateInformation newInfo = new MetaNodeTemplateInformation(Role.Link, null, newSource, ts);
             newInfo.m_updateStatus = m_updateStatus;
             return newInfo;
         default:
@@ -236,16 +259,23 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         }
     }
 
+    /** Key for workflow template information. */
+    private static final String CFG_TEMPLATE_INFO = "workflow_template_information";
+
     /** Saves this object to the argument settings.
      * @param settings To save to.
      */
     public void save(final NodeSettingsWO settings) {
-        settings.addString("role", m_role.name());
         if (!Role.None.equals(m_role)) {
+            NodeSettingsWO nestedSettings = settings.addNodeSettings(CFG_TEMPLATE_INFO);
+            nestedSettings.addString("role", m_role.name());
             String dateS = getTimeStampString();
-            settings.addString("timestamp", dateS);
+            nestedSettings.addString("timestamp", dateS);
             String uriS = m_sourceURI == null ? null : m_sourceURI.toString();
-            settings.addString("sourceURI", uriS);
+            nestedSettings.addString("sourceURI", uriS);
+            if (Role.Template.equals(m_role)) {
+                nestedSettings.addString("templateType", m_type.name());
+            }
         }
     }
 
@@ -255,8 +285,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         try {
             return (MetaNodeTemplateInformation)super.clone();
         } catch (CloneNotSupportedException e) {
-            throw new RuntimeException("Unable to clone object although class "
-                    + "implements Cloneable", e);
+            throw new RuntimeException("Unable to clone object although class implements Cloneable", e);
         }
     }
 
@@ -295,10 +324,13 @@ public final class MetaNodeTemplateInformation implements Cloneable {
         return m_timestamp.after(other.m_timestamp);
     }
 
-    /** @return A new template info representing the template itself. The time
+    /** @param cl The non-null class (used to derive {@link TemplateType}).
+     * @return A new template info representing the template itself. The time
      * stamp is set to the current time. */
-    public static MetaNodeTemplateInformation createNewTemplate() {
-        return new MetaNodeTemplateInformation(Role.Template, null, new Date());
+    public static MetaNodeTemplateInformation createNewTemplate(
+        final Class<? extends NodeContainerTemplate> cl) {
+        TemplateType type = TemplateType.get(cl);
+        return new MetaNodeTemplateInformation(Role.Template, type, null, new Date());
     }
 
     /** Load information from argument, throw {@link InvalidSettingsException}
@@ -308,13 +340,17 @@ public final class MetaNodeTemplateInformation implements Cloneable {
      * @return a new template loading from the argument settings.
      * @throws InvalidSettingsException If that fails.
      */
-    public static MetaNodeTemplateInformation load(
-            final NodeSettingsRO settings, final FileWorkflowPersistor.LoadVersion version)
-        throws InvalidSettingsException {
-        String roleS = settings.getString("role");
+    public static MetaNodeTemplateInformation load(final NodeSettingsRO settings,
+        final FileWorkflowPersistor.LoadVersion version) throws InvalidSettingsException {
+        if (!settings.containsKey(CFG_TEMPLATE_INFO)) {
+            return NONE;
+        }
+        NodeSettingsRO nestedSettings = settings.getNodeSettings(CFG_TEMPLATE_INFO);
+        String roleS = nestedSettings.getString("role");
         Role role;
         Date timestamp;
         URI sourceURI;
+        TemplateType templateType;
         try {
             role = Role.valueOf(roleS);
         } catch (Exception e) {
@@ -327,16 +363,18 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             return NONE;
         case Template:
             sourceURI = null;
-            timestamp = readTimestamp(settings);
+            timestamp = readTimestamp(nestedSettings);
+            templateType = readTemplateType(nestedSettings, version);
             break;
         case Link:
-            sourceURI = readURI(settings);
-            timestamp = readTimestamp(settings);
+            sourceURI = readURI(nestedSettings);
+            templateType = null;
+            timestamp = readTimestamp(nestedSettings);
             break;
         default:
             throw new InvalidSettingsException("Unsupported role: " + role);
         }
-        return new MetaNodeTemplateInformation(role, sourceURI, timestamp);
+        return new MetaNodeTemplateInformation(role, templateType, sourceURI, timestamp);
     }
 
     /** @param settings
@@ -346,8 +384,7 @@ public final class MetaNodeTemplateInformation implements Cloneable {
             throws InvalidSettingsException {
         String dateS = settings.getString("timestamp");
         if (dateS == null || dateS.length() == 0) {
-            throw new InvalidSettingsException(
-                    "Cannot not read reference date from emtpy string");
+            throw new InvalidSettingsException("Cannot not read reference date from emtpy string");
         }
         Date date;
         try {
@@ -355,11 +392,29 @@ public final class MetaNodeTemplateInformation implements Cloneable {
                 date = DATE_FORMAT.parse(dateS);
             }
         } catch (ParseException pe) {
-            throw new InvalidSettingsException(
-                    "Cannot parse reference date \"" + dateS + "\": "
-                    + pe.getMessage(), pe);
+            throw new InvalidSettingsException("Cannot parse reference date \"" + dateS + "\": " + pe.getMessage(), pe);
         }
         return date;
+    }
+
+    /** Read type, only called for templates.
+     * @param settings ...
+     * @param loadVersion ...
+     * @return non-null template type.
+     * @throws InvalidSettingsException ...
+     */
+    private static TemplateType readTemplateType(final NodeSettingsRO settings,
+        final LoadVersion loadVersion) throws InvalidSettingsException {
+        if (loadVersion.isOlderThan(LoadVersion.V2100)) { // no subnode prio 2.10
+            return TemplateType.MetaNode;
+        }
+        String s = settings.getString("templateType");
+        CheckUtils.checkSetting(s != null, "Template type must not be null");
+        try {
+            return TemplateType.valueOf(s);
+        } catch (IllegalArgumentException iae) {
+            throw new InvalidSettingsException("Invalid template type \"" + s + "\"", iae);
+        }
     }
 
     /** @param settings
@@ -378,4 +433,24 @@ public final class MetaNodeTemplateInformation implements Cloneable {
                     + "URI \"" + uriS + "\": " + e.getMessage(), e);
         }
     }
+
+    static NodeSettings createNodeSettingsForTemplate(final NodeContainerTemplate template) {
+        NodeSettings settings = new NodeSettings(Role.Template.toString());
+        FileWorkflowPersistor.saveHeader(settings);
+        template.getTemplateInformation().save(settings);
+        FileWorkflowPersistor.saveWorkflowCipher(settings, template.getWorkflowCipher());
+        return settings;
+    }
+
+//    static final class TemplateLoadHelper {
+//
+//        private final LoadVersion m_loadVersion;
+//        private final String m_name;
+//        private final URI m_templateURI;
+//        private final WorkflowCipher m_cipher;
+//        private final MetaNodeTemplateInformation.Role m_role;
+//
+//
+//    }
+
 }

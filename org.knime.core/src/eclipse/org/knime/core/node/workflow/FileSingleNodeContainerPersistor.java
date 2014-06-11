@@ -54,10 +54,13 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -69,6 +72,7 @@ import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.FlowVariable.Scope;
@@ -95,11 +99,6 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
     /** Meta persistor, only set when used to load a workflow. */
     private final FileNodeContainerMetaPersistor m_metaPersistor;
 
-    /** WFM persistor, only set when used to load a workflow. */
-    private final FileWorkflowPersistor m_wfmPersistor;
-
-    private WorkflowPersistor m_parentPersistor;
-
     private NodeSettingsRO m_nodeSettings;
 
     private SingleNodeContainerSettings m_sncSettings;
@@ -112,32 +111,32 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
 
     private LoadNodeModelSettingsFailPolicy m_settingsFailPolicy;
 
+    private final HashMap<Integer, ContainerTable> m_globalTableRepository;
 
-    /** Load persistor. */
-    FileSingleNodeContainerPersistor(final FileWorkflowPersistor workflowPersistor,
-        final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper, final LoadVersion version) {
-        this(workflowPersistor, new FileNodeContainerMetaPersistor(nodeSettingsFile, loadHelper, version),
-            version);
-    }
+    private final boolean m_mustWarnOnDataLoadError;
 
-    /**
-     * Constructor used internally, not used outside this class or its derivates.
-     *
-     * @param version
-     * @param metaPersistor
-     * @param wfmPersistor
-     */
-    FileSingleNodeContainerPersistor(final FileWorkflowPersistor wfmPersistor,
-        final FileNodeContainerMetaPersistor metaPersistor, final LoadVersion version) {
-        if (version == null || wfmPersistor == null) {
-            throw new NullPointerException();
-        }
+    private final WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
+
+
+    /** Load persistor.
+     * @param globalTableRepository TODO
+     * @param fileStoreHandlerRepository TODO
+     * @param mustWarnOnDataLoadError TODO*/
+    FileSingleNodeContainerPersistor(final ReferencedFile nodeSettingsFile,
+        final WorkflowLoadHelper loadHelper, final LoadVersion version,
+        final HashMap<Integer, ContainerTable> globalTableRepository,
+        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final boolean mustWarnOnDataLoadError) {
+        CheckUtils.checkArgumentNotNull(version, "Version must not be null");
+        CheckUtils.checkArgumentNotNull(globalTableRepository, "Table repository must not be null");
+        CheckUtils.checkArgumentNotNull(fileStoreHandlerRepository, "File store handler repository must not be null");
         m_version = version;
-        m_metaPersistor = metaPersistor;
-        m_wfmPersistor = wfmPersistor;
+        m_metaPersistor = new FileNodeContainerMetaPersistor(nodeSettingsFile, loadHelper, version);
+        m_globalTableRepository = globalTableRepository;
+        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+        m_mustWarnOnDataLoadError = mustWarnOnDataLoadError;
     }
 
-    protected final LoadVersion getLoadVersion() {
+    LoadVersion getLoadVersion() {
         return m_version;
     }
 
@@ -168,8 +167,8 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         return true;
     }
 
-    /** Mark as dirty. */
-    protected void setDirtyAfterLoad() {
+    /** Mark dirty after (when run into error). */
+    public void setDirtyAfterLoad() {
         m_isDirtyAfterLoad = true;
     }
 
@@ -201,13 +200,6 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         return m_nodeSettings;
     }
 
-    /**
-     * @return the parentPersistor
-     */
-    WorkflowPersistor getParentPersistor() {
-        return m_parentPersistor;
-    }
-
     /** {@inheritDoc} */
     @Override
     public List<FlowObject> getFlowObjects() {
@@ -218,7 +210,6 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
     @Override
     public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
         final LoadResult result) throws InvalidSettingsException, IOException {
-        m_parentPersistor = parentPersistor;
         FileNodeContainerMetaPersistor meta = getMetaPersistor();
         final ReferencedFile settingsFileRef = meta.getNodeSettingsFile();
         File settingsFile = settingsFileRef.getFile();
@@ -229,7 +220,8 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         NodeSettingsRO settings;
         try {
             InputStream in = new FileInputStream(settingsFile);
-            in = parentPersistor.decipherInput(in);
+            // parentPersitor is null for loaded subnode templates
+            in = parentPersistor == null ? in : parentPersistor.decipherInput(in);
             settings = NodeSettings.loadFromXML(new BufferedInputStream(in));
         } catch (IOException ioe) {
             setDirtyAfterLoad();
@@ -502,12 +494,20 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         return getLoadVersion().isOlderThan(LoadVersion.V200);
     }
 
-    FileWorkflowPersistor getWorkflowManagerPersistor() {
-        return m_wfmPersistor;
+    /** @return the tableRepository as passed in constructor, not null. */
+    HashMap<Integer, ContainerTable> getGlobalTableRepository() {
+        return m_globalTableRepository;
     }
 
+    /** @return the fileStoreHandlerRepository as passed in constructor, not null. */
+    WorkflowFileStoreHandlerRepository getFileStoreHandlerRepository() {
+        return m_fileStoreHandlerRepository;
+    }
+
+    /** @return property derived from outer workflow persistor,
+     *          see {@link WorkflowPersistor#mustWarnOnDataLoadError()}. */
     public boolean mustWarnOnDataLoadError() {
-        return getWorkflowManagerPersistor().mustWarnOnDataLoadError();
+        return m_mustWarnOnDataLoadError;
     }
 
     /**

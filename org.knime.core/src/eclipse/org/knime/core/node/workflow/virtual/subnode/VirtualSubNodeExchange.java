@@ -61,6 +61,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * Utility object that represents the output objects of virtual output nodes.
  * <p>No API.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.10
  */
 public final class VirtualSubNodeExchange {
 

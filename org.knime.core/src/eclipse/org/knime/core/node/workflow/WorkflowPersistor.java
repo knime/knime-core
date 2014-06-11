@@ -62,6 +62,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
 
 /**
@@ -103,7 +104,8 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     /** Constant for the meta info file name. */
     public static final String METAINFO_FILE = "workflowset.meta";
 
-    FileWorkflowPersistor.LoadVersion getLoadVersion();
+    /** @return The version of the workflow or template being loaded. */
+    public LoadVersion getLoadVersion();
 
     /** @return if the persistor represent a workflow project.
      * @since 2.6 */
@@ -184,7 +186,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @since 2.6  */
     public EditorUIInformation getEditorUIInformation();
 
-    /** @return the shouldFailOnLoadDataError */
+    /** @return the mustWarnOnDataLoadError */
     public boolean mustWarnOnDataLoadError();
 
     /** template information associated with the workflow, e.g. whether it
@@ -544,43 +546,47 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
     }
 
-    public static final class WorkflowLoadResult extends LoadResult {
+    public static final class WorkflowLoadResult extends WorkflowOrTemplateLoadResult {
 
-        private WorkflowManager m_workflowManager;
+        /** @param name */
+        public WorkflowLoadResult(final String name) {
+            super(name);
+        }
+
+        public WorkflowManager getWorkflowManager() {
+            return (WorkflowManager)super.getLoadedInstance();
+        }
+
+    }
+
+    public static class WorkflowOrTemplateLoadResult extends LoadResult {
+
+        private NodeContainerTemplate m_instance;
         private boolean m_guiMustReportDataLoadErrors = false;
 
         /**
          * @param name
          */
-        public WorkflowLoadResult(final String name) {
+        public WorkflowOrTemplateLoadResult(final String name) {
             super(name);
         }
 
-        /**
-         * @param workflowManager the workflowManager to set
-         */
-        void setWorkflowManager(final WorkflowManager workflowManager) {
-            m_workflowManager = workflowManager;
+        /** @param instance the instance to set */
+        public void setLoadedInstance(final NodeContainerTemplate instance) {
+            m_instance = instance;
         }
 
-        /**
-         * @return the workflowManager
-         */
-        public WorkflowManager getWorkflowManager() {
-            return m_workflowManager;
+        /** @return the instance (or null in case of errors) */
+        public NodeContainerTemplate getLoadedInstance() {
+            return m_instance;
         }
 
-        /**
-         * @param guiMustReportDataLoadErrors the guiMustReportError to set
-         */
-        void setGUIMustReportDataLoadErrors(
-                final boolean guiMustReportDataLoadErrors) {
+        /** @param guiMustReportDataLoadErrors the guiMustReportError to set */
+        void setGUIMustReportDataLoadErrors(final boolean guiMustReportDataLoadErrors) {
             m_guiMustReportDataLoadErrors = guiMustReportDataLoadErrors;
         }
 
-        /**
-         * @return the guiMustReportError
-         */
+        /** @return the guiMustReportError */
         public boolean getGUIMustReportDataLoadErrors() {
             return m_guiMustReportDataLoadErrors;
         }
@@ -590,8 +596,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
          */
         @Override
         public String getMessage() {
-            String name = getWorkflowManager() == null ? "<none>"
-                    : getWorkflowManager().getNameWithID();
+            String name = getLoadedInstance() == null ? "<none>" : getLoadedInstance().getNameWithID();
             StringBuilder b = new StringBuilder(name);
             b.append(" loaded");
             switch (getType()) {
@@ -614,24 +619,24 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         }
     }
 
-    public static class MetaNodeLinkUpdateResult extends LoadResult {
+    public static class NodeContainerTemplateLinkUpdateResult extends LoadResult {
 
-        private WorkflowManager m_metaNode;
+        private NodeContainerTemplate m_ncTemplate;
         private WorkflowPersistor m_undoPersistor;
 
         /** @param name Forwarded to super. */
-        public MetaNodeLinkUpdateResult(final String name) {
+        public NodeContainerTemplateLinkUpdateResult(final String name) {
             super(name);
         }
 
         /** @return the metaNode */
-        public WorkflowManager getMetaNode() {
-            return m_metaNode;
+        public NodeContainerTemplate getNCTemplate() {
+            return m_ncTemplate;
         }
 
-        /** @param metaNode the metaNode to set */
-        void setMetaNode(final WorkflowManager metaNode) {
-            m_metaNode = metaNode;
+        /** @param ncTemplate the metaNode to set */
+        void setNCTemplate(final NodeContainerTemplate ncTemplate) {
+            m_ncTemplate = ncTemplate;
         }
 
         /** @return the undoPersistor */

@@ -45,8 +45,26 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+
+import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
+import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 
 /**
  * Callback class that is used during loading of a workflow to read
@@ -55,9 +73,10 @@ import java.util.List;
  */
 public class WorkflowLoadHelper {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowLoadHelper.class);
+
     /** Default (pessimistic) default load helper. */
-    public static final WorkflowLoadHelper INSTANCE =
-        new WorkflowLoadHelper();
+    public static final WorkflowLoadHelper INSTANCE = new WorkflowLoadHelper();
 
     private final boolean m_isTemplate;
 
@@ -158,8 +177,7 @@ public class WorkflowLoadHelper {
      * overwrite this.
      * @return the name of the .knime file. */
     public String getDotKNIMEFileName() {
-        return isTemplateFlow() ? WorkflowPersistor.TEMPLATE_FILE
-                : WorkflowPersistor.WORKFLOW_FILE;
+        return isTemplateFlow() ? WorkflowPersistor.TEMPLATE_FILE : WorkflowPersistor.WORKFLOW_FILE;
     }
 
 
@@ -173,4 +191,143 @@ public class WorkflowLoadHelper {
     public WorkflowContext getWorkflowContext() {
         return m_workflowContext;
     }
+
+
+    /**Create persistor for a workflow or template.
+     * @noreference Clients should only be required to load projects using
+     * {@link #loadProject(File, ExecutionMonitor, WorkflowLoadHelper)}
+     * @param directory The directory to load from
+     * @return The persistor
+     * @throws IOException If an IO error occured
+     * @throws UnsupportedWorkflowVersionException If the workflow is of an unsupported version
+     */
+    FromFileNodeContainerPersistor createLoadPersistor(final File directory)
+            throws IOException, UnsupportedWorkflowVersionException {
+        return createTemplateLoadPersistor(directory, null);
+    }
+
+    /** Create persistor for a workflow or template.
+     * @noreference Clients should only be required to load projects using
+     * {@link WorkflowManager#loadProject(File, ExecutionMonitor, WorkflowLoadHelper)}
+     * @param directory The directory to load from
+     * @param templateSourceURI URI of the link to the template (will load a template and when the template is
+     * instantiated and put into the workflow a link is created)
+     * @return The persistor
+     * @throws IOException If an IO error occured
+     * @throws UnsupportedWorkflowVersionException If the workflow is of an unsupported version
+     */
+    public final TemplateNodeContainerPersistor createTemplateLoadPersistor(
+        final File directory, final URI templateSourceURI)
+            throws IOException, UnsupportedWorkflowVersionException {
+        if (directory == null) {
+            throw new NullPointerException("Arguments must not be null.");
+        }
+        String fileName = getDotKNIMEFileName();
+        if (!directory.isDirectory() || !directory.canRead()) {
+            throw new IOException("Can't read directory " + directory);
+        }
+
+        // template.knime or workflow.knime
+        ReferencedFile dotKNIMERef = new ReferencedFile(new ReferencedFile(directory), fileName);
+        File dotKNIME = dotKNIMERef.getFile();
+        if (!dotKNIME.isFile()) {
+            throw new IOException("No \"" + fileName + "\" file in directory \"" + directory.getAbsolutePath() + "\"");
+        }
+
+        NodeSettingsRO settings = NodeSettings.loadFromXML(new BufferedInputStream(new FileInputStream(dotKNIME)));
+        // CeBIT 2006 version did not contain a version string.
+        String versionString;
+        if (settings.containsKey(WorkflowManager.CFG_VERSION)) {
+            try {
+                versionString = settings.getString(WorkflowManager.CFG_VERSION);
+            } catch (InvalidSettingsException e) {
+                throw new IOException("Can't read version number from \"" + dotKNIME.getAbsolutePath() + "\"", e);
+            }
+        } else {
+            versionString = "0.9.0";
+        }
+        LoadVersion version = FileWorkflowPersistor.parseVersion(versionString);
+        boolean needsResetAfterLoad = false;
+        if (version == null) { // future version
+            StringBuilder versionDetails = new StringBuilder(versionString);
+            String createdBy = settings.getString(WorkflowManager.CFG_CREATED_BY, null);
+            if (createdBy != null) {
+                versionDetails.append(" (created by KNIME ").append(createdBy).append(")");
+            }
+            String v = versionDetails.toString();
+            switch (getUnknownKNIMEVersionLoadPolicy(v)) {
+            case Abort:
+                throw new UnsupportedWorkflowVersionException(String.format("Unable to load %s, version string \"%s\" "
+                        + "is unknown", isTemplateFlow() ? "template" : "workflow", v));
+            default:
+                version = LoadVersion.FUTURE;
+                needsResetAfterLoad = true;
+            }
+        } else if (version.isOlderThan(LoadVersion.V200)) {
+            LOGGER.warn("The current KNIME version (" + KNIMEConstants.VERSION + ") is different from the one that "
+                    + "created the workflow (" + version + ") you are trying to load. In some rare cases, it  "
+                    + "might not be possible to load all data or some nodes can't be configured. "
+                    + "Please re-configure and/or re-execute these nodes.");
+        }
+
+        final MetaNodeTemplateInformation templateInfo;
+        if (isTemplateFlow() && templateSourceURI != null) {
+            try {
+                templateInfo = MetaNodeTemplateInformation.load(settings, version);
+                CheckUtils.checkSetting(Role.Template.equals(templateInfo.getRole()),
+                    "Role is not '%s' but '%s'", Role.Template, templateInfo.getRole());
+            } catch (InvalidSettingsException e) {
+                throw new IOException(String.format(
+                    "Attempting to load template from \"%s\" but can't locate template information: %s",
+                    dotKNIME.getAbsolutePath(), e.getMessage()), e);
+            }
+        } else if (isTemplateFlow()) {
+//            LOGGER.coding("Supposed to instantiate a template but the link URI is not set");
+            // meta node template from node repository
+            templateInfo = null;
+        } else {
+            templateInfo = null;
+        }
+
+        final TemplateNodeContainerPersistor persistor;
+        // TODO only create new hash map if workflow is a project?
+        HashMap<Integer, ContainerTable> tableRep = new GlobalTableRepository();
+        WorkflowFileStoreHandlerRepository fileStoreHandlerRepository = new WorkflowFileStoreHandlerRepository();
+        // ordinary workflow is loaded
+        if (templateInfo == null) {
+            persistor = new FileWorkflowPersistor(tableRep, fileStoreHandlerRepository, dotKNIMERef,
+                this, version, !isTemplateFlow());
+        } else {
+            // some template is loaded
+            switch (templateInfo.getNodeContainerTemplateType()) {
+                case MetaNode:
+                    final ReferencedFile workflowDotKNIME;
+                    if (version.isOlderThan(LoadVersion.V2100)) {
+                        workflowDotKNIME = dotKNIMERef; // before 2.10 everything was stored in template.knime
+                    } else {
+                        workflowDotKNIME = new ReferencedFile(dotKNIMERef.getParent(), WorkflowPersistor.WORKFLOW_FILE);
+                    }
+                    persistor = new FileWorkflowPersistor(tableRep, fileStoreHandlerRepository, workflowDotKNIME,
+                        this, version, !isTemplateFlow());
+                    break;
+                case SubNode:
+                    final ReferencedFile settingsDotXML = new ReferencedFile(dotKNIMERef.getParent(),
+                        SingleNodeContainerPersistor.SETTINGS_FILE_NAME);
+                    persistor = new FileSubNodeContainerPersistor(settingsDotXML, this, version,
+                        tableRep, fileStoreHandlerRepository, true);
+                    break;
+                default:
+                    throw new IllegalStateException("Unsupported template type");
+            }
+        }
+        if (templateInfo != null) {
+            persistor.setOverwriteTemplateInformation(templateInfo.createLink(templateSourceURI));
+            persistor.setNameOverwrite(directory.getName());
+        }
+        if (needsResetAfterLoad) {
+            persistor.setDirtyAfterLoad();
+        }
+        return persistor;
+    }
+
 }

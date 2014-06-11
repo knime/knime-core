@@ -60,6 +60,7 @@ import org.knime.core.node.port.PortType;
 /** Factory to virtual subnode output node.
  * <p>No API.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.10
  */
 public class VirtualSubNodeOutputNodeFactory extends DynamicNodeFactory<VirtualSubNodeOutputNodeModel> {
 

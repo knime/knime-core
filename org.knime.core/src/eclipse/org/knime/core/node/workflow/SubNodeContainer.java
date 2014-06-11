@@ -46,8 +46,11 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -66,6 +69,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.xmlbeans.XmlException;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -95,12 +99,16 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.wizard.WizardNodeLayoutInfo;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -110,6 +118,7 @@ import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeInputNodeModel
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeModel;
 import org.knime.core.quickform.QuickFormRepresentation;
+import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
 import org.knime.core.util.ThreadPool;
 import org.w3c.dom.DOMException;
@@ -123,9 +132,81 @@ import org.w3c.dom.Element;
  * @author M. Berthold & B. Wiswedel
  * @since 2.9
  */
-public final class SubNodeContainer extends SingleNodeContainer implements NodeContainerParent {
+public final class SubNodeContainer extends SingleNodeContainer implements NodeContainerParent, NodeContainerTemplate {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(SubNodeContainer.class);
+
+    /** Keeps outgoing information (specs, objects, HiLiteHandlers...). */
+    private static final class Output {
+        private final PortType m_type;
+        private String m_name = "none";
+        private PortObjectSpec m_spec;
+        private PortObject m_object;
+        private HiLiteHandler m_hiliteHdl;
+        private String m_summary = "no summary";
+
+        /** @param type Non null port type. */
+        Output(final PortType type) {
+            m_type = type;
+        }
+        boolean setSpec(final PortObjectSpec spec) {
+            boolean differ = ObjectUtils.notEqual(m_spec, spec);
+            m_spec = spec;
+            return differ;
+        }
+        boolean setName(final String name) {
+            boolean differ = ObjectUtils.notEqual(m_name, name);
+            m_name = name;
+            return differ;
+        }
+        boolean setObject(final PortObject object) {
+            boolean differ = ObjectUtils.notEqual(m_object, object);
+            m_object = object;
+            return differ;
+        }
+        boolean setHiliteHdl(final HiLiteHandler hiliteHdl) {
+            boolean differ = ObjectUtils.notEqual(m_hiliteHdl, hiliteHdl);
+            m_hiliteHdl = hiliteHdl;
+            return differ;
+        }
+        boolean setSummary(final String summary) {
+            boolean differ = ObjectUtils.notEqual(m_summary, summary);
+            m_summary = summary;
+            return differ;
+        }
+        PortType getType() {
+            return m_type;
+        }
+        String getName() {
+            return m_name;
+        }
+        PortObjectSpec getSpec() {
+            return m_spec;
+        }
+        PortObject getObject() {
+            return m_object;
+        }
+        HiLiteHandler getHiliteHdl() {
+            return m_hiliteHdl;
+        }
+        String getSummary() {
+            return m_summary;
+        }
+        void clean() {
+            m_spec = null;
+            m_object = null;
+            m_hiliteHdl = null;
+            m_summary = null;
+        }
+        static PortType[] getPortTypesNoFlowVariablePort(final Output[] outputs) {
+            PortType[] result = new PortType[outputs.length - 1];
+            for (int i = 1; i < outputs.length; i++) {
+                result[i - 1] = outputs[i].getType();
+            }
+            return result;
+        }
+
+    }
 
     private final WorkflowManager m_wfm;
 
@@ -147,6 +228,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
 
     /** Layout info */
     private Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
+
+    private MetaNodeTemplateInformation m_templateInformation;
 
     /** Load workflow from persistor.
      *
@@ -180,6 +263,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             inTypes[i] = inPortTemplates[i].getPortType();
             m_inports[i] = new NodeInPort(i, inTypes[i]);
         }
+        m_templateInformation = persistor.getTemplateInformation();
     }
 
     /**
@@ -252,6 +336,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         getVirtualInNodeModel().setSubNodeContainer(this);
         m_wfmStateChangeListener = createAndAddStateListener();
         setInternalState(m_wfm.getInternalState());
+        m_templateInformation = MetaNodeTemplateInformation.NONE;
     }
 
     /** Adds new/empty instance of a virtual input node and returns its ID. */
@@ -1419,9 +1504,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * @return ...
      */
     MetaPortInfo[] getInputPortInfo() {
-        WorkflowManager wfm = getWorkflowManager();
-        Workflow wfmFlow = wfm.getWorkflow();
-        NodeContainer inNode = wfm.getNodeContainer(getVirtualInNodeID());
+        Workflow wfmFlow = m_wfm.getWorkflow();
+        NodeContainer inNode = m_wfm.getNodeContainer(getVirtualInNodeID());
 
         List<MetaPortInfo> result = new ArrayList<MetaPortInfo>(inNode.getNrOutPorts());
         for (int i = 0; i < inNode.getNrOutPorts(); i++) {
@@ -1466,9 +1550,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * @return ...
      */
     MetaPortInfo[] getOutputPortInfo() {
-        WorkflowManager wfm = getWorkflowManager();
-        Workflow wfmFlow = wfm.getWorkflow();
-        NodeContainer outNode = wfm.getNodeContainer(getVirtualOutNodeID());
+        Workflow wfmFlow = m_wfm.getWorkflow();
+        NodeContainer outNode = m_wfm.getNodeContainer(getVirtualOutNodeID());
 
         List<MetaPortInfo> result = new ArrayList<MetaPortInfo>(outNode.getNrInPorts());
         for (int i = 0; i < outNode.getNrInPorts(); i++) {
@@ -1544,85 +1627,19 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /** {@inheritDoc} */
     @Override
     public final String getCipherFileName(final String fileName) {
-        return getParent().getCipherFileName(fileName);
+        return WorkflowCipher.getCipherFileName(this, fileName);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public WorkflowCipher getWorkflowCipher() {
+        return getDirectNCParent().getWorkflowCipher();
     }
 
     /** {@inheritDoc} */
     @Override
     public final OutputStream cipherOutput(final OutputStream out) throws IOException {
-        return getParent().cipherOutput(out);
-    }
-
-    /** Keeps outgoing information (specs, objects, HiLiteHandlers...). */
-    private static final class Output {
-        private final PortType m_type;
-        private String m_name = "none";
-        private PortObjectSpec m_spec;
-        private PortObject m_object;
-        private HiLiteHandler m_hiliteHdl;
-        private String m_summary = "no summary";
-
-        /** @param type Non null port type. */
-        Output(final PortType type) {
-            m_type = type;
-        }
-        boolean setSpec(final PortObjectSpec spec) {
-            boolean differ = ObjectUtils.notEqual(m_spec, spec);
-            m_spec = spec;
-            return differ;
-        }
-        boolean setName(final String name) {
-            boolean differ = ObjectUtils.notEqual(m_name, name);
-            m_name = name;
-            return differ;
-        }
-        boolean setObject(final PortObject object) {
-            boolean differ = ObjectUtils.notEqual(m_object, object);
-            m_object = object;
-            return differ;
-        }
-        boolean setHiliteHdl(final HiLiteHandler hiliteHdl) {
-            boolean differ = ObjectUtils.notEqual(m_hiliteHdl, hiliteHdl);
-            m_hiliteHdl = hiliteHdl;
-            return differ;
-        }
-        boolean setSummary(final String summary) {
-            boolean differ = ObjectUtils.notEqual(m_summary, summary);
-            m_summary = summary;
-            return differ;
-        }
-        PortType getType() {
-            return m_type;
-        }
-        String getName() {
-            return m_name;
-        }
-        PortObjectSpec getSpec() {
-            return m_spec;
-        }
-        PortObject getObject() {
-            return m_object;
-        }
-        HiLiteHandler getHiliteHdl() {
-            return m_hiliteHdl;
-        }
-        String getSummary() {
-            return m_summary;
-        }
-        void clean() {
-            m_spec = null;
-            m_object = null;
-            m_hiliteHdl = null;
-            m_summary = null;
-        }
-        static PortType[] getPortTypesNoFlowVariablePort(final Output[] outputs) {
-            PortType[] result = new PortType[outputs.length - 1];
-            for (int i = 1; i < outputs.length; i++) {
-                result[i - 1] = outputs[i].getType();
-            }
-            return result;
-        }
-
+        return getDirectNCParent().cipherOutput(out);
     }
 
     /**
@@ -1630,8 +1647,104 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * @since 2.10
      */
     @Override
-    public WorkflowContext getProjectContext() {
-        return getParent().getProjectContext();
+    public WorkflowManager getProjectWFM() {
+        return getDirectNCParent().getProjectWFM();
+    }
+
+    /* -------- template handling ----- */
+
+    /** @return the templateInformation
+     * @since 2.10*/
+    @Override
+    public MetaNodeTemplateInformation getTemplateInformation() {
+        return m_templateInformation;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setTemplateInformation(final MetaNodeTemplateInformation tI) {
+        CheckUtils.checkArgumentNotNull(tI, "Argument must not be null.");
+        CheckUtils.checkArgument(!Role.Template.equals(tI.getRole())
+            || TemplateType.SubNode.equals(tI.getNodeContainerTemplateType()),
+            "Template type expected to be subnode: %s", tI.getNodeContainerTemplateType());
+        m_templateInformation = tI;
+        notifyNodePropertyChangedListener(NodeProperty.TemplateConnection);
+        setDirty();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public MetaNodeTemplateInformation saveAsTemplate(final File directory, final ExecutionMonitor exec)
+        throws IOException, CanceledExecutionException, LockFailedException {
+        WorkflowManager tempParent = WorkflowManager.lazyInitTemplateWorkflowRoot();
+        SubNodeContainer copy = null;
+        ReferencedFile workflowDirRef = new ReferencedFile(directory);
+        directory.mkdir();
+        workflowDirRef.lock();
+        try {
+            WorkflowCopyContent cnt = new WorkflowCopyContent();
+            cnt.setNodeIDs(getID());
+            synchronized (m_nodeMutex) {
+                cnt = tempParent.copyFromAndPasteHere(getParent(), cnt);
+            }
+            NodeID cID = cnt.getNodeIDs()[0];
+            copy = ((SubNodeContainer)tempParent.getNodeContainer(cID));
+            MetaNodeTemplateInformation template =
+                    MetaNodeTemplateInformation.createNewTemplate(SubNodeContainer.class);
+            synchronized (copy.m_nodeMutex) {
+                copy.setTemplateInformation(template);
+                copy.setName(null);
+                NodeSettings templateSettings = MetaNodeTemplateInformation.createNodeSettingsForTemplate(copy);
+                templateSettings.saveToXML(new FileOutputStream(
+                    new File(workflowDirRef.getFile(), WorkflowPersistor.TEMPLATE_FILE)));
+                FileSingleNodeContainerPersistor.save(copy, workflowDirRef, exec, new WorkflowSaveHelper(true, false));
+            }
+            return template;
+        } finally {
+            if (copy != null) {
+                tempParent.removeNode(copy.getID());
+            }
+            workflowDirRef.unlock();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public void notifyTemplateConnectionChangedListener() {
+        notifyNodePropertyChangedListener(NodeProperty.TemplateConnection);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateMetaNodeLinkInternalRecursively(final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper,
+        final Map<URI, NodeContainerTemplate> visitedTemplateMap, final NodeContainerTemplateLinkUpdateResult loadRes)
+        throws Exception {
+        m_wfm.updateMetaNodeLinkInternalRecursively(exec, loadHelper, visitedTemplateMap, loadRes);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Map<NodeID, NodeContainerTemplate> fillLinkedTemplateNodesList(
+        final Map<NodeID, NodeContainerTemplate> mapToFill, final boolean recurse,
+        final boolean stopRecursionAtLinkedMetaNodes) {
+        return m_wfm.fillLinkedTemplateNodesList(mapToFill, recurse, stopRecursionAtLinkedMetaNodes);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean containsExecutedNode() {
+        return m_wfm.containsExecutedNode();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Collection<NodeContainer> getNodeContainers() {
+        return m_wfm.getNodeContainers();
     }
 
 }

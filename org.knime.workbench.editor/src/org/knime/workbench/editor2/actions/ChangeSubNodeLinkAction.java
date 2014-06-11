@@ -1,6 +1,9 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *
+ *  Copyright by
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -71,12 +74,13 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.commands.ChangeMetaNodeLinkCommand;
+import org.knime.workbench.editor2.commands.ChangeSubNodeLinkCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 import org.knime.workbench.explorer.filesystem.ExplorerFileSystem;
@@ -85,20 +89,20 @@ import org.knime.workbench.explorer.view.AbstractContentProvider;
 import org.knime.workbench.explorer.view.AbstractContentProvider.LinkType;
 
 /**
- * Allows changing the type of the template link of a meta node.
+ * Allows changing the type of the template link of a sub node.
  * @author Peter Ohl, KNIME.com, Zurich, Switzerland
  */
-public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
+public class ChangeSubNodeLinkAction extends AbstractNodeAction {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ChangeMetaNodeLinkAction.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ChangeSubNodeLinkAction.class);
 
     /** id of this action. */
-    public static final String ID = "knime.action.meta_node_relink";
+    public static final String ID = "knime.action.sub_node_relink";
 
     /**
      * @param editor the current workflow editor
      */
-    public ChangeMetaNodeLinkAction(final WorkflowEditor editor) {
+    public ChangeSubNodeLinkAction(final WorkflowEditor editor) {
         super(editor);
     }
 
@@ -125,7 +129,7 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Change the type of the link to the template of the Meta Node";
+        return "Change the type of the link to the template of the Sub Node";
     }
 
     /**
@@ -146,16 +150,16 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
             return false;
         }
         NodeContainer nc = nodes[0].getNodeContainer();
-        if (!(nc instanceof WorkflowManager)) {
+        if (!(nc instanceof SubNodeContainer)) {
             return false;
         }
-        WorkflowManager metaNode = (WorkflowManager)nc;
-        if (!Role.Link.equals(metaNode.getTemplateInformation().getRole()) || metaNode.getParent().isWriteProtected()) {
-            // meta node must be linked and parent must not forbid the change
+        SubNodeContainer subNode = (SubNodeContainer)nc;
+        if (!Role.Link.equals(subNode.getTemplateInformation().getRole()) || subNode.getParent().isWriteProtected()) {
+            // sub node must be linked and parent must not forbid the change
             return false;
         }
         // we can reconfigure the template link - but only if template and flow are in the same mountpoint
-        URI targetURI = metaNode.getTemplateInformation().getSourceURI();
+        URI targetURI = subNode.getTemplateInformation().getSourceURI();
         try {
             if (ResolverUtil.isMountpointRelativeURL(targetURI)
                 || ResolverUtil.isWorkflowRelativeURL(targetURI)) {
@@ -166,7 +170,7 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
         }
         // we can change absolute links if the mount points of flow and template are the same
         AbstractContentProvider workflowMountPoint = null;
-        WorkflowContext wfc = metaNode.getProjectWFM().getContext();
+        WorkflowContext wfc = subNode.getProjectWFM().getContext();
         LocalExplorerFileStore fs =
             ExplorerFileSystem.INSTANCE.fromLocalFile(wfc.getMountpointRoot());
         if (fs != null) {
@@ -185,13 +189,10 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
     /** {@inheritDoc} */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        WorkflowManager metaNode = (WorkflowManager)nodeParts[0].getModel();
-        if (Role.Link.equals(metaNode.getTemplateInformation().getRole())) {
-            WorkflowManager wfm = metaNode;
-            while (!wfm.isProject()) {
-                wfm = wfm.getParent();
-            }
-            URI targetURI = metaNode.getTemplateInformation().getSourceURI();
+        SubNodeContainer subNode = (SubNodeContainer)nodeParts[0].getModel();
+        if (Role.Link.equals(subNode.getTemplateInformation().getRole())) {
+            WorkflowManager wfm = subNode.getProjectWFM();
+            URI targetURI = subNode.getTemplateInformation().getSourceURI();
             LinkType linkType = LinkType.None;
             try {
                 if (ResolverUtil.isMountpointRelativeURL(targetURI)) {
@@ -206,8 +207,8 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
                 return;
             }
 
-            String msg = "This is a linked (read-only) Meta Node. Only the link type can be changed.\n";
-            msg += "Please select the new type of the link to the meta node template.\n";
+            String msg = "This is a linked (read-only) Sub Node. Only the link type can be changed.\n";
+            msg += "Please select the new type of the link to the sub node template.\n";
             msg += "(current type: " + linkType + ", current link: " + targetURI + ")\n";
             msg += "The origin of the template will not be changed - just the way it is referenced.";
             LinkPrompt dlg = new LinkPrompt(getEditor().getSite().getShell(), msg, linkType);
@@ -222,29 +223,29 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
             }
             // as the workflow is local and the template in the same mountID, it should resolve to a file
             URI newURI = null;
-            NodeContext.pushContext(metaNode);
+            NodeContext.pushContext(subNode);
             try {
                 File targetFile = ResolverUtil.resolveURItoLocalFile(targetURI);
                 LocalExplorerFileStore targetfs = ExplorerFileSystem.INSTANCE.fromLocalFile(targetFile);
-                newURI = AbstractContentProvider.createMetanodeLinkUri(metaNode, targetfs, newLinkType);
+                newURI = AbstractContentProvider.createMetanodeLinkUri(subNode, targetfs, newLinkType);
             } catch (IOException e) {
-                LOGGER.error("Unable to resolve meta node template URI " + targetURI + ": " + e.getMessage(), e);
+                LOGGER.error("Unable to resolve sub node template URI " + targetURI + ": " + e.getMessage(), e);
                 return;
             } catch (URISyntaxException e) {
-                LOGGER.error("Unable to resolve meta node template URI " + targetURI + ": " + e.getMessage(), e);
+                LOGGER.error("Unable to resolve sub node template URI " + targetURI + ": " + e.getMessage(), e);
                 return;
             } catch (CoreException e) {
-                LOGGER.error("Unable to resolve meta node template URI " + targetURI + ": " + e.getMessage(), e);
+                LOGGER.error("Unable to resolve sub node template URI " + targetURI + ": " + e.getMessage(), e);
                 return;
             } finally {
                 NodeContext.removeLastContext();
             }
-            ChangeMetaNodeLinkCommand cmd = new ChangeMetaNodeLinkCommand(wfm, metaNode, targetURI, newURI);
+            ChangeSubNodeLinkCommand cmd = new ChangeSubNodeLinkCommand(wfm, subNode, targetURI, newURI);
             getCommandStack().execute(cmd);
         } else {
             throw new IllegalStateException(
-                "Can only change the type of a template link if the meta node is actually linked to a template - "
-                    + metaNode + " is not.");
+                "Can only change the type of a template link if the sub node is actually linked to a template - "
+                    + subNode + " is not.");
         }
     }
 
@@ -263,7 +264,7 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
          *
          */
         public LinkPrompt(final Shell parentShell, final String message, final LinkType preSelect) {
-            super(parentShell, "Change Type of Link to Meta Node Template", null, message,
+            super(parentShell, "Change Type of Link to Sub Node Template", null, message,
                 MessageDialog.QUESTION_WITH_CANCEL, new String[]{IDialogConstants.OK_LABEL,
                     IDialogConstants.CANCEL_LABEL}, 0);
             setShellStyle(getShellStyle() | SWT.SHEET);
@@ -313,7 +314,7 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
             m_mountpointRelativeLink = new Button(group, SWT.RADIO);
             m_mountpointRelativeLink.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
             m_mountpointRelativeLink.setText("Create mountpoint-relative link");
-            m_mountpointRelativeLink.setToolTipText("If you move the workflow to a new workspace - the meta node "
+            m_mountpointRelativeLink.setToolTipText("If you move the workflow to a new workspace - the sub node "
                 + "template must be available on this new workspace as well");
             m_mountpointRelativeLink.setSelection(LinkType.MountpointRelative.equals(m_preSelect));
             m_mountpointRelativeLink.addSelectionListener(new SelectionAdapter() {
@@ -327,7 +328,7 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
             m_workflowRelativeLink = new Button(group, SWT.RADIO);
             m_workflowRelativeLink.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
             m_workflowRelativeLink.setText("Create workflow-relative link");
-            m_workflowRelativeLink.setToolTipText("Workflow and meta node should always be moved together");
+            m_workflowRelativeLink.setToolTipText("Workflow and sub node should always be moved together");
             m_workflowRelativeLink.setSelection(LinkType.WorkflowRelative.equals(m_preSelect));
             m_workflowRelativeLink.addSelectionListener(new SelectionAdapter() {
                 @Override

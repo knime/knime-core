@@ -68,8 +68,8 @@ import org.eclipse.ui.progress.IProgressService;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainerTemplate;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -123,7 +123,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Update Meta Node Link";
+        return "Update Node Link";
     }
 
     /**
@@ -132,7 +132,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Checks whether a newer version of the underlying meta node "
+        return "Checks whether a newer version of the underlying node "
             + "template is available and updates the selected links";
     }
 
@@ -162,42 +162,32 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
         List<NodeID> list = new ArrayList<NodeID>();
         for (NodeContainerEditPart p : getSelectedParts(NodeContainerEditPart.class)) {
             Object model = p.getModel();
-            WorkflowManager wm = null;
-            if (model instanceof WorkflowManager) {
-                wm = (WorkflowManager)model;
-            } else if (model instanceof SubNodeContainer) {
-                wm = ((SubNodeContainer)model).getWorkflowManager();
-            }
-            if (wm != null) {
-                if (wm.getTemplateInformation().getRole().equals(Role.Link)) {
-                    if (!getManager().canUpdateMetaNodeLink(wm.getID())) {
+            if (model instanceof NodeContainerTemplate) {
+                NodeContainerTemplate tnc = (NodeContainerTemplate)model;
+                if (tnc.getTemplateInformation().getRole().equals(Role.Link)) {
+                    if (!getManager().canUpdateMetaNodeLink(tnc.getID())) {
                         return Collections.emptyList();
                     }
-                    list.add(wm.getID());
+                    list.add(tnc.getID());
                 }
-                list.addAll(getMetaNodesToCheck(wm));
+                list.addAll(getNCTemplatesToCheck(tnc));
             }
         }
         return list;
     }
 
-    private List<NodeID> getMetaNodesToCheck(final WorkflowManager workflowManager) {
+    private List<NodeID> getNCTemplatesToCheck(final NodeContainerTemplate template) {
         List<NodeID> list = new ArrayList<NodeID>();
-        for (NodeContainer nc : workflowManager.getNodeContainers()) {
-            WorkflowManager wm = null;
-            if (nc instanceof WorkflowManager) {
-                wm = (WorkflowManager)nc;
-            } else if (nc instanceof SubNodeContainer) {
-                wm = ((SubNodeContainer)nc).getWorkflowManager();
-            }
-            if (wm != null) {
-                if (wm.getTemplateInformation().getRole().equals(Role.Link)) {
-                    if (!workflowManager.canUpdateMetaNodeLink(wm.getID())) {
+        for (NodeContainer nc : template.getNodeContainers()) {
+            if (nc instanceof NodeContainerTemplate) {
+                NodeContainerTemplate tnc = (NodeContainerTemplate)nc;
+                if (tnc.getTemplateInformation().getRole().equals(Role.Link)) {
+                    if (!getManager().canUpdateMetaNodeLink(tnc.getID())) {
                         return Collections.emptyList();
                     }
-                    list.add(wm.getID());
+                    list.add(tnc.getID());
                 }
-                list.addAll(getMetaNodesToCheck(wm));
+                list.addAll(getNCTemplatesToCheck(tnc));
             }
         }
         return list;
@@ -217,7 +207,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
         IWorkbench wb = PlatformUI.getWorkbench();
         IProgressService ps = wb.getProgressService();
         LOGGER.debug("Checking for updates for " + candidateList.size()
-                + " meta node link(s)...");
+                + " node link(s)...");
         CheckUpdateRunnableWithProgress runner =
             new CheckUpdateRunnableWithProgress(getManager(), candidateList);
         try {
@@ -234,51 +224,51 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
                 || status.getSeverity() == IStatus.WARNING) {
             ErrorDialog.openError(Display.getDefault().getActiveShell(),
                     null, "Errors while checking for "
-                    + "updates on meta node links", status);
+                    + "updates on node links", status);
             if (candidateList.size() == 1) {
-                /* As only one meta node is selected and its update failed,
+                /* As only one node is selected and its update failed,
                  * there is nothing else to do. */
                 return;
             }
         }
 
         // find nodes that will be reset as part of the update
-        int metaNodesToResetCount = 0;
+        int nodesToResetCount = 0;
         for (NodeID id : updateList) {
-            WorkflowManager metaNode =
-                (WorkflowManager)getManager().findNodeContainer(id);
+            NodeContainerTemplate templateNode =
+                (NodeContainerTemplate)getManager().findNodeContainer(id);
             // TODO problematic with through-connections
-            if (metaNode.containsExecutedNode()) {
-                metaNodesToResetCount += 1;
+            if (templateNode.containsExecutedNode()) {
+                nodesToResetCount += 1;
             }
         }
 
         if (updateList.isEmpty()) {
             if (m_showInfoMsgIfNoUpdateAvail) {
-                MessageDialog.openInformation(shell, "Meta Node Update",
+                MessageDialog.openInformation(shell, "Node Update",
                         "No updates available");
             } else {
                 LOGGER.info("No updates available ("
-                        + candidateList.size() + " meta node link(s))");
+                        + candidateList.size() + " node link(s))");
             }
         } else {
             boolean isSingle = updateList.size() == 1;
-            String title = "Update Meta Node" + (isSingle ? "" : "s");
+            String title = "Update Node" + (isSingle ? "" : "s");
             StringBuilder messageBuilder = new StringBuilder();
             messageBuilder.append("Update available for ");
             if (isSingle && candidateList.size() == 1) {
-                messageBuilder.append("meta node \"");
+                messageBuilder.append("node \"");
                 messageBuilder.append(getManager().findNodeContainer(
                         candidateList.get(0)).getNameWithID());
                 messageBuilder.append("\".");
             } else if (isSingle) {
-                messageBuilder.append("one meta node.");
+                messageBuilder.append("one node.");
             } else {
                 messageBuilder.append(updateList.size());
-                messageBuilder.append(" meta nodes.");
+                messageBuilder.append(" nodes.");
             }
             messageBuilder.append("\n\n");
-            if (metaNodesToResetCount > 0) {
+            if (nodesToResetCount > 0) {
                 messageBuilder.append("Reset nodes and update now?");
             } else {
                 messageBuilder.append("Update now?");
@@ -286,7 +276,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
             String message = messageBuilder.toString();
             if (MessageDialog.openQuestion(shell, title, message)) {
                 LOGGER.debug("Running update for " + updateList.size()
-                        + " meta node(s): " + updateList);
+                        + " node(s): " + updateList);
                 execute(new UpdateMetaNodeLinkCommand(getManager(),
                         updateList.toArray(new NodeID[updateList.size()])));
             }
@@ -322,17 +312,17 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
             int overallStatus = IStatus.OK;
             for (int i = 0; i < m_candidateList.size(); i++) {
                 NodeID id = m_candidateList.get(i);
-                WorkflowManager wm = (WorkflowManager)m_hostWFM.findNodeContainer(id);
-                WorkflowManager parent = wm.getParent();
-                monitor.subTask(wm.getNameWithID());
+                NodeContainerTemplate tnc = (NodeContainerTemplate)m_hostWFM.findNodeContainer(id);
+                WorkflowManager parent = tnc.getParent();
+                monitor.subTask(tnc.getNameWithID());
                 Status stat;
                 try {
                     String msg;
                     if (parent.checkUpdateMetaNodeLink(id, lH)) {
                         m_updateList.add(id);
-                        msg = "Update available for " + wm.getNameWithID();
+                        msg = "Update available for " + tnc.getNameWithID();
                     } else {
-                        msg = "No update available for " + wm.getNameWithID();
+                        msg = "No update available for " + tnc.getNameWithID();
                     }
                     stat = new Status(IStatus.OK, idName, msg);
                 } catch (Exception ex) {
@@ -341,8 +331,8 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
                         cause = cause.getCause();
                     }
 
-                    String msg = "Unable to check for update on meta "
-                        + "node \"" + wm.getNameWithID() + "\": "
+                    String msg = "Unable to check for update on "
+                        + "node \"" + tnc.getNameWithID() + "\": "
                         + cause.getMessage();
                     LOGGER.warn(msg, cause);
                     stat = new Status(IStatus.WARNING , idName, msg, null);
@@ -355,7 +345,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
                 monitor.worked(1);
             }
             m_status = new MultiStatus(
-                    idName, overallStatus, stats, "Some Meta Node Link Updates failed", null);
+                    idName, overallStatus, stats, "Some Node Link Updates failed", null);
             monitor.done();
         }
 

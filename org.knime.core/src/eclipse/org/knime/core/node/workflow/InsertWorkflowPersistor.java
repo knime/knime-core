@@ -59,6 +59,7 @@ import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
 
 /**
@@ -68,16 +69,14 @@ import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
  */
 final class InsertWorkflowPersistor implements WorkflowPersistor {
 
-    private final WorkflowPersistor m_wfmPersistor;
+    private final TemplateNodeContainerPersistor m_nodePersistor;
 
     /**
      *
      */
-    InsertWorkflowPersistor(final WorkflowPersistor wfmPersistor) {
-        if (wfmPersistor == null) {
-            throw new NullPointerException();
-        }
-        m_wfmPersistor = wfmPersistor;
+    InsertWorkflowPersistor(final TemplateNodeContainerPersistor nodePersistor) {
+        CheckUtils.checkArgumentNotNull(nodePersistor, "Must not be null");
+        m_nodePersistor = nodePersistor;
     }
 
     /** {@inheritDoc} */
@@ -133,7 +132,7 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public FileWorkflowPersistor.LoadVersion getLoadVersion() {
-        return m_wfmPersistor.getLoadVersion();
+        return m_nodePersistor.getLoadVersion();
     }
 
     /** {@inheritDoc} */
@@ -188,8 +187,8 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     @Override
     public Map<Integer, NodeContainerPersistor> getNodeLoaderMap() {
         return Collections.singletonMap(
-                m_wfmPersistor.getMetaPersistor().getNodeIDSuffix(),
-                (NodeContainerPersistor)m_wfmPersistor);
+                m_nodePersistor.getMetaPersistor().getNodeIDSuffix(),
+                (NodeContainerPersistor)m_nodePersistor);
     }
 
     /** {@inheritDoc} */
@@ -218,7 +217,7 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public boolean mustWarnOnDataLoadError() {
-        return m_wfmPersistor.mustWarnOnDataLoadError();
+        return m_nodePersistor.mustWarnOnDataLoadError();
     }
 
     /** {@inheritDoc} */

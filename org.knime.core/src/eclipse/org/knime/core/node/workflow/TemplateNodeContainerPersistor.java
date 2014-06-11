@@ -44,20 +44,42 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 7, 2014 (wiswedel): created
+ *   Jun 8, 2014 (wiswedel): created
  */
-package org.knime.core.node.workflow.virtual;
+package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectOutNodeFactory;
-import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
+import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 
-/**
- * Empty extension of {@link VirtualSubNodeOutputNodeFactory} for backward compatibility reasons
- * (fully qualified name possibly saved in workflows).
+
+
+/** Implemented by persistors reading workflows or templates (meta- or subnode) from file location.
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noreference Not to be used by clients.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @deprecated Use super class instead
  */
-@Deprecated
-public final class VirtualPortObjectOutNodeFactory extends VirtualParallelizedChunkPortObjectOutNodeFactory {
+public interface TemplateNodeContainerPersistor extends FromFileNodeContainerPersistor {
+
+    /** @return The version of the workflow or template being loaded. */
+    public LoadVersion getLoadVersion();
+
+    /** @return true if the persistor represent a workflow project, false for meta nodes and other templates. */
+    boolean isProject();
+
+    /** @return the mustWarnOnDataLoadError */
+    public boolean mustWarnOnDataLoadError();
+
+    /** Mark as dirty when loading completed. */
+    public void setDirtyAfterLoad();
+
+    /** Set a name that overloads the name as persisted in the worklow. Used to overwrite the name in
+     * meta node templates (name is then derived from the folder name).
+     * @param nameOverwrite the nameOverwrite to set
+     */
+    public void setNameOverwrite(final String nameOverwrite);
+
+    /** @param templateInfo The new template information. This is a newly created link to the template that is
+     * currently loaded.*/
+    public void setOverwriteTemplateInformation(final MetaNodeTemplateInformation templateInfo);
 
 }

@@ -189,6 +189,7 @@ import org.knime.workbench.editor2.actions.AddAnnotationAction;
 import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.CancelAllAction;
 import org.knime.workbench.editor2.actions.ChangeMetaNodeLinkAction;
+import org.knime.workbench.editor2.actions.ChangeSubNodeLinkAction;
 import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.CollapseMetaNodeAction;
 import org.knime.workbench.editor2.actions.CollapseSubNodeAction;
@@ -197,6 +198,7 @@ import org.knime.workbench.editor2.actions.CopyAction;
 import org.knime.workbench.editor2.actions.CutAction;
 import org.knime.workbench.editor2.actions.DefaultOpenViewAction;
 import org.knime.workbench.editor2.actions.DisconnectMetaNodeLinkAction;
+import org.knime.workbench.editor2.actions.DisconnectSubNodeLinkAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAllAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
@@ -204,6 +206,7 @@ import org.knime.workbench.editor2.actions.ExpandMetaNodeAction;
 import org.knime.workbench.editor2.actions.ExpandSubNodeAction;
 import org.knime.workbench.editor2.actions.HideNodeNamesAction;
 import org.knime.workbench.editor2.actions.LockMetaNodeAction;
+import org.knime.workbench.editor2.actions.LockSubNodeAction;
 import org.knime.workbench.editor2.actions.MetaNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.NodeConnectionContainerDeleteAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
@@ -213,8 +216,10 @@ import org.knime.workbench.editor2.actions.PauseLoopExecutionAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
 import org.knime.workbench.editor2.actions.RevealMetaNodeTemplateAction;
+import org.knime.workbench.editor2.actions.RevealSubNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SaveAsAction;
 import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
+import org.knime.workbench.editor2.actions.SaveAsSubNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SelectLoopAction;
 import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
@@ -559,7 +564,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             AUTO_SAVE_SCHEDULER.execute(new Runnable() {
                 @Override
                 public void run() {
-                    LOGGER.infoWithFormat("Deleting auto-saved copy (\"%s\")...", autoSaveDirectory);
+                    LOGGER.debugWithFormat("Deleting auto-saved copy (\"%s\")...", autoSaveDirectory);
                     try {
                         FileUtils.deleteDirectory(autoSaveDirectory.getFile());
                     } catch (IOException e) {
@@ -622,13 +627,20 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
 
         AbstractNodeAction metaNodeReConfigure = new MetaNodeReconfigureAction(this);
-        AbstractNodeAction subNodeReConfigure = new SubNodeReconfigureAction(this);
         AbstractNodeAction metaNodeChangeLink = new ChangeMetaNodeLinkAction(this);
         AbstractNodeAction defineMetaNodeTemplate = new SaveAsMetaNodeTemplateAction(this);
         AbstractNodeAction checkUpdateMetaNodeLink = new CheckUpdateMetaNodeLinkAction(this);
         AbstractNodeAction revealMetaNodeTemplate = new RevealMetaNodeTemplateAction(this);
         AbstractNodeAction disconnectMetaNodeLink = new DisconnectMetaNodeLinkAction(this);
         AbstractNodeAction lockMetaLink = new LockMetaNodeAction(this);
+
+        AbstractNodeAction subNodeReConfigure = new SubNodeReconfigureAction(this);
+        AbstractNodeAction subNodeChangeLink = new ChangeSubNodeLinkAction(this);
+        AbstractNodeAction defineSubNodeTemplate = new SaveAsSubNodeTemplateAction(this);
+        AbstractNodeAction checkUpdateSubNodeLink = new CheckUpdateMetaNodeLinkAction(this);
+        AbstractNodeAction revealSubNodeTemplate = new RevealSubNodeTemplateAction(this);
+        AbstractNodeAction disconnectSubNodeLink = new DisconnectSubNodeLinkAction(this);
+        AbstractNodeAction lockSubLink = new LockSubNodeAction(this);
 
         // new annotation action
         AddAnnotationAction annotation = new AddAnnotationAction(this);
@@ -679,13 +691,21 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(convert);
 
         m_actionRegistry.registerAction(metaNodeReConfigure);
-        m_actionRegistry.registerAction(subNodeReConfigure);
         m_actionRegistry.registerAction(metaNodeChangeLink);
         m_actionRegistry.registerAction(defineMetaNodeTemplate);
         m_actionRegistry.registerAction(checkUpdateMetaNodeLink);
         m_actionRegistry.registerAction(revealMetaNodeTemplate);
         m_actionRegistry.registerAction(disconnectMetaNodeLink);
         m_actionRegistry.registerAction(lockMetaLink);
+
+        m_actionRegistry.registerAction(subNodeReConfigure);
+        m_actionRegistry.registerAction(subNodeChangeLink);
+        m_actionRegistry.registerAction(defineSubNodeTemplate);
+        m_actionRegistry.registerAction(checkUpdateSubNodeLink);
+        m_actionRegistry.registerAction(revealSubNodeTemplate);
+        m_actionRegistry.registerAction(disconnectSubNodeLink);
+        m_actionRegistry.registerAction(lockSubLink);
+
         m_actionRegistry.registerAction(annotation);
 
         // remember ids for later updates via 'updateActions'
@@ -1113,14 +1133,14 @@ public class WorkflowEditor extends GraphicalEditor implements
                     long start = System.currentTimeMillis();
                     if (autoSave(saveWithData)) {
                         long delay = System.currentTimeMillis() - start;
-                        LOGGER.infoWithFormat("Auto-saved workflow %s (took %s)",
+                        LOGGER.debugWithFormat("Auto-saved workflow %s (took %s)",
                             m_manager.getName(), StringFormat.formatElapsedTime(delay));
                     }
                 }
             }, interval, interval, TimeUnit.SECONDS);
             m_autoSaveScheduledJobPair =
                     new Pair<ScheduledFuture<?>, Boolean>(autoSaveScheduledJob, Boolean.valueOf(saveWithData));
-            LOGGER.infoWithFormat("Scheduled auto-save job for %s (every %d secs %s data)", m_manager.getName(),
+            LOGGER.debugWithFormat("Scheduled auto-save job for %s (every %d secs %s data)", m_manager.getName(),
                 interval, (saveWithData ? "with" : "without"));
         }
 

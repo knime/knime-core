@@ -53,7 +53,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -95,7 +94,7 @@ import org.knime.core.util.LockFailedException;
  *
  * @author wiswedel, University of Konstanz
  */
-public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeContainerPersistor {
+public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeContainerPersistor {
 
     /**
      * A Version representing a specific workflow format. This enum covers only the version that this specific class can
@@ -261,8 +260,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
 
     private AuthorInformation m_authorInformation;
 
-    private URI m_templateInformationURI;
-
     /** see {@link #setNameOverwrite(String)}. */
     private String m_nameOverwrite;
 
@@ -298,18 +295,18 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
      * Create persistor for load.
      *
      * @param tableRep Table map
-     * @param workflowKNIMEFile Associated workflow.knime file
+     * @param dotKNIMEFile Associated workflow.knime or template.knime file
      * @param loadHelper The load helper as required by meta persistor.
      * @param version of loading workflow.
      */
     FileWorkflowPersistor(final HashMap<Integer, ContainerTable> tableRep,
-        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final ReferencedFile workflowKNIMEFile,
+        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final ReferencedFile dotKNIMEFile,
         final WorkflowLoadHelper loadHelper, final LoadVersion version, final boolean isProject) {
         assert version != null;
         m_globalTableRepository = tableRep;
         m_fileStoreRepository = fileStoreHandlerRepository;
         m_versionString = version;
-        m_metaPersistor = new FileNodeContainerMetaPersistor(workflowKNIMEFile, loadHelper, version);
+        m_metaPersistor = new FileNodeContainerMetaPersistor(dotKNIMEFile, loadHelper, version);
         m_nodeContainerLoaderMap = new TreeMap<Integer, FromFileNodeContainerPersistor>();
         m_connectionSet = new HashSet<ConnectionContainerTemplate>();
         m_obsoleteNodeDirectories = new ArrayList<ReferencedFile>();
@@ -408,17 +405,14 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         return m_workflowCipher;
     }
 
-    /** @param templateInformationURI the uri to set */
-    public void setTemplateInformationLinkURI(final URI templateInformationURI) {
-        m_templateInformationURI = templateInformationURI;
+    /** {@inheritDoc} */
+    @Override
+    public void setOverwriteTemplateInformation(final MetaNodeTemplateInformation templateInfo) {
+        m_templateInformation = templateInfo;
     }
 
-    /**
-     * Set a name that overloads the name as persisted in the worklow. Used to overwrite the name in meta node templates
-     * (name is then derived from the folder name).
-     *
-     * @param nameOverwrite the nameOverwrite to set
-     */
+    /** {@inheritDoc} */
+    @Override
     public void setNameOverwrite(final String nameOverwrite) {
         m_nameOverwrite = nameOverwrite;
     }
@@ -552,8 +546,9 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         return !getLoadVersion().isOlderThan(LoadVersion.V200);
     }
 
-    /** Mark node as dirty. */
-    void setDirtyAfterLoad() {
+    /** {@inheritDoc} */
+    @Override
+    public void setDirtyAfterLoad() {
         m_isDirtyAfterLoad = true;
     }
 
@@ -619,11 +614,13 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         }
 
         try {
-            MetaNodeTemplateInformation ti = loadTemplateInformation(m_workflowSett);
-            if (ti == null) {
-                throw new InvalidSettingsException("No template information");
+            if (m_templateInformation != null) {
+                // template information was set after construction (this node is a link created from a template)
+                assert m_templateInformation.getRole() == Role.Link;
+            } else {
+                m_templateInformation = MetaNodeTemplateInformation.load(m_workflowSett, getLoadVersion());
+                CheckUtils.checkSettingNotNull(m_templateInformation, "No template information");
             }
-            m_templateInformation = fixTemplateInformation(ti);
         } catch (InvalidSettingsException e) {
             String error = "Unable to load workflow template information: " + e.getMessage();
             getLogger().debug(error, e);
@@ -935,7 +932,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
             } catch (InvalidSettingsException e) {
                 String error =
                     "Can't retrieve node type for contained node with id suffix " + nodeIDSuffix
-                        + ", attempting to read" + "ordinary (native) node: " + e.getMessage();
+                        + ", attempting to read ordinary (native) node: " + e.getMessage();
                 getLogger().debug(error, e);
                 setDirtyAfterLoad();
                 loadResult.addError(error);
@@ -1535,30 +1532,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
             return WorkflowCipher.NULL_CIPHER;
         }
         NodeSettingsRO cipherSettings = settings.getNodeSettings("cipher");
-        return WorkflowCipher.load(loadVersion, cipherSettings);    }
-
-    /**
-     * Load template information (in this version always {@link MetaNodeTemplateInformation#NONE}).
-     *
-     * @param settings To load from
-     * @return MetaNodeTemplateInformation#NONE
-     * @throws InvalidSettingsException If fails
-     */
-    MetaNodeTemplateInformation loadTemplateInformation(final NodeSettingsRO settings) throws InvalidSettingsException {
-        if (settings.containsKey(CFG_TEMPLATE_INFO)) {
-            NodeSettingsRO s = settings.getNodeSettings(CFG_TEMPLATE_INFO);
-            return MetaNodeTemplateInformation.load(s, getLoadVersion());
-        } else {
-            return MetaNodeTemplateInformation.NONE;
-        }
-    }
-
-    MetaNodeTemplateInformation fixTemplateInformation(final MetaNodeTemplateInformation original)
-        throws InvalidSettingsException {
-        if (m_templateInformationURI == null) {
-            return original;
-        }
-        return original.createLink(m_templateInformationURI);
+        return WorkflowCipher.load(loadVersion, cipherSettings);
     }
 
     /** Synchronized call to DATE_FORMAT.parse(String).
@@ -1791,14 +1765,13 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
     /**
      * check whether there is a "loaded with no data" file.
      * @param workflowDir ...
-     * @return true
+     * @return true for old workflows (&lt;2.0) or if there is a {@value WorkflowPersistor#SAVED_WITH_DATA_FILE} file.
      */
     boolean loadIfMustWarnOnDataLoadError(final File workflowDir) {
         if (getLoadVersion().isOlderThan(LoadVersion.V200)) {
             return true;
         }
-        return true;
-//        return new File(workflowDir, SAVED_WITH_DATA_FILE).isFile();
+        return new File(workflowDir, SAVED_WITH_DATA_FILE).isFile();
     }
 
 
@@ -1808,11 +1781,13 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
     }
 
     FileSingleNodeContainerPersistor createNativeNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
-        return new FileNativeNodeContainerPersistor(this, nodeFile, getLoadHelper(), getLoadVersion());
+        return new FileNativeNodeContainerPersistor(nodeFile, getLoadHelper(), getLoadVersion(),
+            getGlobalTableRepository(), getFileStoreHandlerRepository(), mustWarnOnDataLoadError());
     }
 
     FileSubNodeContainerPersistor createSubNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
-        return new FileSubNodeContainerPersistor(this, nodeFile, getLoadHelper(), getLoadVersion());
+        return new FileSubNodeContainerPersistor(nodeFile, getLoadHelper(), getLoadVersion(),
+            getGlobalTableRepository(), getFileStoreHandlerRepository(), mustWarnOnDataLoadError());
     }
 
     FileWorkflowPersistor createWorkflowPersistorLoad(final ReferencedFile wfmFile) {
@@ -1904,10 +1879,47 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
     public static String save(final WorkflowManager wm, final ReferencedFile rawWorkflowDirRef,
         final ExecutionMonitor execMon, final WorkflowSaveHelper saveHelper)
                 throws IOException, CanceledExecutionException, LockFailedException {
+        final String name = wm.getDirectNCParent().getCipherFileName(WORKFLOW_FILE);
+        NodeSettings preFilledSettings = new NodeSettings(name);
+        saveHeader(preFilledSettings);
+        wm.getTemplateInformation().save(preFilledSettings);
+        saveContent(wm, preFilledSettings, rawWorkflowDirRef, execMon, saveHelper);
+        return name;
+    }
+
+    public static String saveAsTemplate(final WorkflowManager wm, final ReferencedFile rawWorkflowDirRef,
+        final ExecutionMonitor execMon, final WorkflowSaveHelper saveHelper)
+                throws IOException, CanceledExecutionException, LockFailedException {
+        MetaNodeTemplateInformation tI = wm.getTemplateInformation();
+        if (!Role.Template.equals(tI.getRole())) {
+            throw new IllegalStateException("Cannot save workflow as template (role " + tI.getRole() + ")");
+        }
+        // as per 2.10 template workflows are also saved under workflow.knime (previously it was all contained in
+        // template.knime). The new template.knime file is written elsewhere.
+        final String name = wm.getDirectNCParent().getCipherFileName(WORKFLOW_FILE);
+        NodeSettings preFilledSettings = new NodeSettings(name);
+        saveContent(wm, preFilledSettings, rawWorkflowDirRef, execMon, saveHelper);
+        return name;
+    }
+
+    /**
+     * @param wm The WFM to save.
+     * @param preFilledSettings The settings eventually written to workflow.knime (or workflow.knime.encrypted).
+     * For workflows it contains the version number, cipher, template infos etc. The name of the setting defines the
+     * output file name (so it's important!)
+     * @param rawWorkflowDirRef To save to.
+     * @param execMon ...
+     * @param saveHelper ...
+     * @throws IOException ...
+     * @throws CanceledExecutionException ...
+     * @throws LockFailedException ...
+     */
+    private static void saveContent(final WorkflowManager wm, final NodeSettings preFilledSettings,
+        final ReferencedFile rawWorkflowDirRef, final ExecutionMonitor execMon, final WorkflowSaveHelper saveHelper)
+                throws IOException, CanceledExecutionException, LockFailedException {
         ReferencedFile workflowDirRef = rawWorkflowDirRef;
         Role r = wm.getTemplateInformation().getRole();
-        String fName = Role.Template.equals(r) ? TEMPLATE_FILE : WORKFLOW_FILE;
-        fName = wm.getDirectNCParent().getCipherFileName(fName);
+        final String fName = preFilledSettings.getKey();
         if (!workflowDirRef.fileLockRootForVM()) {
             throw new LockFailedException("Can't write workflow to \"" + workflowDirRef
                 + "\" because the directory can't be locked");
@@ -1917,7 +1929,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
             final ReferencedFile autoSaveDirectory = wm.getAutoSaveDirectory();
             if (!saveHelper.isAutoSave() && workflowDirRef.equals(nodeContainerDirectory)) {
                 if (!nodeContainerDirectory.isDirty()) {
-                    return fName;
+                    return;
                 } else {
                     workflowDirRef = nodeContainerDirectory; // update variable assignment to do changes on member
                     // delete "old" node directories if not saving to the working
@@ -1927,7 +1939,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
             }
             if (saveHelper.isAutoSave() && workflowDirRef.equals(autoSaveDirectory)) {
                 if (!autoSaveDirectory.isDirty()) {
-                    return fName;
+                    return;
                 } else {
                     workflowDirRef = autoSaveDirectory;
                     WorkflowManager.deleteObsoleteNodeDirs(autoSaveDirectory.getDeletedNodesFileLocations());
@@ -1938,19 +1950,15 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
             if (!workflowDir.isDirectory()) {
                 throw new IOException("Unable to create or write directory \": " + workflowDir + "\"");
             }
-            NodeSettings settings = new NodeSettings(fName);
-            settings.addString(WorkflowManager.CFG_CREATED_BY, KNIMEConstants.VERSION);
-            settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion().getVersionString());
-            saveWorkflowName(settings, wm.getNameField());
-            saveWorkflowCipher(settings, wm.getWorkflowCipher());
-            saveTemplateInformation(wm.getTemplateInformation(), settings);
-            saveAuthorInformation(wm.getAuthorInformation(), settings);
-            FileNodeContainerMetaPersistor.save(settings, wm, workflowDirRef);
-            saveWorkflowVariables(wm, settings);
-            saveCredentials(wm, settings);
-            saveWorkflowAnnotations(wm, settings);
+            saveWorkflowName(preFilledSettings, wm.getNameField());
+            saveAuthorInformation(wm.getAuthorInformation(), preFilledSettings);
+            saveWorkflowCipher(preFilledSettings, wm.getWorkflowCipher());
+            FileNodeContainerMetaPersistor.save(preFilledSettings, wm, workflowDirRef);
+            saveWorkflowVariables(wm, preFilledSettings);
+            saveCredentials(wm, preFilledSettings);
+            saveWorkflowAnnotations(wm, preFilledSettings);
 
-            NodeSettingsWO nodesSettings = saveSettingsForNodes(settings);
+            NodeSettingsWO nodesSettings = saveSettingsForNodes(preFilledSettings);
             Collection<NodeContainer> nodes = wm.getNodeContainers();
             double progRatio = 1.0 / (nodes.size() + 1);
 
@@ -1964,7 +1972,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
             }
 
             execMon.setMessage("connection information");
-            NodeSettingsWO connSettings = saveSettingsForConnections(settings);
+            NodeSettingsWO connSettings = saveSettingsForConnections(preFilledSettings);
             int connectionNumber = 0;
             for (ConnectionContainer cc : wm.getConnectionContainers()) {
                 NodeSettingsWO nextConnectionConfig = connSettings.addNodeSettings("connection_" + connectionNumber);
@@ -1972,7 +1980,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
                 connectionNumber += 1;
             }
             int inCount = wm.getNrInPorts();
-            NodeSettingsWO inPortsSetts = inCount > 0 ? saveInPortsSetting(settings) : null;
+            NodeSettingsWO inPortsSetts = inCount > 0 ? saveInPortsSetting(preFilledSettings) : null;
             NodeSettingsWO inPortsSettsEnum = null;
             if (inPortsSetts != null) {
                 saveInportsBarUIInfoClassName(inPortsSetts, wm.getInPortsBarUIInfo());
@@ -1984,7 +1992,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
                 saveInPort(sPort, wm, i);
             }
             int outCount = wm.getNrOutPorts();
-            NodeSettingsWO outPortsSetts = outCount > 0 ? saveOutPortsSetting(settings) : null;
+            NodeSettingsWO outPortsSetts = outCount > 0 ? saveOutPortsSetting(preFilledSettings) : null;
             NodeSettingsWO outPortsSettsEnum = null;
             if (outPortsSetts != null) {
                 saveOutportsBarUIInfoClassName(outPortsSetts, wm.getOutPortsBarUIInfo());
@@ -1995,7 +2003,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
                 NodeSettingsWO singlePort = saveOutPortSetting(outPortsSettsEnum, i);
                 saveOutPort(singlePort, wm, i);
             }
-            saveEditorUIInformation(wm, settings);
+            saveEditorUIInformation(wm, preFilledSettings);
 
             File workflowFile = new File(workflowDir, fName);
             String toBeDeletedFileName = Role.Template.equals(r) ? TEMPLATE_FILE : WORKFLOW_FILE;
@@ -2004,7 +2012,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
 
             OutputStream os = new FileOutputStream(workflowFile);
             os = wm.getDirectNCParent().cipherOutput(os);
-            settings.saveToXML(os);
+            preFilledSettings.saveToXML(os);
             if (saveHelper.isSaveData()) {
                 File saveWithDataFile = new File(workflowDir, SAVED_WITH_DATA_FILE);
                 BufferedWriter o = new BufferedWriter(new FileWriter(saveWithDataFile));
@@ -2030,10 +2038,15 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
             }
             workflowDirRef.setDirty(false);
             execMon.setProgress(1.0);
-            return fName;
         } finally {
             workflowDirRef.fileUnlockRootForVM();
         }
+    }
+
+    /** Add version field. */
+    static void saveHeader(final NodeSettings settings) {
+        settings.addString(WorkflowManager.CFG_CREATED_BY, KNIMEConstants.VERSION);
+        settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion().getVersionString());
     }
 
     protected static void saveWorkflowName(final NodeSettingsWO settings, final String name) {
@@ -2050,18 +2063,6 @@ public class FileWorkflowPersistor implements WorkflowPersistor, FromFileNodeCon
         if (!workflowCipher.isNullCipher()) {
             NodeSettingsWO cipherSettings = settings.addNodeSettings("cipher");
             workflowCipher.save(cipherSettings);
-        }
-    }
-
-    protected static void saveTemplateInformation(
-        final MetaNodeTemplateInformation mnti, final NodeSettingsWO settings) {
-        switch (mnti.getRole()) {
-            case None:
-                // don't save
-                break;
-            default:
-                NodeSettingsWO s = settings.addNodeSettings(CFG_TEMPLATE_INFO);
-                mnti.save(s);
         }
     }
 

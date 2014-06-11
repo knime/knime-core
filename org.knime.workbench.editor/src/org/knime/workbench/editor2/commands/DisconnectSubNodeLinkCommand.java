@@ -1,6 +1,9 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *
+ *  Copyright by
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -43,47 +46,48 @@
  * -------------------------------------------------------------------
  *
  * History
- *   13.04.2011 (Bernd Wiswedel): created
+ *   25.05.2011 (Bernd Wiswedel): created
  */
 package org.knime.workbench.editor2.commands;
 
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.WeakHashMap;
 
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.progress.IProgressService;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeContainerTemplate;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.workbench.editor2.UpdateMetaNodeTemplateRunnable;
 
 /**
- * GEF command for update meta node links.
+ * GEF command for disconnecting sub node links.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich
  */
-public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
+public class DisconnectSubNodeLinkCommand extends AbstractKNIMECommand {
+
+    public static final WeakHashMap<NodeID, URI> RECENTLY_USED_URIS =
+        new WeakHashMap<NodeID, URI>();
+
 
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(UpdateMetaNodeLinkCommand.class);
+            .getLogger(DisconnectSubNodeLinkCommand.class);
 
-    // fields correspond to the fields in UpdateMetaNodeTemplateRunnable
     private final NodeID[] m_ids;
-    private List<NodeID> m_newIDs;
-    private List<WorkflowPersistor> m_undoPersistors;
+    private List<NodeID> m_changedIDs; // for undo
+    private List<MetaNodeTemplateInformation> m_oldTemplInfos; // for undo
 
     /**
      * Creates a new command.
      *
-     * @param manager The workflow manager containing the links to be updated.
+     * @param manager The workflow manager containing the links to change
      * @param ids The ids of the link nodes.
      */
-    public UpdateMetaNodeLinkCommand(final WorkflowManager manager,
+    public DisconnectSubNodeLinkCommand(final WorkflowManager manager,
             final NodeID[] ids) {
         super(manager);
         m_ids = ids.clone();
@@ -99,48 +103,38 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
         if (m_ids == null) {
             return false;
         }
-        boolean containsUpdateableMN = false;
-        WorkflowManager hostWFM = getHostWFM();
         for (NodeID id : m_ids) {
-            NodeContainer nc = hostWFM.findNodeContainer(id);
-            if (nc instanceof NodeContainerTemplate) {
-                NodeContainerTemplate tnc = (NodeContainerTemplate)nc;
-                final WorkflowManager parent = tnc.getParent();
-                if (parent.hasUpdateableMetaNodeLink(id)) {
-                    containsUpdateableMN = true;
-                }
-                if (!parent.canUpdateMetaNodeLink(id)) {
-                    return false;
+            NodeContainer nc = getHostWFM().getNodeContainer(id);
+            if (nc instanceof SubNodeContainer) {
+                SubNodeContainer snc = (SubNodeContainer)nc;
+                MetaNodeTemplateInformation lI = snc.getTemplateInformation();
+                if (Role.Link.equals(lI.getRole())) {
+                    return true;
                 }
             }
         }
-        return containsUpdateableMN;
+        return false;
     }
 
     /** {@inheritDoc} */
     @Override
     public void execute() {
-        UpdateMetaNodeTemplateRunnable updateRunner = null;
-        try {
-            IWorkbench wb = PlatformUI.getWorkbench();
-            IProgressService ps = wb.getProgressService();
-            WorkflowManager hostWFM = getHostWFM();
-            updateRunner = new UpdateMetaNodeTemplateRunnable(hostWFM, m_ids);
-            ps.busyCursorWhile(updateRunner);
-            m_newIDs = updateRunner.getNewIDs();
-            m_undoPersistors = updateRunner.getUndoPersistors();
-            assert m_newIDs.size() == m_undoPersistors.size();
-        } catch (Exception ex) {
-            // if fails notify the user
-            LOGGER.debug("Node cannot be created.", ex);
-            MessageDialog.openWarning(Display.getDefault().
-                    getActiveShell(), "Node cannot be created.",
-                    "The selected node could not be created "
-                    + "due to the following reason:\n" + ex.getMessage());
-            return;
-        } finally {
-            if (updateRunner != null) {
-                updateRunner.discard();
+        m_changedIDs = new ArrayList<NodeID>();
+        m_oldTemplInfos = new ArrayList<MetaNodeTemplateInformation>();
+        WorkflowManager hostWFM = getHostWFM();
+        for (NodeID id : m_ids) {
+            NodeContainer nc = hostWFM.getNodeContainer(id);
+            if (nc instanceof SubNodeContainer) {
+                SubNodeContainer snc = (SubNodeContainer)nc;
+                MetaNodeTemplateInformation lI = snc.getTemplateInformation();
+                if (Role.Link.equals(lI.getRole())) {
+                    MetaNodeTemplateInformation old =
+                            hostWFM.setTemplateInformation(id,
+                                    MetaNodeTemplateInformation.NONE);
+                    RECENTLY_USED_URIS.put(snc.getID(), old.getSourceURI());
+                    m_changedIDs.add(id);
+                    m_oldTemplInfos.add(old);
+                }
             }
         }
     }
@@ -151,7 +145,7 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
         if (m_ids == null || m_ids.length == 0) {
             return false;
         }
-        if (m_newIDs == null || m_undoPersistors == null) {
+        if (m_changedIDs == null || m_oldTemplInfos == null) {
             return false;
         }
         return true;
@@ -162,18 +156,15 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        LOGGER.debug("Undo: Reverting meta node links ("
-                + m_newIDs.size() + " meta node(s))");
-        WorkflowManager hostWFM = getHostWFM();
-        for (int i = 0; i < m_newIDs.size(); i++) {
-            NodeID id = m_newIDs.get(i);
-            WorkflowPersistor p = m_undoPersistors.get(i);
-            NodeContainerTemplate nodeToBeDeleted = (NodeContainerTemplate)hostWFM.findNodeContainer(id);
-            WorkflowManager parent = nodeToBeDeleted.getParent();
-            parent.removeNode(nodeToBeDeleted.getID());
-            parent.paste(p);
+        LOGGER.debug("Undo: Reconnecting sub node links ("
+                + m_changedIDs.size() + " sub node(s))");
+        for (int i = 0; i < m_changedIDs.size(); i++) {
+            NodeID id = m_changedIDs.get(i);
+            MetaNodeTemplateInformation old = m_oldTemplInfos.get(i);
+            getHostWFM().setTemplateInformation(id, old);
         }
-
+        m_changedIDs = null;
+        m_oldTemplInfos = null;
     }
 
 }

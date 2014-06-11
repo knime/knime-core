@@ -72,6 +72,7 @@ public class CopySubNodeContainerPersistor
     private final int m_virtualInNodeIDSuffix;
     private final int m_virtualOutNodeIDSuffix;
     private final Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
+    private final MetaNodeTemplateInformation m_templateInformation;
 
     /**
      * @param original
@@ -85,8 +86,15 @@ public class CopySubNodeContainerPersistor
         final FileStoreHandlerRepository fileStoreHandlerRepository, final boolean preserveDeletableFlags,
         final boolean isUndoableDeleteCommand) {
         super(original, preserveDeletableFlags, isUndoableDeleteCommand);
-        m_workflowPersistor = original.getWorkflowManager().getCopyPersistor(
-            tableRep, fileStoreHandlerRepository, preserveDeletableFlags, isUndoableDeleteCommand);
+        m_workflowPersistor = new CopyWorkflowPersistor(original.getWorkflowManager(), tableRep,
+            fileStoreHandlerRepository, preserveDeletableFlags, isUndoableDeleteCommand) {
+            @Override
+            public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
+                NodeContainerParent ncParent = wfm.getDirectNCParent();
+                SubNodeContainer subnode = (SubNodeContainer)ncParent;
+                subnode.postLoadWFM();
+            }
+        };
         m_inPortTemplates = new WorkflowPortTemplate[original.getNrInPorts()];
         for (int i = 0; i < m_inPortTemplates.length; i++) {
             m_inPortTemplates[i] = new WorkflowPortTemplate(i, original.getInPort(i).getPortType());
@@ -104,6 +112,7 @@ public class CopySubNodeContainerPersistor
             WizardNodeLayoutInfo newInfo = layoutEntry.getValue().clone();
             m_layoutInfo.put(id, newInfo);
         }
+        m_templateInformation = original.getTemplateInformation().clone();
     }
 
     /** {@inheritDoc} */
@@ -153,6 +162,14 @@ public class CopySubNodeContainerPersistor
     @Override
     public Map<Integer, WizardNodeLayoutInfo> getLayoutInfo() {
         return m_layoutInfo;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MetaNodeTemplateInformation getTemplateInformation() {
+        return m_templateInformation;
     }
 
 }

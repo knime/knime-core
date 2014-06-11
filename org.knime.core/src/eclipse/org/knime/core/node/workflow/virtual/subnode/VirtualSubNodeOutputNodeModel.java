@@ -67,6 +67,7 @@ import org.knime.core.node.port.PortType;
 /** NodeModel to subnode virtual output node.
  * <p>No API.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.10
  */
 public final class VirtualSubNodeOutputNodeModel extends NodeModel {
 

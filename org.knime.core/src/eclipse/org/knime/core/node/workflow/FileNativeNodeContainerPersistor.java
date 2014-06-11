@@ -108,19 +108,22 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         }
     }
 
+    private WorkflowPersistor m_parentPersistor;
+
     private Node m_node;
 
     private NodeAndBundleInformation m_nodeAndBundleInformation;
+
     /**
-     * @param workflowPersistor
      * @param nodeSettingsFile
      * @param loadHelper
      * @param version
      */
-    public FileNativeNodeContainerPersistor(final FileWorkflowPersistor workflowPersistor,
-        final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper, final LoadVersion version) {
-        super(workflowPersistor, nodeSettingsFile, loadHelper, version);
-        // TODO Auto-generated constructor stub
+    FileNativeNodeContainerPersistor(final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper,
+        final LoadVersion version, final HashMap<Integer, ContainerTable> globalTableRepository,
+        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final boolean mustWarnOnDataLoadError) {
+        super(nodeSettingsFile, loadHelper, version, globalTableRepository,
+            fileStoreHandlerRepository, mustWarnOnDataLoadError);
     }
 
     /** Called by {@link Node} to update the message field in the {@link NodeModel} class.
@@ -163,6 +166,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
     public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
         final NodeSettingsRO parentSettings, final LoadResult result) throws InvalidSettingsException, IOException {
         super.preLoadNodeContainer(parentPersistor, parentSettings, result);
+        m_parentPersistor = parentPersistor;
         NodeSettingsRO settings = getNodeSettings();
         String error;
         NodeAndBundleInformation nodeInfo;
@@ -263,10 +267,8 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
             }
         }
         try {
-            FileWorkflowPersistor wfmPersistor = getWorkflowManagerPersistor();
-            HashMap<Integer, ContainerTable> globalTableRepository = wfmPersistor.getGlobalTableRepository();
-            WorkflowFileStoreHandlerRepository fileStoreHandlerRepository =
-                wfmPersistor.getFileStoreHandlerRepository();
+            HashMap<Integer, ContainerTable> globalTableRepository = getGlobalTableRepository();
+            WorkflowFileStoreHandlerRepository fileStoreHandlerRepository = getFileStoreHandlerRepository();
             nodePersistor.load(m_node, getParentPersistor(), exec, tblRep, globalTableRepository,
                 fileStoreHandlerRepository, result);
         } catch (final Exception e) {
@@ -398,6 +400,13 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
         }
     }
 
+    /**
+     * @return the parentPersistor
+     */
+    WorkflowPersistor getParentPersistor() {
+        return m_parentPersistor;
+    }
+
     /** {@inheritDoc} */
     @Override
     public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformation nodeInfo,
@@ -425,7 +434,7 @@ public class FileNativeNodeContainerPersistor extends FileSingleNodeContainerPer
                 LoadResult guessLoadResult = new LoadResult("Port type guessing for missing node \"" + nodeName + "\"");
                 NodeSettingsRO settingsForNode = loadSettingsForNode(guessLoadResult);
                 FileNodePersistor nodePersistor = createNodePersistor(settingsForNode);
-                outPortTypes = nodePersistor.guessOutputPortTypes(getParentPersistor(), guessLoadResult, nodeName);
+                outPortTypes = nodePersistor.guessOutputPortTypes(guessLoadResult, nodeName);
                 if (guessLoadResult.hasErrors()) {
                     getLogger().debug(
                         "Errors guessing port types for missing node \"" + nodeName + "\": "

@@ -47,9 +47,8 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -128,6 +127,7 @@ import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.UpdateStatus;
 import org.knime.core.node.workflow.NativeNodeContainer.LoopStatus;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -138,8 +138,9 @@ import org.knime.core.node.workflow.Workflow.NodeAndInports;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
-import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
+import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowOrTemplateLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -169,7 +170,7 @@ import org.knime.core.util.pathresolve.ResolverUtil;
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public final class WorkflowManager extends NodeContainer implements NodeUIInformationListener, NodeContainerParent {
+public final class WorkflowManager extends NodeContainer implements NodeUIInformationListener, NodeContainerParent, NodeContainerTemplate {
 
     /** my logger. */
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WorkflowManager.class);
@@ -481,11 +482,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.10
      */
     @Override
-    public WorkflowContext getProjectContext() {
+    public WorkflowManager getProjectWFM() {
         if (isProject()) {
-            return this.getContext();
+            return this;
         } else {
-            return getDirectNCParent().getProjectContext();
+            return getDirectNCParent().getProjectWFM();
         }
     }
 
@@ -1334,7 +1335,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.10 */
     public MetaPortInfo[] getSubnodeInputPortInfo(final NodeID subNodeID) {
         synchronized (m_workflowMutex) {
-            return getSubNodeContainer(subNodeID).getInputPortInfo();
+            return getNodeContainer(subNodeID, SubNodeContainer.class, true).getInputPortInfo();
         }
     }
 
@@ -1346,7 +1347,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.10 */
     public MetaPortInfo[] getSubnodeOutputPortInfo(final NodeID subNodeID) {
         synchronized (m_workflowMutex) {
-            return getSubNodeContainer(subNodeID).getOutputPortInfo();
+            return getNodeContainer(subNodeID, SubNodeContainer.class, true).getOutputPortInfo();
         }
     }
 
@@ -1357,7 +1358,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void changeMetaNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
         synchronized (m_workflowMutex) {
-            WorkflowManager subFlowMgr = getMetaNodeContainer(subFlowID);
+            WorkflowManager subFlowMgr = getNodeContainer(subFlowID, WorkflowManager.class, true);
             if (!haveMetaPortsChanged(newPorts, true, subFlowMgr)) {
                 return;
             }
@@ -1417,7 +1418,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void changeMetaNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
         synchronized (m_workflowMutex) {
-            WorkflowManager subFlowMgr = getMetaNodeContainer(subFlowID);
+            WorkflowManager subFlowMgr = getNodeContainer(subFlowID, WorkflowManager.class, true);
             if (!haveMetaPortsChanged(newPorts, false, subFlowMgr)) {
                 return;
             }
@@ -1476,7 +1477,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void changeSubNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
         synchronized (m_workflowMutex) {
-            SubNodeContainer snc = getSubNodeContainer(subFlowID);
+            SubNodeContainer snc = getNodeContainer(subFlowID, SubNodeContainer.class, true);
             if (!haveSubPortsChanged(newPorts, true, snc)) {
                 return;
             }
@@ -1529,7 +1530,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void changeSubNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
         synchronized (m_workflowMutex) {
-            SubNodeContainer snc = getSubNodeContainer(subFlowID);
+            SubNodeContainer snc = getNodeContainer(subFlowID, SubNodeContainer.class, true);
             if (!haveSubPortsChanged(newPorts, false, snc)) {
                 return;
             }
@@ -5911,10 +5912,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     // WFM functionality
     ////////////////////////
 
-
-    /**
-     * @return collection of NodeContainers in this WFM
-     */
+    /** {@inheritDoc} */
+    @Override
     public Collection<NodeContainer> getNodeContainers() {
         return Collections.unmodifiableCollection(m_workflow.getNodeValues());
     }
@@ -5946,40 +5945,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return nc;
     }
 
-    /** Get contained node container and cast to WFM. Throws exception if
-     * it not exists or is not a WFM. */
-    private WorkflowManager getMetaNodeContainer(final NodeID id) {
-        NodeContainer nc = getNodeContainer(id);
-        if (!(nc instanceof WorkflowManager)) {
-            throw new IllegalArgumentException("Node "
-                    + nc.getNameWithID() + " is not a meta node.");
-        }
-        return (WorkflowManager)nc;
-    }
-
-    /** Get contained node container and cast to WFM. If the node is not present or not a WFM it prints a debug
-     * message and returns null. */
-    private WorkflowManager getMetaNodeContainerOrNull(final NodeID id) {
+    /** Get contained node container and cast to argument class. Throws exception if it not exists or not implementing
+     * requested class unless the flag is false. */
+    private <T> T getNodeContainer(final NodeID id, final Class<T> subclass, final boolean failOnError) {
         NodeContainer nc = m_workflow.getNode(id);
-        if (nc == null) {
-            LOGGER.debug("Invalid node ID \"" + id + "\"");
-            return null;
+        if (nc == null || !subclass.isInstance(nc)) {
+            String message = nc == null ? "Invalid node ID \"" + id + "\"" : String.format(
+                "Node with ID \"%s\" exists but it's not implementing the requested class %s (is a %s)",
+                id, subclass.getSimpleName(), nc.getClass().getName());
+            if (failOnError) {
+                throw new IllegalArgumentException(message);
+            } else {
+                LOGGER.debug(message);
+                return null;
+            }
         }
-        if (!(nc instanceof WorkflowManager)) {
-            LOGGER.debug("Node \"" + nc.getNameWithID() + "\" is not a meta node");
-        }
-        return (WorkflowManager)nc;
-    }
-
-    /** Get contained node container and cast to SubNodeContainer. Throws exception if
-     * it not exists or is not a SubNodeContainer. */
-    private SubNodeContainer getSubNodeContainer(final NodeID id) {
-        NodeContainer nc = getNodeContainer(id);
-        if (!(nc instanceof SubNodeContainer)) {
-            throw new IllegalArgumentException("Node "
-                    + nc.getNameWithID() + " is not a sub node.");
-        }
-        return (SubNodeContainer)nc;
+        return subclass.cast(nc);
     }
 
     /** Does the workflow contain a node with the argument id?
@@ -5990,8 +5971,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return m_workflow.getNode(id) != null;
     }
 
-    /** @return true if this workflow or its child workflows contain at least
-     * one executed node. */
+    /** {@inheritDoc} */
+    @Override
     public boolean containsExecutedNode() {
         synchronized (m_workflowMutex) {
             for (NodeContainer nc : m_workflow.getNodeValues()) {
@@ -6129,16 +6110,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** @return the templateInformation */
+    @Override
     public MetaNodeTemplateInformation getTemplateInformation() {
         return m_templateInformation;
     }
 
-    /** Set new template info (not null!), fire events.
-     * @param tI the new templateInformation */
-    void setTemplateInformation(final MetaNodeTemplateInformation tI) {
-        if (tI == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
+    /** {@inheritDoc} */
+    @Override
+    public void setTemplateInformation(final MetaNodeTemplateInformation tI) {
+        CheckUtils.checkArgumentNotNull(tI, "Argument must not be null.");
+        CheckUtils.checkArgument(!Role.Template.equals(tI.getRole())
+            || TemplateType.MetaNode.equals(tI.getNodeContainerTemplateType()),
+            "Template type expected to be metanode: %s", tI.getNodeContainerTemplateType());
         m_templateInformation = tI;
         notifyNodePropertyChangedListener(NodeProperty.TemplateConnection);
         setDirty();
@@ -6152,39 +6135,32 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public List<NodeID> getLinkedMetaNodes(final boolean recurse) {
         synchronized (m_workflowMutex) {
-            Map<NodeID, WorkflowManager> filled =
-                    fillLinkedMetaNodesList(new LinkedHashMap<NodeID, WorkflowManager>(), recurse, false);
+            Map<NodeID, NodeContainerTemplate> filled =
+                    fillLinkedTemplateNodesList(new LinkedHashMap<NodeID, NodeContainerTemplate>(), recurse, false);
             return new ArrayList<NodeID>(filled.keySet());
         }
     }
 
-    /** Recursion helper that fills and returns a map of NodeID->linked meta nodes.
-     * @param mapToFill the map to add to
-     * @param recurse If true, enter meta nodes and search linked MN recursivly
-     * @param stopRecursionAtLinkedMetaNodes If true, stop the recursion at linked meta nodes
-     *        (not relevant if they contain links again as a recursive update will be done)
-     * @return the argument map
-     */
-    private Map<NodeID, WorkflowManager> fillLinkedMetaNodesList(final Map<NodeID, WorkflowManager> mapToFill,
-        final boolean recurse, final boolean stopRecursionAtLinkedMetaNodes) {
+    /** {@inheritDoc}
+     * @noreference This method is not intended to be referenced by clients. */
+    @Override
+    public Map<NodeID, NodeContainerTemplate> fillLinkedTemplateNodesList(
+        final Map<NodeID, NodeContainerTemplate> mapToFill, final boolean recurse,
+        final boolean stopRecursionAtLinkedMetaNodes) {
         for (NodeID id : m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet()) {
             NodeContainer nc = getNodeContainer(id);
-            WorkflowManager wm = null;
-            if (nc instanceof WorkflowManager) {
-                wm = (WorkflowManager)nc;
-            } else if (nc instanceof SubNodeContainer) {
-                wm = ((SubNodeContainer)nc).getWorkflowManager();
+            if (!(nc instanceof NodeContainerTemplate)) {
+                continue;
             }
-            if (wm != null) {
-                if (wm.getTemplateInformation().getRole().equals(Role.Link)) {
-                    mapToFill.put(wm.getID(), wm);
-                    if (stopRecursionAtLinkedMetaNodes) {
-                        continue;
-                    }
+            NodeContainerTemplate tnc = (NodeContainerTemplate) nc;
+            if (tnc.getTemplateInformation().getRole().equals(Role.Link)) {
+                mapToFill.put(tnc.getID(), tnc);
+                if (stopRecursionAtLinkedMetaNodes) {
+                    continue;
                 }
-                if (recurse) {
-                    wm.fillLinkedMetaNodesList(mapToFill, true, stopRecursionAtLinkedMetaNodes);
-                }
+            }
+            if (recurse) {
+                tnc.fillLinkedTemplateNodesList(mapToFill, true, stopRecursionAtLinkedMetaNodes);
             }
         }
         return mapToFill;
@@ -6199,7 +6175,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IOException If that fails (template not accessible)
      */
     public boolean checkUpdateMetaNodeLink(final NodeID id, final WorkflowLoadHelper loadHelper) throws IOException {
-        final HashMap<URI, WorkflowManager> visitedTemplateMap = new HashMap<URI, WorkflowManager>();
+        final HashMap<URI, NodeContainerTemplate> visitedTemplateMap = new HashMap<URI, NodeContainerTemplate>();
         try {
             final LoadResult loadResult = new LoadResult("ignored");
             boolean result = checkUpdateMetaNodeLinkWithCache(id, loadHelper, loadResult, visitedTemplateMap, true);
@@ -6209,7 +6185,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             return result;
         } finally {
-            for (WorkflowManager tempLink : visitedTemplateMap.values()) {
+            for (NodeContainerTemplate tempLink : visitedTemplateMap.values()) {
                 tempLink.getParent().removeNode(tempLink.getID());
             }
         }
@@ -6220,24 +6196,25 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param visitedTemplateMap avoids repeated checks for copies of the same meta node link.
      * @param recurseInto Should linked meta nodes contained in the meta node also be checked. */
     private boolean checkUpdateMetaNodeLinkWithCache(final NodeID id, final WorkflowLoadHelper loadHelper,
-        final LoadResult loadResult, final Map<URI, WorkflowManager> visitedTemplateMap,
+        final LoadResult loadResult, final Map<URI, NodeContainerTemplate> visitedTemplateMap,
         final boolean recurseInto) throws IOException {
-        WorkflowManager meta = getMetaNodeContainerOrNull(id);
-        if (meta == null) {
+        NodeContainer nc = m_workflow.getNode(id);
+        if (!(nc instanceof NodeContainerTemplate)) {
             return false;
         }
-        Map<NodeID, WorkflowManager> idsToCheck = new LinkedHashMap<NodeID, WorkflowManager>();
-        if (meta.getTemplateInformation().getRole().equals(Role.Link)) {
-            idsToCheck.put(id, meta);
+        NodeContainerTemplate tnc = (NodeContainerTemplate)nc;
+        Map<NodeID, NodeContainerTemplate> idsToCheck = new LinkedHashMap<NodeID, NodeContainerTemplate>();
+        if (tnc.getTemplateInformation().getRole().equals(Role.Link)) {
+            idsToCheck.put(id, tnc);
         }
         if (recurseInto) {
-            idsToCheck = meta.fillLinkedMetaNodesList(idsToCheck, true, false);
+            idsToCheck = tnc.fillLinkedTemplateNodesList(idsToCheck, true, false);
         }
         boolean hasUpdate = false;
-        for (WorkflowManager linkedMeta : idsToCheck.values()) {
+        for (NodeContainerTemplate linkedMeta : idsToCheck.values()) {
             MetaNodeTemplateInformation linkInfo = linkedMeta.getTemplateInformation();
             final URI uri = linkInfo.getSourceURI();
-            WorkflowManager tempLink = visitedTemplateMap.get(uri);
+            NodeContainerTemplate tempLink = visitedTemplateMap.get(uri);
             if (tempLink == null) {
                 try {
                     final LoadResult templateLoadResult = new LoadResult("Template to " + uri);
@@ -6246,7 +6223,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     visitedTemplateMap.put(uri, tempLink);
                 } catch (Exception e) {
                     if (linkInfo.setUpdateStatusInternal(UpdateStatus.Error)) {
-                        linkedMeta.notifyNodePropertyChangedListener(NodeProperty.TemplateConnection);
+                        linkedMeta.notifyTemplateConnectionChangedListener();
                     }
                     if (e instanceof IOException) {
                         throw (IOException)e;
@@ -6263,7 +6240,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             UpdateStatus updateStatus = hasThisOneAnUpdate ? UpdateStatus.HasUpdate : UpdateStatus.UpToDate;
             hasUpdate = hasUpdate || hasThisOneAnUpdate;
             if (linkInfo.setUpdateStatusInternal(updateStatus)) {
-                linkedMeta.notifyNodePropertyChangedListener(NodeProperty.TemplateConnection);
+                linkedMeta.notifyTemplateConnectionChangedListener();
             }
         }
         return hasUpdate;
@@ -6272,26 +6249,25 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Reads the template info from the metanode argument and then resolves that URI and returns a workflow manager
      * that lives as child of {@link #templateWorkflowRoot}. Used to avoid duplicate loading from a remote location. The
      * returned instance is then copied to the final destination. */
-    private WorkflowManager loadMetaNodeTemplate(final WorkflowManager meta, final WorkflowLoadHelper loadHelper,
-        final LoadResult loadResult)
+    private NodeContainerTemplate loadMetaNodeTemplate(final NodeContainerTemplate meta,
+        final WorkflowLoadHelper loadHelper, final LoadResult loadResult)
                 throws IOException, UnsupportedWorkflowVersionException, CanceledExecutionException {
         MetaNodeTemplateInformation linkInfo = meta.getTemplateInformation();
         URI sourceURI = linkInfo.getSourceURI();
         WorkflowManager tempParent = lazyInitTemplateWorkflowRoot();
-        WorkflowLoadResult loadResultChild;
-        NodeContext.pushContext(meta);
+        WorkflowOrTemplateLoadResult loadResultChild;
+        NodeContext.pushContext((NodeContainer)meta);
         try {
             File localDir = ResolverUtil.resolveURItoLocalOrTempFile(sourceURI);
-            FileWorkflowPersistor loadPersistor = WorkflowManager.createLoadPersistor(localDir, loadHelper);
-            loadPersistor.setNameOverwrite(localDir.getName()); // used in preLoadNodeContainer
-            loadPersistor.setTemplateInformationLinkURI(sourceURI);
-            loadResultChild = tempParent.load(loadPersistor, new ExecutionMonitor(), false);
+            TemplateNodeContainerPersistor loadPersistor = loadHelper.createTemplateLoadPersistor(localDir, sourceURI);
+            loadResultChild = new WorkflowOrTemplateLoadResult("Template from " + sourceURI.toString());
+            tempParent.load(loadPersistor, loadResultChild, new ExecutionMonitor(), false);
         } catch (InvalidSettingsException e) {
             throw new IOException("Unable to read template meta node: " + e.getMessage(), e);
         } finally {
             NodeContext.removeLastContext();
         }
-        WorkflowManager linkResult = loadResultChild.getWorkflowManager();
+        NodeContainerTemplate linkResult = loadResultChild.getLoadedInstance();
         MetaNodeTemplateInformation templInfo = linkResult.getTemplateInformation();
         Role sourceRole = templInfo.getRole();
         switch (sourceRole) {
@@ -6300,7 +6276,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // (this is due to the template information link uri set above)
             break;
         default:
-            throw new IOException("The source of the linked meta node does "
+            throw new IOException("The source of the linked instance does "
                     + "not represent a template but is of role " + sourceRole);
         }
         loadResult.addChildError(loadResultChild);
@@ -6316,18 +6292,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return The above described property. */
     public boolean canUpdateMetaNodeLink(final NodeID id) {
         synchronized (m_workflowMutex) {
-            WorkflowManager meta = getMetaNodeContainerOrNull(id);
-            if (meta == null) { // not existent
+            NodeContainer nc = m_workflow.getNode(id);
+            if (!(nc instanceof NodeContainerTemplate)) {
                 return false;
             }
-            MetaNodeTemplateInformation templInfo = meta.getTemplateInformation();
-            switch (templInfo.getRole()) {
+            NodeContainerTemplate tnc = (NodeContainerTemplate)nc;
+            switch (tnc.getTemplateInformation().getRole()) {
             case Link:
                 break;
             default:
                 return false;
             }
-            return !(meta.getInternalState().isExecutionInProgress() || hasSuccessorInProgress(id));
+            return !(nc.getInternalState().isExecutionInProgress() || hasSuccessorInProgress(id));
         }
     }
 
@@ -6342,19 +6318,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public boolean hasUpdateableMetaNodeLink(final NodeID id) {
         synchronized (m_workflowMutex) {
-            WorkflowManager meta = getMetaNodeContainerOrNull(id);
-            if (meta == null) {
+            NodeContainer nc = m_workflow.getNode(id);
+            if (!(nc instanceof NodeContainerTemplate)) {
                 return false;
             }
-            final MetaNodeTemplateInformation templInfo = meta.getTemplateInformation();
+            NodeContainerTemplate tnc = (NodeContainerTemplate)nc;
+            final MetaNodeTemplateInformation templInfo = tnc.getTemplateInformation();
             if (templInfo.getRole().equals(Role.Link) && templInfo.getUpdateStatus().equals(UpdateStatus.HasUpdate)) {
                 return true;
             }
-            final LinkedHashMap<NodeID, WorkflowManager> linkedMNToCheck = new LinkedHashMap<NodeID, WorkflowManager>();
-            Map<NodeID, WorkflowManager> linkedChildren =
-                    meta.fillLinkedMetaNodesList(linkedMNToCheck, true, false);
-            for (WorkflowManager wm : linkedChildren.values()) {
-                if (wm.getTemplateInformation().getUpdateStatus().equals(UpdateStatus.HasUpdate)) {
+            final LinkedHashMap<NodeID, NodeContainerTemplate> linkedMNToCheck =
+                new LinkedHashMap<NodeID, NodeContainerTemplate>();
+            Map<NodeID, NodeContainerTemplate> linkedChildren =
+                    tnc.fillLinkedTemplateNodesList(linkedMNToCheck, true, false);
+            for (NodeContainerTemplate tempNc : linkedChildren.values()) {
+                if (tempNc.getTemplateInformation().getUpdateStatus().equals(UpdateStatus.HasUpdate)) {
                     return true;
                 }
             }
@@ -6372,13 +6350,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws CanceledExecutionException If canceled
      * @throws IllegalArgumentException If the node does not exist or is not a meta node.
      */
-    public MetaNodeLinkUpdateResult updateMetaNodeLink(final NodeID id, final ExecutionMonitor exec,
+    public NodeContainerTemplateLinkUpdateResult updateMetaNodeLink(final NodeID id, final ExecutionMonitor exec,
         final WorkflowLoadHelper loadHelper) throws CanceledExecutionException {
-        final HashMap<URI, WorkflowManager> visitedTemplateMap = new HashMap<URI, WorkflowManager>();
+        final HashMap<URI, NodeContainerTemplate> visitedTemplateMap = new HashMap<URI, NodeContainerTemplate>();
         try {
             return updateMetaNodeLinkWithCache(id, exec, loadHelper, visitedTemplateMap);
         } finally {
-            for (WorkflowManager tempLink : visitedTemplateMap.values()) {
+            for (NodeContainerTemplate tempLink : visitedTemplateMap.values()) {
                 tempLink.getParent().removeNode(tempLink.getID());
             }
         }
@@ -6389,20 +6367,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * cache argument.
      * @param visitedTemplateMap The map to avoid loading duplicate
      */
-    private MetaNodeLinkUpdateResult updateMetaNodeLinkWithCache(final NodeID id, final ExecutionMonitor exec,
-        final WorkflowLoadHelper loadHelper, final Map<URI, WorkflowManager> visitedTemplateMap)
+    private NodeContainerTemplateLinkUpdateResult updateMetaNodeLinkWithCache(final NodeID id, final ExecutionMonitor exec,
+        final WorkflowLoadHelper loadHelper, final Map<URI, NodeContainerTemplate> visitedTemplateMap)
                 throws CanceledExecutionException {
-        final MetaNodeLinkUpdateResult loadRes =
-                new MetaNodeLinkUpdateResult("Update meta node link \"" + getNameWithID() + "\"");
+        final NodeContainerTemplateLinkUpdateResult loadRes =
+                new NodeContainerTemplateLinkUpdateResult("Update node link \"" + getNameWithID() + "\"");
         NodeContainer nc = getNodeContainer(id);
-        if (!(nc instanceof WorkflowManager)) {
+        if (!(nc instanceof NodeContainerTemplate)) {
             throw new IllegalArgumentException("Node \"" + nc.getNameWithID()
-                + "\" is not a meta node (can't update link)");
+                + "\" is not a template node (can't update link)");
         }
-        WorkflowManager meta = (WorkflowManager)nc;
-        final MetaNodeTemplateInformation tempInfo = meta.getTemplateInformation();
+        NodeContainerTemplate tnc = (NodeContainerTemplate)nc;
+        final MetaNodeTemplateInformation tempInfo = tnc.getTemplateInformation();
         if (!tempInfo.getRole().equals(Role.Link)) {
-            loadRes.addError("Meta node \"" + getNameWithID() + "\" is not a meta node link");
+            loadRes.addError("Node \"" + getNameWithID() + "\" is not a template node link");
             return loadRes;
         }
         synchronized (m_workflowMutex) {
@@ -6410,7 +6388,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             try {
                 needsUpdate = checkUpdateMetaNodeLinkWithCache(id, loadHelper, loadRes, visitedTemplateMap, false);
             } catch (IOException e2) {
-                String msg = "Unable to check meta node update for " + meta.getNameWithID() + ": " + e2.getMessage();
+                String msg = "Unable to check node update for " + tnc.getNameWithID() + ": " + e2.getMessage();
                 loadRes.addError(msg);
                 return loadRes;
             }
@@ -6429,30 +6407,31 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             oldContent.setNodeIDs(id);
             oldContent.setIncludeInOutConnections(true);
             WorkflowPersistor copy = copy(true, oldContent);
-            WorkflowManager updatedMeta = null;
+            NodeContainerTemplate updatedTemplate = null;
             try {
-                WorkflowManager recursionManager;
+                NodeContainerTemplate recursionManager;
                 if (needsUpdate) {
-                    updatedMeta = updateMetaNodeLinkInternal(id, exec, loadHelper, visitedTemplateMap, loadRes);
-                    recursionManager = updatedMeta;
+                    updatedTemplate = updateNodeTemplateLinkInternal(id, exec, loadHelper, visitedTemplateMap, loadRes);
+                    recursionManager = updatedTemplate;
                 } else {
-                    loadRes.setMetaNode(meta); // didn't update so this will be its own reference
-                    recursionManager = meta;
+                    loadRes.setNCTemplate(tnc); // didn't update so this will be its own reference
+                    recursionManager = tnc;
                 }
                 recursionManager.updateMetaNodeLinkInternalRecursively(exec, loadHelper, visitedTemplateMap, loadRes);
             } catch (Exception e) {
+                e.printStackTrace();
                 String error = e.getClass().getSimpleName() + " while loading template: " + e.getMessage();
                 LOGGER.error(error, e);
                 loadRes.addError(error);
-                if (updatedMeta != null) {
-                    removeNode(updatedMeta.getID());
+                if (updatedTemplate != null) {
+                    removeNode(updatedTemplate.getID());
                 }
                 paste(copy);
                 return loadRes;
             }
             if (needsUpdate) {
                 try {
-                    loadNodeSettings(loadRes.getMetaNode().getID(), ncSettings);
+                    loadNodeSettings(loadRes.getNCTemplate().getID(), ncSettings);
                 } catch (InvalidSettingsException e) {
                     String error = "Can't apply previous settigs to new meta node link: " + e.getMessage();
                     LOGGER.warn(error, e);
@@ -6464,19 +6443,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    private void updateMetaNodeLinkInternalRecursively(final ExecutionMonitor exec,
-        final WorkflowLoadHelper loadHelper, final Map<URI, WorkflowManager> visitedTemplateMap,
-        final MetaNodeLinkUpdateResult loadRes) throws Exception {
+    /** {@inheritDoc}
+     * @noreference This method is not intended to be referenced by clients. */
+    @Override
+    public void updateMetaNodeLinkInternalRecursively(final ExecutionMonitor exec,
+        final WorkflowLoadHelper loadHelper, final Map<URI, NodeContainerTemplate> visitedTemplateMap,
+        final NodeContainerTemplateLinkUpdateResult loadRes) throws Exception {
         for (NodeID id : m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet()) {
             NodeContainer nc = getNodeContainer(id);
-            if (nc instanceof WorkflowManager) {
-                WorkflowManager wm = (WorkflowManager)nc;
-                if (wm.getTemplateInformation().getRole().equals(Role.Link)) {
-                    final MetaNodeLinkUpdateResult childResult =
-                            new MetaNodeLinkUpdateResult("Update child link \"" + getNameWithID() + "\"");
-                    wm = updateMetaNodeLinkInternal(wm.getID(), exec, loadHelper, visitedTemplateMap, childResult);
+            if (nc instanceof NodeContainerTemplate) {
+                NodeContainerTemplate t = (NodeContainerTemplate)nc;
+                if (t.getTemplateInformation().getRole().equals(Role.Link)) {
+                    final NodeContainerTemplateLinkUpdateResult childResult =
+                            new NodeContainerTemplateLinkUpdateResult("Update child link \"" + getNameWithID() + "\"");
+                    t = updateNodeTemplateLinkInternal(t.getID(), exec, loadHelper, visitedTemplateMap, childResult);
                 }
-                wm.updateMetaNodeLinkInternalRecursively(exec, loadHelper, visitedTemplateMap, loadRes);
+                t.updateMetaNodeLinkInternalRecursively(exec, loadHelper, visitedTemplateMap, loadRes);
             }
         }
     }
@@ -6484,17 +6466,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Actual implementation to #updateMetaNodeLink. It updates a single meta node, which must be a linked meta node.
      * It does not keep any backups and doesn't have a rollback.
      */
-    private WorkflowManager updateMetaNodeLinkInternal(final NodeID id, final ExecutionMonitor exec,
-        final WorkflowLoadHelper loadHelper, final Map<URI, WorkflowManager> visitedTemplateMap,
-        final MetaNodeLinkUpdateResult loadRes) throws Exception {
-        WorkflowManager meta = getMetaNodeContainer(id);
-        MetaNodeTemplateInformation templInfo = meta.getTemplateInformation();
+    private NodeContainerTemplate updateNodeTemplateLinkInternal(final NodeID id, final ExecutionMonitor exec,
+        final WorkflowLoadHelper loadHelper, final Map<URI, NodeContainerTemplate> visitedTemplateMap,
+        final NodeContainerTemplateLinkUpdateResult loadRes) throws Exception {
+        NodeContainerTemplate tnc = (NodeContainerTemplate)m_workflow.getNode(id);
+        MetaNodeTemplateInformation templInfo = tnc.getTemplateInformation();
         assert templInfo.getRole().equals(Role.Link);
         URI sourceURI = templInfo.getSourceURI();
-        WorkflowManager tempLink = visitedTemplateMap.get(sourceURI);
+        NodeContainerTemplate tempLink = visitedTemplateMap.get(sourceURI);
         if (tempLink == null) {
             try {
-                tempLink = loadMetaNodeTemplate(meta, loadHelper, loadRes);
+                tempLink = loadMetaNodeTemplate(tnc, loadHelper, loadRes);
                 visitedTemplateMap.put(sourceURI, tempLink);
             } catch (IOException e) {
                 String error = "Failed to update meta node reference: " + e.getMessage();
@@ -6508,9 +6490,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 return null;
             }
         }
-        WorkflowManager newLinkMN;
+        NodeContainerTemplate newLinkMN;
         synchronized (m_workflowMutex) {
-            NodeUIInformation oldUI = meta.getUIInformation();
+            NodeUIInformation oldUI = m_workflow.getNode(id).getUIInformation();
             NodeUIInformation newUI = oldUI != null ? oldUI.clone() : null;
             // keep old in/out connections to later relink them
             Set<ConnectionContainer> inConns = getIncomingConnectionsFor(id);
@@ -6519,8 +6501,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             removeNode(id);
             WorkflowCopyContent pasteResult = copyFromAndPasteHere(tempLink.getParent(),
                 new WorkflowCopyContent().setNodeID(tempLink.getID(), id.getIndex(), newUI));
-            newLinkMN = getMetaNodeContainer(pasteResult.getNodeIDs()[0]);
-            loadRes.setMetaNode(newLinkMN);
+            newLinkMN = getNodeContainer(pasteResult.getNodeIDs()[0], NodeContainerTemplate.class, true);
+            loadRes.setNCTemplate(newLinkMN);
 
             for (ConnectionContainer cc : inConns) {
                 NodeID s = cc.getSource();
@@ -6563,33 +6545,32 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws CanceledExecutionException If canceled
      * @throws IOException Special errors during update (not accessible)
      * @noreference This method is not intended to be referenced by clients.
-     * @since 2.8
      */
-    public MetaNodeLinkUpdateResult updateMetaNodeLinks(final WorkflowLoadHelper lH,
+    public NodeContainerTemplateLinkUpdateResult updateMetaNodeLinks(final WorkflowLoadHelper lH,
         final boolean failOnLoadError, final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
         // all linked meta nodes that need to be checked.
-        Map<NodeID, WorkflowManager> linkedMetaNodes =
-                fillLinkedMetaNodesList(new LinkedHashMap<NodeID, WorkflowManager>(), true, true);
+        Map<NodeID, NodeContainerTemplate> linkedMetaNodes =
+                fillLinkedTemplateNodesList(new LinkedHashMap<NodeID, NodeContainerTemplate>(), true, true);
         int linksChecked = 0;
         int linksUpdated = 0;
-        MetaNodeLinkUpdateResult update = new MetaNodeLinkUpdateResult(
-            "Update on " + linkedMetaNodes.size() + " meta node(s) in " + getNameWithID());
-        HashMap<URI, WorkflowManager> visitedTemplateMap = new HashMap<URI, WorkflowManager>();
+        NodeContainerTemplateLinkUpdateResult update = new NodeContainerTemplateLinkUpdateResult(
+            "Update on " + linkedMetaNodes.size() + " node(s) in " + getNameWithID());
+        HashMap<URI, NodeContainerTemplate> visitedTemplateMap = new HashMap<URI, NodeContainerTemplate>();
         try {
-            for (WorkflowManager wm : linkedMetaNodes.values()) {
+            for (NodeContainerTemplate tnc : linkedMetaNodes.values()) {
                 linksChecked += 1;
-                WorkflowManager parent = wm.getParent();
-                exec.setProgress(linksChecked / (double)linkedMetaNodes.size(), "node " + wm.getNameWithID());
+                WorkflowManager parent = tnc.getParent();
+                exec.setProgress(linksChecked / (double)linkedMetaNodes.size(), "node " + tnc.getNameWithID());
                 exec.checkCanceled();
                 LoadResult checkTemplateResult = new LoadResult("update check");
                 final boolean updatesAvail = parent.checkUpdateMetaNodeLinkWithCache(
-                    wm.getID(), lH, checkTemplateResult, visitedTemplateMap, true);
+                    tnc.getID(), lH, checkTemplateResult, visitedTemplateMap, true);
                 if (failOnLoadError && checkTemplateResult.hasErrors()) {
                     LOGGER.error(checkTemplateResult.getFilteredError("", LoadResultEntryType.Error));
                     throw new IOException("Error(s) while updating meta node links");
                 }
                 if (updatesAvail) {
-                    MetaNodeLinkUpdateResult loadResult = parent.updateMetaNodeLinkWithCache(wm.getID(),
+                    NodeContainerTemplateLinkUpdateResult loadResult = parent.updateMetaNodeLinkWithCache(tnc.getID(),
                         exec.createSubProgress(1.0 / linkedMetaNodes.size()), lH, visitedTemplateMap);
                     update.addChildError(loadResult);
                     linksUpdated += 1;
@@ -6607,7 +6588,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             return update;
         } finally {
-            for (WorkflowManager tempLink : visitedTemplateMap.values()) {
+            for (NodeContainerTemplate tempLink : visitedTemplateMap.values()) {
                 tempLink.getParent().removeNode(tempLink.getID());
             }
         }
@@ -6617,8 +6598,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * this instance is used to hold a temporary copy. Initialized lazy.*/
     private static WorkflowManager templateWorkflowRoot;
 
-    /** Lazy init and return of {@link #templateWorkflowRoot}. */
-    private static WorkflowManager lazyInitTemplateWorkflowRoot() {
+    /** @return lazy initialized {@link #templateWorkflowRoot}. */
+    static WorkflowManager lazyInitTemplateWorkflowRoot() {
         synchronized (WorkflowManager.class) {
             if (templateWorkflowRoot == null) {
                 templateWorkflowRoot = ROOT.createAndAddProject("Workflow Template Root", new WorkflowCreationHelper());
@@ -6627,15 +6608,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /**
-     * @param directory The directory to save in
-     * @param exec The execution monitor
-     * @return Information about the meta node template
-     * @throws IOException If an IO error occurs
-     * @throws CanceledExecutionException If execution is canceled during the operation
-     * @throws LockFailedException If locking failed
-     */
-    public MetaNodeTemplateInformation saveAsMetaNodeTemplate(final File directory, final ExecutionMonitor exec)
+    /** {@inheritDoc} */
+    @Override
+    public MetaNodeTemplateInformation saveAsTemplate(final File directory, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException, LockFailedException {
         WorkflowManager tempParent = lazyInitTemplateWorkflowRoot();
         WorkflowManager copy = null;
@@ -6649,12 +6624,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             NodeID cID = cnt.getNodeIDs()[0];
             copy = (WorkflowManager)tempParent.getNodeContainer(cID);
-            MetaNodeTemplateInformation template =
-                MetaNodeTemplateInformation.createNewTemplate();
+            MetaNodeTemplateInformation template = MetaNodeTemplateInformation.createNewTemplate(WorkflowManager.class);
             synchronized (copy.m_workflowMutex) {
-                copy.m_templateInformation = template;
+                copy.setTemplateInformation(template);
                 copy.setName(null);
-                copy.save(directory, exec, true);
+                NodeSettings templateSettings = MetaNodeTemplateInformation.createNodeSettingsForTemplate(copy);
+                copy.save(directory, new WorkflowSaveHelper(true, false), exec);
+                templateSettings.saveToXML(new FileOutputStream(
+                    new File(workflowDirRef.getFile(), WorkflowPersistor.TEMPLATE_FILE)));
             }
             return template;
         } finally {
@@ -6676,14 +6653,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public MetaNodeTemplateInformation setTemplateInformation(final NodeID id,
             final MetaNodeTemplateInformation templateInformation) {
         synchronized (m_workflowMutex) {
-            NodeContainer nc = getNodeContainer(id);
-            if (!(nc instanceof WorkflowManager)) {
-                throw new IllegalArgumentException("Node \""
-                        + nc.getNameWithID() + "\" is not a meta node");
-            }
-            WorkflowManager meta = (WorkflowManager)nc;
-            MetaNodeTemplateInformation old = meta.getTemplateInformation();
-            meta.setTemplateInformation(templateInformation);
+            NodeContainerTemplate nc = getNodeContainer(id, NodeContainerTemplate.class, true);
+            MetaNodeTemplateInformation old = nc.getTemplateInformation();
+            nc.setTemplateInformation(templateInformation);
             return old;
         }
     }
@@ -6721,8 +6693,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 WorkflowEvent.Type.WORKFLOW_DIRTY, getID(), null, null));
     }
 
-    /** @return the cipher (used in persistor). */
-    WorkflowCipher getWorkflowCipher() {
+    /** {@inheritDoc}
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 2.10 */
+    @Override
+    public WorkflowCipher getWorkflowCipher() {
         return m_cipher;
     }
 
@@ -7144,76 +7119,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IOException If an IO error occured
      * @throws UnsupportedWorkflowVersionException If the workflow is of an unsupported version
      */
-    public static FileWorkflowPersistor createLoadPersistor(
-            final File directory, final WorkflowLoadHelper loadHelper)
+    public static FileWorkflowPersistor createLoadPersistor(final File directory, final WorkflowLoadHelper loadHelper)
             throws IOException, UnsupportedWorkflowVersionException {
-        if (directory == null) {
-            throw new NullPointerException("Arguments must not be null.");
-        }
-        String fileName = loadHelper.getDotKNIMEFileName();
-        if (!directory.isDirectory() || !directory.canRead()) {
-            throw new IOException("Can't read directory " + directory);
-        }
-
-        ReferencedFile workflowknimeRef = new ReferencedFile(
-                new ReferencedFile(directory), fileName);
-        File workflowknime = workflowknimeRef.getFile();
-        if (!workflowknime.isFile()) {
-            throw new IOException("No \"" + fileName + "\" file in directory \""
-                    + directory.getAbsolutePath() + "\"");
-        }
-
-        NodeSettingsRO settings =
-            NodeSettings.loadFromXML(new BufferedInputStream(
-                    new FileInputStream(workflowknime)));
-        // CeBIT 2006 version did not contain a version string.
-        String versionString;
-        if (settings.containsKey(CFG_VERSION)) {
-            try {
-                versionString = settings.getString(CFG_VERSION);
-            } catch (InvalidSettingsException e) {
-                throw new IOException("Can't read version number from \""
-                        + workflowknime.getAbsolutePath() + "\"", e);
-            }
-        } else {
-            versionString = "0.9.0";
-        }
-        boolean isProject = !loadHelper.isTemplateFlow();
-        FileWorkflowPersistor persistor;
-        // TODO only create new hash map if workflow is a project?
-        HashMap<Integer, ContainerTable> tableRep = new GlobalTableRepository();
-        WorkflowFileStoreHandlerRepository fileStoreHandlerRepository =
-            new WorkflowFileStoreHandlerRepository();
-        LoadVersion version = FileWorkflowPersistor.parseVersion(versionString);
-        if (version == null) { // future version
-            StringBuilder versionDetails = new StringBuilder(versionString);
-            String createdBy = settings.getString(CFG_CREATED_BY, null);
-            if (createdBy != null) {
-                versionDetails.append(" (created by KNIME ");
-                versionDetails.append(createdBy).append(")");
-            }
-            String v = versionDetails.toString();
-            switch (loadHelper.getUnknownKNIMEVersionLoadPolicy(v)) {
-            case Abort:
-                throw new UnsupportedWorkflowVersionException(
-                        "Unable to load workflow, version string \"" + v + "\" is unknown");
-            default:
-                version = LoadVersion.FUTURE;
-                persistor = new FileWorkflowPersistor(tableRep, fileStoreHandlerRepository, workflowknimeRef,
-                        loadHelper, version, isProject);
-                persistor.setDirtyAfterLoad();
-            }
-        } else {
-            if (version.isOlderThan(LoadVersion.V200)) {
-                LOGGER.warn("The current KNIME version (" + KNIMEConstants.VERSION + ") is different from the one that "
-                        + "created the workflow (" + version + ") you are trying to load. In some rare cases, it  "
-                        + "might not be possible to load all data or some nodes can't be configured. "
-                        + "Please re-configure and/or re-execute these nodes.");
-            }
-            persistor = new FileWorkflowPersistor(tableRep, fileStoreHandlerRepository, workflowknimeRef,
-                loadHelper, version, isProject);
-        }
-        return persistor;
+        return (FileWorkflowPersistor)loadHelper.createLoadPersistor(directory);
     }
 
     /**
@@ -7239,11 +7147,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *             workflow is unknown (future version)
      * @throws LockFailedException if the flow can't be locked for opening
      */
-    public WorkflowLoadResult load(final File directory,
-            final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper,
-            final boolean keepNodeMessages) throws IOException,
-            InvalidSettingsException, CanceledExecutionException,
-            UnsupportedWorkflowVersionException, LockFailedException {
+    public WorkflowLoadResult load(final File directory, final ExecutionMonitor exec,
+        final WorkflowLoadHelper loadHelper, final boolean keepNodeMessages) throws IOException,
+        InvalidSettingsException, CanceledExecutionException, UnsupportedWorkflowVersionException, LockFailedException {
         ReferencedFile rootFile = new ReferencedFile(directory);
         boolean isTemplate = loadHelper.isTemplateFlow();
         if (!isTemplate) {
@@ -7273,114 +7179,106 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /**
      * Loads the content of the argument persistor into this node.
      *
-     * @param persistor The persistor containing the node(s) to be loaded as
-     * children to this node.
+     * @param persistor The persistor containing the node(s) to be loaded as children to this node.
      * @param exec For progress/cancellation (currently not supported)
-     * @param keepNodeMessages Whether to keep the messages that are associated
-     *            with the nodes in the loaded workflow (mostly false but true
-     *            when remotely computed results are loaded).
+     * @param keepNodeMessages Whether to keep the messages that are associated with the nodes in the loaded workflow
+     *            (mostly false but true when remotely computed results are loaded).
      * @return A workflow load result, which also contains the loaded node(s).
-     * @throws IOException If errors reading the "important" files fails due to
-     *             I/O problems (file not present, e.g.)
+     * @throws IOException If errors reading the "important" files fails due to I/O problems (file not present, e.g.)
      * @throws InvalidSettingsException If parsing the "important" files fails.
      * @throws CanceledExecutionException If canceled.
-     * @throws UnsupportedWorkflowVersionException If the version of the
-     *             workflow is unknown (future version)
+     * @throws UnsupportedWorkflowVersionException If the version of the workflow is unknown (future version)
      */
-    public WorkflowLoadResult load(final FileWorkflowPersistor persistor,
-            final ExecutionMonitor exec, final boolean keepNodeMessages)
-    throws IOException, InvalidSettingsException, CanceledExecutionException,
-            UnsupportedWorkflowVersionException {
-        final ReferencedFile refDirectory =
-            persistor.getMetaPersistor().getNodeContainerDirectory();
-        File directory = refDirectory.getFile();
-        final String dirName = directory.getName();
-        exec.setMessage("Loading workflow structure from \""
-                + refDirectory + "\"");
-        LoadVersion version = persistor.getLoadVersion();
-        LOGGER.debug("Loading workflow from \"" + refDirectory
-                + "\" (version \"" + version + "\" with loader class \""
-                + persistor.getClass().getSimpleName() + "\")");
-        // data files are loaded using a repository of reference tables;
-        Map<Integer, BufferedDataTable> tblRep =
-            new HashMap<Integer, BufferedDataTable>();
-        WorkflowLoadResult result = new WorkflowLoadResult(dirName);
-        persistor.preLoadNodeContainer(null, null, result);
-        WorkflowManager manager = null;
+    public WorkflowLoadResult load(final FileWorkflowPersistor persistor, final ExecutionMonitor exec,
+        final boolean keepNodeMessages) throws IOException, InvalidSettingsException, CanceledExecutionException,
+        UnsupportedWorkflowVersionException {
+        final ReferencedFile refDirectory = persistor.getMetaPersistor().getNodeContainerDirectory();
+        final File directory = refDirectory.getFile();
+        final WorkflowLoadResult result = new WorkflowLoadResult(directory.getName());
+        load(persistor, result, exec, keepNodeMessages);
+        final WorkflowManager manager = result.getWorkflowManager();
+        if (!directory.canWrite()) {
+            result.addWarning("Workflow directory \"" + directory.getName()
+                + "\" is read-only; saving a modified workflow " + "will not be possible");
+            manager.m_isWorkflowDirectoryReadonly = true;
+        }
         boolean fixDataLoadProblems = false;
-        boolean isIsolatedProject = persistor.isProject();
-        InsertWorkflowPersistor insertPersistor =
-            new InsertWorkflowPersistor(persistor);
-        Object mutex = isIsolatedProject ? new Object() : m_workflowMutex;
-        synchronized (mutex) {
-            m_loadVersion = persistor.getLoadVersion();
-            NodeID[] newIDs =
-                loadContent(insertPersistor, tblRep, null, exec, result,
-                        keepNodeMessages).getNodeIDs();
-            if (newIDs.length != 1) {
-                throw new InvalidSettingsException("Loading workflow failed, "
-                        + "couldn't identify child sub flow (typically "
-                        + "a project)");
-            }
-            manager = (WorkflowManager)getNodeContainer(newIDs[0]);
-            // if all errors during the load process are related to data loading
-            // it might be that the flow is ex/imported without data;
-            // check for it and silently overwrite the workflow
-            switch (result.getType()) {
+        // if all errors during the load process are related to data loading
+        // it might be that the flow is ex/imported without data;
+        // check for it and silently overwrite the workflow
+        switch (result.getType()) {
             case DataLoadError:
-                if (!persistor.mustWarnOnDataLoadError()) {
+                if (!persistor.mustWarnOnDataLoadError() && !manager.m_isWorkflowDirectoryReadonly) {
                     LOGGER.debug("Workflow was apparently ex/imported without "
-                        + "data, silently fixing states and writing changes");
+                            + "data, silently fixing states and writing changes");
                     try {
                         manager.save(directory, new ExecutionMonitor(), true);
                         fixDataLoadProblems = true;
                     } catch (Throwable t) {
-                        LOGGER.warn("Failed in an attempt to write workflow to "
-                                + "file (workflow was ex/imported without "
-                                + "data; could not write the "
-                                + "\"corrected\" flow.)", t);
+                        LOGGER.warn("Failed in an attempt to write workflow to file (workflow was ex/imported "
+                                + "without data; could not write the \"corrected\" flow.)", t);
                     }
                 }
                 break;
             default:
                 // errors are handled elsewhere
-            }
         }
-        exec.setProgress(1.0);
-        result.setWorkflowManager(manager);
-        if (!directory.canWrite()) {
-            result.addWarning("Workflow directory \"" + dirName
-                    + "\" is read-only; saving a modified workflow "
-                    + "will not be possible");
-            manager.m_isWorkflowDirectoryReadonly = true;
-        }
-        result.setGUIMustReportDataLoadErrors(persistor
-                .mustWarnOnDataLoadError());
         StringBuilder message = new StringBuilder("Loaded workflow from \"");
         message.append(directory.getAbsolutePath()).append("\" ");
         switch (result.getType()) {
-        case Ok:
-            message.append(" with no errors");
-            break;
-        case Warning:
-            message.append(" with warnings");
-            break;
-        case DataLoadError:
-            message.append(" with errors during data load. ");
-            if (fixDataLoadProblems) {
-                message.append("Problems were fixed and (silently) saved.");
-            } else {
-                message.append("Problems were fixed but not saved!");
-            }
-            break;
-        case Error:
-            message.append(" with errors");
-            break;
-        default:
-            message.append("with ").append(result.getType());
+            case Ok:
+                message.append(" with no errors");
+                break;
+            case Warning:
+                message.append(" with warnings");
+                break;
+            case DataLoadError:
+                message.append(" with errors during data load. ");
+                if (fixDataLoadProblems) {
+                    message.append("Problems were fixed and (silently) saved.");
+                } else {
+                    message.append("Problems were fixed but not saved!");
+                }
+                break;
+            case Error:
+                message.append(" with errors");
+                break;
+            default:
+                message.append("with ").append(result.getType());
         }
-        LOGGER.debug(message.toString());
-        return result;
+        LOGGER.debug(message.toString());        return result;
+    }
+
+    /** Implementation of {@link #load(FileWorkflowPersistor, ExecutionMonitor, boolean)}.
+     * @noreference This method is not intended to be referenced by clients. */
+    public void load(final TemplateNodeContainerPersistor persistor,
+        final WorkflowOrTemplateLoadResult result, final ExecutionMonitor exec,
+        final boolean keepNodeMessages) throws IOException, InvalidSettingsException, CanceledExecutionException,
+        UnsupportedWorkflowVersionException {
+        final ReferencedFile refDirectory = persistor.getMetaPersistor().getNodeContainerDirectory();
+        exec.setMessage("Loading workflow structure from \"" + refDirectory + "\"");
+        LoadVersion version = persistor.getLoadVersion();
+        LOGGER.debug("Loading workflow from \"" + refDirectory + "\" (version \"" + version + "\" with loader class \""
+            + persistor.getClass().getSimpleName() + "\")");
+        // data files are loaded using a repository of reference tables;
+        Map<Integer, BufferedDataTable> tblRep = new HashMap<Integer, BufferedDataTable>();
+        persistor.preLoadNodeContainer(null, null, result);
+        NodeContainerTemplate loadedInstance = null;
+        boolean isIsolatedProject = persistor.isProject();
+        InsertWorkflowPersistor insertPersistor = new InsertWorkflowPersistor(persistor);
+        Object mutex = isIsolatedProject ? new Object() : m_workflowMutex;
+        synchronized (mutex) {
+            m_loadVersion = persistor.getLoadVersion();
+            NodeID[] newIDs = loadContent(insertPersistor, tblRep, null, exec, result, keepNodeMessages).getNodeIDs();
+            if (newIDs.length != 1) {
+                throw new InvalidSettingsException("Loading workflow failed, "
+                    + "couldn't identify child sub flow (typically " + "a project)");
+            }
+            loadedInstance = (NodeContainerTemplate)getNodeContainer(newIDs[0]);
+        }
+        exec.setProgress(1.0);
+        result.setLoadedInstance(loadedInstance);
+        result.setGUIMustReportDataLoadErrors(persistor.mustWarnOnDataLoadError());
     }
 
     /** {@inheritDoc} */
@@ -7862,7 +7760,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     m_authorInformation = new AuthorInformation(m_authorInformation);
                 }
                 directoryReference.getFile().mkdirs();
-                FileWorkflowPersistor.save(this, directoryReference, exec, saveHelper);
+                boolean isTemplate = getTemplateInformation().getRole().equals(Role.Template);
+                if (isTemplate) {
+                    FileWorkflowPersistor.saveAsTemplate(this, directoryReference, exec, saveHelper);
+                } else {
+                    FileWorkflowPersistor.save(this, directoryReference, exec, saveHelper);
+                }
             } finally {
                 directoryReference.writeUnlock();
             }
@@ -8952,6 +8855,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         public Date getLastEditDate() {
             return m_lastEditDate;
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public void notifyTemplateConnectionChangedListener() {
+        notifyNodePropertyChangedListener(NodeProperty.TemplateConnection);
     }
 
 }

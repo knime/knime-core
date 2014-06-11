@@ -59,8 +59,9 @@ import java.io.OutputStream;
  * <p>None of the methods are meant be public API.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.10
  */
-interface NodeContainerParent {
+public interface NodeContainerParent {
 
 
     /** See {@link NodeContainer#getDirectNCParent()}.
@@ -88,6 +89,9 @@ interface NodeContainerParent {
      */
     public void pushWorkflowVariablesOnStack(final FlowObjectStack sos);
 
+    /** @return the cipher (used in persistor). */
+    public WorkflowCipher getWorkflowCipher();
+
     /** Returns the argument string unless this workflow or any of the parent wfms is encrypted.
      * Then it appends ".encrypted" to the argument.
      * @param fileName Suggest file name
@@ -106,6 +110,6 @@ interface NodeContainerParent {
     /**
      * @return The root workflow manager of the project containing this workflow manager
      */
-    public abstract WorkflowContext getProjectContext();
+    public abstract WorkflowManager getProjectWFM();
 
 }

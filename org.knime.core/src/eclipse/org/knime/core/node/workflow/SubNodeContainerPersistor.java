@@ -75,4 +75,6 @@ public interface SubNodeContainerPersistor extends SingleNodeContainerPersistor 
 
     /** @since 2.10 */
     Map<Integer, WizardNodeLayoutInfo> getLayoutInfo();
+
+    MetaNodeTemplateInformation getTemplateInformation();
 }

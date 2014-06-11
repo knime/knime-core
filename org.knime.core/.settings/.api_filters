@@ -189,6 +189,12 @@
                 <message_argument value="getLoadVersion()"/>
             </message_arguments>
         </filter>
+        <filter comment="(subnode) template handling" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.FileNodePersistor"/>
+                <message_argument value="guessOutputPortTypes(WorkflowPersistor, WorkflowPersistor.LoadResult, String)"/>
+            </message_arguments>
+        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="FileNodePersistor(FileNativeNodeContainerPersistor, FileWorkflowPersistor.LoadVersion, NodeSettingsRO)"/>
@@ -202,6 +208,11 @@
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="getLoadVersion()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="guessOutputPortTypes(WorkflowPersistor.LoadResult, String)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -530,6 +541,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/util/filter/column/DataColumnSpecFilterPanel.java" type="org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel">
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="updateWithNewConfiguration(DataColumnSpecFilterConfiguration)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/util/filter/variable/FlowVariableFilterPanel.java" type="org.knime.core.node.util.filter.variable.FlowVariableFilterPanel">
         <filter comment="bug 4601 - col filter: red border for invalid (not used as recently added)" id="338792546">
             <message_arguments>
@@ -790,11 +808,6 @@
                 <message_argument value="FileNativeNodeContainerPersistor(WorkflowPersistorVersion1xx, ReferencedFile, WorkflowLoadHelper, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
-        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
-            <message_arguments>
-                <message_argument value="FileNativeNodeContainerPersistor(FileWorkflowPersistor, ReferencedFile, WorkflowLoadHelper, FileWorkflowPersistor.LoadVersion)"/>
-            </message_arguments>
-        </filter>
         <filter comment="bug 5207 - Save plug-in version for each node in workflow" id="1143996420">
             <message_arguments>
                 <message_argument value="getNodeAndBundleInformation()"/>
@@ -802,9 +815,9 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/FileSingleNodeContainerPersistor.java" type="org.knime.core.node.workflow.FileSingleNodeContainerPersistor">
-        <filter comment="renaming persistor classes - no API anyway" id="1143996420">
+        <filter comment="(subnode) template handling" id="1227882500">
             <message_arguments>
-                <message_argument value="getLoadVersion()"/>
+                <message_argument value="setDirtyAfterLoad()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -871,15 +884,38 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/MetaNodeTemplateInformation.java" type="org.knime.core.node.workflow.MetaNodeTemplateInformation">
+        <filter comment="(subnode) template handling" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.MetaNodeTemplateInformation"/>
+                <message_argument value="createNewTemplate()"/>
+            </message_arguments>
+        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.MetaNodeTemplateInformation"/>
                 <message_argument value="load(NodeSettingsRO, WorkflowPersistorVersion1xx.LoadVersion)"/>
             </message_arguments>
         </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="createNewTemplate(Class&lt;? extends NodeContainerTemplate&gt;)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="getNodeContainerTemplateType()"/>
+            </message_arguments>
+        </filter>
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="load(NodeSettingsRO, FileWorkflowPersistor.LoadVersion)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/MetaNodeTemplateInformation.java" type="org.knime.core.node.workflow.MetaNodeTemplateInformation$TemplateType">
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="TemplateType"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1003,6 +1039,11 @@
                 <message_argument value="cipherOutput(OutputStream)"/>
             </message_arguments>
         </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="containsExecutedNode()"/>
+            </message_arguments>
+        </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="fetchInputDataFromParent()"/>
@@ -1013,9 +1054,19 @@
                 <message_argument value="fetchInputSpecFromParent()"/>
             </message_arguments>
         </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="fillLinkedTemplateNodesList(Map&lt;NodeID,NodeContainerTemplate&gt;, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="getCipherFileName(String)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="getNodeContainers()"/>
             </message_arguments>
         </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
@@ -1026,6 +1077,11 @@
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="getVirtualOutNodeID()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="getWorkflowCipher()"/>
             </message_arguments>
         </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
@@ -1043,6 +1099,21 @@
                 <message_argument value="pushWorkflowVariablesOnStack(FlowObjectStack)"/>
             </message_arguments>
         </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="saveAsTemplate(File, ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="setTemplateInformation(MetaNodeTemplateInformation)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="updateMetaNodeLinkInternalRecursively(ExecutionMonitor, WorkflowLoadHelper, Map&lt;URI,NodeContainerTemplate&gt;, WorkflowPersistor.NodeContainerTemplateLinkUpdateResult)"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainerPersistor.java" type="org.knime.core.node.workflow.SubNodeContainerPersistor">
         <filter comment="subnode enhancements" id="1211105284">
@@ -1055,6 +1126,11 @@
                 <message_argument value="getOutPortTemplates()"/>
             </message_arguments>
         </filter>
+        <filter comment="(subnode) template handling" id="1211105284">
+            <message_arguments>
+                <message_argument value="getTemplateInformation()"/>
+            </message_arguments>
+        </filter>
         <filter comment="subnode enhancements" id="1211105284">
             <message_arguments>
                 <message_argument value="getVirtualInNodeIDSuffix()"/>
@@ -1063,6 +1139,13 @@
         <filter comment="subnode enhancements" id="1211105284">
             <message_arguments>
                 <message_argument value="getVirtualOutNodeIDSuffix()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/TemplateNodeContainerPersistor.java" type="org.knime.core.node.workflow.TemplateNodeContainerPersistor">
+        <filter comment="(subnode) template handling" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.TemplateNodeContainerPersistor"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1116,6 +1199,24 @@
                 <message_argument value="reExecuteNode(NodeID, ViewContent, ReexecutionCallback)"/>
             </message_arguments>
         </filter>
+        <filter comment="(subnode) template handling" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="saveAsMetaNodeTemplate(File, ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="updateMetaNodeLink(NodeID, ExecutionMonitor, WorkflowLoadHelper)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="updateMetaNodeLinks(WorkflowLoadHelper, boolean, ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="canResetContainedNodes()"/>
@@ -1124,6 +1225,11 @@
         <filter comment="renaming persistor classes - no API anyway" id="1143996420">
             <message_arguments>
                 <message_argument value="createLoadPersistor(File, WorkflowLoadHelper)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="fillLinkedTemplateNodesList(Map&lt;NodeID,NodeContainerTemplate&gt;, boolean, boolean)"/>
             </message_arguments>
         </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1143996420">
@@ -1136,9 +1242,39 @@
                 <message_argument value="load(FileWorkflowPersistor, ExecutionMonitor, boolean)"/>
             </message_arguments>
         </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="load(TemplateNodeContainerPersistor, WorkflowPersistor.WorkflowOrTemplateLoadResult, ExecutionMonitor, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="saveAsTemplate(File, ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="updateMetaNodeLink(NodeID, ExecutionMonitor, WorkflowLoadHelper)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="updateMetaNodeLinkInternalRecursively(ExecutionMonitor, WorkflowLoadHelper, Map&lt;URI,NodeContainerTemplate&gt;, WorkflowPersistor.NodeContainerTemplateLinkUpdateResult)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="1143996420">
+            <message_arguments>
+                <message_argument value="updateMetaNodeLinks(WorkflowLoadHelper, boolean, ExecutionMonitor)"/>
+            </message_arguments>
+        </filter>
         <filter comment="changes required to support subnode - no API anyway" id="1227882500">
             <message_arguments>
                 <message_argument value="pushWorkflowVariablesOnStack(FlowObjectStack)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="(subnode) template handling" id="1227882500">
+            <message_arguments>
+                <message_argument value="setTemplateInformation(MetaNodeTemplateInformation)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -1161,6 +1297,12 @@
                 <message_argument value="getLoadVersion()"/>
             </message_arguments>
         </filter>
+        <filter comment="(subnode) template handling" id="405995624">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult"/>
+                <message_argument value="org.knime.core_2.10.0"/>
+            </message_arguments>
+        </filter>
         <filter id="643842064">
             <message_arguments>
                 <message_argument value="WorkflowFileStoreHandlerRepository"/>
@@ -1176,6 +1318,20 @@
         <filter comment="changes required to support subnode - no API anyway" id="1211105284">
             <message_arguments>
                 <message_argument value="postLoad(WorkflowManager, WorkflowPersistor.LoadResult)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistor.java" type="org.knime.core.node.workflow.WorkflowPersistor$NodeContainerTemplateLinkUpdateResult">
+        <filter comment="(subnode) template handling" id="1211105284">
+            <message_arguments>
+                <message_argument value="NodeContainerTemplateLinkUpdateResult"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistor.java" type="org.knime.core.node.workflow.WorkflowPersistor$WorkflowOrTemplateLoadResult">
+        <filter comment="(subnode) template handling" id="1211105284">
+            <message_arguments>
+                <message_argument value="WorkflowOrTemplateLoadResult"/>
             </message_arguments>
         </filter>
     </resource>

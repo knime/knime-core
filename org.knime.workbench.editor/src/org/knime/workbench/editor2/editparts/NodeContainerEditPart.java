@@ -110,6 +110,7 @@ import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainerTemplate;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
@@ -948,9 +949,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
 
     private void checkMetaNodeTemplateIcon() {
         NodeContainer nc = getNodeContainer();
-        if (nc instanceof WorkflowManager) {
-            WorkflowManager wm = (WorkflowManager)nc;
-            MetaNodeTemplateInformation templInfo = wm.getTemplateInformation();
+        MetaNodeTemplateInformation templInfo = null;
+        if (nc instanceof NodeContainerTemplate) {
+            NodeContainerTemplate t = (NodeContainerTemplate)nc;
+            templInfo = t.getTemplateInformation();
+        }
+        if (templInfo != null) {
             NodeContainerFigure fig = (NodeContainerFigure)getFigure();
             switch (templInfo.getRole()) {
                 case Link:

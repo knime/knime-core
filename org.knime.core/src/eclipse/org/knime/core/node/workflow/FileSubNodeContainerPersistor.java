@@ -54,6 +54,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -69,6 +71,7 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.wizard.WizardNodeLayoutInfo;
 import org.knime.core.node.workflow.FileWorkflowPersistor.LoadVersion;
+import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.util.LockFailedException;
@@ -78,8 +81,8 @@ import org.knime.core.util.LockFailedException;
  * @author wiswedel
  * @since 2.10
  */
-public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersistor implements
-    SubNodeContainerPersistor {
+public final class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersistor implements
+    SubNodeContainerPersistor, TemplateNodeContainerPersistor {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(FileSubNodeContainerPersistor.class);
 
@@ -95,26 +98,32 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
 
     private Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
 
+    private MetaNodeTemplateInformation m_templateInformation;
+
     /**
-     * @param workflowPersistor
      * @param nodeSettingsFile
      * @param loadHelper
      * @param version
+     * @param globalTableRepository
+     * @param fileStoreHandlerRepository
+     * @param mustWarnOnDataLoadError
      */
-    public FileSubNodeContainerPersistor(final FileWorkflowPersistor workflowPersistor,
-        final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper, final LoadVersion version) {
-        super(workflowPersistor, nodeSettingsFile, loadHelper, version);
-        m_workflowPersistor = new FileWorkflowPersistor(workflowPersistor.getGlobalTableRepository(),
-            workflowPersistor.getFileStoreHandlerRepository(),
-            new ReferencedFile(nodeSettingsFile.getParent(), WorkflowPersistor.WORKFLOW_FILE),
-            getLoadHelper(), getLoadVersion(), false) {
+    public FileSubNodeContainerPersistor(final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper,
+        final LoadVersion version, final HashMap<Integer, ContainerTable> globalTableRepository,
+        final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository, final boolean mustWarnOnDataLoadError) {
+        super(nodeSettingsFile, loadHelper, version, globalTableRepository,
+            fileStoreHandlerRepository, mustWarnOnDataLoadError);
+        m_workflowPersistor =
+            new FileWorkflowPersistor(globalTableRepository, fileStoreHandlerRepository, new ReferencedFile(
+                nodeSettingsFile.getParent(), WorkflowPersistor.WORKFLOW_FILE), getLoadHelper(), getLoadVersion(),
+                false) {
                 @Override
                 public void postLoad(final WorkflowManager wfm, final LoadResult loadResult) {
                     NodeContainerParent ncParent = wfm.getDirectNCParent();
                     if (!(ncParent instanceof SubNodeContainer)) {
                         String error = String.format("Parent is not instance of %s but %s",
-                            SubNodeContainer.class.getSimpleName(),
-                            ncParent == null ?  "<null>" : ncParent.getClass().getSimpleName());
+                                SubNodeContainer.class.getSimpleName(), ncParent == null ? "<null>" :
+                                    ncParent.getClass().getSimpleName());
                         LOGGER.error(error);
                         setNeedsResetAfterLoad();
                         setDirtyAfterLoad();
@@ -124,8 +133,8 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
                         try {
                             subnode.postLoadWFM();
                         } catch (Exception e) {
-                            String error = String.format("Post-load error (%s): %s",
-                                e.getClass().getSimpleName(), e.getMessage());
+                            String error =
+                                String.format("Post-load error (%s): %s", e.getClass().getSimpleName(), e.getMessage());
                             LOGGER.error(error, e);
                             loadResult.addError(error, false);
                             setDirtyAfterLoad();
@@ -251,6 +260,22 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
                 setDirtyAfterLoad();
                 continue;
             }
+        }
+
+        try {
+            if (m_templateInformation != null) {
+                // template information was set after construction (this node is a link created from a template)
+                assert m_templateInformation.getRole() == Role.Link;
+            } else {
+                m_templateInformation = MetaNodeTemplateInformation.load(nodeSettings, getLoadVersion());
+                CheckUtils.checkSettingNotNull(m_templateInformation, "No template information");
+            }
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load workflow template information: " + e.getMessage();
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            result.addError(error);
+            m_templateInformation = MetaNodeTemplateInformation.NONE;
         }
 
         try {
@@ -385,6 +410,30 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
         return null;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public void setNameOverwrite(final String nameOverwrite) {
+        m_workflowPersistor.setNameOverwrite(nameOverwrite);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setOverwriteTemplateInformation(final MetaNodeTemplateInformation templateInfo) {
+        m_templateInformation = templateInfo;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public LoadVersion getLoadVersion() {
+        return super.getLoadVersion();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isProject() {
+        return false;
+    }
+
     /**
      * @param subnodeNC
      * @param settings
@@ -418,6 +467,7 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
             NodeSettingsWO portTypeSettings = inportSetting.addNodeSettings("type");
             virtualOutNode.getInPort(i).getPortType().save(portTypeSettings);
         }
+        subnodeNC.getTemplateInformation().save(settings);
         Map<Integer, WizardNodeLayoutInfo> layoutInfoMap = subnodeNC.getLayoutInfo();
         Integer[] layoutIDs = layoutInfoMap.keySet().toArray(new Integer[0]);
         NodeSettingsWO layoutInfoSettings = settings.addNodeSettings("layoutInfos");
@@ -430,5 +480,12 @@ public class FileSubNodeContainerPersistor extends FileSingleNodeContainerPersis
         FileWorkflowPersistor.save(workflowManager, nodeDirRef, exec, saveHelper);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public MetaNodeTemplateInformation getTemplateInformation() {
+        return m_templateInformation;
+    }
 
 }

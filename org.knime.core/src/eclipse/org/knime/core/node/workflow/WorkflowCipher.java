@@ -216,13 +216,13 @@ final class WorkflowCipher implements Cloneable {
      * @param name ...
      * @return ...
      */
-    static String getCipherFileName(final WorkflowManager wfm, final String name) {
+    static String getCipherFileName(final NodeContainerParent wfm, final String name) {
         boolean isEncrypted;
-        WorkflowManager curWFM = wfm;
+        NodeContainerParent curNCParent = wfm;
         do {
-            isEncrypted = curWFM.getWorkflowCipher().isEncrypted();
-            curWFM = curWFM.getParent();
-        } while (!isEncrypted && curWFM != null);
+            isEncrypted = curNCParent.getWorkflowCipher().isEncrypted();
+            curNCParent = curNCParent.getDirectNCParent();
+        } while (!isEncrypted && curNCParent != null);
         if (isEncrypted) {
             return getCipherFileName(name);
         }

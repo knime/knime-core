@@ -354,6 +354,9 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
             return t.getText();
         }
         String text;
+        if (((NodeAnnotation)t).getNodeContainer() == null) {
+            return "";
+        }
         int id = ((NodeAnnotation)t).getNodeContainer().getID().getIndex();
         String prefix = KNIMEUIPlugin.getDefault().getPreferenceStore().
             getString(PreferenceConstants.P_DEFAULT_NODE_LABEL);
