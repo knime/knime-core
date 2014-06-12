@@ -46,6 +46,7 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
@@ -71,7 +72,7 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
     public static final String ID = "knime.action.convertmetanodetosubnode";
 
     /** Subnode disabled by default (under development). Enable with -Dknime.subnode.enable=true. */
-    public static final boolean ENABLE_SUBNODE_ACTION = Boolean.getBoolean("knime.subnode.enable");
+    public static final boolean ENABLE_SUBNODE_ACTION = Platform.getBundle("org.knime.js.base") != null;
 
     /**
      * @param editor The workflow editor
