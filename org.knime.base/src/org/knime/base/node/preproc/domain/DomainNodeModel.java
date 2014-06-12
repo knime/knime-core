@@ -107,15 +107,14 @@ public class DomainNodeModel extends NodeModel {
         super(1, 1);
     }
 
-    private DataTableDomainCreator getDomainCreator() {
-        DataTableDomainCreator domainCreator = new DataTableDomainCreator();
+    private DataTableDomainCreator getDomainCreator(final DataTableSpec inputSpec) {
         final Set<String> possValCols = new HashSet<String>();
         possValCols.addAll(Arrays.asList(m_possValCols));
         int maxPoss = m_maxPossValues >= 0 ? m_maxPossValues : Integer.MAX_VALUE;
-        domainCreator.setMaxValues(maxPoss);
         final Set<String> minMaxCols = new HashSet<String>();
         minMaxCols.addAll(Arrays.asList(m_minMaxCols));
-        domainCreator.attachColumnSelection(new DomainCreatorColumnSelection() {
+
+        DomainCreatorColumnSelection possValueSelection = new DomainCreatorColumnSelection() {
 
             @Override
             public boolean createDomain(final DataColumnSpec colSpec) {
@@ -124,10 +123,12 @@ public class DomainNodeModel extends NodeModel {
 
             @Override
             public boolean dropDomain(final DataColumnSpec colSpec) {
-                return !possValCols.contains(colSpec.getName())  && !m_possValRetainUnselected;
+                return possValCols.contains(colSpec.getName())
+                        || !m_possValRetainUnselected;
             }
 
-        }, new DomainCreatorColumnSelection() {
+        };
+        DomainCreatorColumnSelection minMaxSelection = new DomainCreatorColumnSelection() {
 
             @Override
             public boolean createDomain(final DataColumnSpec colSpec) {
@@ -136,10 +137,13 @@ public class DomainNodeModel extends NodeModel {
 
             @Override
             public boolean dropDomain(final DataColumnSpec colSpec) {
-                return !minMaxCols.contains(colSpec.getName())  && !m_minMaxRetainUnselected;
+                return minMaxCols.contains(colSpec.getName()) || !m_minMaxRetainUnselected;
             }
 
-        });
+        };
+        DataTableDomainCreator domainCreator =
+            new DataTableDomainCreator(inputSpec, possValueSelection, minMaxSelection);
+        domainCreator.setMaxPossibleValues(maxPoss);
         return domainCreator;
     }
 
@@ -149,8 +153,9 @@ public class DomainNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        DataTableDomainCreator domainCreator = getDomainCreator();
-        return new BufferedDataTable[]{domainCreator.execute(inData[0], exec)};
+        DataTableDomainCreator domainCreator = getDomainCreator(inData[0].getDataTableSpec());
+        domainCreator.updateDomain(inData[0], exec, inData[0].getRowCount());
+        return new BufferedDataTable[]{exec.createSpecReplacerTable(inData[0], domainCreator.createSpec())};
     }
 
     /**
@@ -159,8 +164,8 @@ public class DomainNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
     throws InvalidSettingsException {
-        DataTableDomainCreator domainCreator = getDomainCreator();
-        return new DataTableSpec[]{domainCreator.configure(inSpecs[0])};
+        DataTableDomainCreator domainCreator = getDomainCreator(inSpecs[0]);
+        return new DataTableSpec[]{domainCreator.createSpec()};
     }
 
     /**

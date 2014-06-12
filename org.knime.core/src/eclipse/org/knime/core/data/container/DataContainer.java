@@ -53,13 +53,10 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Exchanger;
@@ -75,18 +72,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomainCreator;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
@@ -345,31 +336,7 @@ public class DataContainer implements RowAppender {
     /** Table to return. Not null when close() is called. */
     private ContainerTable m_table;
 
-    /** For each column, memorize the possible values. For detailed information
-     * regarding the possible values and range determination, refer to the
-     * class description.
-     */
-    private LinkedHashSet<DataCell>[] m_possibleValues;
-
-    /**
-     * For each column, memorize how many possible values need to be stored.
-     * Important when the domain is initialized on the argument spec. For those
-     * columns, this value will be very high!
-     */
-    private int[] m_possibleValuesSizes;
-
-    /** The min values in each column, we keep these values only for numerical
-     * column (i.e. double, int).  For non-numerical columns the respective
-     * entries will be null.
-     */
-    private DataCell[] m_minCells;
-
-    /** The max values in each column, similar to m_minCells.
-     */
-    private DataCell[] m_maxCells;
-
-    /** Comparators used to update the domain. */
-    private DataValueComparator[] m_comparators;
+    private DataTableDomainCreator m_domainCreator;
 
     /** Global repository map, created lazily. */
     private Map<Integer, ContainerTable> m_globalMap;
@@ -448,10 +415,8 @@ public class DataContainer implements RowAppender {
      * property is false, it's using the default (which is false unless
      * specified otherwise through
      * {@link KNIMEConstants#PROPERTY_SYNCHRONOUS_IO})
-     * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0.
-     * @throws NullPointerException If <code>spec</code> is <code>null</code>.
+     * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0 or the spec is null
      */
-    @SuppressWarnings ("unchecked")
     protected DataContainer(final DataTableSpec spec, final boolean initDomain,
             final int maxCellsInMemory, final boolean forceSynchronousIO) {
         if (maxCellsInMemory < 0) {
@@ -459,7 +424,7 @@ public class DataContainer implements RowAppender {
                     "Cell count must be positive: " + maxCellsInMemory);
         }
         if (spec == null) {
-            throw new NullPointerException("Spec must not be null!");
+            throw new IllegalArgumentException("Spec must not be null!");
         }
         m_spec = spec;
         m_duplicateChecker = new DuplicateChecker();
@@ -485,75 +450,9 @@ public class DataContainer implements RowAppender {
             m_writeThrowable = new AtomicReference<Throwable>();
             m_asyncAddFuture = ASYNC_EXECUTORS.submit(new ASyncWriteCallable(this, NodeContext.getContext()));
         }
-        // figure out for which columns it's worth to keep the list of possible
-        // values and min/max ranges
-        m_possibleValues = new LinkedHashSet[m_spec.getNumColumns()];
-        m_possibleValuesSizes = new int[m_spec.getNumColumns()];
-        m_minCells = new DataCell[m_spec.getNumColumns()];
-        m_maxCells = new DataCell[m_spec.getNumColumns()];
-        m_comparators = new DataValueComparator[m_spec.getNumColumns()];
+
+        m_domainCreator = new DataTableDomainCreator(m_spec, initDomain);
         m_size = 0;
-        for (int i = 0; i < m_spec.getNumColumns(); i++) {
-            DataColumnSpec colSpec = m_spec.getColumnSpec(i);
-            DataType colType = colSpec.getType();
-            // bug fix #591: We must init the domain no matter what data
-            // type is in the column (we had the problem where one passed
-            // a FuzzyIntervalCell which is not compatible to doublevalue).
-
-            m_comparators[i] = colType.getComparator();
-            // do first for possible values
-            if (initDomain) {
-                Set<DataCell> values = colSpec.getDomain().getValues();
-                if (values != null) {
-                    m_possibleValues[i] = new LinkedHashSet<DataCell>(values);
-                    m_possibleValuesSizes[i] = MAX_POSSIBLE_VALUES;
-                } else if (colType.isCompatible(NominalValue.class)) {
-                    // mb: used to test for StringValue - let's be more specific
-                    m_possibleValues[i] = new LinkedHashSet<DataCell>();
-                    m_possibleValuesSizes[i] = MAX_POSSIBLE_VALUES;
-                } else {
-                    m_possibleValues[i] = null;
-                    // negative value means: store all!
-                    m_possibleValuesSizes[i] = -1;
-                }
-            } else if (colType.isCompatible(NominalValue.class)) {
-                // mb: used to test for StringValue - let's be more specific
-                m_possibleValues[i] = new LinkedHashSet<DataCell>();
-                m_possibleValuesSizes[i] = MAX_POSSIBLE_VALUES;
-            } else {
-                m_possibleValues[i] = null;
-                m_possibleValuesSizes[i] = -1;
-            }
-
-            // do now for min/max
-            if (initDomain) {
-                DataCell min = colSpec.getDomain().getLowerBound();
-                DataCell max = colSpec.getDomain().getUpperBound();
-                if (min != null || max != null) {
-                    m_minCells[i] = min != null ? min
-                            : DataType.getMissingCell();
-                    m_maxCells[i] = max != null ? max
-                            : DataType.getMissingCell();
-                } else if (colType.isCompatible(BoundedValue.class)) {
-                    // if no min/max available, init only if column is
-                    // "boundable"
-                    m_minCells[i] = DataType.getMissingCell();
-                    m_maxCells[i] = DataType.getMissingCell();
-                } else {
-                    // invalid column type, no domain initialized
-                    m_minCells[i] = null;
-                    m_maxCells[i] = null;
-                }
-            } else {
-                if (colType.isCompatible(BoundedValue.class)) {
-                    m_minCells[i] = DataType.getMissingCell();
-                    m_maxCells[i] = DataType.getMissingCell();
-                } else {
-                    m_minCells[i] = null;
-                    m_maxCells[i] = null;
-                }
-            }
-        }
         // how many rows will occupy MAX_CELLS_IN_MEMORY
         final int colCount = spec.getNumColumns();
         m_maxRowsInMemory = maxCellsInMemory / ((colCount > 0) ? colCount : 1);
@@ -603,11 +502,8 @@ public class DataContainer implements RowAppender {
                         + "not comply with its supposed superclass "
                         + columnClass.toString());
             }
-            // keep the list of possible values and the range updated
-            updatePossibleValues(c, value);
-            updateMinMax(c, value);
-
         } // for all cells
+        m_domainCreator.updateDomain(row);
         addRowKeyForDuplicateCheck(key);
         m_buffer.addRow(row, false, m_forceCopyOfBlobs);
     }
@@ -680,19 +576,7 @@ public class DataContainer implements RowAppender {
      * @throws IllegalArgumentException If the value < 0
      */
     public void setMaxPossibleValues(final int maxPossibleValues) {
-        if (maxPossibleValues < 0) {
-            throw new IllegalArgumentException(
-                    "number < 0: " + maxPossibleValues);
-        }
-        for (int i = 0; i < m_possibleValuesSizes.length; i++) {
-            if (m_possibleValuesSizes[i] >= 0) {
-                m_possibleValuesSizes[i] = maxPossibleValues;
-                if (m_possibleValues[i].size() > maxPossibleValues) {
-                    m_possibleValuesSizes[i] = -1; // invalid
-                    m_possibleValues[i] = null;
-                }
-            }
-        }
+        m_domainCreator.setMaxPossibleValues(maxPossibleValues);
     }
 
     /**
@@ -750,7 +634,7 @@ public class DataContainer implements RowAppender {
         }
         // create table spec _after_ all_ rows have been added (i.e. wait for
         // asynchronous write thread to finish)
-        DataTableSpec finalSpec = createTableSpecWithRange();
+        DataTableSpec finalSpec = m_domainCreator.createSpec();
         m_buffer.close(finalSpec);
         try {
             m_duplicateChecker.checkForDuplicates();
@@ -768,10 +652,7 @@ public class DataContainer implements RowAppender {
         m_spec = null;
         m_duplicateChecker.clear();
         m_duplicateChecker = null;
-        m_possibleValues = null;
-        m_minCells = null;
-        m_maxCells = null;
-        m_comparators = null;
+        m_domainCreator = null;
         m_size = -1;
     }
 
@@ -1032,93 +913,6 @@ public class DataContainer implements RowAppender {
             m_localMap = new HashMap<Integer, ContainerTable>();
         }
         return m_localMap;
-    }
-
-    /** Adds another value to the list of possible values in a certain column.
-     * This method does nothing if the values don't need to be stored for the
-     * respective column.
-     * @param col The column of interest.
-     * @param cell The (maybe) new value.
-     */
-    private void updatePossibleValues(final int col, final DataCell cell) {
-        if (m_possibleValues[col] == null || cell.isMissing()) {
-            return;
-        }
-        DataCell value = cell instanceof BlobWrapperDataCell
-            ? ((BlobWrapperDataCell)cell).getCell() : cell;
-        // bug fix 4940: The possible value list management is only done if new values are seen
-        if (m_possibleValues[col].add(value) && m_possibleValuesSizes[col] >= 0
-                && m_possibleValues[col].size() > m_possibleValuesSizes[col]) {
-            // forget possible values
-            m_possibleValues[col] = null;
-            m_possibleValuesSizes[col] = -1;
-        }
-    }
-
-    /** Updates the min and max value for an respective column. This method
-     * does nothing if the min and max values don't need to be stored, e.g.
-     * the column at hand contains string values.
-     * @param col The column of interest.
-     * @param cell The new value to check.
-     */
-    private void updateMinMax(final int col, final DataCell cell) {
-        if (m_minCells[col] == null || cell.isMissing()) {
-            return;
-        }
-        DataCell value = handleNaN(cell instanceof BlobWrapperDataCell ? ((BlobWrapperDataCell)cell).getCell() : cell);
-        if (value.isMissing()) {
-            return;
-        }
-
-        Comparator<DataCell> comparator = m_comparators[col];
-        if (m_minCells[col].isMissing() || (comparator.compare(value, m_minCells[col]) < 0)) {
-            m_minCells[col] = value;
-        }
-        if (m_maxCells[col].isMissing() || (comparator.compare(value, m_maxCells[col]) > 0)) {
-            m_maxCells[col] = value;
-        }
-    }
-
-    /*
-     * Returns
-     * - the cell if it is not a DoubleValue
-     * - the cell if it is not NaN
-     * - a missing cell if it is NaN
-     */
-    private static DataCell handleNaN(final DataCell cell) {
-        if (cell.getType().isCompatible(DoubleValue.class)) {
-            if (Double.isNaN(((DoubleValue) cell).getDoubleValue())) {
-                return DataType.getMissingCell();
-            } else {
-                return cell;
-            }
-        } else {
-            return cell;
-        }
-    }
-
-    /** Creates the final data table spec. It also includes the column domain
-     * information (if any)
-     * @return The final data table spec to be used.
-     */
-    private DataTableSpec createTableSpecWithRange() {
-        DataColumnSpec[] colSpec = new DataColumnSpec[m_spec.getNumColumns()];
-        for (int i = 0; i < colSpec.length; i++) {
-            DataColumnSpec original = m_spec.getColumnSpec(i);
-            DataCell[] possVal = m_possibleValues[i] != null
-                ? m_possibleValues[i].toArray(new DataCell[0]) : null;
-            DataCell min = m_minCells[i] != null && !m_minCells[i].isMissing()
-                ? m_minCells[i] : null;
-            DataCell max = m_maxCells[i] != null && !m_maxCells[i].isMissing()
-                ? m_maxCells[i] : null;
-            DataColumnDomainCreator domainCreator =
-                new DataColumnDomainCreator(possVal, min, max);
-            DataColumnSpecCreator specCreator =
-                new DataColumnSpecCreator(original);
-            specCreator.setDomain(domainCreator.createDomain());
-            colSpec[i] = specCreator.createSpec();
-        }
-        return new DataTableSpec(m_spec.getName(), colSpec);
     }
 
     /** Convenience method that will buffer the entire argument table. This is

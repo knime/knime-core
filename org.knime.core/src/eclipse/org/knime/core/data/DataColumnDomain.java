@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
@@ -116,19 +117,16 @@ public final class DataColumnDomain {
     }
 
     /**
-     * Returns all possible values in this column. Note, that this set can be
-     * <code>null</code> if this information is not available (for continuous
-     * double values, for example) and that the {@link DataCell}s in the
-     * returned set do not have to be of the same type (but the column type
-     * should be compatible to all of their values).
+     * Returns all possible values in this column. Note, that this set can be <code>null</code> if this information is
+     * not available. This can happen for continuous double values or if the column contains too many possible values
+     * (see {@link DataContainer#MAX_POSSIBLE_VALUES}). Also be aware that the {@link DataCell}s in the returned set do
+     * not have to be of the same type (but the column type should be compatible to all of their values).
      *
      * <p>
-     * If the returned set is not <code>null</code>, the corresponding column
-     * does not contain any value other than the ones contained in the set. The
-     * set can contain a superset of the values in the table though.
+     * If the returned set is not <code>null</code>, the corresponding column does not contain any value other than the
+     * ones contained in the set. The set can contain a superset of the values in the table though.
      *
-     * @return a {@link Set} of possible {@link DataCell} values or
-     *         <code>null</code>
+     * @return a {@link Set} of possible {@link DataCell} values or <code>null</code>
      *
      * @see #hasValues()
      */

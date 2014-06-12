@@ -48,26 +48,17 @@
 package org.knime.base.node.util;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.Vector;
 
-import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.def.DefaultRowIterator;
 import org.knime.core.node.CanceledExecutionException;
@@ -90,46 +81,14 @@ public class DefaultDataArray implements DataArray {
     /* this is where we store the rows. */
     private ArrayList<DataRow> m_rows;
 
-    /* all occurring values for each string column */
-    private Vector<LinkedHashSet<DataCell>> m_possVals;
-
-    /* the max value for each column */
-    private DataCell[] m_maxVal;
-
-    /* the min values for each column */
-    private DataCell[] m_minVal;
-
     /* the first row we've stored */
     private int m_firstRow;
-
-    private static final int MAX_POSS_VALUES = 2000;
-
-    private boolean[] m_ignoreCols;
 
     /*
      * we store the table spec - in case somebody needs name and type of the
      * stored rows
      */
     private DataTableSpec m_tSpec;
-
-    /*
-     * Returns
-     * - the cell if it is not a DoubleValue
-     * - the cell if it is not NaN
-     * - a missing cell if it is NaN
-     */
-    private static DataCell handleNaN(final DataCell cell) {
-        if (cell.getType().isCompatible(DoubleValue.class)) {
-            if (Double.isNaN(((DoubleValue) cell).getDoubleValue())) {
-                return DataType.getMissingCell();
-            } else {
-                return cell;
-            }
-        } else {
-            return cell;
-        }
-    }
-
 
     /**
      * Constructs a random access container holding a certain number of rows
@@ -184,29 +143,12 @@ public class DefaultDataArray implements DataArray {
                     + " greater than or equal zero");
         }
         DataTableSpec tSpec = dTable.getDataTableSpec();
-
+        DataTableDomainCreator domainCreator = new DataTableDomainCreator(tSpec, true);
         int numOfColumns = tSpec.getNumColumns();
 
         m_firstRow = firstRow;
         m_rows = new ArrayList<DataRow>(numOfColumns);
-        m_maxVal = new DataCell[numOfColumns];
-        m_minVal = new DataCell[numOfColumns];
 
-        // create a new list for the values - but only for native string columns
-        m_possVals = new Vector<LinkedHashSet<DataCell>>();
-        m_possVals.setSize(numOfColumns);
-        m_ignoreCols = new boolean[numOfColumns];
-        for (int c = 0; c < numOfColumns; c++) {
-            m_ignoreCols[c] = false;
-            DataType dt = tSpec.getColumnSpec(c).getType();
-            if (dt.isCompatible(NominalValue.class)) {
-                m_possVals.set(c, new LinkedHashSet<DataCell>());
-            }
-            if (dt.isCompatible(BoundedValue.class)) {
-                m_minVal[c] = DataType.getMissingCell();
-                m_maxVal[c] = DataType.getMissingCell();
-            }
-        }
         // now fill our data structures
         RowIterator rIter = dTable.iterator();
         int rowNumber = 0;
@@ -223,39 +165,7 @@ public class DefaultDataArray implements DataArray {
 
             // store it.
             m_rows.add(row);
-
-            // check min, max values and possible values for each column
-            for (int c = 0; c < numOfColumns; c++) {
-                DataCell cell = row.getCell(c);
-
-                if (cell.isMissing()) {
-                    // ignore missing values.
-                    continue;
-                }
-
-                if (m_ignoreCols[c]) {
-                    continue;
-                }
-
-                DataValueComparator comp =
-                    tSpec.getColumnSpec(c).getType().getComparator();
-
-                updateMinMax(c, cell, comp);
-
-                // add it to the possible values if we record them for this col
-                LinkedHashSet<DataCell> possVals = m_possVals.get(c);
-                if (possVals != null) {
-                    // non-string cols have a null list and will be skipped here
-                    possVals.add(cell);
-                    // now check if we have more than MAX_POSS_VALUES values
-                    if (possVals.size() > MAX_POSS_VALUES) {
-                        m_possVals.add(c, null);
-                        m_minVal[c] = null;
-                        m_maxVal[c] = null;
-                        m_ignoreCols[c] = true;
-                    }
-                }
-            } // for all columns in the row
+            domainCreator.updateDomain(row);
 
             // see if user wants us to stop
             if (execMon != null) {
@@ -271,74 +181,9 @@ public class DefaultDataArray implements DataArray {
         if (rIter instanceof CloseableRowIterator) {
             ((CloseableRowIterator)rIter).close();
         }
-
-        // make sure that the table spec's domain is set properly.
-        // Use as is when there is information available, otherwise set it.
-        DataColumnSpec[] colSpecs = new DataColumnSpec[numOfColumns];
-        boolean changed = false; // do we need to set our own table spec
-        for (int i = 0; i < numOfColumns; i++) {
-            boolean colChanged = false;
-            DataColumnSpec origColSpec = tSpec.getColumnSpec(i);
-            DataType type = origColSpec.getType();
-            DataColumnSpecCreator creator = new DataColumnSpecCreator(
-                    origColSpec);
-            DataColumnDomain origColDomain = origColSpec.getDomain();
-            DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(
-                    origColDomain);
-            if (type.isCompatible(NominalValue.class)
-                    && !origColDomain.hasValues()) {
-                domainCreator.setValues(m_possVals.get(i));
-                colChanged = true;
-            }
-            if (type.isCompatible(DoubleValue.class)) {
-                if (!origColDomain.hasLowerBound()) {
-                    domainCreator.setLowerBound(m_minVal[i]);
-                    colChanged = true;
-                }
-                if (!origColDomain.hasUpperBound()) {
-                    domainCreator.setUpperBound(m_maxVal[i]);
-                    colChanged = true;
-                }
-            }
-            if (colChanged) {
-                changed = true;
-                creator.setDomain(domainCreator.createDomain());
-                colSpecs[i] = creator.createSpec();
-            } else {
-                colSpecs[i] = origColSpec;
-            }
-        } // for all columns
-        if (changed) {
-            m_tSpec = new DataTableSpec(colSpecs);
-        } else {
-            m_tSpec = tSpec;
-        }
+        m_tSpec = domainCreator.createSpec();
     }
 
-
-    /**
-     * Updates the min and max value for an respective column. This method does nothing if the min and max values don't
-     * need to be stored, e.g. the column at hand contains string values.
-     *
-     * @param col The column of interest.
-     * @param cell The new value to check.
-     */
-    private void updateMinMax(final int col, final DataCell cell, final Comparator<DataCell> comparator) {
-        if (m_minVal[col] == null || cell.isMissing()) {
-            return;
-        }
-        DataCell value = handleNaN(cell instanceof BlobWrapperDataCell ? ((BlobWrapperDataCell)cell).getCell() : cell);
-        if (value.isMissing()) {
-            return;
-        }
-
-        if (m_minVal[col].isMissing() || (comparator.compare(value, m_minVal[col]) < 0)) {
-            m_minVal[col] = value;
-        }
-        if (m_maxVal[col].isMissing() || (comparator.compare(value, m_maxVal[col]) > 0)) {
-            m_maxVal[col] = value;
-        }
-    }
 
     /**
      * {@inheritDoc}
@@ -354,7 +199,7 @@ public class DefaultDataArray implements DataArray {
      */
     @Override
     public Set<DataCell> getValues(final int colIdx) {
-        return m_possVals.get(colIdx);
+        return m_tSpec.getColumnSpec(colIdx).getDomain().getValues();
     }
 
     /**
@@ -362,7 +207,7 @@ public class DefaultDataArray implements DataArray {
      */
     @Override
     public DataCell getMinValue(final int colIdx) {
-        return m_minVal[colIdx];
+        return m_tSpec.getColumnSpec(colIdx).getDomain().getLowerBound();
     }
 
     /**
@@ -370,7 +215,7 @@ public class DefaultDataArray implements DataArray {
      */
     @Override
     public DataCell getMaxValue(final int colIdx) {
-        return m_maxVal[colIdx];
+        return m_tSpec.getColumnSpec(colIdx).getDomain().getUpperBound();
     }
 
     /**
@@ -382,14 +227,24 @@ public class DefaultDataArray implements DataArray {
      */
     public void setMaxValue(final int colIdx, final DataCell newMaxValue) {
         if (newMaxValue == null) {
-            throw new NullPointerException("The minValue must not be null");
+            throw new IllegalArgumentException("The new maximum value must not be null");
         }
-        if (!m_tSpec.getColumnSpec(colIdx).getType().isASuperTypeOf(
-                newMaxValue.getType())) {
-            throw new IllegalArgumentException(
-                    "new max value is of wrong type");
+        if (!m_tSpec.getColumnSpec(colIdx).getType().isASuperTypeOf(newMaxValue.getType())) {
+            throw new IllegalArgumentException("new maximum value is of wrong type");
         }
-        m_maxVal[colIdx] = newMaxValue;
+
+        DataColumnSpec[] colSpecs = new DataColumnSpec[m_tSpec.getNumColumns()];
+        for (int i = 0; i < colSpecs.length; i++) {
+            colSpecs[i] = m_tSpec.getColumnSpec(i);
+        }
+
+        DataColumnSpecCreator sCrea = new DataColumnSpecCreator(colSpecs[colIdx]);
+        DataColumnDomainCreator dCrea = new DataColumnDomainCreator(colSpecs[colIdx].getDomain());
+        dCrea.setUpperBound(newMaxValue);
+        sCrea.setDomain(dCrea.createDomain());
+
+        colSpecs[colIdx] = sCrea.createSpec();
+        m_tSpec = new DataTableSpec(m_tSpec.getName(), colSpecs);
     }
 
     /**
@@ -402,14 +257,24 @@ public class DefaultDataArray implements DataArray {
      */
     public void setMinValue(final int colIdx, final DataCell newMinValue) {
         if (newMinValue == null) {
-            throw new NullPointerException("The maxValue must not be null");
+            throw new IllegalArgumentException("The new minimum value must not be null");
         }
-        if (!m_tSpec.getColumnSpec(colIdx).getType().isASuperTypeOf(
-                newMinValue.getType())) {
-            throw new IllegalArgumentException(
-                    "new min value is of wrong type");
+        if (!m_tSpec.getColumnSpec(colIdx).getType().isASuperTypeOf(newMinValue.getType())) {
+            throw new IllegalArgumentException("new minimum value is of wrong type");
         }
-        m_minVal[colIdx] = newMinValue;
+
+        DataColumnSpec[] colSpecs = new DataColumnSpec[m_tSpec.getNumColumns()];
+        for (int i = 0; i < colSpecs.length; i++) {
+            colSpecs[i] = m_tSpec.getColumnSpec(i);
+        }
+
+        DataColumnSpecCreator sCrea = new DataColumnSpecCreator(colSpecs[colIdx]);
+        DataColumnDomainCreator dCrea = new DataColumnDomainCreator(colSpecs[colIdx].getDomain());
+        dCrea.setLowerBound(newMinValue);
+        sCrea.setDomain(dCrea.createDomain());
+
+        colSpecs[colIdx] = sCrea.createSpec();
+        m_tSpec = new DataTableSpec(m_tSpec.getName(), colSpecs);
     }
 
     /**

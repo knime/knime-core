@@ -48,37 +48,107 @@ package org.knime.core.data;
 
 import java.util.Comparator;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.knime.core.data.container.BlobWrapperDataCell;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 
 /**
- * Create or recreate domain of a data table.
+ * Create or recreate domain of a data table. The original spec has to be given in the constructor. The possible values
+ * and minimum and maximum values are subsequently updated by calling {@link #updateDomain(DataRow)} or
+ * {@link #updateDomain(DataTable, ExecutionMonitor, int)}. Finally the resulting spec including updated domains is
+ * created by calling {@link #createSpec()}.
  *
  * @author Heiko Hofer
  * @since 2.10
  */
 public class DataTableDomainCreator {
     /** Defines columns to recreate or drop domain values. */
-    private DomainCreatorColumnSelection m_domainValuesColumnSelection;
+    private final DomainCreatorColumnSelection m_domainValuesColumnSelection;
 
     /** Defines columns to recreate or drop min, max values of the domain. */
-    private DomainCreatorColumnSelection m_domainMinMaxColumnSelection;
+    private final DomainCreatorColumnSelection m_domainMinMaxColumnSelection;
 
     /** Maximal domain values. */
-    private int m_maxValues;
+    private int m_maxPossibleValues;
+
+    private final DataTableSpec m_inputSpec;
+
+    private final DataCell[] m_mins;
+
+    private final DataCell[] m_maxs;
+
+    private final LinkedHashSet<DataCell>[] m_possVals;
+
+    private final DataValueComparator[] m_comparators;
 
     /**
-     * A new instance that recreates the domain of all columns. Domain values are recreated for NominalValue columns
-     * whereas min/max values are recreated for BoundValue columns. This behavior can be changed by attaching different
-     * DomainCreateColumnSelection objects.
+     * A new instance that recreates the domain of certains columns. Which columns are processed and if the domains
+     * should be initialized with the domain from the incoming table can be controlled by the two
+     * {@link DomainCreatorColumnSelection} arguments.
+     *
+     * @param inputSpec the spec of the input/original table
+     * @param domainValuesColumnSelection defines columns to recreate or drop domain values
+     * @param domainMinMaxColumnSelection defines columns to recreate or drop min, max values of the domain
      */
-    public DataTableDomainCreator() {
-        m_domainValuesColumnSelection = new DomainCreatorColumnSelection() {
+    @SuppressWarnings("unchecked")
+    public DataTableDomainCreator(final DataTableSpec inputSpec,
+        final DomainCreatorColumnSelection domainValuesColumnSelection,
+        final DomainCreatorColumnSelection domainMinMaxColumnSelection) {
+        m_inputSpec = inputSpec;
+        m_mins = new DataCell[inputSpec.getNumColumns()];
+        m_maxs = new DataCell[inputSpec.getNumColumns()];
+        m_possVals = new LinkedHashSet[inputSpec.getNumColumns()];
+        m_comparators = new DataValueComparator[inputSpec.getNumColumns()];
+        m_domainValuesColumnSelection = domainValuesColumnSelection;
+        m_domainMinMaxColumnSelection = domainMinMaxColumnSelection;
+        m_maxPossibleValues = DataContainer.MAX_POSSIBLE_VALUES;
+
+        int i = 0;
+        for (DataColumnSpec colSpec : inputSpec) {
+            if (m_domainValuesColumnSelection.createDomain(colSpec)) {
+                Set<DataCell> values = colSpec.getDomain().getValues();
+
+                if (!m_domainValuesColumnSelection.dropDomain(colSpec) && (values != null)) {
+                    m_possVals[i] = new LinkedHashSet<DataCell>(values);
+                } else {
+                    m_possVals[i] = new LinkedHashSet<DataCell>();
+                }
+            }
+
+            if (m_domainMinMaxColumnSelection.createDomain(colSpec)) {
+                if (m_domainMinMaxColumnSelection.dropDomain(colSpec)) {
+                    m_mins[i] = DataType.getMissingCell();
+                    m_maxs[i] = DataType.getMissingCell();
+                } else {
+                    m_mins[i] = colSpec.getDomain().getLowerBound();
+                    if (m_mins[i] == null) { // input spec may not have bounds, but we are asked to compute them
+                        m_mins[i] = DataType.getMissingCell();
+                    }
+                    m_maxs[i] = colSpec.getDomain().getUpperBound();
+                    if (m_maxs[i] == null) { // input spec may not have bounds, but we are asked to compute them
+                        m_maxs[i] = DataType.getMissingCell();
+                    }
+                }
+                m_comparators[i] = colSpec.getType().getComparator();
+            }
+            i++;
+        }
+    }
+
+    /**
+     * A new instance that recreates the domain of all columns. Domain values are recreated for all {@link NominalValue}
+     * columns whereas min/max values are recreated for all {@link BoundedValue} columns.
+     *
+     * @param inputSpec the spec of the input/original table
+     * @param initDomain <code>true</code> if the domain values should be initialized with the values from the input
+     *            spec, <code>false</code> if the domain should be initially empty
+     */
+    public DataTableDomainCreator(final DataTableSpec inputSpec, final boolean initDomain) {
+        this(inputSpec, new DomainCreatorColumnSelection() {
             @Override
             public boolean createDomain(final DataColumnSpec colSpec) {
                 return colSpec.getType().isCompatible(NominalValue.class);
@@ -86,10 +156,9 @@ public class DataTableDomainCreator {
 
             @Override
             public boolean dropDomain(final DataColumnSpec colSpec) {
-                return true;
+                return !initDomain;
             }
-        };
-        m_domainMinMaxColumnSelection = new DomainCreatorColumnSelection() {
+        }, new DomainCreatorColumnSelection() {
             @Override
             public boolean createDomain(final DataColumnSpec colSpec) {
                 return colSpec.getType().isCompatible(BoundedValue.class);
@@ -97,62 +166,21 @@ public class DataTableDomainCreator {
 
             @Override
             public boolean dropDomain(final DataColumnSpec colSpec) {
-                return true;
+                return !initDomain;
             }
-        };
-        m_maxValues = 60;
+        });
     }
 
     /**
-     * Set the maximal number of values in the domain of a nominal value columns.
+     * Set the maximum number of possible values in the domain of a nominal value columns.
      *
-     * @param maxValues the maximal number of values
+     * @param maxValues the maximal number of values, must be >= 0
      */
-    public void setMaxValues(final int maxValues) {
-        m_maxValues = maxValues;
-    }
-
-    /**
-     * Change selection of columns processed on configure and execute.
-     *
-     * @param domainValuesColumnSelection defines columns to recreate or drop domain values
-     * @param domainMinMaxColumnSelection defines columns to recreate or drop min, max values of the domain
-     */
-    public void attachColumnSelection(final DomainCreatorColumnSelection domainValuesColumnSelection,
-        final DomainCreatorColumnSelection domainMinMaxColumnSelection) {
-        m_domainValuesColumnSelection = domainValuesColumnSelection;
-        m_domainMinMaxColumnSelection = domainMinMaxColumnSelection;
-    }
-
-    /**
-     * Call this in the configure method of a {@link NodeModel} when this class is used in the execute of the
-     * {@link NodeModel} to create the {@link DataTableSpec} of the output table.
-     *
-     * @param inSpec the {@link DataTableSpec} of the intput table
-     * @return the {@link DataTableSpec} of the output table
-     */
-    public DataTableSpec configure(final DataTableSpec inSpec) {
-        int colCount = inSpec.getNumColumns();
-        DataColumnSpec[] outColSpecs = new DataColumnSpec[colCount];
-        for (int i = 0; i < outColSpecs.length; i++) {
-            DataColumnSpec colSpec = inSpec.getColumnSpec(i);
-            DataColumnSpecCreator specCreator = new DataColumnSpecCreator(colSpec);
-            DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(colSpec.getDomain());
-            if (m_domainValuesColumnSelection.createDomain(colSpec)
-                || m_domainValuesColumnSelection.dropDomain(colSpec)) {
-                domainCreator.setValues(null);
-            }
-            if (m_domainMinMaxColumnSelection.createDomain(colSpec)
-                || m_domainMinMaxColumnSelection.dropDomain(colSpec)) {
-                domainCreator.setLowerBound(null);
-                domainCreator.setUpperBound(null);
-            }
-
-            specCreator.setDomain(domainCreator.createDomain());
-            outColSpecs[i] = specCreator.createSpec();
+    public void setMaxPossibleValues(final int maxValues) {
+        if (maxValues < 0) {
+            throw new IllegalArgumentException("Maximum possible values must be >= 0 but is " + maxValues);
         }
-
-        return new DataTableSpec(inSpec.getName(), outColSpecs);
+        m_maxPossibleValues = maxValues;
     }
 
     /**
@@ -200,70 +228,17 @@ public class DataTableDomainCreator {
     }
 
     /**
-     * Recreate spec of the given table. Affected columns can be controlled by calling
-     * {@link #attachColumnSelection(DomainCreatorColumnSelection, DomainCreatorColumnSelection)}.
+     * Creates an updated version of the input spec. The domains of all configured columns are set according to the data
+     * that has been processed by {@link #updateDomain(DataRow)} or
+     * {@link #updateDomain(DataTable, ExecutionMonitor, int)} so far. You may call this method multiple times even
+     * while you are still presenting more data.
      *
-     * @param table the table to be processed
-     * @param exec an execution monitor to check for cancellation and report progress. Might be <code>null</code> if not
-     *            needed.
-     * @param rowCount used for reporting progress. If value is -1 progress is not reported.
-     * @return the data driven table spec
-     * @throws CanceledExecutionException when execution is cancelled
+     * @return an updated table spec
      */
-    public DataTableSpec createSpec(final DataTable table, final ExecutionMonitor exec, final int rowCount)
-        throws CanceledExecutionException {
-        final DataTableSpec oldSpec = table.getDataTableSpec();
-        final int colCount = oldSpec.getNumColumns();
-
-        @SuppressWarnings("unchecked")
-        LinkedHashSet<DataCell>[] possVals = new LinkedHashSet[colCount];
-        DataCell[] mins = new DataCell[colCount];
-        DataCell[] maxs = new DataCell[colCount];
-        DataValueComparator[] comparators = new DataValueComparator[colCount];
-
-        for (int i = 0; i < colCount; i++) {
-            if (exec != null) {
-                exec.checkCanceled();
-            }
-            DataColumnSpec col = oldSpec.getColumnSpec(i);
-            if (m_domainValuesColumnSelection.createDomain(col)) {
-                possVals[i] = new LinkedHashSet<DataCell>();
-            }
-            if (m_domainMinMaxColumnSelection.createDomain(col)) {
-                mins[i] = DataType.getMissingCell();
-                maxs[i] = DataType.getMissingCell();
-                comparators[i] = col.getType().getComparator();
-            }
-        }
-
-        int row = 0;
-        for (RowIterator it = table.iterator(); it.hasNext(); row++) {
-            if (exec != null) {
-                exec.checkCanceled();
-                if (rowCount > -1) {
-                    double progress = row / (double)rowCount;
-                    exec.setProgress(Math.max(progress, 1.0));
-                }
-            }
-            DataRow r = it.next();
-            for (int i = 0; i < colCount; i++) {
-                DataCell c = r.getCell(i);
-                if (!c.isMissing() && possVals[i] != null) {
-                    possVals[i].add(c);
-                    if (m_maxValues >= 0 && possVals[i].size() > m_maxValues) {
-                        possVals[i] = null;
-                    }
-                }
-                updateMinMax(i, c, mins, maxs, comparators);
-            }
-        }
-
-        DataColumnSpec[] outColSpecs = new DataColumnSpec[colCount];
+    public DataTableSpec createSpec() {
+        DataColumnSpec[] outColSpecs = new DataColumnSpec[m_inputSpec.getNumColumns()];
         for (int i = 0; i < outColSpecs.length; i++) {
-            if (exec != null) {
-                exec.checkCanceled();
-            }
-            DataColumnSpec original = oldSpec.getColumnSpec(i);
+            DataColumnSpec original = m_inputSpec.getColumnSpec(i);
             DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(original.getDomain());
 
             if (m_domainValuesColumnSelection.dropDomain(original)) {
@@ -275,11 +250,11 @@ public class DataTableDomainCreator {
             }
 
             if (m_domainValuesColumnSelection.createDomain(original)) {
-                domainCreator.setValues(possVals[i]);
+                domainCreator.setValues(m_possVals[i]);
             }
             if (m_domainMinMaxColumnSelection.createDomain(original)) {
-                DataCell min = mins[i] != null && !mins[i].isMissing() ? mins[i] : null;
-                DataCell max = mins[i] != null && !maxs[i].isMissing() ? maxs[i] : null;
+                DataCell min = m_mins[i] != null && !m_mins[i].isMissing() ? m_mins[i] : null;
+                DataCell max = m_mins[i] != null && !m_maxs[i].isMissing() ? m_maxs[i] : null;
                 domainCreator.setLowerBound(min);
                 domainCreator.setUpperBound(max);
             }
@@ -289,28 +264,77 @@ public class DataTableDomainCreator {
             outColSpecs[i] = specCreator.createSpec();
         }
 
-        if (exec != null) {
-            exec.checkCanceled();
-            if (rowCount > -1) {
-                exec.setProgress(1.0);
-            }
-        }
-        return new DataTableSpec(oldSpec.getName(), outColSpecs);
+        return new DataTableSpec(m_inputSpec.getName(), outColSpecs);
     }
 
     /**
-     * Convenient method typically called in the execute method of a {@link NodeModel}. Affected columns can be
-     * controlled by calling {@link #attachColumnSelection(DomainCreatorColumnSelection, DomainCreatorColumnSelection)}.
+     * Updates the domain values with a single row. Note that the row structure must match the table spec that has been
+     * provided to the constructor.
      *
-     * @param table the input table
-     * @param exec the execution context of the node
-     * @return the input table with updated {@link DataTableSpec}
-     * @throws CanceledExecutionException when execution is cancelled
+     * @param row a data row
      */
-    public BufferedDataTable execute(final BufferedDataTable table, final ExecutionContext exec)
-        throws CanceledExecutionException {
-        DataTableSpec spec = createSpec(table, exec, table.getRowCount());
-        return exec.createSpecReplacerTable(table, spec);
+    public void updateDomain(final DataRow row) {
+        assert row.getNumCells() == m_inputSpec.getNumColumns() : "Unequal number of columns in spec and row: "
+            + m_inputSpec.getNumColumns() + " vs. " + row.getNumCells();
+
+        int i = 0;
+        for (DataCell c : row) {
+            if (!c.isMissing() && m_possVals[i] != null) {
+                m_possVals[i].add(c);
+                if (m_possVals[i].size() > m_maxPossibleValues) {
+                    m_possVals[i] = null;
+                }
+            }
+            updateMinMax(i, c, m_mins, m_maxs, m_comparators);
+            i++;
+        }
     }
 
+    /**
+     * Updates the domain values by scanning a whole table. Note that the table's structure must match the table spec
+     * that has been provided to the constructor.
+     *
+     * @param table the table to be processed
+     * @param exec an execution monitor to check for cancellation and report progress. Might be <code>null</code> if not
+     *            needed.
+     * @param rowCount the number of rows in the data table
+     * @throws CanceledExecutionException when execution is cancelled
+     */
+    public void updateDomain(final DataTable table, final ExecutionMonitor exec, final int rowCount)
+        throws CanceledExecutionException {
+        if (!m_inputSpec.equalStructure(table.getDataTableSpec())) {
+            throw new IllegalArgumentException("Spec of table to scan does not match spec given in constructor");
+        }
+
+        int row = 0;
+        for (RowIterator it = table.iterator(); it.hasNext(); row++) {
+            if (exec != null) {
+                exec.checkCanceled();
+                double progress = row / rowCount;
+                exec.setProgress(Math.max(progress, 1.0));
+            }
+
+            DataRow r = it.next();
+            updateDomain(r);
+        }
+
+        if (exec != null) {
+            exec.checkCanceled();
+            exec.setProgress(1.0);
+        }
+    }
+
+    /**
+     * Updates the domain values by scanning a whole table. Note that the table's structure must match the table spec
+     * that has been provided to the constructor.
+     *
+     * @param table the table to be processed
+     * @param exec an execution monitor to check for cancellation and report progress. Might be <code>null</code> if not
+     *            needed.
+     * @throws CanceledExecutionException when execution is cancelled
+     */
+    public void updateDomain(final BufferedDataTable table, final ExecutionMonitor exec)
+        throws CanceledExecutionException {
+        updateDomain(table, exec, table.getRowCount());
+    }
 }
