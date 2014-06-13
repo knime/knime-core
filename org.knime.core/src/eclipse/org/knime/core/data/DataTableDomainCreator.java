@@ -280,8 +280,7 @@ public class DataTableDomainCreator {
         int i = 0;
         for (DataCell c : row) {
             if (!c.isMissing() && m_possVals[i] != null) {
-                m_possVals[i].add(c);
-                if (m_possVals[i].size() > m_maxPossibleValues) {
+                if (m_possVals[i].add(c) && (m_possVals[i].size() > m_maxPossibleValues)) {
                     m_possVals[i] = null;
                 }
             }

@@ -53,6 +53,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -213,7 +214,7 @@ public class DataTableDomainCreatorTest {
         DataTableDomainCreator domainCreator = new DataTableDomainCreator(tableSpec, false);
         domainCreator.setMaxPossibleValues(2);
 
-        // initiall not values
+        // initially no values
         Set<DataCell> expectedValues = new LinkedHashSet<>();
         DataColumnDomain colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
         assertThat("Unexpected possible values", colDomain.getValues(), is(expectedValues));
@@ -314,5 +315,32 @@ public class DataTableDomainCreatorTest {
         domainCreator.updateDomain(new DefaultRow(rowKey, "v1"));
         colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
         assertThat("Unexpected possible values", colDomain.getValues(), is(expectedValues));
+
+
+        // check whether a initial set of more than 60 possible values is retained if no new possible values
+        // appear in the data
+        domainCrea = new DataColumnDomainCreator();
+        Set<DataCell> initialValues = new HashSet<>();
+        for (int i = 0; i < 100; i++) {
+            initialValues.add(new StringCell(Integer.toString(i)));
+        }
+        domainCrea.setValues(initialValues);
+        colSpecCrea.setDomain(domainCrea.createDomain());
+        stringColSpec = colSpecCrea.createSpec();
+
+
+        tableSpec = new DataTableSpec(stringColSpec);
+        domainCreator = new DataTableDomainCreator(tableSpec, true);
+        domainCreator.setMaxPossibleValues(60);
+
+        // check initial values
+        colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
+        assertThat("Unexpected possible values", colDomain.getValues(), is(initialValues));
+
+        // add already existing value
+        domainCreator.updateDomain(new DefaultRow(rowKey, "2"));
+        colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
+        assertThat("Unexpected possible values", colDomain.getValues(), is(initialValues));
+
     }
 }
