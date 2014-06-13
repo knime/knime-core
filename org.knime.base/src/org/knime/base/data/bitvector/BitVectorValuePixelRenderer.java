@@ -63,6 +63,7 @@ import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
  *             {@link org.knime.core.data.renderer.BitVectorValuePixelRenderer}
  *             from the core plug-in instead
  */
+@Deprecated
 final class BitVectorValuePixelRenderer extends
         AbstractPainterDataValueRenderer {
 

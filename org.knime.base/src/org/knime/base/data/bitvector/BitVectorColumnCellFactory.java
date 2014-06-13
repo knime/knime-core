@@ -48,17 +48,18 @@
 package org.knime.base.data.bitvector;
 
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.node.NodeLogger;
+import org.knime.core.data.vector.bitvector.BitVectorType;
 
 /**
  *
  * @author Fabian Dill, University of Konstanz
+ * @author Tobias Koetter
  */
 public abstract class BitVectorColumnCellFactory extends BitVectorCellFactory {
 
     private int m_columnIndex;
 
-    private int m_printedWarnings = 0;
+    private final BitVectorType m_vectorType;
 
     /**
      * Create new cell factory that provides one column given by newColSpec.
@@ -66,9 +67,33 @@ public abstract class BitVectorColumnCellFactory extends BitVectorCellFactory {
      * @param columnSpec the spec of the new column
      * @param columnIndex index of the column to be replaced
      */
-    public BitVectorColumnCellFactory(final DataColumnSpec columnSpec,
-            final int columnIndex) {
-        super(columnSpec);
+    public BitVectorColumnCellFactory(final DataColumnSpec columnSpec, final int columnIndex) {
+        this(BitVectorType.DENSE, columnSpec, columnIndex);
+    }
+
+    /**
+     * @param vectorType {@link BitVectorType}
+     * @param columnSpec the spec of the new column
+     * @param columnIndex index of the column to be replaced
+     * @since 2.10
+     */
+    public BitVectorColumnCellFactory(final BitVectorType vectorType, final DataColumnSpec columnSpec,
+        final int columnIndex) {
+        this(false, vectorType, columnSpec, columnIndex);
+    }
+    /**
+     * @param processConcurrently If to process the rows concurrently (must
+     * only be true if there are no interdependency between the rows).
+     * @param vectorType {@link BitVectorType}
+     * @param columnSpec the spec of the new column
+     * @param columnIndex index of the column to be replaced
+     * @since 2.10
+     * @see #setParallelProcessing(boolean)
+     */
+    public BitVectorColumnCellFactory(final boolean processConcurrently, final BitVectorType vectorType,
+        final DataColumnSpec columnSpec, final int columnIndex) {
+        super(processConcurrently, columnSpec);
+        m_vectorType = vectorType;
         m_columnIndex = columnIndex;
     }
 
@@ -81,22 +106,9 @@ public abstract class BitVectorColumnCellFactory extends BitVectorCellFactory {
     }
 
     /**
-     * Logs the provided message to the provided logger. It suppresses messages
-     * after 20 messages have been printed.
-     *
-     * @param logger messages are send to this instance
-     * @param msg the message to print
+     * @return the vectorType
      */
-    protected void printError(final NodeLogger logger, final String msg) {
-        if (m_printedWarnings < 20) {
-            logger.error(msg);
-            m_printedWarnings++;
-            return;
-        }
-        if (m_printedWarnings == 20) {
-            logger.error("Suppressing further error messages...");
-            m_printedWarnings++;
-        }
+    BitVectorType getVectorType() {
+        return m_vectorType;
     }
-
 }

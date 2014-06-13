@@ -45,26 +45,25 @@
  * History
  *   06.12.2005 (dill): created
  */
-package org.knime.base.node.mine.subgroupminer;
+package org.knime.base.node.preproc.bitvector.create;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The factory for the BitVectorGenerator Node.
+ * The factory for the Create Bit Vector Node.
  *
- * @author Fabian Dill, University of Konstanz
+ * @author Tobias Koetter
  */
-public class BitVectorGeneratorNodeFactory
-        extends NodeFactory<BitVectorGeneratorNodeModel> {
+public class CreateBitVectorNodeFactory extends NodeFactory<CreateBitVectorNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public BitVectorGeneratorNodeModel createNodeModel() {
-        return new BitVectorGeneratorNodeModel();
+    public CreateBitVectorNodeModel createNodeModel() {
+        return new CreateBitVectorNodeModel();
     }
 
     /**
@@ -79,9 +78,9 @@ public class BitVectorGeneratorNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public NodeView<BitVectorGeneratorNodeModel> createNodeView(
-            final int viewIndex, final BitVectorGeneratorNodeModel nodeModel) {
-        return new BitVectorGeneratorView(nodeModel);
+    public NodeView<CreateBitVectorNodeModel> createNodeView(final int viewIndex,
+        final CreateBitVectorNodeModel nodeModel) {
+        return new CreateBitVectorView(nodeModel);
     }
 
     /**
@@ -97,6 +96,6 @@ public class BitVectorGeneratorNodeFactory
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new BitVectorGeneratorNodeDialog();
+        return new CreateBitVectorNodeDialog();
     }
 }

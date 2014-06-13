@@ -47,17 +47,57 @@
  */
 package org.knime.base.data.bitvector;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Base class for all cell factories converting strings to bitvectors.
  *
  * @author Fabian Dill, University of Konstanz
+ * @author Tobias Koetter
  */
 public abstract class BitVectorCellFactory extends SingleCellFactory {
 
-    private int m_nrOfProcessedRows;
+    private AtomicInteger m_nrOfProcessedRows = new AtomicInteger(0);
+    private AtomicInteger m_printedErrors = new AtomicInteger(0);
+    private boolean m_wasSuccessfull = true;
+    private String m_lastError = "";
+    private boolean m_failOnError = false;
+
+    /**
+     * @param failOnError set to <code>true</code> if the factory should fail on errors or set to <code>false</code>
+     * to have only an error message printed
+     * @since 2.10
+     */
+    public void setFailOnError(final boolean failOnError) {
+        m_failOnError = failOnError;
+    }
+
+    /**
+     * @return <code>true</code> if the factory fails on parse errors
+     * @since 2.10
+     */
+    public boolean failsOnError() {
+        return m_failOnError;
+    }
+
+    /**
+     * @param colIndices {@link List} with {@link Integer}s to convert
+     * @return int array with the integers
+     */
+    static int[] convert2Array(final List<Integer> colIndices) {
+        int[] idxs = new int[colIndices.size()];
+        int i = 0;
+        for (Integer idx : colIndices) {
+            idxs[i++] = idx;
+        }
+        return idxs;
+    }
 
     /**
      *
@@ -68,11 +108,22 @@ public abstract class BitVectorCellFactory extends SingleCellFactory {
     }
 
     /**
+     *@param processConcurrently If to process the rows concurrently (must
+     * only be true if there are no interdependency between the rows).
+     * @param columnSpec the column spec of the new column
+     * @see #setParallelProcessing(boolean)
+     * @since 2.10
+     */
+    public BitVectorCellFactory(final boolean processConcurrently, final DataColumnSpec columnSpec) {
+        super(processConcurrently, columnSpec);
+    }
+
+    /**
      * Increments the number of processed rows.
      *
      */
     public void incrementNrOfRows() {
-        m_nrOfProcessedRows++;
+        m_nrOfProcessedRows.getAndIncrement();
     }
 
     /**
@@ -81,7 +132,7 @@ public abstract class BitVectorCellFactory extends SingleCellFactory {
      * @return the number of processed rows.
      */
     public int getNrOfProcessedRows() {
-        return m_nrOfProcessedRows;
+        return m_nrOfProcessedRows.get();
     }
 
     /**
@@ -98,8 +149,71 @@ public abstract class BitVectorCellFactory extends SingleCellFactory {
 
     /**
      *
-     * @return true if at least one conversion was successful, false otherwise.
+     * @return true if no error occurred otherwise false
+     * @see #getLastErrorMessage()
      */
-    public abstract boolean wasSuccessful();
+    public boolean wasSuccessful() {
+        return m_wasSuccessfull;
+    }
+
+    /**
+     * @return an error message if {@link #wasSuccessful()} returns <code>false</code> otherwise <code>null</code>
+     * @since 2.10
+     */
+    public String getLastErrorMessage() {
+        return m_lastError;
+    }
+
+    /**
+     * @return the number of printed warnings
+     * @since 2.10
+     */
+    public int getNoOfPrintedErrors() {
+        return m_printedErrors.get();
+    }
+
+    /**
+     * Logs the provided message to the provided logger. It suppresses messages
+     * after 20 messages have been printed.
+     *
+     * @param logger messages are send to this instance
+     * @param msg the message to print
+     * @since 2.10
+     */
+    protected void printError(final NodeLogger logger, final String msg) {
+        printError(logger, null, msg);
+    }
+
+    /**
+     * Logs the provided message to the provided logger. It suppresses messages
+     * after 20 messages have been printed.
+     *
+     * @param logger messages are send to this instance
+     * @param row the {@link DataRow} the error occurred in or <code>null</code> if not available
+     * @param msg the message to print
+     * @since 2.10
+     */
+    protected void printError(final NodeLogger logger, final DataRow row, final String msg) {
+        m_wasSuccessfull = false;
+        final int noOfErrors = m_printedErrors.getAndIncrement();
+        final String errMsg;
+        if (row != null) {
+            errMsg = "Error in row " + row.getKey() + ": " + msg;
+        } else {
+            errMsg = msg;
+        }
+        m_lastError = errMsg;
+        if (m_failOnError) {
+            throw new RuntimeException(m_lastError + (m_lastError.endsWith(".") ? "" : ".")
+                + " Unselect the fail on parse error option to ignore parsing errors.");
+        }
+        if (noOfErrors < 20) {
+            logger.error(errMsg);
+            return;
+        }
+        if (noOfErrors == 20) {
+            logger.error("Suppressing further error messages...");
+        }
+    }
 
 }

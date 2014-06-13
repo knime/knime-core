@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -43,67 +44,59 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18.01.2007 (dill): created
+ *   04.06.2014 (koetter): created
  */
 package org.knime.base.data.bitvector;
 
-import java.util.List;
-
+import org.knime.base.node.preproc.filter.row.rowfilter.StringCompareRowFilter;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
 import org.knime.core.data.vector.bitvector.BitVectorType;
-import org.knime.core.node.NodeLogger;
 
 /**
  *
- * @author Fabian Dill, University of Konstanz
  * @author Tobias Koetter
+ * @since 2.10
  */
-public class Numeric2BitVectorThresholdCellFactory extends BitVectorCellFactory {
+public class MultiString2BitVectorCellFactory extends BitVectorCellFactory {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(Numeric2BitVectorThresholdCellFactory.class);
-
-    private int m_totalNrOf0s;
-    private int m_totalNrOf1s;
-    private double m_threshold;
-    private final int[] m_colIdxs;
-    private final BitVectorType m_vectorType;
-    /**
-    *
-    * @param bitColSpec {@link DataColumnSpec} of the column containing the bit vector
-    * @param threshold the threshold above which the bit is set
-    * @param colIndices list of column indices used to create bit vector from
-    */
-   public Numeric2BitVectorThresholdCellFactory(
-           final DataColumnSpec bitColSpec,
-           final double threshold, final List<Integer> colIndices) {
-       this(BitVectorType.DENSE, bitColSpec, threshold, convert2Array(colIndices));
-   }
+    private StringCompareRowFilter m_filter;
+    private final int[] m_colIndices;
+    private final BitVectorType m_type;
+    private int m_numberOfSetBits;
+    private int m_numberOfNotSetBits;
+    private final boolean m_setMatching;
 
     /**
-     * @param vectorType the {@link BitVectorType}
-     * @param bitColSpec {@link DataColumnSpec} of the column containing the bit vector
-    * @param threshold the threshold above which the bit is set
-    * @param colIndices list of column indices used to create bit vector from
-     * @since 2.10
+     * @param type the {@link BitVectorType} to use
+     * @param colSpec the column spec of the column containing the bitvectors
+     * @param strPattern the pattern that is matched against the string
+     *            representation of the data cell
+     * @param caseSensitive if true a case sensitive match is performed,
+     *            otherwise characters of different case match, too.
+     * @param hasWildcards if true, '*' and '?' is interpreted as wildcard
+     *            matching any character sequence or any character respectively.
+     *            If false, '*' and '?' are treated as regular characters and
+     *            match '*' and '?' in the value.
+     * @param isRegExpr if true, the pattern argument is treated as regular
+     *            expression. Can't be true when the hasWildcard argument is
+     *            true
+     * @param setMatching <code>true</code> if the bit for matching columns should be set otherwise the bits for not
+     * matching columns are set
+     * @param colIndices the indices of the columns to include
      */
-    public Numeric2BitVectorThresholdCellFactory(final BitVectorType vectorType, final DataColumnSpec bitColSpec,
-        final double threshold, final int... colIndices) {
-        super(bitColSpec);
-        m_vectorType = vectorType;
-        m_threshold = threshold;
-        m_colIdxs = colIndices;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNumberOfNotSetBits() {
-        return m_totalNrOf0s;
+    public MultiString2BitVectorCellFactory(final BitVectorType type, final DataColumnSpec colSpec,
+        final boolean caseSensitive, final boolean hasWildcards, final boolean isRegExpr, final boolean setMatching,
+        final String strPattern, final int[] colIndices) {
+        super(colSpec);
+        m_type = type;
+        m_setMatching = setMatching;
+        m_colIndices = colIndices;
+        m_filter =
+                new StringCompareRowFilter(strPattern, "", true, false, caseSensitive, hasWildcards, isRegExpr);
+        m_numberOfSetBits = 0;
+        m_numberOfNotSetBits = 0;
     }
 
     /**
@@ -111,7 +104,31 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorCellFactory 
      */
     @Override
     public int getNumberOfSetBits() {
-        return m_totalNrOf1s;
+        return m_numberOfSetBits;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNumberOfNotSetBits() {
+        return m_numberOfNotSetBits;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean wasSuccessful() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getLastErrorMessage() {
+        return null;
     }
 
     /**
@@ -121,25 +138,23 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorCellFactory 
     public DataCell getCell(final DataRow row) {
         incrementNrOfRows();
         org.knime.core.data.vector.bitvector.BitVectorCellFactory<? extends DataCell> factory =
-                m_vectorType.getCellFactory(m_colIdxs.length);
-        for (int i = 0; i < m_colIdxs.length; i++) {
-            final DataCell cell = row.getCell(m_colIdxs[i]);
+                m_type.getCellFactory(m_colIndices.length);
+        int bitIdx = 0;
+        for (int idx : m_colIndices) {
+            final DataCell cell = row.getCell(idx);
+            final boolean set;
             if (cell.isMissing()) {
-                m_totalNrOf0s++;
-                continue;
-            }
-            if (cell instanceof DoubleValue) {
-                double currValue = ((DoubleValue)cell).getDoubleValue();
-                if (currValue >= m_threshold) {
-                    factory.set(i);
-                    m_totalNrOf1s++;
-                } else {
-                    m_totalNrOf0s++;
-                }
+                set = false;
             } else {
-                printError(LOGGER, row, "Incompatible type found.");
-                return DataType.getMissingCell();
+                set = m_setMatching == m_filter.matches(cell);
             }
+            if (set) {
+                factory.set(bitIdx);
+                m_numberOfSetBits++;
+            } else {
+                m_numberOfNotSetBits++;
+            }
+            bitIdx++;
         }
         return factory.createDataCell();
     }

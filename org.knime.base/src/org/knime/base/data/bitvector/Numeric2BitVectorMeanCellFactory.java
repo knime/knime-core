@@ -52,15 +52,19 @@ import java.util.List;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.vector.bitvector.DenseBitVector;
-import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
+import org.knime.core.data.vector.bitvector.BitVectorType;
+import org.knime.core.node.NodeLogger;
 
 /**
  *
  * @author Fabian Dill, University of Konstanz
+ * @author Tobias Koetter
  */
 public class Numeric2BitVectorMeanCellFactory extends BitVectorCellFactory {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(Numeric2BitVectorMeanCellFactory.class);
 
     private double[] m_meanValues;
 
@@ -69,24 +73,43 @@ public class Numeric2BitVectorMeanCellFactory extends BitVectorCellFactory {
     private int m_totalNrOf0s;
 
     private int m_totalNrOf1s;
-    
-    private final List<Integer>m_columns;
+
+    private final int[] m_columns;
+
+    private final BitVectorType m_vectorType;
 
     /**
      *
-     * @param bitColSpec the column spec of the column containing the bitvectors
+     * @param bitColSpec the column spec of the column containing the bit vector
      * @param meanValues the mean values of the numeric columns
      * @param meanThreshold threshold above which the bits should be set
      *            (percentage of the mean)
-     * @param columns list of column indices used to create bit vector from
+     * @param colIndices list of column indices used to create bit vector from
      */
     public Numeric2BitVectorMeanCellFactory(final DataColumnSpec bitColSpec,
-            final double[] meanValues, final double meanThreshold, 
-            final List<Integer>columns) {
+            final double[] meanValues, final double meanThreshold,
+            final List<Integer> colIndices) {
+        this(BitVectorType.DENSE, bitColSpec, meanThreshold, meanValues, convert2Array(colIndices));
+    }
+
+    /**
+     * @param vectorType {@link BitVectorType}
+     * @param bitColSpec the column spec of the column containing the bit vector
+     * @param meanThreshold threshold above which the bits should be set
+     *            (percentage of the mean)
+     * @param meanValues the mean values of the numeric columns defined by the given column indices. The mean
+     * values need to be in the same order as their corresponding column indices
+     * @param colIndices list of column indices used to create bit vector from in the same order as their corresponding
+     * mean values
+     * @since 2.10
+     */
+    public Numeric2BitVectorMeanCellFactory(final BitVectorType vectorType, final DataColumnSpec bitColSpec,
+        final double meanThreshold, final double[] meanValues, final int[] colIndices) {
         super(bitColSpec);
+        m_vectorType = vectorType;
         m_meanValues = meanValues;
         m_meanFactor = meanThreshold;
-        m_columns = columns;
+        m_columns = colIndices;
     }
 
     /**
@@ -109,33 +132,29 @@ public class Numeric2BitVectorMeanCellFactory extends BitVectorCellFactory {
      * {@inheritDoc}
      */
     @Override
-    public boolean wasSuccessful() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public DataCell getCell(final DataRow row) {
         incrementNrOfRows();
-        DenseBitVector bitSet = new DenseBitVector(m_columns.size());
-        for (int i = 0; i < m_columns.size(); i++) {
-            DataCell cell = row.getCell(m_columns.get(i));
+        org.knime.core.data.vector.bitvector.BitVectorCellFactory<? extends DataCell> factory =
+                m_vectorType.getCellFactory(m_columns.length);
+        for (int i = 0; i < m_columns.length; i++) {
+            final DataCell cell = row.getCell(m_columns[i]);
             if (cell.isMissing()) {
                 m_totalNrOf0s++;
                 continue;
             }
-            double currValue = ((DoubleValue)cell).getDoubleValue();
-            if (currValue >= (m_meanFactor * m_meanValues[i])) {
-                bitSet.set(i);
-                m_totalNrOf1s++;
+            if (cell instanceof DoubleValue) {
+                double currValue = ((DoubleValue)cell).getDoubleValue();
+                if (currValue >= (m_meanFactor * m_meanValues[i])) {
+                    factory.set(i);
+                    m_totalNrOf1s++;
+                } else {
+                    m_totalNrOf0s++;
+                }
             } else {
-                m_totalNrOf0s++;
+                printError(LOGGER, row, "Incompatible type found.");
+                return DataType.getMissingCell();
             }
         }
-        DenseBitVectorCellFactory fact = new DenseBitVectorCellFactory(bitSet);
-        return fact.createDataCell();
+        return factory.createDataCell();
     }
-
 }

@@ -1,5 +1,5 @@
-<!--
-========================================================================
+/*
+ * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,12 +40,65 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
-====================================================================
--->
-<body>
-This package contains everything necessary for normal subgroup mining.
-The algorithms in the package apriori, the data structures in the package 
-frequentitemset and the nodes in this package.
-The SubgoupMiner mines for either frequent itemsets (free, closed or maximal)
-or for association rules.
-</body>
+ * -------------------------------------------------------------------
+ *
+ * History
+ *   06.12.2005 (dill): created
+ */
+package org.knime.base.node.mine.subgroupminer;
+
+import org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+
+/**
+ * The factory for the BitVectorGenerator Node.
+ *
+ * @author Fabian Dill, University of Konstanz
+ * @deprecated replaced by {@link CreateBitVectorNodeFactory}
+ */
+@Deprecated
+public class BitVectorGeneratorNodeFactory extends NodeFactory<BitVectorGeneratorNodeModel> {
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BitVectorGeneratorNodeModel createNodeModel() {
+        return new BitVectorGeneratorNodeModel();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrNodeViews() {
+        return 1;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<BitVectorGeneratorNodeModel> createNodeView(
+            final int viewIndex, final BitVectorGeneratorNodeModel nodeModel) {
+        return new BitVectorGeneratorView(nodeModel);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new BitVectorGeneratorNodeDialog();
+    }
+}

@@ -60,6 +60,7 @@ import org.knime.base.data.bitvector.Hex2BitVectorCellFactory;
 import org.knime.base.data.bitvector.IdString2BitVectorCellFactory;
 import org.knime.base.data.bitvector.Numeric2BitVectorMeanCellFactory;
 import org.knime.base.data.bitvector.Numeric2BitVectorThresholdCellFactory;
+import org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -89,7 +90,9 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * column contains a bitvector of length n.
  *
  * @author Fabian Dill, University of Konstanz
+ * @deprecated replaced by {@link CreateBitVectorNodeModel}
  */
+@Deprecated
 public class BitVectorGeneratorNodeModel extends NodeModel {
     /**
      * Represents the string types that can be parsed.

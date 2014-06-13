@@ -660,8 +660,8 @@
             id="org.knime.base.node.preproc.constantvalue.ConstantValueColumnNodeFactory" />
       <node
             category-path="/mining/subgroup"
-            factory-class="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"
-            id="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"
+            id="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"/>
       <node
             category-path="/mining/subgroup"
             factory-class="org.knime.base.node.mine.subgroupminer.SubgroupMinerFactory2"
@@ -697,13 +697,13 @@
 	          id="org.knime.base.node.io.table.write.WriteTableNodeFactory"/>
      <node
            category-path="/manipulation/column/column-split+combine"
-           factory-class="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"
-           id="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"/>
+           factory-class="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"
+           id="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"/>
      <node
            category-path="/manipulation/column/column-split+combine"
            factory-class="org.knime.base.node.preproc.bitvector.expand.ExpandBitVectorNodeFactory"
            id="org.knime.base.node.preproc.bitvector.expand.ExpandBitVectorNodeFactory"
-           after="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"/>
+           after="org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeFactory"/>
      <node
            category-path="/view"
            factory-class="org.knime.base.node.viz.histogram.node.HistogramNodeFactory"

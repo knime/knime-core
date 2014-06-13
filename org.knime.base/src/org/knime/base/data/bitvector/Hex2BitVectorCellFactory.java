@@ -53,8 +53,9 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.vector.bitvector.BitVectorCellFactory;
+import org.knime.core.data.vector.bitvector.BitVectorType;
 import org.knime.core.data.vector.bitvector.DenseBitVectorCell;
-import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -70,14 +71,11 @@ import org.knime.core.node.NodeLogger;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class Hex2BitVectorCellFactory extends BitVectorColumnCellFactory {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(Hex2BitVectorCellFactory.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(Hex2BitVectorCellFactory.class);
 
     private int m_nrOfSetBits = 0;
 
     private int m_nrOfNotSetBits = 0;
-
-    private boolean m_wasSuccessful = true;
 
     /**
      * Create new cell factory that provides one column given by newColSpec.
@@ -91,12 +89,23 @@ public class Hex2BitVectorCellFactory extends BitVectorColumnCellFactory {
     }
 
     /**
+     * @param vectorType {@link BitVectorType}
+     * @param colSpec the spec of the new column
+     * @param columnIndex index of the column to be replaced
+     * @since 2.10
+     */
+    public Hex2BitVectorCellFactory(final BitVectorType vectorType, final DataColumnSpec colSpec,
+        final int columnIndex) {
+        super(vectorType, colSpec, columnIndex);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public DataCell getCell(final DataRow row) {
         incrementNrOfRows();
-        DataCell old = row.getCell(getColumnIndex());
+        final DataCell old = row.getCell(getColumnIndex());
         if (old.isMissing()) {
             return DataType.getMissingCell();
         }
@@ -105,42 +114,25 @@ public class Hex2BitVectorCellFactory extends BitVectorColumnCellFactory {
             DataCell newCell;
             try {
                 String hexString = val.trim();
-                DenseBitVectorCell cell =
-                        new DenseBitVectorCellFactory(hexString)
-                                .createDataCell();
-                int card = (int)cell.cardinality(); // hopefully int does it
+                BitVectorType type = getVectorType();
+                BitVectorCellFactory<? extends DataCell> factory = type.getCellFactory(hexString);
+                int card = (int)factory.cardinality(); // hopefully int does it
                 m_nrOfSetBits += card;
-                m_nrOfNotSetBits += cell.length() - card;
-                newCell = cell;
+                m_nrOfNotSetBits += factory.length() - card;
+                newCell = factory.createDataCell();
             } catch (IllegalArgumentException nfe) {
                 String nfeMsg = nfe.getMessage();
                 if (nfeMsg == null) {
                     nfeMsg = "<sorry, no further details>";
                 }
-                String message =
-                        "Unable to convert \"" + val + "\" to "
-                                + "bit vector: " + nfeMsg;
-                printError(LOGGER, message);
+                printError(LOGGER, row, "Unable to convert \"" + val + "\" to bit vector: " + nfeMsg);
                 newCell = DataType.getMissingCell();
-                m_wasSuccessful = false;
             }
             return newCell;
         } else {
-            m_wasSuccessful = false;
-            printError(LOGGER, "Unable to convert \"" + old
-                    + "\" to bit vector, not a string value cell.");
+            printError(LOGGER, row, "Unable to convert \"" + old + "\" to bit vector, not a string value cell.");
             return DataType.getMissingCell();
         }
-    }
-
-    /**
-     *
-     * @return <code>true</code> if all conversions of all cells were
-     *         successful. <code>false</code> if one conversion failed.
-     */
-    @Override
-    public boolean wasSuccessful() {
-        return m_wasSuccessful;
     }
 
     /**

@@ -59,6 +59,7 @@ import org.knime.core.data.renderer.DefaultDataValueRenderer;
  *             {@link org.knime.core.data.renderer.BitVectorValueStringRenderer}
  *             from the core plug-in instead.
  */
+@Deprecated
 final class BitVectorValueStringRenderer extends DefaultDataValueRenderer {
 
     /** Possible types for string representation. */

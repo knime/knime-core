@@ -66,6 +66,7 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
 import org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeModel.STRING_TYPES;
+import org.knime.base.node.preproc.bitvector.create.CreateBitVectorNodeDialog;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -86,7 +87,9 @@ import org.knime.core.node.defaultnodesettings.DialogComponentString;
  * threshold are presented as a bit set to zero.
  *
  * @author Fabian Dill, University of Konstanz
+ * @deprecated replaced by {@link CreateBitVectorNodeDialog}
  */
+@Deprecated
 public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
     private JSpinner m_threshold;
 

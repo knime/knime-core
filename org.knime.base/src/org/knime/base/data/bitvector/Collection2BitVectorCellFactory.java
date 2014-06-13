@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -43,75 +44,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   18.01.2007 (dill): created
+ *   11.06.2014 (koetter): created
  */
 package org.knime.base.data.bitvector;
 
-import java.util.List;
+import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
+import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.vector.bitvector.BitVectorType;
 import org.knime.core.node.NodeLogger;
 
 /**
- *
- * @author Fabian Dill, University of Konstanz
+ * Creates a bit vector for a given {@link CollectionDataValue}.
  * @author Tobias Koetter
+ * @since 2.10
  */
-public class Numeric2BitVectorThresholdCellFactory extends BitVectorCellFactory {
+public class Collection2BitVectorCellFactory extends BitVectorColumnCellFactory {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(Numeric2BitVectorThresholdCellFactory.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(Collection2BitVectorCellFactory.class);
 
-    private int m_totalNrOf0s;
-    private int m_totalNrOf1s;
-    private double m_threshold;
-    private final int[] m_colIdxs;
-    private final BitVectorType m_vectorType;
-    /**
-    *
-    * @param bitColSpec {@link DataColumnSpec} of the column containing the bit vector
-    * @param threshold the threshold above which the bit is set
-    * @param colIndices list of column indices used to create bit vector from
-    */
-   public Numeric2BitVectorThresholdCellFactory(
-           final DataColumnSpec bitColSpec,
-           final double threshold, final List<Integer> colIndices) {
-       this(BitVectorType.DENSE, bitColSpec, threshold, convert2Array(colIndices));
-   }
+    private int m_nrOfSetBits = 0;
+
+    private int m_nrOfNotSetBits = 0;
+
+    private final Map<String, Integer> m_idxMap;
 
     /**
-     * @param vectorType the {@link BitVectorType}
-     * @param bitColSpec {@link DataColumnSpec} of the column containing the bit vector
-    * @param threshold the threshold above which the bit is set
-    * @param colIndices list of column indices used to create bit vector from
-     * @since 2.10
+     * @param vectorType {@link BitVectorType}
+     * @param columnSpec the spec of the new column
+     * @param columnIndex index of the column to be replaced
+     * @param idxMap {@link Map} that maps a {@link DataCell} string representation to a unique index starting by 0
      */
-    public Numeric2BitVectorThresholdCellFactory(final BitVectorType vectorType, final DataColumnSpec bitColSpec,
-        final double threshold, final int... colIndices) {
-        super(bitColSpec);
-        m_vectorType = vectorType;
-        m_threshold = threshold;
-        m_colIdxs = colIndices;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNumberOfNotSetBits() {
-        return m_totalNrOf0s;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNumberOfSetBits() {
-        return m_totalNrOf1s;
+    public Collection2BitVectorCellFactory(final BitVectorType vectorType, final DataColumnSpec columnSpec,
+        final int columnIndex, final Map<String, Integer> idxMap) {
+        super(vectorType, columnSpec, columnIndex);
+        m_idxMap = idxMap;
     }
 
     /**
@@ -120,28 +91,50 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorCellFactory 
     @Override
     public DataCell getCell(final DataRow row) {
         incrementNrOfRows();
-        org.knime.core.data.vector.bitvector.BitVectorCellFactory<? extends DataCell> factory =
-                m_vectorType.getCellFactory(m_colIdxs.length);
-        for (int i = 0; i < m_colIdxs.length; i++) {
-            final DataCell cell = row.getCell(m_colIdxs[i]);
-            if (cell.isMissing()) {
-                m_totalNrOf0s++;
-                continue;
-            }
-            if (cell instanceof DoubleValue) {
-                double currValue = ((DoubleValue)cell).getDoubleValue();
-                if (currValue >= m_threshold) {
-                    factory.set(i);
-                    m_totalNrOf1s++;
-                } else {
-                    m_totalNrOf0s++;
-                }
-            } else {
-                printError(LOGGER, row, "Incompatible type found.");
-                return DataType.getMissingCell();
-            }
+        final DataCell cell = row.getCell(getColumnIndex());
+        if (cell.isMissing()) {
+            return DataType.getMissingCell();
         }
-        return factory.createDataCell();
+        if (cell instanceof CollectionDataValue) {
+            org.knime.core.data.vector.bitvector.BitVectorCellFactory<? extends DataCell> factory =
+                    getVectorType().getCellFactory(m_idxMap.size());
+            final CollectionDataValue collCell = (CollectionDataValue) cell;
+            for (final DataCell valCell : collCell) {
+                if (valCell.isMissing()) {
+                    continue;
+                }
+                final Integer bitIdx = m_idxMap.get(valCell.toString());
+                if (bitIdx != null) {
+                    factory.set(bitIdx.intValue());
+                } else {
+                    printError(LOGGER, row, "No bit index found for cell " + valCell.toString());
+                    return DataType.getMissingCell();
+                }
+            }
+            m_nrOfSetBits += collCell.size();
+            m_nrOfNotSetBits += m_idxMap.size() - collCell.size();
+            return factory.createDataCell();
+        } else {
+            printError(LOGGER, row, "Incompatible type found");
+            return DataType.getMissingCell();
+        }
     }
 
+    /**
+     *
+     * @return the number of set bits.
+     */
+    @Override
+    public int getNumberOfSetBits() {
+        return m_nrOfSetBits;
+    }
+
+    /**
+     *
+     * @return the number of not set bits.
+     */
+    @Override
+    public int getNumberOfNotSetBits() {
+        return m_nrOfNotSetBits;
+    }
 }

@@ -52,13 +52,14 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.vector.bitvector.DenseBitVector;
-import org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory;
+import org.knime.core.data.vector.bitvector.BitVectorCellFactory;
+import org.knime.core.data.vector.bitvector.BitVectorType;
 import org.knime.core.node.NodeLogger;
 
 /**
  *
  * @author Fabian Dill, University of Konstanz
+ * @author Tobias Koetter
  */
 public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
 
@@ -68,9 +69,32 @@ public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
      * @param colSpec the spec of the new column
      * @param columnIndex index of the column to be replaced
      */
-    public IdString2BitVectorCellFactory(final DataColumnSpec colSpec,
-            final int columnIndex) {
-        super(colSpec, columnIndex);
+    public IdString2BitVectorCellFactory(final DataColumnSpec colSpec, final int columnIndex) {
+        this(BitVectorType.DENSE, colSpec, columnIndex);
+    }
+
+    /**
+     * @param vectorType {@link BitVectorType}
+     * @param colSpec the spec of the new column
+     * @param columnIndex index of the column to be replaced
+     * @since 2.10
+     */
+    public IdString2BitVectorCellFactory(final BitVectorType vectorType, final DataColumnSpec colSpec,
+        final int columnIndex) {
+        this(vectorType, colSpec, columnIndex, Integer.MIN_VALUE);
+    }
+
+    /**
+     * @param vectorType {@link BitVectorType}
+     * @param colSpec the spec of the new column
+     * @param columnIndex index of the column to be replaced
+     * @param maxPos the actual length of the bit set - the max position
+     * @since 2.10
+     */
+    public IdString2BitVectorCellFactory(final BitVectorType vectorType, final DataColumnSpec colSpec,
+        final int columnIndex, final int maxPos) {
+        super(vectorType, colSpec, columnIndex);
+        m_maxPos = maxPos;
     }
 
     private static final NodeLogger LOGGER =
@@ -79,8 +103,6 @@ public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
     private int m_nrOfSetBits = 0;
 
     private int m_maxPos = Integer.MIN_VALUE;
-
-    private boolean m_wasSuccessful = true;
 
     /**
      *
@@ -96,64 +118,43 @@ public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
     @Override
     public DataCell getCell(final DataRow row) {
         incrementNrOfRows();
-        if (!row.getCell(getColumnIndex()).getType().isCompatible(
-                StringValue.class)) {
-            m_wasSuccessful = false;
-            printError(LOGGER, "Cell in column " + getColumnIndex()
-                    + " is not a string value!");
+        if (!row.getCell(getColumnIndex()).getType().isCompatible(StringValue.class)) {
+            printError(LOGGER, row, "Cell in column " + getColumnIndex() + " is not a string value!");
             return DataType.getMissingCell();
         }
         if (row.getCell(getColumnIndex()).isMissing()) {
             return DataType.getMissingCell();
         }
-        String toParse =
-                ((StringValue)row.getCell(getColumnIndex())).getStringValue();
+        String toParse = ((StringValue)row.getCell(getColumnIndex())).getStringValue().trim();
         toParse = toParse.trim();
-
         try {
             int newlySetBits = 0;
-            DenseBitVector currBitSet = new DenseBitVector(m_maxPos);
+            final BitVectorType type = getVectorType();
+            final BitVectorCellFactory<? extends DataCell> factory = type.getCellFactory(m_maxPos);
             if (!toParse.isEmpty()) {
-                String[] numbers = toParse.split("\\s");
+                final String[] numbers = toParse.split("\\s");
                 for (int i = 0; i < numbers.length; i++) {
                     int pos = Integer.parseInt(numbers[i].trim());
                     if (pos < 0) {
-                        m_wasSuccessful = false;
-                        printError(LOGGER,
-                                "Invalid negative index in index string: "
-                                        + toParse);
+                        printError(LOGGER, row, "Invalid negative index in index string: " + toParse);
                         return DataType.getMissingCell();
                     }
-                    if (!currBitSet.get(pos)) {
-                        currBitSet.set(pos);
+                    if (!factory.get(pos)) {
+                        factory.set(pos);
                         newlySetBits++;
                     }
                 }
             }
             m_nrOfSetBits += newlySetBits;
-            DenseBitVectorCellFactory fact =
-                    new DenseBitVectorCellFactory(currBitSet);
-            return fact.createDataCell();
+            return factory.createDataCell();
         } catch (NumberFormatException nfe) {
             String nfeMsg = nfe.getMessage();
             if (nfeMsg == null) {
                 nfeMsg = "<sorry, no further details>";
             }
-            String message =
-                    "Unable to convert \"" + toParse + "\" to "
-                            + "bit vector: " + nfeMsg;
-            m_wasSuccessful = false;
-            printError(LOGGER, message);
+            printError(LOGGER, row, "Unable to convert \"" + toParse + "\" to " + "bit vector: " + nfeMsg);
             return DataType.getMissingCell();
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean wasSuccessful() {
-        return m_wasSuccessful;
     }
 
     /**

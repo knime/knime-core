@@ -50,6 +50,7 @@ package org.knime.base.node.mine.subgroupminer;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
+import org.knime.base.node.preproc.bitvector.create.CreateBitVectorView;
 import org.knime.core.node.NodeView;
 
 
@@ -60,9 +61,10 @@ import org.knime.core.node.NodeView;
  * and the resulting ratio from 1s to 0s.
  *
  * @author Fabian Dill, University of Konstanz
+ * @deprecated replaced by {@link CreateBitVectorView}
  */
-public class BitVectorGeneratorView
-        extends NodeView<BitVectorGeneratorNodeModel> {
+@Deprecated
+public class BitVectorGeneratorView extends NodeView<BitVectorGeneratorNodeModel> {
 
     private JEditorPane m_pane;
 

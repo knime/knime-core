@@ -183,6 +183,7 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
      *
      * @return hex representation
      */
+    @Override
     public String toHexString() {
         final BitSet set = getBitSet();
         // compute number of hex characters, which come in blocks of 4!
@@ -269,6 +270,7 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
     /**
      * @return number of bits actually used
      */
+    @Override
     public int getNumBits() {
         return m_nrBits;
     }
@@ -277,6 +279,7 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
      * @return the underlying bit set
      * @see java.util.BitSet
      */
+    @Override
     public BitSet getBitSet() {
         return m_bits;
     }
