@@ -44,6 +44,8 @@
  */
 package org.knime.core.node.util.filter.column;
 
+import java.util.ArrayList;
+
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.ListCellRenderer;
@@ -180,7 +182,18 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
         m_typePanel.loadConfiguration(config.getTypeConfig(), spec);
         setTypeFilterEnabled(config.isTypeFilterEnabled());
         setNameFilter(config.getFilter());
-        super.loadConfiguration(config, spec == null ? new String[0] : spec.getColumnNames());
+        super.loadConfiguration(config, spec == null ? new String[0] : toFilteredStringArray(spec));
+    }
+
+    private String[] toFilteredStringArray(final DataTableSpec spec) {
+        ArrayList<String> acceptedInNames = new ArrayList<String>();
+        for (DataColumnSpec col : spec) {
+            if (m_filter == null || m_filter.include(col)) {
+                String name = col.getName();
+                acceptedInNames.add(name);
+            }
+        }
+        return acceptedInNames.toArray(new String[acceptedInNames.size()]);
     }
 
     /**
@@ -194,6 +207,12 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
         super.saveConfiguration(config);
     }
 
+    /**
+     * Updates the panel by using the given {@link DataColumnSpecFilterConfiguration} object.
+     * This method allows for example to change the allowed column type on the fly.
+     * @param newConfig the new {@link DataColumnSpecFilterConfiguration} to use
+     * @since 2.10
+     */
     public void updateWithNewConfiguration(final DataColumnSpecFilterConfiguration newConfig) {
         DataColumnSpecFilterConfiguration tempConfiguration =
                 new DataColumnSpecFilterConfiguration(newConfig.getConfigRootName());
@@ -201,7 +220,7 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
         NodeSettings tempSettings = new NodeSettings("tempSettings");
         tempConfiguration.saveConfiguration(tempSettings);
         newConfig.loadConfigurationInDialog(tempSettings, m_spec);
-        loadConfiguration(tempConfiguration, m_spec);
+        loadConfiguration(newConfig, m_spec);
     }
 
     /**

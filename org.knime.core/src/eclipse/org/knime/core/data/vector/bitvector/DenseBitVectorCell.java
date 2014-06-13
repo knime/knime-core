@@ -229,6 +229,7 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void serialize(final DenseBitVectorCell cell, final DataCellDataOutput out) throws IOException {
             long[] bits = cell.m_bitVector.getAllBits();
             long length = cell.length();
@@ -242,6 +243,7 @@ public class DenseBitVectorCell extends DataCell implements BitVectorValue {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DenseBitVectorCell deserialize(final DataCellDataInput input) throws IOException {
             long length = input.readLong();
             int arrayLength = input.readInt();

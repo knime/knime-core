@@ -55,7 +55,7 @@ import org.knime.core.data.DataCell;
  *
  * @author ohl, University of Konstanz
  */
-public class SparseBitVectorCellFactory {
+public class SparseBitVectorCellFactory implements BitVectorCellFactory<SparseBitVectorCell> {
 
     private SparseBitVector m_vector;
 
@@ -147,6 +147,7 @@ public class SparseBitVectorCellFactory {
      *
      * @param bitIndex the index of the bit to set to one.
      */
+    @Override
     public void set(final long bitIndex) {
         m_vector.set(bitIndex);
     }
@@ -160,6 +161,7 @@ public class SparseBitVectorCellFactory {
      * @throws ArrayIndexOutOfBoundsException if the index is negative or larger
      *             than the size of the vector
      */
+    @Override
     public void set(final long bitIdx, final boolean value) {
         m_vector.set(bitIdx, value);
     }
@@ -169,6 +171,7 @@ public class SparseBitVectorCellFactory {
      *
      * @param bitIndex the index of the bit to set to zero.
      */
+    @Override
     public void clear(final long bitIndex) {
         m_vector.clear(bitIndex);
     }
@@ -178,6 +181,7 @@ public class SparseBitVectorCellFactory {
      *
      * @return a {@link DataCell} containing the current value of the vector
      */
+    @Override
     public SparseBitVectorCell createDataCell() {
         return new SparseBitVectorCell(m_vector);
     }
@@ -326,4 +330,75 @@ public class SparseBitVectorCellFactory {
         return new SparseBitVectorCell(result);
     }
 
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public long length() {
+        return m_vector.length();
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public boolean get(final long bitIdx) {
+        return m_vector.get(bitIdx);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public long nextSetBit(final long startIdx) {
+        return m_vector.nextSetBit(startIdx);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public long nextClearBit(final long startIdx) {
+        return m_vector.nextClearBit(startIdx);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public long cardinality() {
+        return m_vector.cardinality();
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public boolean isEmpty() {
+        return m_vector.isEmpty();
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public String toHexString() {
+        return m_vector.toHexString();
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public String toBinaryString() {
+        return m_vector.toBinaryString();
+    }
 }

@@ -142,9 +142,12 @@
                 <message_argument value="xor(BitVectorValue, BitVectorValue)"/>
             </message_arguments>
         </filter>
-        <filter comment="changed return type from sparse -&gt; dense --- old standing problem" id="1143996420">
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/vector/bitvector/SparseBitVector.java" type="org.knime.core.data.vector.bitvector.SparseBitVector">
+        <filter id="338792546">
             <message_arguments>
-                <message_argument value="xor(BitVectorValue, BitVectorValue)"/>
+                <message_argument value="org.knime.core.data.vector.bitvector.SparseBitVector"/>
+                <message_argument value="cardinality()"/>
             </message_arguments>
         </filter>
     </resource>
@@ -538,13 +541,6 @@
                 <message_argument value="org.knime.core.node.interactive.ViewContent"/>
                 <message_argument value="4"/>
                 <message_argument value="8"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/util/filter/column/DataColumnSpecFilterPanel.java" type="org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel">
-        <filter comment="(subnode) template handling" id="1143996420">
-            <message_arguments>
-                <message_argument value="updateWithNewConfiguration(DataColumnSpecFilterConfiguration)"/>
             </message_arguments>
         </filter>
     </resource>

@@ -89,7 +89,7 @@ public class ColumnSelectionPanel extends JPanel {
 
 
     /**Show only columns which pass the given {@link ColumnFilter}.*/
-    private final ColumnFilter m_columnFilter;
+    private ColumnFilter m_columnFilter;
 
     private boolean m_isRequired;
 
@@ -629,6 +629,21 @@ public class ColumnSelectionPanel extends JPanel {
             columns.add((DataColumnSpec)m_chooser.getModel().getElementAt(i));
         }
         return columns;
+    }
+
+    /**
+     * Sets the new column filter and updates the component.
+     * @param filter {@link ColumnFilter} to use
+     * @throws NotConfigurableException If the spec does not contain at least
+     * one compatible type.
+     * @since 2.10
+     */
+    public void setColumnFilter(final ColumnFilter filter) throws NotConfigurableException {
+        if (filter == null) {
+            throw new IllegalArgumentException("filter must not be null");
+        }
+        m_columnFilter = filter;
+        update(getDataTableSpec(), getSelectedColumn());
     }
 
 

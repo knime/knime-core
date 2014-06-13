@@ -238,6 +238,7 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void serialize(final SparseBitVectorCell cell,
                 final DataCellDataOutput out) throws IOException {
 
@@ -253,6 +254,7 @@ public class SparseBitVectorCell extends DataCell implements BitVectorValue {
         /**
          * {@inheritDoc}
          */
+        @Override
         public SparseBitVectorCell deserialize(final DataCellDataInput input)
                 throws IOException {
             long length = input.readLong();

@@ -60,7 +60,7 @@ import java.util.Arrays;
  *
  * @author ohl, University of Konstanz
  */
-public class DenseBitVector {
+public class DenseBitVector implements BitVector {
 
     // number of bits used per storage object
     private static final int STORAGE_BITS = 64;
@@ -227,10 +227,9 @@ public class DenseBitVector {
     }
 
     /**
-     * Returns the number of bits stored in this vector.
-     *
-     * @return the length of the vector.
+     * {@inheritDoc}
      */
+    @Override
     public long length() {
         return m_length;
     }
@@ -279,14 +278,9 @@ public class DenseBitVector {
     }
 
     /**
-     * Sets the bit at the specified index to the new value.
-     *
-     * @param bitIdx the index of the bit to set or clear
-     * @param value if true, the specified bit will be set, otherwise it will be
-     *            cleared.
-     * @throws ArrayIndexOutOfBoundsException if the index is negative or larger
-     *             than the size of the vector
+     * {@inheritDoc}
      */
+    @Override
     public void set(final long bitIdx, final boolean value) {
         if (value) {
             set(bitIdx);
@@ -296,12 +290,9 @@ public class DenseBitVector {
     }
 
     /**
-     * Sets the bit at the specified index to zero.
-     *
-     * @param bitIdx the index of the bit to clear.
-     * @throws ArrayIndexOutOfBoundsException if the index is negative or larger
-     *             than the size of the vector
+     * {@inheritDoc}
      */
+    @Override
     public void set(final long bitIdx) {
         assert (checkConsistency() == null);
         if (bitIdx >= m_length) {
@@ -407,12 +398,9 @@ public class DenseBitVector {
     }
 
     /**
-     * Sets the bit at the specified index to one.
-     *
-     * @param bitIdx the index of the bit to set.
-     * @throws ArrayIndexOutOfBoundsException if the index is negative or larger
-     *             than the size of the vector
+     * {@inheritDoc}
      */
+    @Override
     public void clear(final long bitIdx) {
         assert (checkConsistency() == null);
         if (bitIdx >= m_length) {
@@ -494,11 +482,11 @@ public class DenseBitVector {
         assert (checkConsistency() == null);
     }
 
+
     /**
-     * Number of bits set in this bit vector.
-     *
-     * @return the number of ones in this vector
+     * {@inheritDoc}
      */
+    @Override
     public long cardinality() {
         assert (checkConsistency() == null);
         long result = 0;
@@ -514,10 +502,9 @@ public class DenseBitVector {
     }
 
     /**
-     * Returns true if no bits are set in this bit vector.
-     *
-     * @return true if no bits are set in this bit vector.
+     * {@inheritDoc}
      */
+    @Override
     public boolean isEmpty() {
         assert (checkConsistency() == null);
         return m_firstAddr == -1;
@@ -553,14 +540,9 @@ public class DenseBitVector {
     }
 
     /**
-     * Returns true if the bit at the specified index is set. False otherwise.
-     *
-     * @param bitIdx the index of the bit to test.
-     * @return <code>true</code> if the specified bit is set,
-     *         <code>false</code> otherwise
-     * @throws ArrayIndexOutOfBoundsException if the index is larger than the
-     *             length of the vector
+     * {@inheritDoc}
      */
+    @Override
     public boolean get(final long bitIdx) {
         assert (checkConsistency() == null);
         if (bitIdx >= m_length) {
@@ -574,18 +556,9 @@ public class DenseBitVector {
     }
 
     /**
-     * Finds the next bit set to one on or after the specified index. Returns an
-     * index larger than or equal the provided index, or -1 if no bit is set
-     * after the startIdx. (This is the only method (and the #nextClearBit)
-     * where it is okay to pass an index larger than the length of the vector.)
-     *
-     * @param startIdx the first index to look for '1's. (It is allowed to pass
-     *            an index larger then the vector's length.)
-     * @return the index of the next bit set to one, which is on or after the
-     *         provided startIdx.
-     * @throws ArrayIndexOutOfBoundsException if the specified startIdx is
-     *             negative
+     * {@inheritDoc}
      */
+    @Override
     public long nextSetBit(final long startIdx) {
         assert (checkConsistency() == null);
         if (startIdx >= m_length) {
@@ -632,17 +605,9 @@ public class DenseBitVector {
     }
 
     /**
-     * Finds the next bit not set (that is '0') on or after the specified index.
-     * Returns an index larger than or equal the provided index, or -1 if no bit
-     * is cleared after the startIdx. (This is the only method (and the
-     * #nextSetBit) where it is okay to pass an index larger than the length of
-     * the vector.)
-     *
-     * @param startIdx the first index to look for '0's.
-     * @return the index of the next cleared bit, which is on or after the
-     *         provided startIdx. Or -1 if the vector contains no zero anymore.
-     * @throws ArrayIndexOutOfBoundsException if the specified startIdx negative
+     * {@inheritDoc}
      */
+    @Override
     public long nextClearBit(final long startIdx) {
         assert (checkConsistency() == null);
         if (startIdx >= m_length) {
@@ -1098,17 +1063,9 @@ public class DenseBitVector {
     }
 
     /**
-     * Returns the hex representation of the bits in this vector. Each character
-     * in the result represents 4 bits (with the characters <code>'0'</code> -
-     * <code>'9'</code> and <code>'A'</code> - <code>'F'</code>). The
-     * character at string position <code>(length - 1)</code> holds the lowest
-     * bits (bit 0 to 3), the character at position 0 represents the bits with
-     * the largest index in the vector. If the length of the vector is larger
-     * than {@link BitVectorValue#MAX_DISPLAY_BITS}, the result
-     * is truncated (and ends with ...).
-     *
-     * @return the hex representation of this bit vector.
+     * {@inheritDoc}
      */
+    @Override
     public String toHexString() {
         // the number of bits we store in the string
         long max = Math.min(m_length, BitVectorValue.MAX_DISPLAY_BITS);
@@ -1158,16 +1115,9 @@ public class DenseBitVector {
     }
 
     /**
-     * Returns the binary string representation of the bits in this vector. Each
-     * character in the result represents one bit - a '1' stands for a set bit,
-     * a '0' represents a cleared bit. The character at string position
-     * <code>(length - 1)</code> holds the bit with index 0, the character at
-     * position 0 represents the bit with the largest index in the vector. If
-     * the length of the vector is larger than {@link BitVectorValue#MAX_DISPLAY_BITS}
-     * the result is truncated (and ends with ...).
-     *
-     * @return the binary (0/1) representation of this bit vector.
+     * {@inheritDoc}
      */
+    @Override
     public String toBinaryString() {
         // the number of bits we store in the string
         int max = (int)Math.min(m_length, BitVectorValue.MAX_DISPLAY_BITS);

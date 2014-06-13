@@ -87,7 +87,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
 
     private final int m_specIndex;
 
-    private final ColumnFilter m_columnFilter;
+    private ColumnFilter m_columnFilter;
 
     private final boolean m_isRequired;
 
@@ -226,6 +226,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
         // before save
 
         m_chooser.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     // a new item got selected, update the model
@@ -236,6 +237,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
 
         // update the selection panel, when the model was changed
         getModel().prependChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 // if only the value in the model changes we only set the
                 // selected column in the component.
@@ -390,4 +392,15 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
         m_label.setToolTipText(text);
     }
 
+    /**
+     * Sets the new column filter and updates the component.
+     * @param filter {@link ColumnFilter} to use
+     * @throws NotConfigurableException If the spec does not contain at least
+     * one compatible type.
+     * @since 2.10
+     */
+    public void setColumnFilter(final ColumnFilter filter) throws NotConfigurableException {
+        m_columnFilter = filter;
+        m_chooser.setColumnFilter(filter);
+    }
 }

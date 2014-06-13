@@ -339,6 +339,25 @@ public class DialogComponentButtonGroup extends DialogComponent {
         return group;
     }
 
+    /**
+     * @param actionCommand the action command to get the button for
+     * @return the button for the given action command or <code>null</code> if no match was found
+     * @since 2.10
+     */
+    public AbstractButton getButton(final String actionCommand) {
+        if (actionCommand == null) {
+            throw new IllegalArgumentException("actionCommand must not be null");
+        }
+        final Enumeration<AbstractButton> buttons = m_buttonGroup.getElements();
+        while (buttons.hasMoreElements()) {
+            AbstractButton button = buttons.nextElement();
+            if (actionCommand.equals(button.getActionCommand())) {
+                return button;
+            }
+        }
+        return null;
+    }
+
     /** Creates a <code>Box</code> with the buttons of the given
      * <code>ButtonGroup</code>. Surrounded by a border if the label is
      * not null.
