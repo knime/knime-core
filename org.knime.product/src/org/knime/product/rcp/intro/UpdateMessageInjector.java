@@ -138,12 +138,6 @@ class UpdateMessageInjector implements Runnable {
     }
 
     private List<UpdateInfo> checkNewVersion() throws IOException, URISyntaxException {
-        // TODO remove these three lines
-        if (true) {
-            return Collections.singletonList(new UpdateInfo(new URI("http://www.knime.org/update/2.10"), "KNIME 2.10",
-                false));
-        }
-
         final ProvisioningUI provUI = ProvisioningUI.getDefaultUI();
         RepositoryTracker tracker = provUI.getRepositoryTracker();
         if (tracker == null) {
