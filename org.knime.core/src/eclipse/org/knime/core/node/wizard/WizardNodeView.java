@@ -554,16 +554,17 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     }
 
     private String initJSView(final String jsonViewRepresentation, final String jsonViewValue) {
+        StringBuilder builder = new StringBuilder();
         String escapedRepresentation = jsonViewRepresentation.replace("\\", "\\\\").replace("'", "\\'");
         String escapedValue = jsonViewValue.replace("\\", "\\\\").replace("'", "\\'");
-        String repParseCall = /*"console.time('parse representation');" +*/ "var parsedRepresentation = JSON.parse('" + escapedRepresentation + "');"/* + "console.timeEnd('parse representation');"*/;
-        String valParseCall = /*"console.time('parse value');" +*/ "var parsedValue = JSON.parse('" + escapedValue + "');"/* + "console.timeEnd('parse value');"*/;
+        String repParseCall = "var parsedRepresentation = JSON.parse('" + escapedRepresentation + "');";
+        builder.append(repParseCall);
+        String valParseCall = "var parsedValue = JSON.parse('" + escapedValue + "');";
+        builder.append(valParseCall);
         String initMethod = m_template.getInitMethodName();
-        /*String initCall = getNamespacePrefix() + initMethod + "(JSON.parse('" + escapedRepresentation
-                + "'), JSON.parse('" + escapedValue + "'));";*/
-        //LOGGER.warn(initCall);
-        String initCall = /*"console.time('init view');" +*/ getNamespacePrefix() + initMethod + "(parsedRepresentation, parsedValue);"/* + "console.timeEnd('init view');"*/;
-        return repParseCall + valParseCall + initCall;
+        String initCall = getNamespacePrefix() + initMethod + "(parsedRepresentation, parsedValue);";
+        builder.append(initCall);
+        return builder.toString();
     }
 
     private String getNamespacePrefix() {
@@ -584,7 +585,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         StringBuilder builder = new StringBuilder();
         builder.append("try {");
         builder.append(jsCode);
-        builder.append("} catch(err) {alert(err);}");
+        builder.append("} catch(err) {if (err.stack) {alert(err.stack);} else {alert (err);}}");
         return builder.toString();
     }
 
