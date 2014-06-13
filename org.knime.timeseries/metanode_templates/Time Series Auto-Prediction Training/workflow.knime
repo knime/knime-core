@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="workflow.knime">
-<entry key="created_by" type="xstring" value="2.9.0.0040668"/>
-<entry key="version" type="xstring" value="2.8.0"/>
+<entry key="created_by" type="xstring" value="2.10.0.qualifier"/>
+<entry key="version" type="xstring" value="2.10.0"/>
 <entry key="name" type="xstring" value="Time Series Auto-Prediction Training"/>
 <config key="authorInformation">
 <entry key="authored-by" type="xstring" value="&lt;unknown&gt;"/>
-<entry key="authored-when" type="xstring" value="1969-12-31 16:00:00 -0800"/>
-<entry key="lastEdited-by" type="xstring" isnull="true" value=""/>
-<entry key="lastEdited-when" type="xstring" isnull="true" value=""/>
+<entry key="authored-when" type="xstring" value="1970-01-01 01:00:00 +0100"/>
+<entry key="lastEdited-by" type="xstring" value="thor"/>
+<entry key="lastEdited-when" type="xstring" value="2014-06-13 10:25:35 +0200"/>
 </config>
-<entry key="customDescription" type="xstring" isnull="true" value=""/>
-<entry key="state" type="xstring" value="CONFIGURED"/>
+<entry key="customDescription" type="xstring" value="This node  selects a time series column, optionally a datetime column, and a lag. Then it trains a model (linear regression or neural network or whatever has a numerical output). The model can be changed (like in the cross-validation node). This node  selects a time series column, optionally a datetime column, and a lag. Then it trains a model (linear regression or neural network or whatever has a numerical output). The model can be changed (like in the cross-validation node)."/>
+<entry key="state" type="xstring" value="IDLE"/>
 <config key="workflow_credentials"/>
 <config key="annotations">
 <config key="annotation_0">
-<entry key="text" type="xstring" value="%%00013%%00010   Time Series Auto-Prediction Training%%00013%%00010%%00013%%00010   This metanode trains a model (any model with numerical outputs) to predict time series values based on its X past values. %%00013%%00010   Parameters required:%%00013%%00010  - TimeSeries column: the data column of the time series to use for prediction%%00013%%00010  - Datetime column: the data column with the datetime information. Datetime column must be sorted in increasing order.%%00013%%00010  - Number of Past Values to use for Prediction: the lag (number of steps back in time) to use for prediction"/>
+<entry key="text" type="xstring" value="%%00013%%00010   Time Series Auto-Prediction Training%%00013%%00010%%00013%%00010   This metanode trains a model (any model with numerical outputs) to predict time series values based on its N past values. %%00013%%00010   This node:%%00013%%00010  - creates the N past values (Lag Column node) of the time series we want to predict%%00013%%00010  - partitions the data in training set and test set (&quot;take from top&quot; option)%%00013%%00010  - Trains a model with numerical output to predict the selected time series based on its N past values%%00013%%00010  - Makes the test set available at the output port"/>
 <entry key="bgcolor" type="xint" value="16777153"/>
 <entry key="x-coordinate" type="xint" value="434"/>
 <entry key="y-coordinate" type="xint" value="22"/>
-<entry key="width" type="xint" value="775"/>
-<entry key="height" type="xint" value="197"/>
+<entry key="width" type="xint" value="810"/>
+<entry key="height" type="xint" value="209"/>
 <entry key="alignment" type="xstring" value="LEFT"/>
 <config key="styles">
 <config key="style_0">
@@ -40,55 +40,7 @@
 </config>
 <config key="style_2">
 <entry key="start" type="xint" value="48"/>
-<entry key="length" type="xint" value="153"/>
-<entry key="fontname" type="xstring" value="Papyrus"/>
-<entry key="fontstyle" type="xint" value="0"/>
-<entry key="fontsize" type="xint" value="11"/>
-<entry key="fgcolor" type="xint" value="0"/>
-</config>
-<config key="style_3">
-<entry key="start" type="xint" value="201"/>
-<entry key="length" type="xint" value="17"/>
-<entry key="fontname" type="xstring" value="Papyrus"/>
-<entry key="fontstyle" type="xint" value="1"/>
-<entry key="fontsize" type="xint" value="11"/>
-<entry key="fgcolor" type="xint" value="255"/>
-</config>
-<config key="style_4">
-<entry key="start" type="xint" value="218"/>
-<entry key="length" type="xint" value="64"/>
-<entry key="fontname" type="xstring" value="Papyrus"/>
-<entry key="fontstyle" type="xint" value="0"/>
-<entry key="fontsize" type="xint" value="11"/>
-<entry key="fgcolor" type="xint" value="0"/>
-</config>
-<config key="style_5">
-<entry key="start" type="xint" value="282"/>
-<entry key="length" type="xint" value="15"/>
-<entry key="fontname" type="xstring" value="Papyrus"/>
-<entry key="fontstyle" type="xint" value="1"/>
-<entry key="fontsize" type="xint" value="11"/>
-<entry key="fgcolor" type="xint" value="255"/>
-</config>
-<config key="style_6">
-<entry key="start" type="xint" value="297"/>
-<entry key="length" type="xint" value="106"/>
-<entry key="fontname" type="xstring" value="Papyrus"/>
-<entry key="fontstyle" type="xint" value="0"/>
-<entry key="fontsize" type="xint" value="11"/>
-<entry key="fgcolor" type="xint" value="0"/>
-</config>
-<config key="style_7">
-<entry key="start" type="xint" value="403"/>
-<entry key="length" type="xint" value="43"/>
-<entry key="fontname" type="xstring" value="Papyrus"/>
-<entry key="fontstyle" type="xint" value="1"/>
-<entry key="fontsize" type="xint" value="11"/>
-<entry key="fgcolor" type="xint" value="255"/>
-</config>
-<config key="style_8">
-<entry key="start" type="xint" value="446"/>
-<entry key="length" type="xint" value="62"/>
+<entry key="length" type="xint" value="461"/>
 <entry key="fontname" type="xstring" value="Papyrus"/>
 <entry key="fontstyle" type="xint" value="0"/>
 <entry key="fontsize" type="xint" value="11"/>
@@ -97,17 +49,33 @@
 </config>
 </config>
 <config key="annotation_1">
-<entry key="text" type="xstring" value="%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010   Select Time Series and DateTime columns %%00013%%00010   to be used for prediction."/>
-<entry key="bgcolor" type="xint" value="16769535"/>
-<entry key="x-coordinate" type="xint" value="70"/>
-<entry key="y-coordinate" type="xint" value="88"/>
-<entry key="width" type="xint" value="267"/>
-<entry key="height" type="xint" value="470"/>
+<entry key="text" type="xstring" value="%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010     Create the number of past samples to train the model for prediction, i.e. it generates:%%00013%%00010                                  x(t-lag), x(t-lag+1), ... x(t-2), x(t-1), to predict x(t)%%00013%%00010   %%00013%%00010    Learner node then trains the model. Model can be changed. %%00013%%00010    The Linear Regression implements an auto-regressive prediction model."/>
+<entry key="bgcolor" type="xint" value="14286847"/>
+<entry key="x-coordinate" type="xint" value="438"/>
+<entry key="y-coordinate" type="xint" value="280"/>
+<entry key="width" type="xint" value="560"/>
+<entry key="height" type="xint" value="319"/>
 <entry key="alignment" type="xstring" value="LEFT"/>
 <config key="styles">
 <config key="style_0">
-<entry key="start" type="xint" value="55"/>
-<entry key="length" type="xint" value="73"/>
+<entry key="start" type="xint" value="32"/>
+<entry key="length" type="xint" value="294"/>
+<entry key="fontname" type="xstring" isnull="true" value=""/>
+<entry key="fontstyle" type="xint" value="0"/>
+<entry key="fontsize" type="xint" value="0"/>
+<entry key="fgcolor" type="xint" value="255"/>
+</config>
+<config key="style_1">
+<entry key="start" type="xint" value="326"/>
+<entry key="length" type="xint" value="15"/>
+<entry key="fontname" type="xstring" isnull="true" value=""/>
+<entry key="fontstyle" type="xint" value="1"/>
+<entry key="fontsize" type="xint" value="-1"/>
+<entry key="fgcolor" type="xint" value="255"/>
+</config>
+<config key="style_2">
+<entry key="start" type="xint" value="341"/>
+<entry key="length" type="xint" value="18"/>
 <entry key="fontname" type="xstring" isnull="true" value=""/>
 <entry key="fontstyle" type="xint" value="0"/>
 <entry key="fontsize" type="xint" value="0"/>
@@ -116,33 +84,17 @@
 </config>
 </config>
 <config key="annotation_2">
-<entry key="text" type="xstring" value="%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010%%00013%%00010     Define the Number of Past samples to use to train a model for Prediction, that is:%%00013%%00010                                  x(t-lag), x(t-lag+1), ... x(t-2), x(t-1), to predict x(t)%%00013%%00010   %%00013%%00010     Model here can be changed. The Linear Regression implements an auto-regressive %%00013%%00010     prediction model."/>
-<entry key="bgcolor" type="xint" value="14286847"/>
-<entry key="x-coordinate" type="xint" value="463"/>
-<entry key="y-coordinate" type="xint" value="230"/>
-<entry key="width" type="xint" value="490"/>
-<entry key="height" type="xint" value="380"/>
+<entry key="text" type="xstring" value=" %%00013%%00010   Output data:%%00013%%00010%%00013%%00010  - the trained model to predict x(t)   %%00013%%00010    from its past%%00013%%00010%%00013%%00010  - the regression coefficients or the %%00013%%00010     predicted training values %%00013%%00010     depending on the chosen model%%00013%%00010%%00013%%00010  - the test data set"/>
+<entry key="bgcolor" type="xint" value="16777185"/>
+<entry key="x-coordinate" type="xint" value="1003"/>
+<entry key="y-coordinate" type="xint" value="420"/>
+<entry key="width" type="xint" value="220"/>
+<entry key="height" type="xint" value="181"/>
 <entry key="alignment" type="xstring" value="LEFT"/>
 <config key="styles">
 <config key="style_0">
-<entry key="start" type="xint" value="40"/>
-<entry key="length" type="xint" value="253"/>
-<entry key="fontname" type="xstring" isnull="true" value=""/>
-<entry key="fontstyle" type="xint" value="0"/>
-<entry key="fontsize" type="xint" value="0"/>
-<entry key="fgcolor" type="xint" value="255"/>
-</config>
-<config key="style_1">
-<entry key="start" type="xint" value="293"/>
-<entry key="length" type="xint" value="15"/>
-<entry key="fontname" type="xstring" isnull="true" value=""/>
-<entry key="fontstyle" type="xint" value="1"/>
-<entry key="fontsize" type="xint" value="-1"/>
-<entry key="fgcolor" type="xint" value="255"/>
-</config>
-<config key="style_2">
-<entry key="start" type="xint" value="308"/>
-<entry key="length" type="xint" value="25"/>
+<entry key="start" type="xint" value="1"/>
+<entry key="length" type="xint" value="217"/>
 <entry key="fontname" type="xstring" isnull="true" value=""/>
 <entry key="fontstyle" type="xint" value="0"/>
 <entry key="fontsize" type="xint" value="0"/>
@@ -151,36 +103,17 @@
 </config>
 </config>
 <config key="annotation_3">
-<entry key="text" type="xstring" value=" %%00013%%00010   Output data:%%00013%%00010%%00013%%00010  - all flow variables used in the time %%00013%%00010     series selection and time lag %%00013%%00010     definition%%00013%%00010%%00013%%00010  - the trained model to predict x(t)   %%00013%%00010    from the past%%00013%%00010%%00013%%00010  - the regression coefficients or the %%00013%%00010     predicted training values %%00013%%00010     depending on the chosen model"/>
-<entry key="bgcolor" type="xint" value="16777185"/>
-<entry key="x-coordinate" type="xint" value="1016"/>
-<entry key="y-coordinate" type="xint" value="249"/>
-<entry key="width" type="xint" value="205"/>
-<entry key="height" type="xint" value="215"/>
-<entry key="alignment" type="xstring" value="LEFT"/>
-<config key="styles">
-<config key="style_0">
-<entry key="start" type="xint" value="1"/>
-<entry key="length" type="xint" value="290"/>
-<entry key="fontname" type="xstring" isnull="true" value=""/>
-<entry key="fontstyle" type="xint" value="0"/>
-<entry key="fontsize" type="xint" value="0"/>
-<entry key="fgcolor" type="xint" value="255"/>
-</config>
-</config>
-</config>
-<config key="annotation_4">
-<entry key="text" type="xstring" value="%%00013%%00010   Change the training model %%00013%%00010                      HERE!!!"/>
+<entry key="text" type="xstring" value="%%00013%%00010Change the training model HERE!!!"/>
 <entry key="bgcolor" type="xint" value="16777185"/>
 <entry key="x-coordinate" type="xint" value="770"/>
-<entry key="y-coordinate" type="xint" value="311"/>
-<entry key="width" type="xint" value="173"/>
-<entry key="height" type="xint" value="196"/>
+<entry key="y-coordinate" type="xint" value="309"/>
+<entry key="width" type="xint" value="178"/>
+<entry key="height" type="xint" value="175"/>
 <entry key="alignment" type="xstring" value="LEFT"/>
 <config key="styles">
 <config key="style_0">
-<entry key="start" type="xint" value="5"/>
-<entry key="length" type="xint" value="57"/>
+<entry key="start" type="xint" value="2"/>
+<entry key="length" type="xint" value="33"/>
 <entry key="fontname" type="xstring" isnull="true" value=""/>
 <entry key="fontstyle" type="xint" value="1"/>
 <entry key="fontsize" type="xint" value="-1"/>
@@ -190,62 +123,18 @@
 </config>
 </config>
 <config key="nodes">
-<config key="node_205">
-<entry key="id" type="xint" value="205"/>
-<entry key="node_settings_file" type="xstring" value="Concatenate (#205)/settings.xml"/>
+<config key="node_147">
+<entry key="id" type="xint" value="147"/>
+<entry key="node_settings_file" type="xstring" value="Partitioning (#147)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
+<entry key="node_type" type="xstring" value="NativeNode"/>
 <entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
 <config key="ui_settings">
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="354"/>
-<entry key="1" type="xint" value="399"/>
-<entry key="2" type="xint" value="70"/>
-<entry key="3" type="xint" value="79"/>
-</config>
-</config>
-</config>
-<config key="node_207">
-<entry key="id" type="xint" value="207"/>
-<entry key="node_settings_file" type="xstring" value="Column Filter QuickForm (#207)/settings.xml"/>
-<entry key="node_is_meta" type="xboolean" value="false"/>
-<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
-<config key="ui_settings">
-<config key="extrainfo.node.bounds">
-<entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="151"/>
-<entry key="1" type="xint" value="288"/>
+<entry key="0" type="xint" value="632"/>
+<entry key="1" type="xint" value="400"/>
 <entry key="2" type="xint" value="74"/>
-<entry key="3" type="xint" value="94"/>
-</config>
-</config>
-</config>
-<config key="node_208">
-<entry key="id" type="xint" value="208"/>
-<entry key="node_settings_file" type="xstring" value="Joiner (#208)/settings.xml"/>
-<entry key="node_is_meta" type="xboolean" value="false"/>
-<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
-<config key="ui_settings">
-<config key="extrainfo.node.bounds">
-<entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="261"/>
-<entry key="1" type="xint" value="215"/>
-<entry key="2" type="xint" value="50"/>
-<entry key="3" type="xint" value="79"/>
-</config>
-</config>
-</config>
-<config key="node_214">
-<entry key="id" type="xint" value="214"/>
-<entry key="node_settings_file" type="xstring" value="Integer Input (#214)/settings.xml"/>
-<entry key="node_is_meta" type="xboolean" value="false"/>
-<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
-<config key="ui_settings">
-<config key="extrainfo.node.bounds">
-<entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="392"/>
-<entry key="1" type="xint" value="251"/>
-<entry key="2" type="xint" value="75"/>
 <entry key="3" type="xint" value="79"/>
 </config>
 </config>
@@ -254,58 +143,30 @@
 <entry key="id" type="xint" value="216"/>
 <entry key="node_settings_file" type="xstring" value="Lag Column (#216)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
+<entry key="node_type" type="xstring" value="NativeNode"/>
 <entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
 <config key="ui_settings">
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
 <entry key="0" type="xint" value="507"/>
 <entry key="1" type="xint" value="400"/>
-<entry key="2" type="xint" value="64"/>
+<entry key="2" type="xint" value="77"/>
 <entry key="3" type="xint" value="79"/>
-</config>
-</config>
-</config>
-<config key="node_232">
-<entry key="id" type="xint" value="232"/>
-<entry key="node_settings_file" type="xstring" value="Column Filter QuickForm (#232)/settings.xml"/>
-<entry key="node_is_meta" type="xboolean" value="false"/>
-<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
-<config key="ui_settings">
-<config key="extrainfo.node.bounds">
-<entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="150"/>
-<entry key="1" type="xint" value="120"/>
-<entry key="2" type="xint" value="74"/>
-<entry key="3" type="xint" value="94"/>
-</config>
-</config>
-</config>
-<config key="node_233">
-<entry key="id" type="xint" value="233"/>
-<entry key="node_settings_file" type="xstring" value="Linear Regression Learner (#233)/settings.xml"/>
-<entry key="node_is_meta" type="xboolean" value="false"/>
-<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
-<config key="ui_settings">
-<config key="extrainfo.node.bounds">
-<entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="838"/>
-<entry key="1" type="xint" value="409"/>
-<entry key="2" type="xint" value="98"/>
-<entry key="3" type="xint" value="94"/>
 </config>
 </config>
 </config>
 <config key="node_234">
 <entry key="id" type="xint" value="234"/>
-<entry key="node_settings_file" type="xstring" value="Java Edit Variable _simple_ (#234)/settings.xml"/>
+<entry key="node_settings_file" type="xstring" value="Linear Regression Learner (#234)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
+<entry key="node_type" type="xstring" value="NativeNode"/>
 <entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
 <config key="ui_settings">
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="644"/>
-<entry key="1" type="xint" value="288"/>
-<entry key="2" type="xint" value="92"/>
+<entry key="0" type="xint" value="841"/>
+<entry key="1" type="xint" value="400"/>
+<entry key="2" type="xint" value="115"/>
 <entry key="3" type="xint" value="94"/>
 </config>
 </config>
@@ -314,100 +175,61 @@
 <config key="connections">
 <config key="connection_0">
 <entry key="sourceID" type="xint" value="-1"/>
-<entry key="destID" type="xint" value="232"/>
+<entry key="destID" type="xint" value="216"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="destPort" type="xint" value="1"/>
 </config>
 <config key="connection_1">
-<entry key="sourceID" type="xint" value="-1"/>
-<entry key="destID" type="xint" value="205"/>
-<entry key="sourcePort" type="xint" value="0"/>
+<entry key="sourceID" type="xint" value="147"/>
+<entry key="destID" type="xint" value="-1"/>
+<entry key="sourcePort" type="xint" value="2"/>
 <entry key="destPort" type="xint" value="2"/>
 <entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.ConnectionUIInformation"/>
 <config key="ui_settings">
 <entry key="extrainfo.conn.bendpoints_size" type="xint" value="1"/>
 <config key="extrainfo.conn.bendpoints_0">
 <entry key="array-size" type="xint" value="2"/>
-<entry key="0" type="xint" value="100"/>
-<entry key="1" type="xint" value="431"/>
+<entry key="0" type="xint" value="683"/>
+<entry key="1" type="xint" value="587"/>
 </config>
 </config>
 </config>
 <config key="connection_2">
-<entry key="sourceID" type="xint" value="-1"/>
-<entry key="destID" type="xint" value="207"/>
-<entry key="sourcePort" type="xint" value="0"/>
+<entry key="sourceID" type="xint" value="147"/>
+<entry key="destID" type="xint" value="234"/>
+<entry key="sourcePort" type="xint" value="1"/>
 <entry key="destPort" type="xint" value="1"/>
 </config>
 <config key="connection_3">
-<entry key="sourceID" type="xint" value="205"/>
-<entry key="destID" type="xint" value="216"/>
+<entry key="sourceID" type="xint" value="216"/>
+<entry key="destID" type="xint" value="147"/>
 <entry key="sourcePort" type="xint" value="1"/>
 <entry key="destPort" type="xint" value="1"/>
 </config>
 <config key="connection_4">
-<entry key="sourceID" type="xint" value="207"/>
-<entry key="destID" type="xint" value="208"/>
+<entry key="sourceID" type="xint" value="234"/>
+<entry key="destID" type="xint" value="-1"/>
 <entry key="sourcePort" type="xint" value="1"/>
-<entry key="destPort" type="xint" value="2"/>
+<entry key="destPort" type="xint" value="0"/>
 </config>
 <config key="connection_5">
-<entry key="sourceID" type="xint" value="208"/>
-<entry key="destID" type="xint" value="205"/>
-<entry key="sourcePort" type="xint" value="1"/>
-<entry key="destPort" type="xint" value="1"/>
-</config>
-<config key="connection_6">
-<entry key="sourceID" type="xint" value="214"/>
-<entry key="destID" type="xint" value="216"/>
-<entry key="sourcePort" type="xint" value="1"/>
-<entry key="destPort" type="xint" value="0"/>
-</config>
-<config key="connection_7">
-<entry key="sourceID" type="xint" value="216"/>
-<entry key="destID" type="xint" value="234"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="destPort" type="xint" value="1"/>
-</config>
-<config key="connection_8">
-<entry key="sourceID" type="xint" value="216"/>
-<entry key="destID" type="xint" value="233"/>
-<entry key="sourcePort" type="xint" value="1"/>
-<entry key="destPort" type="xint" value="1"/>
-</config>
-<config key="connection_9">
-<entry key="sourceID" type="xint" value="232"/>
-<entry key="destID" type="xint" value="208"/>
-<entry key="sourcePort" type="xint" value="1"/>
-<entry key="destPort" type="xint" value="1"/>
-</config>
-<config key="connection_10">
-<entry key="sourceID" type="xint" value="233"/>
-<entry key="destID" type="xint" value="-1"/>
-<entry key="sourcePort" type="xint" value="1"/>
-<entry key="destPort" type="xint" value="1"/>
-</config>
-<config key="connection_11">
-<entry key="sourceID" type="xint" value="233"/>
+<entry key="sourceID" type="xint" value="234"/>
 <entry key="destID" type="xint" value="-1"/>
 <entry key="sourcePort" type="xint" value="2"/>
-<entry key="destPort" type="xint" value="2"/>
-</config>
-<config key="connection_12">
-<entry key="sourceID" type="xint" value="234"/>
-<entry key="destID" type="xint" value="-1"/>
-<entry key="sourcePort" type="xint" value="1"/>
-<entry key="destPort" type="xint" value="0"/>
-</config>
-<config key="connection_13">
-<entry key="sourceID" type="xint" value="234"/>
-<entry key="destID" type="xint" value="233"/>
-<entry key="sourcePort" type="xint" value="1"/>
-<entry key="destPort" type="xint" value="0"/>
+<entry key="destPort" type="xint" value="1"/>
 </config>
 </config>
 <config key="meta_in_ports">
-<entry key="ui_classname" type="xstring" isnull="true" value=""/>
+<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
+<config key="ui_settings">
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="223"/>
+<entry key="1" type="xint" value="155"/>
+<entry key="2" type="xint" value="50"/>
+<entry key="3" type="xint" value="524"/>
+</config>
+</config>
 <config key="port_enum">
 <config key="inport_0">
 <entry key="index" type="xint" value="0"/>
@@ -419,25 +241,34 @@
 </config>
 </config>
 <config key="meta_out_ports">
-<entry key="ui_classname" type="xstring" isnull="true" value=""/>
+<entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
+<config key="ui_settings">
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="1220"/>
+<entry key="1" type="xint" value="114"/>
+<entry key="2" type="xint" value="50"/>
+<entry key="3" type="xint" value="630"/>
+</config>
+</config>
 <config key="port_enum">
 <config key="outport_0">
 <entry key="index" type="xint" value="0"/>
-<entry key="name" type="xstring" value="Connected to: Output variables"/>
-<config key="type">
-<entry key="object_class" type="xstring" value="org.knime.core.node.port.flowvariable.FlowVariablePortObject"/>
-</config>
-</config>
-<config key="outport_1">
-<entry key="index" type="xint" value="1"/>
 <entry key="name" type="xstring" value="Connected to: Model for Predictor"/>
 <config key="type">
 <entry key="object_class" type="xstring" value="org.knime.core.node.port.pmml.PMMLPortObject"/>
 </config>
 </config>
+<config key="outport_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="name" type="xstring" value="Connected to: Coefficients and Statistics"/>
+<config key="type">
+<entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
+</config>
+</config>
 <config key="outport_2">
 <entry key="index" type="xint" value="2"/>
-<entry key="name" type="xstring" value="Connected to: Coefficients and Statistics"/>
+<entry key="name" type="xstring" value="Connected to: Second partition (remaining rows)"/>
 <config key="type">
 <entry key="object_class" type="xstring" value="org.knime.core.node.BufferedDataTable"/>
 </config>
