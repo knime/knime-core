@@ -60,6 +60,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimerTask;
 
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -100,6 +101,19 @@ import org.knime.core.util.tokenizer.TokenizerSettings;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class BatchExecutor {
+    // eclipse arguments that we ignore
+    private static final Set<String> IGNORED_ARGUMENTS = new HashSet<>();
+
+    static {
+        // arguments must be lowercase
+        IGNORED_ARGUMENTS.add("-noversioncheck");
+        IGNORED_ARGUMENTS.add("-perspective");
+        IGNORED_ARGUMENTS.add("-showlocation");
+        IGNORED_ARGUMENTS.add("-allowdeadlock");
+        IGNORED_ARGUMENTS.add("-checkforupdates");
+    }
+
+
     private static final ZipFileFilter WORKFLOW_ZIP_FILTER = new ZipFileFilter() {
         @Override
         public boolean include(final File f) {
@@ -575,7 +589,7 @@ public class BatchExecutor {
             String type = parts2[3];
 
             config.nodeOptions.add(new Option(nodeIDs, optionName, value, type));
-        } else {
+        } else if (!IGNORED_ARGUMENTS.contains(parts[0].toLowerCase())) {
             throw new IllegalOptionException("Unknown option '" + parts[0] + "'");
         }
     }
