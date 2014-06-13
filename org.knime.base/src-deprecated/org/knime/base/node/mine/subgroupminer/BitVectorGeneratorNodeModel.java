@@ -93,6 +93,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class BitVectorGeneratorNodeModel extends NodeModel {
     /**
      * Represents the string types that can be parsed.

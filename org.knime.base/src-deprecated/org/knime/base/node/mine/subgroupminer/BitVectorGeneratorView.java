@@ -64,6 +64,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class BitVectorGeneratorView
         extends NodeView<BitVectorGeneratorNodeModel> {
 

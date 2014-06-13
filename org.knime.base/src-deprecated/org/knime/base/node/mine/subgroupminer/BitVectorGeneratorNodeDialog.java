@@ -87,6 +87,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
  *
  * @author Fabian Dill, University of Konstanz
  */
+@Deprecated
 public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
     private JSpinner m_threshold;
 
