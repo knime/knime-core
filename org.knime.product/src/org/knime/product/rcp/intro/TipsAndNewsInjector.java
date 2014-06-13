@@ -77,6 +77,7 @@ import org.ccil.cowan.tagsoup.Parser;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
+import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -216,11 +217,27 @@ class TipsAndNewsInjector implements Runnable {
         conn.disconnect();
 
         XPath xpath = XPathFactory.newInstance().newXPath();
-        m_news = (Node)xpath.evaluate("//div[@id='knime-client-news']", res.getNode(), XPathConstants.NODE);
-        fixRelativeURLs(m_news, xpath);
+        Node news = (Node)xpath.evaluate("//div[@id='knime-client-news']", res.getNode(), XPathConstants.NODE);
+        m_news = checkIfNewsExist(news);
+        if (m_news != null) {
+            fixRelativeURLs(m_news, xpath);
+        }
 
         m_tips = (Node)xpath.evaluate("//div[@class='contentWrapper']", res.getNode(), XPathConstants.NODE);
-        fixRelativeURLs(m_tips, xpath);
+        if (m_tips != null) {
+            fixRelativeURLs(m_tips, xpath);
+        }
+    }
+
+    private Node checkIfNewsExist(final Node newsNode) {
+        NodeList nl = newsNode.getChildNodes();
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node child = nl.item(i);
+            if (!(child instanceof Comment) && !child.getNodeValue().trim().isEmpty()) {
+                return newsNode;
+            }
+        }
+        return null;
     }
 
     /**
