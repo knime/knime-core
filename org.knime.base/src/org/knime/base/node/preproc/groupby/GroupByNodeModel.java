@@ -77,6 +77,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
@@ -162,8 +163,7 @@ public class GroupByNodeModel extends NodeModel {
         new SettingsModelFilterString(CFG_GROUP_BY_COLUMNS);
 
     private final SettingsModelIntegerBounded m_maxUniqueValues =
-        new SettingsModelIntegerBounded(CFG_MAX_UNIQUE_VALUES, 10000, 1,
-                Integer.MAX_VALUE);
+        new SettingsModelIntegerBounded(CFG_MAX_UNIQUE_VALUES, 10000, 1, Integer.MAX_VALUE);
 
     private final SettingsModelBoolean m_enableHilite =
         new SettingsModelBoolean(CFG_ENABLE_HILITE, false);
@@ -172,22 +172,27 @@ public class GroupByNodeModel extends NodeModel {
     private final SettingsModelBoolean m_sortInMemory =
         new SettingsModelBoolean(CFG_SORT_IN_MEMORY, false);
 
-    private final SettingsModelBoolean m_retainOrder = new SettingsModelBoolean(
-            CFG_RETAIN_ORDER, false);
+    private final SettingsModelBoolean m_retainOrder = new SettingsModelBoolean(CFG_RETAIN_ORDER, false);
 
-    private final SettingsModelBoolean m_inMemory = new SettingsModelBoolean(
-            CFG_IN_MEMORY, false);
+    private final SettingsModelBoolean m_inMemory = new SettingsModelBoolean(CFG_IN_MEMORY, false);
 
     private final SettingsModelString m_columnNamePolicy =
         new SettingsModelString(GroupByNodeModel.CFG_COLUMN_NAME_POLICY,
                 ColumnNamePolicy.getDefault().getLabel());
 
-    private final SettingsModelString m_valueDelimiter =
-        new SettingsModelString(GroupByNodeModel.CFG_VALUE_DELIMITER,
+    private final SettingsModelString m_valueDelimiter = new SettingsModelString(GroupByNodeModel.CFG_VALUE_DELIMITER,
             GlobalSettings.STANDARD_DELIMITER);
+    //used to now the implementation version of the node
+    private final SettingsModelInteger m_version = createVersionModel();
 
-    private final List<ColumnAggregator> m_columnAggregators =
-        new LinkedList<ColumnAggregator>();
+    /**
+     * @return version model
+     */
+    static SettingsModelInteger createVersionModel() {
+        return new SettingsModelInteger("nodeVersion", 1);
+    }
+
+    private final List<ColumnAggregator> m_columnAggregators = new LinkedList<>();
 
     private List<ColumnAggregator> m_columnAggregators2Use;
 
@@ -281,6 +286,7 @@ public class GroupByNodeModel extends NodeModel {
         m_retainOrder.saveSettingsTo(settings);
         m_inMemory.saveSettingsTo(settings);
         m_valueDelimiter.saveSettingsTo(settings);
+        m_version.saveSettingsTo(settings);
     }
 
     /**
@@ -417,6 +423,12 @@ public class GroupByNodeModel extends NodeModel {
             m_valueDelimiter.loadSettingsFrom(settings);
         } catch (final InvalidSettingsException e) {
             m_valueDelimiter.setStringValue(GlobalSettings.STANDARD_DELIMITER);
+        }
+        try {
+            m_version.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            //this flag was introduced in 2.10 to mark the implementation version
+            m_version.setIntValue(0);
         }
     }
 
@@ -712,8 +724,19 @@ public class GroupByNodeModel extends NodeModel {
             final BufferedDataTable table, final List<String> groupByCols,
             final int maxUniqueVals) {
         return new GlobalSettings(FileStoreFactory.createWorkflowFileStoreFactory(exec), groupByCols,
-                maxUniqueVals, m_valueDelimiter.getJavaUnescapedStringValue(),
-                table.getDataTableSpec(), table.getRowCount());
+                maxUniqueVals, getDefaultValueDelimiter(), table.getDataTableSpec(), table.getRowCount());
+    }
+
+    /**
+     * @return the default value delimiter
+     * @since 2.10
+     */
+    protected String getDefaultValueDelimiter() {
+        if (m_version.getIntValue() > 0) {
+            return m_valueDelimiter.getJavaUnescapedStringValue();
+        }
+        //this is the old implementation that uses the escaped value delimiter
+        return m_valueDelimiter.getStringValue();
     }
 
     /**

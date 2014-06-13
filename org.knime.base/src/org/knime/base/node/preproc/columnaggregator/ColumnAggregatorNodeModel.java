@@ -69,6 +69,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
@@ -82,26 +83,28 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 public class ColumnAggregatorNodeModel extends NodeModel {
 
     /**Configuration key for the aggregation method settings.*/
-    protected static final String CFG_AGGREGATION_METHODS =
-        "aggregationMethods";
+    protected static final String CFG_AGGREGATION_METHODS = "aggregationMethods";
 
-    private final SettingsModelColumnFilter2 m_aggregationCols =
-        createAggregationColsModel();
+    private final SettingsModelColumnFilter2 m_aggregationCols = createAggregationColsModel();
 
-    private final SettingsModelBoolean m_removeRetainedCols =
-        createRemoveRetainedColsModel();
+    private final SettingsModelBoolean m_removeRetainedCols = createRemoveRetainedColsModel();
 
-    private final SettingsModelBoolean m_removeAggregationCols =
-        createRemoveAggregationColsModel();
+    private final SettingsModelBoolean m_removeAggregationCols =createRemoveAggregationColsModel();
 
-    private final SettingsModelIntegerBounded m_maxUniqueValues =
-        createMaxUniqueValsModel();
+    private final SettingsModelIntegerBounded m_maxUniqueValues = createMaxUniqueValsModel();
 
-    private final SettingsModelString m_valueDelimiter =
-    createValueDelimiterModel();
+    private final SettingsModelString m_valueDelimiter = createValueDelimiterModel();
 
-    private final List<NamedAggregationOperator> m_methods =
-        new ArrayList<NamedAggregationOperator>();
+    private final List<NamedAggregationOperator> m_methods = new ArrayList<>();
+    //used to now the implementation version of the node
+    private final SettingsModelInteger m_version = createVersionModel();
+
+    /**
+     * @return version model
+     */
+    static SettingsModelInteger createVersionModel() {
+        return new SettingsModelInteger("nodeVersion", 1);
+    }
 
     /**
      * @return the maximum unique values model
@@ -204,8 +207,7 @@ public class ColumnAggregatorNodeModel extends NodeModel {
         final AggregationCellFactory cellFactory = new AggregationCellFactory(
                 origSpec, selectedCols, new GlobalSettings(
                         FileStoreFactory.createWorkflowFileStoreFactory(exec), selectedCols,
-                        m_maxUniqueValues.getIntValue(),
-                        m_valueDelimiter.getJavaUnescapedStringValue(), origSpec,
+                        m_maxUniqueValues.getIntValue(), getDefaultValueDelimiter(), origSpec,
                         table.getRowCount()), m_methods);
         final ColumnRearranger cr =
             createRearranger(origSpec, cellFactory);
@@ -228,6 +230,14 @@ public class ColumnAggregatorNodeModel extends NodeModel {
         return cr;
     }
 
+    private String getDefaultValueDelimiter() {
+        if (m_version.getIntValue() > 0) {
+            return m_valueDelimiter.getJavaUnescapedStringValue();
+        }
+        //this is the old implementation that uses the escaped value delimiter
+        return m_valueDelimiter.getStringValue();
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -241,6 +251,7 @@ public class ColumnAggregatorNodeModel extends NodeModel {
         final NodeSettingsWO subSettings =
             settings.addNodeSettings(CFG_AGGREGATION_METHODS);
         NamedAggregationOperator.saveMethods(subSettings, m_methods);
+        m_version.saveSettingsTo(settings);
     }
 
     /**
@@ -249,13 +260,6 @@ public class ColumnAggregatorNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-//        SettingsModelColumnFilter2 selectedColsModel =
-//            (SettingsModelColumnFilter2) m_aggregationCols
-//                .createCloneWithValidatedValue(settings);
-//        if (selectedCols == null || selectedCols.isEmpty()) {
-//            throw new InvalidSettingsException(
-//                    "Please select at least one aggregation column");
-//        }
         m_aggregationCols.validateSettings(settings);
         m_removeRetainedCols.validateSettings(settings);
         m_removeAggregationCols.validateSettings(settings);
@@ -306,6 +310,12 @@ public class ColumnAggregatorNodeModel extends NodeModel {
         final NodeSettingsRO subSettings = settings.getNodeSettings(
                 ColumnAggregatorNodeModel.CFG_AGGREGATION_METHODS);
         m_methods.addAll(NamedAggregationOperator.loadOperators(subSettings));
+        try {
+            m_version.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            //this flag was introduced in 2.10 to mark the implementation version
+            m_version.setIntValue(0);
+        }
     }
 
     /**

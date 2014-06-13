@@ -79,6 +79,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
@@ -132,8 +133,9 @@ public class GroupByNodeDialog extends NodeDialogPane {
 
     private final DialogComponentColumnFilter m_groupCol;
 
-    private final AggregationColumnPanel m_aggrColPanel =
-        new AggregationColumnPanel();
+    private final AggregationColumnPanel m_aggrColPanel = new AggregationColumnPanel();
+    //used to now the implementation version of the node
+    private final SettingsModelInteger m_version = GroupByNodeModel.createVersionModel();
 
     /**Constructor for class GroupByNodeDialog. */
     @SuppressWarnings("unchecked")
@@ -335,6 +337,11 @@ public class GroupByNodeDialog extends NodeDialogPane {
         }
         m_groupCol.loadSettingsFrom(settings, new DataTableSpec[] {spec});
         columnsChanged();
+        try {
+            m_version.loadSettingsFrom(settings);
+        } catch (final InvalidSettingsException e) {
+            throw new NotConfigurableException(e.getMessage());
+        }
     }
 
     /**
@@ -358,5 +365,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_aggrColPanel.saveSettingsTo(settings);
         m_retainOrder.saveSettingsTo(settings);
         m_inMemory.saveSettingsTo(settings);
+
+        m_version.saveSettingsTo(settings);
     }
 }

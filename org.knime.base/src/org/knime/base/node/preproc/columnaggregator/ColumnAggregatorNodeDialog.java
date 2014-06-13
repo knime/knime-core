@@ -82,6 +82,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
@@ -103,28 +104,24 @@ public class ColumnAggregatorNodeDialog  extends NodeDialogPane {
 
     private final JTabbedPane m_tabs;
 
-    private final SettingsModelColumnFilter2 m_aggregationCols =
-        ColumnAggregatorNodeModel.createAggregationColsModel();
+    private final SettingsModelColumnFilter2 m_aggregationCols = ColumnAggregatorNodeModel.createAggregationColsModel();
 
-    private final SettingsModelIntegerBounded m_maxUniqueValues =
-        ColumnAggregatorNodeModel.createMaxUniqueValsModel();
+    private final SettingsModelIntegerBounded m_maxUniqueValues = ColumnAggregatorNodeModel.createMaxUniqueValsModel();
 
-    private final SettingsModelString m_valueDelimiter =
-        ColumnAggregatorNodeModel.createValueDelimiterModel();
+    private final SettingsModelString m_valueDelimiter = ColumnAggregatorNodeModel.createValueDelimiterModel();
 
-    private final SettingsModelBoolean m_removeRetainedCols =
-        ColumnAggregatorNodeModel.createRemoveRetainedColsModel();
+    private final SettingsModelBoolean m_removeRetainedCols = ColumnAggregatorNodeModel.createRemoveRetainedColsModel();
 
     private final SettingsModelBoolean m_removeAgregationCols =
-        ColumnAggregatorNodeModel.createRemoveAggregationColsModel();
+            ColumnAggregatorNodeModel.createRemoveAggregationColsModel();
 
     private final DialogComponentColumnFilter2 m_aggrColumnsComponent;
+    //used to now the implementation version of the node
+    private final SettingsModelInteger m_version = ColumnAggregatorNodeModel.createVersionModel();
 
-    private final ColumnAggregationPanel m_aggrMethodsPanel =
-        new ColumnAggregationPanel(" Aggregation settings ");
+    private final ColumnAggregationPanel m_aggrMethodsPanel = new ColumnAggregationPanel(" Aggregation settings ");
 
-    private final Collection<DialogComponent> m_components =
-        new LinkedList<DialogComponent>();
+    private final Collection<DialogComponent> m_components = new LinkedList<>();
 
     private DataTableSpec m_spec = null;
 
@@ -288,8 +285,8 @@ public class ColumnAggregatorNodeDialog  extends NodeDialogPane {
         }
         try {
             m_aggrMethodsPanel.loadSettingsFrom(settings.getNodeSettings(
-                    ColumnAggregatorNodeModel.CFG_AGGREGATION_METHODS),
-                    getSuperType(), m_spec);
+                    ColumnAggregatorNodeModel.CFG_AGGREGATION_METHODS), getSuperType(), m_spec);
+            m_version.loadSettingsFrom(settings);
         } catch (final InvalidSettingsException e) {
             throw new NotConfigurableException(e.getMessage(), e);
         }
@@ -306,5 +303,7 @@ public class ColumnAggregatorNodeDialog  extends NodeDialogPane {
         }
         m_aggrMethodsPanel.saveSettingsTo(settings.addNodeSettings(
                 ColumnAggregatorNodeModel.CFG_AGGREGATION_METHODS));
+
+        m_version.saveSettingsTo(settings);
     }
 }
