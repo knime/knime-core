@@ -364,6 +364,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/exec/ThreadNodeExecutionJobManagerFactory.java" type="org.knime.core.node.exec.ThreadNodeExecutionJobManagerFactory">
+        <filter comment="unlikely used outside the core (&quot;no api&quot;)" id="1143996420">
+            <message_arguments>
+                <message_argument value="getInstance()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/interactive/InteractiveClientNodeView.java" type="org.knime.core.node.interactive.InteractiveClientNodeView">
         <filter id="336793632">
             <message_arguments>
@@ -541,6 +548,19 @@
                 <message_argument value="org.knime.core.node.interactive.ViewContent"/>
                 <message_argument value="4"/>
                 <message_argument value="8"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/util/NodeExecutionJobManagerPool.java" type="org.knime.core.node.util.NodeExecutionJobManagerPool">
+        <filter comment="unlikely used outside the core (&quot;no api&quot;)" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.NodeExecutionJobManagerPool"/>
+                <message_argument value="getDefaultJobManagerFactory()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="unlikely used outside the core (&quot;no api&quot;)" id="1143996420">
+            <message_arguments>
+                <message_argument value="getDefaultJobManagerFactory()"/>
             </message_arguments>
         </filter>
     </resource>

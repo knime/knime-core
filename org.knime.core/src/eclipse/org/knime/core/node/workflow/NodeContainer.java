@@ -72,6 +72,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.PortObject;
@@ -218,7 +219,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
         + "\" in \"" + persistor.getClass().getSimpleName() + "\" is null";
         m_state = persistor.getState();
         m_jobManager = persistor.getExecutionJobManager();
-        if (m_parent == null && m_jobManager == null) {
+        if (m_parent == null && !(m_jobManager instanceof ThreadNodeExecutionJobManager)) {
             // make sure at least the top node knows how to execute stuff
             m_jobManager = NodeExecutionJobManagerPool.getDefaultJobManagerFactory().getInstance();
         }
@@ -261,9 +262,11 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
      */
     void setJobManager(final NodeExecutionJobManager je) {
         synchronized (m_nodeMutex) {
-            if (m_parent == null && je == null) {
-                throw new NullPointerException(
-                "Root workflow manager must have a job manager.");
+            if (m_parent == null && !(je instanceof ThreadNodeExecutionJobManager)) {
+                // ROOT and workflow with no parent (inner wfm of subnode) must have the default job manager set
+                throw new IllegalArgumentException(String.format("Can only set the default job manager (%s) on a "
+                    + "no-parent workflow manager (%s); got %s", ThreadNodeExecutionJobManager.class.getSimpleName(),
+                    this.getNameWithID(), je == null ? "<null>" : je.getClass().getSimpleName()));
             }
             if (je != m_jobManager) {
                 if (m_jobManager != null) {
@@ -353,24 +356,16 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
     abstract void markForExecution(final boolean flag);
 
     /**
-     * Change state of marked (for execution) node to queued once it has been
-     * assigned to a NodeExecutionJobManager.
+     * Change state of marked (for execution) node to queued once it has been assigned to a NodeExecutionJobManager.
      *
      * @param inData the incoming data for the execution
-     * @throws IllegalStateException in case of illegal entry state.
+     * @return True if it's now successfully queued, false if it can't be queued as it's still UNCONFIGURED_MARKED.
+     * @throws IllegalStateException in case of illegal entry state (not marked).
      */
-    void queue(final PortObject[] inData) {
+    boolean queue(final PortObject[] inData) {
         synchronized (m_nodeMutex) {
-            // switch state from marked to queued
-            switch (getInternalState()) {
-            case CONFIGURED_MARKEDFOREXEC:
-                setInternalState(InternalNodeContainerState.CONFIGURED_QUEUED);
-                break;
-            case EXECUTED_MARKEDFOREXEC:
-                setInternalState(InternalNodeContainerState.EXECUTED_QUEUED);
-                break;
-            default:
-                throwIllegalStateException();
+            if (!performStateTransitionQUEUED()) {
+                return false;
             }
             // queue job if state change was successful
             NodeExecutionJobManager jobManager = findJobManager();
@@ -390,8 +385,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
                 notifyParentPostExecuteStart(NodeContainerExecutionStatus.FAILURE);
                 notifyParentExecuteFinished(NodeContainerExecutionStatus.FAILURE);
             }
-            return;
         }
+        return true;
     }
 
     /** Marks this node as remotely executing. This is necessary if the entire
@@ -535,6 +530,30 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
             final NodeContainerExecutionStatus status) {
         // clean up stuff and especially change states synchronized again
         getParent().doAfterExecution(this, status);
+    }
+
+    /** Called from {@link #queue(PortObject[])} to set state from marked to queued. It's overwritten in
+     * {@link SubNodeContainer} to be more ignorant with state checks.
+     * @return true if the state transition was done and the node can now be executed. False if it was marked but
+     * it can not be executed (coming from {@link InternalNodeContainerState#UNCONFIGURED_MARKEDFOREXEC}). The calling
+     * code will then clear the mark flags.
+     * @throws IllegalStateException If not coming from 'marked' state. */
+    boolean performStateTransitionQUEUED() {
+        assert Thread.holdsLock(m_nodeMutex);
+        // switch state from marked to queued
+        switch (getInternalState()) {
+        case CONFIGURED_MARKEDFOREXEC:
+            setInternalState(InternalNodeContainerState.CONFIGURED_QUEUED);
+            break;
+        case EXECUTED_MARKEDFOREXEC:
+            setInternalState(InternalNodeContainerState.EXECUTED_QUEUED);
+            break;
+        case UNCONFIGURED_MARKEDFOREXEC:
+            return false;
+        default:
+            throwIllegalStateException();
+        }
+        return true;
     }
 
     /** Called when the state of a node should switch from

@@ -122,10 +122,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
     @Override
     protected boolean internalCalculateEnabled() {
         WorkflowManager wm = getManager();
-        if (wm.getParent() == null) {
-            return false;
-        }
-        return wm.getParent().canExecuteNode(wm.getID());
+        return wm.canExecuteAll();
     }
 
     /**
@@ -139,7 +136,7 @@ public class ExecuteAllAction extends AbstractNodeAction {
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         WorkflowManager wm = getManager();
-        wm.getParent().executeUpToHere(wm.getID());
+        wm.executeAll();
         try {
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.

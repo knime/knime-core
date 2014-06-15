@@ -2695,12 +2695,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         PortObject[] inData = new PortObject[nc.getNrInPorts()];
         boolean allDataAvailable = assembleInputData(nc.getID(), inData);
         if (allDataAvailable) {
-            switch (nc.getInternalState()) {
-            case CONFIGURED_MARKEDFOREXEC:
-            case EXECUTED_MARKEDFOREXEC:
-                nc.queue(inData);
+            if (nc.queue(inData)) {
                 return true;
-            case UNCONFIGURED_MARKEDFOREXEC:
+            } else {
+                // coming from UNCONFIGURED_MARKEDFOREXEC and can't be queued
+                // (subnode is special ... it can be queued even if unconfigured_markedforexec)
                 disableNodeForExecution(nc.getID());
                 // clean loops which were waiting for this one to be executed.
                 for (FlowLoopContext flc : nc.getWaitingLoops()) {
@@ -2709,8 +2708,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 nc.clearWaitingLoopList();
                 checkForNodeStateChanges(true);
                 return false;
-            default:
-                assert false : "Invalid state " + nc.getInternalState() + ", case should have handeled above";
             }
         }
         return false;
@@ -4660,6 +4657,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // check for WorkflowManager - which we handle differently
             if (nc instanceof WorkflowManager) {
                 return ((WorkflowManager)nc).hasExecutableNode();
+            } else if (nc instanceof SubNodeContainer) {
+                return ((SubNodeContainer)nc).getWorkflowManager().hasExecutableNode();
             }
             return nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED);
         }
@@ -4955,8 +4954,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         try {
             waitWhileInExecution(-1, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
-            LOGGER.warn(
-                    "Thread interrupted while waiting for finishing execution");
+            LOGGER.warn("Thread interrupted while waiting for finishing execution");
         }
         return this.getInternalState().equals(InternalNodeContainerState.EXECUTED);
     }
@@ -5046,16 +5044,35 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return isExecuting;
     }
 
-    /** Convenience method: (Try to) Execute all nodes in the workflow.
-     * This method returns immediately, leaving it to the associated
-     * executor to do the job. */
+    /** Called by execute-all action to (attempt to) execute all nodes in the workflow. This is true when there is
+     * at least one node that is executable (even though the state of the wfm is idle).
+     * @return that property
+     * @since 2.10 */
+    public boolean canExecuteAll() {
+        synchronized (m_workflowMutex) {
+            if (isLocalWFM()) {
+                return hasExecutableNode();
+            } else {
+                WorkflowManager parent = getParent();
+                return parent != null && parent.canExecuteNode(getID());
+            }
+        }
+    }
+
+    /** (Try to) Execute all nodes in the workflow. This method only marks the end nodes for execution and then returns
+     * immediately. If a job manager is set on the WFM this one will run the execution. In any case this method
+     * returns immediately and does not wait for the execution to finish.
+     * @see #executeAllAndWaitUntilDone() */
     public void executeAll() {
         synchronized (m_workflowMutex) {
+            if (!isLocalWFM()) {
+                getParent().executeUpToHere(getID());
+                return;
+            }
             Set<NodeID> endNodes = new HashSet<NodeID>();
             for (NodeID id : m_workflow.getNodeIDs()) {
                 boolean hasNonParentSuccessors = false;
-                for (ConnectionContainer cc
-                        : m_workflow.getConnectionsBySource(id)) {
+                for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
                     if (!cc.getDest().equals(this.getID())) {
                         hasNonParentSuccessors = true;
                         break;
@@ -5072,12 +5089,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeID thisID = endNodes.iterator().next();
                 endNodes.remove(thisID);
                 // move all of the predecessors to the "end nodes"
-                for (ConnectionContainer cc
-                        : m_workflow.getConnectionsByDest(thisID)) {
+                for (ConnectionContainer cc : m_workflow.getConnectionsByDest(thisID)) {
                     NodeID nextID = cc.getSource();
-                    if (!endNodes.contains(nextID)
-                            && !executedNodes.contains(nextID)
-                            && !nextID.equals(this.getID())) {
+                    if (!endNodes.contains(nextID) && !executedNodes.contains(nextID) && !nextID.equals(this.getID())) {
                         endNodes.add(nextID);
                     }
                 }
@@ -7910,7 +7924,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return wasClean;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * A "local wfm" is a workflow or meta node that has the default job manager. Other instances, which are executed in
+     * a cluster or so, are non-local and will be more handled like a single node container on execution. The WFM
+     * instance contained in a sub node is a local wfm even if the subnode has a non-default job manager set.
+     * {@inheritDoc}
+     */
     @Override
     protected boolean isLocalWFM() {
         return findJobManager() instanceof ThreadNodeExecutionJobManager;

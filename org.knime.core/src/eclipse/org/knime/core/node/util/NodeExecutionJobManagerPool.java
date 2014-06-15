@@ -196,7 +196,7 @@ public final class NodeExecutionJobManagerPool {
      *
      * @return the default job manager
      */
-    public static NodeExecutionJobManagerFactory getDefaultJobManagerFactory() {
+    public static ThreadNodeExecutionJobManagerFactory getDefaultJobManagerFactory() {
         return ThreadNodeExecutionJobManagerFactory.INSTANCE;
     }
 

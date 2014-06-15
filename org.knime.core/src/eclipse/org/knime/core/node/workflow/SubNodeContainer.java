@@ -858,6 +858,16 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
 
     /** {@inheritDoc} */
     @Override
+    boolean performStateTransitionQUEUED() {
+        // theoretically we can come from any state into queued state, e.g. this node can be marked for
+        // execution (which is the most likely state when run from the outer workflow) and then something is done
+        // internally that causes an internal checkForNodeStateChanges.
+        setInternalState(InternalNodeContainerState.CONFIGURED_QUEUED);
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     boolean performStateTransitionPREEXECUTE() {
         synchronized (m_nodeMutex) {
             getProgressMonitor().reset();
@@ -963,7 +973,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             try {
                 m_wfm.waitWhileInExecution(-1, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
-                m_wfm.cancelExecution(); // TODO - ideally done via parent but that is orphaned?
+                m_wfm.cancelExecution();
                 isCanceled = true;
             }
             final InternalNodeContainerState internalState = m_wfm.getInternalState();

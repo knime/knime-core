@@ -47,22 +47,22 @@
  */
 package org.knime.core.node.exec;
 
-import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManagerFactory;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class ThreadNodeExecutionJobManagerFactory 
+public class ThreadNodeExecutionJobManagerFactory
     implements NodeExecutionJobManagerFactory {
-    
+
     public static final ThreadNodeExecutionJobManagerFactory INSTANCE =
         new ThreadNodeExecutionJobManagerFactory();
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getID() {
         return getClass().getName();
     }
@@ -74,10 +74,10 @@ public class ThreadNodeExecutionJobManagerFactory
     public String getLabel() {
         return "Threaded Job Manager";
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    public NodeExecutionJobManager getInstance() {
+    public ThreadNodeExecutionJobManager getInstance() {
         return ThreadNodeExecutionJobManager.INSTANCE;
     }
 
