@@ -168,6 +168,14 @@ class UpdateMessageInjector implements Runnable {
             (Element)xpath.evaluate("//span[@id='no-updates']", doc.getDocumentElement(), XPathConstants.NODE);
         noUpdatesSpan.removeAttribute("style"); // removes the "hidden" style
 
+        Element checkingUpdatesSpan =
+            (Element)xpath.evaluate("//span[@id='checking-updates']", doc.getDocumentElement(), XPathConstants.NODE);
+        checkingUpdatesSpan.setAttribute("style", "display: none;");
+
+        Element updateDiv =
+            (Element)xpath.evaluate("//div[@id='update']", doc.getDocumentElement(), XPathConstants.NODE);
+        updateDiv.setAttribute("style", "display: none;");
+
         serialize(doc);
     }
 
@@ -178,12 +186,15 @@ class UpdateMessageInjector implements Runnable {
 
         XPath xpath = m_xpathFactory.newXPath();
         Element updateNode =
-                (Element)xpath.evaluate("//div[@id='update']", doc.getDocumentElement(), XPathConstants.NODE);
+            (Element)xpath.evaluate("//div[@id='update']", doc.getDocumentElement(), XPathConstants.NODE);
 
         Element updatesAvailableSpan =
             (Element)xpath.evaluate("//span[@id='updates-available']", updateNode, XPathConstants.NODE);
         updatesAvailableSpan.removeAttribute("style"); // removes the "hidden" style
 
+        Element checkingUpdatesSpan =
+            (Element)xpath.evaluate("//span[@id='checking-updates']", doc.getDocumentElement(), XPathConstants.NODE);
+        checkingUpdatesSpan.setAttribute("style", "display: none;");
 
         Element updateList = (Element)xpath.evaluate(".//ul[@id='update-list']", updateNode, XPathConstants.NODE);
         boolean updatePossible = true;

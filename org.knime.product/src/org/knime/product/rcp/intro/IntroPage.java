@@ -665,7 +665,7 @@ public class IntroPage implements LocationListener {
             WizardDialog dialog = new WizardDialog(view.getSite().getShell(), newWiz);
             dialog.create();
             dialog.getShell().setText("Create new workflow");
-            dialog.getShell().setSize(Math.max(470, dialog.getShell().getSize().x), 300);
+            dialog.getShell().setSize(Math.max(470, dialog.getShell().getSize().x), 350);
             int ok = dialog.open();
             if (ok == Window.OK) {
                 // update the tree

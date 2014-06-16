@@ -36,6 +36,10 @@ body > h2 {
 	border-radius: 6px;
 }
 
+#checking-updates {
+	font-style: italic;
+}
+
 div#links-and-mru {
 	max-width: 1000px;
 	margin: 10 auto 20 auto;

@@ -81,6 +81,7 @@ function reload() {
         <div class="hide-button">
             <img src="img/close-button.png" title="Hide update notifications" onclick="showUpdate(false);" />
         </div>
+        <span id="checking-updates">Checking for updates...</span>
         <span id="no-updates" style="display: none;">Currently no updates are available.</span>
         <span id="updates-available" style="display: none;">New releases of the following components are available:</span>
         
@@ -120,7 +121,7 @@ function reload() {
     
             <div class="floating-link">
                 <a href="intro://browseExamples/" id="examples"
-                   title="Open the KNIME Public Server and browse through numerous examples.">
+                   title="Open the KNIME Public Server (see the KNIME Explorer at the top-left) and browse through numerous examples.">
                     <div class="link-label">Browse example workflows</div>
                 </a>
             </div>

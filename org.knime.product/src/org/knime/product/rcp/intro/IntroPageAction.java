@@ -55,6 +55,9 @@ import org.eclipse.jface.action.Action;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 public class IntroPageAction extends Action {
+    /**
+     * Creates a new action.
+     */
     public IntroPageAction() {
         super("Welcome Page");
         setToolTipText("Opens the KNIME welcome page");
