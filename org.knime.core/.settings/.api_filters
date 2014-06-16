@@ -770,6 +770,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/ConnectionContainer.java" type="org.knime.core.node.workflow.ConnectionContainer$ConnectionType">
+        <filter comment="no api" id="1177550852">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.ConnectionContainer.ConnectionType"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/ConnectionUIInformation.java" type="org.knime.core.node.workflow.ConnectionUIInformation">
         <filter comment="renaming persistor classes - no API anyway" id="338792546">
             <message_arguments>
