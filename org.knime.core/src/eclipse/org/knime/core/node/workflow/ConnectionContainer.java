@@ -68,7 +68,9 @@ public class ConnectionContainer implements ConnectionProgressListener {
     m_progressListeners = new CopyOnWriteArraySet<ConnectionProgressListener>();
 
 
-    enum ConnectionType { STD, WFMIN, WFMOUT, WFMTHROUGH;
+    /** Typ of the connection: meta node input, output, through or "standard" connection.
+     * @noreference */
+    public enum ConnectionType { STD, WFMIN, WFMOUT, WFMTHROUGH;
         /**
          * @return Whether this type is leaving a workflow (through or out)
          */
@@ -79,7 +81,8 @@ public class ConnectionContainer implements ConnectionProgressListener {
                 default: return false;
             }
         }
-    };
+    }
+
     private final ConnectionType m_type;
 
     /** Creates new connection.

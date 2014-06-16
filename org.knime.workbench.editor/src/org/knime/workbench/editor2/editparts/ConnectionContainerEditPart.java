@@ -259,17 +259,13 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      * @return
      */
     private boolean isIncomingConnection(final ConnectionContainer conn) {
-        if (conn.getDest().getPrefix().equals(conn.getSource())) {
-            // if the destination is contained in the source - its incoming
-            assert getNode(null, conn.getSource()) instanceof WorkflowManager;
-            return true;
+        switch (conn.getType()) {
+            case WFMIN:
+            case WFMTHROUGH:
+                return true;
+            default:
+                return false;
         }
-        if (conn.getDest().equals(conn.getSource())) {
-            // source and dest is equal it must be a through connection
-            assert getNode(null, conn.getSource()) instanceof WorkflowManager;
-            return true;
-        }
-        return false;
     }
 
     /** {@inheritDoc} */
