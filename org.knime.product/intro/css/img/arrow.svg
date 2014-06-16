@@ -35,7 +35,7 @@
      fit-margin-right="0"
      fit-margin-bottom="0"
      inkscape:zoom="7.8666667"
-     inkscape:cx="-40.112388"
+     inkscape:cx="-66.17171"
      inkscape:cy="10.778959"
      inkscape:window-x="0"
      inkscape:window-y="0"
@@ -78,7 +78,7 @@
        id="path3358"
        d="M 13.498601,4.3598913 V 8.593077 c 0,0.365324 -0.295265,0.6614353 -0.660377,0.6614353 H 3.643744 V 20.235396 h 9.19448 c 0.365112,0 0.660377,0.295265 0.660377,0.660377 v 4.233186 h 1.554637 L 26.926266,15.638156 V 13.851752 L 15.053238,4.3604205 h -1.554637 z"
        inkscape:connector-curvature="0"
-       style="fill:url(#linearGradient3366);stroke:#777777;stroke-width:1.30000007;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+       style="fill:#f4ab27;stroke:#777777;stroke-width:1.30000007000000006;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;fill-opacity:1" />
   </g>
   <metadata
      id="metadata11">
@@ -95,7 +95,7 @@
             <dc:title>Openclipart</dc:title>
           </cc:Agent>
         </dc:publisher>
-        <dc:title></dc:title>
+        <dc:title />
         <dc:date>2008-05-26T11:58:06</dc:date>
         <dc:description>arrow, arrow, clip art, clipart, icon, icon, image, media, png, public domain, svg, </dc:description>
         <dc:source>http://openclipart.org/detail/17020/icon_arrow_right_green-by-jean_victor_balin</dc:source>
