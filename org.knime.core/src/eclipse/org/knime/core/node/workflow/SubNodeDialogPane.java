@@ -60,7 +60,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -70,6 +69,7 @@ import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.DialogNodePanel;
 import org.knime.core.node.dialog.DialogNodeRepresentation;
 import org.knime.core.node.dialog.DialogNodeValue;
+import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.util.Pair;
 
 /**
@@ -175,7 +175,7 @@ public final class SubNodeDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-        final DataTableSpec[] specs) throws NotConfigurableException {
+        final PortObjectSpec[] specs) throws NotConfigurableException {
         for (Map.Entry<Pair<NodeID, DialogNode<? extends DialogNodeRepresentation<?>,
             ? extends DialogNodeValue>>, DialogNodePanel<? extends DialogNodeValue>> e : m_nodes.entrySet()) {
             Pair<NodeID, DialogNode<? extends DialogNodeRepresentation<?>,
