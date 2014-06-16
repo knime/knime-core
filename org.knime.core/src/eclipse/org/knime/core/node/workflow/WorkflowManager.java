@@ -3671,31 +3671,30 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public NodeID convertMetaNodeToSubNode(final NodeID wfmID) {
         synchronized (m_workflowMutex) {
             //
-            WorkflowManager subWFM = (WorkflowManager)getNodeContainer(wfmID);
-            SubNodeContainer subNC = new SubNodeContainer(this, m_workflow.createUniqueID(), subWFM, subWFM.getName());
+            WorkflowManager subWFM = getNodeContainer(wfmID, WorkflowManager.class, true);
+            final Set<ConnectionContainer> connectionsByDestination =
+                    new LinkedHashSet<>(m_workflow.getConnectionsByDest(subWFM.getID()));
+            final Set<ConnectionContainer> connectionsBySource =
+                    new LinkedHashSet<>(m_workflow.getConnectionsBySource(subWFM.getID()));
+            NodeUIInformation uii = subWFM.getUIInformation();
+
+            removeNode(wfmID);
+
+            SubNodeContainer subNC = new SubNodeContainer(this, wfmID, subWFM, subWFM.getName());
             this.addNodeContainer(subNC, /*propagateChanges=*/true);
+
             // rewire connections TO the old metanode:
-            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(subWFM.getID())) {
+            for (ConnectionContainer cc : connectionsByDestination) {
                 this.addConnection(cc.getSource(), cc.getSourcePort(), subNC.getID(), cc.getDestPort() + 1);
             }
-            List<ConnectionContainer> connections = new ArrayList<ConnectionContainer>();
-            connections.addAll(m_workflow.getConnectionsByDest(subWFM.getID()));
-            for (ConnectionContainer cc : connections) {
-                this.removeConnection(cc);
-            }
+
             // rewire connections FROM the sub workflow
-            ArrayList<ConnectionContainer> tempCCs = new ArrayList<ConnectionContainer>();
-            for (ConnectionContainer cc : m_workflow.getConnectionsBySource(subWFM.getID())) {
-                tempCCs.add(cc);
-            }
-            for (ConnectionContainer cc : tempCCs) {
-                this.removeConnection(cc);
+            for (ConnectionContainer cc : connectionsBySource) {
                 this.addConnection(subNC.getID(), cc.getSourcePort() + 1, cc.getDest(), cc.getDestPort());
             }
             // move SubNode to position of old Metanode (and remove it)
-            NodeUIInformation uii = subWFM.getUIInformation();
             subNC.setUIInformation(uii);
-            this.removeNode(subWFM.getID());
+
             configureNodeAndSuccessors(subNC.getID(), /*configureMyself=*/true);
             return subNC.getID();
         }

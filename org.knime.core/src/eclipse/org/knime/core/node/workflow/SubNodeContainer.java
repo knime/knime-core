@@ -435,10 +435,14 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         return ThreadPool.currentPool().runInvisible(new Callable<PortObject[]>() {
             @Override
             public PortObject[] call() throws Exception {
-                getParent().executePredecessorsAndWait(getID());
-                PortObject[] results = new PortObject[getNrInPorts()];
-                if (getParent().assembleInputData(getID(), results)) {
-                    return results;
+                final WorkflowManager parent = getParent();
+                // might be not yet or no longer in workflow (e.g. part of construction)
+                if (parent.containsNodeContainer(getID())) {
+                    PortObject[] results = new PortObject[getNrInPorts()];
+                    parent.executePredecessorsAndWait(getID());
+                    if (parent.assembleInputData(getID(), results)) {
+                        return results;
+                    }
                 }
                 return null;
             }
@@ -451,7 +455,11 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     public PortObjectSpec[] fetchInputSpecFromParent() {
         PortObjectSpec[] results = new PortObjectSpec[getNrInPorts()];
-        getParent().assembleInputSpecs(getID(), results);
+        final WorkflowManager parent = getParent();
+        // might be not yet or no longer in workflow (e.g. part of construction)
+        if (parent.containsNodeContainer(getID())) {
+            parent.assembleInputSpecs(getID(), results);
+        }
         return results;
     }
 
