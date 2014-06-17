@@ -54,11 +54,14 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DomainCreatorColumnSelection;
+import org.knime.core.data.NominalValue;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -100,7 +103,7 @@ public class DomainNodeModel extends NodeModel {
     private boolean m_possValRetainUnselected = true; // added in 2.1.2
     private String[] m_minMaxCols;
     private boolean m_minMaxRetainUnselected = true;  // added in 2.1.2
-    private int m_maxPossValues;
+    private int m_maxPossValues = DataContainer.MAX_POSSIBLE_VALUES;
 
     /** Constructor, inits one input, one output. */
     public DomainNodeModel() {
@@ -111,6 +114,7 @@ public class DomainNodeModel extends NodeModel {
         final Set<String> possValCols = new HashSet<String>();
         possValCols.addAll(Arrays.asList(m_possValCols));
         int maxPoss = m_maxPossValues >= 0 ? m_maxPossValues : Integer.MAX_VALUE;
+
         final Set<String> minMaxCols = new HashSet<String>();
         minMaxCols.addAll(Arrays.asList(m_minMaxCols));
 
@@ -164,6 +168,15 @@ public class DomainNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
     throws InvalidSettingsException {
+        // auto-configuration in case no user settings are available
+        if (m_possValCols == null) {
+            m_possValCols = DomainNodeModel.getAllCols(NominalValue.class, inSpecs[0]);
+        }
+        if (m_minMaxCols == null) {
+            m_minMaxCols = DomainNodeModel.getAllCols(BoundedValue.class, inSpecs[0]);
+        }
+
+
         DataTableDomainCreator domainCreator = getDomainCreator(inSpecs[0]);
         return new DataTableSpec[]{domainCreator.createSpec()};
     }
