@@ -22,7 +22,7 @@ body > h2 {
 }
 
 #intro {
-	margin: 0 auto 10 auto;
+	margin: 0 auto 10px auto;
 	padding-top: 13px;
 	max-width: 1000px;
 }
@@ -42,7 +42,7 @@ body > h2 {
 
 div#links-and-mru {
 	max-width: 1000px;
-	margin: 10 auto 20 auto;
+	margin: 10px auto 20px auto;
 }
 
 
@@ -50,6 +50,7 @@ div#links {
     float: left;
     width: 45%;
 	overflow: hidden;
+	padding-right: 20px;
 	margin: 0 auto;
 }
 
@@ -67,7 +68,6 @@ a .text {
 div#mru {
     min-width: 45%;
     float: left;
-    padding-left: 20px;
     margin: 10px auto 30px auto;
     overflow: hidden;
     margin: 0 auto;
@@ -130,7 +130,7 @@ div.floating-link {
 
 #news {
 	max-width: 1000px;
-    margin: 20 auto;
+    margin: 20px auto;
 	padding: 5px 5px;
 	background: #eee;
 	border-radius: 6px;
@@ -138,7 +138,7 @@ div.floating-link {
 
 #tips {
     max-width: 1000px;
-    margin: 20 auto;
+    margin: 20px auto;
     padding: 5px 5px;
     background: #eee;
     border-radius: 6px;

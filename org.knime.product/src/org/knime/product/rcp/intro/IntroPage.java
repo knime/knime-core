@@ -227,6 +227,8 @@ public class IntroPage implements LocationListener {
         try (OutputStream out = new FileOutputStream(tempTemplate)) {
             Transformer serializer = m_transformerFactory.newTransformer();
             serializer.setOutputProperty(OutputKeys.METHOD, "xml");
+            serializer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "about:legacy-compat");
+            serializer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
             serializer.transform(new DOMSource(doc), new StreamResult(out));
         }
 
