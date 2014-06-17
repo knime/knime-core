@@ -81,18 +81,18 @@ public class StatementManipulator {
         return "SELECT * FROM (" + sql + ") " + getTempTableName() + " LIMIT " + count;
     }
 
-    /**
-     * Modifies the incoming SQL query so that the number of rows is limited. The default implementation uses the LIMIT
-     * clause.
-     *
-     * @param sql any valid SQL query
-     * @param offset the offset
-     * @param count the maximum number of rows
-     * @return an SQL query
-     */
-    public String limitRows(final String sql, final long count, final long offset) {
-        return "SELECT * FROM (" + sql + ") " + getTempTableName() + " LIMIT " + count + " OFFSET " + offset;
-    }
+//    /**
+//     * Modifies the incoming SQL query so that the number of rows is limited. The default implementation uses the LIMIT
+//     * clause.
+//     *
+//     * @param sql any valid SQL query
+//     * @param offset the offset
+//     * @param count the maximum number of rows
+//     * @return an SQL query
+//     */
+//    public String limitRows(final String sql, final long count, final long offset) {
+//        return "SELECT * FROM (" + sql + ") " + getTempTableName() + " LIMIT " + count + " OFFSET " + offset;
+//    }
 
 
     /**

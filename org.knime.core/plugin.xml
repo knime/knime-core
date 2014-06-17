@@ -215,5 +215,9 @@
             class="org.knime.core.node.port.database.OracleUtility"
             database="oracle">
       </databaseUtility>
+      <databaseUtility
+            class="org.knime.core.node.port.database.SQLServerUtility"
+            database="sqlserver">
+      </databaseUtility>
    </extension>
 </plugin>

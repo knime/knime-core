@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -43,40 +44,29 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   08.05.2014 (thor): created
+ *   17.06.2014 (thor): created
  */
 package org.knime.core.node.port.database;
 
 
 /**
- * Database utility for Oracle.
+ * Database utility for MS SQL Server.
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.10
  */
-public class OracleUtility extends DatabaseUtility {
-    private static class OracleStatementManipulator extends StatementManipulator {
+public class SQLServerUtility extends DatabaseUtility {
+    private static class SQLServerStatementManipulator extends StatementManipulator {
         /**
          * {@inheritDoc}
          */
         @Override
         public String limitRows(final String sql, final long count) {
-            return "SELECT * FROM (" + sql + ") " + getTempTableName() + " WHERE rownum <= " + count;
+            return "SELECT TOP " + count + " * FROM (" + sql + ") " + getTempTableName();
         }
-
-//        /**
-//         * {@inheritDoc}
-//         */
-//        @Override
-//        public String limitRows(final String sql, final long count, final long offset) {
-//            String tempTableName = getTempTableName();
-//
-//            return "SELECT * FROM (SELECT rownum __rnum__, " + tempTableName + ".* FROM (" + sql + ") " + tempTableName
-//                + " WHERE rownum <= " + (offset + count) + ") " + getTempTableName() + " WHERE rnum > " + offset;
-//        }
     }
 
-    private static final StatementManipulator MANIPULATOR = new OracleStatementManipulator();
+    private static final StatementManipulator MANIPULATOR = new SQLServerStatementManipulator();
 
     /**
      * {@inheritDoc}
