@@ -73,6 +73,7 @@ import org.dmg.pmml.DataFieldDocument.DataField;
 import org.dmg.pmml.DerivedFieldDocument.DerivedField;
 import org.dmg.pmml.ExtensionDocument;
 import org.dmg.pmml.GeneralRegressionModelDocument.GeneralRegressionModel;
+import org.dmg.pmml.HeaderDocument.Header;
 import org.dmg.pmml.INVALIDVALUETREATMENTMETHOD;
 import org.dmg.pmml.LocalTransformationsDocument.LocalTransformations;
 import org.dmg.pmml.MiningFieldDocument.MiningField;
@@ -910,13 +911,14 @@ public final class PMMLPortObject implements PortObject {
      */
     public static boolean isKnimeProducedAndOlderThanVersion(
             final PMML pmml, final Integer[] version) {
-        Application application = pmml.getHeader().getApplication();
-        if (pmml.getHeader() == null
-                || !PMMLPortObjectSpec.KNIME.equals(application.getName())) {
+        final Header header = pmml.getHeader();
+        final Application application = header == null ? null : header.getApplication();
+        final String appName = application == null ? null : application.getName();
+        final String appVersion = application == null ? null : application.getVersion();
+        if (!PMMLPortObjectSpec.KNIME.equals(appName)) {
             return false;
         }
-
-        return isOlderThanVersion(version, application.getVersion());
+        return isOlderThanVersion(version, appVersion);
     }
 
 
