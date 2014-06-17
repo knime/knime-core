@@ -541,14 +541,15 @@ public class NodeMonitorView extends ViewPart
         if ((nc instanceof NativeNodeContainer) && showAll) {
             NativeNodeContainer nnc = (NativeNodeContainer)nc;
             TableItem item1 = new TableItem(m_table, SWT.NONE);
-            item1.setText(0, "bundle name");
+            item1.setText(0, "Node's plug-in name");
             item1.setText(1, nnc.getNodeAndBundleInformation().getBundleName());
             TableItem item2 = new TableItem(m_table, SWT.NONE);
-            item2.setText(0, "bundle symbolic name");
+            item2.setText(0, "Node's plug-in symbolic name");
             item2.setText(1, nnc.getNodeAndBundleInformation().getBundleSymbolicName());
             TableItem item3 = new TableItem(m_table, SWT.NONE);
-            item3.setText(0, "version");
-            item3.setText(1, nnc.getNodeAndBundleInformation().getBundleVersion().toString());
+            item3.setText(0, "Node's plug-in version (last saved with)");
+            String version = nnc.getNodeAndBundleInformation().getBundleVersion().toString();
+            item3.setText(1, "0.0.0".equals(version) ? "<unknown>" : version);
         }
         // add settings to table
         Stack<Pair<Iterator<String>, ConfigBase>> stack = new Stack<Pair<Iterator<String>, ConfigBase>>();
