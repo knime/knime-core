@@ -161,6 +161,7 @@ final class TypeFilterPanelImpl extends JPanel {
                 JCheckBox newCheckBox = addCheckBox(valueClassName, true);
                 newCheckBox.setSelected(true);
                 m_selections.put(valueClassName, newCheckBox);
+                newCheckBox.setEnabled(isEnabled());
             }
         }
         update();
@@ -190,7 +191,9 @@ final class TypeFilterPanelImpl extends JPanel {
                         ExtensibleUtilityFactory eu = (ExtensibleUtilityFactory)utilityFor;
                         String label = eu.getName();
                         String key = prefValueClass.getName();
-                        m_selections.put(key, addCheckBox(label, false));
+                        JCheckBox newCheckbox = addCheckBox(label, false);
+                        m_selections.put(key, newCheckbox);
+                        newCheckbox.setEnabled(isEnabled());
                     }
                 }
             }
@@ -211,7 +214,9 @@ final class TypeFilterPanelImpl extends JPanel {
                         ExtensibleUtilityFactory eu = (ExtensibleUtilityFactory)utilityFor;
                         String label = eu.getName();
                         String key = value.getName();
-                        m_selections.put(key, addCheckBox(label, false));
+                        JCheckBox newCheckbox = addCheckBox(label, false);
+                        m_selections.put(key, newCheckbox);
+                        newCheckbox.setEnabled(isEnabled());
                     }
                 }
             }

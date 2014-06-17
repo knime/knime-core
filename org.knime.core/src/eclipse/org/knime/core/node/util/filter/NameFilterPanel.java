@@ -470,6 +470,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     @Override
     public void setEnabled(final boolean enabled) {
+        super.setEnabled(enabled);
         m_searchFieldIncl.setEnabled(enabled);
         m_searchButtonIncl.setEnabled(enabled);
         m_searchFieldExcl.setEnabled(enabled);
@@ -915,6 +916,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         for (String type : m_typePriorities.values()) {
             m_typePanel.add(buttonMap.get(type));
         }
+        radioButton.setEnabled(isEnabled());
         updateTypePanel();
     }
 
