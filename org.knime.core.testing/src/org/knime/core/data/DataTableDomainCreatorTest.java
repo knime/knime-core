@@ -58,6 +58,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.junit.Test;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -341,6 +342,35 @@ public class DataTableDomainCreatorTest {
         domainCreator.updateDomain(new DefaultRow(rowKey, "2"));
         colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
         assertThat("Unexpected possible values", colDomain.getValues(), is(initialValues));
+    }
+
+
+    /**
+     * Checks whether the default maximum of possible values is taken from the system property.
+     */
+    @Test
+    public void testDefaultNumberOfPossibleValues() {
+        DataColumnSpecCreator colSpecCrea = new DataColumnSpecCreator("String col", StringCell.TYPE);
+        DataTableSpec tableSpec = new DataTableSpec(colSpecCrea.createSpec());
+
+        DataTableDomainCreator domainCreator = new DataTableDomainCreator(tableSpec, false);
+
+        Set<DataCell> expectedValues = new LinkedHashSet<>();
+        for (int i = 0; i < DataContainer.MAX_POSSIBLE_VALUES; i++) {
+            RowKey rowKey = new RowKey("Row" + i);
+            StringCell c = new StringCell(Integer.toString(i));
+            domainCreator.updateDomain(new DefaultRow(rowKey, c));
+            expectedValues.add(c);
+        }
+
+        // all possible values should be present
+        DataColumnDomain colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
+        assertThat("Unexpected possible values", colDomain.getValues(), is(expectedValues));
+
+        // add more than the maximum number removes all values
+        domainCreator.updateDomain(new DefaultRow(new RowKey("One value too many"), new StringCell("One value too many")));
+        colDomain = domainCreator.createSpec().getColumnSpec(0).getDomain();
+        assertThat("Unexpected possible values", colDomain.getValues(), is(nullValue()));
 
     }
 }
