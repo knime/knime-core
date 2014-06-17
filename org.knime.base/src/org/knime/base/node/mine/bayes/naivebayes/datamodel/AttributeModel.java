@@ -329,7 +329,9 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
     Double getProbability(final String classValue, final DataCell attributeValue, final double laplaceCorrector,
             final boolean useLog) {
         if (!attributeValue.getType().isCompatible(getCompatibleType())) {
-            throw new IllegalArgumentException("Attribute value type is not compatible");
+            throw new IllegalArgumentException(String.format("Value in column '%s' (%s) is not "
+                    + "compatible with the expected type (expected %s, actual %s)",
+                    getAttributeName(), attributeValue, getCompatibleType(), attributeValue.getType()));
         }
         if (attributeValue.isMissing() && m_ignoreMissingVals) {
             return null;
