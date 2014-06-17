@@ -163,6 +163,7 @@ class TipsAndNewsInjector implements Runnable {
         TransformerFactoryConfigurationError, TransformerException, ParserConfigurationException, SAXException {
 
         DocumentBuilder parser = m_parserFactory.newDocumentBuilder();
+        parser.setEntityResolver(EmptyDoctypeResolver.INSTANCE);
         Document doc = parser.parse(m_templateFile);
 
         XPath xpath = m_xpathFactory.newXPath();
@@ -192,6 +193,8 @@ class TipsAndNewsInjector implements Runnable {
         File temp = FileUtil.createTempFile("intro", ".html", true);
         Transformer serializer = m_transformerFactory.newTransformer();
         serializer.setOutputProperty(OutputKeys.METHOD, "xhtml");
+        serializer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "about:legacy-compat");
+        serializer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
         serializer.transform(new DOMSource(doc), new StreamResult(temp));
         Files.move(temp.toPath(), m_templateFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }

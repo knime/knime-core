@@ -175,6 +175,7 @@ public class IntroPage implements LocationListener {
         try {
             m_xpathFactory = XPathFactory.newInstance();
             m_parserFactory = DocumentBuilderFactory.newInstance();
+            m_parserFactory.setValidating(false);
             m_transformerFactory = TransformerFactory.newInstance();
 
             ReentrantLock introFileLock = new ReentrantLock();
@@ -226,7 +227,7 @@ public class IntroPage implements LocationListener {
 
         try (OutputStream out = new FileOutputStream(tempTemplate)) {
             Transformer serializer = m_transformerFactory.newTransformer();
-            serializer.setOutputProperty(OutputKeys.METHOD, "xml");
+            serializer.setOutputProperty(OutputKeys.METHOD, "xhtml");
             serializer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "about:legacy-compat");
             serializer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
             serializer.transform(new DOMSource(doc), new StreamResult(out));

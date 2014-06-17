@@ -161,6 +161,7 @@ class UpdateMessageInjector implements Runnable {
     private void injectNoUpdateMessage() throws ParserConfigurationException, SAXException, IOException,
         XPathExpressionException, TransformerException {
         DocumentBuilder parser = m_parserFactory.newDocumentBuilder();
+        parser.setEntityResolver(EmptyDoctypeResolver.INSTANCE);
         Document doc = parser.parse(m_templateFile);
 
         XPath xpath = m_xpathFactory.newXPath();
@@ -182,6 +183,7 @@ class UpdateMessageInjector implements Runnable {
     private void injectUpdateMessage(final List<UpdateInfo> updateInfos) throws ParserConfigurationException,
         SAXException, IOException, XPathExpressionException, TransformerException {
         DocumentBuilder parser = m_parserFactory.newDocumentBuilder();
+        parser.setEntityResolver(EmptyDoctypeResolver.INSTANCE);
         Document doc = parser.parse(m_templateFile);
 
         XPath xpath = m_xpathFactory.newXPath();
@@ -229,6 +231,8 @@ class UpdateMessageInjector implements Runnable {
         File temp = FileUtil.createTempFile("intro", ".html", true);
         Transformer serializer = m_transformerFactory.newTransformer();
         serializer.setOutputProperty(OutputKeys.METHOD, "xhtml");
+        serializer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "about:legacy-compat");
+        serializer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
         serializer.transform(new DOMSource(doc), new StreamResult(temp));
         Files.move(temp.toPath(), m_templateFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
