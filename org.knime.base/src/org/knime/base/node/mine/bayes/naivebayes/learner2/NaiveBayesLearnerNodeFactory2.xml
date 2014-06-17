@@ -9,7 +9,8 @@
 
 	<fullDescription>
 		<intro>
-			The node creates a Bayesian model from the given training data. It
+			The node creates a <a href="http://en.wikipedia.org/wiki/Naive_Bayes_classifier">Bayesian model</a> from 
+			the given training data. It
 			calculates the number of rows per attribute value per class for
 			nominal attributes and the Gaussian distribution for numerical
 			attributes. The created model could be used in the naive Bayes
