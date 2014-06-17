@@ -41,9 +41,10 @@
         <ul>
         <li>either a global threshold is defined, then all values which are above or equal to
         the threshold are converted into set bits, all other bit positions remain 0, or</li>
-        <li>a certain percentage of the mean of each column is used as a threshold,
-        then all values which are above or equal to the percentage of the mean 
-        are converted into set bits.</li>
+        <li>a certain percentage of the mean of each column is used as a threshold, then all values which are above 
+        or equal to the percentage of the mean are converted into set bits. As an example let's say the mean percentage 
+        is set to 50% and the mean of col1 is 2 and the mean of col2 is 8. Then the corresponding bit for col1 is set 
+        if the value is above or equal to 1 and for col2 if the value is above or equal to 4.</li>
         </ul>
         
         <h3>Bit vectors from a single column</h3>

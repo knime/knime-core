@@ -480,7 +480,7 @@ public class CreateBitVectorNodeModel extends NodeModel {
     @SuppressWarnings("unused")
     static SettingsModelInteger createMeanPercentageModel() {
         final SettingsModelIntegerBounded model =
-                new SettingsModelIntegerBounded("singleNumericMeanThreshold", 100, 0, 100);
+                new SettingsModelIntegerBounded("singleNumericMeanThreshold", 100, 0, Integer.MAX_VALUE);
       //disable the model since we use threshold by default
         model.setEnabled(DEFAULT_USE_MEAN && ColumnType.getDefault().equals(ColumnType.MULTI_NUMERICAL));
         return model;
