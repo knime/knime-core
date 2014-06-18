@@ -37,7 +37,7 @@ All other trademarks are the property of their respective owners.
 -XX:-UseSplitVerifier
 -Dknime.enable.fastload=true</vmArgs>
       <vmArgsMac>-XstartOnFirstThread
--Xdock:icon=../Resources/knime_mac.icns
+-Xdock:icon=../Resources/Knime.icns
 -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
