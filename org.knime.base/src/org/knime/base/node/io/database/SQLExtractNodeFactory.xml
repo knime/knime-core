@@ -8,7 +8,7 @@
     </shortDescription>
     
     <fullDescription>
-        <intro>This node extracts the SQL query from a database port and creates a flow variable with it.</intro>
+        <intro>This node extracts the SQL query from a database port and creates a flow variable and data table containing the query.</intro>
         <option name="Flow Variable with SQL Query">The name of the flow variable and table column to be used for the outputs.</option>
     </fullDescription>
     

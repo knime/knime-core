@@ -9,7 +9,8 @@
     
     <fullDescription>
         <intro>
-            This node creates a port which stores both a database connection and a SQL query.
+            This node injects an SQL query into a database connection. If the connection already has a query, it
+            will be replaced. 
         </intro>
         
         
