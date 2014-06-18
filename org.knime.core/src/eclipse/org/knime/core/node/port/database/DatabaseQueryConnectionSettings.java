@@ -98,7 +98,7 @@ public final class DatabaseQueryConnectionSettings
             final DatabaseConnectionSettings conn,
             final String query) {
         super(conn);
-        m_query = query;
+        setQuery(query);
     }
 
     /**
@@ -141,7 +141,13 @@ public final class DatabaseQueryConnectionSettings
      * @since 2.10
      */
     public void setQuery(final String sql) {
-        m_query = sql;
+        // Some database don't like ; in between an SQL query. This happens when we wrap the original query, e.g.
+        // SELECT * FROM (SELECT * FROM bla;) temp
+        if (sql.endsWith(";")) {
+            m_query = sql.substring(0, sql.length() - 1);
+        } else {
+            m_query = sql;
+        }
     }
 
 
