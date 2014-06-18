@@ -59,6 +59,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
@@ -123,6 +124,7 @@ class WorkflowExecuteTest extends WorkflowTest {
                         if (m_runConfiguration.isStacktraceOnTimeout()) {
                             message += "\nThread status:\n" + createStacktrace();
                         }
+                        NodeLogger.getLogger(WorkflowExecuteTest.class).info(message);
                         result.addFailure(WorkflowExecuteTest.this, new AssertionFailedError(message));
                         m_context.getWorkflowManager().getParent().cancelExecution(m_context.getWorkflowManager());
                         this.cancel();
