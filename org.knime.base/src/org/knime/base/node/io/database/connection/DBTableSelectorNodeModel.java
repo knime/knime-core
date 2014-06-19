@@ -108,7 +108,7 @@ class DBTableSelectorNodeModel extends NodeModel implements FlowVariableProvider
         try {
             DataTableSpec tableSpec = conn.getDataTableSpec(getCredentialsProvider());
 
-            return new PortObjectSpec[] {new DatabasePortObjectSpec(tableSpec, m_settings)};
+            return new PortObjectSpec[] {new DatabasePortObjectSpec(tableSpec, querySettings)};
         } catch (SQLException ex) {
             Throwable cause = ExceptionUtils.getRootCause(ex);
             if (cause == null) {
