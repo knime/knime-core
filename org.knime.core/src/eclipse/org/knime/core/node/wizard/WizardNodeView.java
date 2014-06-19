@@ -202,7 +202,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
                             if (m_tempIndexFile != null) {
                                 deleteTempFile(m_tempIndexFile);
                             }
-                            m_browser.setText(createErrorHTML(e));
+                            m_browser.setText(createMessageHTML(e.getMessage()));
                         }
                     }
                 }
@@ -225,8 +225,6 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
     @Override
     public final void callOpenView(final String title) {
         m_title = (title == null ? "View" : title);
-        final String jsonViewRepresentation = getViewRepresentationFromModel();
-        final String jsonViewValue = getViewValueFromModel();
 
         Display display = getDisplay();
         m_shell = new Shell(display, SWT.SHELL_TRIM);
@@ -241,6 +239,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
 
         m_browser = new Browser(m_shell, SWT.NONE);
         m_browser.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
+        m_browser.setText(createMessageHTML("Loading view..."), true);
 
         Composite buttonComposite = new Composite(m_shell, SWT.NONE);
         buttonComposite.setLayoutData(new GridData(GridData.END, GridData.END, false, false));
@@ -292,16 +291,6 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         };
         m_browser.addProgressListener(m_completedListener);*/
 
-        try {
-            m_browser.setUrl(createWebResources(jsonViewRepresentation, jsonViewValue));
-            //org.eclipse.swt.program.Program.launch(createWebResources(jsonViewRepresentation, jsonViewValue));
-        } catch (IOException e) {
-            if (m_tempIndexFile != null) {
-                deleteTempFile(m_tempIndexFile);
-            }
-            m_browser.setText(createErrorHTML(e));
-        }
-
         m_shell.setSize(800, 600);
         m_shell.addDisposeListener(new DisposeListener() {
             @Override
@@ -310,6 +299,27 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
             }
         });
         m_shell.open();
+
+        display.asyncExec(new Runnable() {
+
+            @Override
+            public void run() {
+                final String jsonViewRepresentation = getViewRepresentationFromModel();
+                final String jsonViewValue = getViewValueFromModel();
+
+                try {
+                    String url = createWebResources(jsonViewRepresentation, jsonViewValue);
+                    m_browser.setUrl(url);
+                    //org.eclipse.swt.program.Program.launch(createWebResources(jsonViewRepresentation, jsonViewValue));
+                } catch (IOException e) {
+                    if (m_tempIndexFile != null) {
+                        deleteTempFile(m_tempIndexFile);
+                    }
+                    m_browser.setText(createMessageHTML(e.getMessage()));
+                }
+            }
+        });
+
     }
 
     private String getViewRepresentationFromModel() {
@@ -343,7 +353,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
      * @param e
      * @return
      */
-    private String createErrorHTML(final IOException e) {
+    private String createMessageHTML(final String message) {
         String setIEVersion = "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">";
 
         StringBuilder pageBuilder = new StringBuilder();
@@ -351,7 +361,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
         pageBuilder.append(setIEVersion);
         pageBuilder.append("</head><body>");
         // content
-        pageBuilder.append(e.getMessage());
+        pageBuilder.append(message);
         // content end
         pageBuilder.append("</body></html>");
 
