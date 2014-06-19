@@ -125,6 +125,7 @@ class DBTableSelectorNodeModel extends NodeModel implements FlowVariableProvider
      */
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        exec.setMessage("Retrieving metadata from database");
         DatabaseConnectionPortObject incomingConnection = (DatabaseConnectionPortObject)inObjects[0];
         DatabaseConnectionSettings connSettings = incomingConnection.getConnectionSettings(getCredentialsProvider());
 

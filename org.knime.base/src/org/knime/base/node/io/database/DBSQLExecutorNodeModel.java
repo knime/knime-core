@@ -118,7 +118,12 @@ final class DBSQLExecutorNodeModel extends DBNodeModel implements FlowVariablePr
         DatabaseConnectionPortObject dbObj = (DatabaseConnectionPortObject)inData[0];
         DatabaseConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
         String[] statements = parseStatementAndReplaceVariables().split(";");
+
+        final double max = statements.length;
+        int i = 0;
         for (String statement : statements) {
+            exec.checkCanceled();
+            exec.setProgress(i++ / max, "Executing '" + statement + "'");
             statement = statement.trim();
             if (!statement.isEmpty()) {
                 conn.execute(statement, getCredentialsProvider());

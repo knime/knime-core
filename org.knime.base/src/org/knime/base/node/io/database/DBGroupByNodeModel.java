@@ -157,6 +157,7 @@ final class DBGroupByNodeModel extends DBNodeModel {
     @Override
     protected final PortObject[] execute(final PortObject[] inData, final ExecutionContext exec)
         throws CanceledExecutionException, Exception {
+        exec.setMessage("Retrieving metadata from database");
         DatabasePortObject dbObject = (DatabasePortObject)inData[0];
         DatabasePortObject outObject =
             new DatabasePortObject(createDbOutSpec(dbObject.getSpec()));

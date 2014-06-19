@@ -101,6 +101,8 @@ public class SQLInjectNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
+        exec.setMessage("Retrieving metadata from database");
+
         DatabaseConnectionPortObject dbIn = (DatabaseConnectionPortObject)inData[0];
         String sql = peekFlowVariableString(m_flowVariableName.getStringValue());
 

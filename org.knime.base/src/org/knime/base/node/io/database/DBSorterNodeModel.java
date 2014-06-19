@@ -125,6 +125,7 @@ final class DBSorterNodeModel extends DBNodeModel {
     @Override
     protected final PortObject[] execute(final PortObject[] inData, final ExecutionContext exec)
         throws CanceledExecutionException, Exception {
+        exec.setMessage("Retrieving metadata from database");
         DatabasePortObject dbObj = (DatabasePortObject)inData[0];
         DatabaseQueryConnectionSettings conn = dbObj.getConnectionSettings(getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery(), conn.getUtility().getStatementManipulator());

@@ -121,6 +121,7 @@ final class DBJoinerNodeModel extends DBNodeModel {
     @Override
     protected final PortObject[] execute(final PortObject[] inData, final ExecutionContext exec)
         throws CanceledExecutionException, Exception {
+        exec.setMessage("Retrieving metadata from database");
         DatabasePortObject dbObjectLeft = (DatabasePortObject)inData[0];
         DatabasePortObject dbObjectRight = (DatabasePortObject)inData[1];
         DatabasePortObject outObject =
