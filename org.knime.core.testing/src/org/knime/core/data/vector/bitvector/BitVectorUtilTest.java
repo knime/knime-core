@@ -53,222 +53,294 @@ import org.junit.Test;
 import org.knime.core.util.Pair;
 
 public class BitVectorUtilTest {
-	private static final Random RANDOM = new Random(42);
-	private static final BitVectorValue EMPTY_VECTOR = new DenseBitVectorCellFactory(
-			"").createDataCell();
-	private TestVectorFactory DENSE_VECTOR_FACTORY = new TestVectorFactory() {
+    private static final Random RANDOM = new Random(42);
 
-		@Override
-		public Pair<BitVectorValue, BitVectorValue> createVectorPair(
-				String first, String second) {
-			return Pair.<BitVectorValue, BitVectorValue> create(
-					new DenseBitVectorCellFactory(first).createDataCell(),
-					new DenseBitVectorCellFactory(second).createDataCell());
-		}
-	};
+    private static final BitVectorValue EMPTY_VECTOR = new DenseBitVectorCellFactory("").createDataCell();
 
-	private TestVectorFactory SPARSE_VECTOR_FACTORY = new TestVectorFactory() {
+    private static final TestVectorFactory DENSE_VECTOR_FACTORY = new TestVectorFactory() {
 
-		@Override
-		public Pair<BitVectorValue, BitVectorValue> createVectorPair(
-				String first, String second) {
-			return Pair.<BitVectorValue, BitVectorValue> create(
-					new SparseBitVectorCellFactory(first).createDataCell(),
-					new SparseBitVectorCellFactory(second).createDataCell());
-		}
-	};
+        @Override
+        public Pair<BitVectorValue, BitVectorValue> createVectorPair(final String first, final String second) {
+            return Pair.<BitVectorValue, BitVectorValue> create(new DenseBitVectorCellFactory(first).createDataCell(),
+                new DenseBitVectorCellFactory(second).createDataCell());
+        }
+    };
 
-	private TestVectorFactory MIXED_VECTOR_FACTORY = new TestVectorFactory() {
+    private static final TestVectorFactory SPARSE_VECTOR_FACTORY = new TestVectorFactory() {
 
-		@Override
-		public Pair<BitVectorValue, BitVectorValue> createVectorPair(
-				String first, String second) {
-			return RANDOM.nextBoolean() ? Pair
-					.<BitVectorValue, BitVectorValue> create(
-							new DenseBitVectorCellFactory(first)
-									.createDataCell(),
-							new SparseBitVectorCellFactory(second)
-									.createDataCell()) : Pair
-					.<BitVectorValue, BitVectorValue> create(
-							new SparseBitVectorCellFactory(first)
-									.createDataCell(),
-							new DenseBitVectorCellFactory(second)
-									.createDataCell());
-		}
-	};
+        @Override
+        public Pair<BitVectorValue, BitVectorValue> createVectorPair(final String first, final String second) {
+            return Pair.<BitVectorValue, BitVectorValue> create(new SparseBitVectorCellFactory(first).createDataCell(),
+                new SparseBitVectorCellFactory(second).createDataCell());
+        }
+    };
 
-	// Tests for bug http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=5058
-	// @Test
-	// public void testBug5058() {
-	// BitVectorValue denseBitVector = new DenseBitVectorCellFactory("020f")
-	// .createDataCell();
-	// BitVectorValue sparseBitVector = new SparseBitVectorCellFactory("0304")
-	// .createDataCell();
-	//
-	// Assert.assertEquals("0204",
-	// BitVectorUtil.and(denseBitVector, sparseBitVector)
-	// .toHexString());
-	// }
+    private static final TestVectorFactory MIXED_VECTOR_FACTORY = new TestVectorFactory() {
 
-	@Test(expected = NullPointerException.class)
-	public void testCardinalityOfIntersectionThrowsNullpointer() {
-		BitVectorUtil.cardinalityOfIntersection(null, EMPTY_VECTOR);
-	}
+        @Override
+        public Pair<BitVectorValue, BitVectorValue> createVectorPair(final String first, final String second) {
+            return RANDOM.nextBoolean() ? Pair.<BitVectorValue, BitVectorValue> create(new DenseBitVectorCellFactory(
+                first).createDataCell(), new SparseBitVectorCellFactory(second).createDataCell()) : Pair
+                .<BitVectorValue, BitVectorValue> create(new SparseBitVectorCellFactory(first).createDataCell(),
+                    new DenseBitVectorCellFactory(second).createDataCell());
+        }
+    };
 
-	@Test(expected = NullPointerException.class)
-	public void testCardinalityOfIntersectionThrowsNullpointer2() {
-		BitVectorUtil.cardinalityOfIntersection(EMPTY_VECTOR, null);
-	}
+    @Test(expected = NullPointerException.class)
+    public void testCardinalityOfIntersectionThrowsNullpointer() {
+        BitVectorUtil.cardinalityOfIntersection(null, EMPTY_VECTOR);
+    }
 
-	@Test
-	public void testCardinalityOfIntersectionOnlyDense() {
-		Assert.assertEquals(0, BitVectorUtil.cardinalityOfIntersection(
-				EMPTY_VECTOR, EMPTY_VECTOR));
+    @Test(expected = NullPointerException.class)
+    public void testCardinalityOfIntersectionThrowsNullpointer2() {
+        BitVectorUtil.cardinalityOfIntersection(EMPTY_VECTOR, null);
+    }
 
-		assertCardinalityOfIntersection(DENSE_VECTOR_FACTORY);
-	}
+    @Test
+    public void testCardinalityOfIntersectionOnlyDense() {
+        Assert.assertEquals(0, BitVectorUtil.cardinalityOfIntersection(EMPTY_VECTOR, EMPTY_VECTOR));
 
-	@Test
-	public void testCardinalityOfIntersectionOnlySparse() {
-		Assert.assertEquals(0, BitVectorUtil.cardinalityOfIntersection(
-				EMPTY_VECTOR, EMPTY_VECTOR));
+        assertCardinalityOfIntersection(DENSE_VECTOR_FACTORY);
+    }
 
-		assertCardinalityOfIntersection(SPARSE_VECTOR_FACTORY);
-	}
+    @Test
+    public void testCardinalityOfIntersectionOnlySparse() {
+        Assert.assertEquals(0, BitVectorUtil.cardinalityOfIntersection(EMPTY_VECTOR, EMPTY_VECTOR));
 
-	@Test
-	public void testCardinalityOfIntersectionMixed() {
-		Assert.assertEquals(0, BitVectorUtil.cardinalityOfIntersection(
-				EMPTY_VECTOR, EMPTY_VECTOR));
+        assertCardinalityOfIntersection(SPARSE_VECTOR_FACTORY);
+    }
 
-		assertCardinalityOfIntersection(MIXED_VECTOR_FACTORY);
-	}
+    @Test
+    public void testCardinalityOfIntersectionMixed() {
+        Assert.assertEquals(0, BitVectorUtil.cardinalityOfIntersection(EMPTY_VECTOR, EMPTY_VECTOR));
 
-	@Test(expected = NullPointerException.class)
-	public void testCardinalityOfRelativeComplementThrowsNullpointer() {
-		BitVectorUtil.cardinalityOfRelativeComplement(EMPTY_VECTOR, null);
-	}
+        assertCardinalityOfIntersection(MIXED_VECTOR_FACTORY);
+    }
 
-	@Test(expected = NullPointerException.class)
-	public void testCardinalityOfRelativeComplementThrowsNullpointer2() {
-		BitVectorUtil.cardinalityOfRelativeComplement(null, EMPTY_VECTOR);
-	}
+    @Test(expected = NullPointerException.class)
+    public void testCardinalityOfRelativeComplementThrowsNullpointer() {
+        BitVectorUtil.cardinalityOfRelativeComplement(EMPTY_VECTOR, null);
+    }
 
-	@Test
-	public void testCardinalityOfRelativeComplementOnlyDense() {
-		assertCardinalityOfRelativeComplement(DENSE_VECTOR_FACTORY);
-	}
+    @Test(expected = NullPointerException.class)
+    public void testCardinalityOfRelativeComplementThrowsNullpointer2() {
+        BitVectorUtil.cardinalityOfRelativeComplement(null, EMPTY_VECTOR);
+    }
 
-	@Test
-	public void testCardinalityOfRelativeComplementOnlySparse() {
-		assertCardinalityOfRelativeComplement(SPARSE_VECTOR_FACTORY);
-	}
+    @Test
+    public void testCardinalityOfRelativeComplementOnlyDense() {
+        assertCardinalityOfRelativeComplement(DENSE_VECTOR_FACTORY);
+    }
 
-	@Test
-	public void testCardinalityOfRelativeComplementMixed() {
-		assertCardinalityOfRelativeComplement(MIXED_VECTOR_FACTORY);
-	}
+    @Test
+    public void testCardinalityOfRelativeComplementOnlySparse() {
+        assertCardinalityOfRelativeComplement(SPARSE_VECTOR_FACTORY);
+    }
 
-	private static void assertCardinalityOfIntersection(
-			TestVectorFactory vectorFactory) {
-		for (int i = 1; i < 1000; i++) {
-			String first = new BigInteger(RANDOM.nextInt(800), RANDOM)
-					.toString(16);
+    @Test
+    public void testCardinalityOfRelativeComplementMixed() {
+        assertCardinalityOfRelativeComplement(MIXED_VECTOR_FACTORY);
+    }
 
-			String second = new BigInteger(RANDOM.nextInt(i % 5 == 0 ? i * 5
-					: 150), RANDOM).toString(16);
-			Pair<BitVectorValue, BitVectorValue> createVectorPair = vectorFactory
-					.createVectorPair(first, second);
+    // Tests for bug http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=5077
+    @Test
+    public void testBitVectorUtilXor() {
+        assertCardinalityOfXor(MIXED_VECTOR_FACTORY);
+        assertCardinalityOfXor(SPARSE_VECTOR_FACTORY);
+        assertCardinalityOfXor(DENSE_VECTOR_FACTORY);
+    }
 
-			BitVectorValue a = createVectorPair.getFirst();
+    @Test
+    public void testBitVectorUtilOr() {
+        assertCardinalityOfOr(MIXED_VECTOR_FACTORY);
+        assertCardinalityOfOr(SPARSE_VECTOR_FACTORY);
+        assertCardinalityOfOr(DENSE_VECTOR_FACTORY);
+    }
 
-			BitVectorValue b = createVectorPair.getSecond();
+    @Test
+    public void testBitVectorUtilAnd() {
+        assertCardinalityOfAnd(MIXED_VECTOR_FACTORY);
+        assertCardinalityOfAnd(SPARSE_VECTOR_FACTORY);
+        assertCardinalityOfAnd(DENSE_VECTOR_FACTORY);
+    }
 
-			Assert.assertEquals(
-					"Broken add: " + a.toHexString() + "|" + b.toHexString(),
-					BitVectorUtil.and(a, b).cardinality(),
-					BitVectorUtil.cardinalityOfIntersection(a, b));
+    @Test(expected = NullPointerException.class)
+    public void testBitVectorUtilOrThrowsNullpointer() {
+        BitVectorUtil.or(null, EMPTY_VECTOR);
+    }
 
-			Assert.assertEquals(
-					"Broken add: " + a.toHexString() + "|" + b.toHexString(),
-					BitVectorUtil.and(a, b).cardinality(),
-					BitVectorUtil.cardinalityOfIntersection(b, a));
-		}
-	}
+    @Test(expected = NullPointerException.class)
+    public void testBitVectorUtilOrThrowsNullpointer2() {
+        BitVectorUtil.or(EMPTY_VECTOR, null);
+    }
 
-	private static void assertCardinalityOfRelativeComplement(
-			TestVectorFactory vectorFactory) {
-		Assert.assertEquals(0, BitVectorUtil.cardinalityOfRelativeComplement(
-				EMPTY_VECTOR, EMPTY_VECTOR));
+    @Test(expected = NullPointerException.class)
+    public void testBitVectorUtilXorThrowsNullpointer() {
+        BitVectorUtil.xor(null, EMPTY_VECTOR);
+    }
 
-		for (int i = 1; i < 1000; i++) {
-			String first = new BigInteger(RANDOM.nextInt(2000), RANDOM)
-					.toString(16);
+    @Test(expected = NullPointerException.class)
+    public void testBitVectorUtilXorThrowsNullpointer2() {
+        BitVectorUtil.xor(EMPTY_VECTOR, null);
+    }
 
-			String second = new BigInteger(RANDOM.nextInt(i % 5 == 0 ? i * 5
-					: 150), RANDOM).toString(16);
+    @Test(expected = NullPointerException.class)
+    public void testBitVectorUtilAndThrowsNullpointer() {
+        BitVectorUtil.and(null, EMPTY_VECTOR);
+    }
 
-			DenseBitVector aWithoutB = createRelativeComplement(first, second);
+    @Test(expected = NullPointerException.class)
+    public void testBitVectorUtilAndThrowsNullpointer2() {
+        BitVectorUtil.and(EMPTY_VECTOR, null);
+    }
 
-			DenseBitVector bWithoutA = createRelativeComplement(second, first);
+    private static void assertCardinalityOfAnd(final TestVectorFactory vectorFactory) {
+        for (int i = 1; i < 1000; i++) {
+            String first = new BigInteger(RANDOM.nextInt(800), RANDOM).toString(16);
 
-			Pair<BitVectorValue, BitVectorValue> createVectorPair = vectorFactory
-					.createVectorPair(first, second);
+            String second = new BigInteger(RANDOM.nextInt(i % 5 == 0 ? i * 5 : 150), RANDOM).toString(16);
+            Pair<BitVectorValue, BitVectorValue> createVectorPair = vectorFactory.createVectorPair(first, second);
 
-			BitVectorValue a = createVectorPair.getFirst();
+            BitVectorValue a = createVectorPair.getFirst();
 
-			BitVectorValue b = createVectorPair.getSecond();
+            BitVectorValue b = createVectorPair.getSecond();
 
-			Assert.assertEquals(
-					"Broken add: " + a.toHexString() + "|" + b.toHexString(),
-					aWithoutB.cardinality(),
-					BitVectorUtil.cardinalityOfRelativeComplement(a, b));
+            DenseBitVectorCell expected = DenseBitVectorCellFactory.and(a, b);
 
-			Assert.assertEquals(
-					"Broken add: " + b.toHexString() + "|" + a.toHexString(),
-					bWithoutA.cardinality(),
-					BitVectorUtil.cardinalityOfRelativeComplement(b, a));
-		}
-	}
+            BitVectorValue actual = BitVectorUtil.and(a, b);
 
-	@Test
-	public void test() {
+            if (vectorFactory == SPARSE_VECTOR_FACTORY || vectorFactory == MIXED_VECTOR_FACTORY) {
+                Assert.assertTrue("Not an instance of Sparce Vectors", actual instanceof SparseBitVectorCell);
+            } else {
+                Assert.assertTrue("Not an instance of Dense Vectors", actual instanceof DenseBitVectorCell);
+            }
 
-		Pair<BitVectorValue, BitVectorValue> createVectorPair = SPARSE_VECTOR_FACTORY
-				.createVectorPair("5C", "1A");
-		System.out.println("!!"
-				+ BitVectorUtil.cardinalityOfRelativeComplement(
-						createVectorPair.getFirst(),
-						createVectorPair.getSecond()));
-	}
+            Assert.assertEquals("Broken add: " + a.toHexString() + "|" + b.toHexString(), expected.toHexString(),
+                actual.toHexString());
+        }
+    }
 
-	private interface TestVectorFactory {
-		Pair<BitVectorValue, BitVectorValue> createVectorPair(String first,
-				String second);
-	}
+    private static void assertCardinalityOfXor(final TestVectorFactory vectorFactory) {
+        for (int i = 1; i < 1000; i++) {
+            String first = new BigInteger(RANDOM.nextInt(800), RANDOM).toString(16);
 
-	/**
-	 * Creates a reference bit vector for the tests using the equivalence: A \ B
-	 * = A cut not B (When using bit vectors and assuming same length)
-	 */
-	private static DenseBitVector createRelativeComplement(String first,
-			String second) {
-		DenseBitVector firstVector = new DenseBitVector(first);
-		DenseBitVector invertedVector = new DenseBitVector(second).invert();
-		if (invertedVector.length() < firstVector.length()) {
-			// add ones to the start of the inverted vector
-			DenseBitVector filledWithOnes = createVectorWithOnes(firstVector
-					.length() - invertedVector.length());
+            String second = new BigInteger(RANDOM.nextInt(i % 5 == 0 ? i * 5 : 150), RANDOM).toString(16);
+            Pair<BitVectorValue, BitVectorValue> createVectorPair = vectorFactory.createVectorPair(first, second);
 
-			invertedVector = invertedVector.concatenate(filledWithOnes);
-		}
+            BitVectorValue a = createVectorPair.getFirst();
 
-		return firstVector.and(invertedVector);
-	}
+            BitVectorValue b = createVectorPair.getSecond();
 
-	private static DenseBitVector createVectorWithOnes(long l) {
-		DenseBitVector denseBitVector = new DenseBitVector(l);
-		denseBitVector.set(0, l);
-		return denseBitVector;
-	}
+            DenseBitVectorCell expected = DenseBitVectorCellFactory.xor(a, b);
+
+            BitVectorValue actual = BitVectorUtil.xor(a, b);
+
+            if (vectorFactory == SPARSE_VECTOR_FACTORY) {
+                Assert.assertTrue("Not an instance of Sparce Vectors", actual instanceof SparseBitVectorCell);
+            } else {
+                Assert.assertTrue("Not an instance of Dense Vectors", actual instanceof DenseBitVectorCell);
+            }
+
+            Assert.assertEquals("Broken add: " + a.toHexString() + "|" + b.toHexString(), expected.toHexString(),
+                actual.toHexString());
+        }
+    }
+
+    private static void assertCardinalityOfOr(final TestVectorFactory vectorFactory) {
+        for (int i = 1; i < 1000; i++) {
+            String first = new BigInteger(RANDOM.nextInt(800), RANDOM).toString(16);
+
+            String second = new BigInteger(RANDOM.nextInt(i % 5 == 0 ? i * 5 : 150), RANDOM).toString(16);
+            Pair<BitVectorValue, BitVectorValue> createVectorPair = vectorFactory.createVectorPair(first, second);
+
+            BitVectorValue a = createVectorPair.getFirst();
+
+            BitVectorValue b = createVectorPair.getSecond();
+
+            DenseBitVectorCell expected = DenseBitVectorCellFactory.or(a, b);
+
+            BitVectorValue actual = BitVectorUtil.or(a, b);
+
+            if (vectorFactory == SPARSE_VECTOR_FACTORY) {
+                Assert.assertTrue("Not an instance of Sparce Vectors", actual instanceof SparseBitVectorCell);
+            } else {
+                Assert.assertTrue("Not an instance of Dense Vectors", actual instanceof DenseBitVectorCell);
+            }
+
+            Assert.assertEquals("Broken add: " + a.toHexString() + "|" + b.toHexString(), expected.toHexString(),
+                actual.toHexString());
+        }
+    }
+
+    private static void assertCardinalityOfIntersection(final TestVectorFactory vectorFactory) {
+        for (int i = 1; i < 1000; i++) {
+            String first = new BigInteger(RANDOM.nextInt(800), RANDOM).toString(16);
+
+            String second = new BigInteger(RANDOM.nextInt(i % 5 == 0 ? i * 5 : 150), RANDOM).toString(16);
+            Pair<BitVectorValue, BitVectorValue> createVectorPair = vectorFactory.createVectorPair(first, second);
+
+            BitVectorValue a = createVectorPair.getFirst();
+
+            BitVectorValue b = createVectorPair.getSecond();
+
+            Assert.assertEquals("Broken add: " + a.toHexString() + "|" + b.toHexString(), BitVectorUtil.and(a, b)
+                .cardinality(), BitVectorUtil.cardinalityOfIntersection(a, b));
+
+            Assert.assertEquals("Broken add: " + a.toHexString() + "|" + b.toHexString(), BitVectorUtil.and(a, b)
+                .cardinality(), BitVectorUtil.cardinalityOfIntersection(b, a));
+        }
+    }
+
+    private static void assertCardinalityOfRelativeComplement(final TestVectorFactory vectorFactory) {
+        Assert.assertEquals(0, BitVectorUtil.cardinalityOfRelativeComplement(EMPTY_VECTOR, EMPTY_VECTOR));
+
+        for (int i = 1; i < 1000; i++) {
+            String first = new BigInteger(RANDOM.nextInt(2000), RANDOM).toString(16);
+
+            String second = new BigInteger(RANDOM.nextInt(i % 5 == 0 ? i * 5 : 150), RANDOM).toString(16);
+
+            DenseBitVector aWithoutB = createRelativeComplement(first, second);
+
+            DenseBitVector bWithoutA = createRelativeComplement(second, first);
+
+            Pair<BitVectorValue, BitVectorValue> createVectorPair = vectorFactory.createVectorPair(first, second);
+
+            BitVectorValue a = createVectorPair.getFirst();
+
+            BitVectorValue b = createVectorPair.getSecond();
+
+            Assert.assertEquals("Broken add: " + a.toHexString() + "|" + b.toHexString(), aWithoutB.cardinality(),
+                BitVectorUtil.cardinalityOfRelativeComplement(a, b));
+
+            Assert.assertEquals("Broken add: " + b.toHexString() + "|" + a.toHexString(), bWithoutA.cardinality(),
+                BitVectorUtil.cardinalityOfRelativeComplement(b, a));
+        }
+    }
+
+    private interface TestVectorFactory {
+        Pair<BitVectorValue, BitVectorValue> createVectorPair(String first, String second);
+    }
+
+    /**
+     * Creates a reference bit vector for the tests using the equivalence: A \ B = A cut not B (When using bit vectors
+     * and assuming same length)
+     */
+    private static DenseBitVector createRelativeComplement(final String first, final String second) {
+        DenseBitVector firstVector = new DenseBitVector(first);
+        DenseBitVector invertedVector = new DenseBitVector(second).invert();
+        if (invertedVector.length() < firstVector.length()) {
+            // add ones to the start of the inverted vector
+            DenseBitVector filledWithOnes = createVectorWithOnes(firstVector.length() - invertedVector.length());
+
+            invertedVector = invertedVector.concatenate(filledWithOnes);
+        }
+
+        return firstVector.and(invertedVector);
+    }
+
+    private static DenseBitVector createVectorWithOnes(final long l) {
+        DenseBitVector denseBitVector = new DenseBitVector(l);
+        denseBitVector.set(0, l);
+        return denseBitVector;
+    }
 }
