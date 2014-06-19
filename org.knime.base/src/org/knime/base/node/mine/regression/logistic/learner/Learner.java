@@ -195,7 +195,11 @@ final class Learner {
               exec.checkCanceled();
               throw new RuntimeException(e);
             } catch (ExecutionException e) {
-              throw new RuntimeException(e.getCause());
+                if (e.getCause() instanceof RuntimeException) {
+                    throw (RuntimeException)e.getCause();
+                } else {
+                    throw new RuntimeException(e.getCause());
+                }
             }
 
             if (Double.isInfinite(loglike) || Double.isNaN(loglike)) {
