@@ -44,6 +44,13 @@
         </option>
         <option name="Validate connection on close">
             Check this option if you want to validate the connection when closing the dialog.
+        </option>
+        <option name="Retrieve metadata in configure">
+            This option controls subsequent nodes. Usually when a database node is configured it retrieves the metadata of the
+            current table or query from the database for usage in subsequent nodes. If metadata retrieval takes quite
+            some time it will slow down workflow configuration and execution noticeably, especially since metadata is
+            retrieved in both configure and execute. In such cases it's better to switch this option off and
+            only retrieve metadata during execute.
         </option>        
     </fullDescription>
 

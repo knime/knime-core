@@ -128,6 +128,11 @@ final class DBQueryNodeModel extends DBNodeModel {
         DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
         String newQuery = createQuery(conn.getQuery());
         conn = createDBQueryConnection(spec, newQuery);
+
+        if (!conn.getRetrieveMetadataInConfigure()) {
+            return new PortObjectSpec[1];
+        }
+
         try {
             DatabaseReaderConnection reader =
                 new DatabaseReaderConnection(conn);

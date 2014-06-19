@@ -95,6 +95,12 @@ public class DBMiscPanel<T extends DatabaseConnectionSettings> extends JPanel {
     protected final JCheckBox m_validateConnection = new JCheckBox("Validate connection on close");
 
     /**
+     * Checkbox for whether the metadata should be retrieved in configure in subsequent nodes.
+     */
+    protected final JCheckBox m_retrieveMetadataInConfigure = new JCheckBox("Retrieve metadata in configure");
+
+
+    /**
      * Gridbag constraints object used for layouting the panel.
      */
     protected final GridBagConstraints m_c = new GridBagConstraints();
@@ -122,6 +128,8 @@ public class DBMiscPanel<T extends DatabaseConnectionSettings> extends JPanel {
             m_c.gridy++;
         }
         add(m_validateConnection, m_c);
+        m_c.gridy++;
+        add(m_retrieveMetadataInConfigure, m_c);
 
         setBorder(BorderFactory.createTitledBorder("Misc"));
     }
@@ -135,6 +143,7 @@ public class DBMiscPanel<T extends DatabaseConnectionSettings> extends JPanel {
     public void loadSettings(final PortObjectSpec[] specs) throws NotConfigurableException {
         m_allowSpacesInColumnNames.setSelected(m_settings.getAllowSpacesInColumnNames());
         m_validateConnection.setSelected(m_settings.getValidateConnection());
+        m_retrieveMetadataInConfigure.setSelected(m_settings.getRetrieveMetadataInConfigure());
     }
 
     /**
@@ -146,6 +155,7 @@ public class DBMiscPanel<T extends DatabaseConnectionSettings> extends JPanel {
     public void saveSettings(final CredentialsProvider credentialProvider) throws InvalidSettingsException {
         m_settings.setAllowSpacesInColumnNames(m_allowSpacesInColumnNames.isSelected());
         m_settings.setValidateConnection(m_validateConnection.isSelected());
+        m_settings.setRetrieveMetadataInConfigure(m_retrieveMetadataInConfigure.isSelected());
 
         if (m_settings.getValidateConnection()) {
             try {

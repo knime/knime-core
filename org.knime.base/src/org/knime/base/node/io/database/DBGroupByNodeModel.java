@@ -160,7 +160,7 @@ final class DBGroupByNodeModel extends DBNodeModel {
         exec.setMessage("Retrieving metadata from database");
         DatabasePortObject dbObject = (DatabasePortObject)inData[0];
         DatabasePortObject outObject =
-            new DatabasePortObject(createDbOutSpec(dbObject.getSpec()));
+            new DatabasePortObject(createDbOutSpec(dbObject.getSpec(), false));
         return new PortObject[]{outObject};
     }
 
@@ -169,15 +169,17 @@ final class DBGroupByNodeModel extends DBNodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
-        return new PortObjectSpec[]{createDbOutSpec((DatabasePortObjectSpec)inSpecs[0])};
+        return new PortObjectSpec[]{createDbOutSpec((DatabasePortObjectSpec)inSpecs[0], true)};
     }
 
     /**
      * @param inSpec Spec of the input database object
+     * @param checkRetrieveMetadata true if the retrieveMetadataInConfigure settings should be respected,
+     *            <code>false</code> if the metadata should be retrieved in any case (for execute)
      * @return Spec of the output database object
      * @throws InvalidSettingsException If the current settings are invalid
      */
-    private DatabasePortObjectSpec createDbOutSpec(final DatabasePortObjectSpec inSpec)
+    private DatabasePortObjectSpec createDbOutSpec(final DatabasePortObjectSpec inSpec, final boolean checkRetrieveMetadata)
             throws InvalidSettingsException {
         if (m_groupByCols.getIncludeList().isEmpty() && m_aggregatedColumns.length == 0) {
             throw new InvalidSettingsException("Please select at least one group or aggregation column");
@@ -185,6 +187,11 @@ final class DBGroupByNodeModel extends DBNodeModel {
         DatabaseQueryConnectionSettings connection = inSpec.getConnectionSettings(getCredentialsProvider());
         String newQuery = createQuery(connection.getQuery(), connection.getUtility().getStatementManipulator());
         connection = createDBQueryConnection(inSpec, newQuery);
+
+        if (checkRetrieveMetadata && !connection.getRetrieveMetadataInConfigure()) {
+            return null;
+        }
+
         DataTableSpec tableSpec = createOutSpec(inSpec.getDataTableSpec(), connection, newQuery);
         return new DatabasePortObjectSpec(tableSpec, connection.createConnectionModel());
     }

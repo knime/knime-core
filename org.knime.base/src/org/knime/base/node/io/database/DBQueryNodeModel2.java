@@ -126,6 +126,11 @@ final class DBQueryNodeModel2 extends DBNodeModel implements FlowVariableProvide
         DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
         String newQuery = parseQuery(conn.getQuery());
         conn = createDBQueryConnection(spec, newQuery);
+
+        if (!conn.getRetrieveMetadataInConfigure()) {
+            return new PortObjectSpec[1];
+        }
+
         try {
             DatabaseReaderConnection reader =
                 new DatabaseReaderConnection(conn);

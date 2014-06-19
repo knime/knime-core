@@ -105,6 +105,10 @@ class DBTableSelectorNodeModel extends NodeModel implements FlowVariableProvider
 
         DatabaseReaderConnection conn = new DatabaseReaderConnection(querySettings);
 
+        if (!connSettings.getRetrieveMetadataInConfigure()) {
+            return new PortObjectSpec[1];
+        }
+
         try {
             DataTableSpec tableSpec = conn.getDataTableSpec(getCredentialsProvider());
 

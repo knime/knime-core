@@ -147,6 +147,11 @@ final class DBReaderConnectionNodeModel extends DBNodeModel implements FlowVaria
                 throw new InvalidSettingsException("No database connection available.");
             }
             conn = new DatabaseQueryConnectionSettings(conn, parseQuery(conn.getQuery()));
+
+            if (!conn.getRetrieveMetadataInConfigure()) {
+                return new PortObjectSpec[1];
+            }
+
             DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
             DataTableSpec spec = load.getDataTableSpec(getCredentialsProvider());
             if (spec == null) {

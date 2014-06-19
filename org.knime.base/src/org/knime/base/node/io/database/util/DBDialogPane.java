@@ -111,6 +111,7 @@ public final class DBDialogPane extends JPanel {
     private final JCheckBox m_credCheckBox = new JCheckBox();
     private final JCheckBox m_allowSpacesInColumnNames = new JCheckBox();
     private final JCheckBox m_validateConnection = new JCheckBox();
+    private final JCheckBox m_retrieveMetadataInConfigure = new JCheckBox();
     private final JComboBox<String> m_credBox = new JComboBox<>();
     private final JComboBox<String> m_timezone; // filled with all time zones (sorted by name)
 
@@ -124,10 +125,10 @@ public final class DBDialogPane extends JPanel {
     /**
      * Creates a new dialog.
      *
-     * @param showValidateOption <code>true</code> the "Validate connection on close" option should be shown,
-     *            <code>false</code> otherwise
+     * @param showConnectionOptions <code>true</code> the options affecting the connection in subsequent nodes should be
+     *            shown, <code>false</code> otherwise
      */
-    public DBDialogPane(final boolean showValidateOption) {
+    public DBDialogPane(final boolean showConnectionOptions) {
         super.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 // create and driver component
@@ -251,12 +252,19 @@ public final class DBDialogPane extends JPanel {
         spacesPanel.add(new JLabel("Allow spaces in column names"));
         miscPanel.add(spacesPanel);
 
-        if (showValidateOption) {
+        if (showConnectionOptions) {
             final JPanel validatePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             validatePanel.add(m_validateConnection);
             validatePanel.add(new JLabel("Validate connection on close"));
             miscPanel.add(validatePanel);
+
+            final JPanel metadataPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            metadataPanel.add(m_retrieveMetadataInConfigure);
+            metadataPanel.add(new JLabel("Retrieve metadata in configure"));
+            miscPanel.add(metadataPanel);
         }
+
+
         super.add(miscPanel);
     }
 
@@ -342,6 +350,7 @@ public final class DBDialogPane extends JPanel {
 
         m_allowSpacesInColumnNames.setSelected(s.getAllowSpacesInColumnNames());
         m_validateConnection.setSelected(s.getValidateConnection());
+        m_retrieveMetadataInConfigure.setSelected(s.getRetrieveMetadataInConfigure());
     }
 
     private void updateDriver() {
@@ -403,6 +412,7 @@ public final class DBDialogPane extends JPanel {
 
         s.setAllowSpacesInColumnNames(m_allowSpacesInColumnNames.isSelected());
         s.setValidateConnection(m_validateConnection.isSelected());
+        s.setRetrieveMetadataInConfigure(m_retrieveMetadataInConfigure.isSelected());
         if (s.getValidateConnection()) {
             try {
                 s.createConnection(credProvider);
