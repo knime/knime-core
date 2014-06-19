@@ -78,4 +78,6 @@ public final class HeadlessPreferencesConstants {
     /** Preference constant to store loaded database driver files. */
     public static final String P_DATABASE_DRIVERS = "database_drivers";
 
+    /** Preference constant to store loaded database driver files. */
+    public static final String P_DATABASE_TIMEOUT = "database_timeout";
 }

@@ -170,7 +170,7 @@
             category="org.knime.workbench.ui.preferences"
             class="org.knime.workbench.ui.database.DatabasePreferencePage"
             id="org.knime.workbench.ui.preferences.database"
-            name="Database Driver">
+            name="Databases">
       </page>
       <page
             class="org.knime.workbench.ui.preferences.HeadlessPreferencePage"

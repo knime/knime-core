@@ -228,7 +228,11 @@ public final class KNIMEConstants {
     public static final String KNIME_HOME_PROPERTYNAME = PROPERTY_KNIME_HOME;
 
     /** Java property used to set the timeout in seconds trying to establish a
-     * connection to a database. */
+     * connection to a database.
+     *
+     * @deprecated Set the timeout via the database preferences.
+     */
+    @Deprecated
     public static final String PROPERTY_DATABASE_LOGIN_TIMEOUT =
             "knime.database.timeout";
 

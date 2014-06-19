@@ -47,6 +47,7 @@ package org.knime.workbench.core.preferences;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.workbench.core.KNIMECorePlugin;
 
 /**
@@ -75,6 +76,9 @@ public class HeadlessPreferencesInitializer extends
         // set default values
         store.setDefault(KNIMECorePlugin.P_LOGLEVEL_CONSOLE,
                 LEVEL.WARN.name());
+
+        int syspropTimeout = DatabaseConnectionSettings.getSystemPropertyDatabaseTimeout();
+        store.setDefault(HeadlessPreferencesConstants.P_DATABASE_TIMEOUT, syspropTimeout >= 0 ? syspropTimeout : 15);
     }
 
 }

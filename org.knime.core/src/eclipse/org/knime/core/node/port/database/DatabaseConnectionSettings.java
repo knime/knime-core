@@ -107,31 +107,64 @@ public class DatabaseConnectionSettings {
     private static final ExecutorService CONNECTION_CREATOR_EXECUTOR =
             ThreadUtils.executorServiceWithContext(Executors.newCachedThreadPool());
 
+    private static int databaseTimeout = getSystemPropertyDatabaseTimeout();
+
+    static {
+        if (databaseTimeout >= 0) {
+            setDatabaseTimeout(databaseTimeout);
+        }
+    }
+
     /**
-     * DriverManager login timeout for database connection; not implemented/
-     * used by all database drivers.
+     * Returns the database timeout set via the (deprecated) system property.
+     *
+     * @return timeout in seconds or -1 if not timeout is set
+     * @since 2.10
      */
-    private static final int LOGIN_TIMEOUT = initLoginTimeout();
-    private static int initLoginTimeout() {
-        String tout = System.getProperty(KNIMEConstants.PROPERTY_DATABASE_LOGIN_TIMEOUT);
-        int timeout = 15; // default
-        if (tout != null) {
+    public static int getSystemPropertyDatabaseTimeout() {
+        int timeout = -1;
+        String sysPropTimeout = System.getProperty(KNIMEConstants.PROPERTY_DATABASE_LOGIN_TIMEOUT);
+
+        if (sysPropTimeout != null) {
+            LOGGER.warn("Please use the preferences for setting the database timeout instead of the system property");
             try {
-                int t = Integer.parseInt(tout);
+                int t = Integer.parseInt(sysPropTimeout);
                 if (t <= 0) {
-                    LOGGER.warn("Database login timeout not valid (<=0) '"
-                        + tout + "', using default '" + timeout + "'.");
+                    LOGGER.warn("Database timeout set via system propery not valid (<= 0) '" + sysPropTimeout + "'.");
                 } else {
                     timeout = t;
                 }
             } catch (NumberFormatException nfe) {
-                LOGGER.warn("Database login timeout not valid '" + tout
-                        + "', using default '" + timeout + "'.");
+                LOGGER.warn("Database timeout set via system propery not valid '" + sysPropTimeout + "'.");
             }
         }
-        LOGGER.debug("Database login timeout: " + timeout + " sec.");
-        DriverManager.setLoginTimeout(timeout);
         return timeout;
+    }
+
+    /**
+     * Returns the current database timeout in seconds. The timeout is usually controlled via a preference by
+     * may also be taken from the (deprecated) system property {@link KNIMEConstants#PROPERTY_DATABASE_LOGIN_TIMEOUT}
+     * in case no value has been set in the preferences yet.
+     *
+     * @return the timeout in seconds
+     * @since 2.10
+     */
+    public static int getDatabaseTimeout() {
+        return databaseTimeout;
+    }
+
+    /**
+     * Sets the global database timeout. The timeout is mainly used for login but some drivers also use it for
+     * all other database operations.
+     *
+     * @param seconds timeout in seconds
+     *
+     * @since 2.10
+     */
+    public static void setDatabaseTimeout(final int seconds) {
+        databaseTimeout = seconds;
+        LOGGER.debug("Settings database timeout to " + databaseTimeout + " seconds");
+        DriverManager.setLoginTimeout(databaseTimeout);
     }
 
     /** Used to switch on/off the database connection access (applies only for the same database connection).
@@ -201,6 +234,8 @@ public class DatabaseConnectionSettings {
     private String m_timezone = "current"; // use current as of KNIME 2.8, none before 2.8
 
     private boolean m_validateConnection;
+
+    private boolean m_retrieveMetadataInConfigure;
 
     private boolean m_allowSpacesInColumnNames;
 
@@ -285,6 +320,7 @@ public class DatabaseConnectionSettings {
         m_timezone = conn.m_timezone;
         m_allowSpacesInColumnNames = conn.m_allowSpacesInColumnNames;
         m_rowIdsStartWithZero = conn.m_rowIdsStartWithZero;
+        m_retrieveMetadataInConfigure = conn.m_retrieveMetadataInConfigure;
     }
 
     /** Map the keeps database connection based on the user and URL. */
@@ -441,7 +477,7 @@ public class DatabaseConnectionSettings {
             };
             Future<Connection> task = CONNECTION_CREATOR_EXECUTOR.submit(callable);
             try {
-                conn = task.get(LOGIN_TIMEOUT + 1, TimeUnit.SECONDS);
+                conn = task.get(databaseTimeout + 1, TimeUnit.SECONDS);
                 CONNECTION_MAP.put(databaseConnKey, conn);
                 return conn;
             } catch (ExecutionException ee) {
@@ -498,6 +534,7 @@ public class DatabaseConnectionSettings {
         DATABASE_URLS.add(m_jdbcUrl);
         settings.addString("timezone", m_timezone);
         settings.addBoolean("validateConnection", m_validateConnection);
+        settings.addBoolean("retrieveMetadataInConfigure", m_retrieveMetadataInConfigure);
         settings.addBoolean("allowSpacesInColumnNames", m_allowSpacesInColumnNames);
         settings.addBoolean("rowIdsStartWithZero", m_rowIdsStartWithZero);
     }
@@ -541,6 +578,7 @@ public class DatabaseConnectionSettings {
         String credName = null;
         String timezone = settings.getString("timezone", "none");
         boolean validateConnection = settings.getBoolean("validateConnection", false);
+        boolean retrieveMetadataInConfigure = settings.getBoolean("retrieveMetadataInConfigure", true);
         boolean allowSpacesInColumnNames = settings.getBoolean("allowSpacesInColumnNames", false);
         boolean rowIdsStartWithZero = settings.getBoolean("rowIdsStartWithZero", false);
 
@@ -588,6 +626,7 @@ public class DatabaseConnectionSettings {
             m_jdbcUrl = database;
             m_timezone = timezone;
             m_validateConnection = validateConnection;
+            m_retrieveMetadataInConfigure = retrieveMetadataInConfigure;
             m_allowSpacesInColumnNames = allowSpacesInColumnNames;
             m_rowIdsStartWithZero = rowIdsStartWithZero;
             DATABASE_URLS.add(m_jdbcUrl);
@@ -863,6 +902,27 @@ public class DatabaseConnectionSettings {
      */
     public final void setValidateConnection(final boolean b) {
         m_validateConnection = b;
+    }
+
+
+    /**
+     * Returns whether the metadata for the current query should be retrieved during configure.
+     *
+     * @return <code>true</code> if metadata should be retrieved, <code>false</code> otherwise
+     * @since 2.10
+     */
+    public final boolean getRetrieveMetadataInConfigure() {
+        return m_retrieveMetadataInConfigure;
+    }
+
+    /**
+     * Sets whether the metadata for the current query should be retrieved during configure.
+     *
+     * @param b <code>true</code> if metadata should be retrieved, <code>false</code> otherwise
+     * @since 2.10
+     */
+    public final void setRetrieveMetadataInConfigure(final boolean b) {
+        m_retrieveMetadataInConfigure = b;
     }
 
 

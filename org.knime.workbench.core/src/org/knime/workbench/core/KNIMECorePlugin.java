@@ -66,6 +66,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseDriverLoader;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
@@ -213,6 +214,8 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                             equals(event.getProperty())) {
                         String dbDrivers = (String) event.getNewValue();
                         initDatabaseDriver(dbDrivers);
+                    } else if (HeadlessPreferencesConstants.P_DATABASE_TIMEOUT.equals(event.getProperty())) {
+                        DatabaseConnectionSettings.setDatabaseTimeout((Integer) event.getNewValue());
                     }
                 }
             });
@@ -243,6 +246,8 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                     HeadlessPreferencesConstants.P_DATABASE_DRIVERS);
             initDatabaseDriver(dbDrivers);
 
+            DatabaseConnectionSettings.setDatabaseTimeout(pStore
+                .getInt(HeadlessPreferencesConstants.P_DATABASE_TIMEOUT));
         } catch (Throwable e) {
             LOGGER.error("FATAL: error initializing KNIME"
                     + " repository - check plugin.xml" + " and classpath", e);

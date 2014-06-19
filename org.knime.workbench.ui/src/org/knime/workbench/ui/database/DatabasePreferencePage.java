@@ -40,7 +40,8 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * --------------------------------------------------------------------- *
+ * ---------------------------------------------------------------------
+ *
  */
 package org.knime.workbench.ui.database;
 
@@ -48,14 +49,17 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.ListEditor;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseDriverLoader;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
@@ -72,9 +76,9 @@ public class DatabasePreferencePage extends FieldEditorPreferencePage
 	 *
 	 */
 	public DatabasePreferencePage() {
-        super("Load Database Driver File (Jar or Zip)", null, GRID);
-        setDescription("Load additional database driver from Jar or Zip"
-        		+ " archive.");
+        super("Database preferences", null, GRID);
+        setDescription("Let's you load additional database driver from Jar or Zip archive and set other database "
+            + "related preferences.");
 	}
 
 	/**
@@ -136,6 +140,12 @@ public class DatabasePreferencePage extends FieldEditorPreferencePage
 				return res.toString();
 			}
 		});
+
+        addField(new IntegerFieldEditor(HeadlessPreferencesConstants.P_DATABASE_TIMEOUT,
+            "Timeout for database operations (in seconds)", getFieldEditorParent(), 5));
+        if (DatabaseConnectionSettings.getSystemPropertyDatabaseTimeout() >= 0) {
+            setMessage("Database timeout preference will override system property", IMessageProvider.WARNING);
+        }
 	}
 
     /**
