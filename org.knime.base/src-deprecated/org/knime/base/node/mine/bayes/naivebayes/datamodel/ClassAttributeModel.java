@@ -1,6 +1,9 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *
+ *  Copyright (C) 2003 - 2013
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -40,20 +43,20 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
+ *
+ * History
+ *    25.03.2007 (Tobias Koetter): created
  */
 
 package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.dmg.pmml.BayesInputDocument.BayesInput;
-import org.dmg.pmml.BayesOutputDocument.BayesOutput;
-import org.dmg.pmml.TargetValueCountDocument.TargetValueCount;
-import org.dmg.pmml.TargetValueCountsDocument.TargetValueCounts;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.knime.base.node.mine.bayes.naivebayes.datamodel2.TooManyValuesException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.NominalValue;
@@ -62,12 +65,12 @@ import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
 
 
-
 /**
  * This {@link AttributeModel} implementation holds the class attribute
  * information like the number of rows per class value.
  * @author Tobias Koetter, University of Konstanz
  */
+@Deprecated
 class ClassAttributeModel extends AttributeModel {
     /**
      * The unique type of this model used for saving/loading.
@@ -83,7 +86,7 @@ class ClassAttributeModel extends AttributeModel {
     private static final String CLASS_RECS_COUNTER = "classRecordCounter";
 
 
-    /*
+    /**
      *Saves the number of rows per class attribute.
      *<dl>
      *  <dt>Key:</dt>
@@ -110,7 +113,8 @@ class ClassAttributeModel extends AttributeModel {
             final boolean skipMissingVals, final int maxNoOfClassVals) {
         super(rowCaption, 0, skipMissingVals);
         m_maxNoOfClassVals = maxNoOfClassVals;
-        m_recsCounterByClassVal = new HashMap<>(maxNoOfClassVals);
+        m_recsCounterByClassVal =
+            new HashMap<String, MutableInteger>(maxNoOfClassVals);
     }
 
     /**Constructor for class ClassModel.
@@ -134,7 +138,8 @@ class ClassAttributeModel extends AttributeModel {
             throw new InvalidSettingsException(
                     "Class names and counter must be of equal size");
         }
-        m_recsCounterByClassVal = new HashMap<>(classVals.length);
+        m_recsCounterByClassVal =
+            new HashMap<String, MutableInteger>(classVals.length);
         for (int i = 0, length = classVals.length; i < length; i++) {
             m_recsCounterByClassVal.put(classVals[i],
                     new MutableInteger(recsCounter[i]));
@@ -158,71 +163,6 @@ class ClassAttributeModel extends AttributeModel {
         }
         config.addStringArray(CLASS_NAMES, classVals);
         config.addIntArray(CLASS_RECS_COUNTER, recsCounter);
-    }
-
-
-    /**Constructor for class ClassModel.
-     * @param attributeName the name of the attribute
-     * @param noOfMissingVals the number of missing values
-     * @param ignoreMissingVals set to <code>true</code> if the missing values
-     * should be ignored during learning and prediction
-     * @param out the <code>BayesOutput</code> object to read from
-     * @throws InvalidSettingsException if the settings are invalid
-     */
-    private ClassAttributeModel(final String attributeName, final int noOfMissingVals, final boolean ignoreMissingVals,
-            final BayesOutput out) throws InvalidSettingsException {
-        super(attributeName, noOfMissingVals, ignoreMissingVals);
-        final TargetValueCounts targetValueCounts = out.getTargetValueCounts();
-        m_maxNoOfClassVals = Integer.MAX_VALUE;
-        final List<TargetValueCount> targetValueCountList = targetValueCounts.getTargetValueCountList();
-        m_recsCounterByClassVal = new HashMap<>(targetValueCountList.size());
-        for (TargetValueCount targetValueCount : targetValueCountList) {
-            final int count = (int)targetValueCount.getCount();
-            m_totalNoOfRecs += count;
-            m_recsCounterByClassVal.put(targetValueCount.getValue(), new MutableInteger(count));
-        }
-    }
-
-    /**
-     * @param out the {@link BayesOutput} to read from
-     * @return the {@link ClassAttributeModel}
-     * @throws InvalidSettingsException if the model could not be generated from the given {@link BayesOutput}
-     */
-    static ClassAttributeModel loadClassAttributeFromPMML(final BayesOutput out) throws InvalidSettingsException {
-        final Map<String, String> extensionMap = PMMLNaiveBayesModelTranslator.convertToMap(out.getExtensionList());
-        boolean skipMissing = true;
-        int noOfMissing = 0;
-        if (extensionMap.containsKey(NO_OF_MISSING_VALUES)) {
-            skipMissing = false;
-            noOfMissing = PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, NO_OF_MISSING_VALUES);
-        }
-        return new ClassAttributeModel(out.getFieldName(), noOfMissing, skipMissing, out);
-    }
-
-    /**
-     * @param out the PMML {@link BayesOutput} to write the class counts to
-     */
-    void exportClassAttributeToPMML(final BayesOutput out) {
-        out.setFieldName(getAttributeName());
-        if (!ignoreMissingVals()) {
-            PMMLNaiveBayesModelTranslator.setIntExtension(out.addNewExtension(), NO_OF_MISSING_VALUES,
-                getNoOfMissingVals());
-        }
-        final TargetValueCounts targetValueCounts = out.addNewTargetValueCounts();
-        for (final String classVal : m_recsCounterByClassVal.keySet()) {
-            final TargetValueCount targetValueCount = targetValueCounts.addNewTargetValueCount();
-            targetValueCount.setValue(classVal);
-            targetValueCount.setCount(m_recsCounterByClassVal.get(classVal).doubleValue());
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     * @see #exportClassAttributeToPMML(BayesOutput)
-     */
-    @Override
-    void exportToPMMLInternal(final BayesInput in) {
-        throw new UnsupportedOperationException("Class model does not write to BayesInput");
     }
 
     /**
@@ -291,14 +231,7 @@ class ClassAttributeModel extends AttributeModel {
         if (noOfRecs == null) {
             return null;
         }
-        return new Integer(noOfRecs.intValue());
-    }
-
-    /**
-     * @return the total number of records
-     */
-    int getTotalNoOfRecs() {
-        return m_totalNoOfRecs;
+        return noOfRecs.intValue();
     }
 
     /**
@@ -306,8 +239,7 @@ class ClassAttributeModel extends AttributeModel {
      */
     @Override
     double getProbabilityInternal(final String classValue,
-            final DataCell attributeValue, final double laplaceCorrector,
-            final boolean useLog) {
+            final DataCell attributeValue, final double laplaceCorrector) {
         if (attributeValue.isMissing()) {
             throw new IllegalArgumentException(
                     "Missing value not allowed as class value");
@@ -340,7 +272,7 @@ class ClassAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLViewHeadLine() {
-        return "Class counts for " + getAttributeName();
+        return "Class counts for " + StringEscapeUtils.escapeHtml(getAttributeName());
     }
 
     /**
@@ -349,8 +281,7 @@ class ClassAttributeModel extends AttributeModel {
     @Override
     String getHTMLView(final int totalNoOfRecs) {
         final StringBuilder buf = new StringBuilder();
-        buf.append(AttributeModel.createHTMLTable(null, "Class: ",
-                "Count: ", 10, m_recsCounterByClassVal, true));
+        buf.append(AttributeModel.createHTMLTable(null, "Class: ", "Count: ", 10, m_recsCounterByClassVal, true));
         buf.append("<b>Total count: </b>" + totalNoOfRecs + "<br><br>");
         return buf.toString();
     }
@@ -377,4 +308,5 @@ class ClassAttributeModel extends AttributeModel {
         }
         return buf.toString();
     }
+
 }

@@ -43,7 +43,7 @@
  * ------------------------------------------------------------------------
  */
 
-package org.knime.base.node.mine.bayes.naivebayes.datamodel;
+package org.knime.base.node.mine.bayes.naivebayes.datamodel2;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -59,6 +59,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.BayesInputsDocument.BayesInputs;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
@@ -206,12 +207,9 @@ public class BitVectorAttributeModel extends AttributeModel {
         /**
          * @param attributeValue the attribute value to calculate the
          * probability for
-         * @param laplaceCorrector the Laplace corrector to use.
-         * A value greater 0 overcomes zero counts.
-         * @param useLog flag that indicates if log sum should be used instead of product to combine probabilities
          * @return the probability for the given attribute value
          */
-        double getProbability(final DataCell attributeValue, final double laplaceCorrector, final boolean useLog) {
+        double getProbability(final DataCell attributeValue) {
             final int noOfRows4Class = getNoOfRows();
             if (noOfRows4Class == 0) {
                 return 0;
@@ -225,17 +223,11 @@ public class BitVectorAttributeModel extends AttributeModel {
             }
             double combinedProbability = 1;
             for (int i = 0, length = (int)bitVec.length(); i < length; i++) {
-                final double noOfRows = laplaceCorrector + getNoOfRows4AttributeValue(i, bitVec.get(i));
-                final double probability = noOfRows / (noOfRows4Class + 2 * laplaceCorrector);
-                if (useLog) {
-                    combinedProbability += Math.log(probability);
-                } else {
-                    combinedProbability *= probability;
-                }
+                final double noOfRows = getNoOfRows4AttributeValue(i, bitVec.get(i));
+                final double probability = noOfRows / noOfRows4Class;
+                combinedProbability += Math.log(probability);
             }
-            if (useLog) {
-                combinedProbability = Math.exp(combinedProbability);
-            }
+            combinedProbability = Math.exp(combinedProbability);
             return combinedProbability;
         }
 
@@ -418,8 +410,11 @@ public class BitVectorAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
-    Class<BitVectorValue> getCompatibleType() {
-        return BitVectorValue.class;
+    boolean isCompatible(final DataType type) {
+        if (type == null) {
+            return false;
+        }
+        return type.isCompatible(BitVectorValue.class);
     }
 
     /**
@@ -473,13 +468,12 @@ public class BitVectorAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
-    double getProbabilityInternal(final String classValue, final DataCell attributeValue,
-        final double laplaceCorrector, final boolean useLog) {
+    double getProbabilityInternal(final String classValue, final DataCell attributeValue) {
         final BitVectorClassValue classModel = m_classValues.get(classValue);
         if (classModel == null) {
             return 0;
         }
-        return classModel.getProbability(attributeValue, laplaceCorrector, useLog);
+        return classModel.getProbability(attributeValue);
     }
 
     /**

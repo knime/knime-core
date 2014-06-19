@@ -40,83 +40,50 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
+ *
+ * History
+ *    29.03.2007 (Tobias Koetter): created
  */
 
-package org.knime.base.node.mine.bayes.naivebayes.learner2;
-
-import javax.swing.JEditorPane;
-import javax.swing.JScrollPane;
-
-import org.knime.base.node.mine.bayes.naivebayes.datamodel2.NaiveBayesModel;
-import org.knime.core.node.NodeView;
+package org.knime.base.node.mine.bayes.naivebayes.datamodel2;
 
 
 /**
- * <code>NodeView</code> for the "Naive Bayes Learner" Node.
- *
- * @author Tobias Koetter
+ * Exception if the maximum number of different values is exceeded.
+ * @author Tobias Koetter, University of Konstanz
  */
-public class NaiveBayesLearnerNodeView2
-extends NodeView<NaiveBayesLearnerNodeModel2> {
+public class TooManyValuesException extends Exception {
 
+    private static final long serialVersionUID = 2;
 
-    private NaiveBayesModel m_model;
-    private final JEditorPane m_htmlPane;
-
-    /**
-     * Creates a new view.
+    /**Constructor for class TooManyValuesException.
      *
-     * @param nodeModel The model (
-     * class: <code>NaiveBayesLearnerNodeModel</code>)
      */
-    protected NaiveBayesLearnerNodeView2(
-            final NaiveBayesLearnerNodeModel2 nodeModel) {
-        super(nodeModel);
-        m_model = (nodeModel).getNaiveBayesModel();
-        //The output as HTML
-        m_htmlPane = new JEditorPane("text/html", "");
-//        m_htmlPane.setText(m_model.getHTMLTable());
-        m_htmlPane.setEditable(false);
-        final JScrollPane scrollPane = new JScrollPane(m_htmlPane);
-/*
-        //The output as a JTABLE
-        final String[] captions = m_model.getDataTableCaptions();
-        final String[][] dataTable = m_model.getDataTable();
-        JTable table = new JTable(dataTable, captions);
-        JScrollPane scrollPane = new JScrollPane(table);
-        table.setPreferredScrollableViewportSize(new Dimension(540, 400));
-        */
-        setComponent(scrollPane);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void modelChanged() {
-        final NaiveBayesLearnerNodeModel2 nodeModel = getNodeModel();
-        m_model = nodeModel.getNaiveBayesModel();
-        if (m_model != null) {
-            m_htmlPane.setText(m_model.getHTMLView());
-        } else {
-            m_htmlPane.setText("No model available");
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void onClose() {
+    public TooManyValuesException() {
         //nothing to do
     }
 
-    /**
-     * {@inheritDoc}
+    /**Constructor for class TooManyValuesException.
+     * @param message the message
      */
-    @Override
-    protected void onOpen() {
-//        nothing to do
+    public TooManyValuesException(final String message) {
+        super(message);
     }
+
+    /**Constructor for class TooManyValuesException.
+     * @param cause the cause
+     */
+    public TooManyValuesException(final Throwable cause) {
+        super(cause);
+    }
+
+    /**Constructor for class TooManyValuesException.
+     * @param message the message
+     * @param cause the cause
+     */
+    public TooManyValuesException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
+
 }

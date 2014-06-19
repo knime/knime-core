@@ -54,9 +54,9 @@ import java.util.List;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.mine.bayes.naivebayes.datamodel.AttributeModel;
-import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
-import org.knime.base.node.mine.bayes.naivebayes.datamodel.PMMLNaiveBayesModelTranslator;
+import org.knime.base.node.mine.bayes.naivebayes.datamodel2.AttributeModel;
+import org.knime.base.node.mine.bayes.naivebayes.datamodel2.NaiveBayesModel;
+import org.knime.base.node.mine.bayes.naivebayes.datamodel2.PMMLNaiveBayesModelTranslator;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -310,12 +310,11 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
             throw new IllegalArgumentException("Invalid input data");
         }
         final BufferedDataTable trainingTable = (BufferedDataTable)inObject;
-        final String colName = m_classifyColumnName.getStringValue();
         final boolean ignoreMissingVals = m_ignoreMissingVals.getBooleanValue();
         final boolean pmmlCompatible = m_pmmlCompatible.getBooleanValue();
         final int maxNoOfNomVals = m_maxNoOfNominalVals.getIntValue();
-        m_model = new NaiveBayesModel(trainingTable, colName, exec, maxNoOfNomVals, ignoreMissingVals,
-            pmmlCompatible, m_threshold.getDoubleValue());
+        m_model = new NaiveBayesModel(trainingTable, m_classifyColumnName.getStringValue(), exec, maxNoOfNomVals,
+            ignoreMissingVals, pmmlCompatible, m_threshold.getDoubleValue());
         final List<String> missingModels = m_model.getAttributesWithMissingVals();
         if (missingModels.size() > 0) {
             final StringBuilder buf = new StringBuilder();
@@ -338,11 +337,12 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
         LOGGER.debug("Exiting execute of " + NaiveBayesLearnerNodeModel2.class.getName());
 
         // handle the optional PMML input
-        PMMLPortObject inPMMLPort = (PMMLPortObject)inData[MODEL_INPORT];
-        DataTableSpec tableSpec = trainingTable.getSpec();
-        PMMLPortObjectSpec outPortSpec = createPMMLSpec(tableSpec, inPMMLPort == null ? null : inPMMLPort.getSpec(),
-            m_model.getPMMLLearningCols(), m_model.getClassColumnName());
-        PMMLPortObject outPMMLPort = new PMMLPortObject(outPortSpec, inPMMLPort, tableSpec);
+        final PMMLPortObject inPMMLPort = (PMMLPortObject)inData[MODEL_INPORT];
+        final DataTableSpec tableSpec = trainingTable.getSpec();
+        final PMMLPortObjectSpec outPortSpec = createPMMLSpec(tableSpec,
+            inPMMLPort == null ? null : inPMMLPort.getSpec(),
+                m_model.getPMMLLearningCols(), m_model.getClassColumnName());
+        final PMMLPortObject outPMMLPort = new PMMLPortObject(outPortSpec, inPMMLPort, tableSpec);
         outPMMLPort.addModelTranslater(new PMMLNaiveBayesModelTranslator(m_model));
         return new PortObject[]{outPMMLPort};
     }

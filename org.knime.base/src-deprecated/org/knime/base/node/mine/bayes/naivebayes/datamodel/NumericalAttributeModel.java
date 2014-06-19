@@ -1,6 +1,9 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *
+ *  Copyright (C) 2003 - 2013
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -40,7 +43,10 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
+ *
+ * History
+ *    25.03.2007 (Tobias Koetter): created
  */
 
 package org.knime.base.node.mine.bayes.naivebayes.datamodel;
@@ -50,10 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.dmg.pmml.BayesInputDocument.BayesInput;
-import org.dmg.pmml.GaussianDistributionDocument.GaussianDistribution;
-import org.dmg.pmml.TargetValueStatDocument.TargetValueStat;
-import org.dmg.pmml.TargetValueStatsDocument.TargetValueStats;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
@@ -62,12 +65,12 @@ import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
 
 
-
 /**
  *This {@link AttributeModel} implementation calculates the probability for
  *numerical attributes by assuming a Gaussian distribution of the data.
  * @author Tobias Koetter, University of Konstanz
  */
+@Deprecated
 class NumericalAttributeModel extends AttributeModel {
 
     /**
@@ -103,11 +106,11 @@ class NumericalAttributeModel extends AttributeModel {
 
         private double m_mean;
 
-        private double m_stdDeviation = 0;
+        private double m_stdDeviation;
 
-        private double m_probabilityDenominator = 0;
+        private double m_probabilityDenominator;
 
-        private final MutableInteger m_missingValueRecs = new MutableInteger(0);
+        private final MutableInteger m_missingValueRecs;
 
         private boolean m_recompute = true;
 
@@ -117,6 +120,7 @@ class NumericalAttributeModel extends AttributeModel {
          */
         NumericalClassValue(final String classValue) {
             m_classValue = classValue;
+            m_missingValueRecs = new MutableInteger(0);
         }
 
         /**Constructor for class NumericalClassValue.
@@ -126,41 +130,11 @@ class NumericalAttributeModel extends AttributeModel {
         NumericalClassValue(final Config config)
             throws InvalidSettingsException {
             m_classValue = config.getString(CLASS_VALUE);
-            m_missingValueRecs.setValue(config.getInt(MISSING_VALUE_COUNTER));
+            m_missingValueRecs =
+                new MutableInteger(config.getInt(MISSING_VALUE_COUNTER));
             m_noOfRows = config.getInt(NO_OF_ROWS);
             m_sum = config.getDouble(SUM);
             m_squareSum = config.getDouble(SQUARE_SUM);
-        }
-
-        /**Constructor for class NumericalClassValue.
-         * @param targetValueStat the <code>TargetValueStat</code> object to read from
-         * @throws InvalidSettingsException if the settings are invalid
-         */
-        NumericalClassValue(final TargetValueStat targetValueStat) throws InvalidSettingsException {
-            m_classValue = targetValueStat.getValue();
-            final GaussianDistribution distribution = targetValueStat.getGaussianDistribution();
-            m_mean = distribution.getMean();
-            final Map<String, String> extensionMap =
-                    PMMLNaiveBayesModelTranslator.convertToMap(targetValueStat.getExtensionList());
-            if (extensionMap.containsKey(MISSING_VALUE_COUNTER)) {
-                m_missingValueRecs.setValue(
-                    PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, MISSING_VALUE_COUNTER));
-                m_noOfRows = PMMLNaiveBayesModelTranslator.getIntExtension(extensionMap, NO_OF_ROWS);
-            }
-            if (extensionMap.containsKey(SUM)) {
-                m_sum = PMMLNaiveBayesModelTranslator.getDoubleExtension(extensionMap, SUM);
-                m_squareSum = PMMLNaiveBayesModelTranslator.getDoubleExtension(extensionMap, SQUARE_SUM);
-                calculateProbabilityValues();
-            } else {
-                final double variance = distribution.getVariance();
-                m_stdDeviation = Math.sqrt(variance);
-                if (m_stdDeviation == 0) {
-                    m_probabilityDenominator = 0;
-                } else {
-                    m_probabilityDenominator = 2 * variance;
-                }
-            }
-            m_recompute = false;
         }
 
         /**
@@ -172,22 +146,6 @@ class NumericalAttributeModel extends AttributeModel {
             config.addInt(NO_OF_ROWS, m_noOfRows);
             config.addDouble(SUM, m_sum);
             config.addDouble(SQUARE_SUM, m_squareSum);
-        }
-
-        /**
-         * @param targetValueStats
-         */
-        void exportToPMML(final TargetValueStat targetValueStat) {
-            targetValueStat.setValue(getClassValue());
-            if (!ignoreMissingVals()) {
-                PMMLNaiveBayesModelTranslator.setIntExtension(targetValueStat.addNewExtension(), MISSING_VALUE_COUNTER,
-                    m_missingValueRecs.intValue());
-                PMMLNaiveBayesModelTranslator.setIntExtension(targetValueStat.addNewExtension(), NO_OF_ROWS,
-                    getNoOfRows());
-            }
-            final GaussianDistribution distribution = targetValueStat.addNewGaussianDistribution();
-            distribution.setMean(getMean());
-            distribution.setVariance(getVariance());
         }
 
         /**
@@ -217,7 +175,7 @@ class NumericalAttributeModel extends AttributeModel {
 
 
         /**
-         * @return the standard deviation
+         * @return the variance
          */
         double getStdDeviation() {
             if (m_recompute) {
@@ -225,14 +183,6 @@ class NumericalAttributeModel extends AttributeModel {
             }
             return m_stdDeviation;
         }
-
-        /**
-         * @return the variance
-         */
-        double getVariance() {
-            return Math.pow(getStdDeviation(), 2);
-        }
-
         /**
          * @param attrVal the attribute value to add to this class
          */
@@ -240,7 +190,8 @@ class NumericalAttributeModel extends AttributeModel {
             if (attrVal.isMissing()) {
                 m_missingValueRecs.inc();
             } else {
-                final double doubleValue = ((DoubleValue)attrVal).getDoubleValue();
+                final double doubleValue =
+                    ((DoubleValue)attrVal).getDoubleValue();
                 m_sum += doubleValue;
                 m_squareSum += (doubleValue * doubleValue);
                 m_recompute = true;
@@ -277,8 +228,9 @@ class NumericalAttributeModel extends AttributeModel {
             }
             if (m_probabilityDenominator == 0) {
                 //this should never happen since we check the standard deviation
-                throw new IllegalStateException("Error while calculating probability for attribute "
-                + getAttributeName() + ": Probability denominator was zero");
+                throw new IllegalStateException("Error while calculating "
+                        + "probability for attribute " + getAttributeName()
+                        + ": Probability denominator was zero");
             }
             //we do not use the probability factor
             //1 / (PROB_FACT_DEN * m_stdDeviation) which ensures that the area
@@ -287,7 +239,9 @@ class NumericalAttributeModel extends AttributeModel {
             //with a very low variance the probability is > 1 which might result
             //in a number overflow for many of such columns like described
             //in forum post http://www.knime.org/node/949
-            final double prob = Math.exp(-(diff * diff / m_probabilityDenominator));
+            final double prob =
+                Math.exp(-(diff * diff
+                        / m_probabilityDenominator));
             return prob;
         }
 
@@ -312,7 +266,7 @@ class NumericalAttributeModel extends AttributeModel {
             }
             final int noOfRowsNonMissing =
                 m_noOfRows - m_missingValueRecs.intValue();
-            // TODO Verify this! What if training data only contains missing values
+            // TODO Verify this! What if training data only contains missings
             if (noOfRowsNonMissing == 0) {
                 throw new IllegalStateException("Model for attribute "
                         + getAttributeName() + " and class \""
@@ -394,7 +348,7 @@ class NumericalAttributeModel extends AttributeModel {
     NumericalAttributeModel(final String attributeName,
             final boolean skipMissingVals) {
         super(attributeName, 0, skipMissingVals);
-        m_classValues = new HashMap<>();
+        m_classValues = new HashMap<String, NumericalClassValue>();
     }
 
     /**Constructor for class NumericalAttributeModel.
@@ -411,33 +365,13 @@ class NumericalAttributeModel extends AttributeModel {
     throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
         final int noOfClasses = config.getInt(CLASS_VALUE_COUNTER);
-        m_classValues = new HashMap<>(noOfClasses);
+        m_classValues = new HashMap<String, NumericalClassValue>(noOfClasses);
         for (int i = 0; i < noOfClasses; i++) {
             final Config classConfig =
                 config.getConfig(CLASS_VALUE_SECTION + i);
             final NumericalClassValue classVal =
                 new NumericalClassValue(classConfig);
             m_classValues.put(classVal.getClassValue(), classVal);
-        }
-    }
-
-    /**Constructor for class NumericalAttributeModel.
-     * @param attributeName the name of the attribute
-     * @param ignoreMissingVals set to <code>true</code> if the missing values
-     * should be skipped during learning and prediction
-     * @param noOfMissingVals the number of missing values
-     * @param bayesInput the <code>BayesInput</code> object to read from
-     * @throws InvalidSettingsException if the settings are invalid
-     */
-    NumericalAttributeModel(final String attributeName, final boolean ignoreMissingVals,
-        final int noOfMissingVals, final BayesInput bayesInput)  throws InvalidSettingsException {
-        super(attributeName, noOfMissingVals, ignoreMissingVals);
-        TargetValueStats targetValueStats = bayesInput.getTargetValueStats();
-        List<TargetValueStat> targetValueStatList = targetValueStats.getTargetValueStatList();
-        m_classValues = new HashMap<>(targetValueStatList.size());
-        for (TargetValueStat targetValueStat : targetValueStatList) {
-            NumericalClassValue classValue = new NumericalClassValue(targetValueStat);
-            m_classValues.put(classValue.getClassValue(), classValue);
         }
     }
 
@@ -453,18 +387,6 @@ class NumericalAttributeModel extends AttributeModel {
                 config.addConfig(CLASS_VALUE_SECTION + i);
             classVal.saveModel(classConfig);
             i++;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    void exportToPMMLInternal(final BayesInput bayesInput) {
-        final TargetValueStats targetValueStats = bayesInput.addNewTargetValueStats();
-        for (final NumericalClassValue classVal : m_classValues.values()) {
-            final TargetValueStat targetValueStat = targetValueStats.addNewTargetValueStat();
-            classVal.exportToPMML(targetValueStat);
         }
     }
 
@@ -523,15 +445,15 @@ class NumericalAttributeModel extends AttributeModel {
         if (value == null) {
             return null;
         }
-        return new Integer(value.getNoOfRows());
+        return value.getNoOfRows();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    double getProbabilityInternal(final String classValue, final DataCell attributeValue, final double laplaceCorrector,
-            final boolean useLog) {
+    double getProbabilityInternal(final String classValue,
+            final DataCell attributeValue, final double laplaceCorrector) {
         final NumericalClassValue classModel = m_classValues.get(classValue);
         if (classModel == null) {
             return 0;
@@ -544,8 +466,8 @@ class NumericalAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLViewHeadLine() {
-        return "Gaussian distribution for " + getAttributeName()
-        + " per class value";
+        return "Gaussian distribution for " + StringEscapeUtils.escapeHtml(getAttributeName())
+                + " per class value";
     }
 
     /**
@@ -561,8 +483,7 @@ class NumericalAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLView(final int totalNoOfRecs) {
-        final List<String> sortedClassVal =
-            AttributeModel.sortCollection(m_classValues.keySet());
+        final List<String> sortedClassVal = AttributeModel.sortCollection(m_classValues.keySet());
         if (sortedClassVal == null) {
             return "";
         }
@@ -580,13 +501,11 @@ class NumericalAttributeModel extends AttributeModel {
             countRow.append("</td>");
 
             meanRow.append("<td align='center'>");
-            meanRow.append(NaiveBayesModel.HTML_VALUE_FORMATER.format(
-                    classValue.getMean()));
+            meanRow.append(NaiveBayesModel.HTML_VALUE_FORMATER.format(classValue.getMean()));
             meanRow.append("</td>");
 
             stdDevRow.append("<td align='center'>");
-            stdDevRow.append(NaiveBayesModel.HTML_VALUE_FORMATER.format(
-                    classValue.getStdDeviation()));
+            stdDevRow.append(NaiveBayesModel.HTML_VALUE_FORMATER.format(classValue.getStdDeviation()));
             stdDevRow.append("</td>");
 
             rateRow.append("<td align='center'>");

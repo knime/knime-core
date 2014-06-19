@@ -43,7 +43,7 @@
  * ------------------------------------------------------------------------
  */
 
-package org.knime.base.node.mine.bayes.naivebayes.datamodel;
+package org.knime.base.node.mine.bayes.naivebayes.datamodel2;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,6 +55,7 @@ import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.PairCountsDocument.PairCounts;
 import org.dmg.pmml.TargetValueStatsDocument.TargetValueStats;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
@@ -228,10 +229,10 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
     }
 
     /**
-     * @return the <code>DataValue</code> class to check if the rows
-     * are compatible
+     * @param type the {@link DataValue} class to check
+     * @return <code>true</code> if the model is compatible with the given {@link DataValue} class
      */
-    abstract Class<? extends DataValue> getCompatibleType();
+    abstract boolean isCompatible(final DataType type);
 
     /**
      * Adds the given value to this attribute model.
@@ -253,7 +254,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             if (m_ignoreMissingVals) {
                 return;
             }
-        } else if (!attrValue.getType().isCompatible(getCompatibleType())) {
+        } else if (!isCompatible(attrValue.getType())) {
             throw new IllegalArgumentException(
                     "Attribute value type is not compatible");
         }
@@ -319,24 +320,19 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @param classValue the class value to calculate the probability for
      * @param attributeValue the attribute value to calculate the
      * probability for. Could be a missing value.
-     * @param laplaceCorrector the Laplace corrector to use. A value greater 0
-     * overcomes zero counts.
-     * @param useLog <code>true</code> if log sum should be used to
-     * combine probabilities
      * @return the calculated probability or null if the cell was a missing
      * one and missing values should be skipped
      */
-    Double getProbability(final String classValue, final DataCell attributeValue, final double laplaceCorrector,
-            final boolean useLog) {
-        if (!attributeValue.getType().isCompatible(getCompatibleType())) {
+    Double getProbability(final String classValue, final DataCell attributeValue) {
+        if (!isCompatible(attributeValue.getType())) {
             throw new IllegalArgumentException(String.format("Value in column '%s' (%s) is not "
-                    + "compatible with the expected type (expected %s, actual %s)",
-                    getAttributeName(), attributeValue, getCompatibleType(), attributeValue.getType()));
+                    + "compatible with attribute model %s (Column type %s)",
+                    getAttributeName(), attributeValue, getType(), attributeValue.getType()));
         }
         if (attributeValue.isMissing() && m_ignoreMissingVals) {
             return null;
         }
-        return new Double(getProbabilityInternal(classValue, attributeValue, laplaceCorrector, useLog));
+        return new Double(getProbabilityInternal(classValue, attributeValue));
     }
 
     /**
@@ -344,14 +340,9 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @param classValue the class value to calculate the probability for
      * @param attributeValue the attribute value to calculate the
      * probability for. Could be a missing value.
-     * @param laplaceCorrector the Laplace corrector to use. A value greater 0
-     * overcomes zero counts.
-     * @param useLog <code>true</code> if log sum should be used to
-     * combine probabilities
      * @return the calculated probability
      */
-    abstract double getProbabilityInternal(final String classValue, final DataCell attributeValue,
-        double laplaceCorrector, boolean useLog);
+    abstract double getProbabilityInternal(final String classValue, final DataCell attributeValue);
 
     /**
      * @param totalNoOfRecs the total number of records in the training data

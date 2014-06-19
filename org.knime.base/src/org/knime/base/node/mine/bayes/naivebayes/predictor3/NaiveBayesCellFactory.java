@@ -49,7 +49,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.knime.base.data.append.column.AppendedCellFactory;
-import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
+import org.knime.base.node.mine.bayes.naivebayes.datamodel2.NaiveBayesModel;
 import org.knime.base.node.mine.util.PredictorHelper;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -60,8 +60,8 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator;
 
 /**
  * Naive Bayes <code>AppendCellFactory</code> class which uses the given
@@ -123,7 +123,7 @@ CellFactory {
      * them in the order they should be appended to the original table
      * specification.
      * @param model the {@link NaiveBayesModel} to use
-     * @param columnName the name of the prediction column
+     * @param predictionColName the name of the prediction column
      * @param inSpec the <code>DataTableSpec</code> of the input data to check
      * if the winner column name already exists
      * @param inclClassProbVals if the probability values should be displayed
@@ -131,18 +131,17 @@ CellFactory {
      * @return <code>DataColumnSpec[]</code> with the column specifications
      * of the result columns
      */
-    public static DataColumnSpec[] createResultColSpecs(
-            final NaiveBayesModel model, final String columnName, final DataTableSpec inSpec,
+    private static DataColumnSpec[] createResultColSpecs(
+            final NaiveBayesModel model, final String predictionColName, final DataTableSpec inSpec,
             final boolean inclClassProbVals, final String suffix) {
-        final DataColumnSpecCreator colSpecCreator =
-            new DataColumnSpecCreator(columnName, model.getClassColumnDataType());
-        final DataColumnSpec classColSpec = colSpecCreator.createSpec();
+        final DataColumnSpec classColSpec =
+                createPredictedClassColSpec(predictionColName, model.getClassColumnDataType(), inSpec);
         if (!inclClassProbVals) {
             return new DataColumnSpec[] {classColSpec};
         }
         final List<String> classValues = model.getSortedClassValues();
         final Collection<DataColumnSpec> colSpecs = new ArrayList<>(classValues.size() + 1);
-        colSpecCreator.setType(DoubleCell.TYPE);
+        final DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator("dummy", DoubleCell.TYPE);
         final PredictorHelper predictorHelper = PredictorHelper.getInstance();
         for (final String classVal : classValues) {
             colSpecCreator.setName(predictorHelper.probabilityColumnName(model.getClassColumnName(), classVal, suffix));
@@ -170,8 +169,20 @@ CellFactory {
         if (inclClassProbVals) {
             return null;
         }
+        final DataColumnSpec classColSpec = createPredictedClassColSpec(classColumnName, classType, inSpec);
+        return classColSpec;
+    }
+
+    private static DataColumnSpec createPredictedClassColSpec(final String classColumnName, final DataType classType,
+        final DataTableSpec inSpec) {
         final String colName = DataTableSpec.getUniqueColumnName(inSpec, classColumnName);
-        final DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(colName, classType);
+        //we have to do this back and forth conversion because long data cells are converted into double by PMML
+        //that is why we convert the KNIME type to PMML to see what PMML uses as type and then use the PMML type
+        //to inver the right KNIME type
+        final DataType pmmlConformDataType = PMMLDataDictionaryTranslator.getKNIMEDataType(
+         PMMLDataDictionaryTranslator.getPMMLDataType(classType));
+        final DataColumnSpecCreator colSpecCreator =
+                new DataColumnSpecCreator(colName, pmmlConformDataType);
         final DataColumnSpec classColSpec = colSpecCreator.createSpec();
         return classColSpec;
     }
@@ -208,22 +219,21 @@ CellFactory {
      */
     @Override
     public DataCell[] getCells(final DataRow row) {
-        final String mostLikelyClass = m_model.getMostLikelyClass(m_attributeNames, row, true);
-        if (mostLikelyClass == null) {
+        final DataCell predictedClassCell = m_model.getMostLikelyClassCell(m_attributeNames, row);
+        if (predictedClassCell == null) {
             throw new IllegalStateException("No class found for row with id " + row.getKey());
         }
-        final StringCell classCell = new StringCell(mostLikelyClass);
         if (!m_inclClassProbVals) {
-            return new DataCell[] {classCell};
+            return new DataCell[] {predictedClassCell};
         }
         final Collection<DataCell> resultCells = new ArrayList<>(m_sortedClassVals.size() + 1);
-        final double[] classProbs = m_model.getClassProbabilities(m_attributeNames, row, m_sortedClassVals, true, true);
+        final double[] classProbs = m_model.getClassProbabilities(m_attributeNames, row, m_sortedClassVals, true);
         //add the probability per class
         for (final double classVal : classProbs) {
             resultCells.add(new DoubleCell(classVal));
         }
         //add the class cell last
-        resultCells.add(classCell);
+        resultCells.add(predictedClassCell);
         return resultCells.toArray(new DataCell[0]);
     }
 

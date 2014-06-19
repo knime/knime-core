@@ -50,8 +50,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.knime.base.data.append.column.AppendedColumnTable;
-import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
-import org.knime.base.node.mine.bayes.naivebayes.datamodel.PMMLNaiveBayesModelTranslator;
+import org.knime.base.node.mine.bayes.naivebayes.datamodel2.NaiveBayesModel;
+import org.knime.base.node.mine.bayes.naivebayes.datamodel2.PMMLNaiveBayesModelTranslator;
 import org.knime.base.node.mine.util.PredictorHelper;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -152,9 +152,8 @@ public class NaiveBayesPredictorNodeModel2 extends NodeModel {
         final String classColumnName = model.getClassColumnName();
         final String predictionColName = m_overridePredicted.getBooleanValue()
                 ? m_predictionColumnName.getStringValue() : predictorHelper.computePredictionDefault(classColumnName);
-        final NaiveBayesCellFactory appender =
-            new NaiveBayesCellFactory(model, predictionColName, data.getDataTableSpec(),
-                    m_inclProbVals.getBooleanValue(), m_probabilitySuffix.getStringValue());
+        final NaiveBayesCellFactory appender = new NaiveBayesCellFactory(model, predictionColName,
+            data.getDataTableSpec(), m_inclProbVals.getBooleanValue(), m_probabilitySuffix.getStringValue());
         final ColumnRearranger rearranger = new ColumnRearranger(data.getDataTableSpec());
         rearranger.append(appender);
         final BufferedDataTable returnVal = exec.createColumnRearrangeTable(data, rearranger, exec);
@@ -175,8 +174,7 @@ public class NaiveBayesPredictorNodeModel2 extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         //check the input data
          assert (inSpecs != null && inSpecs.length == 2 && inSpecs[DATA_IN_PORT] != null
                 && inSpecs[MODEL_IN_PORT] != null);

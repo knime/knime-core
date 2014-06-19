@@ -1,6 +1,9 @@
 /*
  * ------------------------------------------------------------------------
- *  Copyright by KNIME GmbH, Konstanz, Germany
+ *
+ *  Copyright (C) 2003 - 2013
+ *  University of Konstanz, Germany and
+ *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -40,7 +43,10 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
+ *
+ * History
+ *   01.05.2006 (koetter): created
  */
 package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
@@ -50,15 +56,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.dmg.pmml.BayesInputDocument.BayesInput;
-import org.dmg.pmml.BayesInputsDocument.BayesInputs;
-import org.dmg.pmml.BayesOutputDocument.BayesOutput;
-import org.dmg.pmml.MININGFUNCTION;
-import org.dmg.pmml.NaiveBayesModelDocument;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.knime.base.node.mine.bayes.naivebayes.datamodel2.TooManyValuesException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -78,45 +80,58 @@ import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
-
 /**
  * This class represents the learned Naive Bayes model. This basic model
  * holds for each attribute an {@link AttributeModel}. Which provides the
  * probability information for each class value.
  * @author Tobias Koetter, University of Konstanz
  */
+@Deprecated
 public class NaiveBayesModel {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(NaiveBayesModel.class);
-
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(NaiveBayesModel.class);
     /*
     //Begin of XML tag names used to store and read the model file
      */
-    private static final String BIT_VECTOR_MODEL_COUNT = "BitVectorModelCount";
-    private static final String BIT_VECTOR_MODEL_PREFIX = "BitVectorModel_";
+    private static final String RECORD_COUNTER = "RecordCounter";
+
     private static final String CLASS_COL_NAME = "ClassColumnName";
-    private static final String THRESHOLD = "Threshold";
-    private static final String IGNORE_MISSING_VALS = "skipMissingVals";
-    private static final String SKIPPED_ATTRIBUTE_SECTION = "SkippedAttributes";
-    private static final String SKIPPED_ATTRIBUTE_COUNTER = "SkippedAttributesCounter";
-    private static final String SKIPPED_ATTRIBUTE_DATA = "SkippedAttributeData_";
-    private static final String ATTRIBUTE_MODEL_SECTION = "AttributeModelSection";
-    private static final String ATTRIBUTE_MODEL_COUNTER = "AttributeModelCounter";
-    private static final String ATTRIBUTE_MODEL_DATA = "AttributeModelData_";
+
+    private static final String SKIP_MISSING_VALS = "skipMissingVals";
+
+    private static final String SKIPPED_ATTRIBUTE_SECTION =
+        "SkippedAttributes";
+    private static final String SKIPPED_ATTRIBUTE_COUNTER =
+        "SkippedAttributesCounter";
+    private static final String SKIPPED_ATTRIBUTE_DATA =
+        "SkippedAttributeData_";
+
+    private static final String ATTRIBUTE_MODEL_SECTION =
+        "AttributeModelSection";
+    private static final String ATTRIBUTE_MODEL_COUNTER =
+        "AttributeModelCounter";
+    private static final String ATTRIBUTE_MODEL_DATA =
+        "AttributeModelData_";
     /*
     //End of XML tag names used to store and read the model file
      */
     /**
      * The <code>NumberFormater</code> to use in the html views.
      */
-    public static final NumberFormat HTML_VALUE_FORMATER = new DecimalFormat("#.#####");
+    public static final NumberFormat HTML_VALUE_FORMATER =
+        new DecimalFormat("#.#####");
+
+    /**
+     * Holds the number of total records of the training data.
+     */
+    private int m_noOfRecs;
 
     /**
      * Holds the column name of class column.
      */
     private final String m_classColName;
 
-    private final boolean m_ignoreMissingVals;
+    private final boolean m_skipMissingVals;
 
     private final Map<String, AttributeModel> m_modelByAttrName;
 
@@ -124,8 +139,6 @@ public class NaiveBayesModel {
 
     private String m_htmlView = null;
 
-    private final double m_threshold;
-
     /**Constructor which iterates through the <code>DataTable</code> to
      * calculate the needed Bayes variables.
      *
@@ -135,43 +148,16 @@ public class NaiveBayesModel {
      * information and check for cancel
      * @param maxNoOfNominalVals the maximum number of supported unique
      * nominal attribute values
-     * @param ignoreMissingVals set to <code>true</code> if the missing values
-     * should be ignored during learning and prediction
+     * @param skipMissingVals set to <code>true</code> if the missing values
+     * should be skipped during learning and prediction
      * @throws CanceledExecutionException if the user presses the cancel
      * button during model creation
      * @throws InvalidSettingsException if the input data contains no rows
      */
-    public NaiveBayesModel(final BufferedDataTable data, final String classColName, final ExecutionContext exec,
-            final int maxNoOfNominalVals, final boolean ignoreMissingVals)
+    public NaiveBayesModel(final BufferedDataTable data,
+            final String classColName, final ExecutionContext exec,
+            final int maxNoOfNominalVals, final boolean skipMissingVals)
         throws CanceledExecutionException, InvalidSettingsException {
-        this(data, classColName, exec, maxNoOfNominalVals, ignoreMissingVals, false, Double.NaN);
-    }
-    /**Constructor which iterates through the <code>DataTable</code> to
-     * calculate the needed Bayes variables.
-     *
-     * @param data The <code>BufferedDataTable</code> with the data
-     * @param classColName The name of the column with the class
-     * @param exec the <code>ExecutionContext</code> to provide progress
-     * information and check for cancel
-     * @param maxNoOfNominalVals the maximum number of supported unique
-     * nominal attribute values
-     * @param ignoreMissingVals set to <code>true</code> if the missing values
-     * should be ignored during learning and prediction
-     * @param pmmlCompatible flag that indicates that a PMML compatible model should be learned
-     * @param threshold the threshold to use for zero probability of an attribute values
-     * @throws CanceledExecutionException if the user presses the cancel
-     * button during model creation
-     * @throws InvalidSettingsException if the input data contains no rows
-     * @since 2.10
-     */
-    public NaiveBayesModel(final BufferedDataTable data, final String classColName, final ExecutionContext exec,
-            final int maxNoOfNominalVals, final boolean ignoreMissingVals, final boolean pmmlCompatible,
-            final double threshold)
-        throws CanceledExecutionException, InvalidSettingsException {
-        if (threshold < 0) {
-            throw new IllegalArgumentException(
-                    "Laplace corrector should be positive");
-        }
         if (data == null) {
             throw new NullPointerException("Training table must not be null.");
         }
@@ -182,21 +168,22 @@ public class NaiveBayesModel {
             throw new NullPointerException("Class column must not be null.");
         }
         if (maxNoOfNominalVals < 0) {
-            throw new IllegalArgumentException("The maximum number of unique nominal values must be greater zero");
+            throw new IllegalArgumentException("The maximum number of unique "
+                    + "nominal values must be greater zero");
         }
         final DataTableSpec tableSpec = data.getDataTableSpec();
         final int classColIdx = tableSpec.findColumnIndex(classColName);
         if (classColIdx < 0) {
-            throw new IllegalArgumentException("Class column not found in table specification");
+            throw new IllegalArgumentException(
+                    "Class column not found in table specification");
         }
         //initialise all internal variable
         m_classColName = classColName;
-        m_ignoreMissingVals = ignoreMissingVals;
-        m_skippedAttributes = new ArrayList<>();
+        m_skipMissingVals = skipMissingVals;
+        m_skippedAttributes = new ArrayList<AttributeModel>();
         //initialise the row values
-        m_modelByAttrName =
-                createModelMap(tableSpec, classColName, maxNoOfNominalVals, ignoreMissingVals, pmmlCompatible);
-        m_threshold = threshold;
+        m_modelByAttrName = createModelMap(tableSpec, classColName,
+                maxNoOfNominalVals, skipMissingVals);
         //end of initialise all internal variable
         ExecutionMonitor subExec = null;
         if (exec != null) {
@@ -217,53 +204,37 @@ public class NaiveBayesModel {
         }
     }
 
-    private static Map<String, AttributeModel> createModelMap(final DataTableSpec tableSpec, final String classColName,
-            final int maxNoOfNominalVals, final boolean skipMissingVals, final boolean pmmlCompatible) {
+    private static Map<String, AttributeModel> createModelMap(
+            final DataTableSpec tableSpec, final String classColName,
+            final int maxNoOfNominalVals, final boolean skipMissingVals) {
         final int numColumns = tableSpec.getNumColumns();
-        final Map<String, AttributeModel> modelMap = new HashMap<>(numColumns);
+        final Map<String, AttributeModel> modelMap =
+            new HashMap<String, AttributeModel>(numColumns);
         for (int i = 0; i < numColumns; i++) {
             final DataColumnSpec colSpec = tableSpec.getColumnSpec(i);
-            final AttributeModel model =
-                    getCompatibleModel(colSpec, classColName, maxNoOfNominalVals, skipMissingVals, pmmlCompatible);
-            if (model != null) {
-                modelMap.put(colSpec.getName(), model);
+            final String colName = colSpec.getName();
+            final DataType colType = colSpec.getType();
+            final AttributeModel model;
+            if (colName.equals(classColName)) {
+                    model = new ClassAttributeModel(colName,
+                            skipMissingVals, maxNoOfNominalVals);
+            } else if (colType.isCompatible(DoubleValue.class)) {
+                model = new NumericalAttributeModel(colName, skipMissingVals);
+            } else if (colType.isCompatible(NominalValue.class)) {
+                model = new NominalAttributeModel(colName, skipMissingVals,
+                        maxNoOfNominalVals);
+            } else if (colType.isCompatible(BitVectorValue.class)) {
+                model = new BitVectorAttributeModel(colName, skipMissingVals);
+            } else {
+                continue;
             }
+            modelMap.put(colName, model);
         }
         return modelMap;
     }
 
-    /**
-     * Returns the compatible {@link AttributeModel} or <code>null</code> if the data type is not supported.
-     * @param colSpec {@link DataColumnSpec}
-     * @param classColName name of the class column
-     * @param maxNoOfNominalVals maximum number of nominal values
-     * @param ignoreMissingVals flag that indicates if missing values should be ignored
-     * @param pmmlCompatible flag that indicates if the model should be PMML compliant
-     * @return the corresponding {@link AttributeModel} or <code>null</code> if the data type of the given column
-     * is not supported
-     * @since 2.10
-     */
-    public static AttributeModel getCompatibleModel(final DataColumnSpec colSpec, final String classColName,
-        final int maxNoOfNominalVals, final boolean ignoreMissingVals, final boolean pmmlCompatible) {
-        final String colName = colSpec.getName();
-        final DataType colType = colSpec.getType();
-        if (colName.equals(classColName)) {
-            return new ClassAttributeModel(colName, ignoreMissingVals, maxNoOfNominalVals);
-        }
-        if (colType.isCompatible(DoubleValue.class)) {
-            return new NumericalAttributeModel(colName, ignoreMissingVals);
-        }
-        if (colType.isCompatible(NominalValue.class)) {
-            return new NominalAttributeModel(colName, ignoreMissingVals, maxNoOfNominalVals);
-        }
-        if (!pmmlCompatible && colType.isCompatible(BitVectorValue.class)) {
-            //ignore bit vector columns in pmml compatibility mode
-            return new BitVectorAttributeModel(colName, ignoreMissingVals);
-        }
-        return null;
-    }
-
-    private void createModel(final BufferedDataTable data, final ExecutionMonitor exec, final int classColIdx)
+    private void createModel(final BufferedDataTable data,
+            final ExecutionMonitor exec, final int classColIdx)
             throws InvalidSettingsException, CanceledExecutionException {
         final DataTableSpec tableSpec = data.getDataTableSpec();
         final int noOfRows = data.getRowCount();
@@ -307,25 +278,29 @@ public class NaiveBayesModel {
         }
         final DataCell classCell = row.getCell(classColIdx);
         if (classCell.isMissing()) {
-            if (m_ignoreMissingVals) {
+            if (m_skipMissingVals) {
                 return;
             }
             //check if the class value is missing
-            throw new InvalidSettingsException("Missing class value found in row " + row.getKey()
+            throw new InvalidSettingsException(
+                    "Missing class value found in row " + row.getKey()
                     + " to skip missing values tick the box in the dialog");
         }
         final String classVal = classCell.toString();
         final int numColumns = tableSpec.getNumColumns();
         for (int i = 0; i < numColumns; i++) {
-            final AttributeModel model = m_modelByAttrName.get(tableSpec.getColumnSpec(i).getName());
+            final AttributeModel model =
+                m_modelByAttrName.get(tableSpec.getColumnSpec(i).getName());
             if (model != null) {
                 final DataCell cell = row.getCell(i);
                 try {
                     model.addValue(classVal, cell);
                 } catch (final TooManyValuesException e) {
                     if (model instanceof ClassAttributeModel) {
-                        throw new InvalidSettingsException("Class attribute has too many unique values. "
-                                + "To avoid this exception increase the maximum number of allowed nominal "
+                        throw new InvalidSettingsException(
+                            "Class attribute has too many unique values. "
+                                + "To avoid this exception increase the "
+                                + "maximum number of allowed nominal "
                                 + "values in the node dialog");
                     }
                     //delete the model if it contains too many unique values
@@ -335,13 +310,17 @@ public class NaiveBayesModel {
                 }
             }
         }
+
+        m_noOfRecs++;
     }
 
 
-    private void validateModel(final ExecutionMonitor exec) throws CanceledExecutionException {
+    private void validateModel(final ExecutionMonitor exec)
+    throws CanceledExecutionException {
         final Collection<AttributeModel> mapModels = m_modelByAttrName.values();
         final int noOfModels = mapModels.size();
-        final Collection<AttributeModel> models = new ArrayList<>(noOfModels);
+        final Collection<AttributeModel> models =
+            new ArrayList<AttributeModel>(noOfModels);
         models.addAll(mapModels);
         final double progressPerRow;
         if (noOfModels != 0) {
@@ -370,28 +349,33 @@ public class NaiveBayesModel {
      * @param predParams the <code>ModelContentRO</code> to read from
      * @throws InvalidSettingsException if a mandatory key is not available
      */
-    public NaiveBayesModel(final ConfigRO predParams) throws InvalidSettingsException {
+    public NaiveBayesModel(final ConfigRO predParams)
+    throws InvalidSettingsException {
         if (predParams == null) {
             throw new NullPointerException("PredParams must not be null");
         }
         m_classColName = predParams.getString(CLASS_COL_NAME);
-        m_ignoreMissingVals = predParams.getBoolean(IGNORE_MISSING_VALS);
-        m_threshold = predParams.getDouble(THRESHOLD, Double.NaN);
+        m_skipMissingVals = predParams.getBoolean(SKIP_MISSING_VALS);
         //load the skipped models
-        final Config skippedConfig = predParams.getConfig(SKIPPED_ATTRIBUTE_SECTION);
+        final Config skippedConfig =
+            predParams.getConfig(SKIPPED_ATTRIBUTE_SECTION);
         final int noOfSkipped = skippedConfig.getInt(SKIPPED_ATTRIBUTE_COUNTER);
-        m_skippedAttributes = new ArrayList<>(noOfSkipped);
+        m_skippedAttributes = new ArrayList<AttributeModel>(noOfSkipped);
         for (int i = 0; i < noOfSkipped; i++) {
-            final Config modelConfig = skippedConfig.getConfig(SKIPPED_ATTRIBUTE_DATA + i);
+            final Config modelConfig =
+                skippedConfig.getConfig(SKIPPED_ATTRIBUTE_DATA + i);
             final AttributeModel model = AttributeModel.loadModel(modelConfig);
             m_skippedAttributes.add(model);
         }
         //load the valid models
-        final Config modelConfigSect = predParams.getConfig(ATTRIBUTE_MODEL_SECTION);
+        final Config modelConfigSect =
+            predParams.getConfig(ATTRIBUTE_MODEL_SECTION);
+        m_noOfRecs = modelConfigSect.getInt(RECORD_COUNTER);
         final int noOfAttrs = modelConfigSect.getInt(ATTRIBUTE_MODEL_COUNTER);
-        m_modelByAttrName = new HashMap<>(noOfAttrs);
+        m_modelByAttrName = new HashMap<String, AttributeModel>(noOfAttrs);
         for (int i = 0; i < noOfAttrs; i++) {
-            final Config modelConfig = modelConfigSect.getConfig(ATTRIBUTE_MODEL_DATA + i);
+            final Config modelConfig =
+                modelConfigSect.getConfig(ATTRIBUTE_MODEL_DATA + i);
             final AttributeModel model = AttributeModel.loadModel(modelConfig);
             m_modelByAttrName.put(model.getAttributeName(), model);
         }
@@ -403,102 +387,36 @@ public class NaiveBayesModel {
     public void savePredictorParams(final ConfigWO predParams) {
         //Save the classifier column
         predParams.addString(CLASS_COL_NAME, m_classColName);
-        predParams.addBoolean(IGNORE_MISSING_VALS, m_ignoreMissingVals);
-        predParams.addDouble(THRESHOLD, m_threshold);
+        predParams.addBoolean(SKIP_MISSING_VALS, m_skipMissingVals);
         //create the skipped attributes section
-        final Config skippedConfig = predParams.addConfig(SKIPPED_ATTRIBUTE_SECTION);
+        final Config skippedConfig =
+            predParams.addConfig(SKIPPED_ATTRIBUTE_SECTION);
         //save the number of skipped attribute models
-        skippedConfig.addInt(SKIPPED_ATTRIBUTE_COUNTER, m_skippedAttributes.size());
+        skippedConfig.addInt(SKIPPED_ATTRIBUTE_COUNTER,
+                m_skippedAttributes.size());
         //save the skipped attribute models
         int modelIndex = 0;
         for (final AttributeModel model : m_skippedAttributes) {
-            final Config modelConfig = skippedConfig.addConfig(SKIPPED_ATTRIBUTE_DATA + modelIndex++);
+            final Config modelConfig =
+                skippedConfig.addConfig(SKIPPED_ATTRIBUTE_DATA + modelIndex++);
             model.saveModel(modelConfig);
         }
         //create the model config section
-        final Config modelConfigSect = predParams.addConfig(ATTRIBUTE_MODEL_SECTION);
+        final Config modelConfigSect =
+            predParams.addConfig(ATTRIBUTE_MODEL_SECTION);
+        //Save the total number of records
+        modelConfigSect.addInt(RECORD_COUNTER, m_noOfRecs);
         //save the number of attribute models
-        modelConfigSect.addInt(ATTRIBUTE_MODEL_COUNTER, m_modelByAttrName.size());
+        modelConfigSect.addInt(ATTRIBUTE_MODEL_COUNTER,
+                m_modelByAttrName.size());
         //save the attribute models
         modelIndex = 0;
         for (final AttributeModel model : m_modelByAttrName.values()) {
-            final Config modelConfig = modelConfigSect.addConfig(ATTRIBUTE_MODEL_DATA + modelIndex++);
+            final Config modelConfig =
+                modelConfigSect.addConfig(
+                        ATTRIBUTE_MODEL_DATA + modelIndex++);
             model.saveModel(modelConfig);
         }
-    }
-
-    /**
-     * @param bayesModel the {@link NaiveBayesModelDocument} document to read from
-     * @throws InvalidSettingsException if the document contains invalid settings
-     */
-    NaiveBayesModel(final org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel bayesModel)
-            throws InvalidSettingsException {
-        //set ignore missing values to true as it has no effect on the prediction
-        m_ignoreMissingVals = true;
-        m_threshold = bayesModel.getThreshold();
-        m_skippedAttributes = null;
-        final BayesInputs inputs = bayesModel.getBayesInputs();
-        m_modelByAttrName = new HashMap<>(inputs.getBayesInputList().size() + 1);
-        for (BayesInput input : inputs.getBayesInputList()) {
-            final AttributeModel attributeModel = AttributeModel.loadModel(input);
-            m_modelByAttrName.put(attributeModel.getAttributeName(), attributeModel);
-        }
-        final Map<String, String> inputExtension =
-                PMMLNaiveBayesModelTranslator.convertToMap(inputs.getExtensionList());
-        if (inputExtension.containsKey(BIT_VECTOR_MODEL_COUNT)) {
-            final int bitVecorModels =
-                    PMMLNaiveBayesModelTranslator.getIntExtension(inputExtension, BIT_VECTOR_MODEL_COUNT);
-            for (int idx = 0; idx < bitVecorModels; idx++) {
-                final BitVectorAttributeModel model =
-                        BitVectorAttributeModel.readExtension(inputExtension, BIT_VECTOR_MODEL_PREFIX + idx);
-                m_modelByAttrName.put(model.getAttributeName(), model);
-            }
-        }
-        BayesOutput output = bayesModel.getBayesOutput();
-        ClassAttributeModel classModel = ClassAttributeModel.loadClassAttributeFromPMML(output);
-        m_classColName = classModel.getAttributeName();
-        m_modelByAttrName.put(m_classColName, classModel);
-    }
-
-    /**
-     * @param bayesModel the {@link NaiveBayesModelDocument} document to export to
-     */
-    void exportToPMML(final org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel bayesModel) {
-        bayesModel.setIsScorable(true);
-        bayesModel.setModelName("KNIME PMML Naive Bayes model");
-        bayesModel.setThreshold(m_threshold);
-        bayesModel.setFunctionName(MININGFUNCTION.CLASSIFICATION);
-        final BayesInputs bayesInputs = bayesModel.addNewBayesInputs();
-        final Collection<AttributeModel> models = getAttributeModels();
-        ClassAttributeModel classAttributeModel = null;
-        final Collection<String> bitVecotorModelNames = new LinkedList<>();
-        for (final AttributeModel attributeModel : models) {
-            if (attributeModel instanceof BitVectorAttributeModel) {
-                bitVecotorModelNames.add(attributeModel.getAttributeName());
-            } else if (attributeModel instanceof ClassAttributeModel) {
-                classAttributeModel = (ClassAttributeModel) attributeModel;
-            } else {
-                final BayesInput bayesInput = bayesInputs.addNewBayesInput();
-                attributeModel.exportToPMML(bayesInput);
-            }
-        }
-        if (!bitVecotorModelNames.isEmpty()) {
-            //export the bit vector models as extension since they are not supported by the PMML standard
-            PMMLNaiveBayesModelTranslator.setIntExtension(bayesInputs.addNewExtension(), BIT_VECTOR_MODEL_COUNT,
-                bitVecotorModelNames.size());
-            int idx = 0;
-            for (String bitVectorModelName : bitVecotorModelNames) {
-                final BitVectorAttributeModel bitVectorModel =
-                        (BitVectorAttributeModel)getAttributeModel(bitVectorModelName);
-                bitVectorModel.writeExtension(bayesInputs, BIT_VECTOR_MODEL_PREFIX + idx++);
-            }
-        }
-        if (classAttributeModel == null) {
-            throw new IllegalStateException("No class model found");
-        }
-        final BayesOutput bayesOutput = bayesModel.addNewBayesOutput();
-        bayesOutput.setFieldName(classAttributeModel.getAttributeName());
-        classAttributeModel.exportClassAttributeToPMML(bayesOutput);
     }
 
     /**
@@ -557,12 +475,14 @@ public class NaiveBayesModel {
         final AttributeModel classModel = m_modelByAttrName.get(m_classColName);
         if (classModel != null) {
             final Collection<String> classValues = classModel.getClassValues();
-            final List<String> sortedClassVals = new ArrayList<>(classValues.size());
+            final List<String> sortedClassVals =
+                new ArrayList<String>(classValues.size());
             sortedClassVals.addAll(classValues);
             Collections.sort(sortedClassVals);
             return sortedClassVals;
         }
-        throw new IllegalStateException("No model found for class column" + m_classColName);
+        throw new IllegalStateException("No model found for class column"
+                + m_classColName);
     }
 
     /**
@@ -581,24 +501,73 @@ public class NaiveBayesModel {
         final Integer noOfRecs4Class =
             classModel.getNoOfRecs4ClassValue(classValue);
         if (noOfRecs4Class == null) {
-            throw new IllegalArgumentException("Class value: " + classValue + " not found");
+            throw new IllegalArgumentException("Class value: " + classValue
+                + " not found");
         }
-        final int noOfRecords = getNoOfRecs();
-        if (noOfRecords == 0) {
+        if (m_noOfRecs == 0) {
             throw new IllegalArgumentException("Model contains no records");
         }
-        return (double) noOfRecs4Class.intValue() / noOfRecords;
+        return (double) noOfRecs4Class.intValue() / m_noOfRecs;
     }
+
+    /**
+     * @param attributeNames the name of the attributes we want the normalized
+     * probability values for
+     * @param row the row with the values in the same order like the
+     * attribute names
+     * @param classValues the class values to calculate the probability for
+     * @param normalize set to <code>true</code> if the probability values
+     * should be normalized
+     * @param laplaceCorrector the Laplace corrector to use. A value greater 0
+     *   tolerates zero counts (i.e. does not produce 0 probabilities)
+     * @return the probability values in the same order like the
+     * class values
+     */
+    public double[] getClassProbabilities(
+            final String[] attributeNames, final DataRow row,
+            final List<String> classValues, final boolean normalize,
+            final double laplaceCorrector) {
+        if (row == null) {
+            throw new NullPointerException("Row must not be null");
+        }
+        if (classValues == null || classValues.size() < 1) {
+            throw new IllegalArgumentException(
+                    "Class value list must not be empty");
+        }
+        if (attributeNames == null) {
+            throw new NullPointerException("ColumSpec must not be null");
+        }
+        if (attributeNames.length != row.getNumCells()) {
+            throw new IllegalArgumentException("Attribute names array and "
+                    + "data row must be the same size");
+        }
+        final double[] probs = new double[classValues.size()];
+        double sum = 0;
+        for (int i = 0, length = classValues.size(); i < length; i++) {
+            probs[i] = getClassProbability(attributeNames, row,
+                    classValues.get(i), laplaceCorrector);
+            sum += probs[i];
+        }
+        if (sum == 0) {
+            //all classes have a combined probability of zero -> use only
+            //the prior probability
+            for (int i = 0, length = classValues.size(); i < length; i++) {
+                probs[i] = getClassPriorProbability(classValues.get(i));
+            }
+        } else if (normalize) {
+            for (int i = 0, length = probs.length; i < length; i++) {
+                probs[i] = probs[i] / sum;
+            }
+        }
+        return probs;
+    }
+
 
     /**
      * @return the total number of training records
      */
     public int getNoOfRecs() {
-        final AttributeModel classModel = m_modelByAttrName.get(m_classColName);
-        if (classModel == null) {
-            return 0;
-        }
-        return ((ClassAttributeModel)classModel).getTotalNoOfRecs();
+        return m_noOfRecs;
     }
 
     /**
@@ -654,17 +623,12 @@ public class NaiveBayesModel {
         buf.append("<div>");
         buf.append("<h3>");
         buf.append(classModel.getHTMLViewHeadLine());
+//        buf.append("\t|\t");
+//        buf.append(model.getType());
         buf.append("</h3>");
         buf.append(classModel.getHTMLView(getNoOfRecs()));
         buf.append("<hr>");
         buf.append("</div>");
-        if (!Double.isNaN(m_threshold)) {
-            buf.append("<div>");
-            buf.append("<b>Threshold used for zero probabilities:</b> ");
-            buf.append(m_threshold);
-            buf.append("<hr>");
-            buf.append("</div>");
-        }
         final List<AttributeModel> skippedAttrs = getSkippedAttributes();
         if (skippedAttrs.size() > 0) {
             buf.append("<div>");
@@ -674,7 +638,7 @@ public class NaiveBayesModel {
                     buf.append(", ");
                 }
                 final AttributeModel model = skippedAttrs.get(i);
-                buf.append(model.getAttributeName());
+                buf.append(StringEscapeUtils.escapeHtml(model.getAttributeName()));
                 buf.append("/");
                 buf.append(model.getInvalidCause());
             }
@@ -689,18 +653,20 @@ public class NaiveBayesModel {
                 if (i != 0) {
                     buf.append(", ");
                 }
-                buf.append(missingValAttrs.get(i));
+                buf.append(StringEscapeUtils.escapeHtml(missingValAttrs.get(i)));
             }
             buf.append("<hr>");
             buf.append("</div>");
         }
-        if (m_ignoreMissingVals) {
+        if (m_skipMissingVals) {
             buf.append("<div>");
-            buf.append("Missing values are ignored during learning and prediction phase.");
+            buf.append("Rows with at least one missing value will be skipped during learning and prediction phase");
             buf.append("<hr>");
             buf.append("</div>");
         }
-        final List<AttributeModel> models = new ArrayList<>();
+//        buf.append("<h2 align='center'>Probabilities</h2>");
+        //sort the attribute models by name
+        final List<AttributeModel> models = new ArrayList<AttributeModel>();
         models.addAll(m_modelByAttrName.values());
         Collections.sort(models);
         for (final AttributeModel model : models) {
@@ -710,6 +676,8 @@ public class NaiveBayesModel {
             buf.append("<div>");
             buf.append("<h3>");
             buf.append(model.getHTMLViewHeadLine());
+//            buf.append("\t|\t");
+//            buf.append(model.getType());
             buf.append("</h3>");
             buf.append(model.getHTMLView(getNoOfRecs()));
             buf.append("<br><hr>");
@@ -723,7 +691,8 @@ public class NaiveBayesModel {
      * during learning or an empty list
      */
     public List<String> getAttributesWithMissingVals() {
-        final List<String> missingModels = new ArrayList<>();
+        final List<String> missingModels =
+            new ArrayList<String>();
         for (final AttributeModel model : m_modelByAttrName.values()) {
             if (model.getNoOfMissingVals() > 0) {
                 missingModels.add(model.getAttributeName());
@@ -731,6 +700,7 @@ public class NaiveBayesModel {
         }
         return missingModels;
     }
+
 
     /**
      * @param attributeName the name of the attribute
@@ -753,128 +723,6 @@ public class NaiveBayesModel {
     }
 
     /**
-     * @return {@link List} with all PMML compatible learning columns
-     * @since 2.10
-     */
-    public List<String> getPMMLLearningCols() {
-        final List<String> names = new LinkedList<>();
-        for (AttributeModel model : m_modelByAttrName.values()) {
-            if ((model instanceof NumericalAttributeModel) || (model instanceof NominalAttributeModel)) {
-                if (model.getInvalidCause() == null) {
-                    names.add(model.getAttributeName());
-                }
-            }
-        }
-        return names;
-    }
-
-    /**
-     * @return {@link List} with all attribute names
-     * @since 2.10
-     */
-    public List<String> getAttributeNames() {
-        final List<String> names = new LinkedList<>();
-        for (AttributeModel model : m_modelByAttrName.values()) {
-            if (model.getInvalidCause() == null) {
-                names.add(model.getAttributeName());
-            }
-        }
-        return names;
-    }
-
-    /**
-     * @param attributeNames the name of the attributes we want the normalized
-     * probability values for
-     * @param row the row with the values in the same order like the
-     * attribute names
-     * @param classValues the class values to calculate the probability for
-     * @param normalize set to <code>true</code> if the probability values
-     * should be normalized
-     * @param laplaceCorrector the Laplace corrector to use. A value greater 0
-     *   tolerates zero counts (i.e. does not produce 0 probabilities)
-     * @return the probability values in the same order like the
-     * class values
-     * @deprecated see {@link #getClassProbabilities(String[], DataRow, List, boolean, boolean)}
-     */
-    @Deprecated
-    public double[] getClassProbabilities(final String[] attributeNames, final DataRow row,
-            final List<String> classValues, final boolean normalize, final double laplaceCorrector) {
-        return getClassProbabilities(attributeNames, row, classValues, normalize, false, laplaceCorrector, false);
-    }
-
-    /**
-     * @param attributeNames the name of the attributes we want the normalized
-     * probability values for
-     * @param row the row with the values in the same order like the
-     * attribute names
-     * @param classValues the class values to calculate the probability for
-     * @param normalize set to <code>true</code> if the probability values
-     * should be normalized
-     * @param useLog <code>true</code> if probabilities should be combined
-     * by adding the logs
-     * @return the probability values in the same order like the
-     * class values
-     * @since 2.10
-     */
-    public double[] getClassProbabilities(final String[] attributeNames, final DataRow row,
-        final List<String> classValues, final boolean normalize, final boolean useLog) {
-        return getClassProbabilities(attributeNames, row, classValues, normalize, true, m_threshold, useLog);
-    }
-
-    /**
-     * @param attributeNames the name of the attributes we want the normalized
-     * probability values for
-     * @param row the row with the values in the same order like the
-     * attribute names
-     * @param classValues the class values to calculate the probability for
-     * @param normalize set to <code>true</code> if the probability values
-     * should be normalized
-     * @param pmmlCorrector flag that indicates if the corrector is a pmml threshold or the old Laplace corrector.
-     * @param corrector the corrector to use. A value greater 0 tolerates zero counts
-     * (i.e. does not produce 0 probabilities)
-     * @param useLog <code>true</code> if probabilities should be combined
-     * by adding the logs
-     * @return the probability values in the same order like the class values
-     */
-    private double[] getClassProbabilities(final String[] attributeNames, final DataRow row,
-        final List<String> classValues, final boolean normalize, final boolean pmmlCorrector, final double corrector,
-        final boolean useLog) {
-        if (Double.isNaN(corrector) || corrector < 0) {
-            throw new IllegalArgumentException("Invalid corrector");
-        }
-        if (row == null) {
-            throw new NullPointerException("Row must not be null");
-        }
-        if (classValues == null || classValues.size() < 1) {
-            throw new IllegalArgumentException("Class value list must not be empty");
-        }
-        if (attributeNames == null) {
-            throw new NullPointerException("ColumSpec must not be null");
-        }
-        if (attributeNames.length != row.getNumCells()) {
-            throw new IllegalArgumentException("Attribute names array and data row must be the same size");
-        }
-        final double[] probs = new double[classValues.size()];
-        double sum = 0;
-        for (int i = 0, length = classValues.size(); i < length; i++) {
-            probs[i] = getClassProbability(attributeNames, row, classValues.get(i), pmmlCorrector, corrector, useLog);
-            sum += probs[i];
-        }
-        if (sum == 0) {
-            //all classes have a combined probability of zero -> use only
-            //the prior probability
-            for (int i = 0, length = classValues.size(); i < length; i++) {
-                probs[i] = getClassPriorProbability(classValues.get(i));
-            }
-        } else if (normalize) {
-            for (int i = 0, length = probs.length; i < length; i++) {
-                probs[i] = probs[i] / sum;
-            }
-        }
-        return probs;
-    }
-
-    /**
      * Returns the name of the class with the highest probability for the
      * given row.
      * @param attrNames the attribute names in the same order
@@ -885,50 +733,9 @@ public class NaiveBayesModel {
      * overcomes zero counts
      * @return the class attribute with the highest probability for the given
      * attribute values.
-     * @deprecated see {@link #getMostLikelyClass(String[], DataRow, boolean)}
      */
-    @Deprecated
     public String getMostLikelyClass(final String[] attrNames,
             final DataRow row, final double laplaceCorrector) {
-        return getMostLikelyClass(attrNames, row, false, laplaceCorrector, false);
-    }
-
-    /**
-     * Returns the name of the class with the highest probability for the
-     * given row.
-     * @param attrNames the attribute names in the same order
-     * they appear in the given data row
-     * @param row the row with the attributes in the same order like in the
-     * training data table
-     * @param useLog <code>true</code> if probabilities should be combined
-     * by adding the logs
-     * @return the class attribute with the highest probability for the given
-     * attribute values.
-     * @since 2.10
-     */
-    public String getMostLikelyClass(final String[] attrNames, final DataRow row, final boolean useLog) {
-        return getMostLikelyClass(attrNames, row, true, m_threshold, useLog);
-    }
-
-    /**
-     * Returns the name of the class with the highest probability for the
-     * given row.
-     * @param attrNames the attribute names in the same order
-     * they appear in the given data row
-     * @param row the row with the attributes in the same order like in the
-     * training data table
-     * @param pmmlCorrector flag that indicates if the corrector is a pmml threshold or the old Laplace corrector.
-     * @param corrector the corrector to use. A value greater 0 overcomes zero counts.
-     * @param useLog <code>true</code> if probabilities should be combined
-     * by adding the logs
-     * @return the class attribute with the highest probability for the given
-     * attribute values.
-     */
-    private String getMostLikelyClass(final String[] attrNames, final DataRow row, final boolean pmmlCorrector,
-        final double corrector, final boolean useLog) {
-        if (Double.isNaN(corrector) || corrector < 0) {
-            throw new IllegalArgumentException("Invalid laplace corrector");
-        }
         if (row == null) {
             throw new NullPointerException("Row must not be null");
         }
@@ -936,14 +743,15 @@ public class NaiveBayesModel {
             throw new NullPointerException("ColumSpec must not be null");
         }
         if (attrNames.length != row.getNumCells()) {
-            throw new IllegalArgumentException("Attribute names array and data row must be the same size");
+            throw new IllegalArgumentException("Attribute names array and "
+                    + "data row must be the same size");
         }
         double maxProbability = -1;
         String mostLikelyClass = null;
         final Collection<String> classValues = getClassValues();
         for (final String classValue : classValues) {
-            final double classProbability =
-                    getClassProbability(attrNames, row, classValue, pmmlCorrector, corrector, useLog);
+            final double classProbability = getClassProbability(attrNames,
+                    row, classValue, laplaceCorrector);
             if (classProbability >= maxProbability) {
                 maxProbability = classProbability;
                 mostLikelyClass = classValue;
@@ -953,7 +761,8 @@ public class NaiveBayesModel {
             //all classes have a combined probability of zero for this row ->
             //use only the prior probability
             for (final String classValue : classValues) {
-                final double classPriorProbability = getClassPriorProbability(classValue);
+                final double classPriorProbability =
+                    getClassPriorProbability(classValue);
                 if (classPriorProbability >= maxProbability) {
                     maxProbability = classPriorProbability;
                     mostLikelyClass = classValue;
@@ -961,10 +770,12 @@ public class NaiveBayesModel {
             }
         }
         if (mostLikelyClass == null) {
-            throw new IllegalStateException("Most likely class must not be null");
+            throw new IllegalStateException(
+                    "Most likely class must not be null");
         }
         return mostLikelyClass;
     }
+
 
     /**
      * Returns the probability of the row to be member of the given class.
@@ -974,26 +785,14 @@ public class NaiveBayesModel {
      * @param row the row with the value per attribute in the same order
      * like the attribute names
      * @param classValue the class value to compute the probability for
-     * @param useLog <code>true</code> if probabilities should be combined
-     * by adding the logs
-     * @param pmmlCorrector flag that indicates if the corrector is a pmml threshold or the old Laplace corrector.
-     * @param corrector the corrector to use. A value greater 0 overcomes zero counts
+     * @param laplaceCorrector the Laplace corrector to use. A value greater 0
+     * overcomes zero counts
      * @return the probability of this row to belong to the given class value
      */
-    private double getClassProbability(final String[] attrNames, final DataRow row, final String classValue,
-            final boolean pmmlCorrector, final double corrector, final boolean useLog) {
+    private double getClassProbability(final String[] attrNames,
+            final DataRow row, final String classValue,
+            final double laplaceCorrector) {
         double combinedProbability = getClassPriorProbability(classValue);
-        if (useLog) {
-            combinedProbability = Math.log(combinedProbability);
-        }
-        final double laplaceCorrector;
-        if (pmmlCorrector) {
-            //set the laplace corrector to zero if the pmml threshold method should be used
-            laplaceCorrector = 0;
-        } else {
-            //this is the old behaviour where the corrector is the laplace corrector
-            laplaceCorrector = corrector;
-        }
         for (int i = 0, length = row.getNumCells(); i < length; i++) {
             final String attrName = attrNames[i];
             final AttributeModel model = m_modelByAttrName.get(attrName);
@@ -1006,22 +805,11 @@ public class NaiveBayesModel {
                 continue;
             }
             final DataCell cell = row.getCell(i);
-            Double probability = model.getProbability(classValue, cell, laplaceCorrector, useLog);
+            final Double probability =
+                model.getProbability(classValue, cell, laplaceCorrector);
             if (probability != null) {
-                if (pmmlCorrector && probability.doubleValue() <= 0) {
-                    //set the probability to the given corrector if the probability is zero and the pmml threshold
-                    //method should be used
-                    probability = Double.valueOf(corrector);
-                }
-                if (useLog) {
-                    combinedProbability += Math.log(probability.doubleValue());
-                } else {
-                    combinedProbability *= probability.doubleValue();
-                }
+                combinedProbability *= probability.doubleValue();
             }
-        }
-        if (useLog) {
-            combinedProbability = Math.exp(combinedProbability);
         }
         return combinedProbability;
     }
@@ -1033,7 +821,7 @@ public class NaiveBayesModel {
     public String toString() {
         final StringBuffer buf = new StringBuffer();
         buf.append("Number of records: ");
-        buf.append(getNoOfRecs());
+        buf.append(m_noOfRecs);
         buf.append("\nNumber of columns: ");
         buf.append(m_modelByAttrName.size());
         buf.append("\nClass column: ");
@@ -1057,10 +845,12 @@ public class NaiveBayesModel {
         if (tableSpec == null) {
             throw new NullPointerException("TableSpec must not be null");
         }
-        final List<String> unknownCols = new ArrayList<>();
-        for (int i = 0, length = tableSpec.getNumColumns(); i < length; i++) {
+        final List<String> unknownCols = new ArrayList<String>();
+        for (int i = 0, length = tableSpec.getNumColumns();
+                i < length; i++) {
             final DataColumnSpec colSpec = tableSpec.getColumnSpec(i);
-            final AttributeModel attrModel = getAttributeModel(colSpec.getName());
+            final AttributeModel attrModel =
+                getAttributeModel(colSpec.getName());
             if (attrModel == null || !colSpec.getType().isCompatible(
                     attrModel.getCompatibleType())) {
                 unknownCols.add(colSpec.getName());
@@ -1078,7 +868,7 @@ public class NaiveBayesModel {
      * @return the name of the missing columns or an empty <code>List</code>
      */
     public List<String> check4MissingCols(final DataTableSpec tableSpec) {
-        final List<String> missingInputCols = new ArrayList<>();
+        final List<String> missingInputCols = new ArrayList<String>();
         final Collection<AttributeModel> attrModels = getAttributeModels();
         for (final AttributeModel model : attrModels) {
             if (!model.getType().equals(ClassAttributeModel.MODEL_TYPE)) {

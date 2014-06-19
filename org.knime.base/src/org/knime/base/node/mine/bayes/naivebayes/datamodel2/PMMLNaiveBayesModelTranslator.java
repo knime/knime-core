@@ -43,7 +43,7 @@
  * ------------------------------------------------------------------------
  */
 
-package org.knime.base.node.mine.bayes.naivebayes.datamodel;
+package org.knime.base.node.mine.bayes.naivebayes.datamodel2;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -102,15 +102,8 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
     @Override
     public void initializeFrom(final PMMLDocument pmmlDoc) {
         final PMML pmml = pmmlDoc.getPMML();
-
-        final List<org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel> naiveBayesModelList =
-                pmml.getNaiveBayesModelList();
-        if (naiveBayesModelList.size() != 1) {
-            throw new IllegalArgumentException("Only one Naive Bayes model supported per PMML document");
-        }
-        org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel bayesModel = naiveBayesModelList.get(0);
         try {
-            m_model = new NaiveBayesModel(bayesModel);
+            m_model = new NaiveBayesModel(pmml);
         } catch (InvalidSettingsException e) {
             throw new IllegalStateException(e);
         }
