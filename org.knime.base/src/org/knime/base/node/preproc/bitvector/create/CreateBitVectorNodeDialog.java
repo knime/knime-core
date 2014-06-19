@@ -133,7 +133,7 @@ public class CreateBitVectorNodeDialog extends NodeDialogPane {
     private final DialogComponentString m_outputColumnComp =
             new DialogComponentString(CreateBitVectorNodeModel.createOutputColumnModel(), "Output column: ", true, 10);
     private final DialogComponentBoolean m_failOnErrorComp =
-            new DialogComponentBoolean(CreateBitVectorNodeModel.createFailOnErrorModel(), "Fail on parse error");
+            new DialogComponentBoolean(CreateBitVectorNodeModel.createFailOnErrorModel(), "Fail on invalid input");
     private final DialogComponentButtonGroup m_vectorTypeComp = new DialogComponentButtonGroup(
         CreateBitVectorNodeModel.createVectorTypeModel(), null, true,
         BitVectorType.values());

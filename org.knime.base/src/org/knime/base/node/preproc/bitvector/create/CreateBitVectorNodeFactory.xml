@@ -149,6 +149,9 @@
         If it is unchecked the generated bit vectors are appended to the input table.
         </option>
         <option name="Output column">Name of the output column.</option>
+        <option name="Fail on invalid input">
+        If selected, the node will fail during execution if a data cell could not be converted to a bit set. 
+        If unselected, the node will skip these invalid entries and insert a missing value instead.</option>
         <option name="Bit vector type">
             The dense vector type stores is the default method that stores each vector position with a single bit thus
             requiring the same amount of bits for all vectors e.g. the vector length in bits.  
