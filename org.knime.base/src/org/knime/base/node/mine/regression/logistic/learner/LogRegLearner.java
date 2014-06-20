@@ -130,7 +130,7 @@ public final class LogRegLearner {
         exec.setMessage("Analyzing categorical data.");
         DataTable dataTable = recalcDomainForTargetAndLearningFields(data, inPMMLSpec,
             exec.createSubExecutionContext(calcDomainTime));
-        exec.setMessage("Perform computation of the logistic regression model.");
+        exec.setMessage("Computing logistic regression model.");
         return m_learner.perform(dataTable, exec.createSubExecutionContext(1.0 - calcDomainTime));
     }
 
