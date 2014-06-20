@@ -45,6 +45,7 @@
 package org.knime.testing.core.ng;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -56,11 +57,13 @@ import org.apache.tools.ant.taskdefs.optional.junit.JUnitTaskMirror.JUnitTestRun
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitTest;
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitTestRunner;
 import org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.core.node.workflow.BatchExecutor;
 
 /**
  * This application runs all Unit tests it can find. It collects all classes by querying implementations of
@@ -192,8 +195,10 @@ public class UnittestRunnerApplication implements IApplication {
      * @param args the object with the command line arguments.
      * @return true if the members were set according to the command line arguments, false, if an error message was
      *         printed and the application must exit.
+     * @throws CoreException if preferences cannot be imported
+     * @throws FileNotFoundException if the specified preferences file does not exist
      */
-    private boolean extractCommandLineArgs(final Object args) {
+    private boolean extractCommandLineArgs(final Object args) throws FileNotFoundException, CoreException {
         String[] stringArgs;
         if (args instanceof String[]) {
             stringArgs = (String[])args;
@@ -212,9 +217,9 @@ public class UnittestRunnerApplication implements IApplication {
 
         int i = 0;
         while (i < stringArgs.length) {
-
-            // "-destDir" specifies the destination directory
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-xmlResultDir")) {
+            if (stringArgs[i] == null) {
+                i++;
+            } else if ("-xmlResultDir".equals(stringArgs[i])) {
                 if (m_destDir != null) {
                     System.err.println("Multiple -xmlResultDir arguments are not allowed");
                     return false;
@@ -228,12 +233,19 @@ public class UnittestRunnerApplication implements IApplication {
                     return false;
                 }
                 m_destDir = new File(stringArgs[i++]);
-                continue;
+            } else if (stringArgs[i].equals("-preferences")) {
+                i++;
+                // requires another argument
+                if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
+                    System.err.println("Missing <file_name> for option -preferences.");
+                    return false;
+                }
+                File prefsFile = new File(stringArgs[i++]);
+                BatchExecutor.setPreferences(prefsFile);
+            } else {
+                System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
+                return false;
             }
-
-            System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
-            printUsage();
-            return false;
         }
 
         return true;
@@ -244,6 +256,8 @@ public class UnittestRunnerApplication implements IApplication {
 
         System.err.println("    -xmlResultDir <dir_name>: specifies the directory into which the test results are "
                 + "written.");
+        System.err.println("    -preferences <file_name>: optional, specifies an exported preferences file that should"
+                + " be used to initialize preferences");
     }
 
     private static class WriterOutputStream extends OutputStream {

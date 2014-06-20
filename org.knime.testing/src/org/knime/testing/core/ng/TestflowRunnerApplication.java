@@ -288,7 +288,7 @@ public class TestflowRunnerApplication implements IApplication {
         int i = 0;
         while (i < stringArgs.length) {
             if (stringArgs[i] == null) {
-                continue;
+                i++;
             } else if (stringArgs[i].equals("-pattern")) {
                 System.err.println("-pattern is now depreacted try using -include instead which matches against the " +
                 		"path from the workflow root of each workflow");
