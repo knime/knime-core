@@ -92,6 +92,14 @@ public class MySQLUtility extends DatabaseUtility {
                     "Database fetchsize for MySQL database set to " + Integer.MIN_VALUE + ".");
             }
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String forMetadataOnly(final String sql) {
+            return limitRows(sql, 0);
+        }
     }
 
     private static final StatementManipulator MANIPULATOR = new MySQLStatementManipulator();

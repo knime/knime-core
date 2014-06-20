@@ -70,6 +70,14 @@ public class PostgreSQLUtility extends DatabaseUtility {
                 super.setFetchSize(statement, fetchSize);
             }
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String forMetadataOnly(final String sql) {
+            return limitRows(sql, 0);
+        }
     }
 
     private static final StatementManipulator MANIPULATOR = new PostgreSQLStatementManipulator();

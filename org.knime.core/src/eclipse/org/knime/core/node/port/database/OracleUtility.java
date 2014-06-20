@@ -64,6 +64,14 @@ public class OracleUtility extends DatabaseUtility {
             return "SELECT * FROM (" + sql + ") " + getTempTableName() + " WHERE rownum <= " + count;
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String forMetadataOnly(final String sql) {
+            return limitRows(sql, 0);
+        }
+
 //        /**
 //         * {@inheritDoc}
 //         */
