@@ -153,10 +153,10 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
             createFlowVariableModel(ConstantValueColumnConfig.VALUE, FlowVariable.Type.STRING);
 
         final FlowVariableModelButton flowVariableModelButton = new FlowVariableModelButton(createFlowVariableModel);
-        flowVariableModelButton.addChangeListener(new ChangeListener() {
+        createFlowVariableModel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent evt) {
-                FlowVariableModel wvm = ((FlowVariableModelButton)(evt.getSource())).getFlowVariableModel();
+                FlowVariableModel wvm = (FlowVariableModel)evt.getSource();
                 m_value.setEnabled(!wvm.isVariableReplacementEnabled());
             }
         });
