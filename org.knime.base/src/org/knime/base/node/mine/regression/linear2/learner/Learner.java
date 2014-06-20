@@ -111,7 +111,6 @@ final class Learner extends RegressionStatisticsLearner {
         SummaryStatistics[] stats = new SummaryStatistics[regressorCount];
         UpdatingMultipleLinearRegression regr = initStatistics(regressorCount, stats);
 
-        exec.setProgress(0, "Estimating linear regression model.");
         processTable(rowCount, exec, trainingData, stats, regr);
 
         List<String> factorList = new ArrayList<String>();
@@ -159,7 +158,6 @@ final class Learner extends RegressionStatisticsLearner {
         final RegressionTrainingData trainingData, final SummaryStatistics[] stats,
         final UpdatingMultipleLinearRegression regr) throws CanceledExecutionException {
         int r = 1;
-        double progress = 0;
         for (RegressionTrainingRow row : trainingData) {
             exec.checkCanceled();
             if (!row.hasMissingCells()) {
@@ -171,11 +169,7 @@ final class Learner extends RegressionStatisticsLearner {
             }
             if (rowCount > 0) {
                 double progressUpdate = r / (double)rowCount;
-                // report progress if update above 1%
-                if (progressUpdate - progress > 0.01) {
-                    progress = progressUpdate;
-                    exec.setProgress(progress);
-                }
+                exec.setProgress(progressUpdate, String.format("Row %d/%d", r, rowCount));
                 r++;
             }
         }
