@@ -74,6 +74,7 @@ import javax.swing.text.html.HTMLEditorKit.HTMLFactory;
 import javax.swing.text.html.ObjectView;
 
 import org.knime.base.data.statistics.HistogramColumn;
+import org.knime.base.data.statistics.HistogramColumn.BinNumberSelectionStrategy;
 import org.knime.base.data.statistics.HistogramModel;
 import org.knime.base.data.statistics.Statistics3Table;
 import org.knime.base.node.util.DoubleFormat;
@@ -547,7 +548,7 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
                 final int colId = Integer.parseInt((String)attrs.getAttribute("colid"));
                 final HistogramColumn hc =
                     HistogramColumn.getDefaultInstance().withHistogramWidth(m_model.getHistogramWidth().getIntValue())
-                        .withHistogramHeight(m_model.getHistogramHeight().getIntValue());
+                        .withHistogramHeight(m_model.getHistogramHeight().getIntValue()).withBinSelectionStrategy(BinNumberSelectionStrategy.DecimalRange);
                 return new ObjectView(elem) {
                     /**
                      * {@inheritDoc}

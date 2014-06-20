@@ -182,6 +182,8 @@ class ExtendedStatisticsNodeModel extends NodeModel {
 
     private static final String DATA_ARRAY_GZ = "dataarray.gz";
 
+    private static final BinNumberSelectionStrategy BIN_SELECTION_STRATEGY = BinNumberSelectionStrategy.DecimalRange;
+
     /**
      * Helper method to create image format model.
      *
@@ -593,7 +595,7 @@ class ExtendedStatisticsNodeModel extends NodeModel {
                     }
                 }
                 Pair<Pair<Map<Integer, ? extends HistogramModel<?>>, Map<Integer, Map<Integer, Set<RowKey>>>>, Map<Integer, Map<DataValue, Set<RowKey>>>> ppair =
-                    HistogramColumn.loadHistograms(histogramsGz, dataArrayGz, nominalColumnNames);
+                    HistogramColumn.loadHistograms(histogramsGz, dataArrayGz, nominalColumnNames, BIN_SELECTION_STRATEGY);
                 m_histograms = ppair.getFirst().getFirst();
                 m_buckets = ppair.getFirst().getSecond();
                 m_nominalKeys = ppair.getSecond();
@@ -610,7 +612,7 @@ class ExtendedStatisticsNodeModel extends NodeModel {
             m_nominalKeys = Collections.emptyMap();
             try {
                 m_buckets = new HashMap<Integer, Map<Integer, Set<RowKey>>>();
-                m_histograms = HistogramColumn.loadHistograms(histogramsGz, m_buckets);
+                m_histograms = HistogramColumn.loadHistograms(histogramsGz, m_buckets, BIN_SELECTION_STRATEGY);
                 m_buckets.clear();
             } catch (InvalidSettingsException e) {
                 m_histograms = Collections.emptyMap();
