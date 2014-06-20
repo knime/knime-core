@@ -49,21 +49,16 @@ package org.knime.base.node.mine.regression.logistic.learner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DomainCreatorColumnSelection;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.def.DoubleCell;
@@ -129,85 +124,48 @@ public final class LogRegLearner {
         PMMLPortObject inPMMLPort = (PMMLPortObject)portObjects[1];
         PMMLPortObjectSpec inPMMLSpec = inPMMLPort.getSpec();
         init(data.getDataTableSpec(), inPMMLSpec);
-        DataTable dataTable = recalcDomainForTargeAndLearningFields(data, inPMMLSpec, exec);
-        return m_learner.perform(dataTable, exec);
+        // the learner typically needs five steps with two runs over the data each step, calculating
+        // the domain needs run over the data
+        double calcDomainTime = 1.0 / (5.0 * 2.0 + 1.0);
+        exec.setMessage("Analyzing categorical data.");
+        DataTable dataTable = recalcDomainForTargetAndLearningFields(data, inPMMLSpec,
+            exec.createSubExecutionContext(calcDomainTime));
+        exec.setMessage("Perform computation of the linear regression model.");
+        return m_learner.perform(dataTable, exec.createSubExecutionContext(1.0 - calcDomainTime));
     }
 
-    private DataTable recalcDomainForTargeAndLearningFields(
+    private DataTable recalcDomainForTargetAndLearningFields(
             final BufferedDataTable data, final PMMLPortObjectSpec inPMMLSpec,
             final ExecutionContext exec) throws InvalidSettingsException, CanceledExecutionException {
-        Map<String, Set<DataCell>> recalcValuesFor = new HashMap<String, Set<DataCell>>();
-        final DataTableSpec dataTableSpec = data.getDataTableSpec();
-        for (String col : m_pmmlOutSpec.getLearningFields()) {
-            DataColumnSpec colSpec = dataTableSpec.getColumnSpec(col);
-            if (colSpec.getType().isCompatible(NominalValue.class)) {
-                Set<DataCell> domainValues = new LinkedHashSet<DataCell>();
-                if (colSpec.getDomain().getValues() != null) {
-                    domainValues.addAll(colSpec.getDomain().getValues());
-                }
-                recalcValuesFor.put(col, domainValues);
-            }
-        }
-        String targetCol = m_pmmlOutSpec.getTargetFields().get(0);
-        DataColumnSpec targetColSpec = dataTableSpec.getColumnSpec(
-                targetCol);
-        if (targetColSpec.getType().isCompatible(NominalValue.class)) {
-            Set<DataCell> domainValues = new LinkedHashSet<DataCell>();
-            if (targetColSpec.getDomain().getValues() != null) {
-                domainValues.addAll(targetColSpec.getDomain().getValues());
-            }
-            recalcValuesFor.put(targetCol, domainValues);
-        }
+        final String targetCol = m_pmmlOutSpec.getTargetFields().get(0);
+        DataTableDomainCreator domainCreator = new DataTableDomainCreator(data.getDataTableSpec(),
+            new DomainCreatorColumnSelection() {
 
-        int[] valuesI = new int[recalcValuesFor.size()];
-        int c = 0;
-        for (int i = 0; i < dataTableSpec.getNumColumns(); i++) {
-            String colName = dataTableSpec.getColumnSpec(i).getName();
-            if (recalcValuesFor.containsKey(colName)) {
-                valuesI[c] = i;
-                c++;
+            @Override
+            public boolean dropDomain(final DataColumnSpec colSpec) {
+                return false;
             }
-        }
-        Map<Integer, Set<DataCell>> valuesMap =
-            new HashMap<Integer, Set<DataCell>>();
-        for (int i = 0; i < valuesI.length; i++) {
-            valuesMap.put(valuesI[i], new HashSet<DataCell>());
-        }
-        int rowIndex = 0;
-        final int rowCount = data.getRowCount();
-        for (DataRow row : data) {
-            exec.setMessage("Determining possible values " + ((rowIndex++) + 1)
-                + "/" + rowCount + " (\"" + row.getKey() + "\")");
-            exec.checkCanceled();
-            for (int i = 0; i < valuesI.length; i++) {
-                valuesMap.get(valuesI[i]).add(row.getCell(valuesI[i]));
-            }
-        }
 
-        List<DataColumnSpec> newColSpecList = new ArrayList<DataColumnSpec>();
-        int cc = 0;
-        for (DataColumnSpec columnSpec : dataTableSpec) {
-            if (recalcValuesFor.containsKey(columnSpec.getName())) {
-                DataColumnSpecCreator specCreator = new DataColumnSpecCreator(columnSpec);
-                Set<DataCell> values = recalcValuesFor.get(columnSpec.getName());
-                Set<DataCell> dataValues = valuesMap.get(cc);
-                // retain values found in data, this way the original order of domains values
-                // is preserved.
-                values.retainAll(dataValues);
-                // append all values found in the data that are not in the domain
-                dataValues.removeAll(values);
-                values.addAll(dataValues);
-                DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(values);
-                specCreator.setDomain(domainCreator.createDomain());
-                DataColumnSpec newColSpec = specCreator.createSpec();
-                newColSpecList.add(newColSpec);
-            } else {
-                newColSpecList.add(columnSpec);
+            @Override
+            public boolean createDomain(final DataColumnSpec colSpec) {
+                return colSpec.getName().equals(targetCol) || (colSpec.getType().isCompatible(NominalValue.class)
+                  && m_pmmlOutSpec.getLearningFields().contains(colSpec.getName()));
             }
-            cc++;
-        }
-        DataTableSpec spec =
-            new DataTableSpec(newColSpecList.toArray(new DataColumnSpec[0]));
+        }, new DomainCreatorColumnSelection() {
+
+            @Override
+            public boolean dropDomain(final DataColumnSpec colSpec) {
+                return false;
+            }
+
+            @Override
+            public boolean createDomain(final DataColumnSpec colSpec) {
+                return false;
+            }
+        });
+        domainCreator.updateDomain(data, exec);
+
+        DataTableSpec spec = domainCreator.createSpec();
         DataTable newDataTable = exec.createSpecReplacerTable(data, spec);
         // initialize m_learner so that it has the correct DataTableSpec of
         // the input
