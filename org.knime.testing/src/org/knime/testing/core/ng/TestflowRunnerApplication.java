@@ -45,6 +45,7 @@
 package org.knime.testing.core.ng;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
@@ -66,6 +67,7 @@ import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.node.workflow.BatchExecutor;
 import org.knime.core.util.FileUtil;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
@@ -263,8 +265,10 @@ public class TestflowRunnerApplication implements IApplication {
      * @param args the object with the command line arguments.
      * @return <code>true</code> if the members were set according to the command line arguments, <code>false</code>, if
      *         an error message was printed and the application must exit.
+     * @throws CoreException if preferences cannot be imported
+     * @throws FileNotFoundException if the specified preferences file does not exist
      */
-    private boolean extractCommandLineArgs(final Object args) {
+    private boolean extractCommandLineArgs(final Object args) throws FileNotFoundException, CoreException {
         String[] stringArgs;
         if (args instanceof String[]) {
             stringArgs = (String[])args;
@@ -416,6 +420,15 @@ public class TestflowRunnerApplication implements IApplication {
             } else if (stringArgs[i].equals("-loadSaveLoad")) {
                 m_runConfiguration.setLoadSaveLoad(true);
                 i++;
+            } else if (stringArgs[i].equals("-preferences")) {
+                i++;
+                // requires another argument
+                if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
+                    System.err.println("Missing <file_name> for option -preferences.");
+                    return false;
+                }
+                File prefsFile = new File(stringArgs[i++]);
+                BatchExecutor.setPreferences(prefsFile);
             } else {
                 System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
                 return false;
@@ -456,6 +469,8 @@ public class TestflowRunnerApplication implements IApplication {
                 + " timeouts.");
         System.err.println("    -memLeaks <bytes>: optional, specifies the maximum allowed increaes in heap usage for "
                 + "each testflow. If not specified no test for memory leaks is performed.");
+        System.err.println("    -preferences <file_name>: optional, specifies an exported preferences file that should"
+                + " be used to initialize preferences");
     }
 
     @Override
