@@ -128,7 +128,7 @@ final class LinReg2Learner {
         exec.setMessage("Analyzing categorical data.");
         DataTable dataTable = recalcDomainOfLearningFields(data, inPMMLSpec,
             exec.createSubExecutionContext(calcDomainTime));
-        exec.setMessage("Perform computation of the linear regression model.");
+        exec.setMessage("Computing linear regression model.");
         return m_learner.perform(dataTable, data.getRowCount(), exec.createSubExecutionContext(1.0 - calcDomainTime));
     }
 
