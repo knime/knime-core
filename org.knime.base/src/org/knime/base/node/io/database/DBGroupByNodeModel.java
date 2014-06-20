@@ -57,6 +57,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
@@ -249,15 +250,18 @@ final class DBGroupByNodeModel extends DBNodeModel {
     /**
      * @param inSpec Spec of the input table
      * @return Spec of the output table
+     * @throws InvalidSettingsException if settings do not match the input specification
      */
     private DataTableSpec createOutSpec(final DataTableSpec inSpec, final DatabaseConnectionSettings settings,
-        final String query) {
+        final String query) throws InvalidSettingsException {
         // Try get spec from database
         try {
             DatabaseQueryConnectionSettings querySettings = new DatabaseQueryConnectionSettings(settings, query);
             DatabaseReaderConnection conn = new DatabaseReaderConnection(querySettings);
             return conn.getDataTableSpec(getCredentialsProvider());
         } catch (SQLException e) {
+            NodeLogger.getLogger(getClass()).info("Could not determine table spec from database, trying to guess now",
+                e);
             // Otherwise guess spec
         }
         List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>();
@@ -269,6 +273,11 @@ final class DBGroupByNodeModel extends DBNodeModel {
         for (int i = 0; i < m_aggregatedColumns.length; i++) {
             String col = m_aggregatedColumns[i];
             String method = m_aggregationMethods[i];
+
+            if (inSpec.getColumnSpec(col) == null) {
+                throw new InvalidSettingsException("Column '" + col + "' in aggregation " + method + " does not exist");
+            }
+
             // Get type of column after aggregation
             DataType type = DBGroupByAggregationMethod.valueOf(method).getType(inSpec.getColumnSpec(col).getType());
             colSpecs.add(new DataColumnSpecCreator(generateColumnName(col, method), type).createSpec());
