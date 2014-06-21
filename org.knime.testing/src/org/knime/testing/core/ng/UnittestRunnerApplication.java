@@ -99,6 +99,7 @@ public class UnittestRunnerApplication implements IApplication {
         final PrintStream sysout = System.out; // we save and use the copy because some test may re-assign it
         final PrintStream syserr = System.err;
         // run the tests
+        long globalStartTime = System.currentTimeMillis();
         for (Class<?> testClass : allTests) {
             if (m_stopped) {
                 syserr.println("Tests aborted");
@@ -164,18 +165,19 @@ public class UnittestRunnerApplication implements IApplication {
             out.close();
 
             long duration = System.currentTimeMillis() - startTime;
+            long totalRuntime = System.currentTimeMillis() - globalStartTime;
             switch (runner.getRetCode()) {
                 case JUnitTestRunnerMirror.SUCCESS:
-                    sysout.printf("%-7s (%.3f s)%n", "OK", (duration / 1000.0));
+                    sysout.printf("%-7s (%7.3f s -- %8.3f s)%n", "OK", (duration / 1000.0), (totalRuntime / 1000.0));
                     break;
                 case JUnitTestRunnerMirror.FAILURES:
-                    sysout.printf("%-7s (%.3f s)%n", "FAILURE", (duration / 1000.0));
+                    sysout.printf("%-7s (%7.3f s -- %8.3f s)%n", "FAILURE", (duration / 1000.0), (totalRuntime / 1000.0));
                     break;
                 case JUnitTestRunnerMirror.ERRORS:
-                    sysout.printf("%-7s (%.3f s)%n", "ERROR", (duration / 1000.0));
+                    sysout.printf("%-7s (%7.3f s -- %8.3f s)%n", "ERROR", (duration / 1000.0), (totalRuntime / 1000.0));
                     break;
                 default:
-                    sysout.printf("%-7s (%.3f s)%n", "UNKNOWN", (duration / 1000.0));
+                    sysout.printf("%-7s (%7.3f s -- %8.3f s)%n", "UNKNOWN", (duration / 1000.0), (totalRuntime / 1000.0));
                     break;
             }
         }
