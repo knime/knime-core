@@ -215,7 +215,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                         String dbDrivers = (String) event.getNewValue();
                         initDatabaseDriver(dbDrivers);
                     } else if (HeadlessPreferencesConstants.P_DATABASE_TIMEOUT.equals(event.getProperty())) {
-                        DatabaseConnectionSettings.setDatabaseTimeout((Integer) event.getNewValue());
+                        DatabaseConnectionSettings.setDatabaseTimeout(Integer.parseInt(event.getNewValue().toString()));
                     }
                 }
             });
