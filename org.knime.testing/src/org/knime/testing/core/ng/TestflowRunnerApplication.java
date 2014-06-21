@@ -234,11 +234,11 @@ public class TestflowRunnerApplication implements IApplication {
             long duration = System.currentTimeMillis() - startTime;
             long totalRuntime = System.currentTimeMillis() - globalStartTime;
             if (result.errorCount() > 0) {
-                sysout.printf("%-7s (%3.3f s -- %3.3f s)%n", "ERROR", (duration / 1000.0), (totalRuntime / 1000.0));
+                sysout.printf("%-7s (%3.3f s -- %4.3f s)%n", "ERROR", (duration / 1000.0), (totalRuntime / 1000.0));
             } else if (result.failureCount() > 0) {
-                sysout.printf("%-7s (%3.3f s -- %3.3f s)%n", "FAILURE", (duration / 1000.0), (totalRuntime / 1000.0));
+                sysout.printf("%-7s (%3.3f s -- %4.3f s)%n", "FAILURE", (duration / 1000.0), (totalRuntime / 1000.0));
             } else {
-                sysout.printf("%-7s (%3.3f s -- %3.3f s)%n", "OK", (duration / 1000.0), (totalRuntime / 1000.0));
+                sysout.printf("%-7s (%3.3f s -- %4.3f s)%n", "OK", (duration / 1000.0), (totalRuntime / 1000.0));
             }
             resultWriter.addResult(result);
 
