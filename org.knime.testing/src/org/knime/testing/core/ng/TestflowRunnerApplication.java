@@ -206,6 +206,7 @@ public class TestflowRunnerApplication implements IApplication {
      * @throws TransformerException if the results cannot be written properly
      */
     private int runAllTests(final AbstractXMLResultWriter resultWriter) throws IOException, TransformerException {
+        long globalStartTime = System.currentTimeMillis();
         TestflowCollector registry = new TestflowCollector(m_workflowNamePattern, m_workflowPathPattern, m_rootDirs);
         Collection<WorkflowTestSuite> allTestFlows = registry.collectTestCases(m_runConfiguration);
 
@@ -231,12 +232,13 @@ public class TestflowRunnerApplication implements IApplication {
             long startTime = System.currentTimeMillis();
             WorkflowTestResult result = WorkflowTestSuite.runTest(testFlow, resultWriter);
             long duration = System.currentTimeMillis() - startTime;
+            long totalRuntime = System.currentTimeMillis() - globalStartTime;
             if (result.errorCount() > 0) {
-                sysout.printf("%-7s (%.3f s)%n", "ERROR", (duration / 1000.0));
+                sysout.printf("%-7s (%3.3f s -- %3.3f s)%n", "ERROR", (duration / 1000.0), (totalRuntime / 1000.0));
             } else if (result.failureCount() > 0) {
-                sysout.printf("%-7s (%.3f s)%n", "FAILURE", (duration / 1000.0));
+                sysout.printf("%-7s (%3.3f s -- %3.3f s)%n", "FAILURE", (duration / 1000.0), (totalRuntime / 1000.0));
             } else {
-                sysout.printf("%-7s (%.3f s)%n", "OK", (duration / 1000.0));
+                sysout.printf("%-7s (%3.3f s -- %3.3f s)%n", "OK", (duration / 1000.0), (totalRuntime / 1000.0));
             }
             resultWriter.addResult(result);
 
