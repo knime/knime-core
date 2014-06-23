@@ -144,6 +144,8 @@ public final class FilterIncludeExcludePreview<T> extends JPanel {
         // Clear the lists
         m_includeListModel.clear();
         m_excludeListModel.clear();
+        m_includeList.setToolTipText(null);
+        m_excludeList.setToolTipText(null);
         for (T t : includedTs) {
             m_includeListModel.addElement(t);
         }

@@ -1139,6 +1139,12 @@ public abstract class NameFilterPanel<T> extends JPanel {
                 }
             }
         }
+        if (m_inclMdl.isEmpty()) {
+            m_inclList.setToolTipText(null);
+        }
+        if (m_exclMdl.isEmpty()) {
+            m_exclList.setToolTipText(null);
+        }
     }
 
     /**
