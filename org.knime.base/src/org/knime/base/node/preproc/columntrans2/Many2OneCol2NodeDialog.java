@@ -91,11 +91,9 @@ public class Many2OneCol2NodeDialog extends DefaultNodeSettingsPane {
         m_appendedColumnName =
             new DialogComponentString(new SettingsModelString(Many2OneCol2PMMLNodeModel.CONDENSED_COL_NAME,
                 "Condensed Column"), "Appended column name");
-        m_columns2Condense =
-            new DialogComponentColumnFilter2(new SettingsModelColumnFilter2(Many2OneCol2PMMLNodeModel.SELECTED_COLS), 0,
-                true);
-        final SettingsModelString includeModel =
-            new SettingsModelString(Many2OneCol2PMMLNodeModel.INCLUDE_METHOD,
+        m_columns2Condense = new DialogComponentColumnFilter2(
+            new SettingsModelColumnFilter2(Many2OneCol2PMMLNodeModel.SELECTED_COLS), 0);
+        final SettingsModelString includeModel = new SettingsModelString(Many2OneCol2PMMLNodeModel.INCLUDE_METHOD,
                 Many2OneCol2NodeModel.IncludeMethod.Binary.name());
         String[] values = new String[IncludeMethod.values().length];
         for (int i = 0; i < IncludeMethod.values().length; i++) {

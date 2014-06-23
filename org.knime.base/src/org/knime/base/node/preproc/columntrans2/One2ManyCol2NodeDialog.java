@@ -66,9 +66,8 @@ public class One2ManyCol2NodeDialog extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
     public One2ManyCol2NodeDialog() {
         super();
-        m_columnFilter =
-            new DialogComponentColumnFilter2(new SettingsModelColumnFilter2(One2ManyCol2PMMLNodeModel.CFG_COLUMNS,
-                NominalValue.class), 0, true);
+        m_columnFilter = new DialogComponentColumnFilter2(new SettingsModelColumnFilter2(
+                One2ManyCol2PMMLNodeModel.CFG_COLUMNS, NominalValue.class), 0);
         setDefaultTabTitle("Columns to transform");
         addDialogComponent(m_columnFilter);
     }
