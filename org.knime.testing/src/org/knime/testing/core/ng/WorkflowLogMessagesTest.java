@@ -49,9 +49,11 @@ package org.knime.testing.core.ng;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import junit.framework.AssertionFailedError;
@@ -141,23 +143,30 @@ class WorkflowLogMessagesTest extends WorkflowTest {
     }
 
     private void checkLogMessages(final TestResult result, final TestflowConfiguration flowConfiguration) {
-        Map<Level, List<Pattern>> map = new HashMap<Level, List<Pattern>>();
-        map.put(Level.ERROR, new ArrayList<Pattern>(flowConfiguration.getRequiredErrors()));
-        map.put(Level.WARN, new ArrayList<Pattern>(flowConfiguration.getRequiredWarnings()));
-        map.put(Level.INFO, new ArrayList<Pattern>(flowConfiguration.getRequiredInfos()));
-        map.put(Level.DEBUG, new ArrayList<Pattern>(flowConfiguration.getRequiredDebugs()));
+        Map<Level, List<Pattern>> occurrenceMap = new HashMap<Level, List<Pattern>>();
+        occurrenceMap.put(Level.ERROR, new ArrayList<Pattern>(flowConfiguration.getRequiredErrors()));
+        occurrenceMap.put(Level.WARN, new ArrayList<Pattern>(flowConfiguration.getRequiredWarnings()));
+        occurrenceMap.put(Level.INFO, new ArrayList<Pattern>(flowConfiguration.getRequiredInfos()));
+        occurrenceMap.put(Level.DEBUG, new ArrayList<Pattern>(flowConfiguration.getRequiredDebugs()));
+
+        Map<Level, Set<Pattern>> leftOverMap = new HashMap<Level, Set<Pattern>>();
+        leftOverMap.put(Level.ERROR, new HashSet<Pattern>(flowConfiguration.getRequiredErrors()));
+        leftOverMap.put(Level.WARN, new HashSet<Pattern>(flowConfiguration.getRequiredWarnings()));
+        leftOverMap.put(Level.INFO, new HashSet<Pattern>(flowConfiguration.getRequiredInfos()));
+        leftOverMap.put(Level.DEBUG, new HashSet<Pattern>(flowConfiguration.getRequiredDebugs()));
+
 
         for (LoggingEvent logEvent : m_logEvents) {
             String message = logEvent.getRenderedMessage();
 
             boolean expected = false;
-            List<Pattern> currentList = map.get(logEvent.getLevel());
+            List<Pattern> currentList = occurrenceMap.get(logEvent.getLevel());
             if (currentList != null) {
                 Iterator<Pattern> it = currentList.iterator();
                 while (it.hasNext()) {
                     Pattern p = it.next();
                     if (p.matcher(message).matches()) {
-                        it.remove();
+                        leftOverMap.get(logEvent.getLevel()).remove(p);
                         expected = true;
                         break;
                     }
@@ -170,7 +179,7 @@ class WorkflowLogMessagesTest extends WorkflowTest {
             }
         }
 
-        for (Map.Entry<Level, List<Pattern>> e : map.entrySet()) {
+        for (Map.Entry<Level, Set<Pattern>> e : leftOverMap.entrySet()) {
             for (Pattern p : e.getValue()) {
                 result.addFailure(this, new AssertionFailedError("Expected " + e.getKey() + " log message '"
                         + TestflowConfiguration.patternToString(p) + "' not found"));
