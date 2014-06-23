@@ -32,6 +32,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.SubNodeDialogPane">
+        <filter comment="no api" id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SubNodeDialogPane"/>
+                <message_argument value="org.knime.core_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.WorkflowPersistorVersion1xx">
         <filter id="305324134">
             <message_arguments>
@@ -280,16 +288,34 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/dialog/DialogNode.java" type="org.knime.core.node.dialog.DialogNode">
+        <filter comment="no api (yet)" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="createEmptyDialogValue()"/>
+            </message_arguments>
+        </filter>
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.dialog.DialogNode"/>
                 <message_argument value="getDialogRepresentation()"/>
             </message_arguments>
         </filter>
-        <filter id="403804204">
+        <filter comment="no api (yet)" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.dialog.DialogNode"/>
                 <message_argument value="getDialogValue()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="not public API (yet)" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="isHideInDialog()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="no api (yet)" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="setDialogValue(VAL)"/>
             </message_arguments>
         </filter>
         <filter id="405901410">
@@ -328,6 +354,26 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.dialog.DialogNode"/>
                 <message_argument value="VAL"/>
+            </message_arguments>
+        </filter>
+        <filter comment="no api (yet)" id="1211105284">
+            <message_arguments>
+                <message_argument value="createEmptyDialogValue()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="no api (yet)" id="1211105284">
+            <message_arguments>
+                <message_argument value="getDialogValue()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="not public API (yet)" id="1211105284">
+            <message_arguments>
+                <message_argument value="isHideInDialog()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="no api (yet)" id="1211105284">
+            <message_arguments>
+                <message_argument value="setDialogValue(VAL)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -652,6 +698,12 @@
                 <message_argument value="getViewValue()"/>
             </message_arguments>
         </filter>
+        <filter comment="not public API (yet)" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="isHideInWizard()"/>
+            </message_arguments>
+        </filter>
         <filter id="403902496">
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.WizardNode"/>
@@ -681,6 +733,11 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.WizardNode"/>
                 <message_argument value="VC"/>
+            </message_arguments>
+        </filter>
+        <filter comment="not public API (yet)" id="1211105284">
+            <message_arguments>
+                <message_argument value="isHideInWizard()"/>
             </message_arguments>
         </filter>
     </resource>

@@ -86,7 +86,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
@@ -114,9 +113,7 @@ import org.w3c.dom.Element;
 public class NativeNodeContainer extends SingleNodeContainer {
 
     /** my logger. */
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(NativeNodeContainer.class);
-
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NativeNodeContainer.class);
 
     /** underlying node. */
     private final Node m_node;
@@ -1078,23 +1075,7 @@ public class NativeNodeContainer extends SingleNodeContainer {
         }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean areDialogAndNodeSettingsEqual() {
-        final String key = "snc_settings";
-        NodeSettingsWO nodeSettings = new NodeSettings(key);
-        saveSettings(nodeSettings, true);
-        NodeSettingsWO dlgSettings = new NodeSettings(key);
-        NodeContext.pushContext(this);
-        try {
-            m_node.getDialogPane().finishEditingAndSaveSettingsTo(dlgSettings);
-        } catch (InvalidSettingsException e) {
-            return false;
-        } finally {
-            NodeContext.removeLastContext();
-        }
-        return dlgSettings.equals(nodeSettings);
-    }
+
 
     /* --------------- Output Port Information ---------------- */
 

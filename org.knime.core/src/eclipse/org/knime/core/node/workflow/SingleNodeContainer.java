@@ -846,6 +846,25 @@ public abstract class SingleNodeContainer extends NodeContainer {
     // Credentials handling
     ////////////////////////////////////
 
+    /** {@inheritDoc} */
+    @Override
+    public boolean areDialogAndNodeSettingsEqual() {
+        final String key = "snc_settings";
+        NodeSettingsWO nodeSettings = new NodeSettings(key);
+        saveSettings(nodeSettings, true);
+        NodeSettingsWO dlgSettings = new NodeSettings(key);
+        NodeContext.pushContext(this);
+        try {
+            getDialogPane().finishEditingAndSaveSettingsTo(dlgSettings);
+        } catch (InvalidSettingsException e) {
+            return false;
+        } finally {
+            NodeContext.removeLastContext();
+        }
+        return dlgSettings.equals(nodeSettings);
+    }
+
+
     /** Set credentials store on this node. It will clear usage history to
      * previously accessed credentials (client usage in credentials, see
      * {@link Credentials}) and set a new provider on the underlying node, which

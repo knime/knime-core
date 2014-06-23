@@ -89,6 +89,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.dialog.DialogNode;
 import org.knime.core.node.dialog.DialogNodeRepresentation;
+import org.knime.core.node.dialog.DialogNodeValue;
+import org.knime.core.node.dialog.MetaNodeDialogNode;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
@@ -107,6 +109,7 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation.TemplateType;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
+import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
@@ -226,7 +229,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * is triggered via {@link #performExecuteNode(PortObject[])} or reset via {@link #performReset()}. */
     private boolean m_isPerformingActionCalledFromParent;
 
-    /** Layout info */
+    /** Layout info for wizard nodes. */
     private Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
 
     private MetaNodeTemplateInformation m_templateInformation;
@@ -716,13 +719,19 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("rawtypes")
     NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs, final PortObject[] inData)
         throws NotConfigurableException {
         NodeDialogPane dialogPane = getDialogPane();
         // find all dialog nodes and update subnode dialog
-        @SuppressWarnings("rawtypes")
-        Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
-        ((SubNodeDialogPane)dialogPane).setDialogNodes(nodes);
+        Map<NodeID, MetaNodeDialogNode> nodes = m_wfm.findNodes(MetaNodeDialogNode.class,
+            new NodeModelFilter<MetaNodeDialogNode>() {
+            @Override
+            public boolean include(final MetaNodeDialogNode nodeModel) {
+                return nodeModel instanceof DialogNode && !((DialogNode)nodeModel).isHideInDialog();
+            }
+        }, false);
+        ((MetaNodeDialogPane)dialogPane).setQuickformNodes(nodes);
         NodeSettings settings = new NodeSettings("subnode_settings");
         saveSettings(settings);
         Node.invokeDialogInternalLoad(dialogPane, settings, inSpecs, inData,
@@ -740,7 +749,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         if (m_nodeDialogPane == null) {
             if (hasDialog()) {
                 // create sub node dialog with dialog nodes
-                m_nodeDialogPane = new SubNodeDialogPane();
+                m_nodeDialogPane = new MetaNodeDialogPane(true);
                 // job managers tab
                 if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
                     // TODO: set the SplitType depending on the nodemodel
@@ -753,12 +762,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             }
         }
         return m_nodeDialogPane;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean areDialogAndNodeSettingsEqual() {
-        return true;
     }
 
     /* -------------------- Views ------------------ */
@@ -1243,7 +1246,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 try {
                     NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
                     DialogNode node = entry.getValue();
-                    node.getDialogValue().validateSettings(conf);
+                    final DialogNodeValue emptyDialogValue = node.createEmptyDialogValue();
+                    emptyDialogValue.validateSettings(conf);
                 } catch (InvalidSettingsException e) {
                     return false;
                 }
@@ -1258,19 +1262,61 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     @Override
     @SuppressWarnings("rawtypes")
     void performLoadModelSettingsFrom(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
-        Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
-        for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
-            NodeID id = entry.getKey();
-            String nodeID = Integer.toString(id.getIndex());
-            if (modelSettings.containsKey(nodeID)) {
-                NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
-                NodeSettingsWO oldSettings = new NodeSettings(nodeID);
-                DialogNode node = entry.getValue();
-                node.getDialogValue().saveToNodeSettings(oldSettings);
-                if (!conf.equals(oldSettings)) {
-                    node.getDialogValue().loadFromNodeSettings(conf);
+        assert Thread.holdsLock(getWorkflowMutex());
+        synchronized (m_nodeMutex) {
+            if (getInternalState().isExecutionInProgress()) {
+                throw new IllegalStateException("Cannot load settings as the subnode is currently executing");
+            }
+            Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
+            // contains all nodes that have new value (different to previous value, even if null now).
+            Map<NodeID, DialogNodeValue> newDialogValueMap = new HashMap<>();
+
+            // iterate all dialog nodes and determine those that have a new dialog value. Just load the value
+            // but do not set it yet in order to verify/load all settings before applying them
+            for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
+                final NodeID id = entry.getKey();
+                final DialogNode node = entry.getValue();
+
+                // the old/previously set value in the node
+                final DialogNodeValue oldDialogValue = node.getDialogValue();
+                final NodeSettings oldDialogValueSettings;
+                if (oldDialogValue != null) {
+                    oldDialogValueSettings = new NodeSettings("oldvalue");
+                    oldDialogValue.saveToNodeSettings(oldDialogValueSettings);
+                } else {
+                    oldDialogValueSettings = null;
+                }
+                final String nodeIDSuffix = Integer.toString(id.getIndex());
+                final NodeSettingsRO newDialogValueSettings = modelSettings.containsKey(nodeIDSuffix)
+                        ? modelSettings.getNodeSettings(nodeIDSuffix) : null;
+
+                // only apply if different to previous value. Fall back to equality on settings object ass
+                // #equals on DialogNodeValue might not be implemented.
+                if (ObjectUtils.notEqual(newDialogValueSettings, oldDialogValueSettings)) {
+                    final DialogNodeValue newDialogValue;
+                    if (newDialogValueSettings != null) {
+                        newDialogValue = node.createEmptyDialogValue();
+                        try {
+                            newDialogValue.loadFromNodeSettings(newDialogValueSettings);
+                        } catch (InvalidSettingsException e) {
+                            throw new InvalidSettingsException(String.format(
+                                "Cannot load dialog value for node \"%s\": %s",
+                                ((NodeContainer)node).getNameWithID(), e.getMessage()), e);
+                        }
+                    } else {
+                        newDialogValue = null;
+                    }
+                    newDialogValueMap.put(id, newDialogValue);
                 }
             }
+
+            // apply all new dialog values and reset/configure those nodes with modified config.
+            for (Map.Entry<NodeID, DialogNodeValue> modifiedNodesEntry : newDialogValueMap.entrySet()) {
+                final DialogNode node = nodes.get(modifiedNodesEntry.getKey());
+                node.setDialogValue(modifiedNodesEntry.getValue());
+                m_wfm.resetAndConfigureNode(modifiedNodesEntry.getKey());
+            }
+
         }
     }
 
@@ -1408,8 +1454,12 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
         for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
             String nodeID = Integer.toString(entry.getKey().getIndex());
-            NodeSettingsWO subSettings = modelSettings.addNodeSettings(nodeID);
-            entry.getValue().getDialogValue().saveToNodeSettings(subSettings);
+            final DialogNode dialogNode = entry.getValue();
+            final DialogNodeValue dialogValue = dialogNode.getDialogValue();
+            if (dialogValue != null) {
+                NodeSettingsWO subSettings = modelSettings.addNodeSettings(nodeID);
+                dialogValue.saveToNodeSettings(subSettings);
+            }
         }
     }
 

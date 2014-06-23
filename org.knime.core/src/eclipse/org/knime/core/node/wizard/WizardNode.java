@@ -90,4 +90,8 @@ public interface WizardNode<REP extends WebViewContent, VAL extends WebViewConte
      * @return The object id used in the javascript implementation of the view.
      */
     public String getJavascriptObjectID();
+
+    /** Property set in the configuration dialog to the node to skip this node in the wizard execution.
+     * @return that property. */
+    public boolean isHideInWizard();
 }

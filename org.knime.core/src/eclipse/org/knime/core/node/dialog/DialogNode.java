@@ -63,10 +63,23 @@ public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL exten
      */
     public REP getDialogRepresentation();
 
-    /**
-     * @return The node value content of the dialog node.
-     * @since 2.10
-     */
+    /** Used by the framework to create an empty and uninitialized dialog value instance. This is then kept,
+     * for instance in the subnode with updated user selected values. (Load &amp; Save will be called to fill content.)
+     * @return A new empty instance of the dialog value class, not null. */
+    public VAL createEmptyDialogValue();
+
+    /** Loads a value edited outside the node into the node. 'Outside' here refers to the dialog of a sub- or meta node.
+     * @param value A value whose content should be used in the next calls of configure and execute. May be null
+     * to fall back to the defaults (as per configuration). */
+    public void setDialogValue(VAL value);
+
+    /** Get the currently set dialog value or null if non is set (use defaults as per node configuration).
+     * @return The value currently set. */
     public VAL getDialogValue();
+
+    /** Property set in the configuration dialog of the node to hide this quickform/dialog node in the
+     * meta or subnode dialog.
+     * @return that property. */
+    public boolean isHideInDialog();
 
 }
