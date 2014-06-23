@@ -309,8 +309,13 @@ public class DataTableDomainCreator {
         for (RowIterator it = table.iterator(); it.hasNext(); row++) {
             if (exec != null) {
                 exec.checkCanceled();
-                double progress = row / (double)rowCount;
-                exec.setProgress(Math.min(progress, 1.0), "Row " + row + "/" + rowCount);
+                final String message = "Row " + row + "/" + rowCount;
+                if (rowCount > 0) {
+                    double progress = row / (double)rowCount;
+                    exec.setProgress(Math.min(progress, 1.0), message);
+                } else {
+                    exec.setMessage(message);
+                }
             }
 
             DataRow r = it.next();
