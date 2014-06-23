@@ -56,6 +56,7 @@ import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -238,6 +239,19 @@ public class RenameNodeDialogPane extends NodeDialogPane {
 
         clearBorders();
 
+        // Bug 5299 - New rename node creates false duplicate column errors
+        // in a first iteration find the names which are replaced and remove them from the duplicate check
+        Set<String> oldColumnNames = new HashSet<String>();
+        Collections.addAll(oldColumnNames, m_orgTableSpec.getColumnNames());
+        for (RenameColumnSetting colSet : m_columnToSettings.values()) {
+            final String newName = colSet.getNewColumnName();
+            final String oldName = colSet.getName();
+            if (newName != null) {
+                // we have a replacement for the old name - so we can remove that.
+                oldColumnNames.remove(oldName);
+            }
+        }
+
         int i = 0;
         for (RenameColumnSetting colSet : m_columnToSettings.values()) {
             String newName = colSet.getNewColumnName();
@@ -275,7 +289,7 @@ public class RenameNodeDialogPane extends NodeDialogPane {
             }
 
             // check for dublicates with column names
-            if (m_orgTableSpec.getColumnSpec(newName) != null && colSet.getNewColumnName() != null) {
+            if (oldColumnNames.contains(newName) && colSet.getNewColumnName() != null) {
                 int index1 = getIndexIndividualIndex(colSet);
 
                 String warnMessage =
