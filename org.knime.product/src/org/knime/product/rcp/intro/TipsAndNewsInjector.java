@@ -233,6 +233,9 @@ class TipsAndNewsInjector implements Runnable {
     }
 
     private Node checkIfNewsExist(final Node newsNode) {
+        if (newsNode == null) {
+            return null;
+        }
         NodeList nl = newsNode.getChildNodes();
         for (int i = 0; i < nl.getLength(); i++) {
             Node child = nl.item(i);
