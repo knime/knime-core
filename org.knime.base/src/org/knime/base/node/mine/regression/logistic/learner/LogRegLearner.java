@@ -49,11 +49,12 @@ package org.knime.base.node.mine.regression.logistic.learner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableDomainCreator;
@@ -104,7 +105,7 @@ public final class LogRegLearner {
         m_settings = settings;
         DataTableSpec dataSpec = (DataTableSpec)specs[0];
         PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)specs[1];
-        init(dataSpec, pmmlSpec);
+        init(dataSpec, pmmlSpec, Collections.<String>emptySet());
     }
 
 
@@ -125,7 +126,7 @@ public final class LogRegLearner {
         BufferedDataTable data = (BufferedDataTable)portObjects[0];
         PMMLPortObject inPMMLPort = (PMMLPortObject)portObjects[1];
         PMMLPortObjectSpec inPMMLSpec = inPMMLPort.getSpec();
-        init(data.getDataTableSpec(), inPMMLSpec);
+        init(data.getDataTableSpec(), inPMMLSpec, Collections.<String>emptySet());
         // the learner typically needs five steps with two runs over the data each step, calculating
         // the domain needs run over the data
         double calcDomainTime = 1.0 / (5.0 * 2.0 + 1.0);
@@ -137,26 +138,26 @@ public final class LogRegLearner {
         return m_learner.perform(dataTable, exec.createSubExecutionContext(1.0 - calcDomainTime));
     }
 
-
-    private void checkConstantLearningFields(final BufferedDataTable data, final PMMLPortObjectSpec inPMMLSpec) {
-        List<String> constantValueColumns = new ArrayList<>();
+    private void checkConstantLearningFields(final BufferedDataTable data, final PMMLPortObjectSpec inPMMLSpec)
+            throws InvalidSettingsException {
+        Set<String> exclude = new HashSet<String>();
         for (DataColumnSpec colSpec : m_pmmlOutSpec.getLearningCols()) {
-            final DataColumnDomain domain = colSpec.getDomain();
             if (colSpec.getType().isCompatible(DoubleValue.class)
-                    && domain.getLowerBound().equals(domain.getUpperBound())) {
-                constantValueColumns.add(colSpec.getName());
+                    && colSpec.getDomain().getLowerBound().equals(colSpec.getDomain().getUpperBound())) {
+                exclude.add(colSpec.getName());
             }
         }
-        if (!constantValueColumns.isEmpty()) {
-            StringBuilder error = new StringBuilder();
-            error.append(constantValueColumns.size() == 1 ? "The column " : "The columns ");
-            error.append(ConvenienceMethods.getShortStringFrom(constantValueColumns, 5));
-            error.append(constantValueColumns.size() == 1 ? " has a constant value." : " have constant values.");
-            error.append(" Consider to filter them out using a low variance filter node.");
-            throw new RuntimeException(error.toString());
+        if (!exclude.isEmpty()) {
+            StringBuilder warning = new StringBuilder();
+            warning.append(exclude.size() == 1 ? "Column " : "Columns ");
+            warning.append(ConvenienceMethods.getShortStringFrom(exclude, 5));
+            warning.append(exclude.size() == 1 ? " has a constant value " : " have constant values ");
+            warning.append(" - will be ignored during training");
+            LOGGER.warn(warning);
+            // re-init learner so that it has the correct learning columns
+            init(data.getDataTableSpec(), inPMMLSpec, exclude);
         }
     }
-
 
     private DataTable recalcDomainForTargetAndLearningFields(
             final BufferedDataTable data, final PMMLPortObjectSpec inPMMLSpec,
@@ -194,9 +195,8 @@ public final class LogRegLearner {
 
         DataTableSpec spec = domainCreator.createSpec();
         DataTable newDataTable = exec.createSpecReplacerTable(data, spec);
-        // initialize m_learner so that it has the correct DataTableSpec of
-        // the input
-        init(newDataTable.getDataTableSpec(), inPMMLSpec);
+        // initialize m_learner so that it has the correct DataTableSpec of the input
+        init(newDataTable.getDataTableSpec(), inPMMLSpec, Collections.<String>emptySet());
         return newDataTable;
     }
 
@@ -218,7 +218,8 @@ public final class LogRegLearner {
 
     /** Initialize instance and check if settings are consistent. */
     private void init(final DataTableSpec inSpec,
-            final PMMLPortObjectSpec pmmlSpec)
+            final PMMLPortObjectSpec pmmlSpec,
+            final Set<String> exclude)
             throws InvalidSettingsException {
 
         List<String> inputCols = new ArrayList<String>();
@@ -262,6 +263,9 @@ public final class LogRegLearner {
             }
         }
 
+
+        // remove all columns that should not be used
+        inputCols.removeAll(exclude);
 
         for (int i = 0; i < inSpec.getNumColumns(); i++) {
             DataColumnSpec colSpec = inSpec.getColumnSpec(i);
