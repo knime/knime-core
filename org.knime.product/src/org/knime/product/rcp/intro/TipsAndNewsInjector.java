@@ -186,9 +186,15 @@ class TipsAndNewsInjector extends AbstractInjector {
         reader.setFeature(Parser.namespacesFeature, false);
         reader.setFeature(Parser.namespacePrefixesFeature, false);
 
-        Transformer transformer = m_transformerFactory.newTransformer();
+        final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
         DOMResult res = new DOMResult();
-        transformer.transform(new SAXSource(reader, new InputSource(conn.getInputStream())), res);
+        try {
+            Transformer transformer = m_transformerFactory.newTransformer();
+            transformer.transform(new SAXSource(reader, new InputSource(conn.getInputStream())), res);
+        } finally {
+            Thread.currentThread().setContextClassLoader(cl);
+        }
         conn.disconnect();
 
         XPath xpath = m_xpathFactory.newXPath();
