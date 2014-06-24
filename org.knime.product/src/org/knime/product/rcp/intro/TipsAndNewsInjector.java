@@ -186,12 +186,12 @@ class TipsAndNewsInjector extends AbstractInjector {
         reader.setFeature(Parser.namespacesFeature, false);
         reader.setFeature(Parser.namespacePrefixesFeature, false);
 
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        Transformer transformer = m_transformerFactory.newTransformer();
         DOMResult res = new DOMResult();
         transformer.transform(new SAXSource(reader, new InputSource(conn.getInputStream())), res);
         conn.disconnect();
 
-        XPath xpath = XPathFactory.newInstance().newXPath();
+        XPath xpath = m_xpathFactory.newXPath();
         Node news = (Node)xpath.evaluate("//div[@id='knime-client-news']", res.getNode(), XPathConstants.NODE);
         m_news = checkIfNewsExist(news);
         if (m_news != null) {

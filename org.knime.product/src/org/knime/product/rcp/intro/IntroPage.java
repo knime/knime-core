@@ -165,10 +165,17 @@ public class IntroPage implements LocationListener {
         }
 
         try {
-            m_xpathFactory = XPathFactory.newInstance();
-            m_parserFactory = DocumentBuilderFactory.newInstance();
-            m_parserFactory.setValidating(false);
-            m_transformerFactory = TransformerFactory.newInstance();
+            // workaround for a bug in XPathFinderFactory on MacOS X
+            final ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
+            try {
+                m_xpathFactory = XPathFactory.newInstance();
+                m_parserFactory = DocumentBuilderFactory.newInstance();
+                m_parserFactory.setValidating(false);
+                m_transformerFactory = TransformerFactory.newInstance();
+            } finally {
+                Thread.currentThread().setContextClassLoader(previousClassLoader);
+            }
 
             ReentrantLock introFileLock = new ReentrantLock();
             m_introFile = copyTemplate("intro/intro.xhtml");

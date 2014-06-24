@@ -101,7 +101,7 @@ abstract class AbstractInjector implements Runnable {
 
     protected final XPathFactory m_xpathFactory;
 
-    private final TransformerFactory m_transformerFactory;
+    protected final TransformerFactory m_transformerFactory;
 
     private final ReentrantLock m_introFileLock;
 
