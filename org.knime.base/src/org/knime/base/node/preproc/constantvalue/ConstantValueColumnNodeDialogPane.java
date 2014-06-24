@@ -45,6 +45,8 @@
  */
 package org.knime.base.node.preproc.constantvalue;
 
+import static org.knime.core.node.util.CheckUtils.checkSetting;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridLayout;
@@ -80,8 +82,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.ColumnSelectionComboxBox;
-import org.knime.core.node.util.DataColumnSpecListCellRenderer;
+import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.core.node.util.DataTypeListCellRenderer;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.node.util.ViewUtils;
@@ -100,20 +101,23 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
 
     private static final String FORMAT_HISTORY_KEY = "constant-value-key";
 
-    private final ColumnSelectionComboxBox m_columnPanel;
+    private final ColumnSelectionPanel m_columnPanel;
 
-    private final JComboBox m_fieldType;
+    private final JComboBox<DataType> m_fieldType;
 
-    private final DefaultComboBoxModel m_dateTemplates;
+    private final DefaultComboBoxModel<String> m_dateTemplates;
 
     private final JTextField m_columnName;
 
     private final JTextField m_value;
 
+    private DataTableSpec m_dataTableSpec;
+
     /** Create new dialog. */
     @SuppressWarnings("unchecked")
     ConstantValueColumnNodeDialogPane() {
-        m_columnPanel = new ColumnSelectionComboxBox((Border)null, DataValue.class);
+        m_columnPanel = new ColumnSelectionPanel((Border)null, DataValue.class);
+        m_columnPanel.setRequired(false);
 
         ButtonGroup bg = new ButtonGroup();
         final JRadioButton replaceColumnRadio = new JRadioButton("Replace");
@@ -124,7 +128,7 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
         m_columnName = new JTextField(DEFAULT_TEXT_SIZE);
         m_value = new JTextField(DEFAULT_TEXT_SIZE);
 
-        m_fieldType = new JComboBox();
+        m_fieldType = new JComboBox<DataType>();
         m_fieldType.setRenderer(new DataTypeListCellRenderer());
 
         for (TypeCellFactory factory : TypeCellFactory.values()) {
@@ -165,8 +169,8 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
         northValuePanel.add(m_value, BorderLayout.CENTER);
         northValuePanel.add(flowVariableModelButton, BorderLayout.EAST);
 
-        m_dateTemplates = new DefaultComboBoxModel();
-        final JComboBox box = new JComboBox(m_dateTemplates);
+        m_dateTemplates = new DefaultComboBoxModel<String>();
+        final JComboBox<String> box = new JComboBox<String>(m_dateTemplates);
         box.setEditable(true);
         final JPanel timePatternPanel = ViewUtils.getInFlowLayout(new JLabel("Date format"), box);
 
@@ -242,15 +246,10 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
         throws NotConfigurableException {
         ConstantValueColumnConfig config = new ConstantValueColumnConfig();
         config.loadInDialog(settings, specs[0]);
+        m_dataTableSpec = specs[0];
 
-        m_columnPanel.update(specs[0], config.getReplacedColumn());
-        if (config.getReplacedColumn() != null && !specs[0].containsName(config.getReplacedColumn())) {
-
-            // add an invalid replacement cell, which does not exist anymore
-            ((DefaultComboBoxModel)m_columnPanel.getModel()).addElement(DataColumnSpecListCellRenderer
-                .createInvalidSpec(config.getReplacedColumn(), DataType.getMissingCell().getType()));
-            m_columnPanel.setSelectedColumn(config.getReplacedColumn());
-        }
+        m_columnPanel.setSelectedColumn(config.getReplacedColumn());
+        m_columnPanel.update(specs[0], config.getReplacedColumn(), false, true);
 
         m_value.setText(StringUtils.defaultString(config.getValue(), ""));
 
@@ -292,9 +291,12 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
         config.setCellFactory(forDataType);
         config.setNewColumnName(m_columnName.isEnabled() ? getText(m_columnName, "New column name must not be empty.")
             : null);
+        checkSetting(!m_columnPanel.isEnabled() || m_dataTableSpec.containsName(m_columnPanel.getSelectedColumn()),
+            "Selected column must exist in input table.");
 
         config.setReplacedColumn(m_columnPanel.isEnabled() ? m_columnPanel.getSelectedColumn() : null);
         config.save(settings);
+        m_dataTableSpec = null;
     }
 
     private static void setText(final JTextField appendColumnField, final String newColumnName) {
@@ -310,21 +312,6 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
         String text = StringUtils.defaultIfBlank(field.getText(), "");
         checkSetting(StringUtils.isNotEmpty(text), messageIfNotExist);
         return text;
-    }
-
-    /**
-     * Throws an {@link InvalidSettingsException} with the given string template, if the given predicate is
-     * <code>false</code>.
-     *
-     * @param predicate the predicate
-     * @param template the template
-     * @throws InvalidSettingsException
-     */
-    private static void checkSetting(final boolean predicate, final String template, final Object... args)
-        throws InvalidSettingsException {
-        if (!predicate) {
-            throw new InvalidSettingsException(String.format(template, args));
-        }
     }
 
     private static Collection<String> createPredefinedFormats() {
