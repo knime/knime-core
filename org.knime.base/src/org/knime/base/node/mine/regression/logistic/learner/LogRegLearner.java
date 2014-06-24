@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableDomainCreator;
@@ -74,6 +75,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * Logistic Regression Learner implementation.
@@ -130,9 +132,31 @@ public final class LogRegLearner {
         exec.setMessage("Analyzing categorical data.");
         DataTable dataTable = recalcDomainForTargetAndLearningFields(data, inPMMLSpec,
             exec.createSubExecutionContext(calcDomainTime));
+        checkConstantLearningFields(data, inPMMLSpec);
         exec.setMessage("Computing logistic regression model.");
         return m_learner.perform(dataTable, exec.createSubExecutionContext(1.0 - calcDomainTime));
     }
+
+
+    private void checkConstantLearningFields(final BufferedDataTable data, final PMMLPortObjectSpec inPMMLSpec) {
+        List<String> constantValueColumns = new ArrayList<>();
+        for (DataColumnSpec colSpec : m_pmmlOutSpec.getLearningCols()) {
+            final DataColumnDomain domain = colSpec.getDomain();
+            if (colSpec.getType().isCompatible(DoubleValue.class)
+                    && domain.getLowerBound().equals(domain.getUpperBound())) {
+                constantValueColumns.add(colSpec.getName());
+            }
+        }
+        if (!constantValueColumns.isEmpty()) {
+            StringBuilder error = new StringBuilder();
+            error.append(constantValueColumns.size() == 1 ? "The column " : "The columns ");
+            error.append(ConvenienceMethods.getShortStringFrom(constantValueColumns, 5));
+            error.append(constantValueColumns.size() == 1 ? " has a constant value." : " have constant values.");
+            error.append(" Consider to filter them out using a low variance filter node.");
+            throw new RuntimeException(error.toString());
+        }
+    }
+
 
     private DataTable recalcDomainForTargetAndLearningFields(
             final BufferedDataTable data, final PMMLPortObjectSpec inPMMLSpec,
@@ -155,12 +179,15 @@ public final class LogRegLearner {
 
             @Override
             public boolean dropDomain(final DataColumnSpec colSpec) {
-                return false;
+                // drop domain of numeric learning fields so that we can check for constant columns
+                return colSpec.getType().isCompatible(DoubleValue.class)
+                        && m_pmmlOutSpec.getLearningFields().contains(colSpec.getName());
             }
 
             @Override
             public boolean createDomain(final DataColumnSpec colSpec) {
-                return false;
+                return colSpec.getType().isCompatible(DoubleValue.class)
+                        && m_pmmlOutSpec.getLearningFields().contains(colSpec.getName());
             }
         });
         domainCreator.updateDomain(data, exec);
