@@ -6,7 +6,7 @@ units.1.id=toolingorg.knime.product.desktop.ini.x86_64
 units.2.filter=(osgi.arch\=x86)
 units.2.touchpoint.id=org.eclipse.equinox.p2.osgi
 requires.1.greedy=true
-instructions.configure=org.eclipse.equinox.p2.touchpoint.natives.mkdir(path\:${installFolder}/dropins);org.eclipse.equinox.p2.touchpoint.natives.mkdir(path\:${installFolder}/workspace);
+instructions.configure=org.eclipse.equinox.p2.touchpoint.natives.mkdir(path\:${installFolder}/dropins)
 units.2.instructions.configure=addJvmArg(jvmArg\:-Xmx512m);
 units.2.provides.1.namespace=org.eclipse.equinox.p2.iu
 units.1.provides.1.name=toolingorg.knime.product.desktop.ini.x86_64
