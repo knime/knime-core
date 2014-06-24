@@ -51,36 +51,25 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.equinox.p2.operations.RepositoryTracker;
 import org.eclipse.equinox.p2.ui.ProvisioningUI;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.util.FileUtil;
 import org.knime.workbench.ui.p2.actions.UpdateChecker;
 import org.knime.workbench.ui.p2.actions.UpdateChecker.UpdateInfo;
-import org.osgi.framework.FrameworkUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -92,49 +81,23 @@ import org.xml.sax.SAXException;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class UpdateMessageInjector implements Runnable {
-    private final File m_templateFile;
+class UpdateMessageInjector extends AbstractInjector {
+    private List<UpdateInfo> m_newVersions;
 
-    private final DocumentBuilderFactory m_parserFactory;
-
-    private final XPathFactory m_xpathFactory;
-
-    private final TransformerFactory m_transformerFactory;
-
-    private final ReentrantLock m_introFileLock;
-
-    UpdateMessageInjector(final File templateFile, final ReentrantLock introFileLock,
+    protected UpdateMessageInjector(final File templateFile, final ReentrantLock introFileLock,
+        final IEclipsePreferences preferences, final boolean isFreshWorkspace,
         final DocumentBuilderFactory parserFactory, final XPathFactory xpathFactory,
         final TransformerFactory transformerFactory) {
-        m_templateFile = templateFile;
-        m_introFileLock = introFileLock;
-        m_parserFactory = parserFactory;
-        m_xpathFactory = xpathFactory;
-        m_transformerFactory = transformerFactory;
-
+        super(templateFile, introFileLock, preferences, isFreshWorkspace, parserFactory, xpathFactory,
+            transformerFactory);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void run() {
-        try {
-            List<UpdateInfo> newVersions = checkNewVersion();
-            m_introFileLock.lock();
-            try {
-                if (!newVersions.isEmpty()) {
-                    injectUpdateMessage(newVersions);
-                } else {
-                    injectNoUpdateMessage();
-                }
-            } finally {
-                m_introFileLock.unlock();
-            }
-        } catch (IOException | XPathExpressionException | ParserConfigurationException | SAXException
-                | TransformerException | URISyntaxException ex) {
-            NodeLogger.getLogger(getClass()).warn("Could not check for new KNIME version: " + ex.getMessage(), ex);
-        }
+    protected void prepareData() throws Exception {
+        m_newVersions = checkNewVersion();
     }
 
     private List<UpdateInfo> checkNewVersion() throws IOException, URISyntaxException {
@@ -158,12 +121,8 @@ class UpdateMessageInjector implements Runnable {
         return updateList;
     }
 
-    private void injectNoUpdateMessage() throws ParserConfigurationException, SAXException, IOException,
-        XPathExpressionException, TransformerException {
-        DocumentBuilder parser = m_parserFactory.newDocumentBuilder();
-        parser.setEntityResolver(EmptyDoctypeResolver.INSTANCE);
-        Document doc = parser.parse(m_templateFile);
-
+    private void injectNoUpdateMessage(final Document doc) throws ParserConfigurationException, SAXException,
+        IOException, XPathExpressionException, TransformerException {
         XPath xpath = m_xpathFactory.newXPath();
         Element noUpdatesSpan =
             (Element)xpath.evaluate("//span[@id='no-updates']", doc.getDocumentElement(), XPathConstants.NODE);
@@ -176,31 +135,27 @@ class UpdateMessageInjector implements Runnable {
         Element updateDiv =
             (Element)xpath.evaluate("//div[@id='update']", doc.getDocumentElement(), XPathConstants.NODE);
         updateDiv.setAttribute("style", "display: none;");
-
-        serialize(doc);
     }
 
-    private void injectUpdateMessage(final List<UpdateInfo> updateInfos) throws ParserConfigurationException,
-        SAXException, IOException, XPathExpressionException, TransformerException {
-        DocumentBuilder parser = m_parserFactory.newDocumentBuilder();
-        parser.setEntityResolver(EmptyDoctypeResolver.INSTANCE);
-        Document doc = parser.parse(m_templateFile);
-
+    private void injectUpdateMessage(final Document doc) throws ParserConfigurationException, SAXException,
+        IOException, XPathExpressionException, TransformerException {
         XPath xpath = m_xpathFactory.newXPath();
         Element updateNode =
             (Element)xpath.evaluate("//div[@id='update']", doc.getDocumentElement(), XPathConstants.NODE);
 
         Element updatesAvailableSpan =
             (Element)xpath.evaluate("//span[@id='updates-available']", updateNode, XPathConstants.NODE);
-        updatesAvailableSpan.removeAttribute("style"); // removes the "hidden" style
+        updatesAvailableSpan.removeAttribute("style"); // removes the "hidden" style and makes it visible
 
         Element checkingUpdatesSpan =
             (Element)xpath.evaluate("//span[@id='checking-updates']", doc.getDocumentElement(), XPathConstants.NODE);
         checkingUpdatesSpan.setAttribute("style", "display: none;");
 
         Element updateList = (Element)xpath.evaluate(".//ul[@id='update-list']", updateNode, XPathConstants.NODE);
+        updateList.removeAttribute("style"); // removes the "hidden" style and makes it visible
+
         boolean updatePossible = true;
-        for (UpdateInfo ui : updateInfos) {
+        for (UpdateInfo ui : m_newVersions) {
             updatePossible &= ui.isUpdatePossible();
 
             Element li = doc.createElement("li");
@@ -218,22 +173,21 @@ class UpdateMessageInjector implements Runnable {
             updateNotPossibleNode.removeAttribute("style");
         }
 
-        IEclipsePreferences prefs =
-            InstanceScope.INSTANCE.getNode(FrameworkUtil.getBundle(getClass()).getSymbolicName());
-        if (prefs.getBoolean("org.knime.product.intro.update", true)) {
+        if (m_prefs.getBoolean("org.knime.product.intro.update", true)) {
             updateNode.removeAttribute("style"); // removes the "hidden" style
         }
-
-        serialize(doc);
     }
 
-    private void serialize(final Document doc) throws IOException, TransformerException {
-        File temp = FileUtil.createTempFile("intro", ".html", true);
-        Transformer serializer = m_transformerFactory.newTransformer();
-        serializer.setOutputProperty(OutputKeys.METHOD, "xhtml");
-        serializer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "about:legacy-compat");
-        serializer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        serializer.transform(new DOMSource(doc), new StreamResult(temp));
-        Files.move(temp.toPath(), m_templateFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void injectData(final Document doc, final XPath xpath) throws XPathExpressionException,
+        ParserConfigurationException, SAXException, IOException, TransformerException {
+        if (!m_newVersions.isEmpty()) {
+            injectUpdateMessage(doc);
+        } else {
+            injectNoUpdateMessage(doc);
+        }
     }
 }

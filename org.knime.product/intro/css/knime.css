@@ -1,7 +1,7 @@
 body {
-	color: #333;
-	font-family: Arial, sans-serif;
-	font-size: 11pt;
+	color: #575757;
+	font-family: Roboto, Arial, Helvetica, sans-serif;
+	font-size: 0.9em;
 }
 
 h1 {
@@ -13,8 +13,14 @@ h2 {
 }
 
 a {
-    color: #F4AB27;
+    color: #FFB600;
+    text-decoration: none;
 }
+
+a:HOVER {
+    text-decoration: underline;;
+}
+
 
 body > h2 {
     margin: 30px auto 20px;
@@ -84,7 +90,6 @@ ul#mruList {
 }
 
 ul#mruList li {
-    font-weight: bold;
     margin-bottom: 5px;
 }
 
@@ -129,19 +134,29 @@ div.floating-link {
 
 
 #news {
+	color: #444;
 	max-width: 1000px;
     margin: 20px auto;
 	padding: 5px 5px;
-	background: #eee;
+	background: #f0f0f0;
 	border-radius: 6px;
 }
 
+#news > h2 {
+	margin-top: 5px;
+}
+
 #tips {
+	color: #444;
     max-width: 1000px;
     margin: 20px auto;
     padding: 5px 5px;
-    background: #eee;
+    background: #f0f0f0;
     border-radius: 6px;
+}
+
+#tips > h2 {
+    margin-top: 5px;
 }
 
 
@@ -171,8 +186,8 @@ div.floating-link {
 }
 
 #update .hide-button {
-    margin-top: -2px;
-    margin-right: -2px;
+    margin-top: -9px;
+    margin-right: -6px;
 }
 #update:hover .hide-button {
 	display: block;

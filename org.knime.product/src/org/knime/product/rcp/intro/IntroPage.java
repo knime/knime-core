@@ -48,15 +48,12 @@
 package org.knime.product.rcp.intro;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.lang.reflect.Field;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Deque;
@@ -66,7 +63,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -80,7 +76,6 @@ import javax.xml.xpath.XPathFactory;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
@@ -95,8 +90,6 @@ import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.PartInitException;
@@ -105,10 +98,9 @@ import org.eclipse.ui.browser.IWebBrowser;
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.WorkbenchPlugin;
-import org.eclipse.ui.internal.browser.BrowserViewer;
 import org.eclipse.ui.internal.browser.SystemBrowserInstance;
 import org.eclipse.ui.internal.browser.WebBrowserEditor;
-import org.eclipse.ui.internal.browser.WebBrowserEditorInput;
+import org.eclipse.ui.internal.browser.WebBrowserUtil;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
@@ -180,13 +172,12 @@ public class IntroPage implements LocationListener {
 
             ReentrantLock introFileLock = new ReentrantLock();
             m_introFile = copyTemplate("intro/intro.xhtml");
-            if (!m_freshWorkspace) {
-                KNIMEConstants.GLOBAL_THREAD_POOL.submit(new UpdateMessageInjector(m_introFile, introFileLock,
-                    m_parserFactory, m_xpathFactory, m_transformerFactory));
-            }
-
-            KNIMEConstants.GLOBAL_THREAD_POOL.submit(new TipsAndNewsInjector(m_introFile, introFileLock,
-                m_parserFactory, m_xpathFactory, m_transformerFactory));
+            new MRUInjector(m_introFile, introFileLock, m_prefs, m_freshWorkspace, m_parserFactory, m_xpathFactory,
+                m_transformerFactory).run();
+            KNIMEConstants.GLOBAL_THREAD_POOL.submit(new UpdateMessageInjector(m_introFile, introFileLock, m_prefs,
+                m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory));
+            KNIMEConstants.GLOBAL_THREAD_POOL.submit(new TipsAndNewsInjector(m_introFile, introFileLock, m_prefs,
+                m_freshWorkspace, m_parserFactory, m_xpathFactory, m_transformerFactory));
         } catch (IOException | ParserConfigurationException | SAXException | XPathExpressionException
                 | TransformerFactoryConfigurationError | TransformerException ex) {
             LOGGER.error("Could not copy intro pages: " + ex.getMessage(), ex);
@@ -197,123 +188,20 @@ public class IntroPage implements LocationListener {
     }
 
     /**
-     * Copies one of the template files into a temporary directory and modifies some of the content (e.g. the MRU list
-     * and the URL base).
+     * Copies one of the template files into a temporary directory.
      *
      * @param templateFile the template file that should be copied
      * @return the modified temporary file
      */
     private File copyTemplate(final String templateFile) throws IOException, ParserConfigurationException,
         SAXException, XPathExpressionException, TransformerFactoryConfigurationError, TransformerException {
-
+        File tempTemplate = FileUtil.createTempFile("intro", ".html", true);
         Bundle myBundle = FrameworkUtil.getBundle(getClass());
         URL introUrl = myBundle.getEntry(templateFile);
-        URL cssBaseUrl = FileLocator.toFileURL(myBundle.getEntry("/intro/css"));
-
-        DocumentBuilder parser = m_parserFactory.newDocumentBuilder();
-        Document doc = parser.parse(introUrl.openStream());
-
-        XPath xpath = m_xpathFactory.newXPath();
-        Element base = (Element)xpath.evaluate("/html/head/base", doc.getDocumentElement(), XPathConstants.NODE);
-        base.setAttribute("href", cssBaseUrl.toExternalForm());
-
-        Element mruList =
-            (Element)xpath.evaluate("/html/body//ul[@id='mruList']", doc.getDocumentElement(), XPathConstants.NODE);
-        insertMRUList(mruList);
-
-        processIntroProperties(xpath, doc);
-
-        File tempTemplate = FileUtil.createTempFile("intro", ".html", true);
-
-        try (OutputStream out = new FileOutputStream(tempTemplate)) {
-            Transformer serializer = m_transformerFactory.newTransformer();
-            serializer.setOutputProperty(OutputKeys.METHOD, "xhtml");
-            serializer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "about:legacy-compat");
-            serializer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-            serializer.transform(new DOMSource(doc), new StreamResult(out));
+        try (InputStream is = introUrl.openStream()) {
+            Files.copy(is, tempTemplate.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
-
         return tempTemplate;
-    }
-
-    /**
-     * Iterates over all checkbox elements in the intro page and looks up the corresponding preference keys. The div
-     * corresponding to the checkboxes/preference keys are then either show or hidden.
-     *
-     * @param xpath an XPath object for reuse
-     * @param doc the document
-     */
-    private void processIntroProperties(final XPath xpath, final Document doc) throws XPathExpressionException {
-        NodeList checkBoxes =
-            (NodeList)xpath.evaluate("//div[@id='properties']//input[@type='checkbox']", doc.getDocumentElement(),
-                XPathConstants.NODESET);
-        for (int i = 0; i < checkBoxes.getLength(); i++) {
-            Element cb = (Element)checkBoxes.item(i);
-            String name = cb.getAttribute("name");
-            if (m_freshWorkspace && "update".equals(name)) {
-                continue;
-            }
-
-            String key = "org.knime.product.intro." + name;
-
-            Element div =
-                (Element)xpath.evaluate("//div[@id='" + name + "']", doc.getDocumentElement(), XPathConstants.NODE);
-            if (m_prefs.getBoolean(key, true)) {
-                cb.setAttribute("checked", "checked");
-                div.removeAttribute("style");
-            } else {
-                cb.removeAttribute("checked");
-                div.setAttribute("style", "display: none");
-            }
-        }
-    }
-
-    /**
-     * Inserts the most recently used workflows in the MRU list on the intro page. It will insert &lt;li> elements.
-     *
-     * @param mruList the element for the mru list (an &lt;ul>)
-     */
-    private void insertMRUList(final Element mruList) throws ParserConfigurationException, SAXException, IOException,
-        XPathExpressionException {
-        if (m_freshWorkspace) {
-            return; // no workflows used in a fresh workspace
-        }
-
-        // if it's not fresh workspace, the workbench.xml file exists (already checked in constructor)
-        IPath path = WorkbenchPlugin.getDefault().getDataLocation().append("workbench.xml");
-        DocumentBuilder parser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        Document doc = parser.parse(path.toFile());
-
-        XPath xpath = m_xpathFactory.newXPath();
-        NodeList workflowList =
-            (NodeList)xpath.evaluate("//mruList/file[@id = '" + WorkflowEditor.ID + "']/persistable",
-                doc.getDocumentElement(), XPathConstants.NODESET);
-
-        if (workflowList.getLength() == 0) {
-            Element mru =
-                (Element)xpath.evaluate("//div[@id='mru']", mruList.getOwnerDocument().getDocumentElement(),
-                    XPathConstants.NODE);
-            mru.setAttribute("style", "display: none");
-        } else {
-            for (int i = 0; i < workflowList.getLength(); i++) {
-                Element e = (Element)workflowList.item(i);
-                String uri = e.getAttribute("uri"); // knime://MP/.../WorkflowName/workflow.knime
-                String[] parts = uri.split("/");
-                if (parts.length > 2) {
-                    String workflowName = parts[parts.length - 2];
-                    workflowName = URLDecoder.decode(workflowName, "UTF-8");
-
-                    Element li = mruList.getOwnerDocument().createElement("li");
-                    mruList.appendChild(li);
-
-                    Element a = mruList.getOwnerDocument().createElement("a");
-                    a.setAttribute("href", "intro://openWorkflow/" + uri);
-                    a.setAttribute("title", URLDecoder.decode(uri, "UTF-8").replaceAll("/workflow\\.knime$", ""));
-                    a.setTextContent(workflowName);
-                    li.appendChild(a);
-                }
-            }
-        }
     }
 
     /**
@@ -328,8 +216,11 @@ public class IntroPage implements LocationListener {
         if ((m_introFile != null) && (force || !m_workbenchModified)) {
             try {
                 IWebBrowser browser = PlatformUI.getWorkbench().getBrowserSupport().createBrowser(BROWSER_ID);
-                checkMissingBrowserWarning(browser);
-                browser.openURL(m_introFile.toURI().toURL());
+                if (browser instanceof SystemBrowserInstance) {
+                    showMissingBrowserWarning(browser);
+                } else {
+                    browser.openURL(m_introFile.toURI().toURL());
+                }
             } catch (PartInitException ex) {
                 LOGGER.error("Could not open web browser with first intro page: " + ex.getMessage(), ex);
             } catch (IOException ex) {
@@ -340,26 +231,24 @@ public class IntroPage implements LocationListener {
         attachLocationListener();
     }
 
-    private void checkMissingBrowserWarning(final IWebBrowser browser) {
-        if (browser instanceof SystemBrowserInstance) {
-            IPersistentPreferenceStore prefStore =
-                (IPersistentPreferenceStore)KNIMEUIPlugin.getDefault().getPreferenceStore();
-            boolean omitWarnings = prefStore.getBoolean(PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING);
-            if (!omitWarnings) {
-                MessageDialogWithToggle dialog =
-                    MessageDialogWithToggle.openWarning(Display.getDefault().getActiveShell(),
-                        "Missing browser integration",
-                        "KNIME is unable to display web pages in an internal browser. This may be caused by missing "
-                            + "system libraries. Please visit http://www.knime.org/faq#q6 for details.\n"
-                            + "Some web pages may open in an external browser now.", "Do not show again", false,
-                        prefStore, PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING);
-                if (dialog.getToggleState()) {
-                    prefStore.setValue(PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING, true);
-                    try {
-                        prefStore.save();
-                    } catch (IOException ex) {
-                        // too bad, ignore it
-                    }
+    private void showMissingBrowserWarning(final IWebBrowser browser) {
+        IPersistentPreferenceStore prefStore =
+            (IPersistentPreferenceStore)KNIMEUIPlugin.getDefault().getPreferenceStore();
+        boolean omitWarnings = prefStore.getBoolean(PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING);
+        if (!omitWarnings) {
+            MessageDialogWithToggle dialog =
+                MessageDialogWithToggle.openWarning(Display.getDefault().getActiveShell(),
+                    "Missing browser integration",
+                    "KNIME is unable to display web pages in an internal browser. This may be caused by missing "
+                        + "system libraries. Please visit http://www.knime.org/faq#q6 for details.\n"
+                        + "Some web pages may open in an external browser.", "Do not show again", false, prefStore,
+                    PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING);
+            if (dialog.getToggleState()) {
+                prefStore.setValue(PreferenceConstants.P_OMIT_MISSING_BROWSER_WARNING, true);
+                try {
+                    prefStore.save();
+                } catch (IOException ex) {
+                    // too bad, ignore it
                 }
             }
         }
@@ -370,31 +259,10 @@ public class IntroPage implements LocationListener {
      * (unfortunately) involves some heavy reflection stuff as there is no other way to attach a listener otherwise.
      */
     private void attachLocationListener() {
-        for (IEditorReference ref : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-            .getEditorReferences()) {
-            try {
-                if (isIntroPageEditor(ref)) {
-                    IEditorPart part = ref.getEditor(true);
-                    if (part instanceof WebBrowserEditor) {
-                        WebBrowserEditor editor = (WebBrowserEditor)part;
-
-                        Field webBrowser = editor.getClass().getDeclaredField("webBrowser");
-                        webBrowser.setAccessible(true);
-                        BrowserViewer viewer = (BrowserViewer)webBrowser.get(editor);
-
-                        Field browserField = viewer.getClass().getDeclaredField("browser");
-                        browserField.setAccessible(true);
-                        Browser swtBrowser = (Browser)browserField.get(viewer);
-
-                        swtBrowser.removeLocationListener(this);
-                        swtBrowser.addLocationListener(this);
-                    }
-                }
-            } catch (PartInitException ex) {
-                LOGGER.error("Could not open web browser with intro page: " + ex.getMessage(), ex);
-            } catch (SecurityException | NoSuchFieldException | IllegalArgumentException | IllegalAccessException ex) {
-                LOGGER.error("Could not attach location listener to web browser: " + ex.getMessage(), ex);
-            }
+        Browser browser = AbstractInjector.findIntroPageBrowser(m_introFile);
+        if (browser != null) {
+            browser.removeLocationListener(this);
+            browser.addLocationListener(this);
         }
     }
 
@@ -405,6 +273,8 @@ public class IntroPage implements LocationListener {
     public void modifyWorkbenchState() {
         if (m_freshWorkspace || (m_introFile == null)) {
             return; // we cannot modify the workbench state in this case
+        } else if (!WebBrowserUtil.canUseInternalWebBrowser()) {
+            return; // no internal browser available, opening an editor in this case will lead to errors
         }
 
         IPath path = WorkbenchPlugin.getDefault().getDataLocation();
@@ -688,7 +558,7 @@ public class IntroPage implements LocationListener {
         for (IEditorReference ref : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
             .getEditorReferences()) {
             try {
-                if (IntroPage.INSTANCE.isIntroPageEditor(ref)) {
+                if (AbstractInjector.isIntroPageEditor(ref, m_introFile)) {
                     PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
                         .closeEditor(ref.getEditor(false), false);
                 }
@@ -704,23 +574,5 @@ public class IntroPage implements LocationListener {
     @Override
     public void changed(final LocationEvent event) {
         // nothing to do here
-    }
-
-    /**
-     * Returns whether the given editor is an intro editor. This is checked by looking the URL the editor displays.
-     *
-     * @param ref an editor reference
-     * @return <code>true</code> if it is an intro page editor, <code>false</code> otherwise
-     * @throws PartInitException if there was an error restoring the editor input
-     */
-    boolean isIntroPageEditor(final IEditorReference ref) throws PartInitException {
-        if (m_introFile == null) {
-            return false;
-        }
-
-        IEditorInput input = ref.getEditorInput();
-        return (input instanceof WebBrowserEditorInput)
-            && ((WebBrowserEditorInput)input).getURL().getPath()
-                .endsWith(m_introFile.getAbsolutePath().replace("\\", "/"));
     }
 }

@@ -48,44 +48,30 @@
 package org.knime.product.rcp.intro;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMResult;
-import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.ccil.cowan.tagsoup.Parser;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.util.FileUtil;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXNotRecognizedException;
-import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.XMLReader;
 
 /**
@@ -95,40 +81,19 @@ import org.xml.sax.XMLReader;
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
-class TipsAndNewsInjector implements Runnable {
+class TipsAndNewsInjector extends AbstractInjector {
     private final URL m_tipsAndNewsUrl;
-
-    private final File m_templateFile;
 
     private Node m_news;
 
     private Node m_tips;
 
-    private final DocumentBuilderFactory m_parserFactory;
-
-    private final XPathFactory m_xpathFactory;
-
-    private final TransformerFactory m_transformerFactory;
-
-    private final ReentrantLock m_introFileLock;
-
-    /**
-     * Creates a new injector.
-     *
-     * @param templateFile the template file in the temporary directory
-     * @param parserFactory a parser factory that will be re-used
-     * @param xpathFactory an XPath factory that will be re-used
-     * @param transformerFactory a transformer factory that will be re-used
-     */
     TipsAndNewsInjector(final File templateFile, final ReentrantLock introFileLock,
+        final IEclipsePreferences preferences, final boolean isFreshWorkspace,
         final DocumentBuilderFactory parserFactory, final XPathFactory xpathFactory,
         final TransformerFactory transformerFactory) {
-        m_templateFile = templateFile;
-        m_introFileLock = introFileLock;
-        m_parserFactory = parserFactory;
-        m_xpathFactory = xpathFactory;
-        m_transformerFactory = transformerFactory;
-
+        super(templateFile, introFileLock, preferences, isFreshWorkspace, parserFactory, xpathFactory,
+            transformerFactory);
         URL tipsTricksUrl = null;
         try {
             tipsTricksUrl = new URL("http://www.knime.org/tips-and-tricks?knid=" + KNIMEConstants.getKNIMEInstanceID());
@@ -136,100 +101,6 @@ class TipsAndNewsInjector implements Runnable {
             // does not happen
         }
         m_tipsAndNewsUrl = tipsTricksUrl;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void run() {
-        try {
-            getTipsAndNews();
-
-            m_introFileLock.lock();
-            try {
-                injectTipsAndNews();
-            } finally {
-                m_introFileLock.unlock();
-            }
-        } catch (XPathExpressionException | IOException | TransformerFactoryConfigurationError | TransformerException
-                | ParserConfigurationException | SAXException ex) {
-            NodeLogger.getLogger(getClass()).warn("Could not inject tips and news into intro page: " + ex.getMessage(),
-                ex);
-        }
-    }
-
-    private void injectTipsAndNews() throws XPathExpressionException, IOException,
-        TransformerFactoryConfigurationError, TransformerException, ParserConfigurationException, SAXException {
-
-        DocumentBuilder parser = m_parserFactory.newDocumentBuilder();
-        parser.setEntityResolver(EmptyDoctypeResolver.INSTANCE);
-        Document doc = parser.parse(m_templateFile);
-
-        XPath xpath = m_xpathFactory.newXPath();
-        Element newsNode = (Element)xpath.evaluate("//div[@id='news']", doc.getDocumentElement(), XPathConstants.NODE);
-        if (m_news != null) {
-            Node hr = (Node)xpath.evaluate("hr", m_news, XPathConstants.NODE);
-            if (hr != null) {
-                // the news block retrieved from the webpage contains an <hr> that we don't need
-                hr.getParentNode().removeChild(hr);
-            }
-
-            newsNode.removeAttribute("style");
-            newsNode.appendChild(doc.adoptNode(m_news));
-        } else {
-            // no news, so remove it completely
-            newsNode.getParentNode().removeChild(newsNode);
-        }
-
-        if (m_tips != null) {
-            Element tipsNode =
-                (Element)xpath.evaluate("//div[@id='tips']", doc.getDocumentElement(), XPathConstants.NODE);
-
-            tipsNode.removeAttribute("style");
-            tipsNode.appendChild(doc.adoptNode(m_tips));
-        }
-
-        File temp = FileUtil.createTempFile("intro", ".html", true);
-        Transformer serializer = m_transformerFactory.newTransformer();
-        serializer.setOutputProperty(OutputKeys.METHOD, "xhtml");
-        serializer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "about:legacy-compat");
-        serializer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        serializer.transform(new DOMSource(doc), new StreamResult(temp));
-        Files.move(temp.toPath(), m_templateFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-    }
-
-    /**
-     * Fetches content from the KNIME webpage and assigns it to the member variables.
-     */
-    private void getTipsAndNews() throws IOException, SAXNotRecognizedException, SAXNotSupportedException,
-        TransformerFactoryConfigurationError, TransformerException, XPathExpressionException {
-        HttpURLConnection conn = (HttpURLConnection)m_tipsAndNewsUrl.openConnection();
-        conn.setReadTimeout(5000);
-        conn.setConnectTimeout(2000);
-        conn.connect();
-
-        // parse tips&tricks from webpage
-        XMLReader reader = new Parser();
-        reader.setFeature(Parser.namespacesFeature, false);
-        reader.setFeature(Parser.namespacePrefixesFeature, false);
-
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        DOMResult res = new DOMResult();
-        transformer.transform(new SAXSource(reader, new InputSource(conn.getInputStream())), res);
-        conn.disconnect();
-
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        Node news = (Node)xpath.evaluate("//div[@id='knime-client-news']", res.getNode(), XPathConstants.NODE);
-        m_news = checkIfNewsExist(news);
-        if (m_news != null) {
-            fixRelativeURLs(m_news, xpath);
-        }
-
-        m_tips = (Node)xpath.evaluate("//div[@class='contentWrapper']", res.getNode(), XPathConstants.NODE);
-        if (m_tips != null) {
-            fixRelativeURLs(m_tips, xpath);
-        }
     }
 
     private Node checkIfNewsExist(final Node newsNode) {
@@ -268,6 +139,68 @@ class TipsAndNewsInjector implements Runnable {
             if (!e.getAttribute("href").startsWith("http")) {
                 e.setAttribute("href", "http://www.knime.org/" + e.getAttribute("href"));
             }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void injectData(final Document doc, final XPath xpath) throws Exception {
+        Element newsNode = (Element)xpath.evaluate("//div[@id='news']", doc.getDocumentElement(), XPathConstants.NODE);
+        if (m_news != null) {
+            Node hr = (Node)xpath.evaluate("hr", m_news, XPathConstants.NODE);
+            if (hr != null) {
+                // the news block retrieved from the webpage contains an <hr> that we don't need
+                hr.getParentNode().removeChild(hr);
+            }
+
+            newsNode.removeAttribute("style");
+            newsNode.appendChild(doc.adoptNode(m_news));
+        } else {
+            // no news, so remove it completely
+            newsNode.getParentNode().removeChild(newsNode);
+        }
+
+        if (m_tips != null) {
+            Element tipsNode =
+                (Element)xpath.evaluate("//div[@id='tips']", doc.getDocumentElement(), XPathConstants.NODE);
+
+            tipsNode.removeAttribute("style");
+            tipsNode.appendChild(doc.adoptNode(m_tips));
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void prepareData() throws Exception {
+        HttpURLConnection conn = (HttpURLConnection)m_tipsAndNewsUrl.openConnection();
+        conn.setReadTimeout(5000);
+        conn.setConnectTimeout(2000);
+        conn.connect();
+
+        // parse tips&tricks from webpage
+        XMLReader reader = new Parser();
+        reader.setFeature(Parser.namespacesFeature, false);
+        reader.setFeature(Parser.namespacePrefixesFeature, false);
+
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        DOMResult res = new DOMResult();
+        transformer.transform(new SAXSource(reader, new InputSource(conn.getInputStream())), res);
+        conn.disconnect();
+
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        Node news = (Node)xpath.evaluate("//div[@id='knime-client-news']", res.getNode(), XPathConstants.NODE);
+        m_news = checkIfNewsExist(news);
+        if (m_news != null) {
+            fixRelativeURLs(m_news, xpath);
+        }
+
+        m_tips = (Node)xpath.evaluate("//div[@class='contentWrapper']", res.getNode(), XPathConstants.NODE);
+        if (m_tips != null) {
+            fixRelativeURLs(m_tips, xpath);
         }
     }
 }
