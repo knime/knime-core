@@ -106,6 +106,7 @@ public class TestflowRunnerApplication implements IApplication {
      */
     @Override
     public Object start(final IApplicationContext context) throws Exception {
+        final long globalStartTime = System.currentTimeMillis();
         // we need a display, initialized as early as possible, otherwise closing JFrames may result
         // in X errors (BadWindow) under Linux
         PlatformUI.createDisplay();
@@ -160,7 +161,7 @@ public class TestflowRunnerApplication implements IApplication {
             public Integer call() throws Exception {
                 Thread.currentThread().setName("Testflow executor");
                 try {
-                    return runAllTests(resultWriter);
+                    return runAllTests(resultWriter, globalStartTime);
                 } finally {
                     stop();
                     display.wake();
@@ -202,11 +203,12 @@ public class TestflowRunnerApplication implements IApplication {
      * Searches the root directory for testflows and executes each of them.
      *
      * @param resultWriter the result writer for the test results
+     * @param globalStartTime the time when the whole application was started
      * @throws IOException if an I/O error occurs
      * @throws TransformerException if the results cannot be written properly
      */
-    private int runAllTests(final AbstractXMLResultWriter resultWriter) throws IOException, TransformerException {
-        long globalStartTime = System.currentTimeMillis();
+    private int runAllTests(final AbstractXMLResultWriter resultWriter, final long globalStartTime) throws IOException,
+        TransformerException {
         TestflowCollector registry = new TestflowCollector(m_workflowNamePattern, m_workflowPathPattern, m_rootDirs);
         Collection<WorkflowTestSuite> allTestFlows = registry.collectTestCases(m_runConfiguration);
 
