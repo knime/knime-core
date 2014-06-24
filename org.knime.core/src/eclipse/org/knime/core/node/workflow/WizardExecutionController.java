@@ -348,7 +348,8 @@ public final class WizardExecutionController {
             NodeIDSuffix idSuffix = NodeIDSuffix.create(m_manager.getID(), entry.getKey());
             resultMap.put(idSuffix.toString(), entry.getValue());
         }
-        return new WizardPageContent(resultMap, subNC.getLayoutInfo());
+        NodeIDSuffix pageID = NodeIDSuffix.create(m_manager.getID(), subWFM.getID());
+        return new WizardPageContent(pageID.toString(), resultMap, subNC.getLayoutInfo());
     }
 
     public static final NodeModelFilter<WizardNode> NOT_HIDDEN_FILTER = new NodeModelFilter<WizardNode>() {
@@ -528,16 +529,28 @@ public final class WizardExecutionController {
     public static final class WizardPageContent {
 
         @SuppressWarnings("rawtypes")
+        private final String m_pageNodeID;
         private final Map<String, WizardNode> m_pageMap;
         private final Map<Integer, WizardNodeLayoutInfo> m_layoutInfo;
 
         /**
+         * @param pageNodeID
          * @param pageMap
+         * @param layoutInfo
          */
         @SuppressWarnings("rawtypes")
-        WizardPageContent(final Map<String, WizardNode> pageMap, final Map<Integer, WizardNodeLayoutInfo> layoutInfo) {
+        WizardPageContent(final String pageNodeID, final Map<String, WizardNode> pageMap,
+            final Map<Integer, WizardNodeLayoutInfo> layoutInfo) {
+            m_pageNodeID = pageNodeID;
             m_pageMap = pageMap;
             m_layoutInfo = layoutInfo;
+        }
+
+        /**
+         * @return the pageNodeID
+         */
+        public String getPageNodeID() {
+            return m_pageNodeID;
         }
 
         /**
