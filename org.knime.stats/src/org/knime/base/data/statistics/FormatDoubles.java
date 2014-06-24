@@ -69,7 +69,6 @@ public class FormatDoubles {
      * @return The {@link NumberFormat} appropriate to format them.
      */
     public NumberFormat formatterForNumbers(final double... ds) {
-        double min = min(ds), max = max(ds);
         int[] highestDigits = highestDigits(ds);
         int[] decimalDigits = decimalDigits(ds);
         int highestDigit = max(highestDigits);
@@ -79,40 +78,12 @@ public class FormatDoubles {
             ret.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(Locale.ROOT));
             return ret;
         }
-        int rangeDigits = highestDigits(max - min)[0];
         NumberFormat nf = (NumberFormat)NumberFormat.getNumberInstance(Locale.ROOT).clone();
         nf.setMinimumFractionDigits(decimalDigit);
         nf.setMaximumFractionDigits(decimalDigit);
         nf.setMaximumIntegerDigits(highestDigit);
+        nf.setMinimumIntegerDigits(1);
         return nf;
-    }
-
-    /**
-     * @param ds
-     * @return
-     */
-    private double max(final double[] ds) {
-        double max = Double.NEGATIVE_INFINITY;
-        for (double d : ds) {
-            if (!Double.isNaN(d)) {
-                max = Math.max(max, d);
-            }
-        }
-        return max;
-    }
-
-    /**
-     * @param ds
-     * @return
-     */
-    private double min(final double[] ds) {
-        double min = Double.POSITIVE_INFINITY;
-        for (double d : ds) {
-            if (!Double.isNaN(d)) {
-                min = Math.min(min, d);
-            }
-        }
-        return min;
     }
 
     private static double[] POWERS_OF_TEN = new double[]{10d, 100d, 1000d, 1E4, 1E5, 1E6, 1E7, 1E8, 1E9};

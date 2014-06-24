@@ -136,6 +136,11 @@ import org.w3c.dom.svg.SVGDocument;
  */
 public class HistogramColumn implements Cloneable {
     /**
+     *
+     */
+    private static final BigDecimal FIVE = new BigDecimal(5);
+
+    /**
      * The visual view for {@link HistogramModel}s.
      */
     private final class HistogramComponent extends JPanel implements HiLiteListener, MouseMotionListener {
@@ -237,6 +242,7 @@ public class HistogramColumn implements Cloneable {
         /**
          * {@inheritDoc}
          */
+        //        @Override
         @Override
         public void mouseMoved(final MouseEvent e) {
             int x2 = e.getX();
@@ -336,6 +342,7 @@ public class HistogramColumn implements Cloneable {
      */
     static class HistogramNumericModel extends HistogramModel<Pair<Double, Double>> {
         private final NumberFormat m_format;
+
         private final BinNumberSelectionStrategy m_strategy;
 
         private class NumericBin extends Bin<Pair<Double, Double>> implements DisplayableBin {
@@ -388,6 +395,12 @@ public class HistogramColumn implements Cloneable {
 
         /**
          * Inits {@link HistogramNumericModel}.
+         *
+         * @param min The min value of the model.
+         * @param max The max value of the model.
+         * @param numOfBins The number of bins.
+         * @param colIndex The column index.
+         * @param colName The column name.
          */
         HistogramNumericModel(final double min, final double max, final int numOfBins, final int colIndex,
             final String colName) {
@@ -439,8 +452,9 @@ public class HistogramColumn implements Cloneable {
          */
         @Override
         protected HistogramModel<Pair<Double, Double>> createUninitializedClone() {
-            return new HistogramNumericModel(adjustMin(m_min, m_max, m_strategy), adjustMax(m_min, m_max, m_strategy), getBins().size(),
-                getColIndex(), getColName());
+            MinMaxBinCount adjusted = MinMaxBinCount.adjust(m_min, m_max, m_strategy);
+            return new HistogramNumericModel(adjusted.getMin(), adjusted.getMax(), getBins().size(), getColIndex(),
+                getColName());
         }
     }
 
@@ -499,6 +513,164 @@ public class HistogramColumn implements Cloneable {
         @Override
         protected HistogramModel<DataValue> createUninitializedClone() {
             return new HistogramNominalModel(m_values, getColIndex(), getColName());
+        }
+    }
+
+    static class MinMaxBinCount {
+        private final double m_min, m_max;
+
+        private final int m_binCount;
+
+        /**
+         * @param min
+         * @param max
+         * @param binCount
+         */
+        private MinMaxBinCount(final double min, final double max, final int binCount) {
+            super();
+            this.m_min = min;
+            this.m_max = max;
+            this.m_binCount = binCount;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return String.format("MinMaxBinCount [%s, %s] binCount=%s]", m_min, m_max, m_binCount);
+        }
+
+        double[] boundaries() {
+            double[] ret = new double[m_binCount + 1];
+            for (int i = 0; i < ret.length; ++i) {
+                ret[i] = m_min + i * (m_max - m_min) / m_binCount;
+            }
+            return ret;
+        }
+
+        /**
+         * @return the min
+         */
+        public double getMin() {
+            return m_min;
+        }
+
+        /**
+         * @return the max
+         */
+        public double getMax() {
+            return m_max;
+        }
+
+        /**
+         * @return the binCount
+         */
+        public int getBinCount() {
+            return m_binCount;
+        }
+
+        static MinMaxBinCount adjust(final double min, final double max, final BinNumberSelectionStrategy strategy) {
+            switch (strategy) {
+                case Specified:
+                    return new MinMaxBinCount(min, max, 10);
+                case DecimalRange:
+                    BigDecimal bMin = new BigDecimal(Double.toString(min)),
+                    bMax = new BigDecimal(Double.toString(max));
+                    BigDecimal range =
+                        bMax.subtract(bMin).round(new MathContext(2, RoundingMode.UP)).stripTrailingZeros();
+                    int power = range.scale();
+                    bMin = roundToNearest5Down(bMin, power + 1);
+                    bMax = roundToNearest5Up(bMax, power + 1);
+                    range = bMax.subtract(bMin).stripTrailingZeros();
+                    System.out.println(range + " " + range.scale() + " - " + range.precision());
+                    BigDecimal width = BigDecimal.ONE.scaleByPowerOfTen(-power - 2);//Math.exp(power * Math.log(10));
+                    int binCount = range.divide(width, RoundingMode.UP).intValue();//(int)Math.ceil(range / width);
+                    while (hasLargePrimeDivisor(binCount)) {
+                        BigDecimal diff = scaled5(power + 1);
+                        if (min - bMin.doubleValue() < bMax.doubleValue() - max) {
+                            bMin = bMin.subtract(diff);
+                        } else {
+                            bMax = bMax.add(diff);
+                        }
+                        range = range.add(diff);
+                        binCount = range.divide(width, RoundingMode.UP).intValue();
+                    }
+                    int twoDivisors = twoDivisors(binCount),
+                    fiveDivisors = fiveDivisors(binCount);
+                    while (binCount > 40) {
+                        if (fiveDivisors > 0) {
+                            binCount /= 5;
+                            --fiveDivisors;
+                        }
+                        if (twoDivisors > fiveDivisors) {
+                            binCount /= 2;
+                            --twoDivisors;
+                        }
+                    }
+                    //            int more = 1;
+                    //            while (binCount <= 3) {
+                    //                binCount =
+                    //                    range.divide(java.math.BigDecimal.ONE.scaleByPowerOfTen(-power - (more++)),
+                    //                        java.math.RoundingMode.UP).intValue();//(int)Math.ceil(range / Math.exp((power - 1) * Math.log(10)));
+                    //            }
+                    return new MinMaxBinCount(bMin.doubleValue(), bMax.doubleValue(), binCount);
+                default:
+                    throw new UnsupportedOperationException("Not supported: " + strategy);
+            }
+        }
+
+        /**
+         * @param binCount
+         * @return
+         */
+        private static int twoDivisors(final int binCount) {
+            return divisors(binCount, 2);
+        }
+
+        /**
+         * @param binCount
+         */
+        private static int fiveDivisors(final int binCount) {
+            return divisors(binCount, 5);
+        }
+
+        /**
+         * @param binCount
+         * @param div
+         * @return
+         */
+        private static int divisors(final int binCount, final int div) {
+            int num = binCount, ret = 0;
+            while (num % div == 0) {
+                num /= div;
+                ++ret;
+            }
+            return ret;
+        }
+
+        /**
+         * @param binCount
+         * @return
+         */
+        private static boolean hasLargePrimeDivisor(final int binCount) {
+            int num = binCount;
+            if (binCount == 0) {
+                throw new IllegalStateException("Bin count cannot be 0!");
+            }
+            int wrongDivisors = 1;
+            for (int p : new int[]{2, 5}) {
+                while (num % p == 0) {
+                    num /= p;
+                }
+            }
+            for (int p : new int[]{3, 7, 11, 13, 17, 19}) {
+                while (num % p == 0) {
+                    num /= p;
+                    wrongDivisors *= p;
+                }
+            }
+            return wrongDivisors > 22 || Math.abs(num) > 1;
         }
     }
 
@@ -848,7 +1020,7 @@ public class HistogramColumn implements Cloneable {
                 label = display.getText();
             }
             Rectangle2D bounds = g.getFontMetrics().getStringBounds(label, g);
-            g.drawString(label, m_height - (int)bounds.getWidth(), (int)(m_width - startX - binWidth / 8));
+            g.drawString(label, m_height - 2 - (int)bounds.getWidth(), (int)(m_width - startX - binWidth / 8));
         }
     }
 
@@ -916,7 +1088,9 @@ public class HistogramColumn implements Cloneable {
                     continue;
                 }
                 int numOfBins = addHistogramNumericModel(histograms, columnIndex, colSpec, min, max);
-                NodeLogger.getLogger(HistogramColumn.class).debug("Number of bins: " + numOfBins + " for " + colSpec + " [" + mins[columnIndex] + ", " + maxs[columnIndex] + "]");
+                NodeLogger.getLogger(HistogramColumn.class).debug(
+                    "Number of bins: " + numOfBins + " for " + colSpec + " [" + mins[columnIndex] + ", "
+                        + maxs[columnIndex] + "]");
             }
         }
         final Set<RowKey> hiLitKeys = hlHandler.getHiLitKeys();
@@ -938,21 +1112,19 @@ public class HistogramColumn implements Cloneable {
     }
 
     /**
-     * @param histograms
-     * @param columnIndex
-     * @param colSpec
-     * @param min
-     * @param max
-     * @return
+     * @param histograms The {@link Map} of histograms.
+     * @param columnIndex The column index.
+     * @param colSpec The {@link DataColumnSpec}.
+     * @param minOrig The original min value.
+     * @param maxOrig The original max value.
+     * @return The bin count of the model.
      */
     protected int addHistogramNumericModel(final Map<Integer, HistogramNumericModel> histograms, final int columnIndex,
         final DataColumnSpec colSpec, final double minOrig, final double maxOrig) {
-        double min = adjustMin(minOrig, maxOrig, m_binSelectionStrategy);
-        double max = adjustMax(minOrig, maxOrig, m_binSelectionStrategy);
-        int numOfBins = computeBinNumber(min, max);
-        histograms.put(Integer.valueOf(columnIndex), new HistogramNumericModel(min, max, numOfBins,
-            columnIndex, colSpec.getName()));
-        return numOfBins;
+        MinMaxBinCount adjusted = MinMaxBinCount.adjust(minOrig, maxOrig, m_binSelectionStrategy);
+        histograms.put(Integer.valueOf(columnIndex), new HistogramNumericModel(adjusted.getMin(), adjusted.getMax(),
+            adjusted.getBinCount(), columnIndex, colSpec.getName()));
+        return adjusted.getBinCount();
     }
 
     /**
@@ -961,7 +1133,9 @@ public class HistogramColumn implements Cloneable {
      * @param binSelectionStrategy
      * @return
      */
-    public static double adjustMin(final double min, final double max, final BinNumberSelectionStrategy binSelectionStrategy) {
+    @Deprecated
+    private static double adjustMin(final double min, final double max,
+        final BinNumberSelectionStrategy binSelectionStrategy) {
         switch (binSelectionStrategy) {
             case Specified:
                 return min;
@@ -975,8 +1149,8 @@ public class HistogramColumn implements Cloneable {
                 range = range.round(new MathContext(2, RoundingMode.UP));
                 System.out.println(range + " " + range.scale() + " - " + range.precision());
                 if (bMin.scale() > range.scale()) {
-                    double ret = bMin.setScale(range.scale(), RoundingMode.FLOOR).doubleValue();//bMin.round(new MathContext(Math.max(range.scale() - range.precision() + 1, 1), RoundingMode.FLOOR)).doubleValue();
-                    return ret;
+                    BigDecimal ret = roundToNearest5Down(bMin, range.stripTrailingZeros().scale() + 1);//bMin.round(new MathContext(Math.max(range.scale() - range.precision() + 1, 1), RoundingMode.FLOOR)).doubleValue();
+                    return ret.doubleValue();
                 }
                 return min;
             default:
@@ -985,12 +1159,62 @@ public class HistogramColumn implements Cloneable {
     }
 
     /**
+     * @param num A number.
+     * @param scale The scale of the divisor.
+     * @return The nearest number close to {@code num}, still smaller with {@link #scaled5(int)} on {@code scale}.
+     */
+    private static BigDecimal roundToNearest5Down(final BigDecimal num, final int scale) {
+        BigDecimal rounded = num.setScale(scale, RoundingMode.FLOOR);
+        BigDecimal remainder = positiveRemainder(rounded, scale);
+        return rounded.subtract(remainder);
+    }
+
+    /**
+     * @param num A number.
+     * @param scale The scale of the divisor.
+     * @return The nearest number close to {@code num}, still larger with {@link #scaled5(int)} on {@code scale}.
+     */
+    private static BigDecimal roundToNearest5Up(final BigDecimal num, final int scale) {
+        BigDecimal rounded = num.setScale(scale, RoundingMode.CEILING);
+        BigDecimal remainder = positiveRemainder(rounded, scale);
+        if (remainder.compareTo(BigDecimal.ZERO) != 0) {
+            BigDecimal scaled = scaled5(scale);
+            return rounded.add(scaled.subtract(remainder));
+        }
+        return rounded;
+    }
+
+    /**
+     * @param num A number.
+     * @param scale The scale of the divisor.
+     * @return The positive remainder of the number divided by {@link #scaled5(int)} on {@code scale}.
+     */
+    protected static BigDecimal positiveRemainder(final BigDecimal num, final int scale) {
+        BigDecimal scaled = scaled5(scale);
+        BigDecimal remainder = num.remainder(scaled);
+        if (remainder.compareTo(BigDecimal.ZERO) < 0) {
+            remainder = remainder.add(scaled);
+        }
+        return remainder;
+    }
+
+    /**
+     * @param scale A scale of the multiplication.
+     * @return {@code 5} scaled by power of {@code 10} to {@code -scale}.
+     */
+    protected static BigDecimal scaled5(final int scale) {
+        return FIVE.scaleByPowerOfTen(-scale);
+    }
+
+    /**
      * @param min
      * @param max
      * @param binSelectionStrategy
      * @return
      */
-    public static double adjustMax(final double min, final double max, final BinNumberSelectionStrategy binSelectionStrategy) {
+    @Deprecated
+    private static double adjustMax(final double min, final double max,
+        final BinNumberSelectionStrategy binSelectionStrategy) {
         switch (binSelectionStrategy) {
             case Specified:
                 return min;
@@ -1003,8 +1227,8 @@ public class HistogramColumn implements Cloneable {
                 BigDecimal range = bMax.subtract(bMin);
                 range = range.round(new MathContext(2, RoundingMode.UP));
                 System.out.println(range + " " + range.scale() + " - " + range.precision());
-                if (bMax.scale() >range.scale()) {
-                    double ret = bMax.setScale(range.scale(), RoundingMode.CEILING).doubleValue();//bMax.round(new MathContext(Math.max(range.scale() - range.precision() + 1, 1), RoundingMode.CEILING)).doubleValue();
+                if (bMax.scale() > range.scale()) {
+                    double ret = roundToNearest5Up(bMax, range.stripTrailingZeros().scale() + 1).doubleValue();//bMax.round(new MathContext(Math.max(range.scale() - range.precision() + 1, 1), RoundingMode.CEILING)).doubleValue();
                     return ret;
                 }
                 return max;
@@ -1020,36 +1244,42 @@ public class HistogramColumn implements Cloneable {
      * @param max The maximum value.
      * @return The number of bins to use.
      */
+    @Deprecated
     private int computeBinNumber(final double min, final double max) {
         switch (m_binSelectionStrategy) {
             case Specified:
                 return m_numOfBins;
             case DecimalRange:
-//                double range = max - min;
-//                if (range < 1E-11) {
-//                    return 1;
-//                }
-//                int power = (int)Math.floor(Math.log10(range));
-//                assert power >= -12 : "power: " + power;
-//
-//                double width = Math.exp(power * Math.log(10));
-//                int binCount = (int)Math.ceil(range / width);
-//                if (binCount <= 3) {
-//                    binCount = (int)Math.ceil(range / Math.exp((power - 1) * Math.log(10)));
-//                }
-//                m_numOfBins = binCount;
-//                return binCount;
-                java.math.BigDecimal range = new java.math.BigDecimal(Double.toString(max)).subtract(new java.math.BigDecimal(Double.toString(min)));
-                if (range.scale() < -11) {
+                //                double range = max - min;
+                //                if (range < 1E-11) {
+                //                    return 1;
+                //                }
+                //                int power = (int)Math.floor(Math.log10(range));
+                //                assert power >= -12 : "power: " + power;
+                //
+                //                double width = Math.exp(power * Math.log(10));
+                //                int binCount = (int)Math.ceil(range / width);
+                //                if (binCount <= 3) {
+                //                    binCount = (int)Math.ceil(range / Math.exp((power - 1) * Math.log(10)));
+                //                }
+                //                m_numOfBins = binCount;
+                //                return binCount;
+                java.math.BigDecimal range =
+                    new java.math.BigDecimal(Double.toString(max)).subtract(new java.math.BigDecimal(Double
+                        .toString(min)));
+                int power = range.stripTrailingZeros().scale();//(int)Math.floor(Math.log10(range));
+                if (power < -11) {
                     return 1;
                 }
-                int power = range.stripTrailingZeros().scale();//(int)Math.floor(Math.log10(range));
                 //assert power >= -12 : "power: " + power;
 
-                java.math.BigDecimal width = java.math.BigDecimal.ONE.scaleByPowerOfTen(-power + 1);//Math.exp(power * Math.log(10));
+                java.math.BigDecimal width = scaled5(power);//java.math.BigDecimal.ONE.scaleByPowerOfTen(-power + 1);//Math.exp(power * Math.log(10));
                 int binCount = range.divide(width, java.math.RoundingMode.UP).intValue();//(int)Math.ceil(range / width);
-                if (binCount <= 3) {
-                    binCount = range.divide(java.math.BigDecimal.ONE.scaleByPowerOfTen(-power ), java.math.RoundingMode.UP).intValue();//(int)Math.ceil(range / Math.exp((power - 1) * Math.log(10)));
+                int more = 1;
+                while (binCount <= 3) {
+                    binCount =
+                        range.divide(java.math.BigDecimal.ONE.scaleByPowerOfTen(-power - (more++)),
+                            java.math.RoundingMode.UP).intValue();//(int)Math.ceil(range / Math.exp((power - 1) * Math.log(10)));
                 }
                 return binCount;
             default:
@@ -1088,8 +1318,8 @@ public class HistogramColumn implements Cloneable {
      */
     public static
         Pair<Pair<Map<Integer, ? extends HistogramModel<?>>, Map<Integer, Map<Integer, Set<RowKey>>>>, Map<Integer, Map<DataValue, Set<RowKey>>>>
-        loadHistograms(final File histogramsGz, final File dataArrayGz, final Set<String> nominalColumns, final BinNumberSelectionStrategy strategy)
-            throws IOException, InvalidSettingsException {
+        loadHistograms(final File histogramsGz, final File dataArrayGz, final Set<String> nominalColumns,
+            final BinNumberSelectionStrategy strategy) throws IOException, InvalidSettingsException {
         Map<Integer, Map<Integer, Set<RowKey>>> numericKeys = new HashMap<Integer, Map<Integer, Set<RowKey>>>();
         Map<Integer, HistogramNumericModel> histograms = loadHistogramsPrivate(histogramsGz, numericKeys, strategy);
         Map<Integer, Map<DataValue, Set<RowKey>>> nominalKeys = new HashMap<Integer, Map<DataValue, Set<RowKey>>>();
@@ -1142,12 +1372,14 @@ public class HistogramColumn implements Cloneable {
      * @throws InvalidSettingsException Something went wrong.
      */
     public static Map<Integer, ? extends HistogramModel<?>> loadHistograms(final File histogramsGz,
-        final Map<Integer, Map<Integer, Set<RowKey>>> numericKeys, final BinNumberSelectionStrategy strategy) throws IOException, InvalidSettingsException {
+        final Map<Integer, Map<Integer, Set<RowKey>>> numericKeys, final BinNumberSelectionStrategy strategy)
+        throws IOException, InvalidSettingsException {
         return loadHistogramsPrivate(histogramsGz, numericKeys, strategy);
     }
 
     private static Map<Integer, HistogramNumericModel> loadHistogramsPrivate(final File histogramsGz,
-        final Map<Integer, Map<Integer, Set<RowKey>>> numericKeys, final BinNumberSelectionStrategy strategy) throws IOException, InvalidSettingsException {
+        final Map<Integer, Map<Integer, Set<RowKey>>> numericKeys, final BinNumberSelectionStrategy strategy)
+        throws IOException, InvalidSettingsException {
         final FileInputStream is = new FileInputStream(histogramsGz);
         final GZIPInputStream inData = new GZIPInputStream(is);
         final ConfigRO config = NodeSettings.loadFromXML(inData);
@@ -1162,8 +1394,9 @@ public class HistogramColumn implements Cloneable {
             String colName = h.getString(COL_NAME);
             double[] binMins = h.getDoubleArray(BIN_MINS), binMaxes = h.getDoubleArray(BIN_MAXES);
             int[] binCounts = h.getIntArray(BIN_COUNTS);
-            min = adjustMin(min, max, strategy);
-            max = adjustMax(min, max, strategy);
+            MinMaxBinCount adjusted = MinMaxBinCount.adjust(min, max, strategy);
+            min = adjusted.getMin();
+            max = adjusted.getMax();
             HistogramNumericModel histogramData = new HistogramNumericModel(min, max, binMins.length, colIdx, colName);
             for (int i = binMins.length; i-- > 0;) {
                 histogramData.getBins().set(i, histogramData.new NumericBin(binMins[i], binMaxes[i]));
