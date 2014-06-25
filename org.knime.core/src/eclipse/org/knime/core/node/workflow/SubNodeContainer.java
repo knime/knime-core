@@ -1295,17 +1295,17 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             for (Map.Entry<NodeID, DialogNode> entry : nodes.entrySet()) {
                 final NodeID id = entry.getKey();
                 final DialogNode node = entry.getValue();
+                final String nodeIDSuffix = Integer.toString(id.getIndex());
 
                 // the old/previously set value in the node
                 final DialogNodeValue oldDialogValue = node.getDialogValue();
                 final NodeSettings oldDialogValueSettings;
                 if (oldDialogValue != null) {
-                    oldDialogValueSettings = new NodeSettings("oldvalue");
+                    oldDialogValueSettings = new NodeSettings(nodeIDSuffix);
                     oldDialogValue.saveToNodeSettings(oldDialogValueSettings);
                 } else {
                     oldDialogValueSettings = null;
                 }
-                final String nodeIDSuffix = Integer.toString(id.getIndex());
                 final NodeSettingsRO newDialogValueSettings = modelSettings.containsKey(nodeIDSuffix)
                         ? modelSettings.getNodeSettings(nodeIDSuffix) : null;
 
