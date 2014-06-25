@@ -146,6 +146,10 @@ public final class LogRegLearnerNodeModel extends NodeModel {
         }
         LogRegLearner learner = new LogRegLearner(new PortObjectSpec[] {tableSpec, inPMMLSpec}, m_settings);
         m_content = learner.execute(new PortObject[] {data, inPMMLPort}, exec);
+        String warn = learner.getWarningMessage();
+        if (warn != null) {
+            setWarningMessage(warn);
+        }
 
         // third argument is ignored since we provide a port
         PMMLPortObject outPMMLPort = new PMMLPortObject((PMMLPortObjectSpec)learner.getOutputSpec()[0],
