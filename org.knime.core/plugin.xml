@@ -196,6 +196,13 @@
                suggestAsDefault="true">
          </renderer>
       </dataValue>
+      <dataValue
+            valueClass="org.knime.core.data.image.ImageValue">
+         <renderer
+               rendererFactoryClass="org.knime.core.data.renderer.ImageValueRenderer$Factory"
+               suggestAsDefault="false">
+         </renderer>
+      </dataValue>      
    </extension>
    <extension
          point="org.knime.core.DatabaseUtility">

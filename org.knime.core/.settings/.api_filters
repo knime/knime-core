@@ -143,6 +143,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/image/ImageValue.java" type="org.knime.core.data.image.ImageValue">
+        <filter id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.image.ImageValue"/>
+                <message_argument value="UTILITY"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/vector/bitvector/DenseBitVectorCellFactory.java" type="org.knime.core.data.vector.bitvector.DenseBitVectorCellFactory">
         <filter comment="changed return type from sparse -&gt; dense --- old standing problem" id="338792546">
             <message_arguments>

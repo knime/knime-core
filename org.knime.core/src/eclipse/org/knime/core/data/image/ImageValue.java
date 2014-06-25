@@ -45,12 +45,51 @@
  */
 package org.knime.core.data.image;
 
+import javax.swing.Icon;
+
 import org.knime.core.data.DataValue;
+import org.knime.core.data.ExtensibleUtilityFactory;
 
 /** Interface for all image cells.
  * @author Thomas Gabriel, KNIME.com, Zurich, Switzerland
  */
 public interface ImageValue extends DataValue {
+    /**
+     * Utility factory for image values.
+     *
+     * @since 2.10
+     */
+    UtilityFactory UTILITY = new ImageValueUtilityFactory();
+
+    /**
+     * Utility factory for image values.
+     *
+     * @since 2.10
+     */
+    class ImageValueUtilityFactory extends ExtensibleUtilityFactory {
+        private static final Icon ICON = loadIcon(ImageValue.class, "/image-value.png");
+
+        ImageValueUtilityFactory() {
+            super(ImageValue.class);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Icon getIcon() {
+            return ICON;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getName() {
+            return "Generic Images";
+        }
+    }
+
 
     /** @return underlying image content for this image type/value */
     public ImageContent getImageContent();
