@@ -54,13 +54,21 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.BayesInputsDocument.BayesInputs;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
+import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
@@ -104,7 +112,7 @@ public class BitVectorAttributeModel extends AttributeModel {
         /**Constructor for class BitVectorClassValue.
          * @param classValue
          */
-        BitVectorClassValue(final String classValue) {
+        private BitVectorClassValue(final String classValue) {
             m_classValue = classValue;
         }
 
@@ -112,7 +120,7 @@ public class BitVectorAttributeModel extends AttributeModel {
          * @param config the <code>Config</code> object to read from
          * @throws InvalidSettingsException if the settings are invalid
          */
-        BitVectorClassValue(final Config config)
+        private BitVectorClassValue(final Config config)
             throws InvalidSettingsException {
             m_classValue = config.getString(CLASS_VALUE);
             m_missingValueRecs.setValue(config.getInt(MISSING_VALUE_COUNTER));
@@ -123,7 +131,7 @@ public class BitVectorAttributeModel extends AttributeModel {
         /**
          * @param config the <code>Config</code> object to write to
          */
-        void saveModel(final Config config) {
+        private void saveModel(final Config config) {
             config.addString(CLASS_VALUE, m_classValue);
             config.addInt(MISSING_VALUE_COUNTER, m_missingValueRecs.intValue());
             config.addInt(NO_OF_ROWS, m_noOfRows);
@@ -148,7 +156,7 @@ public class BitVectorAttributeModel extends AttributeModel {
          * Called after all training rows where added to validate the model.
          * @throws InvalidSettingsException if the model isn't valid
          */
-        void validate() throws InvalidSettingsException {
+        private void validate() throws InvalidSettingsException {
             if (m_noOfRows == 0) {
                 setInvalidCause(MODEL_CONTAINS_NO_RECORDS);
                 throw new InvalidSettingsException("Model for attribute "
@@ -159,28 +167,28 @@ public class BitVectorAttributeModel extends AttributeModel {
         /**
          * @return the classValue
          */
-        String getClassValue() {
+        private String getClassValue() {
             return m_classValue;
         }
 
         /**
          * @return the length of the {@link BitVectorClassValue}
          */
-        int getVectorLength() {
+        private int getVectorLength() {
             return m_bitCounts.length;
         }
 
         /**
          * @return the number of rows
          */
-        int getNoOfRows() {
+        private int getNoOfRows() {
             return m_noOfRows;
         }
 
         /**
          * @param attrValue
          */
-        void addValue(final DataCell attrValue) {
+        private void addValue(final DataCell attrValue) {
             if (attrValue.isMissing()) {
                 m_missingValueRecs.inc();
             } else {
@@ -209,7 +217,7 @@ public class BitVectorAttributeModel extends AttributeModel {
          * probability for
          * @return the probability for the given attribute value
          */
-        double getProbability(final DataCell attributeValue) {
+        private double getProbability(final DataCell attributeValue) {
             final int noOfRows4Class = getNoOfRows();
             if (noOfRows4Class == 0) {
                 return 0;
@@ -247,10 +255,10 @@ public class BitVectorAttributeModel extends AttributeModel {
         }
 
         /**
-         * @return the missingValueRecs
+         * @return the number of missing values
          */
-        MutableInteger getMissingValueRecs() {
-            return m_missingValueRecs;
+        private int getNoOfMissingValueRecs() {
+            return m_missingValueRecs.intValue();
         }
 
         /**
@@ -258,7 +266,7 @@ public class BitVectorAttributeModel extends AttributeModel {
          * @return the number of bits that are set for this class value at the
          * specified position
          */
-        public int getBitCount(final int idx) {
+        private int getBitCount(final int idx) {
             return m_bitCounts[idx];
         }
 
@@ -268,8 +276,8 @@ public class BitVectorAttributeModel extends AttributeModel {
          * @return the number of zeros that exist for this class value at the
          * specified position
          */
-        public int getZeroCount(final int idx) {
-            return getNoOfRows() - m_bitCounts[idx];
+        private int getZeroCount(final int idx) {
+            return getNoOfRows() - m_bitCounts[idx] - m_missingValueRecs.intValue();
         }
     }
 
@@ -280,7 +288,7 @@ public class BitVectorAttributeModel extends AttributeModel {
      * @param skipMissingVals set to <code>true</code> if the missing values
      * should be skipped during learning and prediction
      */
-    public BitVectorAttributeModel(final String attributeName,
+    BitVectorAttributeModel(final String attributeName,
             final boolean skipMissingVals) {
         super(attributeName, 0, skipMissingVals);
         m_classValues = new HashMap<>();
@@ -296,7 +304,7 @@ public class BitVectorAttributeModel extends AttributeModel {
      * @throws InvalidSettingsException if the settings are invalid
      *
      */
-    public BitVectorAttributeModel(final String attributeName,
+    BitVectorAttributeModel(final String attributeName,
             final boolean skipMissingVals, final int noOfMissingVals,
             final Config config) throws InvalidSettingsException {
         super(attributeName, noOfMissingVals, skipMissingVals);
@@ -480,6 +488,52 @@ public class BitVectorAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
+    void createDataRows(final ExecutionMonitor exec, final BufferedDataContainer dc, final boolean ignoreMissing,
+        final AtomicInteger rowId) throws CanceledExecutionException {
+        final List<String> sortedClassVal = AttributeModel.sortCollection(m_classValues.keySet());
+        if (sortedClassVal == null) {
+            return;
+        }
+        final StringCell attributeCell = new StringCell(getAttributeName());
+        final int vectorLength = getVectorLength();
+        for (int pos = 0; pos < vectorLength; pos++) {
+            createRowsForPosition(dc, ignoreMissing, sortedClassVal, attributeCell, pos, rowId);
+        }
+    }
+
+    private void createRowsForPosition(final BufferedDataContainer dc, final boolean ignoreMissing,
+        final List<String> sortedClassVal, final StringCell attributeCell, final int pos, final AtomicInteger rowId) {
+        boolean[] bitState = new boolean[]{false, true};
+        for (boolean set : bitState) {
+            for (final String classVal : sortedClassVal) {
+                final StringCell classCell = new StringCell(classVal);
+                final BitVectorClassValue classValue = m_classValues.get(classVal);
+                final List<DataCell> cells = new LinkedList<>();
+                cells.add(attributeCell);
+                if (set) {
+                    cells.add(new StringCell("pos_" + pos + "_set"));
+                    cells.add(classCell);
+                    cells.add(new IntCell(classValue.getBitCount(pos)));
+                } else {
+                    cells.add(new StringCell("pos_" + pos + "_notset"));
+                    cells.add(classCell);
+                    cells.add(new IntCell(classValue.getZeroCount(pos)));
+                }
+                if (!ignoreMissing) {
+                    cells.add(new IntCell(classValue.getNoOfMissingValueRecs()));
+                }
+                cells.add(DataType.getMissingCell());
+                cells.add(DataType.getMissingCell());
+                dc.addRowToTable(
+                    new DefaultRow(RowKey.createRowKey(rowId.getAndIncrement()), cells.toArray(new DataCell[0])));
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     String getHTMLViewHeadLine() {
         return "P(" + StringEscapeUtils.escapeHtml(getAttributeName()) + " | class=?)";
     }
@@ -490,8 +544,7 @@ public class BitVectorAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLView(final int totalNoOfRecs) {
-        final List<String> sortedClassVal =
-            AttributeModel.sortCollection(m_classValues.keySet());
+        final List<String> sortedClassVal = AttributeModel.sortCollection(m_classValues.keySet());
         if (sortedClassVal == null) {
             return "";
         }
@@ -501,7 +554,7 @@ public class BitVectorAttributeModel extends AttributeModel {
         columnNames.add(getAttributeName());
         final String missingHeading = getMissingValueHeader(columnNames);
         final StringBuilder buf = new StringBuilder();
-        buf.append("<table border='1' width='100%'>");
+        buf.append("<table width='100%'>");
         //first table header section
         buf.append("<tr>");
         buf.append("<th rowspan=2>");
@@ -509,7 +562,7 @@ public class BitVectorAttributeModel extends AttributeModel {
         buf.append("</th>");
 //first table header row
         for (int i = 0, length = getVectorLength(); i < length; i++) {
-            buf.append("<th colspan=2>");
+            buf.append("<th colspan=2 align='center'>");
             buf.append("Pos" + i);
             buf.append("</th>");
         }
@@ -523,10 +576,10 @@ public class BitVectorAttributeModel extends AttributeModel {
         buf.append("<tr>");
         //create the first header row
         for (int i = 0; i < bitVectorLength; i++) {
-            buf.append("<th>");
+            buf.append("<th align='center'>");
             buf.append("0");
             buf.append("</th>");
-            buf.append("<th>");
+            buf.append("<th align='center'>");
             buf.append("1");
             buf.append("</th>");
         }
@@ -554,15 +607,13 @@ public class BitVectorAttributeModel extends AttributeModel {
                 totalValCounter[1][i] += bitCount;
                 buf.append(bitCount);
                 buf.append("</td>");
-                //no of missing values for this class value
-                if (missingHeading != null) {
-                    final MutableInteger missingRowCounter =
-                        classValue.getMissingValueRecs();
-                    totalMissingValCounter += missingRowCounter.intValue();
-                    buf.append("<td align='center'>");
-                    buf.append(missingRowCounter);
-                    buf.append("</td>");
-                }
+            }
+            //no of missing values for this class value
+            if (missingHeading != null) {
+                totalMissingValCounter += classValue.getNoOfMissingValueRecs();
+                buf.append("<td align='center'>");
+                buf.append(classValue.getNoOfMissingValueRecs());
+                buf.append("</td>");
             }
             buf.append("</tr>");
         }
@@ -586,8 +637,7 @@ public class BitVectorAttributeModel extends AttributeModel {
         //no of missing values for this class value
         if (missingHeading != null) {
             buf.append("<td align='center'>");
-            buf.append(
-                    nf.format(totalMissingValCounter / (double) totalNoOfRecs));
+            buf.append(nf.format(totalMissingValCounter / (double) totalNoOfRecs));
             buf.append("</td>");
         }
         buf.append("</tr>");

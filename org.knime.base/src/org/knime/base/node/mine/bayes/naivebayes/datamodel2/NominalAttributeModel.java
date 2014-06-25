@@ -50,9 +50,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.PairCountsDocument.PairCounts;
@@ -61,6 +63,13 @@ import org.dmg.pmml.TargetValueCountsDocument.TargetValueCounts;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.NominalValue;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
@@ -111,7 +120,7 @@ class NominalAttributeModel extends AttributeModel {
         /**Constructor for class NominalRowValue.NominalClassValue.
          * @param classValue the class value
          */
-        NominalClassValue(final String classValue, final int missingValueRecs) {
+        private NominalClassValue(final String classValue, final int missingValueRecs) {
             m_classValue = classValue;
             m_missingValueRecs = new MutableInteger(missingValueRecs);
             m_noOfRows = missingValueRecs;
@@ -121,31 +130,28 @@ class NominalAttributeModel extends AttributeModel {
          * @param config the <code>Config</code> object to read from
          * @throws InvalidSettingsException if the settings are invalid
          */
-        NominalClassValue(final Config config)
+        private NominalClassValue(final Config config)
             throws InvalidSettingsException {
             m_classValue = config.getString(CLASS_VALUE);
             m_noOfRows = config.getInt(NO_OF_ROWS);
-            m_missingValueRecs =
-                new MutableInteger(config.getInt(MISSING_VALUE_COUNTER));
+            m_missingValueRecs = new MutableInteger(config.getInt(MISSING_VALUE_COUNTER));
             final String[] attrVals = config.getStringArray(ATTRIBUTE_VALS);
             final int[] recsCounter = config.getIntArray(ATTR_VAL_COUNTER);
             if (attrVals.length != recsCounter.length) {
-                throw new InvalidSettingsException(
-                        "Attribute and counter array must be of equal size");
+                throw new InvalidSettingsException("Attribute and counter array must be of equal size");
             }
             for (int i = 0, length = attrVals.length; i < length; i++) {
-                m_recsByAttrValue.put(attrVals[i],
-                        new MutableInteger(recsCounter[i]));
+                m_recsByAttrValue.put(attrVals[i], new MutableInteger(recsCounter[i]));
             }
         }
 
         /**
          * @param config the config object to write to
          */
-        void saveModel(final Config config) {
+        private void saveModel(final Config config) {
             config.addString(CLASS_VALUE, m_classValue);
             config.addInt(NO_OF_ROWS, m_noOfRows);
-            config.addInt(MISSING_VALUE_COUNTER, m_missingValueRecs.intValue());
+            config.addInt(MISSING_VALUE_COUNTER, getNoOfMissingValueRecs());
             final String[] attrVals = new String[m_recsByAttrValue.size()];
             final int[] recsCounter = new int[m_recsByAttrValue.size()];
             int i = 0;
@@ -161,7 +167,7 @@ class NominalAttributeModel extends AttributeModel {
         /**
          * @param attrVal the attribute value to add to this class
          */
-        void addValue(final DataCell attrVal) {
+        private void addValue(final DataCell attrVal) {
             if (attrVal.isMissing()) {
                 m_missingValueRecs.inc();
             } else {
@@ -180,7 +186,7 @@ class NominalAttributeModel extends AttributeModel {
          * @param attributeValue the attribute value
          * @param rowCount the corresponding row count
          */
-        void addCount(final String attributeValue, final int rowCount) {
+        private void addCount(final String attributeValue, final int rowCount) {
             MutableInteger counter = m_recsByAttrValue.get(attributeValue);
             if (counter == null) {
                 counter = new MutableInteger(0);
@@ -193,14 +199,14 @@ class NominalAttributeModel extends AttributeModel {
         /**
          * @return the classValue
          */
-        String getClassValue() {
+        private String getClassValue() {
             return m_classValue;
         }
 
         /**
          * @return the total number of rows with this class
          */
-        int getNoOfRows() {
+        private int getNoOfRows() {
             return m_noOfRows;
         }
 
@@ -209,12 +215,11 @@ class NominalAttributeModel extends AttributeModel {
          * rows for
          * @return the number of rows with this class and the given attribute
          */
-        MutableInteger getNoOfRows4AttributeValue(
-                final DataCell attributeValue) {
+        private int getNoOfRows4AttributeValue(final DataCell attributeValue) {
             if (attributeValue.isMissing()) {
-                return m_missingValueRecs;
+                return getNoOfMissingValueRecs();
             }
-            return m_recsByAttrValue.get(attributeValue.toString());
+            return getNoOfRows4AttributeValue(attributeValue.toString());
         }
 
         /**
@@ -222,9 +227,12 @@ class NominalAttributeModel extends AttributeModel {
          * rows for
          * @return the number of rows with this class and the given attribute
          */
-        MutableInteger getNoOfRows4AttributeValue(
-                final String attributeValue) {
-            return m_recsByAttrValue.get(attributeValue);
+        private int getNoOfRows4AttributeValue(final String attributeValue) {
+            final MutableInteger counter = m_recsByAttrValue.get(attributeValue);
+            if (counter != null) {
+                return counter.intValue();
+            }
+            return 0;
         }
 
         /**
@@ -232,26 +240,20 @@ class NominalAttributeModel extends AttributeModel {
          * for
          * @return the probability for the given attribute value
          */
-        double getProbability(final DataCell attrVal) {
+        private double getProbability(final DataCell attrVal) {
             final int noOfRows4Class = getNoOfRows();
             if (noOfRows4Class == 0) {
                 throw new IllegalStateException("Model for attribute " + getAttributeName()
                     + " contains no rows for class " + m_classValue);
             }
-            final MutableInteger noOfRows4Attr = getNoOfRows4AttributeValue(attrVal);
-            final double noOfRows;
-            if (noOfRows4Attr != null) {
-                noOfRows = noOfRows4Attr.intValue();
-            } else {
-                noOfRows = 0;
-            }
+            final double noOfRows = getNoOfRows4AttributeValue(attrVal);
             return noOfRows / noOfRows4Class;
         }
         /**
          * @return the missingValueRecs
          */
-        MutableInteger getMissingValueRecs() {
-            return m_missingValueRecs;
+        private int getNoOfMissingValueRecs() {
+            return m_missingValueRecs.intValue();
         }
 
         /**
@@ -371,7 +373,7 @@ class NominalAttributeModel extends AttributeModel {
                 final TargetValueCount targetValueCount = targetValueCounts.addNewTargetValueCount();
                 if (!ignoreMissingVals()) {
                     PMMLNaiveBayesModelTranslator.setIntExtension(targetValueCount.addNewExtension(),
-                        NominalClassValue.MISSING_VALUE_COUNTER, classVal.getMissingValueRecs().intValue());
+                        NominalClassValue.MISSING_VALUE_COUNTER, classVal.getNoOfMissingValueRecs());
                 }
                 targetValueCount.setValue(classVal.getClassValue());
                 final MutableInteger attrCount = classVal.m_recsByAttrValue.get(attributeValue);
@@ -391,7 +393,7 @@ class NominalAttributeModel extends AttributeModel {
      */
     @Override
     void saveModelInternal(final Config config) {
-        config.addInt(MAX_NO_OF_ATTRS, m_maxNoOfAttrVals);
+        config.addInt(MAX_NO_OF_ATTRS, getMaxNoOfAttrVals());
         config.addInt(CLASS_VALUE_COUNTER, m_classValues.size());
         final String[] attrVals = m_attributeVals.toArray(new String[] {});
         config.addStringArray(ATTRIBUTE_VALUES, attrVals);
@@ -406,7 +408,7 @@ class NominalAttributeModel extends AttributeModel {
     /**
      * @return the maximum supported number of unique attribute values
      */
-    int getMaxNoOfAttrVals() {
+    private int getMaxNoOfAttrVals() {
         return m_maxNoOfAttrVals;
     }
 
@@ -436,7 +438,7 @@ class NominalAttributeModel extends AttributeModel {
             final String attrValString = attrValue.toString();
             if (!m_attributeVals.contains(attrValString)) {
                 //check the different number of attribute values
-                if (m_attributeVals.size() >= m_maxNoOfAttrVals) {
+                if (m_attributeVals.size() >= getMaxNoOfAttrVals()) {
                     throw new TooManyValuesException("Attribute value " + attrValString + " doesn't fit into model");
                 }
                 m_attributeVals.add(attrValString);
@@ -513,6 +515,39 @@ class NominalAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
+    void createDataRows(final ExecutionMonitor exec, final BufferedDataContainer dc, final boolean ignoreMissing,
+        final AtomicInteger rowId) throws CanceledExecutionException {
+            final List<String> sortedClassVal = AttributeModel.sortCollection(m_classValues.keySet());
+            if (sortedClassVal == null) {
+                return;
+            }
+            final List<String> sortedAttrValues = AttributeModel.sortCollection(m_attributeVals);
+            final StringCell attributeNameCell = new StringCell(getAttributeName());
+            for (final String attrVal : sortedAttrValues) {
+                final StringCell attributeValueCell = new StringCell(attrVal);
+                for (final String classVal : sortedClassVal) {
+                    final StringCell classCell = new StringCell(classVal);
+                    final NominalClassValue classValue = m_classValues.get(classVal);
+                    final List<DataCell> cells = new LinkedList<>();
+                    cells.add(attributeNameCell);
+                    cells.add(attributeValueCell);
+                    cells.add(classCell);
+                    cells.add(new IntCell(classValue.getNoOfRows4AttributeValue(attrVal)));
+                    if (!ignoreMissing) {
+                        cells.add(new IntCell(classValue.getNoOfMissingValueRecs()));
+                    }
+                    cells.add(DataType.getMissingCell());
+                    cells.add(DataType.getMissingCell());
+                    dc.addRowToTable(
+                        new DefaultRow(RowKey.createRowKey(rowId.getAndIncrement()), cells.toArray(new DataCell[0])));
+                }
+            }
+        }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     String getHTMLView(final int totalNoOfRecs) {
         final List<String> sortedClassVal =
             AttributeModel.sortCollection(m_classValues.keySet());
@@ -530,7 +565,7 @@ class NominalAttributeModel extends AttributeModel {
             arraySize = sortedAttrValues.size();
         }
         final StringBuilder buf = new StringBuilder();
-        buf.append("<table border='1' width='100%'>");
+        buf.append("<table width='100%'>");
         buf.append(createTableHeader(classHeading , sortedAttrValues,
                 missingHeading));
         final int[] rowsPerValCounts = new int[arraySize];
@@ -544,25 +579,16 @@ class NominalAttributeModel extends AttributeModel {
             buf.append("</th>");
             for (int i = 0, length = sortedAttrValues.size(); i < length; i++) {
                 final String attrVal = sortedAttrValues.get(i);
-                final MutableInteger rowCounter =
-                    classValue.getNoOfRows4AttributeValue(attrVal);
-                final int rowCount;
-                if (rowCounter != null) {
-                    rowCount = rowCounter.intValue();
-                } else {
-                    rowCount = 0;
-                }
+                final int rowCount = classValue.getNoOfRows4AttributeValue(attrVal);
                 rowsPerValCounts[i] += rowCount;
                 buf.append("<td align='center'>");
                 buf.append(rowCount);
                 buf.append("</td>");
             }
             if (missingHeading != null) {
-                final MutableInteger rowCounter =
-                    classValue.getMissingValueRecs();
-                rowsPerValCounts[arraySize - 1] += rowCounter.intValue();
+                rowsPerValCounts[arraySize - 1] += classValue.getNoOfMissingValueRecs();
                 buf.append("<td align='center'>");
-                buf.append(rowCounter);
+                buf.append(classValue.getNoOfMissingValueRecs());
                 buf.append("</td>");
             }
             buf.append("</tr>");

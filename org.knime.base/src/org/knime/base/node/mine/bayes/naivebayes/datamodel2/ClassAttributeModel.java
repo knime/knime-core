@@ -47,8 +47,10 @@ package org.knime.base.node.mine.bayes.naivebayes.datamodel2;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.BayesOutputDocument.BayesOutput;
@@ -62,6 +64,13 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.NominalValue;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
@@ -303,12 +312,11 @@ class ClassAttributeModel extends AttributeModel {
      */
     @Override
     Integer getNoOfRecs4ClassValue(final String classValue) {
-        final MutableInteger noOfRecs =
-            m_recsCounterByClassVal.get(classValue);
+        final MutableInteger noOfRecs = m_recsCounterByClassVal.get(classValue);
         if (noOfRecs == null) {
             return null;
         }
-        return new Integer(noOfRecs.intValue());
+        return Integer.valueOf(noOfRecs.intValue());
     }
 
     /**
@@ -360,10 +368,36 @@ class ClassAttributeModel extends AttributeModel {
     @Override
     String getHTMLView(final int totalNoOfRecs) {
         final StringBuilder buf = new StringBuilder();
-        buf.append(AttributeModel.createHTMLTable(null, "Class: ",
-                "Count: ", 10, m_recsCounterByClassVal, true));
+        buf.append(AttributeModel.createHTMLTable(null, "Class: ", "Count: ", 10, m_recsCounterByClassVal, true));
         buf.append("<b>Total count: </b>" + totalNoOfRecs + "<br><br>");
         return buf.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override void createDataRows(final ExecutionMonitor exec, final BufferedDataContainer dc,
+        final boolean ignoreMissing, final AtomicInteger rowId) throws CanceledExecutionException {
+        final List<String> sortedClassVal = AttributeModel.sortCollection(m_recsCounterByClassVal.keySet());
+        if (sortedClassVal == null) {
+            return;
+        }
+        final StringCell attributeNameCell = new StringCell(getAttributeName());
+        for (final String classVal : sortedClassVal) {
+            final StringCell classCell = new StringCell(classVal);
+            final List<DataCell> cells = new LinkedList<>();
+            cells.add(attributeNameCell);
+            cells.add(DataType.getMissingCell());
+            cells.add(classCell);
+            cells.add(new IntCell(getNoOfRecs4ClassValue(classVal)));
+            if (!ignoreMissing) {
+                cells.add(new IntCell(getNoOfMissingVals()));
+            }
+            cells.add(DataType.getMissingCell());
+            cells.add(DataType.getMissingCell());
+            dc.addRowToTable(
+                new DefaultRow(RowKey.createRowKey(rowId.getAndIncrement()), cells.toArray(new DataCell[0])));
+        }
     }
 
     /**

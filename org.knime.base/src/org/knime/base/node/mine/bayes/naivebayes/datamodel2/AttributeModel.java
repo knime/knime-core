@@ -50,6 +50,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.PairCountsDocument.PairCounts;
@@ -57,6 +58,10 @@ import org.dmg.pmml.TargetValueStatsDocument.TargetValueStats;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.container.DataContainer;
+import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 
@@ -451,7 +456,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             tableHeadColspan = noOfVals;
         }
         final StringBuilder buf = new StringBuilder();
-        buf.append("<table border='1' width='100%'>");
+        buf.append("<table width='100%'>");
         if (tableHeading != null) {
             buf.append("<tr>");
             buf.append("<th colspan='" + tableHeadColspan + "'>");
@@ -472,7 +477,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             }
             if (keys != null) {
                 for (final String classVal : keys) {
-                    buf.append("<th>");
+                    buf.append("<th align='center'>");
                     buf.append(classVal);
                     buf.append("</th>");
                 }
@@ -505,7 +510,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @param lastHeading the optional last heading
      * @return the string with a html table head line row
      */
-    protected static String createTableHeader(final String firstHeading,
+    static String createTableHeader(final String firstHeading,
             final List<String> headings, final String lastHeading) {
         final StringBuilder buf = new StringBuilder();
         buf.append("<tr>");
@@ -516,7 +521,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         }
         //create the header
         for (final String attrVal : headings) {
-            buf.append("<th>");
+            buf.append("<th align='center'>");
             buf.append(attrVal);
             buf.append("</th>");
         }
@@ -528,4 +533,16 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         buf.append("</tr>");
         return buf.toString();
     }
+
+    /**
+     * @param exec {@link ExecutionMonitor} to provide progress
+     * @param dc the {@link DataContainer} to add the statistics rows to
+     * @param ignoreMissing <code>true</code> if missing values are ignored and thus shouldn't be added to the table
+     * @param rowId the {@link AtomicInteger} to create the row id from using the
+     * {@link AtomicInteger#getAndIncrement()} method
+     * @throws CanceledExecutionException if the operation has been canceled
+     */
+    abstract void createDataRows(final ExecutionMonitor exec, final BufferedDataContainer dc,
+        final boolean ignoreMissing, final AtomicInteger rowId)
+            throws CanceledExecutionException;
 }

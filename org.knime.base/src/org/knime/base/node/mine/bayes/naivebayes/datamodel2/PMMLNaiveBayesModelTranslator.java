@@ -129,7 +129,7 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
      * @param fieldName the filed name
      * @param fieldValue the value
      */
-    public static void setStringExtension(final Extension extension, final String fieldName, final String fieldValue) {
+    static void setStringExtension(final Extension extension, final String fieldName, final String fieldValue) {
         extension.setName(fieldName);
         extension.setValue(fieldValue);
     }
@@ -140,7 +140,7 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
      * @return the value
      * @throws InvalidSettingsException if the Map does not contain the field
      */
-    public static String getStringExtension(final Map<String, String> extensionMap, final String fieldName)
+    static String getStringExtension(final Map<String, String> extensionMap, final String fieldName)
             throws InvalidSettingsException {
         final String val = extensionMap.get(fieldName);
         if (val == null) {
@@ -154,7 +154,7 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
      * @param fieldName the filed name
      * @param fieldValue the value
      */
-    public static void setObjectExtension(final Extension extension, final String fieldName, final Object fieldValue) {
+    static void setObjectExtension(final Extension extension, final String fieldName, final Object fieldValue) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutput out = null;
         try {
@@ -187,7 +187,7 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
      * @return the value
      * @throws InvalidSettingsException if the Map does not contain the field
      */
-    public static Object getObjectExtension(final Map<String, String> extensionMap, final String fieldName)
+    static Object getObjectExtension(final Map<String, String> extensionMap, final String fieldName)
             throws InvalidSettingsException {
         ByteArrayInputStream bis = null;
         ObjectInput in = null;
@@ -222,7 +222,7 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
      * @param fieldName the filed name
      * @param fieldValue the value
      */
-    public static void setIntExtension(final Extension extension, final String fieldName, final int fieldValue) {
+    static void setIntExtension(final Extension extension, final String fieldName, final int fieldValue) {
         setStringExtension(extension, fieldName, Integer.toString(fieldValue));
     }
 
@@ -232,7 +232,7 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
      * @return the value
      * @throws InvalidSettingsException if the Map does not contain the field
      */
-    public static int getIntExtension(final Map<String, String> extensionMap, final String fieldName)
+    static int getIntExtension(final Map<String, String> extensionMap, final String fieldName)
             throws InvalidSettingsException {
         final String val = getStringExtension(extensionMap, fieldName);
         try {
@@ -248,7 +248,7 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
       * @param fieldName the filed name
       * @param fieldValue the value
       */
-    public static void setBooleanExtension(final Extension extension, final String fieldName,
+    static void setBooleanExtension(final Extension extension, final String fieldName,
         final boolean fieldValue) {
         setStringExtension(extension, fieldName, Boolean.toString(fieldValue));
     }
@@ -259,7 +259,7 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
      * @return the value
      * @throws InvalidSettingsException if the Map does not contain the field
      */
-    public static boolean getBooleanExtension(final Map<String, String> extensionMap, final String fieldName)
+    static boolean getBooleanExtension(final Map<String, String> extensionMap, final String fieldName)
             throws InvalidSettingsException {
         final String val = getStringExtension(extensionMap, fieldName);
         return Boolean.parseBoolean(val);
@@ -270,7 +270,7 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
      * @param fieldName the filed name
      * @param fieldValue the value
      */
-    public static void setDoubleExtension(final Extension extension, final String fieldName, final double fieldValue) {
+    static void setDoubleExtension(final Extension extension, final String fieldName, final double fieldValue) {
         setStringExtension(extension, fieldName, Double.toString(fieldValue));
     }
 
@@ -280,7 +280,7 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
      * @return the value
      * @throws InvalidSettingsException if the Map does not contain the field
      */
-    public static double getDoubleExtension(final Map<String, String> extensionMap, final String fieldName)
+    static double getDoubleExtension(final Map<String, String> extensionMap, final String fieldName)
             throws InvalidSettingsException {
         final String val = getStringExtension(extensionMap, fieldName);
         try {
@@ -294,7 +294,7 @@ public class PMMLNaiveBayesModelTranslator implements PMMLTranslator {
      * @param extensionList the {@link List} of {@link Extension}s to convert to a {@link Map}
      * @return the extensions as key value map with the name as key and the value as value
      */
-    public static Map<String, String> convertToMap(final List<Extension> extensionList) {
+    static Map<String, String> convertToMap(final List<Extension> extensionList) {
         if (extensionList == null || extensionList.isEmpty()) {
             return Collections.EMPTY_MAP;
         }

@@ -188,11 +188,9 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
      * Constructor.
      */
     protected NaiveBayesLearnerNodeModel2() {
-        super(new PortType[]{BufferedDataTable.TYPE,
-            new PortType(PMMLPortObject.class, true)},
-            new PortType[]{PMMLPortObject.TYPE});
+        super(new PortType[]{BufferedDataTable.TYPE, new PortType(PMMLPortObject.class, true)},
+            new PortType[]{PMMLPortObject.TYPE, BufferedDataTable.TYPE});
         m_pmmlCompatible.addChangeListener(new ChangeListener() {
-
             @Override
             public void stateChanged(final ChangeEvent e) {
                 if (m_pmmlCompatible.getBooleanValue()) {
@@ -221,13 +219,12 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
             throw new IllegalArgumentException("Invalid input data");
         }
         final DataTableSpec tableSpec = (DataTableSpec)inSpec;
-        if (tableSpec.findColumnIndex(classColumn) < 0) {
-            throw new InvalidSettingsException(
-                "Please define the classification column");
+        final DataColumnSpec classColSpec = tableSpec.getColumnSpec(classColumn);
+        if (classColSpec == null) {
+            throw new InvalidSettingsException("Classification column not found in input table");
         }
         if (tableSpec.getNumColumns() < 2) {
-            throw new InvalidSettingsException(
-                    "Input table should contain at least 2 columns");
+            throw new InvalidSettingsException("Input table should contain at least 2 columns");
         }
         final int maxNoOfNominalVals = m_maxNoOfNominalVals.getIntValue();
         //and check each nominal column with a valid domain if it contains more values than allowed
@@ -272,7 +269,8 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
         }
         final PMMLPortObjectSpec modelSpec = (PMMLPortObjectSpec)inSpecs[MODEL_INPORT];
         final PMMLPortObjectSpec pmmlSpec = createPMMLSpec(tableSpec, modelSpec, learnCols, classColumn);
-        return new PortObjectSpec[]{pmmlSpec};
+        return new PortObjectSpec[]{pmmlSpec, NaiveBayesModel.createStatisticsTableSpec(classColSpec.getType(),
+            m_ignoreMissingVals.getBooleanValue())};
     }
 
     private void warningMessage(final String message, final List<String> colNames) {
@@ -344,7 +342,7 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
                 m_model.getPMMLLearningCols(), m_model.getClassColumnName());
         final PMMLPortObject outPMMLPort = new PMMLPortObject(outPortSpec, inPMMLPort, tableSpec);
         outPMMLPort.addModelTranslater(new PMMLNaiveBayesModelTranslator(m_model));
-        return new PortObject[]{outPMMLPort};
+        return new PortObject[]{outPMMLPort, m_model.getStatisticsTable()};
     }
 
     /**

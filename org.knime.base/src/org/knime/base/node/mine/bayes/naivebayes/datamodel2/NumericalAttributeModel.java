@@ -45,10 +45,13 @@
 
 package org.knime.base.node.mine.bayes.naivebayes.datamodel2;
 
+import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.GaussianDistributionDocument.GaussianDistribution;
@@ -57,6 +60,14 @@ import org.dmg.pmml.TargetValueStatsDocument.TargetValueStats;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataContainer;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
@@ -115,7 +126,7 @@ class NumericalAttributeModel extends AttributeModel {
          * @param classValue the value of this class
          *
          */
-        NumericalClassValue(final String classValue) {
+        private NumericalClassValue(final String classValue) {
             m_classValue = classValue;
         }
 
@@ -123,7 +134,7 @@ class NumericalAttributeModel extends AttributeModel {
          * @param config the <code>Config</code> object to read from
          * @throws InvalidSettingsException if the settings are invalid
          */
-        NumericalClassValue(final Config config)
+        private NumericalClassValue(final Config config)
             throws InvalidSettingsException {
             m_classValue = config.getString(CLASS_VALUE);
             m_missingValueRecs.setValue(config.getInt(MISSING_VALUE_COUNTER));
@@ -136,7 +147,7 @@ class NumericalAttributeModel extends AttributeModel {
          * @param targetValueStat the <code>TargetValueStat</code> object to read from
          * @throws InvalidSettingsException if the settings are invalid
          */
-        NumericalClassValue(final TargetValueStat targetValueStat) throws InvalidSettingsException {
+        private NumericalClassValue(final TargetValueStat targetValueStat) throws InvalidSettingsException {
             m_classValue = targetValueStat.getValue();
             final GaussianDistribution distribution = targetValueStat.getGaussianDistribution();
             m_mean = distribution.getMean();
@@ -166,9 +177,9 @@ class NumericalAttributeModel extends AttributeModel {
         /**
          * @param config the <code>Config</code> object to write to
          */
-        void saveModel(final Config config) {
+        private void saveModel(final Config config) {
             config.addString(CLASS_VALUE, m_classValue);
-            config.addInt(MISSING_VALUE_COUNTER, m_missingValueRecs.intValue());
+            config.addInt(MISSING_VALUE_COUNTER, getNoOfMissingValueRecs());
             config.addInt(NO_OF_ROWS, m_noOfRows);
             config.addDouble(SUM, m_sum);
             config.addDouble(SQUARE_SUM, m_squareSum);
@@ -177,11 +188,11 @@ class NumericalAttributeModel extends AttributeModel {
         /**
          * @param targetValueStats
          */
-        void exportToPMML(final TargetValueStat targetValueStat) {
+        private void exportToPMML(final TargetValueStat targetValueStat) {
             targetValueStat.setValue(getClassValue());
             if (!ignoreMissingVals()) {
                 PMMLNaiveBayesModelTranslator.setIntExtension(targetValueStat.addNewExtension(), MISSING_VALUE_COUNTER,
-                    m_missingValueRecs.intValue());
+                    getNoOfMissingValueRecs());
                 PMMLNaiveBayesModelTranslator.setIntExtension(targetValueStat.addNewExtension(), NO_OF_ROWS,
                     getNoOfRows());
             }
@@ -193,7 +204,7 @@ class NumericalAttributeModel extends AttributeModel {
         /**
          * @return the classValue
          */
-        String getClassValue() {
+        private String getClassValue() {
             return m_classValue;
         }
 
@@ -201,14 +212,18 @@ class NumericalAttributeModel extends AttributeModel {
         /**
          * @return the noOfRows
          */
-        int getNoOfRows() {
+        private int getNoOfRows() {
             return m_noOfRows;
+        }
+
+        private int getNoOfNotMissingRows() {
+            return m_noOfRows - getNoOfMissingValueRecs();
         }
 
         /**
          * @return the mean
          */
-        double getMean() {
+        private double getMean() {
             if (m_recompute) {
                 calculateProbabilityValues();
             }
@@ -219,7 +234,7 @@ class NumericalAttributeModel extends AttributeModel {
         /**
          * @return the standard deviation
          */
-        double getStdDeviation() {
+        private double getStdDeviation() {
             if (m_recompute) {
                 calculateProbabilityValues();
             }
@@ -229,14 +244,14 @@ class NumericalAttributeModel extends AttributeModel {
         /**
          * @return the variance
          */
-        double getVariance() {
+        private double getVariance() {
             return Math.pow(getStdDeviation(), 2);
         }
 
         /**
          * @param attrVal the attribute value to add to this class
          */
-        void addValue(final DataCell attrVal) {
+        private void addValue(final DataCell attrVal) {
             if (attrVal.isMissing()) {
                 m_missingValueRecs.inc();
             } else {
@@ -252,7 +267,7 @@ class NumericalAttributeModel extends AttributeModel {
          * @param attrVal the attribute value to calculate the probability for
          * @return the calculated probability for the given attribute
          */
-        double getProbability(final DataCell attrVal) {
+        private double getProbability(final DataCell attrVal) {
             if (m_recompute) {
                 calculateProbabilityValues();
             }
@@ -260,7 +275,7 @@ class NumericalAttributeModel extends AttributeModel {
                 if (m_noOfRows == 0) {
                     return 0;
                 }
-                return (double)m_missingValueRecs.intValue() / m_noOfRows;
+                return (double)getNoOfMissingValueRecs() / m_noOfRows;
             }
             final double attrValue = ((DoubleValue)attrVal).getDoubleValue();
             final double diff = attrValue - m_mean;
@@ -295,7 +310,7 @@ class NumericalAttributeModel extends AttributeModel {
          * Called after all training rows where added to validate the model.
          * @throws InvalidSettingsException if the model isn't valid
          */
-        void validate() throws InvalidSettingsException {
+        private void validate() throws InvalidSettingsException {
             if (m_noOfRows == 0) {
                 setInvalidCause(MODEL_CONTAINS_NO_RECORDS);
                 throw new InvalidSettingsException("Model for attribute "
@@ -309,8 +324,7 @@ class NumericalAttributeModel extends AttributeModel {
                 throw new IllegalStateException("Model for attribute "
                         + getAttributeName() + " contains no rows.");
             }
-            final int noOfRowsNonMissing =
-                m_noOfRows - m_missingValueRecs.intValue();
+            final int noOfRowsNonMissing = getNoOfNotMissingRows();
             // TODO Verify this! What if training data only contains missing values
             if (noOfRowsNonMissing == 0) {
                 throw new IllegalStateException("Model for attribute "
@@ -343,8 +357,8 @@ class NumericalAttributeModel extends AttributeModel {
         /**
          * @return the missingValueRecs
          */
-        public MutableInteger getMissingValueRecs() {
-            return m_missingValueRecs;
+        private int getNoOfMissingValueRecs() {
+            return m_missingValueRecs.intValue();
         }
 
         /**
@@ -377,7 +391,7 @@ class NumericalAttributeModel extends AttributeModel {
             buf.append(m_probabilityDenominator);
             buf.append("\n");
             buf.append("Missing values: ");
-            buf.append(m_missingValueRecs);
+            buf.append(getNoOfMissingValueRecs());
             buf.append("\n");
             return buf.toString();
         }
@@ -562,13 +576,42 @@ class NumericalAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
+    void createDataRows(final ExecutionMonitor exec, final BufferedDataContainer dc, final boolean ignoreMissing,
+        final AtomicInteger rowId)
+            throws CanceledExecutionException {
+        final List<String> sortedClassVal = AttributeModel.sortCollection(m_classValues.keySet());
+        if (sortedClassVal == null) {
+            return;
+        }
+        final StringCell attributeCell = new StringCell(getAttributeName());
+        for (final String classVal : sortedClassVal) {
+            final List<DataCell> cells = new LinkedList<>();
+            cells.add(attributeCell);
+            cells.add(DataType.getMissingCell());
+            cells.add(new StringCell(classVal));
+            final NumericalClassValue classValue = m_classValues.get(classVal);
+            cells.add(new IntCell(classValue.getNoOfNotMissingRows()));
+            if (!ignoreMissing) {
+                cells.add(new IntCell(classValue.getNoOfMissingValueRecs()));
+            }
+            cells.add(new DoubleCell(classValue.getMean()));
+            cells.add(new DoubleCell(classValue.getStdDeviation()));
+            dc.addRowToTable(
+                new DefaultRow(RowKey.createRowKey(rowId.getAndIncrement()), cells.toArray(new DataCell[0])));
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     String getHTMLView(final int totalNoOfRecs) {
-        final List<String> sortedClassVal =
-            AttributeModel.sortCollection(m_classValues.keySet());
+        final List<String> sortedClassVal = AttributeModel.sortCollection(m_classValues.keySet());
         if (sortedClassVal == null) {
             return "";
         }
         final String missingHeader = getMissingValueHeader(getClassValues());
+        final NumberFormat nf = NumberFormat.getPercentInstance();
         //create the value rows
         final StringBuilder countRow = new StringBuilder();
         final StringBuilder meanRow = new StringBuilder();
@@ -578,7 +621,7 @@ class NumericalAttributeModel extends AttributeModel {
         for (final String classVal : sortedClassVal) {
             final NumericalClassValue classValue = m_classValues.get(classVal);
             countRow.append("<td align='center'>");
-            countRow.append(classValue.getNoOfRows());
+            countRow.append(classValue.getNoOfNotMissingRows());
             countRow.append("</td>");
 
             meanRow.append("<td align='center'>");
@@ -592,20 +635,18 @@ class NumericalAttributeModel extends AttributeModel {
             stdDevRow.append("</td>");
 
             rateRow.append("<td align='center'>");
-            rateRow.append(classValue.getNoOfRows());
-            rateRow.append('/');
-            rateRow.append(totalNoOfRecs);
+            rateRow.append(nf.format(classValue.getNoOfRows() / (double)totalNoOfRecs));
             rateRow.append("</td>");
 
             if (missingHeader != null) {
                 missingRow.append("<td align='center'>");
-                missingRow.append(classValue.getMissingValueRecs());
+                missingRow.append(classValue.getNoOfMissingValueRecs());
                 missingRow.append("</td>");
             }
         }
 
         final StringBuilder buf = new StringBuilder();
-        buf.append("<table border='1' width='100%'>");
+        buf.append("<table width='100%'>");
         buf.append(createTableHeader(" ", sortedClassVal, null));
         //append the count row
         buf.append("<tr>");

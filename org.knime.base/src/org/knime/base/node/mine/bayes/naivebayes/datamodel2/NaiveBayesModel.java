@@ -53,6 +53,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.dmg.pmml.BayesInputDocument.BayesInput;
 import org.dmg.pmml.BayesInputsDocument.BayesInputs;
@@ -66,6 +67,7 @@ import org.dmg.pmml.PMMLDocument.PMML;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -77,6 +79,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -139,6 +142,8 @@ public class NaiveBayesModel {
 
     private final Double m_pmmlZeroProbThreshold;
 
+    private BufferedDataTable m_statisticsTable;
+
     /**Constructor which iterates through the <code>DataTable</code> to
      * calculate the needed Bayes variables.
      *
@@ -155,12 +160,14 @@ public class NaiveBayesModel {
      * @throws CanceledExecutionException if the user presses the cancel
      * button during model creation
      * @throws InvalidSettingsException if the input data contains no rows
-     * @since 2.10
      */
     public NaiveBayesModel(final BufferedDataTable data, final String classColName, final ExecutionContext exec,
             final int maxNoOfNominalVals, final boolean ignoreMissingVals, final boolean pmmlCompatible,
             final double threshold)
         throws CanceledExecutionException, InvalidSettingsException {
+        if (exec == null) {
+            throw new IllegalArgumentException("exec must not be null");
+        }
         if (threshold < 0) {
             throw new IllegalArgumentException("Probability threshold should be positive");
         }
@@ -193,22 +200,72 @@ public class NaiveBayesModel {
         m_pmmlZeroProbThreshold = threshold;
         //end of initialise all internal variable
         ExecutionMonitor subExec = null;
-        if (exec != null) {
-            exec.setMessage("Building \'Naive Bayesian\' model..");
-            subExec = exec.createSubProgress(0.9);
-        }
+        exec.setMessage("Building model");
+        subExec = exec.createSubProgress(0.8);
         createModel(data, subExec, classColIdx);
-        if (exec != null) {
-            exec.setMessage("Validating model...");
-        }
-        subExec = null;
-        if (exec != null) {
-            subExec = exec.createSubProgress(0.1);
-        }
+        exec.setMessage("Model created");
+        exec.checkCanceled();
+        exec.setMessage("Validating model");
+        subExec = exec.createSubProgress(0.1);
         validateModel(subExec);
-        if (exec != null) {
-            exec.setProgress(1, "Model validated");
+        exec.checkCanceled();
+        subExec.setProgress(1, "Model validated");
+        exec.setMessage("Creating data tables");
+        subExec = exec.createSubProgress(0.1);
+        final BufferedDataContainer nodc = exec.createDataContainer(
+            createStatisticsTableSpec(getClassColumnDataType(), m_ignoreMissingVals));
+        final List<AttributeModel> models = new ArrayList<>();
+        models.addAll(m_modelByAttrName.values());
+        Collections.sort(models);
+        int counter = 1;
+        final AtomicInteger rowId = new AtomicInteger(0);
+        for (final AttributeModel model : models) {
+            subExec.setProgress(counter / (double) m_modelByAttrName.size(),
+                "Processing model " + counter + " of " + m_modelByAttrName.size());
+            exec.checkCanceled();
+            final ExecutionMonitor subSubExec = subExec.createSubProgress(1.0 / m_modelByAttrName.size());
+            model.createDataRows(subSubExec, nodc, m_ignoreMissingVals, rowId);
         }
+        nodc.close();
+        m_statisticsTable = nodc.getTable();
+        subExec.setProgress(1, "Statistics tables created");
+
+    }
+
+    /**
+     * @param classColDataType the {@link DataType} of the class column
+     * @param ignoreMissingVals <code>true</code> if missing value should be ignored
+     * @return the {@link DataTableSpec} of the numerical statistics table
+     */
+    public static DataTableSpec createStatisticsTableSpec(final DataType classColDataType,
+        final boolean ignoreMissingVals) {
+        final List<DataColumnSpec> specs = new LinkedList<>();
+        final DataColumnSpecCreator creator = new DataColumnSpecCreator("Attribute", classColDataType);
+        specs.add(creator.createSpec());
+        creator.setName("Value");
+        specs.add(creator.createSpec());
+        creator.setName("Class");
+        specs.add(creator.createSpec());
+        creator.setName("Count");
+        creator.setType(IntCell.TYPE);
+        specs.add(creator.createSpec());
+        if (!ignoreMissingVals) {
+            creator.setName("Missing value count");
+            specs.add(creator.createSpec());
+        }
+        creator.setName("Mean");
+        creator.setType(DoubleCell.TYPE);
+        specs.add(creator.createSpec());
+        creator.setName("Standard deviation");
+        specs.add(creator.createSpec());
+        return new DataTableSpec(specs.toArray(new DataColumnSpec[0]));
+    }
+
+    /**
+     * @return the statistics table
+     */
+    public BufferedDataTable getStatisticsTable() {
+        return m_statisticsTable;
     }
 
     private static Map<String, AttributeModel> createModelMap(final DataTableSpec tableSpec, final String classColName,
@@ -590,8 +647,7 @@ public class NaiveBayesModel {
         if (classModel == null) {
             throw new IllegalArgumentException("Class model not found");
         }
-        final Integer noOfRecs4Class =
-            classModel.getNoOfRecs4ClassValue(classValue);
+        final Integer noOfRecs4Class = classModel.getNoOfRecs4ClassValue(classValue);
         if (noOfRecs4Class == null) {
             throw new IllegalArgumentException("Class value: " + classValue + " not found");
         }
@@ -663,6 +719,7 @@ public class NaiveBayesModel {
         final StringBuilder buf = new StringBuilder();
         //show the class model first
         final AttributeModel classModel = m_modelByAttrName.get(m_classColName);
+        buf.append("<style type='text/css'>  td{ background-color: #F0F0F0 } </style>");
         buf.append("<div>");
         buf.append("<h3>");
         buf.append(classModel.getHTMLViewHeadLine());
@@ -672,7 +729,7 @@ public class NaiveBayesModel {
         buf.append("</div>");
         if (!m_pmmlZeroProbThreshold.isNaN()) {
             buf.append("<div>");
-            buf.append("<b>Threshold used for zero probabilities:</b> ");
+            buf.append("<b>Threshold to used for zero probabilities:</b> ");
             buf.append(m_pmmlZeroProbThreshold.toString());
             buf.append("<hr>");
             buf.append("</div>");
