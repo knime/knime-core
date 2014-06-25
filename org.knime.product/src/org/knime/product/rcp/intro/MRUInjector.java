@@ -65,6 +65,7 @@ import javax.xml.xpath.XPathFactory;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.ui.internal.WorkbenchPlugin;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -101,6 +102,15 @@ class MRUInjector extends AbstractInjector {
         Element mruList =
             (Element)xpath.evaluate("/html/body//ul[@id='mruList']", doc.getDocumentElement(), XPathConstants.NODE);
         insertMRUList(mruList);
+
+        String quickstartPath = Platform.getInstallLocation().getURL().getPath() + "quickstart.pdf";
+        NodeList nl =
+            (NodeList)xpath
+                .evaluate("//a[@class='quickstart-guide']", doc.getDocumentElement(), XPathConstants.NODESET);
+        for (int i = 0; i < nl.getLength(); i++) {
+            Element link = (Element)nl.item(i);
+            link.setAttribute("href", "file:" + quickstartPath);
+        }
     }
 
     /**
