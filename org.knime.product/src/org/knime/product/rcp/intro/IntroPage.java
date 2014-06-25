@@ -553,17 +553,15 @@ public class IntroPage implements LocationListener {
         dialog.getShell().setText("Create new workflow");
         dialog.getShell().setSize(Math.max(470, dialog.getShell().getSize().x), 350);
         int ok = dialog.open();
-        if (ok == Window.OK) {
+        if ((ok == Window.OK) && (explorerView != null)) {
             // update the tree
             IWizardPage currentPage = dialog.getCurrentPage();
             if (currentPage instanceof NewWorkflowWizardPage) {
                 NewWorkflowWizardPage nwwp = (NewWorkflowWizardPage)currentPage;
                 AbstractExplorerFileStore file = nwwp.getNewFile();
                 Object p = ContentDelegator.getTreeObjectFor(file.getParent());
-                if (explorerView != null) {
-                    explorerView.setNextSelection(file);
-                    explorerView.getViewer().refresh(p);
-                }
+                explorerView.setNextSelection(file);
+                explorerView.getViewer().refresh(p);
             }
         }
     }
