@@ -79,6 +79,15 @@ public class OpenInteractiveViewAction extends Action {
      */
     public OpenInteractiveViewAction(final NodeContainer nodeContainer) {
         m_nodeContainer = nodeContainer;
+        nodeContainer.getNodeContainerState().isExecuted();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isEnabled() {
+        return m_nodeContainer.getNodeContainerState().isExecuted();
     }
 
     /**
