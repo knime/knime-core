@@ -163,7 +163,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
             } else if (e.getValue() instanceof DialogNode) {
                 DialogNodeRepresentation<? extends DialogNodeValue> representation
                     = ((DialogNode)e.getValue()).getDialogRepresentation();
-                if (representation == null) {
+                if (((DialogNode)e.getValue()).isHideInDialog() || representation == null) {
                     // no valid representation
                     continue;
                 }
