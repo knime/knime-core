@@ -57,8 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
@@ -75,6 +73,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
+import org.knime.core.util.ThreadPool;
 
 import Jama.Matrix;
 
@@ -105,8 +104,6 @@ final class Learner {
     private boolean m_sortTargetCategories;
     /** true when categories of nominal data in the include list should be sorted. */
     private boolean m_sortFactorsCategories;
-    /** Executor used for QRDecomposition. */
-    private ExecutorService m_executor;
 
     /**
      * @param spec The {@link PMMLPortObjectSpec} of the output table.
@@ -153,9 +150,6 @@ final class Learner {
     public LogisticRegressionContent perform(final DataTable data,
             final ExecutionContext exec) throws CanceledExecutionException, InvalidSettingsException {
         exec.checkCanceled();
-        if (m_executor == null) {
-            m_executor = Executors.newFixedThreadPool(1);
-        }
         int iter = 0;
         boolean converged = false;
 
@@ -177,16 +171,15 @@ final class Learner {
             loglikeOld = loglike;
 
             // Do heavy work in a separate thread which allows to interrupt it
-            Callable<Double> worker = new Callable() {
-
+            // note the queue may block if no more threads are available (e.g. thread count = 1)
+            // as soon as we stall in 'get' this thread reduces the number of running thread
+            Future<Double> future = ThreadPool.currentPool().enqueue(new Callable<Double>() {
                 @Override
-                public Object call() throws Exception {
+                public Double call() throws Exception {
                     irlsRls(trainingData.iterator(), beta, rC, tcC, exec);
                     return likelihood(trainingData.iterator(), beta, rC, tcC, exec);
                 }
-
-            };
-            Future<Double> future = m_executor.submit(worker);
+            });
 
             try {
                 loglike = future.get();
