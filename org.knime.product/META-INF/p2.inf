@@ -1,0 +1,4 @@
+# indirectly required by org.apache.httpcomponents.httpclient via import package - which Buckminster cannot handle
+requires.0.name=org.apache.commons.logging
+requires.0.range=1.1.1
+requires.0.namespace=osgi.bundle

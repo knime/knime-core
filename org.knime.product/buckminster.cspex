@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cspecExtension xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bc="http://www.eclipse.org/buckminster/Common-1.0" xmlns="http://www.eclipse.org/buckminster/CSpec-1.0">
+  <dependencies>
+    <dependency name="org.apache.commons.logging" componentType="osgi.bundle" versionDesignator="1.1.1"/>
+  </dependencies>
   <actions>
     <!-- Updates the build date in the splash screen if this is a nightly build. -->
     <public name="knime.splash.setDate" actor="knime.splashDate">
