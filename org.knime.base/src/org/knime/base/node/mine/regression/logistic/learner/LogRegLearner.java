@@ -130,11 +130,11 @@ public final class LogRegLearner {
         // the learner typically needs five steps with two runs over the data each step, calculating
         // the domain needs run over the data
         double calcDomainTime = 1.0 / (5.0 * 2.0 + 1.0);
-        exec.setMessage("Analyzing categorical data.");
+        exec.setMessage("Analyzing categorical data");
         DataTable dataTable = recalcDomainForTargetAndLearningFields(data, inPMMLSpec,
             exec.createSubExecutionContext(calcDomainTime));
         checkConstantLearningFields(data, inPMMLSpec);
-        exec.setMessage("Computing logistic regression model.");
+        exec.setMessage("Building logistic regression model");
         return m_learner.perform(dataTable, exec.createSubExecutionContext(1.0 - calcDomainTime));
     }
 
