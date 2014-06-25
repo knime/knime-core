@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow.virtual;
 
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectOutNodeFactory;
 import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFactory;
 
@@ -58,6 +59,16 @@ import org.knime.core.node.workflow.virtual.subnode.VirtualSubNodeOutputNodeFact
  * @deprecated Use super class instead
  */
 @Deprecated
-public final class VirtualPortObjectOutNodeFactory extends VirtualParallelizedChunkPortObjectOutNodeFactory {
+public class VirtualPortObjectOutNodeFactory extends VirtualParallelizedChunkPortObjectOutNodeFactory {
+
+    /** Persistor used by constructor.
+     * @since 2.10 */
+    public VirtualPortObjectOutNodeFactory() {
+    }
+
+    /** Client side constructor. */
+    public VirtualPortObjectOutNodeFactory(final PortType[] inTypes) {
+        super(inTypes);
+    }
 
 }

@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow.virtual;
 
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPortObjectInNodeFactory;
 
 /**
@@ -57,6 +58,11 @@ import org.knime.core.node.workflow.virtual.parchunk.VirtualParallelizedChunkPor
  * @deprecated Use super class instead
  */
 @Deprecated
-public final class VirtualPortObjectInNodeFactory extends VirtualParallelizedChunkPortObjectInNodeFactory {
+public class VirtualPortObjectInNodeFactory extends VirtualParallelizedChunkPortObjectInNodeFactory {
+
+    /** @param outTypes ...*/
+    public VirtualPortObjectInNodeFactory(final PortType[] outTypes) {
+        super(outTypes);
+    }
 
 }

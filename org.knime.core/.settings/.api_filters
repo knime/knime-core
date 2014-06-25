@@ -1447,18 +1447,30 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/virtual/VirtualPortObjectInNodeFactory.java" type="org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory">
-        <filter id="305365105">
+        <filter comment="restoring old &quot;non&quot;-api for Alberto@Genentech" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory"/>
-                <message_argument value="org.knime.core_2.10.0"/>
+                <message_argument value="createNodeModel()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="restoring old &quot;non&quot;-api for Alberto@Genentech" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory"/>
+                <message_argument value="createNodeView(int, VirtualPortObjectInNodeModel)"/>
             </message_arguments>
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/virtual/VirtualPortObjectOutNodeFactory.java" type="org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory">
-        <filter id="305365105">
+        <filter comment="restoring old &quot;non&quot;-api for Alberto@Genentech" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory"/>
-                <message_argument value="org.knime.core_2.10.0"/>
+                <message_argument value="createNodeModel()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="restoring old &quot;non&quot;-api for Alberto@Genentech" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.virtual.VirtualPortObjectOutNodeFactory"/>
+                <message_argument value="createNodeView(int, VirtualPortObjectOutNodeModel)"/>
             </message_arguments>
         </filter>
     </resource>
