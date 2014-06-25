@@ -5959,8 +5959,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** Get contained node container and cast to argument class. Throws exception if it not exists or not implementing
-     * requested class unless the flag is false. */
-    private <T> T getNodeContainer(final NodeID id, final Class<T> subclass, final boolean failOnError) {
+     * requested class unless the flag is false.
+     * @param <T> The interface or subclass the {@link NodeContainer} is expected to implement.
+     * @param id The node to retrieve.
+     * @param subclass the expected sub class, usually sub-classes of {@link NodeContainer} but could also be
+     *        implementing interface.
+     * @param failOnError Fails if node is not found or not of expected type. Otherwise it just prints a DEBUG message.
+     * @return The node..
+     * @throws IllegalArgumentException If node is not found or of the expected type and the flag is true.
+     * @since 2.10
+     * @noreference This method is not intended to be referenced by clients (only used in core and testing plugin). */
+    public <T> T getNodeContainer(final NodeID id, final Class<T> subclass, final boolean failOnError) {
         NodeContainer nc = m_workflow.getNode(id);
         if (nc == null || !subclass.isInstance(nc)) {
             String message = nc == null ? "Invalid node ID \"" + id + "\"" : String.format(
