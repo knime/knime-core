@@ -735,8 +735,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         NodeSettings settings = new NodeSettings("subnode_settings");
         saveSettings(settings);
         Node.invokeDialogInternalLoad(dialogPane, settings, inSpecs, inData,
-            new FlowObjectStack(getID()),
-            new CredentialsProvider(this, m_wfm.getCredentialsStore()),
+            getFlowObjectStack(), new CredentialsProvider(this, m_wfm.getCredentialsStore()),
             getParent().isWriteProtected());
         return dialogPane;
     }
@@ -855,12 +854,31 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     boolean performConfigure(final PortObjectSpec[] rawInSpecs, final NodeConfigureHelper nch) {
         assert rawInSpecs.length == m_inports.length;
         m_isPerformingActionCalledFromParent = true;
+        setNodeMessage(null);
         try {
+            if (nch != null) {
+                try {
+                    nch.preConfigure();
+                } catch (InvalidSettingsException ise) {
+                    LOGGER.warn(ise.getMessage(), ise);
+                    setNodeMessage(new NodeMessage(NodeMessage.Type.WARNING, ise.getMessage()));
+                    return false;
+                }
+            }
             // and launch a configure on entire sub workflow
             m_wfm.reconfigureAllNodesOnlyInThisWFM();
             final InternalNodeContainerState internalState = m_wfm.getInternalState();
             setVirtualOutputIntoOutport(internalState);
             setInternalState(internalState);
+            if (nch != null) {
+                try {
+                    nch.postConfigure(rawInSpecs, null);
+                } catch (InvalidSettingsException ise) {
+                    LOGGER.warn(ise.getMessage(), ise);
+                    setNodeMessage(new NodeMessage(NodeMessage.Type.WARNING, ise.getMessage()));
+                    return false;
+                }
+            }
             return internalState.isConfigured();
         } finally {
             m_isPerformingActionCalledFromParent = false;
@@ -1264,7 +1282,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     void performLoadModelSettingsFrom(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
         assert Thread.holdsLock(getWorkflowMutex());
         synchronized (m_nodeMutex) {
-            if (getInternalState().isExecutionInProgress()) {
+            // check state of contained WFM as state of this Subnode may already be "MARKED".
+            if (m_wfm.getInternalState().isExecutionInProgress()) {
                 throw new IllegalStateException("Cannot load settings as the subnode is currently executing");
             }
             Map<NodeID, DialogNode> nodes = m_wfm.findNodes(DialogNode.class, false);
