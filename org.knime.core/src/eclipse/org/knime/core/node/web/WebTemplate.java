@@ -71,19 +71,25 @@ public interface WebTemplate {
     public String getNamespace();
 
     /**
-     * @return The init-method's name.
+     * @return The init method's name.
      */
     public String getInitMethodName();
 
     /**
-     * @return The pullViewContent-method's name.
+     * @return The pullViewContent method's name.
      */
     public String getPullViewContentMethodName();
 
     /**
-     * @return The validate-method's name.
+     * @return The validate method's name.
      * @since 2.10
      */
     public String getValidateMethodName();
+
+    /**
+     * @return The setValidationError method's name.
+     * @since 2.10
+     */
+    public String getSetValidationErrorMethodName();
 
 }

@@ -61,20 +61,26 @@ public class DefaultWebTemplate implements WebTemplate {
     private final String m_initMethod;
     private final String m_validateMethod;
     private final String m_valueMethod;
+    private final String m_setValidationErrorMethod;
 
     /**
-     * @param jsResources An array of {@link WebResourceLocator}, which is the actual
-     * implementation and the dependencies of the view.
+     * @param webResources
      * @param namespace An optional namespace, which is prepended to all method calls of the view implementation.
+     * @param initMethod
+     * @param validateMethod
+     * @param valueMethod
+     * @param setValidationErrorMethod
      * @since 2.10
      *
      */
-    public DefaultWebTemplate(final WebResourceLocator[] webResources, final String namespace, final String initMethod, final String validateMethod, final String valueMethod) {
-        this.m_webResources = webResources;
-        this.m_namespace = namespace;
-        this.m_initMethod = initMethod;
-        this.m_validateMethod = validateMethod;
-        this.m_valueMethod = valueMethod;
+    public DefaultWebTemplate(final WebResourceLocator[] webResources, final String namespace, final String initMethod,
+        final String validateMethod, final String valueMethod, final String setValidationErrorMethod) {
+        m_webResources = webResources;
+        m_namespace = namespace;
+        m_initMethod = initMethod;
+        m_validateMethod = validateMethod;
+        m_valueMethod = valueMethod;
+        m_setValidationErrorMethod = setValidationErrorMethod;
     }
 
     /**
@@ -119,6 +125,15 @@ public class DefaultWebTemplate implements WebTemplate {
     @Override
     public String getValidateMethodName() {
         return m_validateMethod;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.10
+     */
+    @Override
+    public String getSetValidationErrorMethodName() {
+        return m_setValidationErrorMethod;
     }
 
 }

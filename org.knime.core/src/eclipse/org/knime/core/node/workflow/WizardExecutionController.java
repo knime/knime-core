@@ -122,6 +122,8 @@ public final class WizardExecutionController {
 
     private static final String ATTR_GETCOMPONENTVALUE_METHOD_NAME = "getComponentValue-method-name";
 
+    private static final String ATTR_SETVALIDATIONERROR_METHOD_NAME = "setValidationError-method-name";
+
     private static final String ID_WEB_RESOURCE = "webResource";
 
     private static final String ATTR_RELATIVE_PATH_SOURCE = "relativePathSource";
@@ -162,12 +164,13 @@ public final class WizardExecutionController {
         String initMethodName = jsComponentExtension.getAttribute(ATTR_INIT_METHOD_NAME);
         String validateMethodName = jsComponentExtension.getAttribute(ATTR_VALIDATE_METHOD_NAME);
         String valueMethodName = jsComponentExtension.getAttribute(ATTR_GETCOMPONENTVALUE_METHOD_NAME);
+        String setValidationErrorMethodName = jsComponentExtension.getAttribute(ATTR_SETVALIDATIONERROR_METHOD_NAME);
         return new DefaultWebTemplate(webResList.toArray(new WebResourceLocator[0]),
-            namespace, initMethodName, validateMethodName, valueMethodName);
+            namespace, initMethodName, validateMethodName, valueMethodName, setValidationErrorMethodName);
     }
 
     private static WebTemplate getEmptyWebTemplate() {
-        return new DefaultWebTemplate(new WebResourceLocator[0], "", "", "", "");
+        return new DefaultWebTemplate(new WebResourceLocator[0], "", "", "", "", "");
     }
 
     private static IConfigurationElement getConfigurationFromID(final String extensionPointId,
