@@ -90,8 +90,11 @@ import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IViewReference;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
@@ -529,33 +532,37 @@ public class IntroPage implements LocationListener {
     }
 
     private void newWorkflow() {
-        ExplorerView view = null;
-        for (IViewReference ref : PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-            .getViewReferences()) {
-            if (ExplorerView.ID.equals(ref.getId())) {
-                view = (ExplorerView)ref.getPart(true);
-                break;
+        ExplorerView explorerView = null;
+        for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
+            for (IWorkbenchPage page : window.getPages()) {
+                for (IViewReference ref : page.getViewReferences()) {
+                    if (ExplorerView.ID.equals(ref.getId())) {
+                        explorerView = (ExplorerView)ref.getPart(true);
+                        break;
+                    }
+                }
             }
         }
 
-        if (view != null) {
-            NewWorkflowWizard newWiz = new NewWorkflowWizard();
-            newWiz.init(PlatformUI.getWorkbench(), null);
+        Shell shell = PlatformUI.getWorkbench().getDisplay().getActiveShell();
+        NewWorkflowWizard newWiz = new NewWorkflowWizard();
+        newWiz.init(PlatformUI.getWorkbench(), null);
 
-            WizardDialog dialog = new WizardDialog(view.getSite().getShell(), newWiz);
-            dialog.create();
-            dialog.getShell().setText("Create new workflow");
-            dialog.getShell().setSize(Math.max(470, dialog.getShell().getSize().x), 350);
-            int ok = dialog.open();
-            if (ok == Window.OK) {
-                // update the tree
-                IWizardPage currentPage = dialog.getCurrentPage();
-                if (currentPage instanceof NewWorkflowWizardPage) {
-                    NewWorkflowWizardPage nwwp = (NewWorkflowWizardPage)currentPage;
-                    AbstractExplorerFileStore file = nwwp.getNewFile();
-                    Object p = ContentDelegator.getTreeObjectFor(file.getParent());
-                    view.setNextSelection(file);
-                    view.getViewer().refresh(p);
+        WizardDialog dialog = new WizardDialog(shell, newWiz);
+        dialog.create();
+        dialog.getShell().setText("Create new workflow");
+        dialog.getShell().setSize(Math.max(470, dialog.getShell().getSize().x), 350);
+        int ok = dialog.open();
+        if (ok == Window.OK) {
+            // update the tree
+            IWizardPage currentPage = dialog.getCurrentPage();
+            if (currentPage instanceof NewWorkflowWizardPage) {
+                NewWorkflowWizardPage nwwp = (NewWorkflowWizardPage)currentPage;
+                AbstractExplorerFileStore file = nwwp.getNewFile();
+                Object p = ContentDelegator.getTreeObjectFor(file.getParent());
+                if (explorerView != null) {
+                    explorerView.setNextSelection(file);
+                    explorerView.getViewer().refresh(p);
                 }
             }
         }
