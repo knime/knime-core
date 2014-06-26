@@ -62,13 +62,19 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
- * List cell renderer for lists whose elements are of type 
- * {@link FlowVariable}. It will show the name of the variable along with an
- * icon representing the type.
+ * List cell renderer for lists whose elements are of type
+ * {@link FlowVariable} or {@link FlowVariableCell}.
+ *
+ * It will show the name of the variable along with an icon representing
+ * the type. In case of {@link FlowVariableCell} the actual
+ * {@link FlowVariable} can also be missing. It will than be
+ * displayed with the name, the unknown type icon and a red border.
+ *
  * @author Bernd Wiswedel, University of Konstanz
+ * @author Patrick Winter, KNIME.com, Zurich, Switzerland
  */
 public class FlowVariableListCellRenderer extends DefaultListCellRenderer {
-    
+
     /** Icon representing double flow variables. */
     public static final Icon FLOW_VAR_DOUBLE_ICON;
     /** Icon representing integer flow variables. */
@@ -78,7 +84,7 @@ public class FlowVariableListCellRenderer extends DefaultListCellRenderer {
     /** Icon representing invalid flow variables.
      * @since 2.10*/
     public static final Icon FLOW_VAR_INVALID_ICON;
-    
+
     static {
         FLOW_VAR_DOUBLE_ICON = loadIcon(
                 Node.class, "/icon/flowvar_double.png");
@@ -89,13 +95,13 @@ public class FlowVariableListCellRenderer extends DefaultListCellRenderer {
         FLOW_VAR_INVALID_ICON = loadIcon(
                 Node.class, "/icon/flowvar_default.png");
     }
-    
+
     private static Icon loadIcon(
             final Class<?> className, final String path) {
         ImageIcon icon;
         try {
-            ClassLoader loader = className.getClassLoader(); 
-            String packagePath = 
+            ClassLoader loader = className.getClassLoader();
+            String packagePath =
                 className.getPackage().getName().replace('.', '/');
             String correctedPath = path;
             if (!path.startsWith("/")) {
@@ -109,8 +115,8 @@ public class FlowVariableListCellRenderer extends DefaultListCellRenderer {
             icon = null;
         }
         return icon;
-    }        
-    
+    }
+
     /** {@inheritDoc} */
     @Override
     public Component getListCellRendererComponent(final JList list,
@@ -119,49 +125,60 @@ public class FlowVariableListCellRenderer extends DefaultListCellRenderer {
         Component c =
                 super.getListCellRendererComponent(list, value, index,
                         isSelected, cellHasFocus);
-        if (value instanceof FlowVariableCell) {
+        FlowVariable flowVariable = null;
+        if (value instanceof FlowVariable) {
+            flowVariable = (FlowVariable) value;
+        } else if (value instanceof FlowVariableCell) {
+            // Added for bug 4601 to display missing flow variables
             FlowVariableCell flowVariableCell = (FlowVariableCell)value;
             if (flowVariableCell.isValid()) {
-                FlowVariable v = flowVariableCell.getFlowVariable();
-                Icon icon;
-                setText(v.getName());
-                String curValue;
-                switch (v.getType()) {
-                case DOUBLE:
-                    icon = FLOW_VAR_DOUBLE_ICON;
-                    curValue = Double.toString(v.getDoubleValue());
-                    break;
-                case INTEGER:
-                    icon = FLOW_VAR_INT_ICON;
-                    curValue = Integer.toString(v.getIntValue());
-                    break;
-                case STRING:
-                    icon = FLOW_VAR_STRING_ICON;
-                    curValue = v.getStringValue();
-                    break;
-                default:
-                    icon = DataValue.UTILITY.getIcon();
-                    curValue = v.toString();
-                }
-                setIcon(icon);
-                StringBuilder b = new StringBuilder(v.getName());
-                b.append(" (");
-                if (v.getName().startsWith("knime.")) { // constant
-                    b.append("constant: ");
-                } else {
-                    b.append("current value: ");
-                }
-                b.append(curValue);
-                b.append(")");
-                setToolTipText(b.toString());
+                // Display as normal flow variable
+                flowVariable = flowVariableCell.getFlowVariable();
             } else {
+                // Display missing variable by known name and with missing icon and red border
                 setText(flowVariableCell.getName());
                 setIcon(FLOW_VAR_INVALID_ICON);
                 setToolTipText(null);
                 setBorder(BorderFactory.createLineBorder(Color.red));
             }
         } else {
+            // Value is neither flow variable nor flow variable cell, do nothing
             setToolTipText(null);
+        }
+        // If flow variable was found either directly as value or inside flow variable cell
+        if (flowVariable != null) {
+            FlowVariable v = flowVariable;
+            Icon icon;
+            setText(v.getName());
+            String curValue;
+            switch (v.getType()) {
+            case DOUBLE:
+                icon = FLOW_VAR_DOUBLE_ICON;
+                curValue = Double.toString(v.getDoubleValue());
+                break;
+            case INTEGER:
+                icon = FLOW_VAR_INT_ICON;
+                curValue = Integer.toString(v.getIntValue());
+                break;
+            case STRING:
+                icon = FLOW_VAR_STRING_ICON;
+                curValue = v.getStringValue();
+                break;
+            default:
+                icon = DataValue.UTILITY.getIcon();
+                curValue = v.toString();
+            }
+            setIcon(icon);
+            StringBuilder b = new StringBuilder(v.getName());
+            b.append(" (");
+            if (v.getName().startsWith("knime.")) { // constant
+                b.append("constant: ");
+            } else {
+                b.append("current value: ");
+            }
+            b.append(curValue);
+            b.append(")");
+            setToolTipText(b.toString());
         }
         return c;
     }
@@ -169,7 +186,10 @@ public class FlowVariableListCellRenderer extends DefaultListCellRenderer {
     /**
      * Cell representing a valid or invalid flow variable.
      *
-     * @author "Patrick Winter"
+     * This class is used to display missing {@link FlowVariable}s
+     * in a {@link FlowVariableListCellRenderer}.
+     *
+     * @author Patrick Winter, KNIME.com AG, Zurich
      * @since 2.10
      */
     public static class FlowVariableCell {
