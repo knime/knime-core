@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+<entry key="node_file" type="xstring" value="settings.xml"/>
+<config key="flow_stack"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="scriptImports" type="xstring" value="// Your custom imports:%%00010"/>
+<entry key="scriptFields" type="xstring" value="// Your custom variables:%%00010"/>
+<entry key="scriptBody" type="xstring" value="int unit;%%00010if (v_magnitude.equals(&quot;Second&quot;)) {%%00010%%00009unit = Calendar.SECOND;%%00010} else if (v_magnitude.equals(&quot;Minute&quot;)) {%%00010%%00009unit = Calendar.MINUTE;%%00010} else if (v_magnitude.equals(&quot;Hour&quot;)) {%%00010%%00009unit = Calendar.HOUR;%%00010} else if (v_magnitude.equals(&quot;Day&quot;)) {%%00010%%00009unit = Calendar.DAY_OF_MONTH;%%00010} else if (v_magnitude.equals(&quot;Week&quot;)) {%%00010%%00009unit = Calendar.WEEK_OF_YEAR;%%00010} else if (v_magnitude.equals(&quot;Month&quot;)) {%%00010%%00009unit = Calendar.MONTH;%%00010} else if (v_magnitude.equals(&quot;Year&quot;)) {%%00010%%00009unit = Calendar.YEAR;%%00010} else {%%00010%%00009throw new Abort(&quot;Invalid unit &quot; + v_magnitude);%%00010}%%00010%%00010Calendar c = getCell(v_datetime_column, tCalendar);%%00010c.add(unit, v_amount);%%00010out_converted_output = c;%%00010%%00010%%00010"/>
+<config key="jarFiles">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<config key="outCols">
+<entry key="array-size" type="xint" value="1"/>
+<config key="0">
+<entry key="Name" type="xstring" value="converted_output"/>
+<entry key="JavaName" type="xstring" value="out_converted_output"/>
+<entry key="JavaType" type="xstring" value="java.util.Calendar"/>
+<config key="Type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.date.DateAndTimeCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+<entry key="replaceExisting" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="outVars">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<config key="inCols">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<config key="inVars">
+<entry key="array-size" type="xint" value="3"/>
+<config key="0">
+<entry key="Name" type="xstring" value="magnitude"/>
+<entry key="JavaName" type="xstring" value="v_magnitude"/>
+<entry key="JavaType" type="xstring" value="java.lang.String"/>
+<entry key="Type" type="xstring" value="STRING"/>
+</config>
+<config key="1">
+<entry key="Name" type="xstring" value="datetime_column"/>
+<entry key="JavaName" type="xstring" value="v_datetime_column"/>
+<entry key="JavaType" type="xstring" value="java.lang.String"/>
+<entry key="Type" type="xstring" value="STRING"/>
+</config>
+<config key="2">
+<entry key="Name" type="xstring" value="amount"/>
+<entry key="JavaName" type="xstring" value="v_amount"/>
+<entry key="JavaType" type="xstring" value="java.lang.Integer"/>
+<entry key="Type" type="xstring" value="INTEGER"/>
+</config>
+</config>
+<entry key="version" type="xstring" value="version 1.x"/>
+<entry key="templateUUID" type="xstring" isnull="true" value=""/>
+<entry key="runOnExecute" type="xboolean" value="false"/>
+</config>
+<config key="variables">
+<config key="outCols">
+<config key="0">
+<config key="Name">
+<entry key="used_variable" type="xstring" value="output_column"/>
+<entry key="exposed_variable" type="xstring" isnull="true" value=""/>
+</config>
+</config>
+</config>
+</config>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="state" type="xstring" value="CONFIGURED"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.jsnippet.JavaSnippetNodeFactory"/>
+<entry key="node-name" type="xstring" value="Java Snippet"/>
+<entry key="node-bundle-name" type="xstring" value="KNIME Java Snippet Nodes"/>
+<entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.jsnippets"/>
+<entry key="node-bundle-vendor" type="xstring" value="KNIME GmbH, Konstanz, Germany"/>
+<entry key="node-bundle-version" type="xstring" value="2.10.0.qualifier"/>
+<config key="factory_settings"/>
+<entry key="name" type="xstring" value="Java Snippet"/>
+<entry key="hasContent" type="xboolean" value="false"/>
+<entry key="isInactive" type="xboolean" value="false"/>
+<config key="ports">
+<config key="port_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+</config>
+<config key="filestores">
+<entry key="file_store_location" type="xstring" isnull="true" value=""/>
+<entry key="file_store_id" type="xstring" isnull="true" value=""/>
+</config>
+</config>

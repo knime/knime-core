@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+<entry key="node_file" type="xstring" value="settings.xml"/>
+<config key="flow_stack">
+<config key="Variable_0">
+<entry key="type" type="xstring" value="variable"/>
+<entry key="name" type="xstring" value="format"/>
+<entry key="class" type="xstring" value="STRING"/>
+<entry key="value" type="xstring" value="Date (e.g. 2014-06-26)"/>
+</config>
+<config key="Variable_1">
+<entry key="type" type="xstring" value="variable"/>
+<entry key="name" type="xstring" value="format (Index)"/>
+<entry key="class" type="xstring" value="INTEGER"/>
+<entry key="value" type="xint" value="0"/>
+</config>
+</config>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="label" type="xstring" value="Output Format"/>
+<entry key="description" type="xstring" value="The information contained in the output cell."/>
+<entry key="variableName" type="xstring" value="format"/>
+<entry key="weight" type="xint" value="5"/>
+<entry key="hide_in_wizard" type="xboolean" value="false"/>
+<config key="value">
+<entry key="value" type="xstring" value="Date (e.g. 2014-06-26)"/>
+</config>
+<config key="choices">
+<entry key="array-size" type="xint" value="3"/>
+<entry key="0" type="xstring" value="Date (e.g. 2014-06-26)"/>
+<entry key="1" type="xstring" value="Time (e.g. 21:49:23)"/>
+<entry key="2" type="xstring" value="DateTime (e.g. 2014-06-26 21:49:23)"/>
+</config>
+</config>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="state" type="xstring" value="CONFIGURED"/>
+<entry key="factory" type="xstring" value="org.knime.quickform.nodes.in.stringselection.StringSelectionInputQuickFormInNodeFactory"/>
+<entry key="node-name" type="xstring" value="String Radio Buttons"/>
+<entry key="node-bundle-name" type="xstring" value="KNIME Nodes to create KNIME Quick Forms"/>
+<entry key="node-bundle-symbolic-name" type="xstring" value="org.knime.quickform.nodes"/>
+<entry key="node-bundle-vendor" type="xstring" value="KNIME.com, Zurich, Switzerland"/>
+<entry key="node-bundle-version" type="xstring" value="2.10.0.qualifier"/>
+<config key="factory_settings"/>
+<entry key="name" type="xstring" value="String Radio Buttons"/>
+<entry key="hasContent" type="xboolean" value="false"/>
+<entry key="isInactive" type="xboolean" value="false"/>
+<config key="ports">
+<config key="port_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+</config>
+<config key="filestores">
+<entry key="file_store_location" type="xstring" isnull="true" value=""/>
+<entry key="file_store_id" type="xstring" isnull="true" value=""/>
+</config>
+</config>
