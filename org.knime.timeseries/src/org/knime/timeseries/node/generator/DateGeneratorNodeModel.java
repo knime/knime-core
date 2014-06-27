@@ -81,7 +81,6 @@ public class DateGeneratorNodeModel extends NodeModel {
     private final SettingsModelCalendar m_from = DateGeneratorNodeDialog.createStartingPointModel();
     private final SettingsModelCalendar m_to = DateGeneratorNodeDialog.createEndPointModel();
     private final SettingsModelInteger m_noOfRows = DateGeneratorNodeDialog.createNumberOfRowsModel();
-
     private final SettingsModelBoolean m_useExecution = DateGeneratorNodeDialog.createUseCurrentForStart();
 
     /**
