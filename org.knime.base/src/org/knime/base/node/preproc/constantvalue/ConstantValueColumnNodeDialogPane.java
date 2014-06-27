@@ -50,13 +50,16 @@ import static org.knime.core.node.util.CheckUtils.checkSetting;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -153,10 +156,51 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
 
         final JPanel northValuePanel = new JPanel(new BorderLayout(5, 5));
 
-        FlowVariableModel createFlowVariableModel =
+        final FlowVariableModel createFlowVariableModel =
             createFlowVariableModel(ConstantValueColumnConfig.VALUE, FlowVariable.Type.STRING);
 
-        final FlowVariableModelButton flowVariableModelButton = new FlowVariableModelButton(createFlowVariableModel);
+        //small hack to be called after the flow-variable button-dialog has been opened and something has
+        //actually changed!
+        @SuppressWarnings("serial")
+        final FlowVariableModelButton flowVariableModelButton = new FlowVariableModelButton(createFlowVariableModel) {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                final AtomicBoolean changed = new AtomicBoolean(false);
+                ChangeListener cl = new ChangeListener() {
+
+                    @Override
+                    public void stateChanged(final ChangeEvent ce) {
+                        changed.set(true);
+                    }
+                };
+                createFlowVariableModel.addChangeListener(cl);
+                super.actionPerformed(e);
+                createFlowVariableModel.removeChangeListener(cl);
+                if (changed.get() && createFlowVariableModel.isVariableReplacementEnabled()) {
+                    Map<String, FlowVariable> availableFlowVariables = getAvailableFlowVariables();
+                    FlowVariable flowVariable =
+                        availableFlowVariables.get(createFlowVariableModel.getInputVariableName());
+                    if (flowVariable != null) {
+                        switch (flowVariable.getType()) {
+                            case DOUBLE:
+                                m_fieldType.setSelectedItem(TypeCellFactory.DOUBLE.getDataType());
+                                break;
+                            case INTEGER:
+                                m_fieldType.setSelectedItem(TypeCellFactory.INT.getDataType());
+                                break;
+                            case STRING:
+                                m_fieldType.setSelectedItem(TypeCellFactory.STRING.getDataType());
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+        };
         createFlowVariableModel.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent evt) {
@@ -273,16 +317,19 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         ConstantValueColumnConfig config = new ConstantValueColumnConfig();
-
         TypeCellFactory forDataType = TypeCellFactory.forDataType((DataType)m_fieldType.getSelectedItem());
         String pattern = (String)m_dateTemplates.getSelectedItem();
+        config.setValue(m_value.getText());
 
-        try {
-            forDataType.createCell(m_value.getText() == null ? "" : m_value.getText(), pattern);
-            config.setValue(m_value.getText());
-        } catch (TypeParsingException e) {
-            throw new InvalidSettingsException(String.format("Error on creating '%s' from input string: '%s'",
-                forDataType.getDataType(), m_value.getText()));
+        //Bug-5331 - check if the value is controlled by a flow-variable
+        if (m_columnName.isEnabled()) {
+            try {
+                forDataType.createCell(m_value.getText() == null ? "" : m_value.getText(), pattern);
+                config.setValue(m_value.getText());
+            } catch (TypeParsingException e) {
+                throw new InvalidSettingsException(String.format("Error on creating '%s' from input string: '%s'",
+                    forDataType.getDataType(), m_value.getText()));
+            }
         }
         if (StringUtils.isNotEmpty(pattern)) {
             StringHistory.getInstance(FORMAT_HISTORY_KEY).add(pattern);
@@ -296,6 +343,10 @@ final class ConstantValueColumnNodeDialogPane extends NodeDialogPane {
 
         config.setReplacedColumn(m_columnPanel.isEnabled() ? m_columnPanel.getSelectedColumn() : null);
         config.save(settings);
+    }
+
+    @Override
+    public void onClose() {
         m_dataTableSpec = null;
     }
 
