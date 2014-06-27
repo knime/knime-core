@@ -309,7 +309,7 @@ public class DateShiftConfigure {
             rearranger.append(getColumnbasedCellFactory(spec, col1Idx, col2Idx, g.getFactor(), conf));
         } else if (typeofref.equals(DateShiftNodeDialog.CFG_11970)) {
             //returning the number since 1.1.1970
-            rearranger.append(get1970CellFactory(spec, col1Idx, g.getFactor(), conf));
+            rearranger.append(getTimeBasedCellFactory(spec, col1Idx, g.getFactor(), conf, 0));
         } else {
             long time = System.currentTimeMillis() + TimeZone.getDefault().getOffset(System.currentTimeMillis());
             if (typeofref.equals(DateShiftNodeDialog.CFG_FIXDATE)) {
@@ -373,43 +373,6 @@ public class DateShiftConfigure {
         };
     }
 
-    /**
-     *
-     * @param spec the previous data table spec
-     * @param col1Idx the column index of the numerical column to add
-     * @param g the granularity
-     * @param conf the configuration object
-     * @return the cell factory
-     */
-    public static SingleCellFactory get1970CellFactory(final DataTableSpec spec, final int col1Idx, final double g,
-        final DateShiftConfigure conf) {
-
-        return new SingleCellFactory(createOutputColumnSpec(spec, conf.getNewColumnName().getStringValue())) {
-
-            /**
-             * Value for the new column is based on the values of the current row and the value of the previous row.
-             * Therefore both rows must contain a DateAndTimeValue, the selected granularity, and the fraction digits
-             * for rounding.
-             *
-             * @param row the current row
-             * @return the difference between the two date values with the given granularity and rounding
-             */
-            @Override
-            public DataCell getCell(final DataRow row) {
-                DataCell cell1 = row.getCell(col1Idx);
-                // the cell is missing or not compatible to double
-                // value
-                if ((cell1.isMissing()) || !cell1.getType().isCompatible(DoubleValue.class)) {
-                    return DataType.getMissingCell();
-                }
-                double d = ((DoubleValue)cell1).getDoubleValue();
-                d *= g;
-                return new DateAndTimeCell(Math.round(d), conf.getHasDate().getBooleanValue(), conf.getHasTime()
-                    .getBooleanValue(), conf.getHasMiliSeconds().getBooleanValue());
-
-            }
-        };
-    }
 
     /**
      *

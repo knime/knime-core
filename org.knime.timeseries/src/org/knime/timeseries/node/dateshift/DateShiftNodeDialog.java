@@ -108,7 +108,6 @@ public class DateShiftNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentButtonGroup(m_referencemodel,
                 false, "", CFG_NOW, CFG_COLUMN, CFG_FIXDATE, CFG_11970));
 
-
         setHorizontalPlacement(false);
 
         // numerical column
