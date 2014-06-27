@@ -417,7 +417,8 @@ public final class DecTreePredictorNodeModel extends NodeModel {
                 treeSpec.getDataTableSpec().getColumnSpec(targetCol);
 
         if (!colSpec.getType().isCompatible(StringValue.class)) {
-            throw new InvalidSettingsException("This predictor only supports target fields with data type string");
+            throw new InvalidSettingsException("This predictor only supports target fields of data type string (got "
+                    +  colSpec.getType() + ")");
         }
 
         //Replaced LinkedList because later it is used to get values by index
