@@ -17,6 +17,10 @@
                 If selected the aggregation values of the first rows until the time window is full, 
                 are computed based on the data rows visited so far.
             </option>
+            <option name="Cumulative computation">
+                Select this option to compute cumulative values e.g. cumulative sum over the whole table.
+                Each result row is computed by aggregating the values from the first row to the current row.
+            </option>
             <option name = "Remove aggregation columns">
               If selected the columns used to aggregate are filtered from the output table.
             </option>

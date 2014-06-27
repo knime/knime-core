@@ -85,20 +85,23 @@ public class MovingAggregationCellFactory implements CellFactory {
     private final Set<String> m_aggregationCols;
     private Set<String> m_retainedCols;
     private boolean m_handleMissings;
+    private final boolean m_cumulativeComp;
 
     /**
      * @param spec the {@link DataTableSpec} of the table to process
      * @param globalSettings the {@link GlobalSettings} to use for aggregation
      * @param colNamePolicy the {@link ColumnNamePolicy}
      * @param aggregators list with {@link ColumnAggregator}s to use
+     * @param cumulativeComp use cumulative computation instead of window length
      * @param windowLength the length of the aggregation window
      * @param handleMissings if true, a smaller window size is used in the beginning to handle missing values.
      * @throws IllegalArgumentException if the selected {@link ColumnAggregator}s and the {@link ColumnNamePolicy}
      * results in duplicate column names
      */
     MovingAggregationCellFactory(final DataTableSpec spec, final GlobalSettings globalSettings,
-        final ColumnNamePolicy colNamePolicy, final List<ColumnAggregator> aggregators, final int windowLength,
-        final boolean handleMissings) {
+        final ColumnNamePolicy colNamePolicy, final List<ColumnAggregator> aggregators, final boolean cumulativeComp,
+        final int windowLength, final boolean handleMissings) {
+        m_cumulativeComp = cumulativeComp;
         m_window = new LinkedList<>();
         m_windowLength = windowLength;
         m_handleMissings = handleMissings;
@@ -129,28 +132,38 @@ public class MovingAggregationCellFactory implements CellFactory {
      */
     @Override
     public DataCell[] getCells(final DataRow row) {
-        m_window.add(row);
         final DataCell[] cells = new DataCell[m_ops.length];
-        final boolean windowFull = (m_window.size() >= m_windowLength);
-        if (windowFull || m_handleMissings) {
+        if (m_cumulativeComp) {
             for (int i = 0, length = m_ops.length; i < length; i++) {
-                int colIdx = m_aggrColIdxs[i];
+                final int colIdx = m_aggrColIdxs[i];
                 final AggregationOperator op = m_ops[i];
-                for (final DataRow windowRow : m_window) {
-                    op.compute(windowRow, colIdx);
-                }
+                op.compute(row, colIdx);
                 final DataCell resultCell = op.getResult();
-                op.reset();
                 cells[i] = resultCell;
             }
-            if (windowFull) {
-                //remove the first row only when the window is full
-                //not during the missing value handling phase!
-                m_window.removeFirst();
-            }
         } else {
-            //the window is not yet full return missing cells
-            Arrays.fill(cells, DataType.getMissingCell());
+            m_window.add(row);
+            final boolean windowFull = (m_window.size() >= m_windowLength);
+            if (windowFull || m_handleMissings) {
+                for (int i = 0, length = m_ops.length; i < length; i++) {
+                    final int colIdx = m_aggrColIdxs[i];
+                    final AggregationOperator op = m_ops[i];
+                    for (final DataRow windowRow : m_window) {
+                        op.compute(windowRow, colIdx);
+                    }
+                    final DataCell resultCell = op.getResult();
+                    op.reset();
+                    cells[i] = resultCell;
+                }
+                if (windowFull) {
+                    //remove the first row only when the window is full
+                    //not during the missing value handling phase!
+                    m_window.removeFirst();
+                }
+            } else {
+                //the window is not yet full return missing cells
+                Arrays.fill(cells, DataType.getMissingCell());
+            }
         }
         return cells;
     }

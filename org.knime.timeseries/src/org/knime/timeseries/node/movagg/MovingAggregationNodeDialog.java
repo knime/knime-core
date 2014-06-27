@@ -55,6 +55,8 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.dialogutil.AggregationColumnPanel;
@@ -72,6 +74,8 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 
 /**
  * Node dialog of the Moving Aggregation node.
@@ -82,11 +86,19 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
 
     private final AggregationColumnPanel m_aggrColPanel = new AggregationColumnPanel(null);
 
-    private final DialogComponent m_handleMissings = new DialogComponentBoolean(
-        MovingAggregationNodeModel.createHandleMissingsModel(), "Resolve missing values in the beginning");
+    private SettingsModelBoolean m_handleMissingsModel = MovingAggregationNodeModel.createHandleMissingsModel();
+    private final DialogComponent m_handleMissings = new DialogComponentBoolean(m_handleMissingsModel,
+        "Resolve missing values in the beginning");
 
-    private final DialogComponent m_winLength =
-            new DialogComponentNumberEdit(MovingAggregationNodeModel.createWindowLengthModel(), "Window length", 8);
+    private final SettingsModelBoolean m_cumulativeCompModel =
+            MovingAggregationNodeModel.createCumulativeComputingModel();
+
+    private final DialogComponent m_cumulativeComp =
+            new DialogComponentBoolean(m_cumulativeCompModel, "Cumulative computation");
+
+    private final SettingsModelInteger m_winLengthModel = MovingAggregationNodeModel.createWindowLengthModel();
+
+    private final DialogComponent m_winLength = new DialogComponentNumberEdit(m_winLengthModel, "Window length", 8);
 
     private final DialogComponent m_removeRetainedCols = new DialogComponentBoolean(
         MovingAggregationNodeModel.createRemoveRetainedColsModel(), "Remove retained columns");
@@ -108,6 +120,15 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
      * Constructor.
      */
     public MovingAggregationNodeDialog() {
+        m_cumulativeCompModel.addChangeListener(new ChangeListener() {
+            /**{@inheritDoc}*/
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                final boolean enabled = !m_cumulativeCompModel.getBooleanValue();
+                m_winLengthModel.setEnabled(enabled);
+                m_handleMissingsModel.setEnabled(enabled);
+            }
+        });
         JPanel rootPanel = new JPanel();
         rootPanel.setLayout(new BoxLayout(rootPanel, BoxLayout.Y_AXIS));
         final Box generalSettingsBox = new Box(BoxLayout.X_AXIS);
@@ -115,6 +136,7 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
             BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " General settings "));
         generalSettingsBox.add(m_winLength.getComponentPanel());
         generalSettingsBox.add(m_handleMissings.getComponentPanel());
+        generalSettingsBox.add(m_cumulativeComp.getComponentPanel());
         generalSettingsBox.add(m_removeAggrCols.getComponentPanel());
         generalSettingsBox.add(m_removeRetainedCols.getComponentPanel());
 
@@ -157,6 +179,7 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
             return;
         }
         m_winLength.loadSettingsFrom(settings, specs);
+        m_cumulativeComp.loadSettingsFrom(settings, specs);
         m_handleMissings.loadSettingsFrom(settings, specs);
         m_removeRetainedCols.loadSettingsFrom(settings, specs);
         m_removeAggrCols.loadSettingsFrom(settings, specs);
@@ -176,6 +199,7 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         m_winLength.saveSettingsTo(settings);
+        m_cumulativeComp.saveSettingsTo(settings);
         m_handleMissings.saveSettingsTo(settings);
         m_removeRetainedCols.saveSettingsTo(settings);
         m_removeAggrCols.saveSettingsTo(settings);
