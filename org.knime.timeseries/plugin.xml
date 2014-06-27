@@ -89,15 +89,6 @@
          point="org.knime.workbench.repository.metanode">
       <PersistedMetaNode
             category-path="/timeseries/meta"
-            description="Allows adding/subtracting seconds,minutes,etc from datetime columns"
-            expert-flag="false"
-            icon="icons/category_time.png"
-            id="DateTimeShift"
-            name="Date/Time Shift"
-            workflowDir="metanode_templates/DateTime Shift/">
-      </PersistedMetaNode>
-      <PersistedMetaNode
-            category-path="/timeseries/meta"
             description="Removes the seasonality from the selected time series.  This metanode selects one time series column, optionally one datetime column, and an interval lag. Then it performs x(t) – x(t-interval lag) to correct the seasonality.  Note: It does not find automatically the optimal interval lag. The interval lag has to be supplied by the user. (Optimal Interval Lag can be found via the linear correlation node, by knowledge, or by some specific formulas)."
             expert-flag="false"
             icon="icons/category_time.png"
