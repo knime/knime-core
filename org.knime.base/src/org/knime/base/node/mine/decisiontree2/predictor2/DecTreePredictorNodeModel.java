@@ -71,6 +71,8 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.StringValue;
+import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
@@ -343,8 +345,9 @@ public final class DecTreePredictorNodeModel extends NodeModel {
     /**
      * @param spec
      * @return
+     * @throws InvalidSettingsException when the PMML document is not valid
      */
-    private List<String> getPredictionStrings(final PMMLPortObjectSpec spec) {
+    private List<String> getPredictionStrings(final PMMLPortObjectSpec spec) throws InvalidSettingsException {
         List<DataCell> predictionValues = getPredictionValues(spec);
         if (predictionValues == null) {
             return Collections.emptyList();
@@ -393,6 +396,7 @@ public final class DecTreePredictorNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+
         PMMLPortObjectSpec treeSpec = (PMMLPortObjectSpec)inSpecs[INMODELPORT];
         DataTableSpec inSpec = (DataTableSpec)inSpecs[1];
         for (String learnColName : treeSpec.getLearningFields()) {
@@ -407,22 +411,30 @@ public final class DecTreePredictorNodeModel extends NodeModel {
     }
 
     private List<DataCell> getPredictionValues(
-            final PMMLPortObjectSpec treeSpec) {
+            final PMMLPortObjectSpec treeSpec) throws InvalidSettingsException {
         String targetCol = treeSpec.getTargetFields().get(0);
         DataColumnSpec colSpec =
                 treeSpec.getDataTableSpec().getColumnSpec(targetCol);
+
+        if (!colSpec.getType().isCompatible(StringValue.class)) {
+            throw new InvalidSettingsException("This predictor only supports target fields with data type string");
+        }
+
+        //Replaced LinkedList because later it is used to get values by index
+        ArrayList<DataCell> predValues = new ArrayList<DataCell>();
         if (colSpec.getDomain().hasValues()) {
-            //Replaced LinkedList because later it is used to get values by index
-            ArrayList<DataCell> predValues = new ArrayList<DataCell>();
             predValues.addAll(colSpec.getDomain().getValues());
-            return predValues;
+        } else if (colSpec.getType() == BooleanCell.TYPE) {
+            predValues.add(BooleanCell.FALSE);
+            predValues.add(BooleanCell.TRUE);
         } else {
             return null;
         }
+        return predValues;
     }
 
     private DataTableSpec createOutTableSpec(
-            final PortObjectSpec[] inSpecs) {
+            final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         List<DataCell>  predValues = null;
         if (m_showDistribution.getBooleanValue()) {
             predValues = getPredictionValues(
