@@ -330,12 +330,14 @@ class ClassAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
-    double getProbabilityInternal(final String classValue, final DataCell attributeValue) {
+    double getProbabilityInternal(final String classValue, final DataCell attributeValue,
+        final double probabilityThreshold) {
         if (attributeValue.isMissing()) {
             throw new IllegalArgumentException(
                     "Missing value not allowed as class value");
         }
         if (m_totalNoOfRecs == 0) {
+            //this should not happen
             throw new IllegalStateException("Model for attribute " + getAttributeName() + " contains no records");
         }
         final MutableInteger noOfRecs = m_recsCounterByClassVal.get(classValue);

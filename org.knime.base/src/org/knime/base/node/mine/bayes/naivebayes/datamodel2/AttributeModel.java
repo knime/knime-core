@@ -325,10 +325,13 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @param classValue the class value to calculate the probability for
      * @param attributeValue the attribute value to calculate the
      * probability for. Could be a missing value.
+     * @param probabilityThreshold the probability to use in lieu of P(Ij* | Tk) when count[Ij*Ti] is zero for
+     * categorial fields or when the calculated probability of the distribution falls below the threshold for
+     * continuous fields.
      * @return the calculated probability or null if the cell was a missing
      * one and missing values should be skipped
      */
-    Double getProbability(final String classValue, final DataCell attributeValue) {
+    Double getProbability(final String classValue, final DataCell attributeValue, final double probabilityThreshold) {
         if (!isCompatible(attributeValue.getType())) {
             throw new IllegalArgumentException(String.format("Value in column '%s' (%s) is not "
                     + "compatible with attribute model %s (Column type %s)",
@@ -337,7 +340,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         if (attributeValue.isMissing() && m_ignoreMissingVals) {
             return null;
         }
-        return new Double(getProbabilityInternal(classValue, attributeValue));
+        return new Double(getProbabilityInternal(classValue, attributeValue, probabilityThreshold));
     }
 
     /**
@@ -345,9 +348,13 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @param classValue the class value to calculate the probability for
      * @param attributeValue the attribute value to calculate the
      * probability for. Could be a missing value.
+     * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for
+     * categorial fields or when the calculated probability of the distribution falls below the threshold for
+     * continuous fields.
      * @return the calculated probability
      */
-    abstract double getProbabilityInternal(final String classValue, final DataCell attributeValue);
+    abstract double getProbabilityInternal(final String classValue, final DataCell attributeValue,
+        double probabilityThreshold);
 
     /**
      * @param totalNoOfRecs the total number of records in the training data

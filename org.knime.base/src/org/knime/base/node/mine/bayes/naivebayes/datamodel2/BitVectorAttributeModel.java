@@ -213,11 +213,13 @@ public class BitVectorAttributeModel extends AttributeModel {
         }
 
         /**
-         * @param attributeValue the attribute value to calculate the
-         * probability for
+         * @param attributeValue the attribute value to calculate the probability for
+         * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for
+         * categorial fields or when the calculated probability of the distribution falls below the threshold for
+         * continuous fields.
          * @return the probability for the given attribute value
          */
-        private double getProbability(final DataCell attributeValue) {
+        private double getProbability(final DataCell attributeValue, final double probabilityThreshold) {
             final int noOfRows4Class = getNoOfRows();
             if (noOfRows4Class == 0) {
                 return 0;
@@ -476,12 +478,13 @@ public class BitVectorAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
-    double getProbabilityInternal(final String classValue, final DataCell attributeValue) {
+    double getProbabilityInternal(final String classValue, final DataCell attributeValue,
+        final double probabilityThreshold) {
         final BitVectorClassValue classModel = m_classValues.get(classValue);
         if (classModel == null) {
             return 0;
         }
-        return classModel.getProbability(attributeValue);
+        return classModel.getProbability(attributeValue, probabilityThreshold);
     }
 
     /**

@@ -265,9 +265,12 @@ class NumericalAttributeModel extends AttributeModel {
 
         /**
          * @param attrVal the attribute value to calculate the probability for
+         * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for
+         * categorial fields or when the calculated probability of the distribution falls below the threshold for
+         * continuous fields.
          * @return the calculated probability for the given attribute
          */
-        private double getProbability(final DataCell attrVal) {
+        private double getProbability(final DataCell attrVal, final double probabilityThreshold) {
             if (m_recompute) {
                 calculateProbabilityValues();
             }
@@ -302,6 +305,9 @@ class NumericalAttributeModel extends AttributeModel {
             //in a number overflow for many of such columns like described
             //in forum post http://www.knime.org/node/949
             final double prob = Math.exp(-(diff * diff / m_probabilityDenominator));
+            if (prob < probabilityThreshold) {
+                return probabilityThreshold;
+            }
             return prob;
         }
 
@@ -547,12 +553,13 @@ class NumericalAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
-    double getProbabilityInternal(final String classValue, final DataCell attributeValue) {
+    double getProbabilityInternal(final String classValue, final DataCell attributeValue,
+        final double probabilityThreshold) {
         final NumericalClassValue classModel = m_classValues.get(classValue);
         if (classModel == null) {
             return 0;
         }
-        return classModel.getProbability(attributeValue);
+        return classModel.getProbability(attributeValue, probabilityThreshold);
     }
 
     /**

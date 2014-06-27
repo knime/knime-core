@@ -236,17 +236,22 @@ class NominalAttributeModel extends AttributeModel {
         }
 
         /**
-         * @param attrVal the attribute value to calculate the probability
-         * for
+         * @param attrVal the attribute value to calculate the probability for
+         * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for
+         * categorial fields or when the calculated probability of the distribution falls below the threshold for
+         * continuous fields.
          * @return the probability for the given attribute value
          */
-        private double getProbability(final DataCell attrVal) {
+        private double getProbability(final DataCell attrVal, final double probabilityThreshold) {
             final int noOfRows4Class = getNoOfRows();
             if (noOfRows4Class == 0) {
                 throw new IllegalStateException("Model for attribute " + getAttributeName()
                     + " contains no rows for class " + m_classValue);
             }
             final double noOfRows = getNoOfRows4AttributeValue(attrVal);
+            if (noOfRows == 0) {
+                return probabilityThreshold;
+            }
             return noOfRows / noOfRows4Class;
         }
         /**
@@ -487,12 +492,13 @@ class NominalAttributeModel extends AttributeModel {
      * {@inheritDoc}
      */
     @Override
-    double getProbabilityInternal(final String classValue, final DataCell attributeValue) {
+    double getProbabilityInternal(final String classValue, final DataCell attributeValue,
+        final double probabilityThreshold) {
         final NominalClassValue classVal = m_classValues.get(classValue);
         if (classVal == null) {
             return 0;
         }
-        return classVal.getProbability(attributeValue);
+        return classVal.getProbability(attributeValue, probabilityThreshold);
     }
 
     /**

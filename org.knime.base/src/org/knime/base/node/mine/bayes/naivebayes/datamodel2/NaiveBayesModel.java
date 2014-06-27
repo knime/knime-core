@@ -156,19 +156,21 @@ public class NaiveBayesModel {
      * @param ignoreMissingVals set to <code>true</code> if the missing values
      * should be ignored during learning and prediction
      * @param pmmlCompatible flag that indicates that a PMML compatible model should be learned
-     * @param threshold the threshold to use for zero probability of an attribute values
+     * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for
+     * categorial fields or when the calculated probability of the distribution falls below the threshold for
+     * continuous fields.
      * @throws CanceledExecutionException if the user presses the cancel
      * button during model creation
      * @throws InvalidSettingsException if the input data contains no rows
      */
     public NaiveBayesModel(final BufferedDataTable data, final String classColName, final ExecutionContext exec,
             final int maxNoOfNominalVals, final boolean ignoreMissingVals, final boolean pmmlCompatible,
-            final double threshold)
+            final double probabilityThreshold)
         throws CanceledExecutionException, InvalidSettingsException {
         if (exec == null) {
             throw new IllegalArgumentException("exec must not be null");
         }
-        if (threshold < 0) {
+        if (probabilityThreshold < 0) {
             throw new IllegalArgumentException("Probability threshold should be positive");
         }
         if (data == null) {
@@ -197,7 +199,7 @@ public class NaiveBayesModel {
         //initialise the row values
         m_modelByAttrName = createModelMap(tableSpec, m_classColName, maxNoOfNominalVals,
             ignoreMissingVals, pmmlCompatible);
-        m_pmmlZeroProbThreshold = threshold;
+        m_pmmlZeroProbThreshold = probabilityThreshold;
         //end of initialise all internal variable
         ExecutionMonitor subExec = null;
         exec.setMessage("Building model");
@@ -1000,8 +1002,14 @@ public class NaiveBayesModel {
                 //skip the class value column
                 continue;
             }
+            final double probabilityThreshold;
+            if (m_pmmlZeroProbThreshold.isNaN()) {
+                probabilityThreshold = 0;
+            } else {
+                probabilityThreshold = m_pmmlZeroProbThreshold.doubleValue();
+            }
             final DataCell cell = row.getCell(i);
-            Double probability = model.getProbability(classValue, cell);
+            Double probability = model.getProbability(classValue, cell, probabilityThreshold);
             if (probability != null) {
                 if (probability.doubleValue() <= 0) {
                     //set the probability to the given corrector if the probability is zero and the pmml threshold
