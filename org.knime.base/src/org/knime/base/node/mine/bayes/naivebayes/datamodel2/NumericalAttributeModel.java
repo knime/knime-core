@@ -266,7 +266,7 @@ class NumericalAttributeModel extends AttributeModel {
         /**
          * @param attrVal the attribute value to calculate the probability for
          * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for
-         * categorial fields or when the calculated probability of the distribution falls below the threshold for
+         * categorical fields or when the calculated probability of the distribution falls below the threshold for
          * continuous fields.
          * @return the calculated probability for the given attribute
          */

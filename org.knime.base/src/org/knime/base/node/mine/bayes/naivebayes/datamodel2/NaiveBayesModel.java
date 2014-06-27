@@ -157,7 +157,7 @@ public class NaiveBayesModel {
      * should be ignored during learning and prediction
      * @param pmmlCompatible flag that indicates that a PMML compatible model should be learned
      * @param probabilityThreshold the probability to use in lieu of P(Ij | Tk) when count[IjTi] is zero for
-     * categorial fields or when the calculated probability of the distribution falls below the threshold for
+     * categorical fields or when the calculated probability of the distribution falls below the threshold for
      * continuous fields.
      * @throws CanceledExecutionException if the user presses the cancel
      * button during model creation
