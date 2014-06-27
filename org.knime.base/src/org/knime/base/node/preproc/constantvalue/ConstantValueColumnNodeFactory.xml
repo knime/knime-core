@@ -9,7 +9,6 @@
 		<intro>
 			Adds/replace a column containing a single constant value in each row.
 			<br />
-
 		</intro>
 		<option name="Replace">
 			Select a column which is replaced with the new
@@ -25,7 +24,8 @@
 			of the
 			column and in the text field the
 			actual column
-			value is entered.
+			value is entered. You can also choose a flow-variable to provide the value using the button on the right, 
+			however the datacell implementation configuration is still necessary. 
 			<br />
 			<br />
 
