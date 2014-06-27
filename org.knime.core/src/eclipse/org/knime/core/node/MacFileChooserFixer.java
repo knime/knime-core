@@ -50,12 +50,10 @@ package org.knime.core.node;
 
 import java.awt.AWTEvent;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
 import java.awt.event.WindowEvent;
 
-import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
 import org.eclipse.core.runtime.Platform;
@@ -90,31 +88,17 @@ final class MacFileChooserFixer implements AWTEventListener {
     @Override
     public void eventDispatched(final AWTEvent event) {
         if (event.getID() == WindowEvent.WINDOW_OPENED) {
-            final JFileChooser fc = findFileChooser((Component)event.getSource());
-            if ((fc != null) && (fc.getParent() != null)) {
+            final Component openedWindow = (Component)event.getSource();
+            if ((openedWindow != null) && (openedWindow.getParent() != null)) {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        // if the focus is set to another window, the text file is suddenly editable
-                        fc.getParent().requestFocus();
-                        fc.requestFocus();
+                        // if the focus is set to another window, the text field is suddenly editable
+                        openedWindow.getParent().requestFocus();
+                        openedWindow.requestFocus();
                     }
                 });
             }
         }
-    }
-
-    private JFileChooser findFileChooser(final Component comp) {
-        if (comp instanceof JFileChooser) {
-            return (JFileChooser)comp;
-        } else if (comp instanceof Container) {
-            for (Component c : ((Container)comp).getComponents()) {
-                JFileChooser fc = findFileChooser(c);
-                if (fc != null) {
-                    return fc;
-                }
-            }
-        }
-        return null;
     }
 }
