@@ -603,6 +603,41 @@ public class ClusterNodeModel extends NodeModel {
         m_ignoreColumn = new boolean[m_dimension];
         m_nrIgnoredColumns = 0;
 
+        LinkedList<String> includes = new LinkedList<String>();
+        includes.addAll(m_usedColumns.getIncludeList());
+
+        LinkedList<String> excludes = new LinkedList<String>();
+        excludes.addAll(m_usedColumns.getExcludeList());
+
+        LinkedList<String> includes2 = new LinkedList<String>();
+        includes2.addAll(m_usedColumns.getIncludeList());
+
+        LinkedList<String> excludes2 = new LinkedList<String>();
+        excludes2.addAll(m_usedColumns.getExcludeList());
+
+        // We have to check if we have to update the included and excluded columns
+        // First check if all incoming columns are either excluded or included
+        for (String col : spec.getColumnNames()) {
+            if (m_usedColumns.getIncludeList().contains(col)) {
+                includes2.remove(col);
+            } else if (m_usedColumns.getExcludeList().contains(col)) {
+                excludes2.remove(col);
+            } else {
+                includes.add(col);
+            }
+        }
+
+        //Leftover included columns that do not exist in the incoming table
+        for (String col : includes2) {
+            includes.remove(col);
+        }
+        // Same for excluded columns
+        for (String col : excludes2) {
+            excludes.remove(col);
+        }
+        m_usedColumns.setExcludeList(excludes);
+        m_usedColumns.setIncludeList(includes);
+
         if (m_usedColumns.isKeepAllSelected()) {
             boolean hasNumericColumn = false;
             for (DataColumnSpec colSpec : spec) {
