@@ -124,9 +124,9 @@ implements ChangeListener, ActionListener {
         try {
             // try to load icon(s)
             ImageIcon icon;
-            ClassLoader loader = this.getClass().getClassLoader();
+            ClassLoader loader = FlowVariableModelButton.class.getClassLoader();
             String packagePath =
-                this.getClass().getPackage().getName().replace('.', '/');
+                    FlowVariableModelButton.class.getPackage().getName().replace('.', '/');
             String correctedPath = "/icon/"
                 + (enabled ? "varbuttonON.png"
                             : "varbuttonOFF.png");
@@ -192,9 +192,9 @@ implements ChangeListener, ActionListener {
             // set title and make dialog modal
             super(f, "Variable Settings", true);
             // set icon of dialog frame
-            ClassLoader loader = this.getClass().getClassLoader();
+            ClassLoader loader = FlowVariableModelButton.class.getClassLoader();
             String packagePath =
-                this.getClass().getPackage().getName().replace('.', '/');
+                    FlowVariableModelButton.class.getPackage().getName().replace('.', '/');
             String correctedPath = "/icon/variable_dialog_active.png";
             ImageIcon icon = new ImageIcon(
                     loader.getResource(packagePath + correctedPath));
@@ -353,6 +353,7 @@ implements ChangeListener, ActionListener {
                     m_inputVar.setSelectedItem(s);
                     m_inputVar.addActionListener(new ActionListener() {
                         private Object m_oldSelection = s;
+                        @Override
                         public void actionPerformed(final ActionEvent evt) {
                             Object o = m_inputVar.getSelectedItem();
                             if (o.equals(s)) {
