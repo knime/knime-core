@@ -1042,6 +1042,16 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         }
         changed = m_outputs[0].setSpec(publishSpecs ? FlowVariablePortObjectSpec.INSTANCE : null) || changed;
         changed = m_outputs[0].setObject(publishObjects ? FlowVariablePortObject.INSTANCE : null) || changed;
+        final FlowObjectStack outgoingFlowObjectStack = getOutgoingFlowObjectStack();
+        if (publishObjects) {
+            for (FlowVariable f : outputExchange.getFlowVariables()) {
+                outgoingFlowObjectStack.push(f.cloneAndUnsetOwner());
+            }
+        } else {
+            while (!outgoingFlowObjectStack.isEmpty()) {
+                outgoingFlowObjectStack.pop(FlowObject.class);
+            }
+        }
         if (changed && !m_isPerformingActionCalledFromParent) {
             notifyStateChangeListeners(new NodeStateEvent(this)); // updates port views
         }

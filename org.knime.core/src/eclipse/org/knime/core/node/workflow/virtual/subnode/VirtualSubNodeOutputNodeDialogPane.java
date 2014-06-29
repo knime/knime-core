@@ -119,14 +119,14 @@ final class VirtualSubNodeOutputNodeDialogPane extends NodeDialogPane {
         gbc.weighty = 1.0;
         result.add(m_variableFilterPanel, gbc);
 
-        gbc.gridwidth = 1;
-        gbc.gridy += 1;
-        gbc.gridx = 0;
-        gbc.weighty = 0;
-        result.add(m_variablePrefixChecker, gbc);
-
-        gbc.gridx += 1;
-        result.add(m_variablePrefixTextField, gbc);
+//        gbc.gridwidth = 1;
+//        gbc.gridy += 1;
+//        gbc.gridx = 0;
+//        gbc.weighty = 0;
+//        result.add(m_variablePrefixChecker, gbc);
+//
+//        gbc.gridx += 1;
+//        result.add(m_variablePrefixTextField, gbc);
         return result;
     }
 
