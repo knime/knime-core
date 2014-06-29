@@ -591,6 +591,46 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/mine/regression/RegressionTrainingData.java" type="org.knime.base.node.mine.regression.RegressionTrainingData">
+        <filter comment="polished progress report in regression learners - assumed to be not used, not API" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.RegressionTrainingData"/>
+                <message_argument value="RegressionTrainingData(DataTable, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="polished progress report in regression learners - assumed to be not used, not API" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.RegressionTrainingData"/>
+                <message_argument value="RegressionTrainingData(DataTable, PMMLPortObjectSpec, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="polished progress report in regression learners - assumed to be not used, not API" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.RegressionTrainingData"/>
+                <message_argument value="RegressionTrainingData(DataTable, PMMLPortObjectSpec, boolean, DataCell, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="polished progress report in regression learners - assumed to be not used, not API" id="1143996420">
+            <message_arguments>
+                <message_argument value="RegressionTrainingData(BufferedDataTable, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="polished progress report in regression learners - assumed to be not used, not API" id="1143996420">
+            <message_arguments>
+                <message_argument value="RegressionTrainingData(BufferedDataTable, PMMLPortObjectSpec, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="polished progress report in regression learners - assumed to be not used, not API" id="1143996420">
+            <message_arguments>
+                <message_argument value="RegressionTrainingData(BufferedDataTable, PMMLPortObjectSpec, boolean, DataCell, boolean, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="polished progress report in regression learners - assumed to be not used, not API" id="1143996420">
+            <message_arguments>
+                <message_argument value="getRowCount()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/mine/regression/predict2/LogRegPredictor.java" type="org.knime.base.node.mine.regression.predict2.LogRegPredictor">
         <filter id="1110441988">
             <message_arguments>

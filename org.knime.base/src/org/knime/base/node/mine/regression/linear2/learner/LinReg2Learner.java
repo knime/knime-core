@@ -53,7 +53,6 @@ import java.util.List;
 
 import org.knime.base.node.mine.regression.MissingValueHandling;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableDomainCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -126,13 +125,13 @@ final class LinReg2Learner {
         init(data.getDataTableSpec(), inPMMLSpec);
         double calcDomainTime = 0.2;
         exec.setMessage("Analyzing categorical data");
-        DataTable dataTable = recalcDomainOfLearningFields(data, inPMMLSpec,
+        BufferedDataTable dataTable = recalcDomainOfLearningFields(data, inPMMLSpec,
             exec.createSubExecutionContext(calcDomainTime));
         exec.setMessage("Computing linear regression model");
-        return m_learner.perform(dataTable, data.getRowCount(), exec.createSubExecutionContext(1.0 - calcDomainTime));
+        return m_learner.perform(dataTable, exec.createSubExecutionContext(1.0 - calcDomainTime));
     }
 
-    private DataTable recalcDomainOfLearningFields(
+    private BufferedDataTable recalcDomainOfLearningFields(
             final BufferedDataTable data, final PMMLPortObjectSpec inPMMLSpec,
             final ExecutionContext exec) throws InvalidSettingsException, CanceledExecutionException {
         DataTableDomainCreator domainCreator = new DataTableDomainCreator(data.getDataTableSpec(),
@@ -163,7 +162,7 @@ final class LinReg2Learner {
         domainCreator.updateDomain(data, exec);
 
         DataTableSpec spec = domainCreator.createSpec();
-        DataTable newDataTable = exec.createSpecReplacerTable(data, spec);
+        BufferedDataTable newDataTable = exec.createSpecReplacerTable(data, spec);
         // initialize m_learner so that it has the correct DataTableSpec of
         // the input
         init(newDataTable.getDataTableSpec(), inPMMLSpec);

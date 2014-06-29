@@ -67,9 +67,10 @@ import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.base.node.mine.regression.RegressionTrainingRow;
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataTable;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
@@ -147,7 +148,7 @@ final class Learner {
      * @throws CanceledExecutionException when method is cancelled
      * @throws InvalidSettingsException When settings are inconsistent with the data
      */
-    public LogisticRegressionContent perform(final DataTable data,
+    public LogisticRegressionContent perform(final BufferedDataTable data,
             final ExecutionContext exec) throws CanceledExecutionException, InvalidSettingsException {
         exec.checkCanceled();
         int iter = 0;
@@ -176,7 +177,9 @@ final class Learner {
             Future<Double> future = ThreadPool.currentPool().enqueue(new Callable<Double>() {
                 @Override
                 public Double call() throws Exception {
-                    irlsRls(trainingData.iterator(), beta, rC, tcC, exec);
+                    final ExecutionMonitor progMon = exec.createSubProgress(1.0 / m_maxIter);
+                    irlsRls(trainingData, beta, rC, tcC, progMon);
+                    progMon.setProgress(1.0);
                     return likelihood(trainingData.iterator(), beta, rC, tcC, exec);
                 }
             });
@@ -283,15 +286,16 @@ final class Learner {
     /**
      * Do a irls step. The result is stored in beta.
      *
-     * @param iter iterator over trainings data.
+     * @param data over trainings data.
      * @param beta parameter vector
      * @param rC regressors count
      * @param tcC target category count
      * @throws CanceledExecutionException when method is cancelled
      */
-    private void irlsRls(final Iterator<RegressionTrainingRow> iter, final RealMatrix beta,
-            final int rC, final int tcC,
-            final ExecutionContext exec) throws CanceledExecutionException {
+    private void irlsRls(final RegressionTrainingData data, final RealMatrix beta,
+        final int rC, final int tcC, final ExecutionMonitor exec)
+                throws CanceledExecutionException {
+        Iterator<RegressionTrainingRow> iter = data.iterator();
         int rowCount = 0;
         int dim = (rC + 1) * (tcC - 1);
         RealMatrix xTwx = new Array2DRowRealMatrix(dim, dim);
@@ -300,10 +304,12 @@ final class Learner {
         RealMatrix x = new Array2DRowRealMatrix(1, rC + 1);
         RealMatrix eBetaTx = new Array2DRowRealMatrix(1, tcC - 1);
         RealMatrix pi = new Array2DRowRealMatrix(1, tcC - 1);
+        final int totalRowCount = data.getRowCount();
         while (iter.hasNext()) {
-            exec.checkCanceled();
             rowCount++;
             RegressionTrainingRow row = iter.next();
+            exec.checkCanceled();
+            exec.setProgress(rowCount / (double)totalRowCount, "Row " + rowCount + "/" + totalRowCount);
             x.setEntry(0, 0, 1);
             x.setSubMatrix(row.getParameter().getArray(), 0, 1);
 
@@ -326,7 +332,6 @@ final class Learner {
             // fill the diagonal blocks of matrix xTwx (k = k')
             for (int k = 0; k < tcC - 1; k++) {
                 for (int i = 0; i < rC + 1; i++) {
-                    exec.checkCanceled();
                     for (int ii = i; ii < rC + 1; ii++) {
                         int o = k * (rC + 1);
                         double v = xTwx.getEntry(o + i, o + ii);
@@ -340,7 +345,6 @@ final class Learner {
             // fill the rest of xTwx (k != k')
             for (int k = 0; k < tcC - 1; k++) {
                 for (int kk = k + 1; kk < tcC - 1; kk++) {
-                    exec.checkCanceled();
                     for (int i = 0; i < rC + 1; i++) {
                         for (int ii = i; ii < rC + 1; ii++) {
                             int o1 = k * (rC + 1);

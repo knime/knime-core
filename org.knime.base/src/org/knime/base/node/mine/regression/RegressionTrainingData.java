@@ -55,9 +55,9 @@ import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.NominalValue;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
@@ -68,7 +68,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
  * @since 2.9
  */
 public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
-    private DataTable m_data;
+    private BufferedDataTable m_data;
     private List<Integer> m_learningCols;
     private Integer m_target;
     private Map<Integer, Boolean> m_isNominal;
@@ -82,7 +82,7 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
      * @param spec port object spec.
      * @throws InvalidSettingsException When settings are inconsistent with the data
      */
-    public RegressionTrainingData(final DataTable data,
+    public RegressionTrainingData(final BufferedDataTable data,
             final PMMLPortObjectSpec spec) throws InvalidSettingsException {
         this(data, spec, true);
     }
@@ -93,7 +93,7 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
      * @param failOnMissing when true an exception is thrown when a missing cell is observed
      * @throws InvalidSettingsException When settings are inconsistent with the data
      */
-    public RegressionTrainingData(final DataTable data,
+    public RegressionTrainingData(final BufferedDataTable data,
             final PMMLPortObjectSpec spec,
             final boolean failOnMissing) throws InvalidSettingsException {
         this(data, spec, failOnMissing, null, true, true);
@@ -108,7 +108,7 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
      * @param sortFactorsCategories true when categories of nominal data in the include list should be sorted
      * @throws InvalidSettingsException When settings are inconsistent with the data
      */
-    public RegressionTrainingData(final DataTable data,
+    public RegressionTrainingData(final BufferedDataTable data,
             final PMMLPortObjectSpec spec,
             final boolean failOnMissing,
             final DataCell targetReferenceCategory,
@@ -185,6 +185,11 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
      */
     public int getRegressorCount() {
         return m_parameterCount;
+    }
+
+    /** @return Number of rows in the training data. */
+    public int getRowCount() {
+        return m_data.getRowCount();
     }
 
 

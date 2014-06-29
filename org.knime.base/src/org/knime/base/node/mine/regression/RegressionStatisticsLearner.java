@@ -57,6 +57,7 @@ import org.apache.commons.math3.stat.regression.RegressionResults;
 import org.apache.commons.math3.stat.regression.UpdatingMultipleLinearRegression;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTable;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -105,14 +106,12 @@ public abstract class RegressionStatisticsLearner {
 
     /**
      * @param data The data table.
-     * @param rowCount the number of rows in the input table, used for reporting progress. Set to -1 if progress should
-     *            not be reported.
      * @param exec The execution context used for reporting progress.
      * @return An object which holds the results.
      * @throws CanceledExecutionException When method is cancelled
      * @throws InvalidSettingsException When settings are inconsistent with the data
      */
-    public abstract RegressionContent perform(final DataTable data, final int rowCount, final ExecutionContext exec)
+    public abstract RegressionContent perform(final BufferedDataTable data, final ExecutionContext exec)
         throws CanceledExecutionException, InvalidSettingsException;
 
     /**
@@ -133,16 +132,15 @@ public abstract class RegressionStatisticsLearner {
 
     /**
      * Reads the table and performs the necessary updates on the statistics ({@code stats} and {@code regr}).
-     *
-     * @param rowCount Number of rows in the input table.
      * @param exec An {@link ExecutionMonitor}.
      * @param trainingData The training data.
      * @param stats Array of statistics for each (column, exponent) pair.
      * @param regr An {@link UpdatingMultipleLinearRegression} object.
+     *
      * @throws CanceledExecutionException Processing was cancelled.
      */
-    protected abstract void processTable(final int rowCount, final ExecutionMonitor exec,
-        RegressionTrainingData trainingData, SummaryStatistics[] stats, UpdatingMultipleLinearRegression regr)
+    protected abstract void processTable(final ExecutionMonitor exec, RegressionTrainingData trainingData,
+        SummaryStatistics[] stats, UpdatingMultipleLinearRegression regr)
         throws CanceledExecutionException;
 
     /**

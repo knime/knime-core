@@ -56,7 +56,7 @@ import org.apache.commons.math3.stat.regression.UpdatingMultipleLinearRegression
 import org.knime.base.node.mine.regression.RegressionStatisticsLearner;
 import org.knime.base.node.mine.regression.RegressionTrainingData;
 import org.knime.base.node.mine.regression.RegressionTrainingRow;
-import org.knime.core.data.DataTable;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -104,17 +104,14 @@ final class Learner extends RegressionStatisticsLearner {
 
     /**
      * @param data The data table.
-     * @param rowCount the number of rows in the input table, used for reporting progress.
-     *      Set to -1 if progress should not be reported.
      * @param exec The execution context used for reporting progress.
      * @return An object which holds the results.
      * @throws CanceledExecutionException When method is cancelled
      * @throws InvalidSettingsException When settings are inconsistent with the data
      */
     @Override
-    public PolyRegContent perform(final DataTable data,
-            final int rowCount, final ExecutionContext exec)
-                    throws CanceledExecutionException, InvalidSettingsException {
+    public PolyRegContent perform(final BufferedDataTable data, final ExecutionContext exec)
+        throws CanceledExecutionException, InvalidSettingsException {
         exec.checkCanceled();
 
         RegressionTrainingData trainingData = new RegressionTrainingData(data, m_outSpec,
@@ -126,7 +123,7 @@ final class Learner extends RegressionStatisticsLearner {
 
 
         exec.setProgress(0, "Estimating polynomial regression model.");
-        processTable(rowCount, exec, trainingData, stats, regr);
+        processTable(exec, trainingData, stats, regr);
 
         RegressionResults result = regr.regress();
 
@@ -148,7 +145,6 @@ final class Learner extends RegressionStatisticsLearner {
 
 
     /**
-     * @param rowCount
      * @param exec
      * @param trainingData
      * @param stats
@@ -156,10 +152,11 @@ final class Learner extends RegressionStatisticsLearner {
      * @throws CanceledExecutionException
      */
     @Override
-    protected void processTable(final int rowCount, final ExecutionMonitor exec, final RegressionTrainingData trainingData,
-        final SummaryStatistics[] stats, final UpdatingMultipleLinearRegression regr) throws CanceledExecutionException {
+    protected void processTable(final ExecutionMonitor exec, final RegressionTrainingData trainingData, final SummaryStatistics[] stats,
+        final UpdatingMultipleLinearRegression regr) throws CanceledExecutionException {
         int r = 1;
         double progress = 0;
+        final int rowCount = trainingData.getRowCount();
         for (RegressionTrainingRow row : trainingData) {
             exec.checkCanceled();
             if (!row.hasMissingCells()) {
@@ -176,15 +173,13 @@ final class Learner extends RegressionStatisticsLearner {
                 }
                 regr.addObservation(params, row.getTarget() - m_offsetValue);
             }
-            if (rowCount > 0) {
-                double progressUpdate = r / (double)rowCount;
-                // report progress if update above 1%
-                if (progressUpdate - progress > 0.01) {
-                    progress = progressUpdate;
-                    exec.setProgress(progress);
-                }
-                r++;
+            double progressUpdate = r / (double)rowCount;
+            // report progress if update above 1%
+            if (progressUpdate - progress > 0.01) {
+                progress = progressUpdate;
+                exec.setProgress(progress);
             }
+            r++;
         }
     }
 }

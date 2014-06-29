@@ -373,7 +373,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
 
         Learner learner = new Learner(model.getSpec(), 0d, m_settings.getMissingValueHandling() == MissingValueHandling.fail, m_settings.getDegree());
         try {
-            PolyRegContent polyRegContent = learner.perform(inTable, inTable.getRowCount(), exec);
+            PolyRegContent polyRegContent = learner.perform(inTable, exec);
             PortObject[] bdt =
                 new PortObject[]{model, rearrangerTable,
                     polyRegContent.createTablePortObject(exec.createSubExecutionContext(0.2))};

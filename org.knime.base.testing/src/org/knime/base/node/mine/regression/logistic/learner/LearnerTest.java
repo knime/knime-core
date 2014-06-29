@@ -71,6 +71,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
@@ -122,12 +123,12 @@ public class LearnerTest {
     }
 
     /**
-     * Test method for {@link org.knime.base.node.mine.regression.logistic.learner.Learner#perform(org.knime.core.data.DataTable, org.knime.core.node.ExecutionContext)}.
+     * Test method for {@link org.knime.base.node.mine.regression.logistic.learner.Learner#perform(BufferedDataTable, org.knime.core.node.ExecutionContext)}.
      * @throws CanceledExecutionException
      */
     @Test
     public final void testPerformChdAgeData() throws Exception {
-        DataTable data = new ChdAgeData();
+        BufferedDataTable data = m_exec.createBufferedDataTable(new ChdAgeData(), m_exec);
         PMMLPortObjectSpecCreator specCreator =
             new PMMLPortObjectSpecCreator(data.getDataTableSpec());
         specCreator.setLearningColsNames(Arrays.asList(new String[] {"Age"}));
@@ -145,12 +146,12 @@ public class LearnerTest {
     }
 
     /**
-     * Test method for {@link org.knime.base.node.mine.regression.logistic.learner.Learner#perform(org.knime.core.data.DataTable, org.knime.core.node.ExecutionContext)}.
+     * Test method for {@link org.knime.base.node.mine.regression.logistic.learner.Learner#perform(BufferedDataTable, org.knime.core.node.ExecutionContext)}.
      * @throws CanceledExecutionException
      */
     @Test
     public final void testPerformLowBirthWeightData() throws Exception {
-        DataTable data = new LowBirthWeightData();
+        BufferedDataTable data = m_exec.createBufferedDataTable(new LowBirthWeightData(), m_exec);
         PMMLPortObjectSpecCreator specCreator =
             new PMMLPortObjectSpecCreator(data.getDataTableSpec());
         specCreator.setLearningColsNames(Arrays.asList(new String[] {"AGE",
