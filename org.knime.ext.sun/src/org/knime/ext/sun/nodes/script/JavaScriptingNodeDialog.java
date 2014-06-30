@@ -82,8 +82,8 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
                 return JavaScriptingNodeDialog.this.getAvailableFlowVariables();
             }
         });
-        addTab("Java Snippet", m_mainPanel);
-        addTab("Additional Libraries", m_jarPanel);
+        addTab("Java Snippet", m_mainPanel, false);
+        addTab("Additional Libraries", m_jarPanel, false);
     }
 
     /**

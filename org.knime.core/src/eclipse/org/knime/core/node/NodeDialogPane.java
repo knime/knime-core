@@ -824,6 +824,17 @@ public abstract class NodeDialogPane {
      *             <code>null</code>.
      */
     protected final void addTab(final String title, final Component comp) {
+        addTab(title, comp, true);
+    }
+
+    /** As {@link #addTab(String, Component)} but with an additional option to wrap the entire panel
+     * into a scroll pane. Default is true as this is often neglected by the node author.
+     * @param title ... see referring method.
+     * @param comp ... see referring method.
+     * @param wrapInScrollPane true if the panel is to be wrapped in a scroll pane.
+     * @since 2.10
+     */
+    protected final void addTab(final String title, final Component comp, final boolean wrapInScrollPane) {
         if (title == null) {
             throw new NullPointerException("The title of a tab in the dialog"
                     + " can't be null");
@@ -870,7 +881,7 @@ public abstract class NodeDialogPane {
             return;
         }
 
-        insertNewTabAt(Integer.MAX_VALUE, titleToUse, comp);
+        insertNewTabAt(Integer.MAX_VALUE, titleToUse, comp, wrapInScrollPane);
     }
 
     /**
@@ -900,9 +911,21 @@ public abstract class NodeDialogPane {
      *             the same component exists already
      * @throws IndexOutOfBoundsException if the index is smaller than zero.
      */
-    protected final int addTabAt(final int index, final String title,
-            final Component comp) {
+    protected final int addTabAt(final int index, final String title, final Component comp) {
+        return addTabAt(index, title, comp, true);
+    }
 
+    /** As {@link #addTabAt(int, String, Component)} but with an additional option to wrap the entire panel
+     * into a scroll pane. Default is true as this is often neglected by the node author
+     * @param index ... see referring method.
+     * @param title ... see referring method.
+     * @param comp ... see referring method.
+     * @param wrapInScrollPane true if the panel is to be wrapped in a scroll pane.
+     * @return  ... see referring method.
+     * @since 2.10
+     */
+    protected final int addTabAt(final int index, final String title,
+        final Component comp, final boolean wrapInScrollPane) {
         if (title == null) {
             throw new NullPointerException("The title of a tab in the dialog"
                     + " can't be null");
@@ -924,7 +947,7 @@ public abstract class NodeDialogPane {
             throw new IndexOutOfBoundsException("Index must be greater than"
                     + " or equal to zero");
         }
-        return insertNewTabAt(index, title, comp);
+        return insertNewTabAt(index, title, comp, wrapInScrollPane);
     }
 
     /**
@@ -972,7 +995,7 @@ public abstract class NodeDialogPane {
      * after insertion.
      */
     private int insertNewTabAt(final int idx, final String title,
-            final Component newTab) {
+            final Component newTab, final boolean wrapInScrollPane) {
         assert idx >= 0;
         assert title != null;
         assert newTab != null;
@@ -1016,9 +1039,13 @@ public abstract class NodeDialogPane {
 
                 // fix for bug 4933: All node dialog panes are wrapped in a scroll panel
                 // to avoid layouting issues on smallish screens
-                JScrollPane scrollPane = newTab instanceof JScrollPane
-                        ? (JScrollPane)newTab : new JScrollPane(newTab);
-                m_pane.insertTab(title, null, scrollPane, null, insertIdx.intValue());
+                Component pane;
+                if (wrapInScrollPane && !(newTab instanceof JScrollPane)) {
+                    pane = new JScrollPane(newTab);
+                } else {
+                    pane = newTab;
+                }
+                m_pane.insertTab(title, null, pane, null, insertIdx.intValue());
                 m_tabs.put(title, newTab);
 
                 // listens to components added/removed from this dialog
@@ -1167,7 +1194,7 @@ public abstract class NodeDialogPane {
 
     /** Iterates panels in m_pane and finds the tab pane index representing comp or -1 if not present. Used
      * instead of {@link JTabbedPane#indexOfComponent(Component)} to handle extra wrapping in JScrollPane in
-     * {@link #insertNewTabAt(int, String, Component)}.
+     * {@link #insertNewTabAt(int, String, Component, boolean)}.
      * @param comp Component to query
      * @return Index in tab pane or -1.
      */

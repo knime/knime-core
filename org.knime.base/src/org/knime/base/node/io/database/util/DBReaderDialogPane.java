@@ -239,7 +239,7 @@ public class DBReaderDialogPane extends NodeDialogPane {
         }
         jsp.setRightComponent(configurePanel);
         allPanel.add(jsp, BorderLayout.CENTER);
-        super.addTab("Settings", allPanel);
+        super.addTab("Settings", allPanel, false);
     }
 
     /**

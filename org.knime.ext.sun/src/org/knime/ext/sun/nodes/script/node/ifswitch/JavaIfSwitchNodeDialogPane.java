@@ -84,7 +84,7 @@ final class JavaIfSwitchNodeDialogPane extends NodeDialogPane {
                 return p.getAvailableFlowVariables();
             }
         });
-        addTab("Expression", m_panel);
+        addTab("Expression", m_panel, false);
     }
 
     /** {@inheritDoc} */
