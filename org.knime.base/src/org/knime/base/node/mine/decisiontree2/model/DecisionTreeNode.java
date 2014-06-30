@@ -136,9 +136,13 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     protected DecisionTreeNode(final Node xmlNode,
             final DataCellStringMapper mapper) {
         // read index of this node
-        m_ownIndex =
-                Integer.parseInt(xmlNode.getAttributes().getNamedItem("id")
-                        .getNodeValue());
+        final String nodeValue = xmlNode.getAttributes().getNamedItem("id").getNodeValue();
+        try {
+            m_ownIndex = Integer.parseInt(nodeValue);
+        } catch (NumberFormatException nfe) {
+            throw new IllegalArgumentException(String.format("Unable to parse dec tree node ID \"%s\" as integer, "
+                    + "KNIME only supports integer node IDs", nodeValue), nfe);
+        }
         // and also the majority class up to here
         String cls =
                 xmlNode.getAttributes().getNamedItem("class").getNodeValue();

@@ -201,7 +201,13 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
                     + "but no default child set for node with id "
                     + this.getOwnIndex());
         }
-        return super.getChildNodeAt(m_defaultChild);
+        for (DecisionTreeNode child : getChildren()) {
+            if (child.getOwnIndex() == m_defaultChild) {
+                return child;
+            }
+        }
+        throw new IllegalStateException("DefaultChild strategy specified but default child (index  "
+                + m_defaultChild + ") does not exist (this index: " + getOwnIndex() + ")");
     }
 
     /**
