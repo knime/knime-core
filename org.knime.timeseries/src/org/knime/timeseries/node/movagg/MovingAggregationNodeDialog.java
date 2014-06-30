@@ -50,10 +50,11 @@ package org.knime.timeseries.node.movagg;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -129,44 +130,93 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
                 m_handleMissingsModel.setEnabled(enabled);
             }
         });
-        JPanel rootPanel = new JPanel();
-        rootPanel.setLayout(new BoxLayout(rootPanel, BoxLayout.Y_AXIS));
-        final Box generalSettingsBox = new Box(BoxLayout.X_AXIS);
-        generalSettingsBox.setBorder(
-            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " General settings "));
-        generalSettingsBox.add(m_winLength.getComponentPanel());
-        generalSettingsBox.add(m_handleMissings.getComponentPanel());
-        generalSettingsBox.add(m_cumulativeComp.getComponentPanel());
-        generalSettingsBox.add(m_removeAggrCols.getComponentPanel());
-        generalSettingsBox.add(m_removeRetainedCols.getComponentPanel());
-
-        final Box subAggregationBox = new Box(BoxLayout.X_AXIS);
-        m_maxNoneNumericVals.setToolTipText("All groups with more unique values "
-                    + "will be skipped and replaced by a missing value");
-        subAggregationBox.add(m_maxNoneNumericVals.getComponentPanel());
-        subAggregationBox.add(m_valueDelimiter.getComponentPanel());
-        subAggregationBox.add(m_columnNamePolicy.getComponentPanel());
-
-        final Box aggregationBox = new Box(BoxLayout.Y_AXIS);
-        aggregationBox.setBorder(
-            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Aggregation settings "));
-        aggregationBox.add(m_aggrColPanel.getComponentPanel());
-        aggregationBox.add(subAggregationBox);
-
-        rootPanel.add(generalSettingsBox);
-        rootPanel.add(aggregationBox);
+        final JPanel generalSettingsBox = createGeneralSettingsPanel();
+        final JPanel aggregationBox = createAgggregationPanel();
+        JPanel rootPanel = new JPanel(new GridBagLayout());
+        final GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+        c.weighty = 0;
+        c.gridx = 0;
+        c.gridy = 0;
+        rootPanel.add(generalSettingsBox, c);
+        c.weightx = 1;
+        c.weighty = 1;
+        c.fill = GridBagConstraints.BOTH;
+        c.gridy = 1;
+        rootPanel.add(aggregationBox, c);
         addTab("Settings", rootPanel);
       //calculate the component size
         int width = (int)m_aggrColPanel.getComponentPanel().getMinimumSize().getWidth();
         width = Math.max(width, GroupByNodeDialog.DEFAULT_WIDTH);
-        final Dimension dimension =
-            new Dimension(width, GroupByNodeDialog.DEFAULT_HEIGHT);
+        final Dimension dimension = new Dimension(width, GroupByNodeDialog.DEFAULT_HEIGHT);
       //add description tab
         final Component descriptionTab = AggregationMethods.createDescriptionPane();
         descriptionTab.setMinimumSize(dimension);
         descriptionTab.setMaximumSize(dimension);
         descriptionTab.setPreferredSize(dimension);
         super.addTab("Description", descriptionTab);
+    }
+
+    private JPanel createGeneralSettingsPanel() {
+        final JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(
+            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " General settings "));
+        final GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.NONE;
+        c.anchor = GridBagConstraints.LINE_START;
+        c.gridy = 0;
+        c.gridx = 0;
+        panel.add(m_winLength.getComponentPanel(), c);
+        c.gridx++;
+        panel.add(m_handleMissings.getComponentPanel(), c);
+        c.gridx++;
+        panel.add(m_cumulativeComp.getComponentPanel(), c);
+        c.gridx++;
+        c.weightx = 1;
+        panel.add(new JLabel(), c);
+        c.weightx = 0;
+        c.gridy++;
+        c.gridx = 0;
+        panel.add(m_removeAggrCols.getComponentPanel(), c);
+        c.gridx++;
+        panel.add(m_removeRetainedCols.getComponentPanel(), c);
+        c.gridx++;
+        c.weightx = 1;
+        c.gridwidth = 2;
+        panel.add(new JLabel(), c);
+        return panel;
+    }
+
+    private JPanel createAgggregationPanel() {
+        final JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(
+            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Aggregation settings "));
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridy = 0;
+        c.gridx = 0;
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1;
+        c.weighty = 1;
+        c.gridwidth = 4;
+        panel.add(m_aggrColPanel.getComponentPanel(), c);
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.gridwidth = 1;
+        c.gridy++;
+        m_maxNoneNumericVals.setToolTipText("All groups with more unique values "
+                + "will be skipped and replaced by a missing value");
+        panel.add(m_maxNoneNumericVals.getComponentPanel(), c);
+        c.gridx++;
+        panel.add(m_valueDelimiter.getComponentPanel(), c);
+        c.gridx++;
+        panel.add(m_columnNamePolicy.getComponentPanel(), c);
+        c.gridx++;
+        c.weightx = 1;
+        panel.add(new JLabel(), c);
+        return panel;
     }
 
     /**
