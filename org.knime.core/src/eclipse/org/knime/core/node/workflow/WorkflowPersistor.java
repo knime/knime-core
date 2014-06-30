@@ -546,7 +546,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
     }
 
-    public static final class WorkflowLoadResult extends WorkflowOrTemplateLoadResult {
+    public static final class WorkflowLoadResult extends MetaNodeLinkUpdateResult {
 
         /** @param name */
         public WorkflowLoadResult(final String name) {
@@ -559,7 +559,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
     }
 
-    public static class WorkflowOrTemplateLoadResult extends LoadResult {
+    public static class MetaNodeLinkUpdateResult extends LoadResult {
 
         private NodeContainerTemplate m_instance;
         private boolean m_guiMustReportDataLoadErrors = false;
@@ -567,7 +567,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         /**
          * @param name
          */
-        public WorkflowOrTemplateLoadResult(final String name) {
+        public MetaNodeLinkUpdateResult(final String name) {
             super(name);
         }
 

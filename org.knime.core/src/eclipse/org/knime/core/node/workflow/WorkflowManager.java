@@ -140,7 +140,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowOrTemplateLoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -6277,12 +6277,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         MetaNodeTemplateInformation linkInfo = meta.getTemplateInformation();
         URI sourceURI = linkInfo.getSourceURI();
         WorkflowManager tempParent = lazyInitTemplateWorkflowRoot();
-        WorkflowOrTemplateLoadResult loadResultChild;
+        MetaNodeLinkUpdateResult loadResultChild;
         NodeContext.pushContext((NodeContainer)meta);
         try {
             File localDir = ResolverUtil.resolveURItoLocalOrTempFile(sourceURI);
             TemplateNodeContainerPersistor loadPersistor = loadHelper.createTemplateLoadPersistor(localDir, sourceURI);
-            loadResultChild = new WorkflowOrTemplateLoadResult("Template from " + sourceURI.toString());
+            loadResultChild = new MetaNodeLinkUpdateResult("Template from " + sourceURI.toString());
             tempParent.load(loadPersistor, loadResultChild, new ExecutionMonitor(), false);
         } catch (InvalidSettingsException e) {
             throw new IOException("Unable to read template meta node: " + e.getMessage(), e);
@@ -7274,7 +7274,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Implementation of {@link #load(FileWorkflowPersistor, ExecutionMonitor, boolean)}.
      * @noreference This method is not intended to be referenced by clients. */
     public void load(final TemplateNodeContainerPersistor persistor,
-        final WorkflowOrTemplateLoadResult result, final ExecutionMonitor exec,
+        final MetaNodeLinkUpdateResult result, final ExecutionMonitor exec,
         final boolean keepNodeMessages) throws IOException, InvalidSettingsException, CanceledExecutionException,
         UnsupportedWorkflowVersionException {
         final ReferencedFile refDirectory = persistor.getMetaPersistor().getNodeContainerDirectory();

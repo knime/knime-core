@@ -63,7 +63,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowOrTemplateLoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.workbench.editor2.LoadMetaNodeTemplateRunnable;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 
@@ -126,7 +126,7 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
             // this one sets the workflow manager in the editor
             loadRunnable = new LoadMetaNodeTemplateRunnable(getHostWFM(), m_templateKNIMEFolder);
             ps.busyCursorWhile(loadRunnable);
-            WorkflowOrTemplateLoadResult result = loadRunnable.getLoadResult();
+            MetaNodeLinkUpdateResult result = loadRunnable.getLoadResult();
             m_container = (NodeContainer)result.getLoadedInstance();
             if (m_container == null) {
                 throw new RuntimeException("No template returned by load routine, see log for details");

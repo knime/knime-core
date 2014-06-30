@@ -60,7 +60,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.TemplateNodeContainerPersistor;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
-import org.knime.core.node.workflow.WorkflowPersistor.WorkflowOrTemplateLoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 
@@ -79,7 +79,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
 
     private AbstractExplorerFileStore m_templateKNIMEFolder;
 
-    private WorkflowOrTemplateLoadResult m_result;
+    private MetaNodeLinkUpdateResult m_result;
 
     /**
      *
@@ -116,8 +116,8 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
                     new GUIWorkflowLoadHelper(d, parentFile.getName(), parentFile, null, true);
             TemplateNodeContainerPersistor loadPersistor =
                     loadHelper.createTemplateLoadPersistor(parentFile, sourceURI);
-            WorkflowOrTemplateLoadResult loadResult =
-                    new WorkflowOrTemplateLoadResult("Template from \"" + sourceURI + "\"");
+            MetaNodeLinkUpdateResult loadResult =
+                    new MetaNodeLinkUpdateResult("Template from \"" + sourceURI + "\"");
             m_parentWFM.load(loadPersistor, loadResult, new ExecutionMonitor(progressMonitor), false);
             m_result = loadResult;
             if (pm.isCanceled()) {
@@ -168,7 +168,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
     }
 
     /** @return the result */
-    public WorkflowOrTemplateLoadResult getLoadResult() {
+    public MetaNodeLinkUpdateResult getLoadResult() {
         return m_result;
     }
 }

@@ -1330,9 +1330,9 @@
                 <message_argument value="load(FileWorkflowPersistor, ExecutionMonitor, boolean)"/>
             </message_arguments>
         </filter>
-        <filter comment="(subnode) template handling" id="1143996420">
+        <filter comment="no API - update meta/sub node templates" id="1143996420">
             <message_arguments>
-                <message_argument value="load(TemplateNodeContainerPersistor, WorkflowPersistor.WorkflowOrTemplateLoadResult, ExecutionMonitor, boolean)"/>
+                <message_argument value="load(TemplateNodeContainerPersistor, WorkflowPersistor.MetaNodeLinkUpdateResult, ExecutionMonitor, boolean)"/>
             </message_arguments>
         </filter>
         <filter comment="(subnode) template handling" id="1143996420">
@@ -1367,59 +1367,68 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistor.java" type="org.knime.core.node.workflow.WorkflowPersistor">
-        <filter comment="persistor code rewrite - not meant as public api" id="403804204">
+        <filter comment="no API - update meta/sub node templates" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
                 <message_argument value="getLoadVersion()"/>
             </message_arguments>
         </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="403804204">
+        <filter comment="no API - update meta/sub node templates" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
                 <message_argument value="postLoad(WorkflowManager, WorkflowPersistor.LoadResult)"/>
             </message_arguments>
         </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="405901410">
+        <filter comment="no API - update meta/sub node templates" id="405901410">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
                 <message_argument value="getLoadVersion()"/>
             </message_arguments>
         </filter>
-        <filter comment="(subnode) template handling" id="405995624">
+        <filter comment="no API - update meta/sub node templates" id="1211105284">
+            <message_arguments>
+                <message_argument value="getLoadVersion()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="no API - update meta/sub node templates" id="1211105284">
+            <message_arguments>
+                <message_argument value="postLoad(WorkflowManager, WorkflowPersistor.LoadResult)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistor.java" type="org.knime.core.node.workflow.WorkflowPersistor$MetaNodeLinkUpdateResult">
+        <filter comment="no API - update meta/sub node templates" id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult"/>
-                <message_argument value="org.knime.core_2.10.0"/>
+                <message_argument value="getMetaNode()"/>
             </message_arguments>
         </filter>
-        <filter id="643842064">
+        <filter comment="no API - update meta/sub node templates" id="338792546">
             <message_arguments>
-                <message_argument value="WorkflowFileStoreHandlerRepository"/>
-                <message_argument value="WorkflowPersistor"/>
-                <message_argument value="getFileStoreHandlerRepository()"/>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult"/>
+                <message_argument value="getUndoPersistor()"/>
             </message_arguments>
         </filter>
-        <filter comment="persistor code rewrite - not meant as public api" id="1211105284">
+        <filter comment="no API - update meta/sub node templates" id="1143996420">
             <message_arguments>
-                <message_argument value="getLoadVersion()"/>
+                <message_argument value="getGUIMustReportDataLoadErrors()"/>
             </message_arguments>
         </filter>
-        <filter comment="changes required to support subnode - no API anyway" id="1211105284">
+        <filter comment="no API - update meta/sub node templates" id="1143996420">
             <message_arguments>
-                <message_argument value="postLoad(WorkflowManager, WorkflowPersistor.LoadResult)"/>
+                <message_argument value="getLoadedInstance()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="no API - update meta/sub node templates" id="1143996420">
+            <message_arguments>
+                <message_argument value="setLoadedInstance(NodeContainerTemplate)"/>
             </message_arguments>
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistor.java" type="org.knime.core.node.workflow.WorkflowPersistor$NodeContainerTemplateLinkUpdateResult">
-        <filter comment="(subnode) template handling" id="1211105284">
+        <filter comment="no API - update meta/sub node templates" id="1211105284">
             <message_arguments>
                 <message_argument value="NodeContainerTemplateLinkUpdateResult"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistor.java" type="org.knime.core.node.workflow.WorkflowPersistor$WorkflowOrTemplateLoadResult">
-        <filter comment="(subnode) template handling" id="1211105284">
-            <message_arguments>
-                <message_argument value="WorkflowOrTemplateLoadResult"/>
             </message_arguments>
         </filter>
     </resource>
