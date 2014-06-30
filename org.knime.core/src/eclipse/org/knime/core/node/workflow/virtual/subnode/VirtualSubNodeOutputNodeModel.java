@@ -50,6 +50,10 @@ package org.knime.core.node.workflow.virtual.subnode;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.knime.core.node.CanceledExecutionException;
@@ -62,6 +66,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
+import org.knime.core.node.workflow.FlowVariable;
 
 
 /** NodeModel to subnode virtual output node.
@@ -87,7 +93,7 @@ public final class VirtualSubNodeOutputNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        setNewExchange(new VirtualSubNodeExchange(inSpecs, getAvailableFlowVariables().values()));
+        setNewExchange(new VirtualSubNodeExchange(inSpecs, getVisibleFlowVariables()));
         if (m_configuration == null) {
             setWarningMessage("Guessing defaults (excluding all variables)");
             m_configuration = VirtualSubNodeOutputConfiguration.newDefault(m_numberOfPorts);
@@ -99,14 +105,24 @@ public final class VirtualSubNodeOutputNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
             throws Exception {
-        setNewExchange(new VirtualSubNodeExchange(inObjects, getAvailableFlowVariables().values()));
+        setNewExchange(new VirtualSubNodeExchange(inObjects, getVisibleFlowVariables()));
         return new PortObject[0];
+    }
+
+    /**
+     * @return
+     */
+    private Collection<FlowVariable> getVisibleFlowVariables() {
+        Map<String, FlowVariable> filter = new LinkedHashMap<>(getAvailableFlowVariables());
+        FilterResult result = m_configuration.getFilterConfiguration().applyTo(filter);
+        filter.keySet().retainAll(Arrays.asList(result.getIncludes()));
+        return filter.values();
     }
 
     /** Called when workflow is loaded to fill the exchange field.
      * @param inObjects Input objects, excluding flow var port. */
     public void postLoadExecute(final PortObject[] inObjects) {
-        setNewExchange(new VirtualSubNodeExchange(inObjects, getAvailableFlowVariables().values()));
+        setNewExchange(new VirtualSubNodeExchange(inObjects, getVisibleFlowVariables()));
     }
 
     /** {@inheritDoc} */
