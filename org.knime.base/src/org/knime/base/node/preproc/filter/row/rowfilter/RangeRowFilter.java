@@ -175,7 +175,13 @@ public class RangeRowFilter extends AttrValueRowFilter {
     public DataTableSpec configure(final DataTableSpec inSpec)
             throws InvalidSettingsException {
         super.configure(inSpec);
-        DataType colType = inSpec.getColumnSpec(getColIdx()).getType();
+        final DataType origType = inSpec.getColumnSpec(getColIdx()).getType();
+        final DataType colType;
+        if (getDeepFiltering() && origType.isCollectionType()) {
+            colType = origType.getCollectionElementType();
+        } else {
+            colType = origType;
+        }
         if (m_lowerBound != null) {
             if (!colType.isASuperTypeOf(m_lowerBound.getType())) {
                 throw new InvalidSettingsException("Column value filter: "

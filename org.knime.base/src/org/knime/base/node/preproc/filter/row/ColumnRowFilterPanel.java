@@ -863,8 +863,13 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         }
 
         if (m_tSpec != null) {
-            DataColumnSpec cSpec = m_tSpec.getColumnSpec(colName);
-            DataType cType = cSpec.getType();
+            final DataType origType = m_tSpec.getColumnSpec(colName).getType();
+            final DataType cType;
+            if (m_deepFiltering.isSelected() &&  origType.isCollectionType()) {
+                cType =  origType.getCollectionElementType();
+            } else {
+                cType =  origType;
+            }
             if (cType.isCompatible(IntValue.class)) {
                 // first try making of an IntCell
                 try {
