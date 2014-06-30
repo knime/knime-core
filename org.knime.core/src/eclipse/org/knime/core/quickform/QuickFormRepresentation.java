@@ -52,6 +52,8 @@ import org.knime.core.node.dialog.DialogNodeRepresentation;
 import org.knime.core.node.dialog.DialogNodeValue;
 
 /**
+ * Contains information that is needed for the representation of a quick form's sub node dialog.
+ *
  * @author Patrick Winter, KNIME.com AG, Zurich, Switzerland
  * @param <VAL> The value class handled by this representation
  * @since 2.10
