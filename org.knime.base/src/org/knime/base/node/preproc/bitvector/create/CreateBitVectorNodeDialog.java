@@ -346,6 +346,7 @@ public class CreateBitVectorNodeDialog extends NodeDialogPane {
         c.gridheight = 1;
 
         c.gridy++;
+        c.fill = GridBagConstraints.WEST;
         c.anchor = GridBagConstraints.LINE_END;
         c.gridx = 0;
         c.insets = INSET;
