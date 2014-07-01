@@ -291,7 +291,7 @@ public final class DBDialogPane extends JPanel {
 
         // update credentials
         m_credBox.removeAllItems();
-        if (credProvider.listNames().isEmpty()) {
+        if (credProvider == null || credProvider.listNames().isEmpty()) {
             m_credCheckBox.setEnabled(false);
             m_credBox.setEnabled(false);
         } else {
