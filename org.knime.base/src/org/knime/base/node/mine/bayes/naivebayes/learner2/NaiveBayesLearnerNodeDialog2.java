@@ -110,7 +110,7 @@ public class NaiveBayesLearnerNodeDialog2 extends DefaultNodeSettingsPane {
 
          final DialogComponentBoolean pmmlComp = new DialogComponentBoolean(m_pmmlCompatible,
              "Create PMML 4.2 compatible model");
-         pmmlComp.setToolTipText("Ignore missing values and BitVector columns");
+         pmmlComp.setToolTipText("Ignore missing values and bit vector columns");
          addDialogComponent(pmmlComp);
 
     }

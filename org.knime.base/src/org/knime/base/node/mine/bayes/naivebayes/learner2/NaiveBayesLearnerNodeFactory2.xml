@@ -46,7 +46,8 @@
 		<option name="Create PMML 4.2 compatible model">
 			Select this option to create a model which is compliant with the 
             <a href="http://www.dmg.org/v4-2/NaiveBayes.html">PMML 4.2 standard</a>.
-            Missing values are ignored during learning and prediction if this option is ticked.
+            Missing values as well as columns that contain bit vectors are ignored during learning and prediction if 
+            this option is ticked.
 	    </option>
 	</fullDescription>
 
