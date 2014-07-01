@@ -44,6 +44,7 @@
  */
 package org.knime.timeseries.node.dateshift;
 
+import java.util.Calendar;
 import java.util.TimeZone;
 
 import org.knime.core.data.DataCell;
@@ -52,7 +53,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.date.DateAndTimeCell;
@@ -61,6 +62,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.timeseries.node.diff.Granularity;
 import org.knime.timeseries.util.SettingsModelCalendar;
@@ -112,7 +114,7 @@ public class DateShiftConfigure {
         return m_granularity;
     }
 
-    private final SettingsModelString m_typeofreference = getReferenceTypeModel();
+    private final SettingsModelString m_typeofreference = createReferenceTypeModel();
 
     /**
      * @return the settings model for the type.
@@ -121,10 +123,30 @@ public class DateShiftConfigure {
         return m_typeofreference;
     }
 
-    private final SettingsModelCalendar m_timemodel = getCalendarModel();
+    private final SettingsModelString m_typeofshift = createShiftTypeModel();
 
     /**
-     * @return the settings model for the calender.
+     * @return the settings model for the type of shift.
+     */
+    public SettingsModelString gettypeofshift() {
+        return m_typeofshift;
+    }
+
+    private final SettingsModelInteger m_shiftvalue = createShiftValueModel();
+
+    /**
+     *  @return the settings model for the type of shift.
+     */
+    public SettingsModelInteger getvalueofshift() {
+            return m_shiftvalue;
+    }
+
+
+
+    private final SettingsModelCalendar m_timemodel = createCalendarModel();
+
+    /**
+     * @return the settings model for the calendar.
      */
     public SettingsModelCalendar getTimeModel() {
         return m_timemodel;
@@ -169,6 +191,8 @@ public class DateShiftConfigure {
 
     private static final String CFG_TIME = "cfg.time";
 
+    private static final String CFG_SHIFT_TYPE = "cfg.shift.type";
+
     /*
      * Models...
      */
@@ -176,22 +200,46 @@ public class DateShiftConfigure {
     /**
      * @return settings model for the selected time
      */
-    public static SettingsModelCalendar getCalendarModel() {
-        return new SettingsModelCalendar(CFG_TIME, null);
+    public static SettingsModelCalendar createCalendarModel() {
+        Calendar cal = DateAndTimeCell.getUTCCalendar();
+        cal.setTimeInMillis(System.currentTimeMillis());
+        SettingsModelCalendar smc = new SettingsModelCalendar(CFG_TIME, cal);
+        smc.setEnabled(false);
+        return smc;
     }
 
     /**
      * @return settings model for the type of the used reference column.
      */
-    public static SettingsModelString getReferenceTypeModel() {
-        return new SettingsModelString(CFG_REF_TYPE, DateShiftNodeDialog.CFG_NOW);
+    public static SettingsModelString createReferenceTypeModel() {
+        return new SettingsModelString(CFG_REF_TYPE, DateShiftNodeDialog.CFG_COLUMN);
+    }
+
+
+
+    /**
+     * @return settings model for the type of shift.
+     */
+    public static SettingsModelString createShiftTypeModel() {
+        return new SettingsModelString(CFG_SHIFT_TYPE, DateShiftNodeDialog.CFG_VALUE_SHIFT);
+    }
+
+
+
+    /**
+     * @return settings model for the shift value.
+     */
+    public static SettingsModelInteger createShiftValueModel() {
+        return new SettingsModelInteger("cfg.shift.value", 1);
     }
 
     /**
      * @return settings model for the first time column
      */
     public static SettingsModelString createNumColmodel() {
-        return new SettingsModelString(CFG_COL1, "");
+        SettingsModelString sms = new SettingsModelString(CFG_COL1, null);
+        sms.setEnabled(false);
+        return sms;
     }
 
     /**
@@ -199,7 +247,7 @@ public class DateShiftConfigure {
      * @return settings model for the second time column
      */
     public static SettingsModelString createDateColumnModel() {
-        return new SettingsModelString(CFG_COL2, "");
+        return new SettingsModelString(CFG_COL2, null);
     }
 
     /**
@@ -253,7 +301,8 @@ public class DateShiftConfigure {
         m_hasDate.validateSettings(settings);
         m_hasMiliSeconds.validateSettings(settings);
         m_hasTime.validateSettings(settings);
-
+        m_typeofshift.validateSettings(settings);
+        m_shiftvalue.validateSettings(settings);
     }
 
     /**
@@ -270,6 +319,8 @@ public class DateShiftConfigure {
         m_hasDate.saveSettingsTo(settings);
         m_hasMiliSeconds.saveSettingsTo(settings);
         m_hasTime.saveSettingsTo(settings);
+        m_typeofshift.saveSettingsTo(settings);
+        m_shiftvalue.saveSettingsTo(settings);
     }
 
     /**
@@ -287,6 +338,8 @@ public class DateShiftConfigure {
         m_hasDate.loadSettingsFrom(settings);
         m_hasMiliSeconds.loadSettingsFrom(settings);
         m_hasTime.loadSettingsFrom(settings);
+        m_typeofshift.loadSettingsFrom(settings);
+        m_shiftvalue.loadSettingsFrom(settings);
     }
 
     /**
@@ -294,32 +347,58 @@ public class DateShiftConfigure {
      * @param conf the configuration object
      * @param spec the input data table spec
      * @return the column rearranger as defied in the configuration object.
+     * @throws InvalidSettingsException if settings are not valid.
      */
-    public static ColumnRearranger getTimeToValueRearranger(final DateShiftConfigure conf, final DataTableSpec spec) {
+    public static ColumnRearranger getTimeToValueRearranger(final DateShiftConfigure conf,
+                                            final DataTableSpec spec) throws InvalidSettingsException {
 
         int col1Idx = spec.findColumnIndex(conf.getNumColumnModel().getStringValue());
-        int col2Idx = spec.findColumnIndex(conf.getDateColumnModel().getStringValue());
-
         ColumnRearranger rearranger = new ColumnRearranger(spec);
-        final Granularity g = Granularity.valueOf(conf.getGranularity().getStringValue());
+
+        int unit = getDateTimeUnit(conf);
+        DataColumnSpec out = createOutputColumnSpec(spec,
+            DataTableSpec.getUniqueColumnName(spec, conf.getNewColumnName().getStringValue()));
 
         String typeofref = conf.gettypeofreference().getStringValue();
         if (typeofref.equals(DateShiftNodeDialog.CFG_COLUMN)) {
+            int col2Idx = spec.findColumnIndex(conf.getDateColumnModel().getStringValue());
             // append the new column with single cell factory
-            rearranger.append(getColumnbasedCellFactory(spec, col1Idx, col2Idx, g.getFactor(), conf));
-        } else if (typeofref.equals(DateShiftNodeDialog.CFG_11970)) {
-            //returning the number since 1.1.1970
-            rearranger.append(getTimeBasedCellFactory(spec, col1Idx, g.getFactor(), conf, 0));
+            rearranger.append(getColumnbasedCellFactory(out, col1Idx, col2Idx, unit, conf));
         } else {
-            long time = System.currentTimeMillis() + TimeZone.getDefault().getOffset(System.currentTimeMillis());
+            Calendar time = Calendar.getInstance();
+            time.setTimeInMillis(System.currentTimeMillis()
+                            + TimeZone.getDefault().getOffset(System.currentTimeMillis()));
             if (typeofref.equals(DateShiftNodeDialog.CFG_FIXDATE)) {
-                time = conf.getTimeModel().getCalendar().getTimeInMillis();
+                time = conf.getTimeModel().getCalendar();
             }
             // append the new column with single cell factory
-            rearranger.append(getTimeBasedCellFactory(spec, col1Idx, g.getFactor(), conf, time));
+            rearranger.append(getTimeBasedCellFactory(out, col1Idx, unit, conf, time));
         }
 
         return rearranger;
+    }
+
+    private static int getDateTimeUnit(final DateShiftConfigure conf) throws InvalidSettingsException {
+        String gran = conf.getGranularity().getStringValue();
+        if (gran.equals(Granularity.SECOND.getName())) {
+            return Calendar.SECOND;
+        } else if (gran.equals(Granularity.MINUTE.getName())) {
+            return Calendar.MINUTE;
+        } else if (gran.equals(Granularity.HOUR.getName())) {
+            return Calendar.HOUR;
+        } else if (gran.equals(Granularity.DAY.getName())) {
+            return Calendar.DAY_OF_YEAR;
+        } else if (gran.equals(Granularity.WEEK.getName())) {
+            return Calendar.WEEK_OF_YEAR;
+        } else if (gran.equals(Granularity.MONTH.getName())) {
+            return Calendar.MONTH;
+        } else if (gran.equals(Granularity.YEAR.getName())) {
+            return Calendar.YEAR;
+        } else if (gran.equals(Granularity.MILLISECOND.getName())) {
+            return Calendar.MILLISECOND;
+        } else {
+            throw new InvalidSettingsException("Invalid granularity " + gran);
+        }
     }
 
     /**
@@ -336,15 +415,109 @@ public class DateShiftConfigure {
 
     /**
      *
-     * @param spec the previous data table spec
+     * @param spec the  output column spec
      * @param col1Idx the column index of the numerical column to add
-     * @param g the granularity
+     * @param g the time field to modify (as defined by calendar constants)
      * @param conf the configuration object
      * @param col2Idx the time column
      * @return the cell factory
      */
-    public static SingleCellFactory getColumnbasedCellFactory(final DataTableSpec spec, final int col1Idx,
-        final int col2Idx, final double g, final DateShiftConfigure conf) {
+    public static SingleCellFactory getColumnbasedCellFactory(final DataColumnSpec spec, final int col1Idx,
+        final int col2Idx, final int g, final DateShiftConfigure conf) {
+        return new SingleCellFactory(spec) {
+            /**
+             * Value for the new column is based on the values of two column of the row (first and second date column),
+             * the selected granularity, and the fraction digits for rounding.
+             *
+             * @param row the current row
+             * @return the difference between the two date values with the given granularity and rounding
+             */
+            @Override
+            public DataCell getCell(final DataRow row) {
+                final int value;
+                DataCell cell2 = row.getCell(col2Idx);
+                if (cell2.isMissing()) {
+                    return DataType.getMissingCell();
+                }
+
+                String typeofshift = conf.gettypeofshift().getStringValue();
+                if (typeofshift.equals(DateShiftNodeDialog.CFG_COLUMN_SHIFT)) {
+                    DataCell cell1 = row.getCell(col1Idx);
+                    if ((cell1.isMissing())) {
+                        return DataType.getMissingCell();
+                    }
+                    value = ((IntValue)cell1).getIntValue();
+                } else {
+                    value = conf.getvalueofshift().getIntValue();
+                }
+
+                Calendar c = ((DateAndTimeValue)cell2).getUTCCalendarClone();
+                c.add(g, value);
+
+                return new DateAndTimeCell(c.getTimeInMillis(), conf.getHasDate().getBooleanValue(),
+                    conf.getHasTime().getBooleanValue(), conf.getHasMiliSeconds().getBooleanValue());
+
+            }
+        };
+    }
+
+    /**
+     *
+     * @param spec the  output column spec
+     * @param col1Idx the column index of the numerical column to add
+     * @param g the time field to modify (as defined by calendar constants)
+     * @param conf the configuration object
+     * @param time the configured time as Calendar
+     * @return the cell factory
+     */
+    public static SingleCellFactory getTimeBasedCellFactory(final DataColumnSpec spec, final int col1Idx,
+        final int g, final DateShiftConfigure conf, final Calendar time) {
+        return new SingleCellFactory(spec) {
+
+            /**
+             * Value for the new column is based on the values of two column of the row (first and second date column),
+             * the selected granularity, and the fraction digits for rounding.
+             *
+             * @param row the current row
+             * @return the difference between the two date values with the given granularity and rounding
+             */
+            @Override
+            public DataCell getCell(final DataRow row) {
+                final int value;
+
+                String typeofshift = conf.gettypeofshift().getStringValue();
+                if (typeofshift.equals(DateShiftNodeDialog.CFG_COLUMN_SHIFT)) {
+                    DataCell cell1 = row.getCell(col1Idx);
+                    if ((cell1.isMissing())) {
+                        return DataType.getMissingCell();
+                    }
+                    value = ((IntValue)cell1).getIntValue();
+                } else {
+                    value = conf.getvalueofshift().getIntValue();
+                }
+                Calendar c = (Calendar)time.clone();
+                c.add(g, value);
+
+                return new DateAndTimeCell(c.getTimeInMillis(),
+                    conf.getHasDate().getBooleanValue(), conf.getHasTime().getBooleanValue(),
+                    conf.getHasMiliSeconds().getBooleanValue());
+            }
+        };
+    }
+
+
+
+    /**
+     *
+     * @param spec the previous data table spec
+     * @param col1Idx the column index of the numerical column to add
+     * @param g the time field to modify (as defined by calendar constants)
+     * @param conf the configuration object
+     * @param col2Idx the time column
+     * @return the cell factory
+     */
+    public static SingleCellFactory getColumnValuebasedCellFactory(final DataTableSpec spec, final int col1Idx,
+        final int col2Idx, final int g, final DateShiftConfigure conf) {
         return new SingleCellFactory(createOutputColumnSpec(spec, conf.getNewColumnName().getStringValue())) {
             /**
              * Value for the new column is based on the values of two column of the row (first and second date column),
@@ -360,31 +533,27 @@ public class DateShiftConfigure {
                 if ((cell1.isMissing()) || (cell2.isMissing())) {
                     return DataType.getMissingCell();
                 }
-                double d = ((DoubleValue)cell1).getDoubleValue();
-                d *= g;
-                long first = Math.round(d);
+                Calendar c = ((DateAndTimeValue)cell2).getUTCCalendarClone();
+                c.add(g, ((IntValue)cell1).getIntValue());
 
-                long last = ((DateAndTimeValue)cell2).getUTCTimeInMillis();
-
-                return new DateAndTimeCell(first + last, conf.getHasDate().getBooleanValue(), conf.getHasTime()
+                return new DateAndTimeCell(c.getTimeInMillis(), conf.getHasDate().getBooleanValue(), conf.getHasTime()
                     .getBooleanValue(), conf.getHasMiliSeconds().getBooleanValue());
 
             }
         };
     }
 
-
     /**
      *
      * @param spec the previous data table spec
      * @param col1Idx the column index of the numerical column to add
-     * @param g the granularity
+     * @param g the time field to modify (as defined by calendar constants)
      * @param conf the configuration object
-     * @param time the configured time in UTC milliceonds
+     * @param time the configured time as Calendar
      * @return the cell factory
      */
-    public static SingleCellFactory getTimeBasedCellFactory(final DataTableSpec spec, final int col1Idx,
-        final double g, final DateShiftConfigure conf, final long time) {
+    public static SingleCellFactory getTimeBasedValueCellFactory(final DataTableSpec spec, final int col1Idx,
+        final int g, final DateShiftConfigure conf, final Calendar time) {
 
         return new SingleCellFactory(createOutputColumnSpec(spec, conf.getNewColumnName().getStringValue())) {
 
@@ -401,12 +570,15 @@ public class DateShiftConfigure {
                 if ((cell1.isMissing())) {
                     return DataType.getMissingCell();
                 }
-                double d = ((DoubleValue)cell1).getDoubleValue();
-                d *= g;
-                return new DateAndTimeCell(time + Math.round(d), conf.getHasDate().getBooleanValue(), conf.getHasTime()
-                    .getBooleanValue(), conf.getHasMiliSeconds().getBooleanValue());
+                Calendar c = (Calendar)time.clone();
+                c.add(g, ((IntValue)cell1).getIntValue());
+
+                return new DateAndTimeCell(c.getTimeInMillis(),
+                    conf.getHasDate().getBooleanValue(), conf.getHasTime().getBooleanValue(),
+                    conf.getHasMiliSeconds().getBooleanValue());
             }
         };
     }
+
 
 }

@@ -49,8 +49,9 @@ import java.io.IOException;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -109,58 +110,56 @@ public class DateShiftNodeModel extends NodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         // check for one date columns and auto configure
         DataTableSpec inSpec = (DataTableSpec)inSpecs[0];
-        String firstColName = m_confObj.getNumColumnModel().getStringValue();
 
-        // autoconfigure for the numerical column only, as the date column is only used for one type.
-        if ((firstColName == null || firstColName.isEmpty())) {
-            // avoid NullPointer
-            m_confObj.getNumColumnModel().setStringValue("");
-            m_confObj.getDateColumnModel().setStringValue("");
-            int nrDoubleCols = 0;
-            String warning = "";
-            for (DataColumnSpec colSpec : inSpec) {
-                if (colSpec.getType().isCompatible(DoubleValue.class)) {
-                    nrDoubleCols++;
-                    if (nrDoubleCols >= 1) {
+        // if the user selected to use a column as shift, we need to check the int column is in the data.
+        if (m_confObj.gettypeofshift().getStringValue().equals(DateShiftNodeDialog.CFG_COLUMN_SHIFT)) {
+            String colName = m_confObj.getNumColumnModel().getStringValue();
+            if (colName == null || colName.isEmpty()) {
+                // Autoguessing
+                for (DataColumnSpec dcs : inSpec) {
+                    if (dcs.getType().isCompatible(IntValue.class)) {
+                        m_confObj.getNumColumnModel().setStringValue(dcs.getName());
                         break;
                     }
-                    // if autoconfigure -> set first column
-                    if (m_confObj.getNumColumnModel().getStringValue().isEmpty()) {
-                        m_confObj.getNumColumnModel().setStringValue(colSpec.getName());
-                        warning += "numerical column = \"" + m_confObj.getNumColumnModel().getStringValue() + "\"";
-                    }
+                }
+
+                colName = m_confObj.getNumColumnModel().getStringValue();
+                if (colName == null || colName.isEmpty()) {
+                    throw new InvalidSettingsException("No valid shift column in the data, please reconfigure!");
                 }
             }
-
-            if (!warning.isEmpty()) {
-                warning = "Auto-configure: " + warning;
-                setWarningMessage(warning);
+            // check for column in input spec
+            if (inSpec.findColumnIndex(colName) < 0) {
+                throw new InvalidSettingsException("Column " + colName
+                    + " not found in input table, Please reconfigure!");
             }
-        }
-        int col1Idx = inSpec.findColumnIndex(m_confObj.getNumColumnModel().getStringValue());
-
-        // check for first date column in input spec
-        if (col1Idx < 0) {
-            throw new InvalidSettingsException("Column " + m_confObj.getNumColumnModel().getStringValue()
-                + " not found in input table");
         }
 
         // if the user selected to use a column as baseline, we need to check the date column is in the data.
         if (m_confObj.gettypeofreference().getStringValue().equals(DateShiftNodeDialog.CFG_COLUMN)) {
             String secondColName = m_confObj.getDateColumnModel().getStringValue();
             if (secondColName == null || secondColName.isEmpty()) {
-                throw new InvalidSettingsException("Please configure the date column!");
+                // Autoguessing
+                for (DataColumnSpec dcs : inSpec) {
+                    if (dcs.getType().isCompatible(DateAndTimeValue.class)) {
+                        m_confObj.getDateColumnModel().setStringValue(dcs.getName());
+                        break;
+                    }
+                }
+            }
+
+
+            secondColName = m_confObj.getDateColumnModel().getStringValue();
+            if (secondColName == null || secondColName.isEmpty()) {
+                throw new InvalidSettingsException("No valid date column in the data, please reconfigure!");
             }
             // check for date column in input spec
-            if (inSpec.findColumnIndex(secondColName) < 0) {
-                throw new InvalidSettingsException("Column " + secondColName + " not found in input table,"
-                    + "Please reconfigure!");
+            if (inSpec.findColumnIndex(m_confObj.getDateColumnModel().getStringValue()) < 0) {
+                throw new InvalidSettingsException("Column " + m_confObj.getDateColumnModel().getStringValue()
+                    + " not found in input table, Please reconfigure!");
             }
         }
         // get unique column name based on the entered column name
-        m_confObj.getNewColumnName().setStringValue(
-            DataTableSpec.getUniqueColumnName(inSpec, m_confObj.getNewColumnName().getStringValue()));
-        // return new spec with appended column (time and chosen new column name)
         return new DataTableSpec[]{new DataTableSpec(inSpec, new DataTableSpec(
             DateShiftConfigure.createOutputColumnSpec(inSpec,
                 DataTableSpec.getUniqueColumnName(inSpec, m_confObj.getNewColumnName().getStringValue()))))};

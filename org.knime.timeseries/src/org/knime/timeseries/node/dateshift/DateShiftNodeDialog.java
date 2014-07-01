@@ -44,11 +44,14 @@
  */
 package org.knime.timeseries.node.dateshift;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
 import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -57,8 +60,10 @@ import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.timeseries.node.diff.Granularity;
 import org.knime.timeseries.util.DialogComponentCalendar;
@@ -78,16 +83,22 @@ public class DateShiftNodeDialog extends DefaultNodeSettingsPane {
     /** the key for using the execution time. */
     public static final String CFG_NOW = "Use execution time";
     /** the key for using a column as the  time. */
-    public static final String CFG_COLUMN = "Use second column";
+    public static final String CFG_COLUMN = "Use date/time column";
     /** the key for using a specific time as the second time. */
     public static final String CFG_FIXDATE = "Use fixed date";
-    /** the key for using the 1.1.1970. */
-    public static final String CFG_11970 = "Use 1.1.1970";
+    /** the key for using a value column for the shift. */
+    public static final String CFG_COLUMN_SHIFT = "Use shift value from column";
+    /** the key for using a constant value for the shift. */
+    public static final String CFG_VALUE_SHIFT = "Use static shift value";
 
 
-    private final SettingsModelString m_referencemodel = DateShiftConfigure.getReferenceTypeModel();
-    private final SettingsModelCalendar m_fixTimeComponent = DateShiftConfigure.getCalendarModel();
+    private final SettingsModelString m_referencemodel = DateShiftConfigure.createReferenceTypeModel();
+    private final SettingsModelCalendar m_fixTimeComponent = DateShiftConfigure.createCalendarModel();
     private final SettingsModelString m_columnSelComponent = DateShiftConfigure.createDateColumnModel();
+
+    private final SettingsModelString m_shiftmodel = DateShiftConfigure.createShiftTypeModel();
+    private final SettingsModelInteger m_shiftValueModel = DateShiftConfigure.createShiftValueModel();
+    private final SettingsModelString m_shiftColumnModel = DateShiftConfigure.createNumColmodel();
 
 
     /**
@@ -95,8 +106,43 @@ public class DateShiftNodeDialog extends DefaultNodeSettingsPane {
      */
     @SuppressWarnings("unchecked")
     protected DateShiftNodeDialog() {
-        setHorizontalPlacement(true);
+        createNewGroup("Shift value:");
+        addDialogComponent(new DialogComponentButtonGroup(m_shiftmodel, false, "", CFG_COLUMN_SHIFT, CFG_VALUE_SHIFT));
 
+        addDialogComponent(new DialogComponentNumberEdit(m_shiftValueModel, "Shift value", 15));
+
+        // en- and disable the selection of the time and the
+        // second column, as selected by user.
+        m_shiftmodel.addChangeListener(new ChangeListener() {
+             @Override
+            public void stateChanged(final ChangeEvent e) {
+                 updateComponentVisibility(m_shiftmodel.getStringValue());
+            }
+        });
+
+        // numerical column
+        addDialogComponent(new DialogComponentColumnNameSelection(
+                m_shiftColumnModel, "Select shift column", 0, false, false, IntValue.class));
+        List<String> gran = new LinkedList<String>();
+        gran.add(Granularity.DAY.getName());
+        gran.add(Granularity.HOUR.getName());
+        gran.add(Granularity.MILLISECOND.getName());
+        gran.add(Granularity.MINUTE.getName());
+        gran.add(Granularity.MONTH.getName());
+        gran.add(Granularity.SECOND.getName());
+        gran.add(Granularity.WEEK.getName());
+        gran.add(Granularity.YEAR.getName());
+
+        // granularity selection
+        addDialogComponent(new DialogComponentStringSelection(
+                DateShiftConfigure.createGranularityModel(), "Select granularity of shift", gran));
+        // new column name
+        addDialogComponent(new DialogComponentString(
+                DateShiftConfigure.createNewColNameModel(), "Appended column name:"));
+
+        setHorizontalPlacement(true);
+        closeCurrentGroup();
+        createNewGroup("Date reference:");
         // en- and disable the selection of the time and the
         // second column, as selected by user.
         m_referencemodel.addChangeListener(new ChangeListener() {
@@ -106,33 +152,24 @@ public class DateShiftNodeDialog extends DefaultNodeSettingsPane {
             }
         });
         addDialogComponent(new DialogComponentButtonGroup(m_referencemodel,
-                false, "", CFG_NOW, CFG_COLUMN, CFG_FIXDATE, CFG_11970));
+                false, "", CFG_NOW, CFG_COLUMN, CFG_FIXDATE));
 
         setHorizontalPlacement(false);
 
-        // numerical column
-        addDialogComponent(new DialogComponentColumnNameSelection(
-                DateShiftConfigure.createNumColmodel(), "Select value column", 0, DoubleValue.class));
         //  date column
         addDialogComponent(new DialogComponentColumnNameSelection(
-                m_columnSelComponent, "Select a date column", 0, false, true, DateAndTimeValue.class));
-        // granularity selection
-        addDialogComponent(new DialogComponentStringSelection(
-                DateShiftConfigure.createGranularityModel(),
-                "Select granularity of value", Granularity.getDefaultGranularityNames()));
-        // new column name
-        addDialogComponent(new DialogComponentString(
-                DateShiftConfigure.createNewColNameModel(), "Appended column name:"));
+                m_columnSelComponent, "Select a date column", 0, false, false, DateAndTimeValue.class));
         // time selection
         addDialogComponent(new DialogComponentCalendar(m_fixTimeComponent, "Fixed time "));
 
-        createNewGroup("");
+        closeCurrentGroup();
+        createNewGroup("Output date options:");
 
         setHorizontalPlacement(true);
         addDialogComponent(new DialogComponentBoolean(DateShiftConfigure.createHasDateModel(), "Use date"));
         addDialogComponent(new DialogComponentBoolean(DateShiftConfigure.createHasTimeModel(), "Use time"));
         addDialogComponent(new DialogComponentBoolean(
-                                          DateShiftConfigure.createHasMiliSecondsModel(), "Use miliseconds"));
+                                          DateShiftConfigure.createHasMiliSecondsModel(), "Use milliseconds"));
         closeCurrentGroup();
     }
 
@@ -147,9 +184,16 @@ public class DateShiftNodeDialog extends DefaultNodeSettingsPane {
         try {
             m_referencemodel.loadSettingsFrom(settings);
         } catch (InvalidSettingsException e) {
-            m_referencemodel.setStringValue(DateShiftConfigure.getReferenceTypeModel().getStringValue());
+            m_referencemodel.setStringValue(DateShiftConfigure.createReferenceTypeModel().getStringValue());
+        }
+
+        try {
+            m_shiftmodel.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            m_shiftmodel.setStringValue(DateShiftConfigure.createShiftTypeModel().getStringValue());
         }
         updateComponentVisibility(m_referencemodel.getStringValue());
+        updateComponentVisibility(m_shiftmodel.getStringValue());
     }
 
 
@@ -160,12 +204,18 @@ public class DateShiftNodeDialog extends DefaultNodeSettingsPane {
         if (string.equals(CFG_FIXDATE)) {
             m_fixTimeComponent.setEnabled(true);
             m_columnSelComponent.setEnabled(false);
-        } else if (string.equals(CFG_NOW) || string.equals(CFG_11970)) {
+        } else if (string.equals(CFG_NOW)) {
             m_fixTimeComponent.setEnabled(false);
             m_columnSelComponent.setEnabled(false);
-        } else {  //default: use a second column
+        } else if (string.equals(CFG_COLUMN)) {  //default: use a second column
             m_fixTimeComponent.setEnabled(false);
             m_columnSelComponent.setEnabled(true);
+        } else if (string.equals(CFG_COLUMN_SHIFT)) {
+            m_shiftValueModel.setEnabled(false);
+            m_shiftColumnModel.setEnabled(true);
+        } else if (string.equals(CFG_VALUE_SHIFT)) {
+            m_shiftValueModel.setEnabled(true);
+            m_shiftColumnModel.setEnabled(false);
         }
     }
 }
