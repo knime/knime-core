@@ -51,6 +51,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.HierarchyEvent;
@@ -681,7 +682,8 @@ public abstract class NodeDialogPane {
         Runnable r = new Runnable() {
             @Override
             public void run() {
-                commitComponentsRecursively(getPanel());
+                final JPanel panel = getPanel();
+                commitComponentsRecursively(panel);
 
                 /* Workaround that makes sure that the last modified Swing component
                  * looses focus and that its values are stored (Bug 1949). Otherwise
@@ -700,10 +702,13 @@ public abstract class NodeDialogPane {
                     pane.setSelectedIndex(prevIndex);
                 }
 
+                panel.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                 try {
                     internalSaveSettingsTo(settings);
                 } catch (Throwable ex) {
                     exRef.set(ex);
+                } finally {
+                    panel.setCursor(Cursor.getDefaultCursor());
                 }
             }
         };
