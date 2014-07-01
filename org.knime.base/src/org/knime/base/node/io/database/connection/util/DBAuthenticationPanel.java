@@ -213,6 +213,8 @@ public class DBAuthenticationPanel<T extends DatabaseConnectionSettings> extends
         if (m_useCredentials.isSelected()) {
             m_settings.setCredentialName((String)m_credentials.getSelectedItem());
         } else {
+            // Bug 5345, username and password are only used if credentialname is null
+            m_settings.setCredentialName(null);
             m_settings.setUserName(m_username.getText());
             m_settings.setPassword(new String(m_password.getPassword()));
         }
