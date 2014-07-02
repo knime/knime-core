@@ -46,6 +46,7 @@
  */
 package org.knime.core.node.wizard;
 
+import org.knime.core.node.dialog.ValueControlledNode;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.web.WebViewContent;
 
@@ -57,7 +58,7 @@ import org.knime.core.node.web.WebViewContent;
  * @since 2.9
  */
 public interface WizardNode<REP extends WebViewContent, VAL extends WebViewContent>
-        extends InteractiveNode<REP, VAL> {
+        extends InteractiveNode<REP, VAL>, ValueControlledNode {
 
     /**
      * Create content which can be used by the web view implementation.

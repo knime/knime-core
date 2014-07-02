@@ -75,6 +75,8 @@ import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.dialog.ValueControlledDialogPane;
+import org.knime.core.node.dialog.ValueControlledNode;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveNodeFactoryExtension;
 import org.knime.core.node.interactive.InteractiveView;
@@ -1880,9 +1882,23 @@ public final class Node implements NodeModelWarningListener {
         // to the node model class ...
         final FlowObjectStack flowObjectStack = m_model instanceof VirtualSubNodeInputNodeModel
                 ? ((VirtualSubNodeInputNodeModel)m_model).getSubNodeContainerFlowObjectStack() : getFlowObjectStack();
-        dialogPane.internalLoadSettingsFrom(settings, corrInSpecs, corrInData,
-                flowObjectStack, getCredentialsProvider(),
-                isWriteProtected);
+        dialogPane.internalLoadSettingsFrom(settings, corrInSpecs, corrInData, flowObjectStack,
+            getCredentialsProvider(), isWriteProtected);
+        if (m_model instanceof ValueControlledNode && dialogPane instanceof ValueControlledDialogPane) {
+            NodeSettings currentValue = new NodeSettings("currentValue");
+            try {
+                ((ValueControlledNode)m_model).saveCurrentValue(currentValue);
+                ((ValueControlledDialogPane)dialogPane).loadCurrentValue(currentValue);
+            } catch (Exception ise) {
+                final String msg = "Could not load current value into dialog: " + ise.getMessage();
+                if (ise instanceof InvalidSettingsException) {
+                    m_logger.warn(msg, ise);
+                } else {
+                    m_logger.coding(msg, ise);
+                }
+            }
+
+        }
         return dialogPane;
     }
 

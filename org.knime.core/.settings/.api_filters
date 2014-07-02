@@ -24,6 +24,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.LoadingPanel">
+        <filter comment="moved panel implementation to inner class of OutputView - not used anywhere else" id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.LoadingPanel"/>
+                <message_argument value="org.knime.core_2.10.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.ObsoleteMetaNodeWorkflowPersistorVersion1xx">
         <filter comment="renaming persistor classes - no API anyway" id="305324134">
             <message_arguments>
@@ -324,6 +332,13 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.dialog.DialogNode"/>
                 <message_argument value="setDialogValue(VAL)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes to pending wizard/dialogNode API" id="403984517">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNode"/>
+                <message_argument value="org.knime.core.node.dialog.ValueControlledNode"/>
+                <message_argument value="saveCurrentValue(NodeSettingsWO)"/>
             </message_arguments>
         </filter>
         <filter id="405901410">
@@ -716,6 +731,13 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.WizardNode"/>
                 <message_argument value="VAL"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes to pending wizard/dialogNode API" id="403984517">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="org.knime.core.node.dialog.ValueControlledNode"/>
+                <message_argument value="saveCurrentValue(NodeSettingsWO)"/>
             </message_arguments>
         </filter>
         <filter id="405901410">

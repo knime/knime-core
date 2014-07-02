@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -42,44 +43,30 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 08.10.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * History
+ *   Jul 2, 2014 (wiswedel): created
  */
 package org.knime.core.node.dialog;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
 
 /**
+ * Interface to be implemented by {@link org.knime.core.node.NodeDialogPane} when additional runtime parameter
+ * need to be shown. For a detailed description see {@link ValueControlledNode}.
  *
- * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
- * @param <REP> The configuration content of the dialog node.
- * @param <VAL> The node value implementation of the dialog node.
- * @since 2.9
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.10
  */
-public interface DialogNode<REP extends DialogNodeRepresentation<VAL>, VAL extends DialogNodeValue>
-        extends MetaNodeDialogNode, ValueControlledNode {
+public interface ValueControlledDialogPane {
 
-    /**
-     * @return The representation content of the dialog node.
-     * @since 2.10
+    /** Counter part to {@link ValueControlledNode#saveCurrentValue(org.knime.core.node.NodeSettingsWO)}. It receives
+     * the currently used value from the node and shows it as part of a label or updated component in the configuration
+     * dialog. Such value controlled parameters are not modified by the node configuration dialog itself (but only
+     * from the outer sub node, for instance).
+     * @param value To load from, not null.
+     * @throws InvalidSettingsException If that fails. Errors are logged but not further handled.
      */
-    public REP getDialogRepresentation();
-
-    /** Used by the framework to create an empty and uninitialized dialog value instance. This is then kept,
-     * for instance in the subnode with updated user selected values. (Load &amp; Save will be called to fill content.)
-     * @return A new empty instance of the dialog value class, not null. */
-    public VAL createEmptyDialogValue();
-
-    /** Loads a value edited outside the node into the node. 'Outside' here refers to the dialog of a sub- or meta node.
-     * @param value A value whose content should be used in the next calls of configure and execute. May be null
-     * to fall back to the defaults (as per configuration). */
-    public void setDialogValue(VAL value);
-
-    /** Get the currently set dialog value or null if non is set (use defaults as per node configuration).
-     * @return The value currently set. */
-    public VAL getDialogValue();
-
-    /** Property set in the configuration dialog of the node to hide this quickform/dialog node in the
-     * meta or subnode dialog.
-     * @return that property. */
-    public boolean isHideInDialog();
+    public void loadCurrentValue(NodeSettingsRO value) throws InvalidSettingsException;
 
 }

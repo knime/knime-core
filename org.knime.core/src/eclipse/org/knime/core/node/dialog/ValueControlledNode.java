@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,36 +41,36 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   Jul 2, 2014 (wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node.dialog;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.image.ImageObserver;
-
-import javax.swing.Box;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- * 
- * @author Fabian Dill, University of Konstanz
+ * Implemented by nodes whose execution not only depends on the node configuration (dialog) but also on additional
+ * runtime parameters. These are, for instance dialog values set via a metanode or subnode dialog. Also nodes having
+ * a view that sets view values are "value controlled".
+ *
+ * <p>Nodes implementing this interface and whose dialog component implements {@link ValueControlledDialogPane} will
+ * have an additional method called when the dialog is opened. This allows them to display the currently used value
+ * in the configuration dialog. E.g. a string quickform input has a default value of "foo" but the value as per
+ * subnode configuration dialog is "bar" -- this will then be shown in the main config dialog of the QF node to
+ * clarify why the current output is "bar" although it says "foo" in the dialog.
+ *
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.10
  */
-public class LoadingPanel extends JPanel implements ImageObserver {
-    
-    /**
-     * Displays "loading port content".
-     */
-    public LoadingPanel() {
-        setLayout(new BorderLayout());
-        setBackground(Color.WHITE);
-        Box centerBox = Box.createHorizontalBox();
-        centerBox.add(Box.createHorizontalGlue());
-        centerBox.add(new JLabel("Loading port content..."));
-        centerBox.add(Box.createHorizontalGlue());
-        add(centerBox);
-    }
+public interface ValueControlledNode {
 
-    
+    /** Save the currently used value to a node settings argument. This can be the full value or just a message saying
+     * "Output is currently controlled by sub node dialog". The corresponding load method is
+     * {@link ValueControlledDialogPane#loadCurrentValue(org.knime.core.node.NodeSettingsRO)}
+     * @param content To save to, not null.
+     */
+    public void saveCurrentValue(final NodeSettingsWO content);
+
 }

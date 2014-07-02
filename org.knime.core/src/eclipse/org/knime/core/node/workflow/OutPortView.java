@@ -45,6 +45,7 @@
 package org.knime.core.node.workflow;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -322,6 +323,22 @@ public class OutPortView extends JFrame {
                 repaint();
             }
         });
+
+    }
+
+    /** Displays "loading port content". */
+    @SuppressWarnings("serial")
+    private static final class LoadingPanel extends JPanel {
+
+        LoadingPanel() {
+            setLayout(new BorderLayout());
+            setBackground(Color.WHITE);
+            Box centerBox = Box.createHorizontalBox();
+            centerBox.add(Box.createHorizontalGlue());
+            centerBox.add(new JLabel("Loading port content..."));
+            centerBox.add(Box.createHorizontalGlue());
+            add(centerBox);
+        }
 
     }
 }

@@ -235,7 +235,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
     }
 
     /** Icon in the status bar that shows the node's warning message. */
-    static final Icon WARNING_ICON = ViewUtils.loadIcon(
+    public static final Icon WARNING_ICON = ViewUtils.loadIcon(
             NodeView.class, "/icon/warning.png");
 
     /** Method that is called by the framework when the view is saved as image
