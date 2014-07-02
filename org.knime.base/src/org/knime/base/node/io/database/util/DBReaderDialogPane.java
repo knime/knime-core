@@ -66,6 +66,7 @@ import javax.swing.JSplitPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingWorker;
+import javax.swing.text.JTextComponent;
 
 import org.knime.base.node.io.database.DBTreeBrowser;
 import org.knime.base.util.flowvariable.FlowVariableResolver;
@@ -268,9 +269,10 @@ public class DBReaderDialogPane extends NodeDialogPane {
         // statement
         String statement = s.getQuery();
         m_statmnt.setText(statement == null
-                ? "SELECT * FROM "
-                        + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER
+                ? "SELECT * FROM " + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER
                 : statement);
+        // select the table placeholder statement for easier replacements
+        selectPlaceHolder(m_statmnt, DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER);
         // update list of flow/workflow variables
         m_listModelVars.removeAllElements();
         for (Map.Entry<String, FlowVariable> e
@@ -303,9 +305,25 @@ public class DBReaderDialogPane extends NodeDialogPane {
         }
     }
 
+    /**
+     * @param statmnt the {@link JTextComponent} to select the place holder in
+     * @param placeHolder the place holder to select
+     * @since 2.10
+     */
+    private static void selectPlaceHolder(final JTextComponent statmnt, final String placeHolder) {
+        if (statmnt == null || placeHolder == null) {
+            return;
+        }
+        final String text = statmnt.getText();
+        final int startIdx = text.indexOf(placeHolder);
+        if (startIdx < 0) {
+            return;
+        }
+        statmnt.select(startIdx, startIdx + placeHolder.length());
+    }
 
     private DatabaseConnectionSettings getConnectionSettings() {
-        if (m_showConnectionPanel) {
+        if (m_showConnectionPanel && m_upstreamConnectionSettings == null) {
             return m_connectionPane.getConnectionSettings();
         } else {
             return m_upstreamConnectionSettings;
