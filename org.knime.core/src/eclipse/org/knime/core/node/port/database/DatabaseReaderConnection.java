@@ -80,6 +80,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.blob.BinaryObjectCellFactory;
@@ -92,6 +93,7 @@ import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -389,13 +391,16 @@ public final class DatabaseReaderConnection {
                 case Types.INTEGER:
                     newType = IntCell.TYPE;
                     break;
+                 // all types that can be interpreted as long
+                case Types.BIGINT:
+                    newType = LongCell.TYPE;
+                    break;
                 // all types that can be interpreted as double
                 case Types.FLOAT:
                 case Types.DOUBLE:
                 case Types.NUMERIC:
                 case Types.DECIMAL:
                 case Types.REAL:
-                case Types.BIGINT:
                     newType = DoubleCell.TYPE;
                     break;
                 // all types that can be interpreted as data-and-time
@@ -406,7 +411,6 @@ public final class DatabaseReaderConnection {
                     break;
                 // all types that can be interpreted as binary object
                 case Types.BLOB:
-                case Types.LONGNVARCHAR:
                 case Types.LONGVARBINARY:
                 case Types.BINARY:
                     newType = BinaryObjectDataCell.TYPE;
@@ -521,6 +525,14 @@ public final class DatabaseReaderConnection {
                                 break;
                             default: cell = readInt(i);
                         }
+                    } else if (type.isCompatible(LongValue.class)) {
+                        switch (dbType) {
+                            // all types that can be interpreted as long
+                            case Types.BIGINT:
+                                cell = readLong(i);
+                                break;
+                            default: cell = readLong(i);
+                        }
                     } else if (type.isCompatible(DoubleValue.class)) {
                         switch (dbType) {
                             // all types that can be interpreted as double
@@ -534,9 +546,6 @@ public final class DatabaseReaderConnection {
                             case Types.DECIMAL:
                             case Types.NUMERIC:
                                 cell = readBigDecimal(i);
-                                break;
-                            case Types.BIGINT:
-                                cell = readLong(i);
                                 break;
                             default: cell = readDouble(i);
                         }
@@ -563,6 +572,7 @@ public final class DatabaseReaderConnection {
                                 cell = c;
                                 break;
                             case Types.LONGVARCHAR:
+                            case Types.LONGNVARCHAR:
                                 cell = readAsciiStream(i); break;
                             case Types.LONGVARBINARY:
                             case Types.BINARY:
@@ -577,6 +587,7 @@ public final class DatabaseReaderConnection {
                                 cell = readArray(i); break;
                             case Types.CHAR:
                             case Types.VARCHAR:
+                            case Types.LONGVARCHAR:
                                 cell = readString(i); break;
                             case Types.VARBINARY:
                                 cell = readBytesAsString(i); break;
@@ -774,7 +785,7 @@ public final class DatabaseReaderConnection {
             if (wasNull()) {
                 return DataType.getMissingCell();
             } else {
-                return new DoubleCell(l);
+                return new LongCell(l);
             }
         }
 

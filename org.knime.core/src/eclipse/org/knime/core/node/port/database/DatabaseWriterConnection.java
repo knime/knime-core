@@ -67,6 +67,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.blob.BinaryObjectDataValue;
 import org.knime.core.data.date.DateAndTimeValue;
@@ -206,13 +207,22 @@ public final class DatabaseWriterConnection {
                                         + "\" in database at position " + i);
                                 }
                                 break;
+                            case Types.BIGINT:
+                                // types must also be compatible to LongValue
+                                if (!cspec.getType().isCompatible(LongValue.class)) {
+                                    throw new RuntimeException("Column \"" + name
+                                        + "\" of type \"" + cspec.getType()
+                                        + "\" from input does not match type "
+                                        + "\"" + rsmd.getColumnTypeName(i + 1)
+                                        + "\" in database at position " + i);
+                                }
+                            break;
                             // check all double compatible types
                             case Types.FLOAT:
                             case Types.DOUBLE:
                             case Types.NUMERIC:
                             case Types.DECIMAL:
                             case Types.REAL:
-                            case Types.BIGINT:
                                 // types must also be compatible to DoubleValue
                                 if (!cspec.getType().isCompatible(DoubleValue.class)) {
                                     throw new RuntimeException("Column \"" + name
@@ -238,7 +248,6 @@ public final class DatabaseWriterConnection {
                             // check for blob compatible types
                             case Types.BLOB:
                             case Types.BINARY:
-                            case Types.LONGVARCHAR:
                             case Types.LONGVARBINARY:
                                 // types must also be compatible to DataValue
                                 if (!cspec.getType().isCompatible(BinaryObjectDataValue.class)) {
@@ -703,6 +712,13 @@ public final class DatabaseWriterConnection {
             } else {
                 int integer = ((IntValue) cell).getIntValue();
                 stmt.setInt(dbIdx, integer);
+            }
+        } else if (cspec.getType().isCompatible(LongValue.class)) {
+            if (cell.isMissing()) {
+                stmt.setNull(dbIdx, Types.BIGINT);
+            } else {
+                long dbl = ((LongValue) cell).getLongValue();
+                stmt.setLong(dbIdx, dbl);
             }
         } else if (cspec.getType().isCompatible(DoubleValue.class)) {
             if (cell.isMissing()) {
