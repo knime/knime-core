@@ -214,16 +214,18 @@ final class DBGroupByAggregationPanel extends JPanel {
     }
 
     private void onAddIt() {
-        if (m_columns.getSelectedValue() != null) {
-            String selection = m_columns.getSelectedValue().getName();
+        List<DataColumnSpec> selections = m_columns.getSelectedValuesList();
+        for (DataColumnSpec spec : selections) {
+            String selection = spec.getName();
             m_aggregatedColumnsModel.addRow(new Object[]{selection, DBGroupByAggregationMethod.AVG.name()});
         }
     }
 
     private void onRemIt() {
-        int selectedRow = m_aggregatedColumns.getSelectedRow();
-        if (selectedRow >= 0) {
-            m_aggregatedColumnsModel.removeRow(selectedRow);
+        int[] selections = m_aggregatedColumns.getSelectedRows();
+        for (int i = 0; i < selections.length; i++) {
+            // i acts as offset for already removed rows
+            m_aggregatedColumnsModel.removeRow(selections[i] - i);
         }
     }
 
