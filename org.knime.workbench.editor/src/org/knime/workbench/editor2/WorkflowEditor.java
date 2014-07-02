@@ -67,6 +67,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -964,13 +965,12 @@ public class WorkflowEditor extends GraphicalEditor implements
                                 oldFileResource, m_fileResource, oldManager, managerForOldResource));
                     }
                     ProjectWorkflowMap.replace(m_fileResource, oldManager, oldFileResource);
-                    isEnableAutoSave = false;
+                    isEnableAutoSave = m_isAutoSaveAllowed;
                 } else {
                     m_manager = (WorkflowManager)ProjectWorkflowMap.getWorkflow(m_fileResource);
                 }
 
                 if (m_manager != null) {
-                    isEnableAutoSave = false;
                     // in case the workflow manager was edited somewhere else
                     if (m_manager.isDirty()) {
                         markDirty();
@@ -984,10 +984,20 @@ public class WorkflowEditor extends GraphicalEditor implements
                                 (!autoSaveDirectory.isDirectory() ? "it is not a directory" : "cannot read it"));
                             isEnableAutoSave = false;
                         } else {
+                            File parentDir = autoSaveDirectory.getParentFile();
+                            String date = DateFormatUtils.format(autoSaveDirectory.lastModified(), "yyyy-MM-dd HH:mm");
+                            String newName = wfDir.getName() + " (Auto-Save Copy - " + date + ")";
+                            int unique = 1;
+                            File restoredAutoSaveDirectory;
+                            while ((restoredAutoSaveDirectory = new File(parentDir, newName)).exists()) {
+                                newName = wfDir.getName() + " (Auto-Save Copy - " + date + " #" + (unique++) + ")";
+                            }
+
                             // this is the file store object to autoSaveDirectory - if we can resolve it
                             // we use it below in user messages and to do the rename in order to trigger a refresh
                             // in the explorer tree - if we can't resolve it (dunno why) we use java.io.File operation
                             AbstractExplorerFileStore autoSaveDirFileStore = null;
+                            AbstractExplorerFileStore restoredAutoSaveDirFileStore = null;
                             if (wfFileFileStore != null) {
                                 try {
                                     // first parent is workflow dir, parent of that is the workflow group
@@ -996,59 +1006,59 @@ public class WorkflowEditor extends GraphicalEditor implements
                                     if (autoSaveDirectory.equals(temp.toLocalFile())) {
                                         autoSaveDirFileStore = temp;
                                     }
+                                    restoredAutoSaveDirFileStore = parFS.getChild(newName);
                                 } catch (CoreException e) {
                                     LOGGER.warn("Unable to resolve parent file store for \""
                                             + wfFileFileStore + "\"", e);
                                 }
                             }
+
                             int action = openQuestionDialogWhenLoadingWorkflowWithAutoSaveCopy(
-                                autoSaveDirFileStore != null ? autoSaveDirFileStore.getMountIDWithFullPath()
-                                    : autoSaveDirectory.getAbsolutePath());
+                                wfDir.getName(), restoredAutoSaveDirectory.getName());
+
                             switch (action) {
-                                case 0: // Rename & Open Copy
-                                    File parentDir = autoSaveDirectory.getParentFile();
-                                    String newName = wfDir.getName() + "(Auto-Save Copy)";
-                                    int unique = 1;
-                                    File newDir;
-                                    while ((newDir = new File(parentDir, newName)).exists()) {
-                                        newName = wfDir.getName() + "(Auto-Save Copy - " + (unique++) + ")";
-                                    }
-                                    if (autoSaveDirFileStore != null) { // preferred way to rename
-                                        try {
-                                            final AbstractExplorerFileStore parent = autoSaveDirFileStore.getParent();
-                                            AbstractExplorerFileStore newFS = parent.getChild(newName);
-                                            autoSaveDirFileStore.move(newFS, EFS.NONE, null);
-                                        } catch (CoreException e) {
-                                            String message = "Could not rename auto-save copy\n"
-                                                    + "from\n  " + autoSaveDirFileStore.getMountIDWithFullPath()
-                                                    + "\nto\n  " + newName + "\nCanceling opening.";
-                                                openErrorDialogAndCloseEditor(message);
-                                                throw new OperationCanceledException(message);
-                                        }
-                                    } else {
-                                        LOGGER.warnWithFormat("Could not resolve explorer file store to \"%s\" - "
-                                                + "renaming on file system directly",
-                                                autoSaveDirectory.getAbsolutePath());
-                                        // could not resolve explorer file store, just rename on file system and
-                                        // ignore explorer tree
-                                        if (!autoSaveDirectory.renameTo(newDir)) {
-                                            String message = "Could not rename auto-save copy\n"
-                                                + "from\n  " + autoSaveDirectory.getAbsolutePath() + "\nto\n  "
-                                                + newDir.getAbsolutePath() + "\nCanceling opening.";
-                                            openErrorDialogAndCloseEditor(message);
-                                            throw new OperationCanceledException(message);
-                                        }
-                                    }
-                                    m_fileResource = newDir.toURI();
-                                    wfFile = new File(newDir, wfFile.getName());
+                                case 0: // Open Copy
+                                case 1: // Open Original
                                     break;
-                                case 1: // Open original
-                                    isEnableAutoSave = false;
-                                    break;
-                                default:
+                                default: // Cancel
                                     String error = "Canceling due to auto-save copy conflict";
                                     openErrorDialogAndCloseEditor(error);
                                     throw new OperationCanceledException(error);
+                            }
+
+                            if (autoSaveDirFileStore != null) { // preferred way to rename
+                                try {
+                                    autoSaveDirFileStore.move(restoredAutoSaveDirFileStore, EFS.NONE, null);
+                                } catch (CoreException e) {
+                                    String message = "Could not rename auto-save copy\n"
+                                            + "from\n  " + autoSaveDirFileStore.getMountIDWithFullPath()
+                                            + "\nto\n  " + newName + "\nCanceling opening.";
+                                    openErrorDialogAndCloseEditor(message);
+                                    throw new OperationCanceledException(message);
+                                }
+                            } else {
+                                LOGGER.warnWithFormat("Could not resolve explorer file store to \"%s\" - "
+                                        + "renaming on file system directly",
+                                        autoSaveDirectory.getAbsolutePath());
+                                // could not resolve explorer file store, just rename on file system and
+                                // ignore explorer tree
+                                if (!autoSaveDirectory.renameTo(restoredAutoSaveDirectory)) {
+                                    String message = "Could not rename auto-save copy\n"
+                                            + "from\n  " + autoSaveDirectory.getAbsolutePath() + "\nto\n  "
+                                            + restoredAutoSaveDirectory.getAbsolutePath() + "\nCanceling opening.";
+                                    openErrorDialogAndCloseEditor(message);
+                                    throw new OperationCanceledException(message);
+                                }
+                            }
+                            switch (action) {
+                                case 0: // Open Copy
+                                    m_fileResource = restoredAutoSaveDirectory.toURI();
+                                    wfFile = new File(restoredAutoSaveDirectory, wfFile.getName());
+                                    break;
+                                case 1: // Open original
+                                    break;
+                                default:
+                                    assert false : "Should have been caught further up";
                             }
                         }
                     }
@@ -1121,20 +1131,22 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     }
 
-    /** Opens dialog to ask user for action when auto-save copy is found.
-     * @param autoSavePath to print in message
-     * @return 0: Rename Copy &amp; Open, 1: Open Original, any other value: Cancel
+    /** Opens dialog to ask user for action when auto-save copy is found. Return values:
+     * <ul>
+     * <li>0: Open Copy</li>
+     * <li>1: Open Original</li>
+     * <li>any other value: Cancel</li>
+     * </ul>
+     * @param workflowName to print in message
+     * @param restoredPath the path where the workflow will be restored to.
+     * @return as above...
      */
-    private int openQuestionDialogWhenLoadingWorkflowWithAutoSaveCopy(final String autoSavePath) {
-        String[] buttons = new String[]{"Open Co&py", "Open &Original", "&Cancel"};
-        StringBuilder m = new StringBuilder("Workflow was not properly closed; found auto-save copy:\n");
-        m.append("  \"").append(autoSavePath).append("\"\n\n");
-        m.append("What do you want to do?\n");
-        m.append("Open Copy - Moves auto-save folder to new location and opens it.\n");
-        m.append("     (The original workflow will stay unmodified.)\n");
-        m.append("Open Original - Opens the original workflow leaving the auto-save copy in place.\n");
-        m.append("     (Note that auto-saving will be disabled until the auto-save copy is deleted.)\n");
-        m.append("Cancel - Cancels the current operation.\n");
+    private int openQuestionDialogWhenLoadingWorkflowWithAutoSaveCopy(
+        final String workflowName, final String restoredPath) {
+        String[] buttons = new String[]{"Open Auto-Save Co&py", "Open &Original", "&Cancel"};
+        StringBuilder m = new StringBuilder("\"");
+        m.append(workflowName).append("\" was not properly closed.\n\n");
+        m.append("An auto-saved copy will be restored to \"").append(restoredPath).append("\".\n");
         Shell sh = Display.getDefault().getActiveShell();
         MessageDialog d = new MessageDialog(sh, "Detected auto-save copy", null,
                         m.toString(), MessageDialog.QUESTION, buttons, 0);
@@ -1613,7 +1625,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (isOtherEditorToWorkflowOpen(workflowDir.toURI())) {
             MessageDialog.openError(activeShell, "\"Save As...\" not available",
                     "\"Save As...\" is not possible while another editor to this workflow is open.");
-                return;
+            return;
         }
         AbstractExplorerFileStore newWorkflowDir = getNewLocation(fileResource, isTempRemoteWorkflowEditor());
         if (newWorkflowDir == null) {
