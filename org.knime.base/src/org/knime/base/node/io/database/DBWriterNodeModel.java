@@ -216,9 +216,9 @@ final class DBWriterNodeModel extends NodeModel {
         }
 
         // write entire data
-        String error =
-            DatabaseWriterConnection.writeData(connSettings, m_tableName, (BufferedDataTable)inData[0], m_append, exec,
-                m_types, getCredentialsProvider(), m_batchSize);
+        final String error = DatabaseWriterConnection.writeData(connSettings, m_tableName, (BufferedDataTable)inData[0],
+            m_append, exec, m_types, getCredentialsProvider(), m_batchSize);
+        // set error message generated during writing rows
         if (error != null) {
             super.setWarningMessage(error);
         }

@@ -181,8 +181,12 @@ final class DBDeleteRowsNodeModel extends NodeModel {
 
         // DELETE rows
         final int[] deleteStatus = new int[inTable.getRowCount()];
-        DatabaseWriterConnection.deleteRows(connSettings, m_tableName, inTable,
+        final String errMsg = DatabaseWriterConnection.deleteRows(connSettings, m_tableName, inTable,
             whereIncludes, deleteStatus, exec, getCredentialsProvider(), m_batchSize);
+        // set warning message generated during deleting rows
+        if (errMsg != null) {
+            setWarningMessage(errMsg);
+        }
         // create out table with update column
         final ColumnRearranger colre = createColumnRearranger(inTable.getSpec(), deleteStatus);
         final BufferedDataTable outTable = exec.createColumnRearrangeTable(inTable,

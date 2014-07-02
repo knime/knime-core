@@ -196,8 +196,12 @@ final class DBUpdateNodeModel extends NodeModel {
 
         // UPDATE table
         final int[] updateStatus = new int[inTable.getRowCount()];
-        DatabaseWriterConnection.updateTable(connSettings, m_tableName, inTable,
+        final String errMsg = DatabaseWriterConnection.updateTable(connSettings, m_tableName, inTable,
             setIncludes, whereIncludes, updateStatus, exec, getCredentialsProvider(), m_batchSize);
+        // set warning message generated during updating rows
+        if (errMsg != null) {
+            setWarningMessage(errMsg);
+        }
         // create out table with update column
         final ColumnRearranger colre = createColumnRearranger(inTable.getSpec(), updateStatus);
         final BufferedDataTable outTable = exec.createColumnRearrangeTable(inTable,
