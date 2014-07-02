@@ -58,13 +58,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -79,9 +74,12 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.draw2d.FigureCanvas;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Viewport;
@@ -153,6 +151,7 @@ import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -178,8 +177,6 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowSaveHelper;
-import org.knime.core.util.FileUtil;
-import org.knime.core.util.Pair;
 import org.knime.core.util.Pointer;
 import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
@@ -271,17 +268,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(WorkflowEditor.class);
 
-    private static final AtomicInteger AUTO_SAVE_INCREMENT = new AtomicInteger();
-
-    private static final ScheduledExecutorService AUTO_SAVE_SCHEDULER = Executors.newSingleThreadScheduledExecutor(
-    new ThreadFactory() {
-        @Override
-        public Thread newThread(final Runnable r) {
-            return new Thread(r, "KNIME-Auto-Save-" + AUTO_SAVE_INCREMENT.incrementAndGet());
-        }
-    });
-
-    /** Clipboard name. */
     public static final String CLIPBOARD_ROOT_NAME = "clipboard";
 
     /**
@@ -343,8 +329,8 @@ public class WorkflowEditor extends GraphicalEditor implements
      * is detected when the workflow is opened (see assignment of variable for additional requirements). */
     private boolean m_isAutoSaveAllowed;
 
-    /** Pair of the scheduled job (for cancelation) and a boolean indicating wheather data should be saved also. */
-    private Pair<ScheduledFuture<?>, Boolean> m_autoSaveScheduledJobPair;
+    /** The job for auto-saving. Reused for each save, init when first needed. */
+    private AutoSaveJob m_autoSaveJob;
 
     /**
      * No arg constructor, creates the edit domain for this editor.
@@ -510,20 +496,20 @@ public class WorkflowEditor extends GraphicalEditor implements
                 // after the workflow is deleted we can delete the temp location
                 final AbstractExplorerFileStore flowLoc = getFileStore(m_fileResource);
                 if (flowLoc != null) {
-                    new Thread(new Runnable() {
+                    KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {
                         @Override
                         public void run() {
                             try {
                                 File d = flowLoc.toLocalFile();
                                 if (d != null) {
-                                    FileUtil.deleteRecursively(d.getParentFile());
+                                    FileUtils.deleteDirectory(d.getParentFile());
                                 }
-                            } catch (Exception e) {
+                            } catch (CoreException | IOException e) {
                                 LOGGER.warn("Error during deletion of temporary workflow location: " + e.getMessage(),
                                     e);
                             }
                         }
-                    }).start();
+                    });
                 }
             }
         }
@@ -556,12 +542,12 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
         }
         setWorkflowManager(null); // unregisters wfm listeners
-        if (m_autoSaveScheduledJobPair != null) {
-            m_autoSaveScheduledJobPair.getFirst().cancel(false);
-            m_autoSaveScheduledJobPair = null;
+        if (m_autoSaveJob != null) {
+            m_autoSaveJob.cancel();
+            m_autoSaveJob = null;
         }
         if (autoSaveDirectory != null) {
-            AUTO_SAVE_SCHEDULER.execute(new Runnable() {
+            KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {
                 @Override
                 public void run() {
                     LOGGER.debugWithFormat("Deleting auto-saved copy (\"%s\")...", autoSaveDirectory);
@@ -1115,11 +1101,11 @@ public class WorkflowEditor extends GraphicalEditor implements
     private void setupAutoSaveSchedule() {
         IPreferenceStore prefStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
         Boolean wasSavingWithData = null;
-        if (m_autoSaveScheduledJobPair != null) {
+        if (m_autoSaveJob != null) {
             LOGGER.debugWithFormat("Clearing auto-save job for %s", m_manager.getName());
-            m_autoSaveScheduledJobPair.getFirst().cancel(false);
-            wasSavingWithData = m_autoSaveScheduledJobPair.getSecond();
-            m_autoSaveScheduledJobPair = null;
+            m_autoSaveJob.cancel();
+            wasSavingWithData = m_autoSaveJob.isSavingWithData();
+            m_autoSaveJob = null;
         }
         if (m_isAutoSaveAllowed && prefStore.getBoolean(PreferenceConstants.P_AUTO_SAVE_ENABLE)) {
             int interval = prefStore.getInt(PreferenceConstants.P_AUTO_SAVE_INTERVAL);
@@ -1127,19 +1113,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             if (wasSavingWithData != null && wasSavingWithData.booleanValue() != saveWithData) {
                 m_manager.setAutoSaveDirectoryDirtyRecursivly();
             }
-            ScheduledFuture<?> autoSaveScheduledJob = AUTO_SAVE_SCHEDULER.scheduleWithFixedDelay(new Runnable() {
-                @Override
-                public void run() {
-                    long start = System.currentTimeMillis();
-                    if (autoSave(saveWithData)) {
-                        long delay = System.currentTimeMillis() - start;
-                        LOGGER.debugWithFormat("Auto-saved workflow %s (took %s)",
-                            m_manager.getName(), StringFormat.formatElapsedTime(delay));
-                    }
-                }
-            }, interval, interval, TimeUnit.SECONDS);
-            m_autoSaveScheduledJobPair =
-                    new Pair<ScheduledFuture<?>, Boolean>(autoSaveScheduledJob, Boolean.valueOf(saveWithData));
+            m_autoSaveJob = new AutoSaveJob(saveWithData, interval);
+            m_autoSaveJob.scheduleNextAutoSave();
             LOGGER.debugWithFormat("Scheduled auto-save job for %s (every %d secs %s data)", m_manager.getName(),
                 interval, (saveWithData ? "with" : "without"));
         }
@@ -1450,12 +1425,10 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @param fileResource .. the resource, usually m_fileResource or m_autoSaveFileResource
      *        or soon-to-be m_fileResource (for save-as)
      * @param monitor ...
-     * @param isAutoSave ... (don't save data)
      * @param saveWithData ... save data also
      */
-    private void saveTo(final URI fileResource, final IProgressMonitor monitor, final boolean isAutoSave,
-        final boolean saveWithData) {
-        LOGGER.debug((isAutoSave ? "Auto-" : "") + "Saving workflow ...");
+    private void saveTo(final URI fileResource, final IProgressMonitor monitor, final boolean saveWithData) {
+        LOGGER.debug("Saving workflow " + getWorkflowManager().getNameWithID());
 
         // Exception messages from the inner thread
         final StringBuilder exceptionMessage = new StringBuilder();
@@ -1491,13 +1464,12 @@ public class WorkflowEditor extends GraphicalEditor implements
             final File workflowDir = new File(fileResource);
             final File file = new File(workflowDir, WorkflowPersistor.WORKFLOW_FILE);
 
-            // If something fails an empty workflow is created
-            // except when cancellation occurred
+            WorkflowSaveHelper saveHelper = new WorkflowSaveHelper(saveWithData, false);
+            final SaveWorkflowRunnable saveWorkflowRunnable =
+                    new SaveWorkflowRunnable(this, file, exceptionMessage, saveHelper, monitor);
+
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
-            WorkflowSaveHelper saveHelper = new WorkflowSaveHelper(saveWithData, isAutoSave);
-            SaveWorkflowRunnable saveWorkflowRunnable =
-                    new SaveWorkflowRunnable(this, file, exceptionMessage, saveHelper, monitor);
 
             NodeContainerState state = m_manager.getNodeContainerState();
             wasInProgress = state.isExecutionInProgress() && !state.isExecutingRemotely();
@@ -1514,11 +1486,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                     }
                 }
             });
-
-            if (!isAutoSave) {
-                // mark command stack (no undo beyond this point)
-                getCommandStack().markSaveLocation();
-            }
+            // mark command stack (no undo beyond this point)
+            getCommandStack().markSaveLocation();
 
         } catch (Exception e) {
             LOGGER.error("Could not save workflow: " + exceptionMessage, e);
@@ -1531,21 +1500,19 @@ public class WorkflowEditor extends GraphicalEditor implements
             throw new OperationCanceledException("Workflow was not saved: " + exceptionMessage.toString());
         }
 
-        if (!isAutoSave) {
-            Display.getDefault().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    if (!Display.getDefault().isDisposed()) {
-                        // mark all sub editors as saved
-                        for (IEditorPart subEditor : getSubEditors()) {
-                            final WorkflowEditor editor = (WorkflowEditor)subEditor;
-                            ((WorkflowEditor)subEditor).setIsDirty(false);
-                            editor.firePropertyChange(IEditorPart.PROP_DIRTY);
-                        }
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                if (!Display.getDefault().isDisposed()) {
+                    // mark all sub editors as saved
+                    for (IEditorPart subEditor : getSubEditors()) {
+                        final WorkflowEditor editor = (WorkflowEditor)subEditor;
+                        ((WorkflowEditor)subEditor).setIsDirty(false);
+                        editor.firePropertyChange(IEditorPart.PROP_DIRTY);
                     }
                 }
-            });
-        }
+            }
+        });
 
         monitor.done();
 
@@ -1553,7 +1520,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // check if the workflow manager is in execution
         // this happens if the user pressed "Yes" on save confirmation dialog
         // or simply saves (Ctrl+S)
-        if (!isAutoSave && wasInProgress) {
+        if (wasInProgress) {
             markDirty();
             final Pointer<Boolean> abortPointer = new Pointer<Boolean>();
             abortPointer.set(Boolean.FALSE);
@@ -1620,7 +1587,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 doSaveAs();
             }
         } else {
-            saveTo(m_fileResource, monitor, false, true);
+            saveTo(m_fileResource, monitor, true);
         }
     }
 
@@ -1655,7 +1622,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (newWorkflowDir instanceof RemoteExplorerFileStore) {
             // selected a remote location: save + upload
             if (isDirty()) {
-                saveTo(m_fileResource, new NullProgressMonitor(), false, true);
+                saveTo(m_fileResource, new NullProgressMonitor(), true);
             }
             AbstractExplorerFileStore localFS = getFileStore(fileResource);
             if (localFS == null || !(localFS instanceof LocalExplorerFileStore)) {
@@ -1685,7 +1652,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 return;
             }
 
-            saveTo(localNewWorkflowDir.toURI(), new NullProgressMonitor(), false, true);
+            saveTo(localNewWorkflowDir.toURI(), new NullProgressMonitor(), true);
             setInput(new FileStoreEditorInput(newWorkflowFile));
             if (newWorkflowDir.getParent() != null) {
                 newWorkflowDir.getParent().refresh();
@@ -1694,36 +1661,83 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
     }
 
-    private boolean autoSave(final boolean withData) {
-        assert m_parentEditor == null : "No auto save on meta node";
-        ReferencedFile autoSaveDir = getWorkflowManager().getAutoSaveDirectory();
-        if (autoSaveDir == null) {
-            if (!isDirty()) {
-                return false;
+    private class AutoSaveJob extends Job {
+
+        private final boolean m_isSavingWithData;
+        private final int m_intervalInSecs;
+
+        AutoSaveJob(final boolean isSavingWithData, final int intervalInSecs) {
+            super("Auto-Save " + getWorkflowManager().getName());
+            m_isSavingWithData = isSavingWithData;
+            m_intervalInSecs = intervalInSecs;
+        }
+
+        boolean isSavingWithData() {
+            return m_isSavingWithData;
+        }
+
+        void scheduleNextAutoSave() {
+            schedule(TimeUnit.SECONDS.toMillis(m_intervalInSecs));
+        }
+
+        @Override
+        protected IStatus run(final IProgressMonitor jobMonitor) {
+            assert m_parentEditor == null : "No auto save on meta node";
+            long start = System.currentTimeMillis();
+            IStatus status = doIt(jobMonitor);
+            IStatus resultStatus = status;
+            if (status == null) {
+                resultStatus = Status.OK_STATUS;
+            } else if (status.isOK()) {
+                String delay = StringFormat.formatElapsedTime(System.currentTimeMillis() - start);
+                LOGGER.debugWithFormat("Auto-saved workflow %s (took %s)", m_manager.getName(), delay);
+            } else {
+                LOGGER.warnWithFormat("Auto-saving workflow %s caused issues: ", m_manager.getName(), status);
             }
-            final ReferencedFile ncDirRef = getWorkflowManager().getNodeContainerDirectory();
-            autoSaveDir = new ReferencedFile(WorkflowSaveHelper.getAutoSaveDirectory(ncDirRef));
-            autoSaveDir.setDirty(true);
-            getWorkflowManager().setAutoSaveDirectory(autoSaveDir);
+            scheduleNextAutoSave();
+            return resultStatus;
         }
-        if (!autoSaveDir.isDirty()) {
-            return false;
-        }
-        final URI autoSaveURI = autoSaveDir.getFile().toURI();
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                NodeContext.pushContext(m_manager);
-                try {
-                    saveTo(autoSaveURI, new NullProgressMonitor(), true, withData);
-                } catch (Exception e) {
-                    LOGGER.error("Failed auto-saving " + m_manager.getNameWithID(), e);
-                } finally {
-                    NodeContext.removeLastContext();
+
+        /** Performs the save, returns null if no save needed (=not dirty). */
+        private IStatus doIt(final IProgressMonitor jobMonitor) {
+            NodeContext.pushContext(m_manager);
+            try {
+                ReferencedFile autoSaveDir = getWorkflowManager().getAutoSaveDirectory();
+                if (autoSaveDir == null) { // net yet auto-saved
+                    if (!isDirty()) {      // main editor not dirty
+                        return null;
+                    }
+                    final ReferencedFile ncDirRef = getWorkflowManager().getNodeContainerDirectory();
+                    autoSaveDir = new ReferencedFile(WorkflowSaveHelper.getAutoSaveDirectory(ncDirRef));
+                    autoSaveDir.setDirty(true);
+                    getWorkflowManager().setAutoSaveDirectory(autoSaveDir);
                 }
+                if (!autoSaveDir.isDirty()) {
+                    return null;
+                }
+                final URI autoSaveURI = autoSaveDir.getFile().toURI();
+
+                saveEditorSettingsToWorkflowManager();
+                final File workflowDir = new File(autoSaveURI);
+                final File file = new File(workflowDir, WorkflowPersistor.WORKFLOW_FILE);
+
+                // Exception messages from the inner thread
+                final StringBuilder exceptionMessage = new StringBuilder();
+                WorkflowSaveHelper saveHelper = new WorkflowSaveHelper(m_isSavingWithData, true);
+                final NullProgressMonitor monitor = new NullProgressMonitor();
+                SaveWorkflowRunnable saveRunnable =
+                        new SaveWorkflowRunnable(WorkflowEditor.this, file, exceptionMessage, saveHelper, monitor);
+                saveRunnable.run(jobMonitor);
+                jobMonitor.done();
+                return Status.OK_STATUS;
+            } catch (Exception e) {
+                final String error = "Failed auto-saving " + m_manager.getNameWithID();
+                LOGGER.error(error, e);
+                return new Status(IStatus.ERROR, KNIMEEditorPlugin.PLUGIN_ID, error, e);
+            } finally {
+                NodeContext.removeLastContext();
             }
-        });
-        return true;
+        }
     }
 
     /**
