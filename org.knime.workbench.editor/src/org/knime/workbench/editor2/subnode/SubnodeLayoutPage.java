@@ -154,8 +154,10 @@ public class SubnodeLayoutPage extends WizardPage {
             String annotation = nodeContainer.getNodeAnnotation().getText();
             nodeLabel.setText(nodeName + "\nID: " + nodeID.getIndex() + "\n" + annotation);
 
+            GridData gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+            gridData.widthHint = 80;
             final Text xText = new Text(composite, SWT.SINGLE | SWT.BORDER);
-            xText.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+            xText.setLayoutData(gridData);
             xText.setText(layoutInfo == null ? "" : layoutInfo.getX());
             xText.addModifyListener(new ModifyListener() {
 
@@ -166,7 +168,7 @@ public class SubnodeLayoutPage extends WizardPage {
             });
 
             final Text yText = new Text(composite, SWT.SINGLE | SWT.BORDER);
-            yText.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+            yText.setLayoutData(gridData);
             yText.setText(layoutInfo == null ? "" : layoutInfo.getY());
             yText.addModifyListener(new ModifyListener() {
 
@@ -177,7 +179,7 @@ public class SubnodeLayoutPage extends WizardPage {
             });
 
             final Text paddingText = new Text(composite, SWT.SINGLE | SWT.BORDER);
-            paddingText.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
+            paddingText.setLayoutData(gridData);
             paddingText.setText(layoutInfo == null || layoutInfo.getPadding() == null ? "" : layoutInfo.getPadding());
             paddingText.addModifyListener(new ModifyListener() {
 
