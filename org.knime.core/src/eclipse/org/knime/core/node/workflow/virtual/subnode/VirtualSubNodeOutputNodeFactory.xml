@@ -9,8 +9,6 @@
     </intro>
     </fullDescription>
     <ports>
-        <inPort index="0" name="Input Data">
-            The forwarded output data.
-        </inPort>
+        <!--  Port description is defined in java code -->
     </ports>
 </knimeNode>

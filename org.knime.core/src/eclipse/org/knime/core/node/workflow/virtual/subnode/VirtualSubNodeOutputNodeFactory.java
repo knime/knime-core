@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow.virtual.subnode;
 
+import org.knime.core.node.DelegateNodeDescription;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDescription;
@@ -83,7 +84,7 @@ public class VirtualSubNodeOutputNodeFactory extends DynamicNodeFactory<VirtualS
     /** {@inheritDoc} */
     @Override
     protected NodeDescription createNodeDescription() {
-        return super.parseNodeDescriptionFromFile();
+        return new SubnodeOutputNodeDescription(super.parseNodeDescriptionFromFile());
     }
 
     /** {@inheritDoc} */
@@ -136,5 +137,25 @@ public class VirtualSubNodeOutputNodeFactory extends DynamicNodeFactory<VirtualS
     @Override
     public org.knime.core.node.NodeFactory.NodeType getType() {
         return NodeType.VirtualOut;
+    }
+
+    private static final class SubnodeOutputNodeDescription extends DelegateNodeDescription {
+
+        SubnodeOutputNodeDescription(final NodeDescription delegate) {
+            super(delegate);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String getInportName(final int index) {
+            return "Passed-on Subnode Output " + index;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String getInportDescription(final int index) {
+            return "The port content passed onto the subnode output, port " + index;
+        }
+
     }
 }

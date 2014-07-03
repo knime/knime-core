@@ -9,8 +9,6 @@
     </intro>
     </fullDescription>
     <ports>
-        <outPort index="0" name="Subnode input">
-            Input data to subnode.
-        </outPort>
+        <!--  Port description is defined in java code -->
     </ports>
 </knimeNode>

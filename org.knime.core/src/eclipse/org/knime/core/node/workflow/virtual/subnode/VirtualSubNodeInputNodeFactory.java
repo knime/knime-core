@@ -51,6 +51,7 @@ package org.knime.core.node.workflow.virtual.subnode;
 import java.util.Arrays;
 import java.util.Set;
 
+import org.knime.core.node.DelegateNodeDescription;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDescription;
@@ -93,7 +94,7 @@ public final class VirtualSubNodeInputNodeFactory extends DynamicNodeFactory<Vir
     /** {@inheritDoc} */
     @Override
     protected NodeDescription createNodeDescription() {
-        return super.parseNodeDescriptionFromFile();
+        return new SubnodeInputNodeDescription(super.parseNodeDescriptionFromFile());
     }
     /** {@inheritDoc} */
     @Override
@@ -180,6 +181,26 @@ public final class VirtualSubNodeInputNodeFactory extends DynamicNodeFactory<Vir
             throw new InvalidSettingsException("Unassigned port type at index " + invalidIndex);
         }
         return outTypes;
+    }
+
+    private static final class SubnodeInputNodeDescription extends DelegateNodeDescription {
+
+        SubnodeInputNodeDescription(final NodeDescription delegate) {
+            super(delegate);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String getOutportName(final int index) {
+            return "Delegated Subnode Input " + index;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String getOutportDescription(final int index) {
+            return "The port content from the subnode input";
+        }
+
     }
 
 }
