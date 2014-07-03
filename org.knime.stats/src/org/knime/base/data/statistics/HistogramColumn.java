@@ -49,6 +49,7 @@ package org.knime.base.data.statistics;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
@@ -135,6 +136,11 @@ import org.w3c.dom.svg.SVGDocument;
  * @author Gabor Bakos
  */
 public class HistogramColumn implements Cloneable {
+    /**
+     *
+     */
+    private static final int MIN_MAX_AREA_HEIGHT = 15;
+
     /**
      *
      */
@@ -346,7 +352,6 @@ public class HistogramColumn implements Cloneable {
         private final BinNumberSelectionStrategy m_strategy;
 
         private class NumericBin extends Bin<Pair<Double, Double>> implements DisplayableBin {
-
             NumericBin(final double min, final double max) {
                 this(Pair.create(min, max));
             }
@@ -403,17 +408,22 @@ public class HistogramColumn implements Cloneable {
          * @param colName The column name.
          */
         HistogramNumericModel(final double min, final double max, final int numOfBins, final int colIndex,
-            final String colName) {
-            this(min, max, numOfBins, colIndex, colName, BinNumberSelectionStrategy.DecimalRange);
+            final String colName, final double realMin, final double realMax, final double mean) {
+            this(min, max, numOfBins, colIndex, colName, BinNumberSelectionStrategy.DecimalRange, realMin, realMax,
+                mean);
         }
 
         HistogramNumericModel(final double min, final double max, final int numOfBins, final int colIndex,
-            final String colName, final BinNumberSelectionStrategy strategy) {
+            final String colName, final BinNumberSelectionStrategy strategy, final double realMin,
+            final double realMax, final double mean) {
             super(numOfBins, colIndex, colName);
             m_strategy = strategy;
             assert max >= min : "min: " + min + ", max: " + max;
             m_min = min;
             m_max = max;
+            m_realMin = realMin;
+            m_realMax = realMax;
+            m_mean = mean;
             m_width = (max - min) / numOfBins;
             double[] binStarts = new double[numOfBins];
             for (int i = 0; i < numOfBins; ++i) {
@@ -424,7 +434,9 @@ public class HistogramColumn implements Cloneable {
         }
 
         ///min and max values in the column.
-        private final double m_min, m_max;
+        private final double m_min, m_max, m_realMin, m_realMax;
+
+        private final double m_mean;
 
         ///width of a bin (bin's max - bin's min)
         private final double m_width;
@@ -452,9 +464,30 @@ public class HistogramColumn implements Cloneable {
          */
         @Override
         protected HistogramModel<Pair<Double, Double>> createUninitializedClone() {
-            MinMaxBinCount adjusted = MinMaxBinCount.adjust(m_min, m_max, m_strategy);
+            MinMaxBinCount adjusted = MinMaxBinCount.adjust(m_min, m_max, m_strategy, getBins().size());
             return new HistogramNumericModel(adjusted.getMin(), adjusted.getMax(), getBins().size(), getColIndex(),
-                getColName());
+                getColName(), m_realMin, m_realMax, m_mean);
+        }
+
+        /**
+         * @return the realMin
+         */
+        public double getRealMin() {
+            return m_realMin;
+        }
+
+        /**
+         * @return the realMax
+         */
+        public double getRealMax() {
+            return m_realMax;
+        }
+
+        /**
+         * @return the mean
+         */
+        public double getMean() {
+            return m_mean;
         }
     }
 
@@ -570,10 +603,10 @@ public class HistogramColumn implements Cloneable {
             return m_binCount;
         }
 
-        static MinMaxBinCount adjust(final double min, final double max, final BinNumberSelectionStrategy strategy) {
+        static MinMaxBinCount adjust(final double min, final double max, final BinNumberSelectionStrategy strategy, final int defaultNumOfBins) {
             switch (strategy) {
                 case Specified:
-                    return new MinMaxBinCount(min, max, 10);
+                    return new MinMaxBinCount(min, max, defaultNumOfBins);
                 case DecimalRange:
                     BigDecimal bMin = new BigDecimal(Double.toString(min)),
                     bMax = new BigDecimal(Double.toString(max));
@@ -582,8 +615,10 @@ public class HistogramColumn implements Cloneable {
                     int power = range.scale();
                     bMin = roundToNearest5Down(bMin, power + 1);
                     bMax = roundToNearest5Up(bMax, power + 1);
-                    range = bMax.subtract(bMin).stripTrailingZeros();
-                    System.out.println(range + " " + range.scale() + " - " + range.precision());
+                    range = bMax.subtract(bMin)/*.stripTrailingZeros()*/;
+                    if (range.scale() < 0) {
+                        range = range.setScale(0);
+                    }
                     BigDecimal width = BigDecimal.ONE.scaleByPowerOfTen(-power - 2);//Math.exp(power * Math.log(10));
                     int binCount = range.divide(width, RoundingMode.UP).intValue();//(int)Math.ceil(range / width);
                     while (hasLargePrimeDivisor(binCount)) {
@@ -594,6 +629,9 @@ public class HistogramColumn implements Cloneable {
                             bMax = bMax.add(diff);
                         }
                         range = range.add(diff);
+                        if (range.scale() < 0) {
+                            range = range.setScale(0);
+                        }
                         binCount = range.divide(width, RoundingMode.UP).intValue();
                     }
                     int twoDivisors = twoDivisors(binCount),
@@ -607,6 +645,70 @@ public class HistogramColumn implements Cloneable {
                             binCount /= 2;
                             --twoDivisors;
                         }
+                    }
+                    switch (binCount) {
+                        case 40:
+                            binCount = 10;
+                            break;
+                        case 38:
+                            binCount = 19;
+                            break;
+                        case 36:
+                            binCount = 9;
+                            break;
+                        case 35:
+                            binCount = 7;
+                        case 34:
+                            binCount = 17;
+                            break;
+                        case 32:
+                            binCount = 8;
+                            break;
+                        case 30:
+                            binCount = 15;
+                            break;
+                        case 28:
+                            binCount = 7;
+                            break;
+                        case 27:
+                            //should not happen
+                            binCount = 9;
+                            break;
+                        case 26:
+                            binCount = 13;
+                            break;
+                        case 25:
+                            binCount = 5;
+                            break;
+                        case 24:
+                            binCount = 12;
+                            break;
+                        case 22:
+                            binCount = 11;
+                            break;
+                        case 21:
+                            binCount = 7;
+                            break;
+                        case 20:
+                            binCount = 10;
+                            break;
+                        case 18:
+                            binCount = 9;
+                            break;
+                        case 16:
+                            binCount = 8;
+                            break;
+                        case 15:
+                            binCount = 5;
+                            break;
+                        case 14:
+                            binCount = 7;
+                            break;
+                        default:
+                            break;
+                    }
+                    if (binCount == 40 || binCount == 20) {
+                        binCount = 10;
                     }
                     //            int more = 1;
                     //            while (binCount <= 3) {
@@ -686,6 +788,8 @@ public class HistogramColumn implements Cloneable {
 
     private BinNumberSelectionStrategy m_binSelectionStrategy = BinNumberSelectionStrategy.Specified;
 
+    private boolean m_showMinMax = false;
+
     /**
      * @param numOfBins The new number of bins.
      * @return The instance with the {@code numOfBins} bins.
@@ -751,6 +855,16 @@ public class HistogramColumn implements Cloneable {
     public HistogramColumn withBinSelectionStrategy(final BinNumberSelectionStrategy strategy) {
         final HistogramColumn ret = safeClone();
         ret.m_binSelectionStrategy = strategy;
+        return ret;
+    }
+
+    /**
+     * @param showMinMax Show min/max/mean values on the x axis?
+     * @return The instance with {@code showMinMax} for show min max property.
+     */
+    public HistogramColumn withShowMinMax(final boolean showMinMax) {
+        final HistogramColumn ret = safeClone();
+        ret.m_showMinMax = showMinMax;
         return ret;
     }
 
@@ -885,6 +999,7 @@ public class HistogramColumn implements Cloneable {
      * @param stats The table to add the column.
      * @param mins The minimal values for {@code columns}.
      * @param maxs The maximal values for {@code columns}.
+     * @param means The mean values for {@code columns}.
      * @param maxBins The maximum number of bins till we draw labels.
      * @param columns The columns to summarize as a histogram.
      * @return The histogram added to the input {@code data} table and the {@link HistogramModel}s.
@@ -892,10 +1007,11 @@ public class HistogramColumn implements Cloneable {
      */
     public Pair<BufferedDataTable, Map<Integer, ? extends HistogramModel<?>>> process(final ExecutionContext exec,
         final BufferedDataTable data, final HiLiteHandler hlHandler, final BufferedDataTable stats,
-        final double[] mins, final double[] maxs, final int maxBins, final String... columns)
+        final double[] mins, final double[] maxs, final double[] means, final int maxBins, final String... columns)
         throws CanceledExecutionException {
         exec.setMessage("Collecting histogram data");
-        final Map<Integer, HistogramNumericModel> histograms = histogramsPrivate(data, hlHandler, mins, maxs, columns);
+        final Map<Integer, HistogramNumericModel> histograms =
+            histogramsPrivate(data, hlHandler, mins, maxs, means, columns);
         exec.setMessage("Generating histogram");
         ColumnRearranger rearranger = createColumnRearranger(data, stats, histograms, maxBins, columns);
         return Pair.<BufferedDataTable, Map<Integer, ? extends HistogramModel<?>>> create(
@@ -936,7 +1052,7 @@ public class HistogramColumn implements Cloneable {
                 assert columnIndex == histogramData.getColIndex() : "Expected: " + columnIndex + ", but got: "
                     + histogramData.getColIndex();
 
-                return createImageCell(histogramData, maxBinCount >= histogramData.getBins().size());
+                return createImageCell(histogramData, false);
             }
 
         });
@@ -951,6 +1067,7 @@ public class HistogramColumn implements Cloneable {
      */
     private void paint(final HistogramModel<?> histogramData, final Graphics2D g) {
         double binWidth = binWidth(histogramData);
+        int height = m_showMinMax && histogramData instanceof HistogramNumericModel ? m_height - MIN_MAX_AREA_HEIGHT : m_height;
         //g.setFont(Font.getFont("Arial").deriveFont((float)(binWidth * .8d)));
         g.setColor(m_fillColor);
         if (histogramData.getBins().isEmpty()) {
@@ -960,31 +1077,72 @@ public class HistogramColumn implements Cloneable {
         for (int i = histogramData.getBins().size(); i-- > 0;) {
             HistogramModel.Bin<?> bin = histogramData.getBins().get(i);
             int upperPosition = upperPosition(histogramData, bin);
-            g.fillRect((int)(i * binWidth), upperPosition, (int)Math.ceil(binWidth), m_height - upperPosition);
+            g.fillRect((int)(i * binWidth), upperPosition, (int)Math.ceil(binWidth), height - upperPosition);
         }
         g.setColor(m_lineColor);
+        g.drawLine(0, height, m_width, height);
         g.setStroke(new BasicStroke(1.5f));
         for (int i = histogramData.getBins().size(); i-- > 0;) {
             HistogramModel.Bin<?> bin = histogramData.getBins().get(i);
             int startX = (int)(i * binWidth), nextX = (int)((i + 1) * binWidth), upper =
                 upperPosition(histogramData, bin);
-            drawCap(g, startX, nextX, upper);
+            drawCap(g, startX, nextX, upper, height);
         }
         g.setColor(ColorAttr.HILITE);
         for (int i = histogramData.getBins().size(); i-- > 0;) {
             Bin<?> bin = histogramData.getBins().get(i);
             if (bin.getHiLited() > 0) {
                 int upper = upperPosition(histogramData.getReferenceNumber(), bin.getHiLited());
-                g.fillRect((int)(i * binWidth), upper, (int)Math.ceil(binWidth), m_height - upper);
+                g.fillRect((int)(i * binWidth), upper, (int)Math.ceil(binWidth), height - upper);
             }
         }
-        g.setColor(ColorAttr.SELECTED_HILITE);
+        //g.setColor(ColorAttr.SELECTED_HILITE);
+        g.setColor(m_lineColor);
         for (int i = histogramData.getBins().size(); i-- > 0;) {
             HistogramModel.Bin<?> bin = histogramData.getBins().get(i);
             int startX = (int)(i * binWidth), nextX = (int)((i + 1) * binWidth);
             if (bin.getHiLited() > 0) {
                 int upper = upperPosition(histogramData.getReferenceNumber(), bin.getHiLited());
-                drawCap(g, startX, nextX, upper);
+                drawCap(g, startX, nextX, upper, height);
+            }
+        }
+        if (m_showMinMax) {
+            paintMinMax(histogramData, g, height);
+        }
+    }
+
+    /**
+     * @param histogramData
+     * @param g
+     * @param height
+     */
+    protected void paintMinMax(final HistogramModel<?> histogramData, final Graphics2D g, final int height) {
+        g.setColor(m_textColor);
+        if (histogramData instanceof HistogramNumericModel) {
+            HistogramNumericModel hnm = (HistogramNumericModel)histogramData;
+
+            double realMin = hnm.getRealMin(), realMax = hnm.getRealMax();
+            NumberFormat format = new FormatDoubles().minimalFormatterForNumbers(realMin, realMax);
+            String min = format.format(realMin);
+            String max = format.format(realMax);
+            FontMetrics fm = g.getFontMetrics();
+            Rectangle2D minBounds = fm.getStringBounds(min, g);
+            Rectangle2D maxBounds = fm.getStringBounds(max, g);
+            //Rectangle2D meanBounds = fm.getStringBounds(mean, g);
+            List<Bin<Pair<Double, Double>>> bins = hnm.getBins();
+            double visibleMin = bins.get(0).getDef().getFirst().doubleValue(), visibleMax = bins.get(bins.size() - 1).getDef().getSecond().doubleValue();
+            double visibleRange = visibleMax - visibleMin;
+            int minPos = (int)((realMin - visibleMin)/ visibleRange * m_width), maxPos = (int)((realMax - visibleMin) / visibleRange * m_width);
+            //int meanPos = (int)((hnm.getMean() - visibleMin) / visibleRange * m_width);
+            if (minPos + minBounds.getWidth() + maxBounds.getWidth() + 2 < maxPos) {
+//                if (minPos + minBounds.getWidth() + meanBounds.getWidth()/2 + 2 < meanPos && meanPos + meanBounds.getWidth() / 2 + 2 < maxPos - maxBounds.getWidth()) {
+//                    g.drawString(mean, (int)(meanPos - meanBounds.getWidth() / 2 - 1), m_height);
+//                }
+                for (int pos : new int[] {minPos/*, meanPos*/, maxPos}) {
+                    g.drawLine(pos, height, pos, height + MIN_MAX_AREA_HEIGHT / 3);
+                }
+                g.drawString(min, minPos + 1, m_height);
+                g.drawString(max, (int)(maxPos - maxBounds.getWidth() - 1), m_height);
             }
         }
     }
@@ -1008,6 +1166,8 @@ public class HistogramColumn implements Cloneable {
         g.setColor(m_textColor);
         g.translate(m_width, 0);
         g.rotate(Math.PI / 2);
+        int height =
+            m_showMinMax && histogramData instanceof HistogramNumericModel ? m_height - MIN_MAX_AREA_HEIGHT : m_height;
         for (int i = histogramData.getBins().size(); i-- > 0;) {
             HistogramModel.Bin<?> bin = histogramData.getBins().get(i);
             int startX = (int)(i * binWidth);
@@ -1020,7 +1180,7 @@ public class HistogramColumn implements Cloneable {
                 label = display.getText();
             }
             Rectangle2D bounds = g.getFontMetrics().getStringBounds(label, g);
-            g.drawString(label, m_height - 2 - (int)bounds.getWidth(), (int)(m_width - startX - binWidth / 8));
+            g.drawString(label, height - 1 - (int)bounds.getWidth(), (int)(m_width - startX - binWidth / 8));
         }
     }
 
@@ -1031,11 +1191,12 @@ public class HistogramColumn implements Cloneable {
      * @param startX The x position of the left line.
      * @param nextX The x position of the right line.
      * @param upper The y position of the top line.
+     * @param height The y position of the bottom area.
      */
-    private void drawCap(final Graphics2D g, final int startX, final int nextX, final int upper) {
-        g.drawLine(startX, upper, startX, m_height);
+    private void drawCap(final Graphics2D g, final int startX, final int nextX, final int upper, final int height) {
+        g.drawLine(startX, upper, startX, height);
         g.drawLine(startX, upper, nextX, upper);
-        g.drawLine(nextX, upper, nextX, m_height);
+        g.drawLine(nextX, upper, nextX, height);
     }
 
     /**
@@ -1055,7 +1216,8 @@ public class HistogramColumn implements Cloneable {
      * @return The position vertically of the top of the bin.
      */
     private int upperPosition(final int referenceCount, final int count) {
-        return (int)((referenceCount - count) * m_height / (double)referenceCount);
+        int height = m_showMinMax ? m_height - MIN_MAX_AREA_HEIGHT : m_height;
+        return (int)((referenceCount - count) * height / (double)referenceCount);
     }
 
     /**
@@ -1065,17 +1227,18 @@ public class HistogramColumn implements Cloneable {
      * @param hlHandler The {@link HiLiteHandler}.
      * @param mins The minimum values. (Preferably non-infinite.)
      * @param maxs The maximum values. (Preferably non-infinite.)
+     * @param means The mean values. (Preferably non-NaN.)
      * @param columns The name of the columns.
      * @return The numeric {@link HistogramModel} for {@code columns} from {@code data} (where the keys are the array
      *         indices from {@code columns}).
      */
     public Map<Integer, ? extends HistogramModel<?>> histograms(final DataTable data, final HiLiteHandler hlHandler,
-        final double[] mins, final double[] maxs, final String... columns) {
-        return histogramsPrivate(data, hlHandler, mins, maxs, columns);
+        final double[] mins, final double[] maxs, final double[] means, final String... columns) {
+        return histogramsPrivate(data, hlHandler, mins, maxs, means, columns);
     }
 
     private Map<Integer, HistogramNumericModel> histogramsPrivate(final DataTable data, final HiLiteHandler hlHandler,
-        final double[] mins, final double[] maxs, final String... columns) {
+        final double[] mins, final double[] maxs, final double[] means, final String... columns) {
         final Map<Integer, HistogramNumericModel> histograms = new HashMap<Integer, HistogramNumericModel>();
         for (int columnIndex = 0; columnIndex < columns.length; ++columnIndex) {
             String column = columns[columnIndex];
@@ -1087,7 +1250,8 @@ public class HistogramColumn implements Cloneable {
                 if (Double.isInfinite(min) || Double.isInfinite(max) || Double.isNaN(min) || Double.isNaN(max)) {
                     continue;
                 }
-                int numOfBins = addHistogramNumericModel(histograms, columnIndex, colSpec, min, max);
+                double mean = means[columnIndex];
+                int numOfBins = addHistogramNumericModel(histograms, columnIndex, colSpec, min, max, mean);
                 NodeLogger.getLogger(HistogramColumn.class).debug(
                     "Number of bins: " + numOfBins + " for " + colSpec + " [" + mins[columnIndex] + ", "
                         + maxs[columnIndex] + "]");
@@ -1117,45 +1281,15 @@ public class HistogramColumn implements Cloneable {
      * @param colSpec The {@link DataColumnSpec}.
      * @param minOrig The original min value.
      * @param maxOrig The original max value.
+     * @param mean The mean value.
      * @return The bin count of the model.
      */
     protected int addHistogramNumericModel(final Map<Integer, HistogramNumericModel> histograms, final int columnIndex,
-        final DataColumnSpec colSpec, final double minOrig, final double maxOrig) {
-        MinMaxBinCount adjusted = MinMaxBinCount.adjust(minOrig, maxOrig, m_binSelectionStrategy);
+        final DataColumnSpec colSpec, final double minOrig, final double maxOrig, final double mean) {
+        MinMaxBinCount adjusted = MinMaxBinCount.adjust(minOrig, maxOrig, m_binSelectionStrategy, m_numOfBins);
         histograms.put(Integer.valueOf(columnIndex), new HistogramNumericModel(adjusted.getMin(), adjusted.getMax(),
-            adjusted.getBinCount(), columnIndex, colSpec.getName()));
+            adjusted.getBinCount(), columnIndex, colSpec.getName(), minOrig, maxOrig, mean));
         return adjusted.getBinCount();
-    }
-
-    /**
-     * @param min
-     * @param max
-     * @param binSelectionStrategy
-     * @return
-     */
-    @Deprecated
-    private static double adjustMin(final double min, final double max,
-        final BinNumberSelectionStrategy binSelectionStrategy) {
-        switch (binSelectionStrategy) {
-            case Specified:
-                return min;
-            case DecimalRange:
-                BigDecimal bMin = new BigDecimal(Double.toString(min)),
-                bMax = new BigDecimal(Double.toString(max));
-                if (bMin.scale() == bMax.scale()) {
-                    return bMin.subtract(BigDecimal.valueOf(5).scaleByPowerOfTen(-bMin.scale() - 1)).doubleValue();
-                }
-                BigDecimal range = bMax.subtract(bMin);
-                range = range.round(new MathContext(2, RoundingMode.UP));
-                System.out.println(range + " " + range.scale() + " - " + range.precision());
-                if (bMin.scale() > range.scale()) {
-                    BigDecimal ret = roundToNearest5Down(bMin, range.stripTrailingZeros().scale() + 1);//bMin.round(new MathContext(Math.max(range.scale() - range.precision() + 1, 1), RoundingMode.FLOOR)).doubleValue();
-                    return ret.doubleValue();
-                }
-                return min;
-            default:
-                throw new IllegalStateException("Unknown strategy: " + binSelectionStrategy);
-        }
     }
 
     /**
@@ -1207,88 +1341,6 @@ public class HistogramColumn implements Cloneable {
     }
 
     /**
-     * @param min
-     * @param max
-     * @param binSelectionStrategy
-     * @return
-     */
-    @Deprecated
-    private static double adjustMax(final double min, final double max,
-        final BinNumberSelectionStrategy binSelectionStrategy) {
-        switch (binSelectionStrategy) {
-            case Specified:
-                return min;
-            case DecimalRange:
-                BigDecimal bMin = new BigDecimal(Double.toString(min)),
-                bMax = new BigDecimal(Double.toString(max));
-                if (bMin.scale() == bMax.scale()) {
-                    return bMax.add(BigDecimal.valueOf(5).scaleByPowerOfTen(-bMin.scale() - 1)).doubleValue();
-                }
-                BigDecimal range = bMax.subtract(bMin);
-                range = range.round(new MathContext(2, RoundingMode.UP));
-                System.out.println(range + " " + range.scale() + " - " + range.precision());
-                if (bMax.scale() > range.scale()) {
-                    double ret = roundToNearest5Up(bMax, range.stripTrailingZeros().scale() + 1).doubleValue();//bMax.round(new MathContext(Math.max(range.scale() - range.precision() + 1, 1), RoundingMode.CEILING)).doubleValue();
-                    return ret;
-                }
-                return max;
-            default:
-                throw new IllegalStateException("Unknown strategy: " + binSelectionStrategy);
-        }
-    }
-
-    /**
-     * Computes according to the bin selection strategy ({@link BinNumberSelectionStrategy}) the number of bins.
-     *
-     * @param min The minimum value.
-     * @param max The maximum value.
-     * @return The number of bins to use.
-     */
-    @Deprecated
-    private int computeBinNumber(final double min, final double max) {
-        switch (m_binSelectionStrategy) {
-            case Specified:
-                return m_numOfBins;
-            case DecimalRange:
-                //                double range = max - min;
-                //                if (range < 1E-11) {
-                //                    return 1;
-                //                }
-                //                int power = (int)Math.floor(Math.log10(range));
-                //                assert power >= -12 : "power: " + power;
-                //
-                //                double width = Math.exp(power * Math.log(10));
-                //                int binCount = (int)Math.ceil(range / width);
-                //                if (binCount <= 3) {
-                //                    binCount = (int)Math.ceil(range / Math.exp((power - 1) * Math.log(10)));
-                //                }
-                //                m_numOfBins = binCount;
-                //                return binCount;
-                java.math.BigDecimal range =
-                    new java.math.BigDecimal(Double.toString(max)).subtract(new java.math.BigDecimal(Double
-                        .toString(min)));
-                int power = range.stripTrailingZeros().scale();//(int)Math.floor(Math.log10(range));
-                if (power < -11) {
-                    return 1;
-                }
-                //assert power >= -12 : "power: " + power;
-
-                java.math.BigDecimal width = scaled5(power);//java.math.BigDecimal.ONE.scaleByPowerOfTen(-power + 1);//Math.exp(power * Math.log(10));
-                int binCount = range.divide(width, java.math.RoundingMode.UP).intValue();//(int)Math.ceil(range / width);
-                int more = 1;
-                while (binCount <= 3) {
-                    binCount =
-                        range.divide(java.math.BigDecimal.ONE.scaleByPowerOfTen(-power - (more++)),
-                            java.math.RoundingMode.UP).intValue();//(int)Math.ceil(range / Math.exp((power - 1) * Math.log(10)));
-                }
-                return binCount;
-            default:
-                throw new UnsupportedOperationException("Not supported: " + m_binSelectionStrategy
-                    + ", implementor: please implement.");
-        }
-    }
-
-    /**
      * @return The {@link DataColumnSpec} for the column to be created.
      */
     public DataColumnSpec createHistogramColumnSpec() {
@@ -1312,6 +1364,7 @@ public class HistogramColumn implements Cloneable {
      * @param dataArrayGz The data array file for the row keys.
      * @param nominalColumns The nominal columns.
      * @param strategy The strategy used to compute the bins.
+     * @param means The mean values for the numeric columns.
      * @return A triple (Pair(Pair(,),)) of histograms, numeric and nominal row keys.
      * @throws IOException Failed to read the files.
      * @throws InvalidSettingsException Something went wrong.
@@ -1319,9 +1372,11 @@ public class HistogramColumn implements Cloneable {
     public static
         Pair<Pair<Map<Integer, ? extends HistogramModel<?>>, Map<Integer, Map<Integer, Set<RowKey>>>>, Map<Integer, Map<DataValue, Set<RowKey>>>>
         loadHistograms(final File histogramsGz, final File dataArrayGz, final Set<String> nominalColumns,
-            final BinNumberSelectionStrategy strategy) throws IOException, InvalidSettingsException {
+            final BinNumberSelectionStrategy strategy, final double[] means) throws IOException,
+            InvalidSettingsException {
         Map<Integer, Map<Integer, Set<RowKey>>> numericKeys = new HashMap<Integer, Map<Integer, Set<RowKey>>>();
-        Map<Integer, HistogramNumericModel> histograms = loadHistogramsPrivate(histogramsGz, numericKeys, strategy);
+        Map<Integer, HistogramNumericModel> histograms =
+            loadHistogramsPrivate(histogramsGz, numericKeys, strategy, means);
         Map<Integer, Map<DataValue, Set<RowKey>>> nominalKeys = new HashMap<Integer, Map<DataValue, Set<RowKey>>>();
         ContainerTable table = DataContainer.readFromZip(dataArrayGz);
         Set<Integer> numericColIndices = numericKeys.keySet();
@@ -1367,19 +1422,20 @@ public class HistogramColumn implements Cloneable {
      * @param histogramsGz The file for the histograms.
      * @param numericKeys The keys map to fill.
      * @param strategy The strategy used to compute the bins.
+     * @param means The mean values for the numeric columns.
      * @return The {@link Map} from the column indices to the numeric {@link HistogramModel}s.
      * @throws IOException Problem reading the file.
      * @throws InvalidSettingsException Something went wrong.
      */
     public static Map<Integer, ? extends HistogramModel<?>> loadHistograms(final File histogramsGz,
-        final Map<Integer, Map<Integer, Set<RowKey>>> numericKeys, final BinNumberSelectionStrategy strategy)
-        throws IOException, InvalidSettingsException {
-        return loadHistogramsPrivate(histogramsGz, numericKeys, strategy);
+        final Map<Integer, Map<Integer, Set<RowKey>>> numericKeys, final BinNumberSelectionStrategy strategy,
+        final double[] means) throws IOException, InvalidSettingsException {
+        return loadHistogramsPrivate(histogramsGz, numericKeys, strategy, means);
     }
 
     private static Map<Integer, HistogramNumericModel> loadHistogramsPrivate(final File histogramsGz,
-        final Map<Integer, Map<Integer, Set<RowKey>>> numericKeys, final BinNumberSelectionStrategy strategy)
-        throws IOException, InvalidSettingsException {
+        final Map<Integer, Map<Integer, Set<RowKey>>> numericKeys, final BinNumberSelectionStrategy strategy,
+        final double[] means) throws IOException, InvalidSettingsException {
         final FileInputStream is = new FileInputStream(histogramsGz);
         final GZIPInputStream inData = new GZIPInputStream(is);
         final ConfigRO config = NodeSettings.loadFromXML(inData);
@@ -1394,10 +1450,13 @@ public class HistogramColumn implements Cloneable {
             String colName = h.getString(COL_NAME);
             double[] binMins = h.getDoubleArray(BIN_MINS), binMaxes = h.getDoubleArray(BIN_MAXES);
             int[] binCounts = h.getIntArray(BIN_COUNTS);
-            MinMaxBinCount adjusted = MinMaxBinCount.adjust(min, max, strategy);
+            double mean = means[colIdx];
+            ///This 10 might not work always, though it is not used with the current implementation
+            MinMaxBinCount adjusted = MinMaxBinCount.adjust(min, max, strategy, 10);
             min = adjusted.getMin();
             max = adjusted.getMax();
-            HistogramNumericModel histogramData = new HistogramNumericModel(min, max, binMins.length, colIdx, colName);
+            HistogramNumericModel histogramData =
+                new HistogramNumericModel(min, max, binMins.length, colIdx, colName, min, max, mean);
             for (int i = binMins.length; i-- > 0;) {
                 histogramData.getBins().set(i, histogramData.new NumericBin(binMins[i], binMaxes[i]));
                 histogramData.getBins().get(i).setCount(binCounts[i]);
@@ -1530,7 +1589,7 @@ public class HistogramColumn implements Cloneable {
         JPanel ret;
         if (histogramDescription instanceof HistogramModel) {
             final HistogramModel<?> hd = (HistogramModel<?>)histogramDescription;
-            ret = new HistogramComponent(hd, hiLiteHandler, rowKeys, hd.getBins().size() <= maxBinSize);
+            ret = new HistogramComponent(hd, hiLiteHandler, rowKeys, false);
         } else {
             ret = new JPanel();
         }
@@ -1570,7 +1629,7 @@ public class HistogramColumn implements Cloneable {
             HistogramNominalModel model =
                 new HistogramNominalModel(new LinkedHashMap<DataValue, Integer>(nominalValues), i, colName,
                     statTable.getRowCount());
-            row[row.length - 1] = createImageCell(model, maxBinCount >= model.getBins().size());
+            row[row.length - 1] = createImageCell(model, false);
             nominals.addRowToTable(new DefaultRow(colName + " (as nominal)", row));
         }
         nominals.close();
@@ -1606,7 +1665,7 @@ public class HistogramColumn implements Cloneable {
             HistogramNominalModel model =
                 new HistogramNominalModel(new LinkedHashMap<DataValue, Integer>(nominalValues), i, colName,
                     statTable.getRowCount());
-            row[row.length - 1] = createImageCell(model, maxBinCount >= model.getBins().size());
+            row[row.length - 1] = createImageCell(model, false);
             nominals.addRowToTable(new DefaultRow(colName, row));
         }
         nominals.close();

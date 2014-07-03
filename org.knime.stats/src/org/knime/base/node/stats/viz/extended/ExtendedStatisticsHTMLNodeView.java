@@ -548,7 +548,9 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
                 final int colId = Integer.parseInt((String)attrs.getAttribute("colid"));
                 final HistogramColumn hc =
                     HistogramColumn.getDefaultInstance().withHistogramWidth(m_model.getHistogramWidth().getIntValue())
-                        .withHistogramHeight(m_model.getHistogramHeight().getIntValue()).withBinSelectionStrategy(BinNumberSelectionStrategy.DecimalRange);
+                        .withHistogramHeight(m_model.getHistogramHeight().getIntValue())
+                        .withBinSelectionStrategy(BinNumberSelectionStrategy.DecimalRange)
+                        .withShowMinMax(m_model.getShowMinMax().getBooleanValue());
                 return new ObjectView(elem) {
                     /**
                      * {@inheritDoc}

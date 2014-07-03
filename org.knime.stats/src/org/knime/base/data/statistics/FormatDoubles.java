@@ -86,6 +86,31 @@ public class FormatDoubles {
         return nf;
     }
 
+    /**
+     * Selects the {@link NumberFormatter} appropriate for all the numbers with minimal number of decimal digits. (Like
+     * having the same decimal digits to use.)
+     *
+     * @param ds The numbers.
+     * @return The {@link NumberFormat} appropriate to format them.
+     */
+    public NumberFormat minimalFormatterForNumbers(final double... ds) {
+        int[] highestDigits = highestDigits(ds);
+        int[] decimalDigits = decimalDigits(ds);
+        int highestDigit = max(highestDigits);
+        int decimalDigit = min(decimalDigits);
+        if (highestDigit >= 9) {
+            DecimalFormat ret = new DecimalFormat("0.000E0");
+            ret.setDecimalFormatSymbols(DecimalFormatSymbols.getInstance(Locale.ROOT));
+            return ret;
+        }
+        NumberFormat nf = (NumberFormat)NumberFormat.getNumberInstance(Locale.ROOT).clone();
+        nf.setMinimumFractionDigits(decimalDigit);
+        nf.setMaximumFractionDigits(decimalDigit);
+        nf.setMaximumIntegerDigits(highestDigit);
+        nf.setMinimumIntegerDigits(1);
+        return nf;
+    }
+
     private static double[] POWERS_OF_TEN = new double[]{10d, 100d, 1000d, 1E4, 1E5, 1E6, 1E7, 1E8, 1E9};
 
     /**
@@ -146,5 +171,13 @@ public class FormatDoubles {
             max = Math.max(max, v);
         }
         return max;
+    }
+
+    private static int min(final int... values) {
+        int min = Integer.MAX_VALUE;
+        for (int v : values) {
+            min = Math.min(min, v);
+        }
+        return min;
     }
 }

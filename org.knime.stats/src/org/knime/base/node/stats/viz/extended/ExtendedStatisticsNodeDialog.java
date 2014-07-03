@@ -87,5 +87,6 @@ class ExtendedStatisticsNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentNumberEdit(ExtendedStatisticsNodeModel.createHistogramWidth(), "Width: "));
         addDialogComponent(new DialogComponentNumberEdit(ExtendedStatisticsNodeModel.createHistogramHeight(),
             "Height: "));
+        addDialogComponent(new DialogComponentBoolean(ExtendedStatisticsNodeModel.createShowMinMax(), "Show min/max values"));
     }
 }

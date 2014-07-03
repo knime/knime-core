@@ -178,6 +178,12 @@ class ExtendedStatisticsNodeModel extends NodeModel {
     /** The default value for enabling HiLite. */
     protected static final boolean DEFAULT_ENABLE_HILITE = false;
 
+    /** The configuration key for showing the min/max(/mean) values on the x axis. */
+    protected static final String CFGKEY_SHOW_MIN_MAX = "show min max";
+
+    /** The default value for showing the min/max(/mean) values on the x axis. */
+    protected static final boolean DEFAULT_SHOW_MIN_MAX = false;
+
     private static final String HISTOGRAMS_GZ = "histograms.xml.gz";
 
     private static final String DATA_ARRAY_GZ = "dataarray.gz";
@@ -221,6 +227,15 @@ class ExtendedStatisticsNodeModel extends NodeModel {
     }
 
     /**
+     * Helper method to create show min/max values on the figures.
+     *
+     * @return A {@link SettingsModelBoolean} for showing the min/max values on the figures.
+     */
+    protected static SettingsModelBoolean createShowMinMax() {
+        return new SettingsModelBoolean(CFGKEY_SHOW_MIN_MAX, DEFAULT_SHOW_MIN_MAX);
+    }
+
+    /**
      * @return create nominal filter model
      */
     static SettingsModelColumnFilter2 createNominalFilterModel() {
@@ -257,6 +272,8 @@ class ExtendedStatisticsNodeModel extends NodeModel {
             m_histogramHeight = createHistogramHeight();
 
     private SettingsModelBoolean m_enableHiLite = createEnableHiLite();
+
+    private SettingsModelBoolean m_showMinMax = createShowMinMax();
 
     /// column index -> nominal value -> keys
     private Map<Integer, Map<DataValue, Set<RowKey>>> m_nominalKeys =
@@ -317,7 +334,7 @@ class ExtendedStatisticsNodeModel extends NodeModel {
         ExecutionContext histogram = exec.createSubExecutionContext(1.0 / 2);
         final HistogramColumn histogramColumn = createHistogramColumn();
         HiLiteHandler hlHandler = getEnableHiLite().getBooleanValue() ? getInHiLiteHandler(0) : new HiLiteHandler();
-        double[] mins = getStatTable().getMin(), maxes = getStatTable().getMax();
+        double[] mins = getStatTable().getMin(), maxes = getStatTable().getMax(), means = getStatTable().getMean();
         for (int i = 0; i < maxes.length; i++) {
             DataCell min = getStatTable().getNonInfMin(i);
             if (min.isMissing()) {
@@ -334,7 +351,7 @@ class ExtendedStatisticsNodeModel extends NodeModel {
             }
         }
         Pair<BufferedDataTable, Map<Integer, ? extends HistogramModel<?>>> pair =
-            histogramColumn.process(histogram, inData[0], hlHandler, ret[0], mins, maxes, numOfNominalValues(),
+            histogramColumn.process(histogram, inData[0], hlHandler, ret[0], mins, maxes, means, numOfNominalValues(),
                 getColumnNames());
         //        final BufferedDataTable outTable =
         //            histogramColumn.appendNominal(pair.getFirst(), getStatTable(), hlHandler, exec, numOfNominalValues());
@@ -355,7 +372,7 @@ class ExtendedStatisticsNodeModel extends NodeModel {
             m_subTable =
                 new DefaultDataArray(projection.createColumnRearrangeTable(inData[0], rearranger, projection), 1,
                     inData[0].getRowCount(), save);
-            m_histograms = histogramColumn.histograms(inData[0], getInHiLiteHandler(0), mins, maxes, getColumnNames());
+            m_histograms = histogramColumn.histograms(inData[0], getInHiLiteHandler(0), mins, maxes, means, getColumnNames());
             Set<String> nominalColumns = new LinkedHashSet<String>();
             for (int i = 0; i < inData[0].getSpec().getNumColumns(); ++i) {
                 Map<DataCell, Integer> nominalValues = getStatTable().getNominalValues(i);
@@ -413,7 +430,8 @@ class ExtendedStatisticsNodeModel extends NodeModel {
         return HistogramColumn.getDefaultInstance().withNumberOfBins(4)
             .withImageFormat(getImageFormat().getStringValue()).withHistogramWidth(getHistogramWidth().getIntValue())
             .withHistogramHeight(getHistogramHeight().getIntValue())
-            .withBinSelectionStrategy(BinNumberSelectionStrategy.DecimalRange);
+            .withBinSelectionStrategy(BinNumberSelectionStrategy.DecimalRange)
+            .withShowMinMax(getShowMinMax().getBooleanValue());
     }
 
     /**
@@ -533,6 +551,7 @@ class ExtendedStatisticsNodeModel extends NodeModel {
         getHistogramWidth().saveSettingsTo(settings);
         getHistogramHeight().saveSettingsTo(settings);
         getEnableHiLite().saveSettingsTo(settings);
+        getShowMinMax().saveSettingsTo(settings);
     }
 
     /**
@@ -548,6 +567,7 @@ class ExtendedStatisticsNodeModel extends NodeModel {
         getHistogramWidth().loadSettingsFrom(settings);
         getHistogramHeight().loadSettingsFrom(settings);
         getEnableHiLite().loadSettingsFrom(settings);
+        getShowMinMax().loadSettingsFrom(settings);
     }
 
     /**
@@ -569,6 +589,7 @@ class ExtendedStatisticsNodeModel extends NodeModel {
         getHistogramWidth().validateSettings(settings);
         getHistogramHeight().validateSettings(settings);
         getEnableHiLite().validateSettings(settings);
+        getShowMinMax().validateSettings(settings);
     }
 
     /**
@@ -578,11 +599,12 @@ class ExtendedStatisticsNodeModel extends NodeModel {
     protected void loadInternals(final File internDir, final ExecutionMonitor exec) throws IOException {
         NodeSettingsRO sett = NodeSettings.loadFromXML(new FileInputStream(
             new File(internDir, "statistic.xml.gz")));
-    try {
-        m_statTable = Statistics3Table.load(sett);
-    } catch (InvalidSettingsException ise) {
-        throw new IOException(ise);
-    }
+        try {
+            m_statTable = Statistics3Table.load(sett);
+        } catch (InvalidSettingsException ise) {
+            throw new IOException(ise);
+        }
+        double[] means = getStatTable().getMean();
         if (m_enableHiLite.getBooleanValue()) {
             File histogramsGz = new File(internDir, HISTOGRAMS_GZ);
             File dataArrayGz = new File(internDir, DATA_ARRAY_GZ);
@@ -595,7 +617,7 @@ class ExtendedStatisticsNodeModel extends NodeModel {
                     }
                 }
                 Pair<Pair<Map<Integer, ? extends HistogramModel<?>>, Map<Integer, Map<Integer, Set<RowKey>>>>, Map<Integer, Map<DataValue, Set<RowKey>>>> ppair =
-                    HistogramColumn.loadHistograms(histogramsGz, dataArrayGz, nominalColumnNames, BIN_SELECTION_STRATEGY);
+                    HistogramColumn.loadHistograms(histogramsGz, dataArrayGz, nominalColumnNames, BIN_SELECTION_STRATEGY, means);
                 m_histograms = ppair.getFirst().getFirst();
                 m_buckets = ppair.getFirst().getSecond();
                 m_nominalKeys = ppair.getSecond();
@@ -612,7 +634,7 @@ class ExtendedStatisticsNodeModel extends NodeModel {
             m_nominalKeys = Collections.emptyMap();
             try {
                 m_buckets = new HashMap<Integer, Map<Integer, Set<RowKey>>>();
-                m_histograms = HistogramColumn.loadHistograms(histogramsGz, m_buckets, BIN_SELECTION_STRATEGY);
+                m_histograms = HistogramColumn.loadHistograms(histogramsGz, m_buckets, BIN_SELECTION_STRATEGY, means);
                 m_buckets.clear();
             } catch (InvalidSettingsException e) {
                 m_histograms = Collections.emptyMap();
@@ -668,6 +690,13 @@ class ExtendedStatisticsNodeModel extends NodeModel {
      */
     protected SettingsModelBoolean getEnableHiLite() {
         return m_enableHiLite;
+    }
+
+    /**
+     * @return the showMinMax
+     */
+    public SettingsModelBoolean getShowMinMax() {
+        return m_showMinMax;
     }
 
     /**
