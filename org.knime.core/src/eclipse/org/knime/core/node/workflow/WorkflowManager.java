@@ -138,9 +138,9 @@ import org.knime.core.node.workflow.Workflow.NodeAndInports;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
+import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeContainerTemplateLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
@@ -7686,19 +7686,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (this == ROOT) {
             throw new IOException("Can't save root workflow");
         }
-        ReferencedFile ncDirRef = getNodeContainerDirectory();
-        if (!isProject()) {
-            throw new IOException("Cannot call save-as on a non-project workflow");
-        }
-        directory.mkdirs();
-        if (!directory.isDirectory() || !directory.canWrite()) {
-            throw new IOException("Cannot write to " + directory);
-        }
-        boolean isNCDirNullOrRootReferenceFolder = ncDirRef == null || ncDirRef.getParent() == null;
-        if (!isNCDirNullOrRootReferenceFolder) {
-            throw new IOException("Referenced directory pointer is not hierarchical: " + ncDirRef);
-        }
         synchronized (m_workflowMutex) {
+            ReferencedFile ncDirRef = getNodeContainerDirectory();
+            if (!isProject()) {
+                throw new IOException("Cannot call save-as on a non-project workflow");
+            }
+            directory.mkdirs();
+            if (!directory.isDirectory() || !directory.canWrite()) {
+                throw new IOException("Cannot write to " + directory);
+            }
+            boolean isNCDirNullOrRootReferenceFolder = ncDirRef == null || ncDirRef.getParent() == null;
+            if (!isNCDirNullOrRootReferenceFolder) {
+                throw new IOException("Referenced directory pointer is not hierarchical: " + ncDirRef);
+            }
+            ReferencedFile autoSaveDirRef = getAutoSaveDirectory();
             ExecutionMonitor saveExec;
             File ncDir = ncDirRef != null ? ncDirRef.getFile() : null;
             if (!ConvenienceMethods.areEqual(ncDir, directory)) { // new location
@@ -7714,6 +7715,24 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         .notFileFilter(FileFilterUtils.nameFileFilter(VMFileLocker.LOCK_FILE, IOCase.SENSITIVE)));
                     exec.setMessage("Incremental save");
                     ncDirRef.changeRoot(directory);
+                    if (autoSaveDirRef != null) {
+                        File newLoc = WorkflowSaveHelper.getAutoSaveDirectory(ncDirRef);
+                        final File autoSaveDir = autoSaveDirRef.getFile();
+                        if (autoSaveDir.exists()) {
+                            try {
+                                FileUtils.moveDirectory(autoSaveDir, newLoc);
+                                autoSaveDirRef.changeRoot(newLoc);
+                                LOGGER.debugWithFormat("Moved auto-save directory from \"%s\" to \"%s\"",
+                                    autoSaveDir.getAbsolutePath(), newLoc.getAbsolutePath());
+                            } catch (IOException ioe) {
+                                LOGGER.error(String.format("Couldn't move auto save directory \"%s\" to \"%s\": %s",
+                                    autoSaveDir.getAbsolutePath(), newLoc.getAbsolutePath(), ioe.getMessage()), ioe);
+                            }
+                        } else {
+                            autoSaveDirRef.changeRoot(newLoc);
+                        }
+
+                    }
                     m_isWorkflowDirectoryReadonly = false;
                 } finally {
                     ncDirRef.writeUnlock();
@@ -8039,11 +8058,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * (has no corresponding node directory).
      */
     public boolean renameWorkflowDirectory(final String newName) {
-        ReferencedFile file = getNodeContainerDirectory();
-        if (file == null) {
-            throw new IllegalStateException("Workflow has not been saved yet.");
+        synchronized (m_workflowMutex) {
+            ReferencedFile file = getNodeContainerDirectory();
+            if (file == null) {
+                throw new IllegalStateException("Workflow has not been saved yet.");
+            }
+            return file.rename(newName);
         }
-        return file.rename(newName);
     }
 
     /** Get reference to credentials store used to persist name/passwords.
