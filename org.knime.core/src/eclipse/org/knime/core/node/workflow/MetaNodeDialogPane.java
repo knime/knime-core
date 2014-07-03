@@ -45,6 +45,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -208,8 +209,8 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                 dpanel.setLayout(boxLayout2);
                 dpanel.setBorder(BorderFactory.createTitledBorder((String) null));
 
-                JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
-                p.add(nodePanel);
+                JPanel p = new JPanel(new BorderLayout());
+                p.add(nodePanel, BorderLayout.CENTER);
                 dpanel.add(p);
                 m_panel.add(dpanel);
             }
