@@ -646,8 +646,8 @@
             id="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
-            factory-class="org.knime.base.node.preproc.rename2.Rename2NodeFactory"
-            id="org.knime.base.node.preproc.rename2.Rename2NodeFactory"/>
+            factory-class="org.knime.base.node.preproc.rename.RenameNodeFactory"
+            id="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.columnrenameregex.ColumnRenameRegexNodeFactory"
