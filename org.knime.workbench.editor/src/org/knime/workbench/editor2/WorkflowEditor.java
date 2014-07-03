@@ -985,7 +985,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                             isEnableAutoSave = false;
                         } else {
                             File parentDir = autoSaveDirectory.getParentFile();
-                            String date = DateFormatUtils.format(autoSaveDirectory.lastModified(), "yyyy-MM-dd HH:mm");
+                            String date = DateFormatUtils.format(autoSaveDirectory.lastModified(), "yyyy-MM-dd HH-mm");
                             String newName = wfDir.getName() + " (Auto-Save Copy - " + date + ")";
                             int unique = 1;
                             File restoredAutoSaveDirectory;
