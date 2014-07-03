@@ -164,12 +164,11 @@ public class DateAndTimeCell extends DataCell
     /**
      * A date timestamp without time.
      *
-     * @param year the year
-     * @param month the month (1-12)
-     * @param dayOfMonth the day of the month (1-31)
+     * @param year the year {@link Calendar#YEAR}
+     * @param month the month {@link Calendar#MONTH}
+     * @param dayOfMonth day of month {@link Calendar#DAY_OF_MONTH}
      */
-    public DateAndTimeCell(final int year, final int month,
-            final int dayOfMonth) {
+    public DateAndTimeCell(final int year, final int month, final int dayOfMonth) {
         m_utcCalendar = getUTCCalendar();
         m_utcCalendar.clear();
         m_utcCalendar.set(year, month, dayOfMonth);
@@ -181,13 +180,12 @@ public class DateAndTimeCell extends DataCell
     /**
      * A timestamp without date.
      *
-     * @param hourOfDay the hour of the day
-     * @param minute the minute
-     * @param second the second
-     * @param milliseconds the milliseconds (or <0 if they should not be set)
+     * @param hourOfDay hour of day {@link Calendar#HOUR_OF_DAY}
+     * @param minute minute {@link Calendar#MINUTE}
+     * @param second second {@link Calendar#SECOND}
+     * @param milliseconds the milliseconds (or 0 if they should not be set)
      */
-    public DateAndTimeCell(final int hourOfDay, final int minute,
-            final int second, final int milliseconds) {
+    public DateAndTimeCell(final int hourOfDay, final int minute, final int second, final int milliseconds) {
         m_utcCalendar = getUTCCalendar();
         m_utcCalendar.clear();
         m_utcCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
@@ -226,8 +224,7 @@ public class DateAndTimeCell extends DataCell
      * @param hourOfDay hour of day {@link Calendar#HOUR_OF_DAY}
      * @param minute minute {@link Calendar#MINUTE}
      * @param second second {@link Calendar#SECOND}
-     * @param millisecond milliseconds {@link Calendar#MILLISECOND}
-     *    (or <0 if they should not be set)
+     * @param millisecond milliseconds {@link Calendar#MILLISECOND} (or &lt 0 if they should not be set)
      */
     public DateAndTimeCell(final int year, final int month,
             final int dayOfMonth, final int hourOfDay, final int minute,
