@@ -754,6 +754,20 @@ public final class Node implements NodeModelWarningListener {
         }
     }
 
+    /** Counter part to {@link #setInHiLiteHandler(int, HiLiteHandler)}.
+     * @param index The port.
+     * @return the hilite handler.
+     * @since 2.10
+     * @noreference This method is not intended to be referenced by clients. */
+    public HiLiteHandler getInHiLiteHandler(final int index) {
+        assert 0 <= index && index < getNrInPorts();
+        if (index > 0) {
+            // ignore HiLiteHandler on optional variable input port
+            return m_model.getInHiLiteHandler(index - 1);
+        }
+        return null;
+    }
+
     /**
      * Delegate method to node model.
      *

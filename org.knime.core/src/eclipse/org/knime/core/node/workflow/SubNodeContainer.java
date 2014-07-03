@@ -1241,8 +1241,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
 
     /* ------------- HiLite Support ---------------- */
 
-    /* TODO: enable if this ever makes sense. */
-
     /**
      * {@inheritDoc}
      */
@@ -1255,7 +1253,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     @Override
     public HiLiteHandler getOutputHiLiteHandler(final int portIndex) {
-        return null;
+        return getVirtualOutNode().getNode().getInHiLiteHandler(portIndex);
     }
 
     /* ------------------ Load&Save ------------------------- */
