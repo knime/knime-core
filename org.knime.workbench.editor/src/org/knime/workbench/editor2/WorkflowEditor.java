@@ -1016,9 +1016,13 @@ public class WorkflowEditor extends GraphicalEditor implements
                             int action = openQuestionDialogWhenLoadingWorkflowWithAutoSaveCopy(
                                 wfDir.getName(), restoredAutoSaveDirectory.getName());
 
+                            final boolean openCopy;
                             switch (action) {
                                 case 0: // Open Copy
+                                    openCopy = true;
+                                    break;
                                 case 1: // Open Original
+                                    openCopy = false;
                                     break;
                                 default: // Cancel
                                     String error = "Canceling due to auto-save copy conflict";
@@ -1026,39 +1030,39 @@ public class WorkflowEditor extends GraphicalEditor implements
                                     throw new OperationCanceledException(error);
                             }
 
-                            if (autoSaveDirFileStore != null) { // preferred way to rename
+                            boolean couldRename = false;
+                            if (autoSaveDirFileStore != null) { // preferred way to rename, updates explorer tree
                                 try {
                                     autoSaveDirFileStore.move(restoredAutoSaveDirFileStore, EFS.NONE, null);
+                                    couldRename = true;
                                 } catch (CoreException e) {
                                     String message = "Could not rename auto-save copy\n"
                                             + "from\n  " + autoSaveDirFileStore.getMountIDWithFullPath()
-                                            + "\nto\n  " + newName + "\nCanceling opening.";
-                                    openErrorDialogAndCloseEditor(message);
-                                    throw new OperationCanceledException(message);
+                                            + "\nto\n  " + newName;
+                                    LOGGER.error(message, e);
                                 }
                             } else {
                                 LOGGER.warnWithFormat("Could not resolve explorer file store to \"%s\" - "
-                                        + "renaming on file system directly",
-                                        autoSaveDirectory.getAbsolutePath());
-                                // could not resolve explorer file store, just rename on file system and
-                                // ignore explorer tree
-                                if (!autoSaveDirectory.renameTo(restoredAutoSaveDirectory)) {
-                                    String message = "Could not rename auto-save copy\n"
-                                            + "from\n  " + autoSaveDirectory.getAbsolutePath() + "\nto\n  "
-                                            + restoredAutoSaveDirectory.getAbsolutePath() + "\nCanceling opening.";
+                                        + "renaming on file system directly", autoSaveDirectory.getAbsolutePath());
+                                // just rename on file system and ignore explorer tree
+                                couldRename = autoSaveDirectory.renameTo(restoredAutoSaveDirectory);
+                            }
+                            if (!couldRename) {
+                                isEnableAutoSave = false;
+                                String message = "Could not rename auto-save copy\n"
+                                        + "from\n  " + autoSaveDirectory.getAbsolutePath() + "\nto\n  "
+                                        + restoredAutoSaveDirectory.getAbsolutePath() + "";
+                                if (openCopy) {
                                     openErrorDialogAndCloseEditor(message);
                                     throw new OperationCanceledException(message);
+                                } else {
+                                    MessageDialog.openWarning(Display.getDefault().getActiveShell(),
+                                        "Auto-Save Rename Problem", message + "\nAuto-Save will be disabled.");
                                 }
                             }
-                            switch (action) {
-                                case 0: // Open Copy
-                                    m_fileResource = restoredAutoSaveDirectory.toURI();
-                                    wfFile = new File(restoredAutoSaveDirectory, wfFile.getName());
-                                    break;
-                                case 1: // Open original
-                                    break;
-                                default:
-                                    assert false : "Should have been caught further up";
+                            if (openCopy) {
+                                m_fileResource = restoredAutoSaveDirectory.toURI();
+                                wfFile = new File(restoredAutoSaveDirectory, wfFile.getName());
                             }
                         }
                     }
