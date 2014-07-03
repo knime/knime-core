@@ -50,10 +50,12 @@ package org.knime.base.node.preproc.rename;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.knime.core.data.DataCell;
@@ -91,7 +93,7 @@ public class RenameNodeModel extends NodeModel {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(RenameNodeModel.class);
 
     /** contains settings for each individual column. */
-    private RenameColumnSetting[] m_settings;
+    private Map<String, RenameColumnSetting> m_settings;
 
     /**
      * Create new model, does nothing fancy.
@@ -107,10 +109,9 @@ public class RenameNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         NodeSettingsWO subSettings = settings.addNodeSettings(CFG_SUB_CONFIG);
         if (m_settings != null) {
-            for (int i = 0; i < m_settings.length; i++) {
-                RenameColumnSetting set = m_settings[i];
-                NodeSettingsWO subSub = subSettings.addNodeSettings(Integer.toString(i));
-                set.saveSettingsTo(subSub);
+            for (Entry<String, RenameColumnSetting> entry : m_settings.entrySet()) {
+                NodeSettingsWO subSub = subSettings.addNodeSettings(entry.getKey());
+                entry.getValue().saveSettingsTo(subSub);
             }
         }
     }
@@ -132,14 +133,14 @@ public class RenameNodeModel extends NodeModel {
     }
 
     /* Reads all settings from a settings object, used by validate and load. */
-    private RenameColumnSetting[] load(final NodeSettingsRO settings) throws InvalidSettingsException {
+    private Map<String, RenameColumnSetting> load(final NodeSettingsRO settings) throws InvalidSettingsException {
         NodeSettingsRO subSettings = settings.getNodeSettings(CFG_SUB_CONFIG);
-        ArrayList<RenameColumnSetting> result = new ArrayList<RenameColumnSetting>();
+        Map<String, RenameColumnSetting> result = new LinkedHashMap<String, RenameColumnSetting>();
         for (String identifier : subSettings) {
             NodeSettingsRO col = subSettings.getNodeSettings(identifier);
-            result.add(RenameColumnSetting.createFrom(col));
+            result.put(identifier, RenameColumnSetting.createFrom(col));
         }
-        return result.toArray(new RenameColumnSetting[0]);
+        return result;
     }
 
     /**
@@ -220,7 +221,7 @@ public class RenameNodeModel extends NodeModel {
 
         List<RenameColumnSetting> renameSettings =
             m_settings == null ? new ArrayList<RenameColumnSetting>() : new ArrayList<RenameColumnSetting>(
-                Arrays.asList(m_settings));
+                m_settings.values());
 
         for (int i = 0; i < colSpecs.length; i++) {
             DataColumnSpec current = inSpec.getColumnSpec(i);
