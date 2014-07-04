@@ -1657,7 +1657,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
             try {
                 newWorkflowDir.getContentProvider().performUpload((LocalExplorerFileStore)localFS,
-                    (RemoteExplorerFileStore)newWorkflowDir, new NullProgressMonitor());
+                    (RemoteExplorerFileStore)newWorkflowDir, /*deleteSource=*/false, new NullProgressMonitor());
             } catch (CoreException e) {
                 String msg =
                     "\"Save As...\" failed to upload the workflow to the selected remote location\n(" + e.getMessage()
