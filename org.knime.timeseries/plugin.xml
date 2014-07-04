@@ -65,6 +65,13 @@
             factory-class="org.knime.timeseries.node.dateshift.DateShiftNodeFactory"
             id="org.knime.timeseries.node.converter.DateShiftNodeFactory">
       </node>
+      
+      <node
+            category-path="/timeseries"
+            expert-flag="false"
+            factory-class="org.knime.timeseries.node.timemissvaluehandler.TimeMissValueNodeFactory"
+            id="org.knime.timeseries.node.timemissvaluehandler.TimeMissValueNodeFactory">
+      </node>
    </extension>
 
    <extension
