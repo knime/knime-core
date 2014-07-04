@@ -1842,4 +1842,12 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         return m_wfm.getNodeContainers();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    boolean canPerformReset() {
+        return getWorkflowManager().canPerformReset();
+    }
+
 }
