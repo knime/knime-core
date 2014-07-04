@@ -495,7 +495,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         if (o instanceof IContainer) {
             IContainer container = (IContainer)o;
             Path wfPath = new Path(WorkflowPersistor.WORKFLOW_FILE);
-            if (container.exists(wfPath)) {
+            Path templatePath = new Path(WorkflowPersistor.TEMPLATE_FILE);
+            if (container.exists(wfPath) && !container.exists(templatePath)) {
                 // container must have a workflow file
                 IFile wFile =
                         (IFile)container
