@@ -871,9 +871,19 @@ public class WorkflowEditor extends GraphicalEditor implements
         return m_graphicalViewer;
     }
 
-    /** @return the URI to the underlying workflow of null if not available (meta node editor). */
+    /**
+     * Returns the URI to the workflow. If this is a meta node editor, it traverses up until it finds the top. Should
+     * never return null - returns null if it has no file resource AND no parent....
+     * @return the URI to the workflow. If this is a meta node editor, it traverses up until it finds the top.
+     */
     public URI getWorkflowURI() {
-        return m_fileResource;
+        if (m_fileResource != null) {
+            return m_fileResource;
+        }
+        if (m_parentEditor != null) {
+            return m_parentEditor.getWorkflowURI();
+        }
+        return null;
     }
 
     /**
@@ -887,7 +897,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         LOGGER.debug("Setting input into editor...");
         super.setInput(input);
         m_origRemoteLocation = null;
-        if (input instanceof WorkflowManagerInput) {
+        if (input instanceof WorkflowManagerInput) { // meta node and subnode
             setWorkflowManagerInput((WorkflowManagerInput)input);
         } else if (input instanceof IURIEditorInput) {
             File wfFile;
@@ -2008,8 +2018,12 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * @return true if this is an editor of a remote workflow that was downloaded in a temp location
+     * @since 2.10
      */
-    private boolean isTempRemoteWorkflowEditor() {
+    public boolean isTempRemoteWorkflowEditor() {
+        if (m_fileResource == null && m_parentEditor != null) { // meta node editor
+            return m_parentEditor.isTempRemoteWorkflowEditor();
+        }
         return m_origRemoteLocation != null;
     }
 
