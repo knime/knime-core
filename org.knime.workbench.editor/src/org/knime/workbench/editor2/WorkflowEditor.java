@@ -2038,6 +2038,12 @@ public class WorkflowEditor extends GraphicalEditor implements
         } else {
             workflowFigure.setMessage(null);
         }
+        List<IEditorPart> subEditors = getSubEditors();
+        for (IEditorPart ep : subEditors) {
+            if (ep instanceof WorkflowEditor) {
+                ((WorkflowEditor)ep).updateTempRemoteWorkflowMessage();
+            }
+        }
     }
 
     /**
