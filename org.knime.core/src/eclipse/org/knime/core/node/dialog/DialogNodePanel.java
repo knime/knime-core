@@ -82,11 +82,11 @@ public abstract class DialogNodePanel<VAL extends DialogNodeValue>
     }
 
     /**
-     * Save DialogNode value.
-     * @param value save into
+     * Create DialogNode value with current execution parameters or null if to use defaults.
+     * @return the current value or null.
      * @throws InvalidSettingsException if settings can't be saved
      */
-    public abstract void saveNodeValue(final VAL value) throws InvalidSettingsException;
+    public abstract VAL getNodeValue() throws InvalidSettingsException;
 
     /**
      * Load DialogNode value.

@@ -46,9 +46,6 @@
  */
 package org.knime.core.node.dialog;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
 
 /**
  *
@@ -59,29 +56,7 @@ import org.knime.core.node.NodeSettingsWO;
 public interface DialogNodeRepresentation<VAL extends DialogNodeValue> {
 
     /**
-     * @param settings The settings
-     */
-    public void saveToNodeSettings(final NodeSettingsWO settings);
-
-    /**
-     * @param settings The settings
-     * @throws InvalidSettingsException If the settings could not be loaded
-     */
-    public void loadFromNodeSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
-
-    /**
-     * @param settings The settings
-     */
-    public void loadFromNodeSettingsInDialog(final NodeSettingsRO settings);
-
-    /**
      * @return The panel to be shown as a dialog component.
      */
     public DialogNodePanel<VAL> createDialogPanel();
-
-    /**
-     * Resets a given DialogNodeValue to a default value.
-     * @param value the value to reset.
-     */
-    public void resetNodeValueToDefault(VAL value);
 }

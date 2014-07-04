@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="2.10.0"/>
+                <message_argument value="2.9.4"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.web.JSONDataTable">
         <filter id="305324134">
             <message_arguments>
@@ -401,6 +409,18 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/dialog/DialogNodePanel.java" type="org.knime.core.node.dialog.DialogNodePanel">
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNodePanel"/>
+                <message_argument value="getNodeValue()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.dialog.DialogNodePanel"/>
+                <message_argument value="saveNodeValue(VAL)"/>
+            </message_arguments>
+        </filter>
         <filter id="437350426">
             <message_arguments>
                 <message_argument value="org.knime.core.node.dialog.DialogNodePanel"/>
@@ -412,6 +432,11 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.dialog.DialogNodePanel"/>
                 <message_argument value="VAL"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getNodeValue()"/>
             </message_arguments>
         </filter>
     </resource>
