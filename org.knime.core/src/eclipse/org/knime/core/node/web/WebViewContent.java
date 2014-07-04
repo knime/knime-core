@@ -46,6 +46,7 @@
  */
 package org.knime.core.node.web;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -53,8 +54,9 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.interactive.ViewContent;
+import org.knime.core.node.wizard.WizardNode;
 
-/** Container for all of the information transported inbetween a {@link InteractiveWebNode}
+/** Container for all of the information transported in between a {@link WizardNode}
  * and an interactive view running in the wizard or WebPortal.
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold, C. Albrecht
@@ -64,15 +66,15 @@ public interface WebViewContent extends ViewContent {
 
     /**
      * @param viewContentStream an input stream, that is used to create the instance of a view content.
-     * @throws Exception Exception that can occur while creating an instance.
+     * @throws IOException Exception that can occur while creating an instance.
      */
-    public abstract void loadFromStream(InputStream viewContentStream) throws Exception;
+    public abstract void loadFromStream(InputStream viewContentStream) throws IOException;
 
     /**
      * @return An output stream with the serialized view content.
-     * @throws Exception Exception that can occur while serializing object.
+     * @throws IOException Exception that can occur while serializing object.
      */
-    public abstract OutputStream saveToStream() throws Exception;
+    public abstract OutputStream saveToStream() throws IOException;
 
     /**
      * @param settings
