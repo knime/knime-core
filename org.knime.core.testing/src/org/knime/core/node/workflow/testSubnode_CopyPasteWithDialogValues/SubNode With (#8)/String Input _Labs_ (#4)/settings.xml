@@ -26,6 +26,7 @@
 <entry key="description" type="xstring" value="..."/>
 <entry key="hideInWizard" type="xboolean" value="false"/>
 <entry key="hideInDialog" type="xboolean" value="false"/>
+<entry key="required" type="xboolean" value="false"/>
 <entry key="flowvariablename" type="xstring" value="var_string"/>
 <entry key="regex" type="xstring" value="^[0-9a-zA-Z]+([0-9a-zA-Z]*[-._+])*[0-9a-zA-Z]+@[0-9a-zA-Z]+([-.][0-9a-zA-Z]+)*([0-9a-zA-Z]*[.])[a-zA-Z]{2,6}$"/>
 <entry key="error_message" type="xstring" value="The given input is not a valid email address"/>

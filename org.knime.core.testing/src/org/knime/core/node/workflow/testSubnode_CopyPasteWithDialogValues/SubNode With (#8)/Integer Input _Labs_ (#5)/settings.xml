@@ -26,6 +26,7 @@
 <entry key="description" type="xstring" value="..."/>
 <entry key="hideInWizard" type="xboolean" value="false"/>
 <entry key="hideInDialog" type="xboolean" value="false"/>
+<entry key="required" type="xboolean" value="false"/>
 <entry key="flowvariablename" type="xstring" value="var_int"/>
 <entry key="use_min" type="xboolean" value="true"/>
 <entry key="use_max" type="xboolean" value="true"/>
