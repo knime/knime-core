@@ -136,7 +136,7 @@ public interface PreferenceConstants {
     /** Pref constant whether to save data with auto-save. */
     public static final String P_AUTO_SAVE_DATA = "knime.autosave.data";
     /** Default auto save enablement. */
-    public static final boolean P_AUTO_SAVE_DEFAULT_ENABLE = true;
+    public static final boolean P_AUTO_SAVE_DEFAULT_ENABLE = false;
     /** Default auto save interval in seconds ({@value #P_AUTO_SAVE_DEFAULT_INTERVAL_SECS}). */
     public static final int P_AUTO_SAVE_DEFAULT_INTERVAL_SECS = 180;
     /** Default auto save data property: true = save with data (default is {@value #P_AUTO_SAVE_DEFAULT_DATA}). */
