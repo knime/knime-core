@@ -52,6 +52,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -75,6 +77,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
@@ -128,15 +131,23 @@ public class LearnerTest {
      */
     @Test
     public final void testPerformChdAgeData() throws Exception {
-        BufferedDataTable data = m_exec.createBufferedDataTable(new ChdAgeData(), m_exec);
+        final BufferedDataTable data = m_exec.createBufferedDataTable(new ChdAgeData(), m_exec);
         PMMLPortObjectSpecCreator specCreator =
             new PMMLPortObjectSpecCreator(data.getDataTableSpec());
         specCreator.setLearningColsNames(Arrays.asList(new String[] {"Age"}));
         specCreator.setTargetColName("Evidence of Coronary Heart Disease");
-        PMMLPortObjectSpec spec = specCreator.createSpec();
+        final PMMLPortObjectSpec spec = specCreator.createSpec();
 
-        Learner learner = new Learner(spec, null, true, true);
-        LogisticRegressionContent content = learner.perform(data, m_exec);
+        // done in KNIME thread pool, expected by code
+        Future<LogisticRegressionContent> callable =
+                KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Callable<LogisticRegressionContent>() {
+            @Override
+            public LogisticRegressionContent call() throws Exception {
+                final Learner learner = new Learner(spec, null, true, true);
+                return learner.perform(data, m_exec);
+            }
+        });
+        LogisticRegressionContent content = callable.get();
         // Reference results are published in the book:
         //   Applied Logistic Regression,
         //   David W. Hosmer and Stanley Lemeshow
@@ -151,16 +162,24 @@ public class LearnerTest {
      */
     @Test
     public final void testPerformLowBirthWeightData() throws Exception {
-        BufferedDataTable data = m_exec.createBufferedDataTable(new LowBirthWeightData(), m_exec);
+        final BufferedDataTable data = m_exec.createBufferedDataTable(new LowBirthWeightData(), m_exec);
         PMMLPortObjectSpecCreator specCreator =
             new PMMLPortObjectSpecCreator(data.getDataTableSpec());
         specCreator.setLearningColsNames(Arrays.asList(new String[] {"AGE",
                 "LWT", "RACE", "FTV"}));
         specCreator.setTargetColName("LOW");
-        PMMLPortObjectSpec spec = specCreator.createSpec();
+        final PMMLPortObjectSpec spec = specCreator.createSpec();
 
-        Learner learner = new Learner(spec, null, true, true);
-        LogisticRegressionContent content = learner.perform(data, m_exec);
+        // done in KNIME thread pool, expected by code
+        Future<LogisticRegressionContent> callable =
+                KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Callable<LogisticRegressionContent>() {
+            @Override
+            public LogisticRegressionContent call() throws Exception {
+                final Learner learner = new Learner(spec, null, true, true);
+                return learner.perform(data, m_exec);
+            }
+        });
+        LogisticRegressionContent content = callable.get();
         // Reference results are published in the book:
         //   Applied Logistic Regression,
         //   David W. Hosmer and Stanley Lemeshow
