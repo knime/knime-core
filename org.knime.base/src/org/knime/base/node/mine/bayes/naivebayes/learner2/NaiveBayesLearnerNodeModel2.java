@@ -209,16 +209,26 @@ public class NaiveBayesLearnerNodeModel2 extends NodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         //        check the internal variables if they are valid
-        final String classColumn = m_classifyColumnName.getStringValue();
-        if (classColumn == null || classColumn.length() < 1) {
-            throw new InvalidSettingsException(
-                    "Please define the classification column");
-        }
         final PortObjectSpec inSpec = inSpecs[TRAINING_DATA_PORT];
         if (!(inSpec instanceof DataTableSpec)) {
             throw new IllegalArgumentException("Invalid input data");
         }
         final DataTableSpec tableSpec = (DataTableSpec)inSpec;
+        if (m_classifyColumnName.getStringValue() == null) {
+            String predictedClassName = null;
+            for (DataColumnSpec colSpec : tableSpec) {
+                if (colSpec.getType().isCompatible(NominalValue.class)) {
+                    if (predictedClassName == null) {
+                        predictedClassName = colSpec.getName();
+                    } else {
+                        throw new InvalidSettingsException("Please define the classification column");
+                    }
+                }
+            }
+            m_classifyColumnName.setStringValue(predictedClassName);
+            setWarningMessage("Classification column preset to " + predictedClassName);
+        }
+        final String classColumn = m_classifyColumnName.getStringValue();
         final DataColumnSpec classColSpec = tableSpec.getColumnSpec(classColumn);
         if (classColSpec == null) {
             throw new InvalidSettingsException("Classification column not found in input table");
