@@ -2840,7 +2840,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Marks this editor as dirty and notifies the registered listeners.
      */
     public void markDirty() {
-        m_manager.setDirty(); // call anyway to allow auto-save copy to be dirty
+        m_manager.setDirty(); // call anyway to allow auto-save copy to be dirty (the WFM has 2 dirty flags, really)
         if (!m_isDirty) {
             m_isDirty = true;
 
