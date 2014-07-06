@@ -51,6 +51,7 @@
 package org.knime.workbench.editor2.subnode;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -143,9 +144,8 @@ public class SubnodeLayoutPage extends WizardPage {
 
             Label iconLabel = new Label(labelComposite, SWT.CENTER);
             iconLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
-            try {
-                String nodeIconPath = FileLocator.resolve(nodeContainer.getIcon()).getFile();
-                iconLabel.setImage(new Image(Display.getCurrent(), nodeIconPath));
+            try (InputStream iconURLStream = FileLocator.resolve(nodeContainer.getIcon()).openStream()) {
+                iconLabel.setImage(new Image(Display.getCurrent(), iconURLStream));
             } catch (IOException e) { /* do nothing */ }
 
             Label nodeLabel = new Label(labelComposite, SWT.LEFT);
