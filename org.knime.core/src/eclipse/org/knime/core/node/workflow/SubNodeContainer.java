@@ -966,17 +966,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 if (status.isSuccess()) {
                     setInternalState(InternalNodeContainerState.EXECUTED);
                 } else {
-                    // node will be configured in doAfterExecute.
-                    // for now we assume complete failure and clean up (reset)
-                    // We do keep the message, though.
-                    NodeMessage oldMessage = getNodeMessage();
-                    NodeContext.pushContext(this);
-                    try {
-                        performReset();
-                    } finally {
-                        NodeContext.removeLastContext();
-                    }
-                    setNodeMessage(oldMessage);
+                    // don't reset and configure (like a NativeNodeContainer) for easier error inspection
                     setInternalState(InternalNodeContainerState.IDLE);
                 }
                 setExecutionJob(null);
