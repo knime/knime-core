@@ -119,7 +119,7 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         if (!EclipseUtil.isRunFromSDK() && showTipsAndTricks) {
             IntroPage.INSTANCE.modifyWorkbenchState();
         }
-        if (/* !EclipseUtil.isRunFromSDK() && */ IntroPage.INSTANCE.isFreshWorkspace()) {
+        if (!EclipseUtil.isRunFromSDK() && IntroPage.INSTANCE.isFreshWorkspace()) {
             KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new ExampleWorkflowExtractor());
         }
     }
@@ -146,7 +146,7 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
             }
         }
 
-        if (/* !EclipseUtil.isRunFromSDK() && */ IntroPage.INSTANCE.isFreshWorkspace()) {
+        if (!EclipseUtil.isRunFromSDK() && IntroPage.INSTANCE.isFreshWorkspace()) {
             for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
                 for (IWorkbenchPage page : window.getPages()) {
                     for (IViewReference ref : page.getViewReferences()) {

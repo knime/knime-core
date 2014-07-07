@@ -50,11 +50,13 @@ package org.knime.product.rcp;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.zip.ZipInputStream;
 
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -63,8 +65,6 @@ import org.knime.core.internal.KNIMEPath;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 import org.knime.workbench.explorer.view.ExplorerView;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 
 /**
  * Runnable that extract the example workflows into a fresh workspace and refreshes the explorer view afterwards.
@@ -77,11 +77,31 @@ class ExampleWorkflowExtractor implements Runnable {
      */
     @Override
     public void run() {
-        Bundle myself = FrameworkUtil.getBundle(getClass());
-        URL exampleWorkflowsZip = FileLocator.find(myself, new Path("/ExampleFlows.zip"), null);
+        Location loc = Platform.getInstallLocation();
+        if (loc == null) {
+            NodeLogger.getLogger(getClass()).error("Cannot detect KNIME installation directory");
+            return;
+        } else if (!loc.getURL().getProtocol().equals("file")) {
+            NodeLogger.getLogger(getClass()).error("KNIME installation directory is not local");
+            return;
+        }
+
+        String path = loc.getURL().getPath();
+        if (Platform.OS_WIN32.equals(Platform.getOS()) && path.matches("^/[a-zA-Z]:/.*")) {
+            // Windows path with drive letter => remove first slash
+            path = path.substring(1);
+        }
+        Path initialWorkspace = Paths.get(path, "knime-workspace.zip");
+        if (!Files.exists(initialWorkspace)) {
+            NodeLogger.getLogger(getClass()).warn(
+                initialWorkspace.toAbsolutePath()
+                    + " not found in installation directory, not creating inital workspace");
+            return;
+        }
+
 
         File workspace = KNIMEPath.getWorkspaceDirPath();
-        try (ZipInputStream is = new ZipInputStream(exampleWorkflowsZip.openStream())) {
+        try (ZipInputStream is = new ZipInputStream(Files.newInputStream(initialWorkspace))) {
             FileUtil.unzip(is, workspace, 0);
         } catch (IOException ex) {
             NodeLogger.getLogger(getClass()).error("Could not extract example workflows: " + ex.getMessage(), ex);
