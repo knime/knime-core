@@ -10,7 +10,6 @@
 <entry key="id" type="xint" value="1"/>
 <entry key="node_settings_file" type="xstring" value="Variable Based File Reader (#1)/settings.xml"/>
 <entry key="node_is_meta" type="xboolean" value="false"/>
-<entry key="isDeletable" type="xboolean" value="false"/>
 <entry key="ui_classname" type="xstring" value="org.knime.core.node.workflow.NodeUIInformation"/>
 <config key="ui_settings">
 <config key="extrainfo.node.bounds">
@@ -68,7 +67,6 @@
 <entry key="destID" type="xint" value="1"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="destPort" type="xint" value="0"/>
-<entry key="isDeletable" type="xboolean" value="false"/>
 </config>
 <config key="connection_2">
 <entry key="sourceID" type="xint" value="3"/>
