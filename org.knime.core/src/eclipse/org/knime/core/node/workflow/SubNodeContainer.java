@@ -1272,12 +1272,21 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    @SuppressWarnings("rawtypes")
     void performLoadModelSettingsFrom(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
+        loadModelSettingsIntoDialogNodes(modelSettings, false);
+    }
+
+    /** Applies the "modelSettings" (stored in the {@link SingleNodeContainerSettings} into the {@link DialogNode}
+     * contained in this workflow.
+     * @param modelSettings The new model settings.
+     * @param performReset true when called via dialog, false when called during load.
+     * @throws InvalidSettingsException ...
+     */
+    @SuppressWarnings("rawtypes")
+    private void loadModelSettingsIntoDialogNodes(final NodeSettingsRO modelSettings,
+        final boolean performReset) throws InvalidSettingsException {
         assert Thread.holdsLock(getWorkflowMutex());
         synchronized (m_nodeMutex) {
             // check state of contained WFM as state of this Subnode may already be "MARKED".
@@ -1331,7 +1340,9 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             for (Map.Entry<NodeID, DialogNodeValue> modifiedNodesEntry : newDialogValueMap.entrySet()) {
                 final DialogNode node = nodes.get(modifiedNodesEntry.getKey());
                 node.setDialogValue(modifiedNodesEntry.getValue());
-                m_wfm.resetAndConfigureNode(modifiedNodesEntry.getKey());
+                if (performReset) {
+                    m_wfm.resetAndConfigureNode(modifiedNodesEntry.getKey());
+                }
             }
 
         }
@@ -1351,6 +1362,17 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         WorkflowPersistor workflowPersistor = subNodePersistor.getWorkflowPersistor();
         // TODO pass in a filter input stack
         m_wfm.loadContent(workflowPersistor, tblRep, inStack, exec, loadResult, preserveNodeMessage);
+        NodeSettingsRO modelSettings = subNodePersistor.getSNCSettings().getModelSettings();
+        if (modelSettings != null) {
+            try {
+                loadModelSettingsIntoDialogNodes(modelSettings, false);
+            } catch (InvalidSettingsException e) {
+                final String msg = "Could not load subnode configuration into dialog-nodes: " + e.getMessage();
+                LOGGER.error(msg, e);
+                loadResult.addError(msg);
+                setDirty();
+            }
+        }
         checkInOutNodesAfterLoad(subNodePersistor, loadResult);
         // put data input output node if it was executed;
         final NativeNodeContainer virtualOutNode = getVirtualOutNode();
