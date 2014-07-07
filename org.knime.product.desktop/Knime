@@ -1,4 +1,7 @@
 #!/bin/bash
+#
+# Start script for MacOS because the standard Eclipse launcher is unable to use any other JRE than the system's JRE
+# 
 
 SOURCE="$0"
 APP_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
@@ -14,6 +17,7 @@ declare -a APP_ARGS
 JAVA=""
 CLASSPATH=""
 APPLICATION_OR_PRODUCT_SET=0
+KNIME_INI_FILE="$APP_DIR/Knime.ini"
 
 readArguments() {
     local params=("$@")
@@ -34,8 +38,11 @@ readArguments() {
         elif [[ "$arg" == "-startup" ]]; then
             CLASSPATH="${params[i+1]}"
             ((i++))
-        elif [[ "$arg" == "--launcher.library" ]] || [[ "$arg" == "--launcher.ini" ]] || \
-        	 [[ "$arg" == "--launcher.timeout" ]] || [[ "$arg" == "--launcher.XXMaxPermSize" ]]; then
+        elif [[ "$arg" == "--launcher.ini" ]] ; then
+        	KNIME_INI_FILE=${params[i+1]}
+        	((i++))
+        elif [[ "$arg" == "--launcher.library" ]] || [[ "$arg" == "--launcher.timeout" ]] || \
+        	 [[ "$arg" == "--launcher.XXMaxPermSize" ]]; then
         	echo "Launcher argument '$arg' ignored"
         	((i++)) # ...and its argument
         elif [[ "$arg" == --launcher.* ]]; then
@@ -63,8 +70,14 @@ else
     JAVA=java
 fi
 
+
+# check for supported --launcher. arguments
+readArguments "$@"
+VM_ARGS=()
+APP_ARGS=()
+
 # extract parameters from Knime.ini
-KNIME_INI=( $(cat "$APP_DIR/Knime.ini") ) 
+KNIME_INI=( $(cat "$KNIME_INI_FILE") )
 readArguments "${KNIME_INI[@]}"
 
 # add command line parameters, they should override the parameters from the ini file
