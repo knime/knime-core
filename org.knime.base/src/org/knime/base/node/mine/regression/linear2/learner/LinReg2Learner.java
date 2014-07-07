@@ -139,7 +139,7 @@ final class LinReg2Learner {
 
             @Override
             public boolean dropDomain(final DataColumnSpec colSpec) {
-                return false;
+                return true;
             }
 
             @Override
