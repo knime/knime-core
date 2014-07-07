@@ -1,7 +1,7 @@
 body {
 	color: #575757;
 	font-family: Roboto, Arial, Helvetica, sans-serif;
-	font-size: 0.9em;
+	font-size: 10.5pt;
 }
 
 h1 {
@@ -62,7 +62,7 @@ div#links {
 
 a .link-label {
 	padding-left: 40px;
-	font-size: 16px;
+	font-size: 120%;
 	font-weight: bold;
 	vertical-align: middle;
 }
@@ -108,7 +108,7 @@ div#tips h2 {
 }
 
 span.field-content {
-	font-size: 115%;
+	font-size: 120%;
 	font-weight: bold;
 }
 
