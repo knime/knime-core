@@ -98,6 +98,10 @@ final class Learner {
     private RealMatrix b;
     private double m_penaltyTerm;
 
+    private static final String FAILING_MSG = "The logisitic regression model cannot be computed. "
+            + "See section \"Potential Errors and Error Handling\" in the node description for possible error "
+            + "causes and fixes";
+
 
     /** the target reference category, if not set it is the last category. */
     private DataCell m_targetReferenceCategory;
@@ -199,7 +203,7 @@ final class Learner {
             }
 
             if (Double.isInfinite(loglike) || Double.isNaN(loglike)) {
-                throw new RuntimeException("Log-likelihood is not a number.");
+                throw new RuntimeException(FAILING_MSG);
             }
             exec.checkCanceled();
             // test for decreasing likelihood
@@ -395,8 +399,12 @@ final class Learner {
         }
         DecompositionSolver solver = new QRDecomposition(A).getSolver();
         boolean isNonSingular = solver.isNonSingular();
-        RealMatrix betaNew = solver.solve(b);
-        beta.setSubMatrix(betaNew.transpose().getData(), 0, 0);
+        if (isNonSingular) {
+            RealMatrix betaNew = solver.solve(b);
+            beta.setSubMatrix(betaNew.transpose().getData(), 0, 0);
+        } else {
+            throw new RuntimeException(FAILING_MSG);
+        }
     }
 
     private RealMatrix getStdErrorMatrix(final RealMatrix xTwx) {
