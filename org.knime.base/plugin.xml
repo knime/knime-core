@@ -1646,7 +1646,7 @@
              description="Provides a skeleton of nodes necessary for cross validation"
              icon="icons/meta_nodes/cross_validation_flow.png"
              id="cross_validation"
-             name="X-Validation"
+             name="Cross Validation"
              workflowDir="metanode_templates/Cross Validation/">
        </PersistedMetaNode>
        <PersistedMetaNode
