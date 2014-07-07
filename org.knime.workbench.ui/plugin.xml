@@ -235,17 +235,17 @@
    <extension
          point="org.eclipse.ui.exportWizards">
       <wizard
-            class="org.knime.workbench.ui.wizards.export.WorkflowExportWizard"
+            class="org.knime.workbench.explorer.view.actions.export.WorkflowExportWizard"
             icon="icons/knime_export.png"
-            id="org.knime.workbench.ui.wizards.export.WorkflowExportWizard"
+            id="org.knime.workbench.explorer.view.actions.export.WorkflowExportWizard"
             name="Export KNIME Workflow"/>
    </extension>
    <extension
          point="org.eclipse.ui.importWizards">
       <wizard
-            class="org.knime.workbench.ui.wizards.imports.WorkflowImportWizard"
+            class="org.knime.workbench.explorer.view.actions.imports.WorkflowImportWizard"
             icon="icons/knime_import.png"
-            id="org.knime.workbench.ui.wizards.imports.WorkflowImportWizard"
+            id="org.knime.workbench.explorer.view.actions.imports.WorkflowImportWizard"
             name="Import KNIME Workflow"/>
    </extension>
    

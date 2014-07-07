@@ -84,8 +84,8 @@ import org.eclipse.ui.internal.registry.IActionSetDescriptor;
 import org.eclipse.ui.views.IViewDescriptor;
 import org.eclipse.ui.views.IViewRegistry;
 import org.knime.product.rcp.intro.IntroPageAction;
-import org.knime.workbench.ui.navigator.actions.ExportKnimeWorkflowAction;
-import org.knime.workbench.ui.navigator.actions.ImportKnimeWorkflowAction;
+import org.knime.workbench.explorer.view.actions.export.WorkflowExportApplicationAction;
+import org.knime.workbench.explorer.view.actions.imports.WorkflowImportApplicationAction;
 import org.knime.workbench.ui.p2.actions.InvokeInstallSiteAction;
 import org.knime.workbench.ui.p2.actions.InvokeUpdateAction;
 import org.knime.workbench.ui.preferences.ExportPreferencesAction;
@@ -273,9 +273,9 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
                 ActionFactory.NEW_WIZARD_DROP_DOWN.create(window);
         register(m_newWizardDropdownAction);
 
-        m_exportWorkflowAction = new ExportKnimeWorkflowAction(window);
+        m_exportWorkflowAction = new WorkflowExportApplicationAction();
         register(m_exportWorkflowAction);
-        m_importWorkflowAction = new ImportKnimeWorkflowAction(window);
+        m_importWorkflowAction = new WorkflowImportApplicationAction();
         register(m_importWorkflowAction);
     }
 
