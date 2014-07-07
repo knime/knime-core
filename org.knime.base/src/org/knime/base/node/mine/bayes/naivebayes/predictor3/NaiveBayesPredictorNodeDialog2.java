@@ -55,14 +55,14 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 /**
  * <code>NodeDialog</code> for the "Naive Bayes Predictor" Node.
  *
- * @author Tobias Koetter
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  */
-public class NaiveBayesPredictorNodeDialog2 extends PredictorNodeDialog {
+class NaiveBayesPredictorNodeDialog2 extends PredictorNodeDialog {
 
     /**
      * New pane for configuring BayesianClassifier node dialog.
      */
-    public NaiveBayesPredictorNodeDialog2() {
+    NaiveBayesPredictorNodeDialog2() {
         super(NaiveBayesPredictorNodeModel2.createProbabilityColumnModel());
     }
 

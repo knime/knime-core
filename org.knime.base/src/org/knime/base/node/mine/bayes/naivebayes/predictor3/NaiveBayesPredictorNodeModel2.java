@@ -78,7 +78,8 @@ import org.w3c.dom.Node;
  * This is the <code>NodeModel</code> implementation of the
  * "Naive Bayes Predictor" node.
  *
- * @author Tobias Koetter
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @since 2.10
  */
 public class NaiveBayesPredictorNodeModel2 extends NodeModel {
 
@@ -111,7 +112,7 @@ public class NaiveBayesPredictorNodeModel2 extends NodeModel {
 
     /**Constructor for class NaiveBayesPredictorNodeModel.
      */
-    protected NaiveBayesPredictorNodeModel2() {
+    public NaiveBayesPredictorNodeModel2() {
 //      we have one data in and out port and one model in port
         super(new PortType[] {PMMLPortObject.TYPE, BufferedDataTable.TYPE},
                 new PortType[] {BufferedDataTable.TYPE});
@@ -121,8 +122,7 @@ public class NaiveBayesPredictorNodeModel2 extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) throws Exception {
+    public PortObject[] execute(final PortObject[] inData, final ExecutionContext exec) throws Exception {
         LOGGER.debug("Entering execute(inData, exec) of class NaiveBayesPredictorNodeModel.");
 //      check input data
         assert (inData != null && inData.length == 2 && inData[DATA_IN_PORT] != null
@@ -168,7 +168,6 @@ public class NaiveBayesPredictorNodeModel2 extends NodeModel {
     protected void reset() {
         //nothing to do
     }
-
 
     /**
      * {@inheritDoc}

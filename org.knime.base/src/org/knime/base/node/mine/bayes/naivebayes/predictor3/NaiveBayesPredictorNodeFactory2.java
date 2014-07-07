@@ -51,10 +51,10 @@ import org.knime.core.node.NodeView;
 /**
  * <code>NodeFactory</code> for the "Naive Bayes Predictor" node.
 
- * @author Tobias Koetter
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @since 2.10
  */
-public class NaiveBayesPredictorNodeFactory2
-    extends NodeFactory<NaiveBayesPredictorNodeModel2> {
+public class NaiveBayesPredictorNodeFactory2 extends NodeFactory<NaiveBayesPredictorNodeModel2> {
     /**
      * {@inheritDoc}
      */

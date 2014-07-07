@@ -66,10 +66,9 @@ import org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator;
 /**
  * Naive Bayes <code>AppendCellFactory</code> class which uses the given
  * <code>NaiveBayesModel</code> to predict the class membership of each row.
- * @author Tobias Koetter, University of Konstanz
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  */
-public class NaiveBayesCellFactory implements AppendedCellFactory,
-CellFactory {
+class NaiveBayesCellFactory implements AppendedCellFactory, CellFactory {
 
     /**
      * The <code>NaiveBayesModel</code> which holds all necessary information
@@ -98,7 +97,7 @@ CellFactory {
      * be appended as columns
      * @param suffix the suffix for the probability columns
      */
-    public NaiveBayesCellFactory(final NaiveBayesModel model, final String columnName,
+    NaiveBayesCellFactory(final NaiveBayesModel model, final String columnName,
             final DataTableSpec tableSpec, final boolean inclClassProbVals, final String suffix) {
         this.m_columnName = columnName;
         this.m_suffix = suffix;
@@ -163,7 +162,7 @@ CellFactory {
      * @return <code>DataColumnSpec[]</code> with the column specifications
      * of the result columns
      */
-    public static DataColumnSpec createResultColSpecs(
+    static DataColumnSpec createResultColSpecs(
             final String classColumnName, final DataType classType, final DataTableSpec inSpec,
             final boolean inclClassProbVals) {
         if (inclClassProbVals) {
@@ -191,7 +190,7 @@ CellFactory {
      * @return the specification of the result columns in the order they
      * should be append at the end of the original table specification
      */
-    public DataColumnSpec[] getResultColumnsSpec() {
+    DataColumnSpec[] getResultColumnsSpec() {
         return createResultColSpecs(m_model, m_columnName, m_tableSpec, m_inclClassProbVals, m_suffix);
     }
 
