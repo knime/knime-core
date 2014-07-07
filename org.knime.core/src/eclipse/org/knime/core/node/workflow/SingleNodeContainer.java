@@ -382,6 +382,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
      * @throws IllegalStateException in case of illegal entry state.
      */
     void reset() {
+        // TODO move copies into Native/SubNodecontainer?
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
             case EXECUTED:
@@ -421,7 +422,16 @@ public abstract class SingleNodeContainer extends NodeContainer {
                 setInternalState(InternalNodeContainerState.IDLE);
                 return;
             default:
-                throwIllegalStateException();
+                if (isResetable()) { // a subnode container is resetable even when IDLE
+                    NodeContext.pushContext(this);
+                    try {
+                        performReset();
+                    } finally {
+                        NodeContext.removeLastContext();
+                    }
+                } else  {
+                    throwIllegalStateException();
+                }
             }
         }
     }
