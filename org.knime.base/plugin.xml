@@ -360,6 +360,35 @@
             locked="true"
             name="PMML"
             path="/mining">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="database-io"
+            locked="true"
+            name="IO"
+            path="/database">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="database-manipulation"
+            locked="true"
+            name="Manipulation"
+            path="/database">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="database-connector"
+            locked="true"
+            name="Connector"
+            path="/database"
+            after="database-io">
+      </category>
+      <category
+            icon="icons/missing.gif"
+            level-id="database-utility"
+            locked="true"
+            name="Utility"
+            path="/database">
       </category>            
    </extension>
             
@@ -957,80 +986,80 @@
             factory-class="org.knime.base.node.viz.enrichment.EnrichmentPlotterFactory"
             id="org.knime.chem.node.viz.enrich.EnrichmentPlotterFactory"/>
        <node
-            category-path="/database"
+            category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBReaderNodeFactory"
             id="org.knime.base.node.io.database.DBReaderNodeFactory"/>
        <node
             after="org.knime.base.node.io.database.DBReaderNodeFactory"
-            category-path="/database"
+            category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
             id="org.knime.base.node.io.database.DBReaderConnectionNodeFactory">
    	  </node>
    	  <node
             after="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
-            category-path="/database"
+            category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DatabaseLoopingNodeFactory"
             id="org.knime.base.node.io.database.DatabaseLoopingNodeFactory">
       </node>
       <node
             after="org.knime.base.node.io.database.DatabaseLoopingNodeFactory"
-            category-path="/database"
+            category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBConnectionNodeFactory"
             id="org.knime.base.node.io.database.DBConnectionNodeFactory">
       </node>
       <node
             after="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
-            category-path="/database"
+            category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBRowFilterNodeFactory"
             id="org.knime.base.node.io.database.DBRowFilterNodeFactory"/>
       <node
             after="org.knime.base.node.io.database.DBRowFilterNodeFactory"
-            category-path="/database"
+            category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBQueryNodeFactory2"
             id="org.knime.base.node.io.database.DBQueryNodeFactory2"/>
       <node
             after="org.knime.base.node.io.database.DBQueryNodeFactory2"
-            category-path="/database"
+            category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBColumnFilterNodeFactory"
             id="org.knime.base.node.io.database.DBColumnFilterNodeFactory"/>
       <node
             after="org.knime.base.node.io.database.DBColumnFilterNodeFactory"
-            category-path="/database"
+            category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBSorterNodeFactory"
             id="org.knime.base.node.io.database.DBSorterNodeFactory"/>
       <node
             after="org.knime.base.node.io.database.DBSorterNodeFactory"
-            category-path="/database"
+            category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBGroupByNodeFactory"
             id="org.knime.base.node.io.database.DBGroupByNodeFactory"/>
       <node
             after="org.knime.base.node.io.database.DBGroupByNodeFactory"
-            category-path="/database"
+            category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBJoinerNodeFactory"
             id="org.knime.base.node.io.database.DBJoinerNodeFactory"/>
       <node
             after="org.knime.base.node.io.database.DBJoinerNodeFactory"
-            category-path="/database"
+            category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
             id="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"/>
       <node
             after="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
-            category-path="/database"
+            category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBWriterNodeFactory"
             id="org.knime.base.node.io.database.DBWriterNodeFactory"/>
       <node
             after="org.knime.base.node.io.database.DBWriterNodeFactory"
-            category-path="/database"
+            category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBUpdateNodeFactory"
             id="org.knime.base.node.io.database.DBUpdateNodeFactory"/>
       <node
             after="org.knime.base.node.io.database.DBUpdateNodeFactory"
-            category-path="/database"
+            category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBDeleteRowsNodeFactory"
             id="org.knime.base.node.io.database.DBDeleteRowsNodeFactory"/>
       <node
             after="org.knime.base.node.io.database.DBDeleteRowsNodeFactory"
-            category-path="/database"
+            category-path="/database/database-utility"
             factory-class="org.knime.base.node.io.database.DBSQLExecutorNodeFactory"
             id="org.knime.base.node.io.database.DBSQLExecutorNodeFactory"/>
       <node
@@ -1615,24 +1644,24 @@
             id="org.knime.base.node.preproc.pmml.xml2pmml.XML2PMMLNodeFactory">
       </node>
       <node
-            category-path="/database"
+            category-path="/database/database-connector"
             expert-flag="false"
             factory-class="org.knime.base.node.io.database.connection.JDBCConnectorNodeFactory"
             id="org.knime.base.node.io.database.JDBCConnectorNodeFactory">
       </node>
       <node
-            category-path="/database"
+            category-path="/database/database-connector"
             expert-flag="false"
             factory-class="org.knime.base.node.io.database.connection.DBTableSelectorNodeFactory"
             id="org.knime.base.node.io.database.connection.DBTableSelectorNodeFactory">
       </node>
       <node
-            category-path="database"
+            category-path="/database/database-utility"
             factory-class="org.knime.base.node.io.database.SQLInjectNodeFactory"
             id="org.knime.base.node.io.database.SQLInjectNodeFactory">
       </node>
       <node
-            category-path="database"
+            category-path="database/database-utility"
             factory-class="org.knime.base.node.io.database.SQLExtractNodeFactory"
             id="org.knime.base.node.io.database.SQLExtractNodeFactory">
       </node>
