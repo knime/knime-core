@@ -1836,9 +1836,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         assert !newLocation.fetchInfo().exists() || newLocation.fetchInfo().isWorkflow();
         if (newLocation.fetchInfo().exists()) {
-            boolean overwrite = MessageDialog.openConfirm(getSite().getShell(),
+            boolean overwrite = MessageDialog.openQuestion(getSite().getShell(),
                 "Confirm SaveAs Overwrite", "The selected destination\n\n\t" + newLocation.getMountIDWithFullPath()
-                + "\n\nexists and will be overwritten.\n\n\nPlease confirm the overwrite.");
+                + "\n\nexists.\n\n\nDo you want to overwrite it with the current workflow?");
             if (!overwrite) {
                 return null;
             }
