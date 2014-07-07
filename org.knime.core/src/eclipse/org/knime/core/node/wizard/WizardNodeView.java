@@ -203,6 +203,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
                                 deleteTempFile(m_tempIndexFile);
                             }
                             m_browser.setText(createMessageHTML(e.getMessage()));
+                            LOGGER.error(e.getMessage(), e);
                         }
                     }
                 }
@@ -316,6 +317,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
                         deleteTempFile(m_tempIndexFile);
                     }
                     m_browser.setText(createMessageHTML(e.getMessage()));
+                    LOGGER.error(e.getMessage(), e);
                 }
             }
         });
@@ -504,9 +506,19 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, RE
             URL pluginURL = FileLocator.find(Platform.getBundle(pluginName), new Path("/"), null);
             if (pluginURL != null) {
                 try {
-                    pluginFile = new File(FileLocator.resolve(pluginURL).toURI());
+                    // like bundleentry://3394.fwk2134861702/
+                    URL url = FileLocator.resolve(pluginURL);
+                    // like file:/foo/eclipse trunk/plugins/org.knime.js.core/ -- not the space!
+                    // https://bugs.eclipse.org/bugs/show_bug.cgi?id=145096
+                    url = FileLocator.toFileURL(url);
+                    if ("file".equals(url.getProtocol())) {
+                        pluginFile = new File(url.getFile());
+                    } else {
+                        // don't know better, good luck
+                        pluginFile = new File(url.toURI());
+                    }
                 } catch (URISyntaxException e) {
-                    throw new IOException("Plugin path could not be resolved: " + pluginURL.toString());
+                    throw new IOException("Plugin path could not be resolved: " + pluginURL.toString(), e);
                 }
             }
             if (pluginFile == null) {
