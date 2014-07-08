@@ -991,7 +991,6 @@
             factory-class="org.knime.base.node.io.database.DBReaderNodeFactory"
             id="org.knime.base.node.io.database.DBReaderNodeFactory"/>
        <node
-            after="org.knime.base.node.io.database.DBReaderNodeFactory"
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
             id="org.knime.base.node.io.database.DBReaderConnectionNodeFactory">
@@ -1648,7 +1647,7 @@
             id="org.knime.base.node.io.database.JDBCConnectorNodeFactory">
       </node>
       <node
-            category-path="/database/database-connector"
+            category-path="/database/database-io"
             expert-flag="false"
             factory-class="org.knime.base.node.io.database.connection.DBTableSelectorNodeFactory"
             id="org.knime.base.node.io.database.connection.DBTableSelectorNodeFactory">
