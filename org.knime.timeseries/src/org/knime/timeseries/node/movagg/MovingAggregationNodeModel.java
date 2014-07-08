@@ -61,7 +61,6 @@ import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
 import org.knime.base.node.preproc.groupby.GroupByNodeModel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -87,6 +86,7 @@ public class MovingAggregationNodeModel extends NodeModel {
     private final List<ColumnAggregator> m_columnAggregators = new LinkedList<>();
 
     private final SettingsModelInteger m_winLength = createWindowLengthModel();
+
     private final SettingsModelBoolean m_handleMissings = createHandleMissingsModel();
 
     private final SettingsModelInteger m_maxUniqueVals = createMaxUniqueValModel();
@@ -101,6 +101,8 @@ public class MovingAggregationNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_cumulativeComputing = createCumulativeComputingModel();
 
+    private final SettingsModelString m_windowType = createWindowTypeModel();
+
     private List<ColumnAggregator> m_columnAggregators2Use = new LinkedList<>();
 
 
@@ -109,6 +111,13 @@ public class MovingAggregationNodeModel extends NodeModel {
      */
     public MovingAggregationNodeModel() {
         super(1, 1);
+    }
+
+    /**
+     * @return the {@link WindowType} model
+     */
+    static SettingsModelString createWindowTypeModel() {
+        return new SettingsModelString("windowType", WindowType.getDefault().getActionCommand());
     }
 
     /**
@@ -177,7 +186,7 @@ public class MovingAggregationNodeModel extends NodeModel {
             throw new InvalidSettingsException("No input table specification available");
         }
         final DataTableSpec inputSpec = inSpecs[0];
-     // remove all column aggregator
+        // remove all column aggregator
         m_columnAggregators2Use.clear();
         final ArrayList<ColumnAggregator> invalidColAggrs = new ArrayList<>(1);
         for (final ColumnAggregator colAggr : m_columnAggregators) {
@@ -188,34 +197,27 @@ public class MovingAggregationNodeModel extends NodeModel {
                 invalidColAggrs.add(colAggr);
             }
         }
-        if (m_columnAggregators2Use.isEmpty()) {
-            setWarningMessage("No aggregation column defined");
-        }
         if (!invalidColAggrs.isEmpty()) {
             setWarningMessage(invalidColAggrs.size() + " invalid aggregation column(s) found.");
         }
-        final ColumnRearranger colRearranger =
-                createColRearranger(FileStoreFactory.createNotInWorkflowFileStoreFactory(), inputSpec);
-        final DataTableSpec resultSpec = colRearranger.createSpec();
-        return new DataTableSpec[] {resultSpec};
+        if (m_columnAggregators2Use.isEmpty()) {
+            throw new InvalidSettingsException("No aggregation column defined");
+        }
+        final MovingAggregationTableFactory tableFactory =
+                createTableFactory(FileStoreFactory.createNotInWorkflowFileStoreFactory(), inputSpec);
+        return new DataTableSpec[] {tableFactory.createResultSpec()};
     }
 
-    private ColumnRearranger createColRearranger(final FileStoreFactory fsf, final DataTableSpec spec) {
+    private MovingAggregationTableFactory createTableFactory(final FileStoreFactory fsf, final DataTableSpec spec) {
         final GlobalSettings globalSettings = new GlobalSettings(fsf, Collections.<String> emptyList(),
             m_maxUniqueVals.getIntValue(), m_valueDelimiter.getJavaUnescapedStringValue(), spec, 0);
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(m_columnNamePolicy.getStringValue());
-        final ColumnRearranger colRearranger = new ColumnRearranger(spec);
-        final MovingAggregationCellFactory cellFactory =  new MovingAggregationCellFactory(spec, globalSettings,
-            colNamePolicy, m_columnAggregators2Use, m_cumulativeComputing.getBooleanValue(), m_winLength.getIntValue(),
-            m_handleMissings.getBooleanValue());
-        if (m_removeAggregationCols.getBooleanValue()) {
-            colRearranger.remove(cellFactory.getAggregationColNames().toArray(new String[0]));
-        }
-        if (m_removeRetainedCols.getBooleanValue()) {
-            colRearranger.remove(cellFactory.getRetainedColNames().toArray(new String[0]));
-        }
-        colRearranger.append(cellFactory);
-        return colRearranger;
+        final MovingAggregationTableFactory tableFactory =  new MovingAggregationTableFactory(spec, globalSettings,
+            colNamePolicy, m_columnAggregators2Use, m_cumulativeComputing.getBooleanValue(),
+            WindowType.getType(m_windowType.getStringValue()), m_winLength.getIntValue(),
+            m_handleMissings.getBooleanValue(), m_removeAggregationCols.getBooleanValue(),
+            m_removeRetainedCols.getBooleanValue());
+        return tableFactory;
     }
 
     /**
@@ -231,13 +233,13 @@ public class MovingAggregationNodeModel extends NodeModel {
         if (table.getRowCount() == 0) {
             setWarningMessage("Empty input table found");
         } else if (!m_cumulativeComputing.getBooleanValue() && table.getRowCount() < m_winLength.getIntValue()) {
-            setWarningMessage(
-                "Window length is smaller than the number of rows of the input table, only missing values appended");
+            throw new InvalidSettingsException(
+                "Window length is larger than the number of rows of the input table");
         }
         final DataTableSpec spec = table.getDataTableSpec();
-        final ColumnRearranger colRearranger =
-                createColRearranger(FileStoreFactory.createWorkflowFileStoreFactory(exec), spec);
-        final BufferedDataTable resultTable = exec.createColumnRearrangeTable(table, colRearranger, exec);
+        final MovingAggregationTableFactory tableFactory =
+                createTableFactory(FileStoreFactory.createWorkflowFileStoreFactory(exec), spec);
+        BufferedDataTable resultTable = tableFactory.createTable(exec, table);
         return new BufferedDataTable[] {resultTable};
     }
 
@@ -247,6 +249,7 @@ public class MovingAggregationNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_winLength.saveSettingsTo(settings);
+        m_windowType.saveSettingsTo(settings);
         m_cumulativeComputing.saveSettingsTo(settings);
         m_handleMissings.saveSettingsTo(settings);
         m_removeRetainedCols.saveSettingsTo(settings);
@@ -263,6 +266,7 @@ public class MovingAggregationNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_winLength.validateSettings(settings);
+        m_windowType.validateSettings(settings);
         m_cumulativeComputing.validateSettings(settings);
         m_handleMissings.validateSettings(settings);
         m_removeRetainedCols.validateSettings(settings);
@@ -295,6 +299,7 @@ public class MovingAggregationNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_winLength.loadSettingsFrom(settings);
+        m_windowType.loadSettingsFrom(settings);
         m_cumulativeComputing.loadSettingsFrom(settings);
         m_handleMissings.loadSettingsFrom(settings);
         m_removeRetainedCols.loadSettingsFrom(settings);
