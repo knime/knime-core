@@ -182,7 +182,7 @@ class ExtendedStatisticsNodeModel extends NodeModel {
     protected static final String CFGKEY_SHOW_MIN_MAX = "show min max";
 
     /** The default value for showing the min/max(/mean) values on the x axis. */
-    protected static final boolean DEFAULT_SHOW_MIN_MAX = false;
+    protected static final boolean DEFAULT_SHOW_MIN_MAX = true;
 
     private static final String HISTOGRAMS_GZ = "histograms.xml.gz";
 

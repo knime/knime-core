@@ -610,6 +610,9 @@ public class HistogramColumn implements Cloneable {
                 case DecimalRange:
                     BigDecimal bMin = new BigDecimal(Double.toString(min)),
                     bMax = new BigDecimal(Double.toString(max));
+                    if (min == max) {
+                        return new MinMaxBinCount(min, max, 1);
+                    }
                     BigDecimal range =
                         bMax.subtract(bMin).round(new MathContext(2, RoundingMode.UP)).stripTrailingZeros();
                     int power = range.scale();
@@ -1118,31 +1121,30 @@ public class HistogramColumn implements Cloneable {
      */
     protected void paintMinMax(final HistogramModel<?> histogramData, final Graphics2D g, final int height) {
         g.setColor(m_textColor);
+
         if (histogramData instanceof HistogramNumericModel) {
             HistogramNumericModel hnm = (HistogramNumericModel)histogramData;
 
             double realMin = hnm.getRealMin(), realMax = hnm.getRealMax();
-            NumberFormat format = new FormatDoubles().minimalFormatterForNumbers(realMin, realMax);
-            String min = format.format(realMin);
-            String max = format.format(realMax);
+            NumberFormat formatter = new FormatDoubles().formatterWithSamePrecisio(realMin, realMax);
+            String min = formatter.format(realMin);
+            String max = formatter.format(realMax);
             FontMetrics fm = g.getFontMetrics();
             Rectangle2D minBounds = fm.getStringBounds(min, g);
             Rectangle2D maxBounds = fm.getStringBounds(max, g);
-            //Rectangle2D meanBounds = fm.getStringBounds(mean, g);
             List<Bin<Pair<Double, Double>>> bins = hnm.getBins();
             double visibleMin = bins.get(0).getDef().getFirst().doubleValue(), visibleMax = bins.get(bins.size() - 1).getDef().getSecond().doubleValue();
             double visibleRange = visibleMax - visibleMin;
             int minPos = (int)((realMin - visibleMin)/ visibleRange * m_width), maxPos = (int)((realMax - visibleMin) / visibleRange * m_width);
-            //int meanPos = (int)((hnm.getMean() - visibleMin) / visibleRange * m_width);
             if (minPos + minBounds.getWidth() + maxBounds.getWidth() + 2 < maxPos) {
-//                if (minPos + minBounds.getWidth() + meanBounds.getWidth()/2 + 2 < meanPos && meanPos + meanBounds.getWidth() / 2 + 2 < maxPos - maxBounds.getWidth()) {
-//                    g.drawString(mean, (int)(meanPos - meanBounds.getWidth() / 2 - 1), m_height);
-//                }
-                for (int pos : new int[] {minPos/*, meanPos*/, maxPos}) {
+                for (int pos : new int[] {minPos, maxPos}) {
                     g.drawLine(pos, height, pos, height + MIN_MAX_AREA_HEIGHT / 3);
                 }
                 g.drawString(min, minPos + 1, m_height);
                 g.drawString(max, (int)(maxPos - maxBounds.getWidth() - 1), m_height);
+            } else if (min.equals(max)) {
+                g.drawString(min, (m_width = (int)maxBounds.getWidth()) / 2, m_height);
+                g.drawLine(m_width / 2, height, m_width / 2, height + MIN_MAX_AREA_HEIGHT / 3);
             }
         }
     }
