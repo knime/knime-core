@@ -49,6 +49,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,6 +61,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -243,6 +245,8 @@ import org.knime.workbench.explorer.filesystem.LocalExplorerFileStore;
 import org.knime.workbench.explorer.filesystem.RemoteExplorerFileStore;
 import org.knime.workbench.explorer.view.AbstractContentProvider;
 import org.knime.workbench.explorer.view.ContentObject;
+import org.knime.workbench.explorer.view.dialogs.OverwriteAndMergeInfo;
+import org.knime.workbench.explorer.view.dialogs.SnapshotPanel;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
@@ -1641,10 +1645,39 @@ public class WorkflowEditor extends GraphicalEditor implements
                     "\"Save As...\" is not possible while another editor to this workflow is open.");
             return;
         }
-        AbstractExplorerFileStore newWorkflowDir = getNewLocation(fileResource, isTempRemoteWorkflowEditor());
-        if (newWorkflowDir == null) {
+        OverwriteAndMergeInfo newLocationInfo = getNewLocation(fileResource, isTempRemoteWorkflowEditor());
+        if (newLocationInfo == null) {
+            // user canceled
             return;
         }
+        AbstractExplorerFileStore newWorkflowDir;
+        try {
+            newWorkflowDir = ExplorerFileSystem.INSTANCE.getStore(new URI(newLocationInfo.getNewName()));
+        } catch (URISyntaxException e2) {
+            LOGGER.error("Unable to create a URI from the selected destination: " + e2.getMessage()
+                    + " Canceling the SaveAs.");
+            MessageDialog.openError(getSite().getShell(), "Internal Error",
+                "Unable to create a URI from the selected destination. \n" + e2.getMessage()
+                + "\nCanceling the SaveAs.");
+            return;
+        }
+
+        if (newLocationInfo.createSnapshot()) {
+            try {
+                ((RemoteExplorerFileStore)newWorkflowDir).createSnapshot(newLocationInfo.getComment());
+            } catch (CoreException e) {
+                String msg =
+                    "Unable to create the desired snapshot before overwriting the workflow:\n" + e.getMessage()
+                        + "\n\nCanceling the upload!";
+                LOGGER.error(
+                    "Unable to create the desired snapshot before overwriting the workflow: " + e.getMessage()
+                        + " Upload canceled!", e);
+                MessageDialog.openError(getSite().getShell(), "Server Error", msg);
+                return;
+            }
+        }
+
+
         if (newWorkflowDir instanceof RemoteExplorerFileStore) {
             // selected a remote location: save + upload
             if (isDirty()) {
@@ -1770,9 +1803,9 @@ public class WorkflowEditor extends GraphicalEditor implements
      * For SaveAs...
      * @param currentLocation
      * @param allowRemoteLocation local and remote mount points are added to the selection dialog
-     * @return new (different!) URI or null if user canceled.
+     * @return new (different!) URI or null if user canceled. Caller should create a snapshot if told so.
      */
-    private AbstractExplorerFileStore getNewLocation(final URI currentLocation, final boolean allowRemoteLocation) {
+    private OverwriteAndMergeInfo getNewLocation(final URI currentLocation, final boolean allowRemoteLocation) {
         final AbstractExplorerFileStore currentStore = getFileStore(currentLocation);
         AbstractExplorerFileStore currentParent = null;
         if (currentStore != null) {
@@ -1790,60 +1823,107 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (isTempRemoteWorkflowEditor()) {
             AbstractExplorerFileStore remoteStore = ExplorerFileSystem.INSTANCE.getStore(m_origRemoteLocation);
             if (remoteStore != null) {
-                preSel = ContentObject.forFile(remoteStore.getParent());
+                preSel = ContentObject.forFile(remoteStore);
             } else {
                 preSel = null;
             }
         }
-        final SpaceResourceSelectionDialog dialog =
-            new SpaceResourceSelectionDialog(getSite().getShell(), selIDs.toArray(new String[selIDs.size()]), preSel);
-        SaveAsValidator validator = new SaveAsValidator(dialog, currentStore);
-        String defName = currentName + " - Copy";
-        if (!isTempRemoteWorkflowEditor()) {
-            if (currentParent != null) {
-                try {
-                    Set<String> childs = new HashSet<String>(Arrays.asList(currentParent.childNames(EFS.NONE, null)));
-                    defName = guessNewWorkflowNameOnSaveAs(childs, currentName);
-                } catch (CoreException e1) {
-                    // keep the simple default
+        OverwriteAndMergeInfo result = null;
+        while (result == null) { // keep the selection dialog open until we get a useful result
+            final SpaceResourceSelectionDialog dialog =
+                new SpaceResourceSelectionDialog(getSite().getShell(), selIDs.toArray(new String[selIDs.size()]),
+                    preSel);
+            SaveAsValidator validator = new SaveAsValidator(dialog, currentStore);
+            String defName = currentName + " - Copy";
+            if (!isTempRemoteWorkflowEditor()) {
+                if (currentParent != null) {
+                    try {
+                        Set<String> childs =
+                            new HashSet<String>(Arrays.asList(currentParent.childNames(EFS.NONE, null)));
+                        defName = guessNewWorkflowNameOnSaveAs(childs, currentName);
+                    } catch (CoreException e1) {
+                        // keep the simple default
+                    }
                 }
+            } else {
+                defName = currentName;
             }
-        } else {
-            defName = currentName;
-        }
-        dialog.setTitle("Save to new Location");
-        dialog.setDescription("Select the new destination workflow group for the workflow.");
-        dialog.setValidator(validator);
-        // Setup the name field of the dialog
-        dialog.setNameFieldEnabled(true);
-        dialog.setNameFieldDefaultValue(defName);
-        final AtomicBoolean proceed = new AtomicBoolean(false);
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                proceed.set(dialog.open() == Window.OK);
-            }
-        });
-        if (!proceed.get()) {
-            return null;
-        }
-        AbstractExplorerFileStore newLocation = dialog.getSelection();
-        if (newLocation.fetchInfo().isWorkflowGroup()) {
-            newLocation = newLocation.getChild(dialog.getNameFieldValue());
-        } else {
-            // in case they have selected a flow but changed the name in the name field afterwards
-            newLocation = newLocation.getParent().getChild(dialog.getNameFieldValue());
-        }
-        assert !newLocation.fetchInfo().exists() || newLocation.fetchInfo().isWorkflow();
-        if (newLocation.fetchInfo().exists()) {
-            boolean overwrite = MessageDialog.openQuestion(getSite().getShell(),
-                "Confirm SaveAs Overwrite", "The selected destination\n\n\t" + newLocation.getMountIDWithFullPath()
-                + "\n\nexists.\n\n\nDo you want to overwrite it with the current workflow?");
-            if (!overwrite) {
+            dialog.setTitle("Save to new Location");
+            dialog.setDescription("Select the new destination workflow group for the workflow.");
+            dialog.setValidator(validator);
+            // Setup the name field of the dialog
+            dialog.setNameFieldEnabled(true);
+            dialog.setNameFieldDefaultValue(defName);
+            final AtomicBoolean proceed = new AtomicBoolean(false);
+            Display.getDefault().syncExec(new Runnable() {
+                @Override
+                public void run() {
+                    proceed.set(dialog.open() == Window.OK);
+                }
+            });
+            if (!proceed.get()) {
                 return null;
             }
-        }
-        return newLocation;
+            AbstractExplorerFileStore newLocation = dialog.getSelection();
+            if (newLocation.fetchInfo().isWorkflowGroup()) {
+                newLocation = newLocation.getChild(dialog.getNameFieldValue());
+            } else {
+                // in case they have selected a flow but changed the name in the name field afterwards
+                newLocation = newLocation.getParent().getChild(dialog.getNameFieldValue());
+            }
+            assert !newLocation.fetchInfo().exists() || newLocation.fetchInfo().isWorkflow();
+            if (newLocation.fetchInfo().exists()) {
+                // confirm overwrite (with snapshot?)
+                final AtomicBoolean snapshotSupported = new AtomicBoolean(false);
+                final AtomicReference<SnapshotPanel> snapshotPanel = new AtomicReference<SnapshotPanel>(null);
+                if (newLocation.getContentProvider().supportsSnapshots()
+                    && (newLocation instanceof RemoteExplorerFileStore)) {
+                    snapshotSupported.set(true);
+                }
+                MessageDialog dlg =
+                    new MessageDialog(getSite().getShell(), "Confirm SaveAs Overwrite", null,
+                        "The selected destination\n\n\t" + newLocation.getMountIDWithFullPath()
+                            + "\n\nalready exists. Do you want to overwrite?\n",
+                        MessageDialog.QUESTION, new String[]{IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL,
+                            IDialogConstants.CANCEL_LABEL}, 1) {
+                        /**
+                         * {@inheritDoc}
+                         */
+                        @Override
+                        protected Control createCustomArea(final Composite parent) {
+                            if (snapshotSupported.get()) {
+                                snapshotPanel.set(new SnapshotPanel(parent, SWT.NONE));
+                                snapshotPanel.get().setEnabled(true);
+                                return snapshotPanel.get();
+                            } else {
+                                return null;
+                            }
+                        }
+                    };
+                int dlgResult = dlg.open();
+                if (dlgResult == 2 /* CANCEL */) {
+                    return null;
+                }
+                if (dlgResult == 0) { /* YES (= please overwrite) */
+                    if (snapshotPanel.get() != null) {
+                        SnapshotPanel snapPanel = snapshotPanel.get();
+                        result = new OverwriteAndMergeInfo(newLocation.toURI().toASCIIString(), false, true,
+                            snapPanel.createSnapshot(), snapPanel.getComment());
+                    } else {
+                        result =
+                            new OverwriteAndMergeInfo(newLocation.toURI().toASCIIString(), false, true, false, "");
+                    }
+
+                } else {
+                    /* NO, don't overwrite: continue while loop asking for a different location */
+                    preSel = ContentObject.forFile(newLocation);
+                    currentName = newLocation.getName();
+                }
+            } else {
+                result = new OverwriteAndMergeInfo(newLocation.toURI().toASCIIString(), false, false, false, "");
+            }
+        } /* end of while (result != null) keep the target selection dialog open */
+        return result;
     }
 
     /**
