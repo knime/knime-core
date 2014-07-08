@@ -51,13 +51,24 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.input.CountingInputStream;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.util.NonClosableInputStream;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -69,6 +80,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.util.FileUtil;
 
@@ -89,14 +102,34 @@ public class ReadTableNodeModel extends NodeModel {
     /** The extension of the files to store, \".knime\". */
     public static final String PREFERRED_FILE_EXTENSION = ".table";
 
-    private final SettingsModelString m_fileName =
-        new SettingsModelString(CFG_FILENAME, null);
+    private final SettingsModelString m_fileName = new SettingsModelString(CFG_FILENAME, null);
+    private final SettingsModelBoolean m_limitCheckerModel = createLimitCheckerModel();
+    private final SettingsModelInteger m_limitSpinnerModel = createLimitSpinnerModel(m_limitCheckerModel);
 
     /**
      * Creates new model with no inputs, one output.
      */
     public ReadTableNodeModel() {
         super(0, 1);
+    }
+
+    /** @param limitCheckerModel to register for enable/disable.
+     * @return */
+    static final SettingsModelInteger createLimitSpinnerModel(final SettingsModelBoolean limitCheckerModel) {
+        final SettingsModelInteger result = new SettingsModelInteger("limitRowsCount", 100000);
+        limitCheckerModel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                result.setEnabled(limitCheckerModel.getBooleanValue());
+            }
+        });
+        result.setEnabled(limitCheckerModel.getBooleanValue());
+        return result;
+    }
+
+    /** @return */
+    static final SettingsModelBoolean createLimitCheckerModel() {
+        return new SettingsModelBoolean("limitRows", false);
     }
 
     /**
@@ -137,6 +170,13 @@ public class ReadTableNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_fileName.loadSettingsFrom(settings);
+        try {
+            m_limitCheckerModel.loadSettingsFrom(settings);
+            m_limitSpinnerModel.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            m_limitCheckerModel.setBooleanValue(false);
+            m_limitSpinnerModel.setIntValue(100000);
+        }
     }
 
     /**
@@ -148,8 +188,63 @@ public class ReadTableNodeModel extends NodeModel {
         InputStream in = null;
         try {
             in = openInputStream();
-            DataTable table = DataContainer.readFromStream(in);
-            BufferedDataTable out = exec.createBufferedDataTable(table, exec);
+            long sizeInBytes;
+            String loc = m_fileName.getStringValue();
+            try {
+                try {
+                    URL url = new URL(loc);
+                    sizeInBytes = FileUtil.getFileFromURL(url).length();
+                } catch (MalformedURLException mue) {
+                    File file = new File(loc);
+                    if (file.exists()) {
+                        sizeInBytes = file.length();
+                    } else {
+                        sizeInBytes = 0L;
+                    }
+                }
+            } catch (Exception e) {
+                // ignore, no progress
+                sizeInBytes = 0L;
+            }
+            final ExecutionMonitor extractMonitor = exec.createSubProgress(0.4);
+            final ExecutionMonitor readMonitor = exec.createSubProgress(0.6);
+            final long sizeFinal = sizeInBytes;
+            if (sizeFinal > 0) {
+                CountingInputStream bcs = new CountingInputStream(in) {
+                    @Override
+                    protected synchronized void afterRead(final int n) {
+                        super.afterRead(n);
+                        final long byteCount = getByteCount();
+                        extractMonitor.setProgress((double)byteCount / sizeFinal,
+                            FileUtils.byteCountToDisplaySize(byteCount));
+                        try {
+                            extractMonitor.checkCanceled();
+                        } catch (CanceledExecutionException e) {
+                            throw new RuntimeException("canceled");
+                        }
+                    }
+                };
+                in = bcs;
+            }
+            exec.setMessage("Extracting temporary table...");
+            ContainerTable table = DataContainer.readFromStream(in);
+            exec.setMessage("Reading into final format...");
+            int limit = m_limitCheckerModel.getBooleanValue() ? m_limitSpinnerModel.getIntValue() : Integer.MAX_VALUE;
+            final int rowCount = Math.min(limit, table.getRowCount());
+            BufferedDataContainer c = exec.createDataContainer(table.getDataTableSpec(), true);
+            int row = 0;
+            try {
+                for (RowIterator it = table.iterator(); it.hasNext() && row < limit; row++) {
+                    DataRow next = it.next();
+                    String message = "Caching row #" + (row + 1) + " (\"" + next.getKey() + "\")";
+                    readMonitor.setProgress(row / (double)rowCount, message);
+                    exec.checkCanceled();
+                    c.addRowToTable(next);
+                }
+            } finally {
+                c.close();
+            }
+            BufferedDataTable out = c.getTable();
             return new BufferedDataTable[]{out};
         } finally {
             if (in != null) {

@@ -16,6 +16,9 @@
 		<option name="File Chooser">
 			Choose the file to read.
 		</option>
+		<option name="Limit number of rows">
+			Select this option if you want to read only the first few lines.
+		</option>
 	</fullDescription>
 	
 	<ports>
