@@ -365,10 +365,11 @@
             icon="icons/missing.gif"
             level-id="database-io"
             locked="true"
-            name="IO"
+            name="Read/Write"
             path="/database">
       </category>
       <category
+            after="database-io"
             icon="icons/missing.gif"
             level-id="database-manipulation"
             locked="true"
@@ -996,19 +997,18 @@
             id="org.knime.base.node.io.database.DBReaderConnectionNodeFactory">
    	  </node>
    	  <node
-            after="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
+            after="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DatabaseLoopingNodeFactory"
             id="org.knime.base.node.io.database.DatabaseLoopingNodeFactory">
       </node>
       <node
-            after="org.knime.base.node.io.database.DatabaseLoopingNodeFactory"
+            after="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBConnectionNodeFactory"
             id="org.knime.base.node.io.database.DBConnectionNodeFactory">
       </node>
       <node
-            after="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
             category-path="/database/database-manipulation"
             factory-class="org.knime.base.node.io.database.DBRowFilterNodeFactory"
             id="org.knime.base.node.io.database.DBRowFilterNodeFactory"/>
@@ -1038,12 +1038,11 @@
             factory-class="org.knime.base.node.io.database.DBJoinerNodeFactory"
             id="org.knime.base.node.io.database.DBJoinerNodeFactory"/>
       <node
-            after="org.knime.base.node.io.database.DBJoinerNodeFactory"
+            after="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
             id="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"/>
       <node
-            after="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
             category-path="/database/database-io"
             factory-class="org.knime.base.node.io.database.DBWriterNodeFactory"
             id="org.knime.base.node.io.database.DBWriterNodeFactory"/>
@@ -1058,7 +1057,6 @@
             factory-class="org.knime.base.node.io.database.DBDeleteRowsNodeFactory"
             id="org.knime.base.node.io.database.DBDeleteRowsNodeFactory"/>
       <node
-            after="org.knime.base.node.io.database.DBDeleteRowsNodeFactory"
             category-path="/database/database-utility"
             factory-class="org.knime.base.node.io.database.DBSQLExecutorNodeFactory"
             id="org.knime.base.node.io.database.DBSQLExecutorNodeFactory"/>
