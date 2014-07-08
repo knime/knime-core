@@ -113,6 +113,8 @@ public final class DatabaseWriterConnection {
             final int batchSize) throws Exception {
         final Connection conn = dbConn.createConnection(cp);
         exec.setMessage("Waiting for free database connection...");
+
+        final StringBuilder columnNamesForInsertStatement = new StringBuilder("(");
         synchronized (dbConn.syncConnection(conn)) {
             exec.setMessage("Start writing rows in database...");
             DataTableSpec spec = data.getDataTableSpec();
@@ -143,7 +145,9 @@ public final class DatabaseWriterConnection {
                             + "\" does not exist in database, "
                             + "will create new table.");
                     // and create new table
-                    final String query = "CREATE TABLE " + table + " " + createStmt(spec, sqlTypes, dbConn);
+                    final String query =
+                        "CREATE TABLE " + table + " "
+                            + createStmt(spec, sqlTypes, dbConn, columnNamesForInsertStatement);
                     LOGGER.debug("Executing SQL statement as execute: " + query);
                     statement.execute(query);
                 }
@@ -153,19 +157,24 @@ public final class DatabaseWriterConnection {
                     final Map<String, Integer> columnNames =
                         new LinkedHashMap<String, Integer>();
                     for (int i = 0; i < spec.getNumColumns(); i++) {
-                        String colName = replaceColumnName(spec.getColumnSpec(i).getName(), dbConn).toLowerCase();
-                        columnNames.put(colName, i);
+                        String colName = replaceColumnName(spec.getColumnSpec(i).getName(), dbConn);
+                        columnNames.put(colName.toLowerCase(), i);
                     }
                     // sanity check to lock if all input columns are in db
                     ArrayList<String> columnNotInSpec = new ArrayList<String>(
                             columnNames.keySet());
                     for (int i = 0; i < rsmd.getColumnCount(); i++) {
-                        String colName =
-                            rsmd.getColumnName(i + 1).toLowerCase();
-                        if (columnNames.containsKey(colName)) {
-                            columnNotInSpec.remove(colName);
+                        String colName = replaceColumnName(rsmd.getColumnName(i + 1), dbConn);
+                        if (columnNames.containsKey(colName.toLowerCase())) {
+                            columnNotInSpec.remove(colName.toLowerCase());
                         }
+                        columnNamesForInsertStatement.append(colName).append(',');
                     }
+                    if (rsmd.getColumnCount() > 0) {
+                        columnNamesForInsertStatement.deleteCharAt(columnNamesForInsertStatement.length() - 1);
+                    }
+                    columnNamesForInsertStatement.append(')');
+
                     if (columnNotInSpec.size() > 0) {
                         throw new RuntimeException("No. of columns in input"
                                 + " table > in database; not existing columns: "
@@ -173,7 +182,7 @@ public final class DatabaseWriterConnection {
                     }
                     mapping = new int[rsmd.getColumnCount()];
                     for (int i = 0; i < mapping.length; i++) {
-                        String name = rsmd.getColumnName(i + 1).toLowerCase();
+                        String name = replaceColumnName(rsmd.getColumnName(i + 1), dbConn).toLowerCase();
                         if (!columnNames.containsKey(name)) {
                             mapping[i] = -1;
                             continue;
@@ -289,7 +298,8 @@ public final class DatabaseWriterConnection {
                     LOGGER.info("Can't drop table \"" + table + "\", will create new table.");
                 }
                 // and create new table
-                final String query = "CREATE TABLE " + table + " " + createStmt(spec, sqlTypes, dbConn);
+                final String query =
+                    "CREATE TABLE " + table + " " + createStmt(spec, sqlTypes, dbConn, columnNamesForInsertStatement);
                 LOGGER.debug("Executing SQL statement as execute: " + query);
                 statement.execute(query);
                 statement.close();
@@ -298,7 +308,10 @@ public final class DatabaseWriterConnection {
             // creates the wild card string based on the number of columns
             // this string it used every time an new row is inserted into the db
             final StringBuilder wildcard = new StringBuilder("(");
+
             for (int i = 0; i < mapping.length; i++) {
+
+
                 if (i > 0) {
                     wildcard.append(", ?");
                 } else {
@@ -319,7 +332,7 @@ public final class DatabaseWriterConnection {
             int curBatchSize = 0;
 
             // create table meta data with empty column information
-            final String query = "INSERT INTO " + table + " VALUES " + wildcard.toString();
+            final String query = "INSERT INTO " + table + " " + columnNamesForInsertStatement + " VALUES " + wildcard;
             LOGGER.debug("Executing SQL statement as prepareStatement: " + query);
             final PreparedStatement stmt = conn.prepareStatement(query);
             // remember auto-commit flag
@@ -782,18 +795,24 @@ public final class DatabaseWriterConnection {
     }
 
     private static String createStmt(final DataTableSpec spec,
-            final Map<String, String> sqlTypes, final DatabaseConnectionSettings settings) {
+            final Map<String, String> sqlTypes, final DatabaseConnectionSettings settings,
+            final StringBuilder columnNamesForInsertStatement) {
         StringBuilder buf = new StringBuilder("(");
         for (int i = 0; i < spec.getNumColumns(); i++) {
             if (i > 0) {
                 buf.append(", ");
+                columnNamesForInsertStatement.append(", ");
             }
             DataColumnSpec cspec = spec.getColumnSpec(i);
             String colName = cspec.getName();
             String column = replaceColumnName(colName, settings);
             buf.append(column + " " + sqlTypes.get(colName));
+
+            columnNamesForInsertStatement.append(column);
         }
         buf.append(")");
+        columnNamesForInsertStatement.append(')');
+
         return buf.toString();
     }
 
