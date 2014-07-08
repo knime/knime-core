@@ -81,6 +81,7 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
      * @param data training data.
      * @param spec port object spec.
      * @throws InvalidSettingsException When settings are inconsistent with the data
+     * @since 2.10
      */
     public RegressionTrainingData(final BufferedDataTable data,
             final PMMLPortObjectSpec spec) throws InvalidSettingsException {
@@ -92,6 +93,7 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
      * @param spec port object spec.
      * @param failOnMissing when true an exception is thrown when a missing cell is observed
      * @throws InvalidSettingsException When settings are inconsistent with the data
+     * @since 2.10
      */
     public RegressionTrainingData(final BufferedDataTable data,
             final PMMLPortObjectSpec spec,
@@ -107,6 +109,7 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
      * @param sortTargetCategories true when target categories should be sorted
      * @param sortFactorsCategories true when categories of nominal data in the include list should be sorted
      * @throws InvalidSettingsException When settings are inconsistent with the data
+     * @since 2.10
      */
     public RegressionTrainingData(final BufferedDataTable data,
             final PMMLPortObjectSpec spec,
@@ -187,7 +190,10 @@ public class RegressionTrainingData implements Iterable<RegressionTrainingRow> {
         return m_parameterCount;
     }
 
-    /** @return Number of rows in the training data. */
+    /**
+     * @return Number of rows in the training data.
+     * @since 2.10
+     */
     public int getRowCount() {
         return m_data.getRowCount();
     }

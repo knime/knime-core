@@ -107,7 +107,7 @@ final class LinReg2LearnerSettings {
         m_offsetValue = 0;
         m_scatterPlotFirstRow = 1;
         m_scatterPlotRowCount = 20000;
-        m_missingValueHandling = org.knime.base.node.mine.regression.MissingValueHandling.ignore;
+        m_missingValueHandling = org.knime.base.node.mine.regression.MissingValueHandling.fail;
     }
 
     private static final String CFG_TARGET = "target";

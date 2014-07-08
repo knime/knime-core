@@ -247,7 +247,8 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
                 if ((m_colSelected[i] || (i == dependentIndex)) && row.getCell(i).isMissing()) {
                     switch (m_settings.getMissingValueHandling()) {
                         case fail:
-                            throw new IllegalArgumentException("Missing values are not supported by this node.");
+                            throw new IllegalArgumentException("Missing value support disabled,"
+                                + " see node configuration dialog.");
                         case ignore:
                             continue nextRow;
                         default:

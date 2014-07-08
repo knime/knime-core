@@ -153,7 +153,7 @@ public class RegressionTrainingRow {
     private boolean isMissing(final DataCell cell) {
         boolean isMissing = cell.isMissing();
         if (isMissing && m_failOnMissing) {
-            throw new IllegalStateException("Observed missing value in input data.");
+            throw new IllegalStateException("Missing value support disabled, see node configuration dialog.");
         }
         m_hasMissingCells = m_hasMissingCells || isMissing;
         return isMissing;
