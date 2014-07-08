@@ -54,6 +54,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -84,9 +85,7 @@ public final class PortUtil {
         NodeLogger.getLogger(PortUtil.class);
 
     private static final Map<Class<? extends PortObjectSpec>,
-    PortObjectSpecSerializer<?>> PORT_SPEC_SERIALIZER_MAP =
-        new HashMap<Class<? extends PortObjectSpec>,
-        PortObjectSpecSerializer<?>>();
+    PortObjectSpecSerializer<?>> PORT_SPEC_SERIALIZER_MAP = new ConcurrentHashMap<>();
 
     private PortUtil() {
     }
