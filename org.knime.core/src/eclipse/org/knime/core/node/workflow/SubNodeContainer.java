@@ -1038,8 +1038,11 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 outgoingFlowObjectStack.push(f.cloneAndUnsetOwner());
             }
         } else {
-            while (!outgoingFlowObjectStack.isEmpty()) {
-                outgoingFlowObjectStack.pop(FlowObject.class);
+            // outgoing stack may be null if reset is called twice in a row (or once but no configure was called)
+            if (outgoingFlowObjectStack != null) {
+                while (!outgoingFlowObjectStack.isEmpty()) {
+                    outgoingFlowObjectStack.pop(FlowObject.class);
+                }
             }
         }
         if (changed && !m_isPerformingActionCalledFromParent) {
