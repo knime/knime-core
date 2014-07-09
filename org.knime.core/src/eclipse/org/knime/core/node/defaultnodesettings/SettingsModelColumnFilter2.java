@@ -141,6 +141,20 @@ public final class SettingsModelColumnFilter2 extends SettingsModel {
         m_filterConfiguration.loadDefaults(spec, true);
     }
 
+    /** Inits default values, usually used during first-time node configuration (auto-configure).
+     * For a detailed description of the arguments, see
+     * {@link DataColumnSpecFilterConfiguration#loadDefault(DataTableSpec, InputFilter, boolean)}.
+     * @param spec ...
+     * @param filter ...
+     * @param filterDefinesIncludeList ...
+     * @since 2.10
+     * @see DataColumnSpecFilterConfiguration#loadDefault(DataTableSpec, InputFilter, boolean)
+     */
+    public void loadDefaults(final DataTableSpec spec,
+        final InputFilter<DataColumnSpec> filter, final boolean filterDefinesIncludeList) {
+        m_filterConfiguration.loadDefault(spec, filter, filterDefinesIncludeList);
+    }
+
     /**
      * @return
      */

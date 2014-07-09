@@ -65,6 +65,7 @@ import org.knime.base.data.statistics.HistogramModel;
 import org.knime.base.data.statistics.Statistics3Table;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
+import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -73,8 +74,11 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataTableSpecCreator;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataTable;
@@ -92,6 +96,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 import org.knime.core.util.Pair;
 
 /**
@@ -189,6 +194,10 @@ class ExtendedStatisticsNodeModel extends NodeModel {
     private static final String DATA_ARRAY_GZ = "dataarray.gz";
 
     private static final BinNumberSelectionStrategy BIN_SELECTION_STRATEGY = BinNumberSelectionStrategy.DecimalRange;
+
+    /** Set to true when the settings are loaded the first time (after load or after confirming the dialog). Used
+     * to trigger auto-configure. */
+    private boolean m_hasSettings = false;
 
     /**
      * Helper method to create image format model.
@@ -501,10 +510,16 @@ class ExtendedStatisticsNodeModel extends NodeModel {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
-        List<String> nominalValues = Arrays.asList(m_nominalFilter.applyTo(inSpecs[0]).getIncludes());
-        DataTableSpec nominalSpec = createOutSpecNominal(inSpecs[0], nominalValues);
+        final DataTableSpec inputSpec = inSpecs[0];
+        if (!m_hasSettings) {
+            m_nominalFilter.loadDefaults(inputSpec, new DataTypeColumnFilter(NominalValue.class, StringValue.class,
+                IntValue.class, LongValue.class, BooleanValue.class), true);
+        }
+        List<String> nominalValues = Arrays.asList(m_nominalFilter.applyTo(inputSpec).getIncludes());
+        DataTableSpec nominalSpec = createOutSpecNominal(inputSpec, nominalValues);
 
         DataTableSpec[] ret = new DataTableSpec[3];
         DataTableSpecCreator specCreator = new DataTableSpecCreator(Statistics3Table.getStatisticsSpecification());
@@ -568,6 +583,7 @@ class ExtendedStatisticsNodeModel extends NodeModel {
         getHistogramHeight().loadSettingsFrom(settings);
         getEnableHiLite().loadSettingsFrom(settings);
         getShowMinMax().loadSettingsFrom(settings);
+        m_hasSettings = true;
     }
 
     /**
