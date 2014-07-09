@@ -614,8 +614,7 @@ public class Statistics3Table {
      * @param colIdx The index of column in the computed values.
      * @return The cells according to {@link #STATISTICS_SPECIFICATION}.
      */
-    private DataCell[] createRow(final String name, final int colIdx) {
-        final DataCell[] ret = new DataCell[getStatisticsSpecification().getNumColumns()];
+    private DataCell[] createRow(final String name, final int colIdx) { final DataCell[] ret = new DataCell[getStatisticsSpecification().getNumColumns()];
         int i = 0;
         ret[i++] = new StringCell(name);
         ret[i++] = m_minCells[colIdx];
@@ -630,7 +629,7 @@ public class Statistics3Table {
         ret[i++] = new IntCell(m_nanValueCnt[colIdx]);
         ret[i++] = new IntCell(m_posInfinityValueCnt[colIdx]);
         ret[i++] = new IntCell(m_negInfinityValueCnt[colIdx]);
-        ret[i++] = new DoubleCell(m_median[colIdx]);
+        ret[i++] = Double.isNaN(m_median[colIdx]) ? DataType.getMissingCell() : new DoubleCell(m_median[colIdx]);
         ret[i++] = new IntCell(m_rowCount);
         return ret;
     }
