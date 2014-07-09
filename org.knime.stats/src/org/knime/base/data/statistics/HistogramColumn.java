@@ -1667,7 +1667,7 @@ public class HistogramColumn implements Cloneable {
             HistogramNominalModel model =
                 new HistogramNominalModel(new LinkedHashMap<DataValue, Integer>(nominalValues), i, colName,
                     statTable.getRowCount());
-            row[row.length - 1] = createImageCell(model, false);
+            row[row.length - 1] = createImageCell(model, maxBinCount >= model.getBins().size());
             nominals.addRowToTable(new DefaultRow(colName, row));
         }
         nominals.close();
