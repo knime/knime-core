@@ -57,7 +57,7 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
  */
 public enum WindowType implements ButtonGroupEnumInterface {
     /**Forward.*/
-    FORWARD("Forward", "Looks window length rows forward from the current point"),
+    FORWARD("Forward", "Looks window length rows forward from the current point."),
     /**Central.*/
     CENTER("Central", "Looks half the window length backward from the current point and half forward."),
     /**Backward.*/

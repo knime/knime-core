@@ -10,6 +10,13 @@
             at the end of the table.
         </intro>
         <tab name="General settings">
+            <option name="Window type">
+                <ul>
+                    <li><b>Forward:</b> Looks window length rows forward from the current point.</li>
+                    <li><b>Central:</b> Looks half the window length backward from the current point and half forward.</li>
+                    <li><b>Forward:</b> Looks window length rows back from the current point.</li>
+                </ul>
+            </option>
             <option name="Window length"> The number of samples to include in 
             the moving window. Minimum value: 2 samples. Maximum Value: Time Series length.
             </option>
