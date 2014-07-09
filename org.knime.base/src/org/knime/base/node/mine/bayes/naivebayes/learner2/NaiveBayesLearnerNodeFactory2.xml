@@ -35,19 +35,21 @@
             given attribute/class value pair. Set to zero for no correction.
         </option>
         <option name="Ignore missing values">
-            By default the node uses the missing value information to improve the class probability calculation but can 
-            be disabled by selecting this option.
+            By default the node uses the missing value information to improve the prediction result.
             Since the PMML standard does not support this option and ignores missing values this option is disabled 
             if the PMML compatibility option is selected and missing values are ignored.
-            
-            Be aware that if missing values are considered during prediction the result might be different to the
-            PMML compatible model.
         </option>
 		<option name="Create PMML 4.2 compatible model">
 			Select this option to create a model which is compliant with the 
             <a href="http://www.dmg.org/v4-2/NaiveBayes.html">PMML 4.2 standard</a>.
-            Missing values as well as columns that contain bit vectors are ignored during learning and prediction if 
-            this option is ticked.
+            The PMML 4.2 standard ignores missing values and does not support bit vectors. Therefore bit vector columns
+            and missing values are ignored during learning and prediction if this option is selected.
+            <p>
+            Even if this option is not selected the node creates a valid PMML model. However the model contains 
+            KNIME specific information to store missing value and bit vector information. This information is used in 
+            the KNIME Naive Bayes Predictor to improve the prediction result but ignored by any other PMML compatible 
+            predictor which might result in different prediction results.
+            </p>
 	    </option>
 	</fullDescription>
 
