@@ -158,8 +158,11 @@ public class TestflowCollector {
     private void searchDirectory(final File currentDir, final File rootDir, final Collection<WorkflowTestSuite> tests,
         final TestrunConfiguration runConfiguration) throws IOException {
         File workflowFile = new File(currentDir, WorkflowPersistor.WORKFLOW_FILE);
+        File templateFile = new File(currentDir, WorkflowPersistor.TEMPLATE_FILE);
 
-        if (workflowFile.exists()) {
+        if (templateFile.exists()) {
+            return;
+        } else if (workflowFile.exists()) {
             String workflowName = currentDir.getName();
             String workflowPath = currentDir.getAbsolutePath().substring(rootDir.getAbsolutePath().length());
             if (workflowName.matches(m_namePattern) && workflowPath.matches(m_pathPattern)) {
