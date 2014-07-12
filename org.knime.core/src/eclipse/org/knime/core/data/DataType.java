@@ -320,27 +320,26 @@ public final class DataType {
      * or <code>null</code> if no such serializer is available
      * @throws NullPointerException if the argument is <code>null</code>
      */
-    @SuppressWarnings("unchecked") // access to CLASS_TO_SERIALIZER_MAP
-    public static <T extends DataCell>
-        DataCellSerializer<T> getCellSerializer(final Class<T> cl) {
-        if (CLASS_TO_SERIALIZER_MAP.containsKey(cl)) {
-            return CLASS_TO_SERIALIZER_MAP.get(cl);
-        }
-        DataCellSerializer<T> result = null;
-        try {
-            result = SerializerMethodLoader.
-            getSerializer(cl, DataCellSerializer.class,
-                    "getCellSerializer", false);
-        } catch (NoSuchMethodException nsme) {
-            if (KNIMEConstants.ASSERTIONS_ENABLED) {
-                LOGGER.warn("Class \"" + cl.getSimpleName() + "\" does not "
-                        + "define method \"getCellSerializer\", using ordinary "
-                        + "(but slow) java serialization. This warning "
-                        + "does not appear if assertions are off.", nsme);
+    @SuppressWarnings("unchecked")
+    // access to CLASS_TO_SERIALIZER_MAP
+    public static <T extends DataCell> DataCellSerializer<T> getCellSerializer(final Class<T> cl) {
+        synchronized (CLASS_TO_SERIALIZER_MAP) {
+            if (CLASS_TO_SERIALIZER_MAP.containsKey(cl)) {
+                return CLASS_TO_SERIALIZER_MAP.get(cl);
             }
+            DataCellSerializer<T> result = null;
+            try {
+                result = SerializerMethodLoader.getSerializer(cl, DataCellSerializer.class, "getCellSerializer", false);
+            } catch (NoSuchMethodException nsme) {
+                if (KNIMEConstants.ASSERTIONS_ENABLED) {
+                    LOGGER.warn("Class \"" + cl.getSimpleName() + "\" does not define method \"getCellSerializer\", "
+                            + "using ordinary (but slow) java serialization. This warning does not appear if "
+                            + "assertions are off.", nsme);
+                }
+            }
+            CLASS_TO_SERIALIZER_MAP.put(cl, result);
+            return result;
         }
-        CLASS_TO_SERIALIZER_MAP.put(cl, result);
-        return result;
     }
 
     /**
