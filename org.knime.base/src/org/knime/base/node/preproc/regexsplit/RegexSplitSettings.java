@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Sep 1, 2008 (wiswedel): created
  */
@@ -74,13 +74,13 @@ final class RegexSplitSettings {
     private boolean m_isDotAll;
     private boolean m_isUniCodeCase;
     private boolean m_isCanonEQ;
-    
+
     /**
      * Load method for NodeModel.
      * @param settings To load from.
      * @throws InvalidSettingsException If settings invalid.
      */
-    void loadSettingsInModel(final NodeSettingsRO settings) 
+    void loadSettingsInModel(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         m_column = settings.getString("column");
         m_pattern = settings.getString("pattern");
@@ -100,7 +100,7 @@ final class RegexSplitSettings {
      * @param spec Input spec
      * @throws NotConfigurableException If no matching col found
      */
-    void loadSettingsInDialog(final NodeSettingsRO settings, 
+    void loadSettingsInDialog(final NodeSettingsRO settings,
             final DataTableSpec spec) throws NotConfigurableException {
         String defColumn = null;
         for (DataColumnSpec s : spec) {
@@ -127,7 +127,7 @@ final class RegexSplitSettings {
                     "No string compatible column in input table");
         }
     }
-    
+
     /**
      * Saves parameters to argument settings.
      * @param settings To save to.
@@ -144,7 +144,7 @@ final class RegexSplitSettings {
         settings.addBoolean("isUniCodeCase", m_isUniCodeCase);
         settings.addBoolean("isCanonEQ", m_isCanonEQ);
     }
-    
+
     /** Compiles the pattern with the current settings.
      * @return The pattern object
      * @throws InvalidSettingsException If the pattern can't be compiled.
@@ -157,18 +157,18 @@ final class RegexSplitSettings {
             throw new InvalidSettingsException(
                     "Invalid pattern: " + e.getMessage(), e);
         } catch (IllegalArgumentException iae) {
-            throw new IllegalArgumentException("Invalid flags in pattern " 
+            throw new IllegalArgumentException("Invalid flags in pattern "
                     + "compilation: " + iae.getMessage(), iae);
         }
     }
-    
+
     private int getFlags() {
         int flags = 0;
         if (m_isUnixLines) {
             flags |= Pattern.UNIX_LINES;
         }
         if (m_isCaseInsensitive) {
-            flags |= Pattern.UNIX_LINES;
+            flags |= Pattern.CASE_INSENSITIVE;
         }
         if (m_isComments) {
             flags |= Pattern.COMMENTS;
@@ -190,7 +190,7 @@ final class RegexSplitSettings {
         }
         return flags;
     }
-    
+
     /**
      * @return the column
      */
