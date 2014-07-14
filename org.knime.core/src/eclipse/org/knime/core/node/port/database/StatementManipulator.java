@@ -103,7 +103,7 @@ public class StatementManipulator {
      * @return an SQL query
      */
     public String forMetadataOnly(final String sql) {
-        return "SELECT * FROM (" + sql + ") " + getTempTableName() + " WHERE (1 == 0)";
+        return "SELECT * FROM (" + sql + ") " + getTempTableName() + " WHERE (1 = 0)";
     }
 
     /**
