@@ -54,6 +54,7 @@
 				format.</option>
 			<option name="Width">The width of the histogram.</option>
 			<option name="Height">The height of the histogram.</option>
+			<option name="Show min/max values">Show or do not show the numeric min/max values on histograms.</option>
 		</tab>
 	</fullDescription>
 
