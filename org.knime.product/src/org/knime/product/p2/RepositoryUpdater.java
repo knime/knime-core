@@ -163,10 +163,11 @@ public class RepositoryUpdater implements ProvisioningListener {
     public void notify(final EventObject o) {
         if (o instanceof RepositoryEvent) {
             RepositoryEvent event = (RepositoryEvent)o;
-            if ((event.getKind() == RepositoryEvent.ADDED) && (event.getRepositoryType() == IRepository.TYPE_ARTIFACT)
-                && !urlContainsID(event.getRepositoryLocation())) {
-
-                // update artifact repository location when a new repository is added
+            if ((event.getKind() == RepositoryEvent.ADDED) && !urlContainsID(event.getRepositoryLocation())) {
+                // Update/add artifact repository location when a new repository is added. Even though Eclipse
+                // adds the corresponding artifact repository by itself, reloading an existing repository, will only
+                // remove and add the metadata repository. Therefore we need to re-add the artifact repository in such
+                // cases "manually".
                 updateArtifactRepository(event);
             } else if ((event.getKind() == RepositoryEvent.REMOVED)
                 && (event.getRepositoryType() == IRepository.TYPE_METADATA)
