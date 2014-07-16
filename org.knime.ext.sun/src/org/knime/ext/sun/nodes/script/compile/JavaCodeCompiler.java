@@ -156,6 +156,12 @@ public final class JavaCodeCompiler {
             }
             compileArgs.add(b.toString());
         }
+
+        compileArgs.add("-source");
+        compileArgs.add("1.7");
+        compileArgs.add("-target");
+        compileArgs.add("1.7");
+
         compileArgs.add("-nowarn");
         if (m_additionalCompileArgs != null) {
             compileArgs.addAll(Arrays.asList(m_additionalCompileArgs));

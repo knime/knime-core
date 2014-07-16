@@ -113,6 +113,10 @@ public class JavaSnippetCompiler {
                 }
                 m_compileArgs.add(b.toString());
             }
+            m_compileArgs.add("-source");
+            m_compileArgs.add("1.7");
+            m_compileArgs.add("-target");
+            m_compileArgs.add("1.7");
 
             m_compiler  = new EclipseCompiler();
         }
