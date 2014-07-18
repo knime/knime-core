@@ -237,34 +237,21 @@ public final class StringManipulatorProvider implements ManipulatorProvider {
      * @return file object of a jar file with all compiled manipulators
      * @throws IOException if jar file cannot be created
      */
-    public File getJarFile() throws IOException {
+    public synchronized File getJarFile() throws IOException {
         if (m_jarFile == null || !m_jarFile.exists()) {
-            // Temp directory must not be associated with a node therefore we need to specifiy the base directory
+            // Temp file must not be associated with a node therefore we need to specify the base directory
             // explicitly.
-            File tempClassPathDir =
-                    FileUtil.createTempDir("knime_stringmanipulation", new File(KNIMEConstants.getKNIMETempDir()));
-            tempClassPathDir.deleteOnExit();
             m_jarFile =
-                    new File(tempClassPathDir.getPath() + File.separator
-                            + "manipulators.jar");
-            m_jarFile.deleteOnExit();
-            FileOutputStream out = new FileOutputStream(m_jarFile);
-            JarOutputStream jar = new JarOutputStream(out);
-
+                FileUtil.createTempFile("jsnippet-manipulators", ".jar", new File(KNIMEConstants.getKNIMETempDir()),
+                    true);
             Collection<Object> classes = new ArrayList<Object>();
             classes.add(Manipulator.class);
             classes.addAll(m_manipulators.get(ALL_CATEGORY));
             // create tree structure for classes
             DefaultMutableTreeNode root = createTree(classes);
-            try {
+            try (JarOutputStream jar = new JarOutputStream(new FileOutputStream(m_jarFile))) {
                 createJar(root, jar, null);
-            } catch (IOException ioe) {
-                throw ioe;
-            } finally {
-                jar.close();
-                out.close();
             }
-
         }
         return m_jarFile;
     }
