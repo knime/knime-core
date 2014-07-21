@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Testcases for the Node Repository
 Bundle-SymbolicName: org.knime.workbench.repository.testing;singleton:=true
-Bundle-Version: 2.10.0.qualifier
+Bundle-Version: 2.11.0.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Fragment-Host: org.knime.workbench.repository;bundle-version="[2.9.0,3.0.0)"
 Require-Bundle: org.junit;bundle-version="4.8.2",
