@@ -128,7 +128,8 @@ public final class ImageRepository {
         History("icons/history.png"),
         /** Icon for delete. */
         Delete("icons/delete.png"),
-
+        /** Icon for startup messages view. */
+        StartupMessages("icons/startupMessages.png"),
 
         /** Icon for a folder. */
         Folder("icons/folder.png"),

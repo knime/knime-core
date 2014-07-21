@@ -2,6 +2,7 @@
 <?eclipse version="3.0"?>
 <plugin>
    <extension-point id="multipleInstanceViews" name="KNIME multiple instances views" schema="schema/multipleInstanceViews.exsd"/>
+   <extension-point id="startupMessages" name="StartupMessages" schema="schema/startupMessages.exsd"/>
 <extension
          point="org.eclipse.ui.views">
       <view
@@ -341,6 +342,17 @@
                 name="Log files"
                 priority="normal">
           </content-type>
+       </extension>
+       <extension
+             point="org.eclipse.ui.views">
+       <view
+             allowMultiple="false"
+             category="org.knime.workbench.ui.category"
+             class="org.knime.workbench.ui.startup.view.StartupMessagesView"
+             icon="icons/startupMessages.png"
+             id="org.knime.workbench.ui.startupMessages"
+             name="Startup Messages">
+       </view>
        </extension>
    
 </plugin>

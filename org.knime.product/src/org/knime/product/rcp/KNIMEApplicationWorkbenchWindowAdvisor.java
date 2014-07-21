@@ -52,6 +52,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.CoolBarManager;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
@@ -60,6 +61,8 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.internal.WorkbenchWindow;
 import org.eclipse.ui.internal.ide.IDEInternalPreferences;
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin;
+import org.knime.core.node.NodeLogger;
+import org.knime.workbench.ui.startup.StartupMessage;
 
 /**
  * This advisor is used for configuring the workbench window and creating the action bar advisor.
@@ -122,7 +125,7 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
     @Override
     public void postWindowOpen() {
         super.postWindowOpen();
-        IWorkbenchWindow workbenchWindow =  PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        IWorkbenchWindow workbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
         IMenuManager menuManager = ((WorkbenchWindow)workbenchWindow).getMenuBarManager();
         menuManager.remove("org.eclipse.search.menu");
         menuManager.remove("org.eclipse.ui.run");
@@ -130,12 +133,25 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         menuManager.remove("navigate");
         menuManager.updateAll(true);
 
-
         CoolBarManager toolbarManager = ((WorkbenchWindow)workbenchWindow).getCoolBarManager();
         toolbarManager.remove("org.eclipse.debug.ui.launchActionSet");
         toolbarManager.remove("org.eclipse.ui.edit.text.actionSet.annotationNavigation");
         toolbarManager.remove("org.eclipse.ui.edit.text.actionSet.navigation");
         toolbarManager.update(true);
+
+        showStartupMessages();
+    }
+
+    private void showStartupMessages() {
+        if (!StartupMessage.getAllStartupMessages().isEmpty()) {
+            // show view only if there are messages
+            try {
+                PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
+                    .showView("org.knime.workbench.ui.startupMessages");
+            } catch (PartInitException ex) {
+                NodeLogger.getLogger(getClass()).error("Could not open startup messages view: " + ex.getMessage(), ex);
+            }
+        }
     }
 
     @SuppressWarnings("restriction")
@@ -164,12 +180,11 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvis
         }
 
         String workspaceName =
-                IDEWorkbenchPlugin.getDefault().getPreferenceStore().getString(IDEInternalPreferences.WORKSPACE_NAME);
+            IDEWorkbenchPlugin.getDefault().getPreferenceStore().getString(IDEInternalPreferences.WORKSPACE_NAME);
         if ((customName == null) && (workspaceName != null) && (workspaceName.length() > 0)) {
             customName = workspaceName;
         }
 
-        return (customName != null ? customName : title)
-                + (workspaceLocation != null ? " - " + workspaceLocation : "");
+        return (customName != null ? customName : title) + (workspaceLocation != null ? " - " + workspaceLocation : "");
     }
 }
