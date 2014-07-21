@@ -271,8 +271,9 @@ public final class JavaCodeCompiler {
                 b.append("\n").append(errorOut);
             } else {
                 if (!errorOut.isEmpty()) {
-                    LOGGER.debug("Error output of compilation: ");
-                    LOGGER.debug(errorOut);
+                    LOGGER.debug("Error output of compilation:\n" + errorOut);
+                    LOGGER.debug("Command line arguments were: " + compileArgs);
+
                 }
             }
             throw new CompilationFailedException(b.toString());
