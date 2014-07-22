@@ -47,8 +47,8 @@ package org.knime.base.data.aggregation.collection;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.Set;
 
 import org.knime.base.data.aggregation.AggregationOperator;
@@ -69,18 +69,19 @@ import org.knime.core.data.collection.SetCell;
 public class XORElementOperator extends AggregationOperator {
 
     private final Set<DataCell> m_vals;
+    private final Set<DataCell> m_allVals;
 
     /**Constructor for class XORElementOperator.
      * @param operatorData the operator data
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    protected XORElementOperator(final OperatorData operatorData,
-            final GlobalSettings globalSettings,
+    protected XORElementOperator(final OperatorData operatorData, final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
         try {
-            m_vals = new LinkedHashSet<DataCell>(getMaxUniqueValues());
+            m_vals = new LinkedHashSet<>(getMaxUniqueValues());
+            m_allVals = new HashSet<>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
                     "Maximum unique values number to big");
@@ -93,8 +94,7 @@ public class XORElementOperator extends AggregationOperator {
      */
     public XORElementOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Exclusive-or", "Exclusive-or", true, false,
-                CollectionDataValue.class, true),
+        this(new OperatorData("Exclusive-or", "Exclusive-or", true, false, CollectionDataValue.class, true),
                 globalSettings, opColSettings);
     }
 
@@ -102,8 +102,7 @@ public class XORElementOperator extends AggregationOperator {
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(
-            final GlobalSettings globalSettings,
+    public AggregationOperator createInstance(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         return new XORElementOperator(getOperatorData(), globalSettings, opColSettings);
     }
@@ -115,23 +114,18 @@ public class XORElementOperator extends AggregationOperator {
     protected boolean computeInternal(final DataCell cell) {
         if (cell instanceof CollectionDataValue) {
             //missing cells are skipped
-            final CollectionDataValue collectionCell =
-                (CollectionDataValue)cell;
-            final Collection<DataCell> elements2add =
-                new LinkedList<DataCell>();
+            final CollectionDataValue collectionCell = (CollectionDataValue)cell;
             for (final DataCell valCell : collectionCell) {
-                if (!m_vals.remove(valCell)) {
+                if (m_allVals.add(valCell)) {
                     //the collection does not contain the given element add it
-                    elements2add.add(valCell);
+                    //check if the set contains more values than allowed before adding a new value
+                    if (m_vals.size() + 1 >= getMaxUniqueValues()) {
+                        setSkipMessage("Group contains too many unique values");
+                        return true;
+                    }
+                    m_vals.add(valCell);
                 }
             }
-            //check if the set contains more values than allowed
-            //before adding a new value
-            if (m_vals.size() + elements2add.size() >= getMaxUniqueValues()) {
-                setSkipMessage("Group contains too many unique values");
-                return true;
-            }
-            m_vals.addAll(elements2add);
         }
         return false;
     }
@@ -166,6 +160,7 @@ public class XORElementOperator extends AggregationOperator {
     @Override
     protected void resetInternal() {
         m_vals.clear();
+        m_allVals.clear();
     }
 
     /**
@@ -173,8 +168,8 @@ public class XORElementOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Creates a set cell that contains all exclusive elements "
-        + "that exist in only one collection per group.";
+        return "Creates a set cell that contains all exclusive elements that exist in only one collection per group."
+                + " This is a memory intensive computation since all unique elements have to be stored per group.";
     }
 
 }
