@@ -48,27 +48,26 @@
 
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.core.data.DataColumnSpec;
-
-import org.knime.base.data.aggregation.AggregationMethod;
-
-import java.awt.Component;
-
-import javax.swing.DefaultCellEditor;
 import javax.swing.JTable;
 import javax.swing.table.TableModel;
-import javax.swing.tree.DefaultTreeCellEditor;
+
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
 
 
 /**
- * Extends the {@link DefaultTreeCellEditor} class to provide the
+ * Extends the {@link AbstractAggregationMethodTableCellEditor} class to provide the
  * {@link AggregationMethodComboBox} as cell editor. It passes the
  * {@link DataColumnSpec} of the selected method to the combo box to
  * display only compatible aggregation methods.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @deprecated
+ * @see AbstractAggregationMethodTableCellEditor
  */
-public class AggregationMethodTableCellEditor extends DefaultCellEditor {
+@Deprecated
+public class AggregationMethodTableCellEditor extends AbstractAggregationMethodTableCellEditor {
 
     private static final long serialVersionUID = 1415862346615703238L;
 
@@ -80,7 +79,7 @@ public class AggregationMethodTableCellEditor extends DefaultCellEditor {
      * that should be changed
      */
     public AggregationMethodTableCellEditor(final TableModel model) {
-        super(new AggregationMethodComboBox());
+        super();
         m_model = model;
     }
 
@@ -88,29 +87,26 @@ public class AggregationMethodTableCellEditor extends DefaultCellEditor {
      * {@inheritDoc}
      */
     @Override
-    public Component getTableCellEditorComponent(final JTable table,
-            final Object value, final boolean isSelected, final int row,
-            final int column) {
-        final Object valueAt = m_model.getValueAt(row, 0);
+    protected AggregationMethod getSelectedAggregationMethod(final JTable table, final Object value,
+        final boolean isSelected, final int row, final int column) {
         final Object methodVal = m_model.getValueAt(row, 1);
-        if (valueAt instanceof DataColumnSpec) {
-            final AggregationMethod method;
-                if (methodVal instanceof AggregationMethod) {
-                    method = (AggregationMethod)methodVal;
-                } else {
-                    method = null;
-                }
-            final DataColumnSpec spec = (DataColumnSpec)valueAt;
-            getBox().update(spec, method);
+        if (methodVal instanceof AggregationMethod) {
+            return (AggregationMethod)methodVal;
         }
-        return super.getTableCellEditorComponent(table, valueAt,
-                isSelected, row, column);
+        return null;
     }
 
     /**
-     * @return the {@link AggregationMethodComboBox}
+     * {@inheritDoc}
      */
-    AggregationMethodComboBox getBox() {
-        return (AggregationMethodComboBox)getComponent();
+    @Override
+    protected DataType getDataType(final JTable table, final Object value, final boolean isSelected,
+        final int row, final int column) {
+        final Object valueAt = m_model.getValueAt(row, 0);
+        if (valueAt instanceof DataColumnSpec) {
+            final DataColumnSpec spec = (DataColumnSpec)valueAt;
+            return spec.getType();
+        }
+        return null;
     }
 }

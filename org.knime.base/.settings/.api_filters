@@ -738,6 +738,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/preproc/groupby/GroupByNodeDialog.java" type="org.knime.base.node.preproc.groupby.GroupByNodeDialog">
+        <filter id="388194388">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.groupby.GroupByNodeDialog"/>
+                <message_argument value="DEFAULT_HEIGHT"/>
+                <message_argument value="350"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/preproc/joiner/Joiner2Settings.java" type="org.knime.base.node.preproc.joiner.Joiner2Settings">
         <filter id="338792546">
             <message_arguments>

@@ -46,13 +46,13 @@
 
 package org.knime.base.data.aggregation.dialogutil;
 
-import java.awt.Component;
-
 import javax.swing.DefaultCellEditor;
 import javax.swing.JTable;
 
+import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
 
 
 /**
@@ -64,35 +64,33 @@ import org.knime.core.data.DataColumnSpec;
  * @author Tobias Koetter, University of Konstanz
  * @since 2.8
  */
-public class ColumnAggregatorTableCellEditor extends DefaultCellEditor {
+public class ColumnAggregatorTableCellEditor extends AbstractAggregationMethodTableCellEditor {
 
     private static final long serialVersionUID = 1415862346615703238L;
 
-    /**Constructor for class AggregationMethodTableCellEditor.
+    /**
+     * {@inheritDoc}
      */
-    public ColumnAggregatorTableCellEditor() {
-        super(new AggregationMethodComboBox());
+    @Override
+    protected AggregationMethod getSelectedAggregationMethod(final JTable table, final Object value,
+        final boolean isSelected, final int row, final int column) {
+        if (value instanceof ColumnAggregator) {
+            ColumnAggregator aggregator = (ColumnAggregator) value;
+            return aggregator.getMethodTemplate();
+        }
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Component getTableCellEditorComponent(final JTable table,
-            final Object value, final boolean isSelected, final int row,
-            final int column) {
+    protected DataType getDataType(final JTable table, final Object value, final boolean isSelected,
+        final int row, final int column) {
         if (value instanceof ColumnAggregator) {
             ColumnAggregator aggregator = (ColumnAggregator) value;
-            final DataColumnSpec spec = aggregator.getOriginalColSpec();
-            getBox().update(spec, aggregator.getMethodTemplate());
+            return aggregator.getOriginalColSpec().getType();
         }
-        return super.getTableCellEditorComponent(table, value, isSelected, row, column);
-    }
-
-    /**
-     * @return the {@link AggregationMethodComboBox}
-     */
-    AggregationMethodComboBox getBox() {
-        return (AggregationMethodComboBox)getComponent();
+        return null;
     }
 }

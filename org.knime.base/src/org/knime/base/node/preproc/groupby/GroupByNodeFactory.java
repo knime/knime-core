@@ -60,7 +60,7 @@ public class GroupByNodeFactory extends NodeFactory<GroupByNodeModel> {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new GroupByNodeDialog();
+        return new GroupByNodeDialog(true, true);
     }
 
     /**

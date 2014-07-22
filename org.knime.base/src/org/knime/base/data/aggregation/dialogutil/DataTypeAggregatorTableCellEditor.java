@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,77 +41,52 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   17.07.2014 (koetter): created
  */
 package org.knime.base.data.aggregation.dialogutil;
 
-import java.util.List;
-
-import javax.swing.JComboBox;
+import javax.swing.JTable;
 
 import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.core.data.DataColumnSpec;
+import org.knime.base.data.aggregation.AggregationMethodDecorator;
 import org.knime.core.data.DataType;
 
 /**
- * This combo box is used in the aggregation column table to let the user
- * choose from the different compatible aggregation methods per aggregation
- * column.
+ * {@link DataTypeAggregator} table cell editor class that allows the user to choose from the supported
+ * {@link AggregationMethod}s for {@link DataType} of the current {@link DataTypeAggregator}.
  *
- * @author Tobias Koetter, University of Konstanz
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @since 2.11
  */
-public class AggregationMethodComboBox extends JComboBox<AggregationMethod> {
+public class DataTypeAggregatorTableCellEditor extends AbstractAggregationMethodTableCellEditor {
 
-    private static final long serialVersionUID = -8712817491828316484L;
-
-    private DataType m_type = null;
+    private static final long serialVersionUID = 1L;
 
     /**
-     * Creates AggregationMethod selection combo box with the allowed
-     * methods.
+     * {@inheritDoc}
      */
-    public AggregationMethodComboBox() {
-        super();
-        this.setBackground(this.getBackground());
-        this.setRenderer(new AggregationMethodListCellRenderer());
-    }
-
-    /**
-     * @param spec the {@link DataColumnSpec} used to initialize this combobox
-     * @param selectedMethod the current selected method
-     */
-    public void update(final DataColumnSpec spec, final AggregationMethod selectedMethod) {
-        final DataType type = spec.getType();
-        update(type, AggregationMethods.getCompatibleMethods(type, true), selectedMethod);
-    }
-    /**
-     * @param type the {@link DataType} used to initialize this combobox
-     * @param compatibleMethods {@link List} of {@link AggregationMethod}s the user can choose from
-     * @param selectedMethod the current selected method
-     * @since 2.11
-     */
-    public void update(final DataType type, final List<AggregationMethod> compatibleMethods,
-        final AggregationMethod selectedMethod) {
-        if (m_type == null || !m_type.equals(type)) {
-            //recreate the combo box if the type has change
-            removeAllItems();
-            for (final AggregationMethod method : compatibleMethods) {
-                addItem(method);
-            }
-            //save the current type for comparison
-            m_type = type;
+    @Override
+    protected AggregationMethod getSelectedAggregationMethod(final JTable table, final Object value,
+        final boolean isSelected, final int row, final int column) {
+        if (value instanceof AggregationMethodDecorator) {
+            return ((AggregationMethodDecorator)value).getMethodTemplate();
         }
-        //select the previous selected item
-        setSelectedItem(selectedMethod);
+        return null;
     }
 
     /**
-     * @return the selected {@link AggregationMethods}
+     * {@inheritDoc}
      */
-    public AggregationMethod getSelectedMethod() {
-        return (AggregationMethod)getSelectedItem();
+    @Override
+    protected DataType getDataType(final JTable table, final Object value, final boolean isSelected,
+        final int row, final int column) {
+        if (value instanceof DataTypeAggregator) {
+            return ((DataTypeAggregator)value).getDataType();
+        }
+        return null;
     }
 
 }

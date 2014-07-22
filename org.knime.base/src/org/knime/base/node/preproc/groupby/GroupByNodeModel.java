@@ -56,13 +56,17 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.dialogutil.DataTypeAggregator;
+import org.knime.base.data.aggregation.dialogutil.RegexAggregator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -159,6 +163,12 @@ public class GroupByNodeModel extends NodeModel {
     /**Configuration key for the value delimiter option.*/
     protected static final String CFG_VALUE_DELIMITER = "valueDelimiter";
 
+    /**Configuration key for the data type based aggregation methods.*/
+    static final String CFG_DATA_TYPE_AGGREGATORS = "dataTypeAggregators";
+
+    /**Configuration key for the regular expression based aggregation methods.*/
+    static final String CFG_REGEX_AGGREGATORS = "regexAggregators";
+
     private final SettingsModelFilterString m_groupByCols =
         new SettingsModelFilterString(CFG_GROUP_BY_COLUMNS);
 
@@ -182,6 +192,7 @@ public class GroupByNodeModel extends NodeModel {
 
     private final SettingsModelString m_valueDelimiter = new SettingsModelString(GroupByNodeModel.CFG_VALUE_DELIMITER,
             GlobalSettings.STANDARD_DELIMITER);
+
     //used to now the implementation version of the node
     private final SettingsModelInteger m_version = createVersionModel();
 
@@ -196,10 +207,15 @@ public class GroupByNodeModel extends NodeModel {
 
     private List<ColumnAggregator> m_columnAggregators2Use;
 
+    private final Collection<DataTypeAggregator> m_dataTypeAggregators = new LinkedList<>();
+
+    private final Collection<RegexAggregator> m_regexAggregators = new LinkedList<>();
+
     /**
      * Node returns a new hilite handler instance.
      */
     private final HiLiteTranslator m_hilite = new HiLiteTranslator();
+
 
     /** Creates a new group by model with one in- and one out-port. */
     public GroupByNodeModel() {
@@ -253,13 +269,11 @@ public class GroupByNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException {
         if (m_enableHilite.getBooleanValue()) {
             final NodeSettings config = new NodeSettings("hilite_mapping");
-            final DefaultHiLiteMapper mapper = (DefaultHiLiteMapper) m_hilite
-                    .getMapper();
+            final DefaultHiLiteMapper mapper = (DefaultHiLiteMapper) m_hilite.getMapper();
             if (mapper != null) {
                 mapper.save(config);
             }
-            config.saveToXML(new FileOutputStream(new File(nodeInternDir,
-                    INTERNALS_FILE_NAME)));
+            config.saveToXML(new FileOutputStream(new File(nodeInternDir, INTERNALS_FILE_NAME)));
         }
     }
 
@@ -273,15 +287,15 @@ public class GroupByNodeModel extends NodeModel {
         m_enableHilite.saveSettingsTo(settings);
         //this setting was used prior KNIME 2.6
         m_sortInMemory.saveSettingsTo(settings);
-        if (m_columnAggregators.isEmpty() && m_oldNominal != null
-                && m_oldNumerical != null) {
+        if (m_columnAggregators.isEmpty() && m_oldNominal != null && m_oldNumerical != null) {
             // these settings were used prior Knime 2.0
             settings.addString(OLD_CFG_NUMERIC_COL_METHOD, m_oldNumerical);
             settings.addString(OLD_CFG_NOMINAL_COL_METHOD, m_oldNominal);
         } else {
-            ColumnAggregator.saveColumnAggregators(settings,
-                    m_columnAggregators);
+            ColumnAggregator.saveColumnAggregators(settings, m_columnAggregators);
         }
+        RegexAggregator.saveAggregators(settings, CFG_REGEX_AGGREGATORS, m_regexAggregators);
+        DataTypeAggregator.saveAggregators(settings, CFG_DATA_TYPE_AGGREGATORS, m_dataTypeAggregators);
         m_columnNamePolicy.saveSettingsTo(settings);
         m_retainOrder.saveSettingsTo(settings);
         m_inMemory.saveSettingsTo(settings);
@@ -306,18 +320,23 @@ public class GroupByNodeModel extends NodeModel {
         // the option to use a column multiple times was introduced
         // with Knime 2.0 as well as the naming policy
         try {
-            final List<ColumnAggregator> aggregators = ColumnAggregator
-                    .loadColumnAggregators(settings);
-            if (groupByCols.isEmpty() && aggregators.isEmpty()) {
-                throw new IllegalArgumentException(
-                    "Please select at least one group or aggregation column");
+            final List<ColumnAggregator> aggregators = ColumnAggregator.loadColumnAggregators(settings);
+            final List<DataTypeAggregator> typeAggregators = new LinkedList<>();
+            final List<RegexAggregator> regexAggregators = new LinkedList<>();
+            try {
+                regexAggregators.addAll(RegexAggregator.loadAggregators(settings, CFG_REGEX_AGGREGATORS));
+                typeAggregators.addAll(DataTypeAggregator.loadAggregators(settings, CFG_DATA_TYPE_AGGREGATORS));
+            } catch (InvalidSettingsException e) {
+                // introduced in 2.11
+            }
+            if (groupByCols.isEmpty() && aggregators.isEmpty()
+                    && regexAggregators.isEmpty() && typeAggregators.isEmpty()) {
+                throw new IllegalArgumentException("Please select at least one group column or aggregation option");
             }
             ColumnNamePolicy namePolicy;
             try {
                 final String policyLabel =
-                    ((SettingsModelString) m_columnNamePolicy
-                        .createCloneWithValidatedValue(settings))
-                        .getStringValue();
+                    ((SettingsModelString) m_columnNamePolicy.createCloneWithValidatedValue(settings)).getStringValue();
                 namePolicy = ColumnNamePolicy.getPolicy4Label(policyLabel);
             } catch (final InvalidSettingsException e) {
                 namePolicy = compGetColumnNamePolicy(settings);
@@ -325,6 +344,16 @@ public class GroupByNodeModel extends NodeModel {
             checkDuplicateAggregators(namePolicy, aggregators);
             try {
                 ColumnAggregator.validateSettings(settings, aggregators);
+            } catch (InvalidSettingsException e) {
+                throw new IllegalArgumentException(e.getMessage());
+            }
+            try {
+                RegexAggregator.validateSettings(settings, regexAggregators);
+            } catch (InvalidSettingsException e) {
+                throw new IllegalArgumentException(e.getMessage());
+            }
+            try {
+                DataTypeAggregator.validateSettings(settings, typeAggregators);
             } catch (InvalidSettingsException e) {
                 throw new IllegalArgumentException(e.getMessage());
             }
@@ -376,32 +405,35 @@ public class GroupByNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        final boolean move2Front = settings.getBoolean(
-                OLD_CFG_MOVE_GROUP_BY_COLS_2_FRONT, true);
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        final boolean move2Front = settings.getBoolean(OLD_CFG_MOVE_GROUP_BY_COLS_2_FRONT, true);
         if (!move2Front) {
-            setWarningMessage(
-                    "Setting ignored: Group columns will be moved to front");
+            setWarningMessage("Setting ignored: Group columns will be moved to front");
         }
         m_groupByCols.loadSettingsFrom(settings);
         m_columnAggregators.clear();
         try {
             // this option was introduced in Knime 2.0
-            m_columnAggregators.addAll(ColumnAggregator
-                    .loadColumnAggregators(settings));
+            m_columnAggregators.addAll(ColumnAggregator.loadColumnAggregators(settings));
             m_oldNumerical = null;
             m_oldNominal = null;
         } catch (final InvalidSettingsException e) {
             m_oldNumerical = settings.getString(OLD_CFG_NUMERIC_COL_METHOD);
             m_oldNominal = settings.getString(OLD_CFG_NOMINAL_COL_METHOD);
         }
+        m_regexAggregators.clear();
+        m_dataTypeAggregators.clear();
+        try {
+            m_regexAggregators.addAll(RegexAggregator.loadAggregators(settings, CFG_REGEX_AGGREGATORS));
+            m_dataTypeAggregators.addAll(DataTypeAggregator.loadAggregators(settings, CFG_DATA_TYPE_AGGREGATORS));
+        } catch (final InvalidSettingsException e) {
+            // introduced in KNIME 2.11
+        }
         try {
             // this option was introduced in Knime 2.0
             m_columnNamePolicy.loadSettingsFrom(settings);
         } catch (final InvalidSettingsException e) {
-            final ColumnNamePolicy colNamePolicy = GroupByNodeModel
-                    .compGetColumnNamePolicy(settings);
+            final ColumnNamePolicy colNamePolicy = GroupByNodeModel.compGetColumnNamePolicy(settings);
             m_columnNamePolicy.setStringValue(colNamePolicy.getLabel());
         }
         try {
@@ -456,8 +488,7 @@ public class GroupByNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void setInHiLiteHandler(final int inIndex,
-            final HiLiteHandler hiLiteHdl) {
+    protected void setInHiLiteHandler(final int inIndex, final HiLiteHandler hiLiteHdl) {
         m_hilite.removeAllToHiliteHandlers();
         m_hilite.addToHiLiteHandler(hiLiteHdl);
     }
@@ -474,11 +505,9 @@ public class GroupByNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         if (inSpecs == null || inSpecs[0] == null) {
-            throw new InvalidSettingsException(
-                    "No input specification available.");
+            throw new InvalidSettingsException("No input specification available.");
         }
         final DataTableSpec origSpec = (DataTableSpec) inSpecs[0];
         if (origSpec.getNumColumns() < 1) {
@@ -487,15 +516,13 @@ public class GroupByNodeModel extends NodeModel {
 
         final List<String> groupByCols = m_groupByCols.getIncludeList();
         if (groupByCols.isEmpty()) {
-            setWarningMessage(
-                    "No grouping column included. Aggregate complete table.");
+            setWarningMessage("No grouping column included. Aggregate complete table.");
         }
         // be compatible to versions prior KNIME 2.0
         compCheckColumnAggregators(groupByCols, origSpec);
 
         // generate group-by spec given the original spec and selected columns
-        final DataTableSpec groupBySpec =
-            createGroupBySpec(origSpec, groupByCols);
+        final DataTableSpec groupBySpec = createGroupBySpec(origSpec, groupByCols);
         //only after generating the spec we have the columnAggregators2Use initialized
         ColumnAggregator.configure(origSpec, m_columnAggregators2Use);
         return new DataTableSpec[] {groupBySpec};
@@ -510,25 +537,58 @@ public class GroupByNodeModel extends NodeModel {
      * @throws InvalidSettingsException if the group-by can't by generated due
      *         to invalid settings
      */
-    protected final DataTableSpec createGroupBySpec(
-            final DataTableSpec origSpec, final List<String> groupByCols)
+    protected final DataTableSpec createGroupBySpec(final DataTableSpec origSpec, final List<String> groupByCols)
             throws InvalidSettingsException {
         // remove all column aggregator
-        m_columnAggregators2Use = new ArrayList<ColumnAggregator>(m_columnAggregators.size());
-        final ArrayList<ColumnAggregator> invalidColAggrs = new ArrayList<ColumnAggregator>(1);
+        m_columnAggregators2Use = new ArrayList<>(m_columnAggregators.size());
+        final ArrayList<ColumnAggregator> invalidColAggrs = new ArrayList<>(1);
+        final Set<String> usedColNames = new HashSet<>(groupByCols);
         for (final ColumnAggregator colAggr : m_columnAggregators) {
-            final DataColumnSpec colSpec = origSpec.getColumnSpec(colAggr
-                    .getOriginalColName());
-            if (colSpec != null && colSpec.getType().equals(
-                    colAggr.getOriginalDataType())) {
+            final String originalColName = colAggr.getOriginalColName();
+            final DataColumnSpec colSpec = origSpec.getColumnSpec(originalColName);
+            if (colSpec != null && colSpec.getType().equals(colAggr.getOriginalDataType())) {
+                usedColNames.add(originalColName);
                 m_columnAggregators2Use.add(colAggr);
             } else {
                 invalidColAggrs.add(colAggr);
             }
         }
+        if (origSpec.getNumColumns() > usedColNames.size() && !m_regexAggregators.isEmpty()) {
+            for (final DataColumnSpec spec : origSpec) {
+                if (!usedColNames.contains(spec.getName())) {
+                    for (final RegexAggregator regexAggr : m_regexAggregators) {
+                        Pattern pattern = regexAggr.getPattern();
+                        if (pattern != null && pattern.matcher(spec.getName()).matches()
+                                && regexAggr.isCompatible(spec)) {
+                            final ColumnAggregator colAggregator = new ColumnAggregator(spec,
+                                regexAggr.getMethodTemplate(), regexAggr.inclMissingCells());
+                            m_columnAggregators2Use.add(colAggregator);
+                            usedColNames.add(spec.getName());
+                        }
+                    }
+                }
+            }
+        }
+        //check if some columns are left
+        if (origSpec.getNumColumns() > usedColNames.size() && !m_dataTypeAggregators.isEmpty()) {
+            for (final DataColumnSpec spec : origSpec) {
+                if (!usedColNames.contains(spec.getName())) {
+                    final DataType dataType = spec.getType();
+                    for (final DataTypeAggregator typeAggregator : m_dataTypeAggregators) {
+                        if (typeAggregator.isCompatibleType(dataType)) {
+                            final ColumnAggregator colAggregator = new ColumnAggregator(spec,
+                                typeAggregator.getMethodTemplate(), typeAggregator.inclMissingCells());
+                            m_columnAggregators2Use.add(colAggregator);
+                            usedColNames.add(spec.getName());
+                        }
+                    }
+                }
+            }
+        }
         if (m_columnAggregators2Use.isEmpty()) {
             setWarningMessage("No aggregation column defined");
         }
+        LOGGER.info(m_columnAggregators2Use);
         if (!invalidColAggrs.isEmpty()) {
             setWarningMessage(invalidColAggrs.size() + " invalid aggregation column(s) found.");
         }
@@ -538,24 +598,19 @@ public class GroupByNodeModel extends NodeModel {
         } catch (final IllegalArgumentException e) {
             throw new InvalidSettingsException(e.getMessage());
         }
-        if (origSpec.getNumColumns() > 1
-                && groupByCols.size() == origSpec.getNumColumns()) {
+        if (origSpec.getNumColumns() > 1 && groupByCols.size() == origSpec.getNumColumns()) {
             setWarningMessage("All columns selected as group by column");
         }
-        final ColumnNamePolicy colNamePolicy = ColumnNamePolicy
-                .getPolicy4Label(m_columnNamePolicy.getStringValue());
+        final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(m_columnNamePolicy.getStringValue());
 
         // Check if no column at all has been selected as in the validate
         // settings method. This check has to be after the explicit setting
         // of the group columns above!!!
         if (groupByCols.isEmpty() && m_columnAggregators2Use.isEmpty()) {
-            throw new InvalidSettingsException(
-                    "Please select at least one group or aggregation column");
+            throw new InvalidSettingsException("Please select at least one group or aggregation column");
         }
-        return GroupByTable.createGroupByTableSpec(
-                origSpec, groupByCols,
-                m_columnAggregators2Use.toArray(new ColumnAggregator[0]),
-                colNamePolicy);
+        return GroupByTable.createGroupByTableSpec(origSpec, groupByCols,
+                m_columnAggregators2Use.toArray(new ColumnAggregator[0]), colNamePolicy);
     }
 
     /**
@@ -566,7 +621,7 @@ public class GroupByNodeModel extends NodeModel {
      * @since 2.8
      */
     protected static Collection<String> getExcludeList(final DataTableSpec origSpec, final List<String> columns) {
-        final Collection<String> exlList = new LinkedList<String>();
+        final Collection<String> exlList = new LinkedList<>();
         for (final DataColumnSpec spec : origSpec) {
             if (columns == null || columns.isEmpty() || !columns.contains(spec.getName())) {
                 exlList.add(spec.getName());
@@ -605,7 +660,6 @@ public class GroupByNodeModel extends NodeModel {
 
         // be compatible to versions prior KNIME 2.0
         compCheckColumnAggregators(groupByCols, table.getDataTableSpec());
-
         final GroupByTable resultTable = createGroupByTable(exec, table,
                 groupByCols);
         return new BufferedDataTable[] {resultTable.getBufferedTable()};
@@ -620,13 +674,11 @@ public class GroupByNodeModel extends NodeModel {
      * @throws CanceledExecutionException if the group-by table generation was
      *         canceled externally
      */
-    protected final GroupByTable createGroupByTable(final ExecutionContext exec,
-            final BufferedDataTable table, final List<String> groupByCols)
-            throws CanceledExecutionException {
+    protected final GroupByTable createGroupByTable(final ExecutionContext exec, final BufferedDataTable table,
+        final List<String> groupByCols) throws CanceledExecutionException {
         final boolean inMemory = m_inMemory.getBooleanValue();
         final boolean retainOrder = m_retainOrder.getBooleanValue();
-        return createGroupByTable(exec, table, groupByCols, inMemory,
-                retainOrder, m_columnAggregators2Use);
+        return createGroupByTable(exec, table, groupByCols, inMemory, retainOrder, m_columnAggregators2Use);
     }
 
     /**
@@ -642,13 +694,10 @@ public class GroupByNodeModel extends NodeModel {
      *         canceled externally
      * @since 2.6
      */
-    protected final GroupByTable createGroupByTable(final ExecutionContext exec,
-            final BufferedDataTable table, final List<String> groupByCols,
-            final boolean inMemory, final boolean retainOrder,
-            final List<ColumnAggregator> aggregators)
-            throws CanceledExecutionException {
-        return createGroupByTable(exec, table, groupByCols, inMemory, false,
-                retainOrder, aggregators);
+    protected final GroupByTable createGroupByTable(final ExecutionContext exec, final BufferedDataTable table,
+        final List<String> groupByCols, final boolean inMemory, final boolean retainOrder,
+            final List<ColumnAggregator> aggregators) throws CanceledExecutionException {
+        return createGroupByTable(exec, table, groupByCols, inMemory, false, retainOrder, aggregators);
     }
 
     /**
@@ -668,17 +717,13 @@ public class GroupByNodeModel extends NodeModel {
      * boolean, boolean, List)
      */
     @Deprecated
-    protected final GroupByTable createGroupByTable(final ExecutionContext exec,
-            final BufferedDataTable table, final List<String> groupByCols,
-            final boolean inMemory, final boolean sortInMemory,
-            final boolean retainOrder, final List<ColumnAggregator> aggregators)
-            throws CanceledExecutionException {
+    protected final GroupByTable createGroupByTable(final ExecutionContext exec, final BufferedDataTable table,
+        final List<String> groupByCols, final boolean inMemory, final boolean sortInMemory,
+            final boolean retainOrder, final List<ColumnAggregator> aggregators) throws CanceledExecutionException {
         final int maxUniqueVals = m_maxUniqueValues.getIntValue();
         final boolean enableHilite = m_enableHilite.getBooleanValue();
-        final ColumnNamePolicy colNamePolicy = ColumnNamePolicy
-        .getPolicy4Label(m_columnNamePolicy.getStringValue());
-        final GlobalSettings globalSettings =
-            createGlobalSettings(exec, table, groupByCols, maxUniqueVals);
+        final ColumnNamePolicy colNamePolicy = ColumnNamePolicy.getPolicy4Label(m_columnNamePolicy.getStringValue());
+        final GlobalSettings globalSettings = createGlobalSettings(exec, table, groupByCols, maxUniqueVals);
 
         //reset all aggregators in order to use enforce operator creation
         for (final ColumnAggregator colAggr : aggregators) {
@@ -686,26 +731,20 @@ public class GroupByNodeModel extends NodeModel {
         }
         final GroupByTable resultTable;
         if (inMemory || groupByCols.isEmpty()) {
-            resultTable = new MemoryGroupByTable(exec, table, groupByCols,
-                    aggregators.toArray(new ColumnAggregator[0]),
-                    globalSettings, enableHilite, colNamePolicy,
-                    retainOrder);
+            resultTable = new MemoryGroupByTable(exec, table, groupByCols, aggregators.toArray(new ColumnAggregator[0]),
+                globalSettings, enableHilite, colNamePolicy, retainOrder);
         } else {
-            resultTable = new BigGroupByTable(exec, table, groupByCols,
-                    aggregators.toArray(new ColumnAggregator[0]),
-                    globalSettings, enableHilite, colNamePolicy,
-                    retainOrder);
+            resultTable = new BigGroupByTable(exec, table, groupByCols, aggregators.toArray(new ColumnAggregator[0]),
+                    globalSettings, enableHilite, colNamePolicy, retainOrder);
         }
         if (m_enableHilite.getBooleanValue()) {
-            setHiliteMapping(new DefaultHiLiteMapper(
-                    resultTable.getHiliteMapping()));
+            setHiliteMapping(new DefaultHiLiteMapper(resultTable.getHiliteMapping()));
         }
         // check for skipped columns
         final String warningMsg = resultTable.getSkippedGroupsMessage(3, 3);
         if (warningMsg != null) {
             setWarningMessage(warningMsg);
-            LOGGER.info(resultTable.getSkippedGroupsMessage(
-                        Integer.MAX_VALUE, Integer.MAX_VALUE));
+            LOGGER.info(resultTable.getSkippedGroupsMessage(Integer.MAX_VALUE, Integer.MAX_VALUE));
         }
         return resultTable;
     }
@@ -720,9 +759,8 @@ public class GroupByNodeModel extends NodeModel {
      * @return the {@link GlobalSettings} object to use
      * @since 2.6
      */
-    protected GlobalSettings createGlobalSettings(final ExecutionContext exec,
-            final BufferedDataTable table, final List<String> groupByCols,
-            final int maxUniqueVals) {
+    protected GlobalSettings createGlobalSettings(final ExecutionContext exec, final BufferedDataTable table,
+        final List<String> groupByCols, final int maxUniqueVals) {
         return new GlobalSettings(FileStoreFactory.createWorkflowFileStoreFactory(exec), groupByCols,
                 maxUniqueVals, getDefaultValueDelimiter(), table.getDataTableSpec(), table.getRowCount());
     }
@@ -774,8 +812,7 @@ public class GroupByNodeModel extends NodeModel {
      * @return column name policy used to create resulting pivot columns
      */
     protected ColumnNamePolicy getColumnNamePolicy() {
-        return ColumnNamePolicy.getPolicy4Label(
-                m_columnNamePolicy.getStringValue());
+        return ColumnNamePolicy.getPolicy4Label(m_columnNamePolicy.getStringValue());
     }
 
 //**************************************************************************
@@ -842,12 +879,9 @@ public class GroupByNodeModel extends NodeModel {
      * @param spec
      *            the input {@link DataTableSpec}
      */
-    private void compCheckColumnAggregators(final List<String> groupByCols,
-            final DataTableSpec spec) {
-        if (m_columnAggregators.isEmpty() && m_oldNumerical != null
-                && m_oldNominal != null) {
-            m_columnAggregators.addAll(compCreateColumnAggregators(spec,
-                    groupByCols, m_oldNumerical, m_oldNominal));
+    private void compCheckColumnAggregators(final List<String> groupByCols, final DataTableSpec spec) {
+        if (m_columnAggregators.isEmpty() && m_oldNumerical != null && m_oldNominal != null) {
+            m_columnAggregators.addAll(compCreateColumnAggregators(spec, groupByCols, m_oldNumerical, m_oldNominal));
         }
     }
 
@@ -866,24 +900,18 @@ public class GroupByNodeModel extends NodeModel {
      *            the name of the nominal aggregation method
      * @return {@link Collection} of the {@link ColumnAggregator}s
      */
-    private static List<ColumnAggregator> compCreateColumnAggregators(
-            final DataTableSpec spec, final List<String> excludeCols,
-            final String numeric, final String nominal) {
-        final AggregationMethod numericMethod = AggregationMethods
-                .getMethod4Id(numeric);
-        final AggregationMethod nominalMethod = AggregationMethods
-                .getMethod4Id(nominal);
-        final Set<String> groupCols = new HashSet<String>(excludeCols);
-        final List<ColumnAggregator> colAg = new LinkedList<ColumnAggregator>();
-        for (int colIdx = 0, length = spec.getNumColumns(); colIdx < length;
-            colIdx++) {
+    private static List<ColumnAggregator> compCreateColumnAggregators(final DataTableSpec spec,
+        final List<String> excludeCols, final String numeric, final String nominal) {
+        final AggregationMethod numericMethod = AggregationMethods.getMethod4Id(numeric);
+        final AggregationMethod nominalMethod = AggregationMethods.getMethod4Id(nominal);
+        final Set<String> groupCols = new HashSet<>(excludeCols);
+        final List<ColumnAggregator> colAg = new LinkedList<>();
+        for (int colIdx = 0, length = spec.getNumColumns(); colIdx < length; colIdx++) {
             final DataColumnSpec colSpec = spec.getColumnSpec(colIdx);
             if (!groupCols.contains(colSpec.getName())) {
-                final AggregationMethod method = AggregationMethods
-                        .getAggregationMethod(colSpec, numericMethod,
-                                nominalMethod);
-                colAg.add(new ColumnAggregator(colSpec, method, method
-                        .inclMissingCells()));
+                final AggregationMethod method =
+                        AggregationMethods.getAggregationMethod(colSpec, numericMethod, nominalMethod);
+                colAg.add(new ColumnAggregator(colSpec, method, method.inclMissingCells()));
             }
         }
         return colAg;

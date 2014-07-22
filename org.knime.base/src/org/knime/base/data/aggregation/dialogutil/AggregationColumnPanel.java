@@ -85,12 +85,11 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * @author Tobias Koetter, University of Konstanz
  */
 public class AggregationColumnPanel
-extends AbstractAggregationPanel<AggregationColumnTableModel,
-ColumnAggregator, DataColumnSpec> {
+    extends AbstractAggregationPanel<AggregationColumnTableModel, ColumnAggregator, DataColumnSpec> {
 
     /**This field holds all columns of the input table.*/
-    private final List<DataColumnSpec> m_avAggrColSpecs =
-        new LinkedList<DataColumnSpec>();
+    private final List<DataColumnSpec> m_avAggrColSpecs = new LinkedList<>();
+    private final String m_key;
 
     /**
      * {@inheritDoc}
@@ -100,8 +99,7 @@ ColumnAggregator, DataColumnSpec> {
         final JPopupMenu menu = new JPopupMenu();
         if (getNoOfTableRows() == 0) {
             //the table contains no rows
-            final JMenuItem item =
-                new JMenuItem("No column(s) available");
+            final JMenuItem item = new JMenuItem("No column(s) available");
             item.setEnabled(false);
             menu.add(item);
             return menu;
@@ -121,8 +119,7 @@ ColumnAggregator, DataColumnSpec> {
      * @param menu the menu to append the column selection section
      */
     private void createColumnSelectionMenu(final JPopupMenu menu) {
-        final Collection<Class<? extends DataValue>> existingTypes =
-            getAllPresentTypes();
+        final Collection<Class<? extends DataValue>> existingTypes = getAllPresentTypes();
         if (existingTypes.size() < 3) {
             //create no sub menu if their are to few different types
             for (final Class<? extends DataValue> type : existingTypes) {
@@ -131,10 +128,7 @@ ColumnAggregator, DataColumnSpec> {
                     continue;
                 }
                 final JMenuItem selectCompatible =
-                    new JMenuItem("Select "
-                            + AggregationMethods.getUserTypeLabel(
-                                    type).toLowerCase()
-                            + " columns");
+                    new JMenuItem("Select " + AggregationMethods.getUserTypeLabel(type).toLowerCase() + " columns");
                 selectCompatible.addActionListener(new ActionListener() {
                     /**
                      * {@inheritDoc}
@@ -156,9 +150,7 @@ ColumnAggregator, DataColumnSpec> {
                     continue;
                 }
                 final JMenuItem selectCompatible =
-                    new JMenuItem(AggregationMethods.getUserTypeLabel(
-                                    type).toLowerCase()
-                            + " columns");
+                    new JMenuItem(AggregationMethods.getUserTypeLabel(type).toLowerCase() + " columns");
                 selectCompatible.addActionListener(new ActionListener() {
                     /**
                      * {@inheritDoc}
@@ -175,8 +167,7 @@ ColumnAggregator, DataColumnSpec> {
         final Collection<Integer> numericIdxs =
             getTableModel().getCompatibleRowIdxs(DoubleValue.class);
         if (numericIdxs != null && !numericIdxs.isEmpty()) {
-            final JMenuItem selectNoneNumerical =
-                new JMenuItem("Select all numerical columns");
+            final JMenuItem selectNoneNumerical = new JMenuItem("Select all numerical columns");
             selectNoneNumerical.addActionListener(new ActionListener() {
                 /**
                  * {@inheritDoc}
@@ -192,8 +183,7 @@ ColumnAggregator, DataColumnSpec> {
         final Collection<Integer> nonNumericIdxs =
             getTableModel().getNotCompatibleRowIdxs(DoubleValue.class);
         if (nonNumericIdxs != null && !nonNumericIdxs.isEmpty()) {
-            final JMenuItem selectNoneNumerical =
-                new JMenuItem("Select all non-numerical columns");
+            final JMenuItem selectNoneNumerical = new JMenuItem("Select all non-numerical columns");
             selectNoneNumerical.addActionListener(new ActionListener() {
                 /**
                  * {@inheritDoc}
@@ -206,8 +196,7 @@ ColumnAggregator, DataColumnSpec> {
             menu.add(selectNoneNumerical);
         }
         //add the select all columns entry
-        final JMenuItem selectAll =
-            new JMenuItem("Select all columns");
+        final JMenuItem selectAll = new JMenuItem("Select all columns");
         selectAll.addActionListener(new ActionListener() {
             /**
              * {@inheritDoc}
@@ -228,14 +217,12 @@ ColumnAggregator, DataColumnSpec> {
      */
     private void createAggregationSection(final JPopupMenu menu) {
         if (getSelectedRows().length <= 0) {
-                final JMenuItem noneSelected =
-                    new JMenuItem("Select a column to change method");
+                final JMenuItem noneSelected = new JMenuItem("Select a column to change method");
                 noneSelected.setEnabled(false);
                 menu.add(noneSelected);
                 return;
         }
-        final List<Entry<String, List<AggregationMethod>>>
-            methodList = getMethods4SelectedItems();
+        final List<Entry<String, List<AggregationMethod>>> methodList = getMethods4SelectedItems();
         if (methodList.size() == 1) {
             //we need no sub menu for a single group
             for (final AggregationMethod method
@@ -255,16 +242,13 @@ ColumnAggregator, DataColumnSpec> {
                 menu.add(methodItem);
             }
         } else {
-            for (final Entry<String, List<AggregationMethod>> entry
-                    : methodList) {
+            for (final Entry<String, List<AggregationMethod>> entry : methodList) {
                 final String type = entry.getKey();
-                final List<AggregationMethod> methods =
-                    entry.getValue();
+                final List<AggregationMethod> methods = entry.getValue();
                 final JMenu menuItem = new JMenu(type + " Methods");
                 final JMenuItem subMenu = menu.add(menuItem);
                 for (final AggregationMethod method : methods) {
-                    final JMenuItem methodItem =
-                        new JMenuItem(method.getLabel());
+                    final JMenuItem methodItem = new JMenuItem(method.getLabel());
                     methodItem.setToolTipText(method.getDescription());
                     methodItem.addActionListener(new ActionListener() {
                         /**
@@ -295,11 +279,19 @@ ColumnAggregator, DataColumnSpec> {
      * @since 2.10
     */
    public AggregationColumnPanel(final String title) {
-        super(title, " Available columns ",
-                new DataColumnSpecListCellRenderer(), " To change multiple "
-                + "columns use right mouse click for context menu. ",
-                new AggregationColumnTableModel());
+        this(title, null);
     }
+
+   /**
+     * @param title the title of the border or <code>null</code> for no border
+     * @param key the unique settings key
+     * @since 2.11
+     */
+    public AggregationColumnPanel(final String title, final String key) {
+       super(title, " Available columns ", new DataColumnSpecListCellRenderer(),
+           " To change multiple columns use right mouse click for context menu. ", new AggregationColumnTableModel());
+        m_key = key;
+   }
 
     /**
      * {@inheritDoc}
@@ -331,14 +323,13 @@ ColumnAggregator, DataColumnSpec> {
         columnModel.getColumn(0).setPreferredWidth(170);
         columnModel.getColumn(1).setPreferredWidth(150);
     }
+
     /**
      * @return all supported types with at least one row in the table
      */
     public Collection<Class<? extends DataValue>> getAllPresentTypes() {
-        final Collection<Class<? extends DataValue>> supportedTypes =
-            AggregationMethods.getSupportedTypes();
-        final Collection<Class<? extends DataValue>> existingTypes =
-            new LinkedList<Class<? extends DataValue>>();
+        final Collection<Class<? extends DataValue>> supportedTypes = AggregationMethods.getSupportedTypes();
+        final Collection<Class<? extends DataValue>> existingTypes = new LinkedList<>();
         for (final Class<? extends DataValue> type : supportedTypes) {
             if (noOfCompatibleRows(type) > 0) {
                 //add only types that have at least one row
@@ -355,9 +346,8 @@ ColumnAggregator, DataColumnSpec> {
      */
     protected void changeAggregationMethod(final String methodId) {
         final int[] selectedRows = getSelectedRows();
-        getTableModel().setAggregationMethod(selectedRows,
-                AggregationMethods.getMethod4Id(methodId));
-        final Collection<Integer> idxs = new LinkedList<Integer>();
+        getTableModel().setAggregationMethod(selectedRows, AggregationMethods.getMethod4Id(methodId));
+        final Collection<Integer> idxs = new LinkedList<>();
         for (final int i : selectedRows) {
             idxs.add(Integer.valueOf(i));
         }
@@ -368,10 +358,8 @@ ColumnAggregator, DataColumnSpec> {
      * Selects all rows that are compatible with the given type.
      * @param type the type to check for compatibility
      */
-    protected void selectCompatibleRows(
-            final Class<? extends DataValue> type) {
-        final Collection<Integer> idxs =
-            getTableModel().getCompatibleRowIdxs(type);
+    protected void selectCompatibleRows(final Class<? extends DataValue> type) {
+        final Collection<Integer> idxs = getTableModel().getCompatibleRowIdxs(type);
         updateSelection(idxs);
     }
 
@@ -380,8 +368,7 @@ ColumnAggregator, DataColumnSpec> {
      * @param type the type to check for
      * @return the number of compatible rows
      */
-    int noOfCompatibleRows(
-            final Class<? extends DataValue> type) {
+    int noOfCompatibleRows(final Class<? extends DataValue> type) {
         return getTableModel().getCompatibleRowIdxs(type).size();
     }
 
@@ -400,11 +387,9 @@ ColumnAggregator, DataColumnSpec> {
             }
             if (first) {
                 first = false;
-                getTable().setRowSelectionInterval(idx.intValue(),
-                        idx.intValue());
+                getTable().setRowSelectionInterval(idx.intValue(), idx.intValue());
             } else {
-                getTable().addRowSelectionInterval(idx.intValue(),
-                        idx.intValue());
+                getTable().addRowSelectionInterval(idx.intValue(), idx.intValue());
             }
         }
     }
@@ -414,9 +399,8 @@ ColumnAggregator, DataColumnSpec> {
      * excluded from the aggregation panel
      */
     public void excludeColsChange(final Collection<String> excludeColNames) {
-        final Set<String> excludeColNameSet =
-            new HashSet<String>(excludeColNames);
-        final List<DataColumnSpec> newList = new LinkedList<DataColumnSpec>();
+        final Set<String> excludeColNameSet = new HashSet<>(excludeColNames);
+        final List<DataColumnSpec> newList = new LinkedList<>();
         //include all columns that are not in the exclude list
         for (final DataColumnSpec colSpec : m_avAggrColSpecs) {
             if (!excludeColNameSet.contains(colSpec.getName())) {
@@ -424,8 +408,7 @@ ColumnAggregator, DataColumnSpec> {
             }
         }
         final List<ColumnAggregator> oldAggregators = getTableModel().getRows();
-        final List<ColumnAggregator> newAggregators =
-            new LinkedList<ColumnAggregator>();
+        final List<ColumnAggregator> newAggregators = new LinkedList<>();
         for (final ColumnAggregator aggregator : oldAggregators) {
             if (!excludeColNameSet.contains(aggregator.getOriginalColName())) {
                 newAggregators.add(aggregator);
@@ -438,8 +421,7 @@ ColumnAggregator, DataColumnSpec> {
      * @param settings the settings object to write to
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
-        ColumnAggregator.saveColumnAggregators(settings,
-                getTableModel().getRows());
+        ColumnAggregator.saveColumnAggregators(settings, m_key, getTableModel().getRows());
     }
 
     /**
@@ -447,10 +429,9 @@ ColumnAggregator, DataColumnSpec> {
      * @param spec initializes the component
      * @throws InvalidSettingsException if the settings are invalid
      */
-    public void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec spec)
+    public void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec spec)
     throws InvalidSettingsException {
-        initialize(spec, ColumnAggregator.loadColumnAggregators(settings, spec));
+        initialize(spec, ColumnAggregator.loadColumnAggregators(settings, m_key, spec));
     }
 
     /**
@@ -459,17 +440,15 @@ ColumnAggregator, DataColumnSpec> {
      * @param colAggrs the {@link List} of {@link ColumnAggregator}s that are
      * initially used
      */
-    public void initialize(final DataTableSpec spec,
-            final List<ColumnAggregator> colAggrs) {
+    public void initialize(final DataTableSpec spec, final List<ColumnAggregator> colAggrs) {
         m_avAggrColSpecs.clear();
-        final List<DataColumnSpec> listElements =
-            new LinkedList<DataColumnSpec>();
+        final List<DataColumnSpec> listElements = new LinkedList<>();
         for (final DataColumnSpec colSpec : spec) {
             m_avAggrColSpecs.add(colSpec);
             listElements.add(colSpec);
         }
       //remove all invalid column aggregator
-        final List<ColumnAggregator> colAggrs2Use = new ArrayList<ColumnAggregator>(colAggrs.size());
+        final List<ColumnAggregator> colAggrs2Use = new ArrayList<>(colAggrs.size());
         for (final ColumnAggregator colAggr : colAggrs) {
             final DataColumnSpec colSpec = spec.getColumnSpec(colAggr.getOriginalColName());
             final boolean valid;
@@ -488,17 +467,14 @@ ColumnAggregator, DataColumnSpec> {
      * @return a label list of all supported methods for the currently
      * selected rows
      */
-    protected List<Entry<String, List<AggregationMethod>>>
-        getMethods4SelectedItems() {
+    protected List<Entry<String, List<AggregationMethod>>> getMethods4SelectedItems() {
         final int[] selectedColumns = getSelectedRows();
-        final Set<DataType> types =
-            new HashSet<DataType>(selectedColumns.length);
+        final Set<DataType> types = new HashSet<>(selectedColumns.length);
         for (final int row : selectedColumns) {
             final ColumnAggregator aggregator = getTableModel().getRow(row);
             types.add(aggregator.getOriginalDataType());
         }
-        final DataType superType = CollectionCellFactory.getElementType(
-                types.toArray(new DataType[0]));
+        final DataType superType = CollectionCellFactory.getElementType(types.toArray(new DataType[0]));
         final List<Entry<String, List<AggregationMethod>>> list =
                 AggregationMethods.getCompatibleMethodGroupList(superType);
         return list;
@@ -509,10 +485,8 @@ ColumnAggregator, DataColumnSpec> {
      * @since 2.6
      */
     @Override
-    protected ColumnAggregator getOperator(
-            final DataColumnSpec colSpec) {
-        final AggregationMethod defaultMethod =
-            AggregationMethods.getDefaultMethod(colSpec);
+    protected ColumnAggregator getOperator(final DataColumnSpec colSpec) {
+        final AggregationMethod defaultMethod = AggregationMethods.getDefaultMethod(colSpec);
         return new ColumnAggregator(colSpec, defaultMethod);
     }
 

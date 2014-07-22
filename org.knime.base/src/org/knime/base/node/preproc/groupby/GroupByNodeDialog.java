@@ -47,12 +47,13 @@ package org.knime.base.node.preproc.groupby;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.util.List;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -64,6 +65,8 @@ import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.dialogutil.AggregationColumnPanel;
+import org.knime.base.data.aggregation.dialogutil.DataTypeAggregationPanel;
+import org.knime.base.data.aggregation.dialogutil.RegexAggregationPanel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -96,24 +99,21 @@ public class GroupByNodeDialog extends NodeDialogPane {
     public static final int DEFAULT_WIDTH = 680;
 
     /**The height of the default component.*/
-    public static final int DEFAULT_HEIGHT = 350;
+    public static final int DEFAULT_HEIGHT = 370;
 
     private final JTabbedPane m_tabs;
 
     private final SettingsModelFilterString m_groupByCols =
         new SettingsModelFilterString(GroupByNodeModel.CFG_GROUP_BY_COLUMNS);
 
-    private final SettingsModelIntegerBounded m_maxUniqueValues =
-        new SettingsModelIntegerBounded(
-                GroupByNodeModel.CFG_MAX_UNIQUE_VALUES, 10000, 1,
-                Integer.MAX_VALUE);
+    private final SettingsModelIntegerBounded m_maxUniqueValues = new SettingsModelIntegerBounded(
+                GroupByNodeModel.CFG_MAX_UNIQUE_VALUES, 10000, 1, Integer.MAX_VALUE);
 
     private final SettingsModelBoolean m_enableHilite =
-        new SettingsModelBoolean(GroupByNodeModel.CFG_ENABLE_HILITE, false);
+            new SettingsModelBoolean(GroupByNodeModel.CFG_ENABLE_HILITE, false);
 
     private final SettingsModelString m_valueDelimiter =
-        new SettingsModelString(GroupByNodeModel.CFG_VALUE_DELIMITER,
-            GlobalSettings.STANDARD_DELIMITER);
+        new SettingsModelString(GroupByNodeModel.CFG_VALUE_DELIMITER, GlobalSettings.STANDARD_DELIMITER);
 
     /** This setting was used prior KNIME 2.6.
      * @deprecated */
@@ -134,20 +134,34 @@ public class GroupByNodeDialog extends NodeDialogPane {
     private final DialogComponentColumnFilter m_groupCol;
 
     private final AggregationColumnPanel m_aggrColPanel = new AggregationColumnPanel();
+
+    private final DataTypeAggregationPanel m_dataTypeAggrPanel =
+            new DataTypeAggregationPanel(GroupByNodeModel.CFG_DATA_TYPE_AGGREGATORS);
+
+    private final RegexAggregationPanel m_regexAggrPanel =
+            new RegexAggregationPanel(GroupByNodeModel.CFG_REGEX_AGGREGATORS);
+
     //used to now the implementation version of the node
     private final SettingsModelInteger m_version = GroupByNodeModel.createVersionModel();
-
     /**Constructor for class GroupByNodeDialog. */
-    @SuppressWarnings("unchecked")
     public GroupByNodeDialog() {
+        this(false, false);
+    }
+
+    /**Constructor for class GroupByNodeDialog.
+     * @param showRegex <code>true</code> if the regex based aggregation selection should be displayed
+     * @param showType <code>true</code> if the type based aggregation selection should be displayed
+     * @since 2.11
+     */
+    @SuppressWarnings("unchecked")
+    public GroupByNodeDialog(final boolean showRegex, final boolean showType) {
 //create the root tab
         m_tabs = new JTabbedPane();
         m_tabs.setBorder(BorderFactory.createTitledBorder(""));
         m_tabs.setOpaque(true);
 
 //The group column box
-        m_groupCol =
-            new DialogComponentColumnFilter(m_groupByCols, 0, false,
+        m_groupCol = new DialogComponentColumnFilter(m_groupByCols, 0, false,
                 new ColumnFilterPanel.ValueClassFilter(DataValue.class), false);
         m_groupCol.setIncludeTitle(" Group column(s) ");
         m_groupCol.setExcludeTitle(" Available column(s) ");
@@ -160,29 +174,49 @@ public class GroupByNodeDialog extends NodeDialogPane {
                 columnsChanged();
             }
         });
-        final JPanel groupColPanel = m_groupCol.getComponentPanel();
-        groupColPanel.setLayout(new GridLayout(1, 1));
-        groupColPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+
+        final JPanel groupColPanel = new JPanel();
+        groupColPanel.setLayout(new GridBagLayout());
+        final GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 1;
+        c.weighty = 1;
+        final JPanel groupColFilterPanel = m_groupCol.getComponentPanel();
+        groupColFilterPanel.setLayout(new GridLayout(1, 1));
+        groupColFilterPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), " Group settings "));
+        groupColPanel.add(groupColFilterPanel, c);
+        c.gridy = 1;
+        c.weightx = 0;
+        c.weighty = 0;
+        groupColPanel.add(createAdvancedOptionsBox(), c);
         m_tabs.addTab("Groups", groupColPanel);
 
-//The last tab: aggregations and advance settings
-        final JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        final JPanel columnBasedPanel = new JPanel();
+        columnBasedPanel.setLayout(new BoxLayout(columnBasedPanel, BoxLayout.Y_AXIS));
+        columnBasedPanel.add(m_aggrColPanel.getComponentPanel());
+//        columnBasedPanel.add(createAdvancedOptionsBox());
+        m_tabs.addTab("Column Based Aggregation", columnBasedPanel);
 
-//The aggregation column box
-        panel.add(m_aggrColPanel.getComponentPanel());
-
-//The advanced settings box
-        final JComponent advancedBox = createAdvancedOptionsBox();
-        panel.add(advancedBox);
-        m_tabs.addTab("Options", panel);
+        if (showRegex) {
+            final JPanel regexPanel = new JPanel();
+            regexPanel.setLayout(new BoxLayout(regexPanel, BoxLayout.Y_AXIS));
+            regexPanel.add(m_regexAggrPanel.getComponentPanel());
+            m_tabs.addTab("Regex Based Aggregation", regexPanel);
+        }
+        if (showType) {
+            final JPanel typeBasedPanel = new JPanel();
+            typeBasedPanel.setLayout(new BoxLayout(typeBasedPanel, BoxLayout.Y_AXIS));
+            typeBasedPanel.add(m_dataTypeAggrPanel.getComponentPanel());
+            m_tabs.addTab("Type Based Aggregation", typeBasedPanel);
+        }
 
 //calculate the component size
-        int width = (int)Math.max(m_groupCol.getComponentPanel().
+        int width = (int)Math.max(groupColPanel.
                 getMinimumSize().getWidth(), m_aggrColPanel.
                     getComponentPanel().getMinimumSize().getWidth());
-        width = (int)Math.max(width, advancedBox.getMinimumSize().getWidth());
         width = Math.max(width, DEFAULT_WIDTH);
         final Dimension dimension =
             new Dimension(width, DEFAULT_HEIGHT);
@@ -217,6 +251,17 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_tabs.insertTab(title, null, p, null, tabSize - 1);
     }
 
+    /**
+     * Add additional panel (for example for pivoting) to this dialog.
+     * @param p the panel to add to tabs
+     * @param title the title for the new tab
+     * @param index the index the {@link JPanel} should be added
+     * @since 2.11
+     */
+    protected final void addPanel(final JPanel p, final String title, final int index) {
+        m_tabs.insertTab(title, null, p, null, index);
+    }
+
     /** Call this method if the process in memory flag has changed. */
     protected void inMemoryChanged() {
         final boolean inMem = m_inMemory.getBooleanValue();
@@ -225,55 +270,45 @@ public class GroupByNodeDialog extends NodeDialogPane {
     }
 
     private JComponent createAdvancedOptionsBox() {
-//general option box
-        final Box generalBox = new Box(BoxLayout.X_AXIS);
-        final DialogComponent maxNoneNumericVals =
-            new DialogComponentNumber(m_maxUniqueValues,
+        final DialogComponent maxNoneNumericVals = new DialogComponentNumber(m_maxUniqueValues,
                     "Maximum unique values per group", new Integer(1000), 5);
         maxNoneNumericVals.setToolTipText("All groups with more unique values "
                 + "will be skipped and replaced by a missing value");
-        generalBox.add(maxNoneNumericVals.getComponentPanel());
-
-        final DialogComponentStringSelection colNamePolicy =
-            new DialogComponentStringSelection(m_columnNamePolicy,
+        final DialogComponentStringSelection colNamePolicy = new DialogComponentStringSelection(m_columnNamePolicy,
                     "Column naming:", ColumnNamePolicy.getPolicyLabels());
-        generalBox.add(colNamePolicy.getComponentPanel());
+        final DialogComponent enableHilite = new DialogComponentBoolean(m_enableHilite, "Enable hiliting");
+        final DialogComponentString valueDelimiter =
+                new DialogComponentString(m_valueDelimiter, "Value delimiter", false, 2);
+        final DialogComponent inMemory = new DialogComponentBoolean(m_inMemory, "Process in memory");
+        inMemory.setToolTipText("Processes all data in memory.");
+        final DialogComponent retainOrder = new DialogComponentBoolean(m_retainOrder, "Retain row order");
+        retainOrder.setToolTipText("Retains the original row order of the input table.");
 
-//memory option box
-        final Box memoryBox = new Box(BoxLayout.X_AXIS);
-        final DialogComponent enableHilite = new DialogComponentBoolean(
-                m_enableHilite, "Enable hiliting");
-        memoryBox.add(enableHilite.getComponentPanel());
+        final JPanel rootPanel = new JPanel(new GridBagLayout());
+        rootPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+            " Advanced settings "));
+        final GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.LINE_START;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.fill = GridBagConstraints.NONE;
+        c.gridx = 0;
+        c.gridy = 0;
 
+        rootPanel.add(colNamePolicy.getComponentPanel(), c);
+        c.gridx++;
+        rootPanel.add(enableHilite.getComponentPanel(), c);
+        c.gridx++;
+        rootPanel.add(inMemory.getComponentPanel(), c);
+        c.gridx++;
+        rootPanel.add(retainOrder.getComponentPanel(), c);
 
-        final DialogComponentString valueDelimiter = new DialogComponentString(
-                m_valueDelimiter, "Value delimiter", false, 2);
-        memoryBox.add(valueDelimiter.getComponentPanel());
-
-        final DialogComponent inMemory = new DialogComponentBoolean(
-                m_inMemory, "Process in memory");
-        inMemory.setToolTipText(
-        "Processes all data in memory.");
-        memoryBox.add(inMemory.getComponentPanel());
-
-        final DialogComponent retainOrder = new DialogComponentBoolean(
-                m_retainOrder, "Retain row order");
-        retainOrder.setToolTipText(
-                "Retains the original row order of the input table.");
-        memoryBox.add(retainOrder.getComponentPanel());
-
-//Advanced settings box
-        final Box box = new Box(BoxLayout.Y_AXIS);
-        box.add(generalBox);
-        box.add(memoryBox);
-        box.setMaximumSize(box.getPreferredSize());
-        final Box rootBox = new Box(BoxLayout.X_AXIS);
-        rootBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), " Advanced settings "));
-        rootBox.add(Box.createHorizontalGlue());
-        rootBox.add(box);
-        rootBox.add(Box.createHorizontalGlue());
-        return rootBox;
+        c.gridy++;
+        c.gridx = 0;
+        rootPanel.add(maxNoneNumericVals.getComponentPanel(), c);
+        c.gridx++;
+        rootPanel.add(valueDelimiter.getComponentPanel(), c);
+        return rootPanel;
     }
 
     /**
@@ -312,11 +347,22 @@ public class GroupByNodeDialog extends NodeDialogPane {
             //this option was introduced in Knime 2.0
             m_aggrColPanel.loadSettingsFrom(settings, spec);
         } catch (final InvalidSettingsException e) {
-            final List<ColumnAggregator> columnMethods =
-                GroupByNodeModel.compGetColumnMethods(spec,
+            final List<ColumnAggregator> columnMethods = GroupByNodeModel.compGetColumnMethods(spec,
                         m_groupByCols.getIncludeList(), settings);
             m_aggrColPanel.initialize(spec, columnMethods);
         }
+        try {
+            m_regexAggrPanel.loadSettingsFrom(settings, spec);
+            m_dataTypeAggrPanel.loadSettingsFrom(settings, spec);
+        } catch (InvalidSettingsException e) {
+            //introduced in 2.11
+        }
+//        try {
+//            //this option was introduced in Knime 2.10
+//            m_defaultAggrPanel.loadSettingsFrom(settings, spec);
+//        } catch (final InvalidSettingsException e) {
+//            // nothing to do this is an old dialog
+//        }
         try {
             //this option was introduced in Knime 2.0.3+
             m_retainOrder.loadSettingsFrom(settings);
@@ -363,6 +409,8 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_sortInMemory.saveSettingsTo(settings);
         m_columnNamePolicy.saveSettingsTo(settings);
         m_aggrColPanel.saveSettingsTo(settings);
+        m_regexAggrPanel.saveSettingsTo(settings);
+        m_dataTypeAggrPanel.saveSettingsTo(settings);
         m_retainOrder.saveSettingsTo(settings);
         m_inMemory.saveSettingsTo(settings);
 

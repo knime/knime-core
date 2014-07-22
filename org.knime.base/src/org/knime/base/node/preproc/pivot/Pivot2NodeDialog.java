@@ -134,7 +134,7 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
         pivotOptions.add(m_totalComponent.getComponentPanel());
         pivotOptions.add(m_domainComponent.getComponentPanel());
         pivotAllPanel.add(pivotOptions, BorderLayout.SOUTH);
-        addPanel(pivotAllPanel, "Pivots");
+        addPanel(pivotAllPanel, "Pivots", 1);
     }
 
     /** @return settings model boolean for ignoring missing values */

@@ -116,9 +116,9 @@ public abstract class AbstractAggregationPanel
 
     private final JPanel m_panel = new JPanel();
 
-    private final DefaultListModel m_listModel = new DefaultListModel();
+    private final DefaultListModel<L> m_listModel = new DefaultListModel<>();
 
-    private final JList m_list;
+    private final JList<L> m_list;
 
     private final T m_tableModel;
 
@@ -185,11 +185,10 @@ public abstract class AbstractAggregationPanel
      * (<code>null</code> = no border, empty string = border)
      * @param tableModel the {@link AggregationTableModel} to use
      */
-    protected  AbstractAggregationPanel(final String title,
-            final String listTitle, final ListCellRenderer cellRenderer,
-            final String tableTitle, final T tableModel) {
+    protected  AbstractAggregationPanel(final String title, final String listTitle,
+        final ListCellRenderer<? super L> cellRenderer, final String tableTitle, final T tableModel) {
         m_tableModel = tableModel;
-        m_list = new JList(getListModel());
+        m_list = new JList<>(getListModel());
         m_list.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(final MouseEvent e) {
@@ -233,9 +232,18 @@ public abstract class AbstractAggregationPanel
                     .createEtchedBorder(), title);
             rootBox.setBorder(border);
         }
-        rootBox.add(createListComponent(listTitle));
-        rootBox.add(createButtonComponent());
-        rootBox.add(createTableComponent(tableTitle));
+        final Component listComponent = createListComponent(listTitle);
+        if (listComponent != null) {
+            rootBox.add(listComponent);
+        }
+        final Component buttonComponent = createButtonComponent();
+        if (buttonComponent != null) {
+            rootBox.add(buttonComponent);
+        }
+        final Component tableComponent = createTableComponent(tableTitle);
+        if (tableComponent != null) {
+            rootBox.add(tableComponent);
+        }
         m_panel.add(rootBox);
     }
 
@@ -334,7 +342,7 @@ public abstract class AbstractAggregationPanel
      * which contains the available options
      * @see AbstractAggregationPanel#getListModel()
      */
-    protected JList getList() {
+    protected JList<L> getList() {
         return m_list;
     }
 
@@ -343,7 +351,7 @@ public abstract class AbstractAggregationPanel
      * the left hand side which contains the available options
      * @see #getList()
      */
-    protected DefaultListModel getListModel() {
+    protected DefaultListModel<L> getListModel() {
         return m_listModel;
     }
 
@@ -452,8 +460,8 @@ public abstract class AbstractAggregationPanel
      * Adds all selected columns to the aggregation column table.
      */
     protected void onAddIt() {
-        final L[] values = (L[])getList().getSelectedValues();
-        if (values == null || values.length < 1) {
+        final List<L> values = getList().getSelectedValuesList();
+        if (values == null || values.size() < 1) {
             return;
         }
         final List<O> methods = getOperators(values);
@@ -469,9 +477,13 @@ public abstract class AbstractAggregationPanel
     }
 
     /**
-     * @param methods
+     * @param methods {@link List} of methods to add to the table model
+     * @since 2.11
      */
-    private void addMethods(final List<O> methods) {
+    protected void addMethods(final List<O> methods) {
+        if (methods == null) {
+            throw new IllegalArgumentException("methods must not be null");
+        }
         final T tableModel = getTableModel();
         final int rowCountBefore = tableModel.getRowCount();
         tableModel.add(methods);
@@ -501,11 +513,10 @@ public abstract class AbstractAggregationPanel
         getTableModel().removeAll();
     }
 
-    private List<O> getOperators(
-            final DefaultListModel listModel) {
-      final List<O> methods = new ArrayList<O>(listModel.size());
+    private List<O> getOperators(final DefaultListModel<L> listModel) {
+      final List<O> methods = new ArrayList<>(listModel.size());
       for (int i = 0, size = listModel.getSize(); i < size; i++) {
-          final L listEntry = (L)listModel.get(i);
+          final L listEntry = listModel.get(i);
           final O operator = getOperator(listEntry);
           methods.add(operator);
       }
@@ -516,8 +527,8 @@ public abstract class AbstractAggregationPanel
      * @param values the user selected values to add
      * @return the wrapped objects to add to the table model
      */
-    private List<O> getOperators(final L[] values) {
-        final List<O> methods = new ArrayList<O>(values.length);
+    private List<O> getOperators(final List<L> values) {
+        final List<O> methods = new ArrayList<>(values.size());
         for (final L value : values) {
             methods.add(getOperator(value));
         }
@@ -595,7 +606,7 @@ public abstract class AbstractAggregationPanel
      * @return {@link Collection} of all elements the user can choose from
      */
     protected Collection<L> getListElements() {
-        final LinkedList<L> elements = new LinkedList<L>();
+        final LinkedList<L> elements = new LinkedList<>();
         final Enumeration<?> listElements = getListModel().elements();
         while (listElements.hasMoreElements()) {
             final L listElement = (L)listElements.nextElement();
@@ -620,8 +631,7 @@ public abstract class AbstractAggregationPanel
      * @param spec input {@link DataTableSpec}
      * @since 2.7
      */
-    protected void initialize(final List<L> listElements,
-            final List<O> operators, final DataTableSpec spec) {
+    protected void initialize(final List<L> listElements, final List<O> operators, final DataTableSpec spec) {
         m_inputTableSpec = spec;
         getListModel().clear();
         final Collection<L> types = listElements;

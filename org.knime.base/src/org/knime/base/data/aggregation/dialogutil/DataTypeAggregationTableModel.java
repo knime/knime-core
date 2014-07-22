@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,77 +41,98 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   06.07.2014 (koetter): created
  */
 package org.knime.base.data.aggregation.dialogutil;
 
-import java.util.List;
-
-import javax.swing.JComboBox;
-
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 
+
+
+
 /**
- * This combo box is used in the aggregation column table to let the user
- * choose from the different compatible aggregation methods per aggregation
- * column.
- *
- * @author Tobias Koetter, University of Konstanz
+ * {@link AbstractAggregationTableModel} that stores {@link DataType}s and the {@link AggregationMethod} to use.
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @since 2.11
  */
-public class AggregationMethodComboBox extends JComboBox<AggregationMethod> {
+public class DataTypeAggregationTableModel extends AbstractAggregationTableModel<DataTypeAggregator> {
 
-    private static final long serialVersionUID = -8712817491828316484L;
-
-    private DataType m_type = null;
+    private static final long serialVersionUID = 1L;
 
     /**
-     * Creates AggregationMethod selection combo box with the allowed
-     * methods.
+     * Constructor.
      */
-    public AggregationMethodComboBox() {
-        super();
-        this.setBackground(this.getBackground());
-        this.setRenderer(new AggregationMethodListCellRenderer());
+    DataTypeAggregationTableModel() {
+        super(new String[] {"Data type", "Aggregation (click to change)"},
+            new Class[] {DataTypeAggregator.class, DataTypeAggregator.class}, true);
     }
 
+
     /**
-     * @param spec the {@link DataColumnSpec} used to initialize this combobox
-     * @param selectedMethod the current selected method
+     * {@inheritDoc}
      */
-    public void update(final DataColumnSpec spec, final AggregationMethod selectedMethod) {
-        final DataType type = spec.getType();
-        update(type, AggregationMethods.getCompatibleMethods(type, true), selectedMethod);
-    }
-    /**
-     * @param type the {@link DataType} used to initialize this combobox
-     * @param compatibleMethods {@link List} of {@link AggregationMethod}s the user can choose from
-     * @param selectedMethod the current selected method
-     * @since 2.11
-     */
-    public void update(final DataType type, final List<AggregationMethod> compatibleMethods,
-        final AggregationMethod selectedMethod) {
-        if (m_type == null || !m_type.equals(type)) {
-            //recreate the combo box if the type has change
-            removeAllItems();
-            for (final AggregationMethod method : compatibleMethods) {
-                addItem(method);
-            }
-            //save the current type for comparison
-            m_type = type;
+    @Override
+    protected void setValue(final Object aValue, final int row, final int columnIdx) {
+        if (aValue == null) {
+            return;
         }
-        //select the previous selected item
-        setSelectedItem(selectedMethod);
+        if (aValue instanceof AggregationMethod) {
+            assert columnIdx == 1;
+            final AggregationMethod newMethod = (AggregationMethod)aValue;
+            updateMethod(row, newMethod);
+        }
     }
 
     /**
-     * @return the selected {@link AggregationMethods}
+     * @param row the row to update
+     * @param method the {@link AggregationMethod} to use
      */
-    public AggregationMethod getSelectedMethod() {
-        return (AggregationMethod)getSelectedItem();
+    private void updateMethod(final int row, final AggregationMethod method) {
+        final DataTypeAggregator old = getRow(row);
+        if (old.getMethodTemplate().equals(method)) {
+            //check if the method has changed
+            return;
+        }
+        //create a new operator each time it is updated to guarantee that
+        //each column has its own operator instance
+        final AggregationMethod methodClone = AggregationMethods.getMethod4Id(method.getId());
+        updateRow(row, new DataTypeAggregator(old.getDataType(), methodClone, old.inclMissingCells()));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean isEditable(final int row, final int columnIdx) {
+        switch (columnIdx) {
+            case 1:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Object getValueAtRow(final int row, final int columnIndex) {
+        final DataTypeAggregator aggregator = getRow(row);
+        switch (columnIndex) {
+        case 0:
+            return aggregator;
+        case 1:
+            return aggregator;
+
+        default:
+            break;
+        }
+        return null;
     }
 
 }
