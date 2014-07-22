@@ -19,13 +19,13 @@
            The columns to aggregate can be either defined by selecting the columns directly, 
            by name based on a regular expression or based on the data type. Input columns are handled in
            this order and only considered once e.g. columns that are added directly on the
-           "Column Based Aggregation" tab are ignored even if their name matches a
+           "Manual Aggregation" tab are ignored even if their name matches a
            defined regular expression on the "Regex Based Aggregation" tab or their type matches a defined type on the
            "Type Based Aggregation" tab. The same holds for columns that are added based on a defined regular expression. 
            They are ignored even if they match a criterion that has been defined in the "Type Based Aggregation" tab.
            </p>
            <p>
-            The "Column Based Aggregation" tab allows you to change the aggregation method of more than one 
+            The "Manual Aggregation" tab allows you to change the aggregation method of more than one 
             column. In order to do so select the columns to change, open the context menu with a right mouse click
             and select the aggregation method to use.
            </p>
@@ -34,7 +34,7 @@
             <a href="http://www.java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html#sum">regular expression</a>.
             Columns where the name matches the regular expression but where the data type is not compatible with the
             selected aggregation method are ignored. Only columns that have not been selected as group column or 
-            that have not been selected as aggregation column on the "Column Based Aggregation" tab are considered.
+            that have not been selected as aggregation column on the "Manual Aggregation" tab are considered.
            </p>
            <p>
             The "Type Based Aggregation" tab allows to select an aggregation method for all columns of a certain 
@@ -102,7 +102,7 @@
             option is selected.
         </option>
         </tab>
-        <tab name="Column Based Aggregation">
+        <tab name="Manual Aggregation">
             <option name="Aggregation settings">
                 Select one or more column(s) for aggregation from the available 
                 columns list. Change the aggregation method in the Aggregation 

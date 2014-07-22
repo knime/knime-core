@@ -198,7 +198,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         columnBasedPanel.setLayout(new BoxLayout(columnBasedPanel, BoxLayout.Y_AXIS));
         columnBasedPanel.add(m_aggrColPanel.getComponentPanel());
 //        columnBasedPanel.add(createAdvancedOptionsBox());
-        m_tabs.addTab("Column Based Aggregation", columnBasedPanel);
+        m_tabs.addTab("Manual Aggregation", columnBasedPanel);
 
         if (showRegex) {
             final JPanel regexPanel = new JPanel();

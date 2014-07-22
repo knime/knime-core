@@ -51,7 +51,7 @@
             input data.
           </option>
         </tab>
-        <tab name="Column Based Aggregation">
+        <tab name="Manual Aggregation">
           <option name="Aggregation methods">
             Select one or more columns for aggregation from the available 
             columns list. Change the aggregation method in the Aggregation 
