@@ -186,7 +186,7 @@ extends AbstractAggregationPanel<RegexAggregationTableModel, RegexAggregator, Ob
                         c.setText(regex);
                     }
                 }
-            }, true));
+            }, true, "Double click to change regular expression. Right mouse click for context menu."));
         columnModel.getColumn(0).setCellEditor(new RegexTableCellEditor());
         columnModel.getColumn(1).setCellEditor(new RegexAggregatorTableCellEditor());
         columnModel.getColumn(1).setCellRenderer(

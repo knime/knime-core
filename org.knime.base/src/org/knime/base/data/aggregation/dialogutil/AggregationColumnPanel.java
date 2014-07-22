@@ -310,7 +310,7 @@ public class AggregationColumnPanel
                             c.setIcon(spec.getType().getIcon());
                         }
                     }
-                }, true));
+                }, true, "Double click to remove column. Right mouse click for context menu."));
         columnModel.getColumn(1).setCellEditor(new ColumnAggregatorTableCellEditor());
         columnModel.getColumn(1).setCellRenderer(
                 new AggregationMethodDecoratorTableCellRenderer(new ValueRenderer() {

@@ -120,7 +120,7 @@ extends AbstractAggregationPanel<DataTypeAggregationTableModel, DataTypeAggregat
                         c.setIcon(dataType.getIcon());
                     }
                 }
-            }, true));
+            }, true, "Double click to remove data type. Right mouse click for context menu."));
         columnModel.getColumn(1).setCellEditor(new DataTypeAggregatorTableCellEditor());
         columnModel.getColumn(1).setCellRenderer(
                 new AggregationMethodDecoratorTableCellRenderer(new ValueRenderer() {

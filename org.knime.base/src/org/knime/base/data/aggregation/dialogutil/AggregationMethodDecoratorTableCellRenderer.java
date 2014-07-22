@@ -70,6 +70,8 @@ public class AggregationMethodDecoratorTableCellRenderer extends DefaultTableCel
 
     private final boolean m_checkValidFlag;
 
+    private final String m_toolTip;
+
     /** Used to render a specific value of an {@link AggregationMethodDecorator}. */
     public interface ValueRenderer {
         /**
@@ -92,12 +94,24 @@ public class AggregationMethodDecoratorTableCellRenderer extends DefaultTableCel
      * should be checked
      */
     public AggregationMethodDecoratorTableCellRenderer(final ValueRenderer valueRenderer,
-                                                       final boolean checkValidFlag) {
+        final boolean checkValidFlag) {
+        this(valueRenderer, checkValidFlag, "Left mouse click to change method. Right mouse click for context menu.");
+    }
+    /**
+     * @param valueRenderer the {@link ValueRenderer} to use
+     * @param checkValidFlag <code>true</code> if the valid flag of the {@link AggregationMethodDecorator}
+     * should be checked
+     * @param toolTip the tool tip to show or <code>null</code> for none
+     * @since 2.11
+     */
+    public AggregationMethodDecoratorTableCellRenderer(final ValueRenderer valueRenderer,
+        final boolean checkValidFlag, final String toolTip) {
         if (valueRenderer == null) {
             throw new NullPointerException("renderer must not be null");
         }
         m_renderer = valueRenderer;
         m_checkValidFlag = checkValidFlag;
+        m_toolTip = toolTip;
     }
 
     /**
@@ -126,7 +140,7 @@ public class AggregationMethodDecoratorTableCellRenderer extends DefaultTableCel
      */
     @Override
     public String getToolTipText() {
-        return "Left mouse click to change method. " + "Right mouse click for context menu.";
+        return m_toolTip;
     }
 
     /**
