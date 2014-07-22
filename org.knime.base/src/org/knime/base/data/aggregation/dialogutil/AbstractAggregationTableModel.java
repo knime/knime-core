@@ -66,8 +66,7 @@ import org.knime.base.data.aggregation.ColumnAggregator;
  * @param <O> the {@link AggregationMethodDecorator} implementation
  * @since 2.6
  */
-public abstract class AbstractAggregationTableModel
-    <O extends AggregationMethodDecorator> extends AbstractTableModel
+public abstract class AbstractAggregationTableModel <O extends AggregationMethodDecorator> extends AbstractTableModel
         implements AggregationTableModel<O> {
 
     /**The name of the settings column in the aggregation panel.*/
@@ -75,7 +74,7 @@ public abstract class AbstractAggregationTableModel
 
     private static final long serialVersionUID = 1;
 
-    private final List<O> m_operators = new ArrayList<O>();
+    private final List<O> m_operators = new ArrayList<>();
 
     private final int m_missingColIdx;
 
@@ -173,8 +172,7 @@ public abstract class AbstractAggregationTableModel
     protected void toggleMissingCellOption(final int row) {
         final O operator = getOperator(row);
         if (operator.supportsMissingValueOption()) {
-            operator.setInclMissingCells(
-                    !operator.inclMissingCells());
+            operator.setInclMissingCells(!operator.inclMissingCells());
             fireTableRowsUpdated(row, row);
         }
     }
@@ -183,8 +181,7 @@ public abstract class AbstractAggregationTableModel
      * {@inheritDoc}
      */
     @Override
-    public void setValueAt(final Object aValue, final int row,
-            final int columnIdx) {
+    public void setValueAt(final Object aValue, final int row, final int columnIdx) {
         if (row < 0 || row >= m_operators.size()) {
             //this might happen if the user removes a row that he also
             //edited e.g. changed the name of the result column
@@ -207,16 +204,14 @@ public abstract class AbstractAggregationTableModel
      * @param row the row to update
      * @param columnIdx the column to update
      */
-    protected abstract void setValue(final Object aValue, final int row,
-            final int columnIdx);
+    protected abstract void setValue(final Object aValue, final int row, final int columnIdx);
 
     /**
      * @param row row index to change the method for
      * @param inclMissingVals <code>true</code> if missing cells should be
      * considered during aggregation
      */
-    protected void updateInclMissing(final int row,
-            final boolean inclMissingVals) {
+    protected void updateInclMissing(final int row, final boolean inclMissingVals) {
         final AggregationMethodDecorator operator = getOperator(row);
         if (operator.supportsMissingValueOption()) {
             operator.setInclMissingCells(inclMissingVals);
@@ -347,8 +342,7 @@ public abstract class AbstractAggregationTableModel
         if (idxs == null || idxs.length < 1) {
             return;
         }
-        final List<O> ops2remove =
-            new LinkedList<O>();
+        final List<O> ops2remove = new LinkedList<>();
         for (final int idx : idxs) {
             ops2remove.add(m_operators.get(idx));
         }

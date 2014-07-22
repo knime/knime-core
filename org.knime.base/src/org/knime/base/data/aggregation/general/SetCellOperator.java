@@ -71,10 +71,8 @@ public class SetCellOperator extends AggregationOperator {
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    public SetCellOperator(final GlobalSettings globalSettings,
-            final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Set", true, false,
-                DataValue.class, true), globalSettings, opColSettings);
+    public SetCellOperator(final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Set", true, false, DataValue.class, true), globalSettings, opColSettings);
     }
 
     /**Constructor for class SetCellOperator.
@@ -82,15 +80,13 @@ public class SetCellOperator extends AggregationOperator {
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    protected SetCellOperator(final OperatorData operatorData,
-            final GlobalSettings globalSettings,
+    protected SetCellOperator(final OperatorData operatorData, final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
         try {
-            m_cells = new LinkedHashSet<DataCell>(getMaxUniqueValues());
+            m_cells = new LinkedHashSet<>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(
-                    "Maximum unique values number to big");
+            throw new IllegalArgumentException("Maximum unique values number to big");
         }
     }
 
@@ -106,9 +102,8 @@ public class SetCellOperator extends AggregationOperator {
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(
-            final GlobalSettings globalSettings,
-            final OperatorColumnSettings opColSettings) {
+    public AggregationOperator createInstance(final GlobalSettings globalSettings,
+        final OperatorColumnSettings opColSettings) {
         return new SetCellOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
@@ -161,7 +156,6 @@ public class SetCellOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Creates a SetCell that contains each element "
-                + "only once per group (including missing values).";
+        return "Creates a SetCell that contains each element only once per group (including missing values).";
     }
 }

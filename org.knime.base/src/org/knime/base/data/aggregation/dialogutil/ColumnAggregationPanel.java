@@ -148,8 +148,8 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
      */
     public ColumnAggregationPanel(final String title) {
         super(title, " Aggregation methods ",
-                new AggregationMethodListCellRenderer(), " To change multiple "
-                + "columns use right mouse click for context menu. ",
+                new AggregationMethodListCellRenderer(),
+                " To change multiple columns use right mouse click for context menu. ",
                 new ColumnAggregationTableModel());
     }
 
@@ -185,8 +185,7 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
      */
     @Deprecated
     public void saveSettingsTo(final Config cnfg) {
-        NamedAggregationOperator.saveMethods((NodeSettingsWO)cnfg,
-                getTableModel().getRows());
+        NamedAggregationOperator.saveMethods((NodeSettingsWO)cnfg, getTableModel().getRows());
     }
 
     /**
@@ -198,8 +197,7 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
     @Deprecated
     public void loadSettingsFrom(final Config cnfg, final DataType type)
     throws InvalidSettingsException {
-        initialize(type, NamedAggregationOperator.loadOperators(
-                      (NodeSettingsRO)cnfg, null), null);
+        initialize(type, NamedAggregationOperator.loadOperators((NodeSettingsRO)cnfg, null), null);
     }
 
     /**
@@ -207,8 +205,7 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
      * @since 2.7
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
-        NamedAggregationOperator.saveMethods(settings,
-                getTableModel().getRows());
+        NamedAggregationOperator.saveMethods(settings, getTableModel().getRows());
     }
 
     /**
@@ -218,8 +215,7 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
      * @throws InvalidSettingsException if the settings are invalid
      * @since 2.7
      */
-    public void loadSettingsFrom(final NodeSettingsRO settings,
-             final DataType type, final DataTableSpec spec)
+    public void loadSettingsFrom(final NodeSettingsRO settings, final DataType type, final DataTableSpec spec)
     throws InvalidSettingsException {
         initialize(type, NamedAggregationOperator.loadOperators(settings, spec), spec);
     }
@@ -232,12 +228,11 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
      * @param spec input {@link DataTableSpec}
      * @since 2.7
      */
-    public void initialize(final DataType type,
-            final List<NamedAggregationOperator> methods,
-            final DataTableSpec spec) {
+    public void initialize(final DataType type, final List<NamedAggregationOperator> methods,
+        final DataTableSpec spec) {
         m_type = type;
         //update the compatible methods list
-        final List<NamedAggregationOperator> methods2Use = new ArrayList<NamedAggregationOperator>(methods.size());
+        final List<NamedAggregationOperator> methods2Use = new ArrayList<>(methods.size());
         if (m_type != null) {
             //remove selected methods that are not compatible with the new type
             for (final NamedAggregationOperator method : methods) {
@@ -260,8 +255,7 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
      * {@inheritDoc}
      */
     @Override
-    protected NamedAggregationOperator getOperator(
-            final AggregationMethod method) {
+    protected NamedAggregationOperator getOperator(final AggregationMethod method) {
         //create a new instance to guarantee that each aggregation operator
         //uses its own instance
         final AggregationMethod clonedMethod =

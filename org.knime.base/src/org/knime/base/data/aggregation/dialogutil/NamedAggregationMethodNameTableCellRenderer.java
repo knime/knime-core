@@ -46,13 +46,13 @@
  */
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.base.data.aggregation.NamedAggregationOperator;
-
 import java.awt.Component;
 import java.awt.event.MouseEvent;
 
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
+
+import org.knime.base.data.aggregation.NamedAggregationOperator;
 
 
 /**
@@ -71,12 +71,9 @@ public class NamedAggregationMethodNameTableCellRenderer
      * {@inheritDoc}
      */
     @Override
-    public Component getTableCellRendererComponent(final JTable table,
-            final Object value, final boolean isSelected,
+    public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected,
             final boolean hasFocus, final int row, final int column) {
-        final Component c =
-            super.getTableCellRendererComponent(table, value, isSelected,
-                hasFocus, row, column);
+        final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         assert (c == this);
         if (value instanceof NamedAggregationOperator) {
             setText(((NamedAggregationOperator)value).getName());
@@ -89,8 +86,7 @@ public class NamedAggregationMethodNameTableCellRenderer
      */
     @Override
     public String getToolTipText() {
-        return "Double click to change name. "
-            + "Right mouse click for context menu.";
+        return "Double click to change name. Right mouse click for context menu.";
     }
 
     /**

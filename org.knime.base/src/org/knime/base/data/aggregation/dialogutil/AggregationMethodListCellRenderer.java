@@ -46,12 +46,12 @@
  */
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.base.data.aggregation.AggregationMethod;
-
 import java.awt.Component;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;
+
+import org.knime.base.data.aggregation.AggregationMethod;
 
 
 /**
@@ -61,8 +61,7 @@ import javax.swing.JList;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class AggregationMethodListCellRenderer
-    extends DefaultListCellRenderer {
+public class AggregationMethodListCellRenderer extends DefaultListCellRenderer {
 
     private static final long serialVersionUID = -5113725870350491440L;
 
@@ -70,12 +69,9 @@ public class AggregationMethodListCellRenderer
      * {@inheritDoc}
      */
     @Override
-    public Component getListCellRendererComponent(final JList list,
-            final Object value, final int index, final boolean isSelected,
-            final boolean cellHasFocus) {
-        final Component c =
-            super.getListCellRendererComponent(list, value, index, isSelected,
-                    cellHasFocus);
+    public Component getListCellRendererComponent(final JList<?> list, final Object value, final int index,
+        final boolean isSelected, final boolean cellHasFocus) {
+        final Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         assert (c == this);
         if (value instanceof AggregationMethod) {
             final AggregationMethod aggregationMeth = (AggregationMethod)value;

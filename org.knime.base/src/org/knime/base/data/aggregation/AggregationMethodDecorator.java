@@ -65,8 +65,7 @@ import org.knime.core.node.NotConfigurableException;
  * @author Tobias Koetter, University of Konstanz
  * @since 2.6
  */
-public abstract class AggregationMethodDecorator
-    implements AggregationMethod {
+public abstract class AggregationMethodDecorator implements AggregationMethod {
 
     /**Config key for the aggregation method.*/
     protected static final String CNFG_AGGR_METHODS = "aggregationMethod";
@@ -92,8 +91,7 @@ public abstract class AggregationMethodDecorator
      * @param inclMissingCells <code>true</code> if missing cells should be
      * considered
      */
-    public AggregationMethodDecorator(final AggregationMethod method,
-            final boolean inclMissingCells) {
+    public AggregationMethodDecorator(final AggregationMethod method, final boolean inclMissingCells) {
         if (method == null) {
             throw new NullPointerException("method must not be null");
         }

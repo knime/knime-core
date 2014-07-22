@@ -46,13 +46,13 @@
  */
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.base.data.aggregation.AggregationMethod;
-
 import java.awt.Component;
 import java.awt.event.MouseEvent;
 
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
+
+import org.knime.base.data.aggregation.AggregationMethod;
 
 
 /**
@@ -62,20 +62,16 @@ import javax.swing.table.DefaultTableCellRenderer;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class AggregationMethodTableCellRenderer
-    extends DefaultTableCellRenderer {
+public class AggregationMethodTableCellRenderer extends DefaultTableCellRenderer {
   private static final long serialVersionUID = -2935929914992836023L;
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Component getTableCellRendererComponent(final JTable table,
-            final Object value, final boolean isSelected,
+    public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected,
             final boolean hasFocus, final int row, final int column) {
-        final Component c =
-            super.getTableCellRendererComponent(table, value, isSelected,
-                hasFocus, row, column);
+        final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         assert (c == this);
         if (value instanceof AggregationMethod) {
             setText(((AggregationMethod)value).getLabel());
@@ -88,8 +84,7 @@ public class AggregationMethodTableCellRenderer
      */
     @Override
     public String getToolTipText() {
-        return "Left mouse click to change method. "
-        + "Right mouse click for context menu.";
+        return "Left mouse click to change method. Right mouse click for context menu.";
     }
 
     /**

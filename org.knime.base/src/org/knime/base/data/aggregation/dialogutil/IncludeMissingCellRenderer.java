@@ -66,8 +66,7 @@ import javax.swing.table.TableModel;
 public class IncludeMissingCellRenderer extends JCheckBox
 implements TableCellRenderer, UIResource {
     private static final long serialVersionUID = 4646190851811197484L;
-    private static final Border NO_FOCUS_BORDER =
-        new EmptyBorder(1, 1, 1, 1);
+    private static final Border NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
     private final TableModel m_model;
 
     /**Constructor for class IncludeMissingCellRenderer.
@@ -89,8 +88,7 @@ implements TableCellRenderer, UIResource {
      * {@inheritDoc}
      */
     @Override
-    public Component getTableCellRendererComponent(final JTable table,
-            final Object value, final boolean isSelected,
+    public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected,
             final boolean hasFocus, final int row, final int column) {
         if (isSelected) {
             setForeground(table.getSelectionForeground());

@@ -80,10 +80,8 @@ public class UniqueConcatenateWithCountOperator
     public UniqueConcatenateWithCountOperator(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("uniqueConcatenateWithCount_V2.4",
-                "Unique concatenate with count",
-                "Unique concatenate with count", true, false,
-                DataValue.class, true), globalSettings, opColSettings);
+        this(new OperatorData("uniqueConcatenateWithCount_V2.4", "Unique concatenate with count",
+                "Unique concatenate with count", true, false, DataValue.class, true), globalSettings, opColSettings);
     }
 
     /**Constructor for class UniqueConcatenateWithCountOperator.
@@ -97,8 +95,7 @@ public class UniqueConcatenateWithCountOperator
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
         try {
-            m_vals = new LinkedHashMap<DataCell, MutableInteger>(
-                    getMaxUniqueValues());
+            m_vals = new LinkedHashMap<>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
                     "Maximum unique values number to big");
@@ -117,11 +114,9 @@ public class UniqueConcatenateWithCountOperator
      * {@inheritDoc}
      */
     @Override
-    public AggregationOperator createInstance(
-            final GlobalSettings globalSettings,
+    public AggregationOperator createInstance(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new UniqueConcatenateWithCountOperator(getOperatorData(), globalSettings,
-                opColSettings);
+        return new UniqueConcatenateWithCountOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**
@@ -153,8 +148,7 @@ public class UniqueConcatenateWithCountOperator
             return DataType.getMissingCell();
         }
         final StringBuilder buf = new StringBuilder();
-        final Set<Entry<DataCell, MutableInteger>> entrySet =
-            m_vals.entrySet();
+        final Set<Entry<DataCell, MutableInteger>> entrySet = m_vals.entrySet();
         boolean first = true;
         for (final Entry<DataCell, MutableInteger> entry : entrySet) {
             if (first) {
@@ -183,7 +177,6 @@ public class UniqueConcatenateWithCountOperator
      */
     @Override
     public String getDescription() {
-        return "Concatenates each member only once with the number of its "
-             + "occurrences per group.";
+        return "Concatenates each member only once with the number of its occurrences per group.";
     }
 }

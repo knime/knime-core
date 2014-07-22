@@ -52,7 +52,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import javax.swing.table.DefaultTableModel;
+
 import org.knime.base.data.aggregation.NamedAggregationOperator;
 
 
@@ -72,9 +74,8 @@ public class ColumnAggregationTableModel
      *
      */
     protected ColumnAggregationTableModel() {
-        super(new String[] {"Column name (double click to change) ",
-                "Aggregation method"}, new Class[] {
-                NamedAggregationOperator.class, String.class}, true);
+        super(new String[] {"Column name (double click to change) ", "Aggregation method"},
+            new Class[] {NamedAggregationOperator.class, String.class}, true);
     }
 
     /**
@@ -82,7 +83,7 @@ public class ColumnAggregationTableModel
      */
     private Set<String> getOperatorNames() {
         final List<NamedAggregationOperator> operators = getRows();
-        final Set<String> methodNames = new HashSet<String>(operators.size());
+        final Set<String> methodNames = new HashSet<>(operators.size());
         for (final NamedAggregationOperator op : operators) {
             methodNames.add(op.getName());
         }
@@ -206,8 +207,7 @@ public class ColumnAggregationTableModel
     @Override
     public void add(final List<NamedAggregationOperator> operators) {
         final Set<String> names = getOperatorNames();
-        final List<NamedAggregationOperator> uniqueOperators =
-            new ArrayList<NamedAggregationOperator>(operators.size());
+        final List<NamedAggregationOperator> uniqueOperators = new ArrayList<>(operators.size());
         for (final NamedAggregationOperator op : operators) {
             //check if the name of the operator is already used and
             //make it unique

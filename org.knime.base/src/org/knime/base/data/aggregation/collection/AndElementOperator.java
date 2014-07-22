@@ -76,15 +76,13 @@ public class AndElementOperator extends AggregationOperator {
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    protected AndElementOperator(final OperatorData operatorData,
-            final GlobalSettings globalSettings,
+    protected AndElementOperator(final OperatorData operatorData, final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
         try {
-            m_vals = new LinkedHashSet<DataCell>(getMaxUniqueValues());
+            m_vals = new LinkedHashSet<>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(
-                    "Maximum unique values number to big");
+            throw new IllegalArgumentException("Maximum unique values number to big");
         }
     }
 
@@ -124,10 +122,8 @@ public class AndElementOperator extends AggregationOperator {
     protected boolean computeInternal(final DataCell cell) {
         if (cell instanceof CollectionDataValue) {
             //missing cells are skipped
-            final CollectionDataValue collectionCell =
-                (CollectionDataValue)cell;
-            final Set<DataCell> valCells =
-                new HashSet<DataCell>(collectionCell.size());
+            final CollectionDataValue collectionCell = (CollectionDataValue)cell;
+            final Set<DataCell> valCells = new HashSet<>(collectionCell.size());
             for (final DataCell valCell : collectionCell) {
                 valCells.add(valCell);
             }
@@ -178,8 +174,7 @@ public class AndElementOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Creates a SetCell that contains the intersection of all "
-        + "collection elements per group."
-        + " Only elements that are present in all collections are kept.";
+        return "Creates a SetCell that contains the intersection of all collection elements per group."
+                + " Only elements that are present in all collections are kept.";
     }
 }

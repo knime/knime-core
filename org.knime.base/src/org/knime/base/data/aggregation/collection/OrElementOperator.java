@@ -75,15 +75,13 @@ public class OrElementOperator extends AggregationOperator {
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    protected OrElementOperator(final OperatorData operatorData,
-            final GlobalSettings globalSettings,
+    protected OrElementOperator(final OperatorData operatorData, final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
         try {
-            m_vals = new LinkedHashSet<DataCell>(getMaxUniqueValues());
+            m_vals = new LinkedHashSet<>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(
-                    "Maximum unique values number to big");
+            throw new IllegalArgumentException("Maximum unique values number to big");
         }
     }
 
@@ -123,8 +121,7 @@ public class OrElementOperator extends AggregationOperator {
     protected boolean computeInternal(final DataCell cell) {
         if (cell instanceof CollectionDataValue) {
             //missing cells are skipped
-            final CollectionDataValue collectionCell =
-                (CollectionDataValue)cell;
+            final CollectionDataValue collectionCell = (CollectionDataValue)cell;
             for (final DataCell valCell : collectionCell) {
                 if (m_vals.contains(cell)) {
                     continue;
@@ -170,8 +167,7 @@ public class OrElementOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Creates a SetCell that contains the union of all "
-        + "collection elements per group";
+        return "Creates a SetCell that contains the union of all collection elements per group";
     }
 
 }

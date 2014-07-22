@@ -72,10 +72,8 @@ public class ModeOperator extends AggregationOperator {
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    public ModeOperator(final GlobalSettings globalSettings,
-            final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Mode", true, true, DataValue.class, true),
-                globalSettings, opColSettings);
+    public ModeOperator(final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Mode", true, true, DataValue.class, true), globalSettings, opColSettings);
     }
 
     /**Constructor for class ModeOperator.
@@ -83,17 +81,13 @@ public class ModeOperator extends AggregationOperator {
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    protected ModeOperator(final OperatorData operatorData,
-            final GlobalSettings globalSettings,
+    protected ModeOperator(final OperatorData operatorData, final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
         try {
-            m_valCounter =
-                new LinkedHashMap<DataCell, MutableInteger>(
-                        getMaxUniqueValues());
+            m_valCounter = new LinkedHashMap<>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(
-                    "Maximum unique values number to big");
+            throw new IllegalArgumentException("Maximum unique values number to big");
         }
     }
 
@@ -145,8 +139,7 @@ public class ModeOperator extends AggregationOperator {
             return DataType.getMissingCell();
         }
         //get the cell with the most counts
-        final Set<Entry<DataCell, MutableInteger>> entries =
-            m_valCounter.entrySet();
+        final Set<Entry<DataCell, MutableInteger>> entries = m_valCounter.entrySet();
         int max = Integer.MIN_VALUE;
         DataCell result = null;
         for (final Entry<DataCell, MutableInteger> entry : entries) {
@@ -172,7 +165,6 @@ public class ModeOperator extends AggregationOperator {
     @Override
     public String getDescription() {
         return "Takes the value with the most occurrences per group. "
-        + "If multiple values match this criterion the first occurrence is "
-        + "written to the output table.";
+        + "If multiple values match this criterion the first occurrence is written to the output table.";
     }
 }

@@ -87,7 +87,7 @@ public class ListCellOperator extends AggregationOperator {
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
         try {
-            m_cells = new ArrayList<DataCell>(getMaxUniqueValues());
+            m_cells = new ArrayList<>(getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
             "Maximum unique values number too big");

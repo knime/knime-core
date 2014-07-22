@@ -46,12 +46,12 @@
  */
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.core.data.DataColumnSpec;
-
 import java.awt.Component;
 
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
+
+import org.knime.core.data.DataColumnSpec;
 
 
 /**
@@ -70,15 +70,12 @@ public class DataColumnSpecTableCellRenderer extends DefaultTableCellRenderer {
      * {@inheritDoc}
      */
     @Override
-    public Component getTableCellRendererComponent(final JTable table,
-            final Object value, final boolean isSelected,
+    public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected,
             final boolean hasFocus, final int row, final int column) {
         // The super method will reset the icon if we call this method
         // last. So we let super do its job first and then we take care
         // that everything is properly set.
-        final Component c =
-            super.getTableCellRendererComponent(table, value, isSelected,
-                hasFocus, row, column);
+        final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         assert (c == this);
         if (value instanceof DataColumnSpec) {
             setText(((DataColumnSpec)value).getName());

@@ -91,7 +91,7 @@ import org.knime.core.node.port.PortObjectSpec;
 public class DialogComponentAggregationMethod extends DialogComponent
     implements ItemListener, DocumentListener, ActionListener, ChangeListener {
 
-    private final JComboBox m_aggregationMethod;
+    private final JComboBox<AggregationMethod> m_aggregationMethod;
 
     private final JLabel m_label;
 
@@ -136,7 +136,7 @@ public class DialogComponentAggregationMethod extends DialogComponent
                     + "shouldn't be null or empty");
         }
         m_label = new JLabel(label);
-        m_aggregationMethod = new JComboBox();
+        m_aggregationMethod = new JComboBox<>();
         m_aggregationMethod.setRenderer(new AggregationMethodListCellRenderer());
 
         for (final AggregationMethod o : methods) {
@@ -228,8 +228,7 @@ public class DialogComponentAggregationMethod extends DialogComponent
         if (modelVal != null) {
             for (int i = 0, length = m_aggregationMethod.getItemCount();
                 i < length; i++) {
-                final AggregationMethod curVal =
-                    (AggregationMethod)m_aggregationMethod.getItemAt(i);
+                final AggregationMethod curVal = m_aggregationMethod.getItemAt(i);
                 if (curVal.equals(modelVal)) {
                     val = curVal;
                     break;
@@ -390,8 +389,7 @@ public class DialogComponentAggregationMethod extends DialogComponent
      * @param supportedType the {@link DataType} the methods must be compatible with
      */
     public void replaceListItems(final DataType supportedType) {
-        final List<AggregationMethod> compatibleMethods =
-                AggregationMethods.getCompatibleMethods(supportedType, true);
+        final List<AggregationMethod> compatibleMethods = AggregationMethods.getCompatibleMethods(supportedType, true);
         replaceListItems(((SettingsModelAggregationMethod)getModel()).getAggregationMethod(),
                          compatibleMethods.toArray(new AggregationMethod[0]));
     }
@@ -402,8 +400,7 @@ public class DialogComponentAggregationMethod extends DialogComponent
      */
     public void replaceListItems(final AggregationMethod select, final AggregationMethod... newItems) {
         if (newItems == null || newItems.length < 1) {
-            throw new NullPointerException("The container with the new items"
-                    + " can't be null or empty.");
+            throw new NullPointerException("The container with the new items can't be null or empty.");
         }
         final AggregationMethod sel;
         if (select == null) {
@@ -417,8 +414,7 @@ public class DialogComponentAggregationMethod extends DialogComponent
         AggregationMethod selOption = null;
         for (final AggregationMethod option : newItems) {
             if (option == null) {
-                throw new NullPointerException("Options in the selection"
-                        + " list can't be null");
+                throw new NullPointerException("Options in the selection list can't be null");
             }
             m_aggregationMethod.addItem(option);
             if (option.equals(sel)) {

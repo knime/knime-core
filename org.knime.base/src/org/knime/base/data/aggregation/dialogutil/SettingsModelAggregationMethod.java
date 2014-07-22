@@ -119,7 +119,7 @@ public class SettingsModelAggregationMethod extends SettingsModel {
      *
      */
     public SettingsModelAggregationMethod(final String configName, final int inputPortIndex,
-                                          final AggregationMethod defaultMethod) {
+        final AggregationMethod defaultMethod) {
         this(configName, inputPortIndex, DEFAULT_SETTINGS.getValueDelimiter(),
              DEFAULT_SETTINGS.getMaxUniqueValues(), defaultMethod);
     }
@@ -164,8 +164,8 @@ public class SettingsModelAggregationMethod extends SettingsModel {
     @SuppressWarnings("unchecked")
     @Override
     protected SettingsModelAggregationMethod createClone() {
-        return new SettingsModelAggregationMethod(m_configName, m_inputPortIndex,
-                                                  m_valueDelimiter, m_maxUniqueValues, m_method);
+        return new SettingsModelAggregationMethod(m_configName, m_inputPortIndex, m_valueDelimiter,
+            m_maxUniqueValues, m_method);
     }
 
     /**
@@ -189,8 +189,7 @@ public class SettingsModelAggregationMethod extends SettingsModel {
      * @param valueDelimiter the possibly new value separator
      * @param maxUniqueValues the possible new maximum number of unique values
      */
-    protected void setValues(final AggregationMethod method, final String valueDelimiter,
-                          final int maxUniqueValues) {
+    protected void setValues(final AggregationMethod method, final String valueDelimiter, final int maxUniqueValues) {
         boolean changed = updateAggregationMethod(method);
         changed = updateValueDelimiter(valueDelimiter) || changed;
         changed = updateMaxUniqueValues(maxUniqueValues) || changed;
@@ -241,8 +240,8 @@ public class SettingsModelAggregationMethod extends SettingsModel {
      * @return the {@link AggregationOperator} to use
      */
     public AggregationOperator getAggregationOperator(final FileStoreFactory fileStoreFactory,
-          final List<String> groupColNames, final DataTableSpec spec,
-          final DataColumnSpec origColSpec, final int noOfRows) {
+        final List<String> groupColNames, final DataTableSpec spec, final DataColumnSpec origColSpec,
+        final int noOfRows) {
         return m_method.createOperator(new GlobalSettings(fileStoreFactory, groupColNames,
                           m_maxUniqueValues, m_valueDelimiter, spec, noOfRows),
                               new OperatorColumnSettings(m_method.inclMissingCells(), origColSpec));

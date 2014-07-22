@@ -45,10 +45,17 @@
 
 package org.knime.base.node.preproc.groupby;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -59,14 +66,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 
 /**
@@ -150,8 +149,8 @@ public class MemoryGroupByTable extends GroupByTable {
     protected BufferedDataTable createGroupByTable(final ExecutionContext exec,
             final BufferedDataTable dataTable, final DataTableSpec resultSpec,
             final int[] groupColIdx) throws CanceledExecutionException {
-        m_rowKeys = new HashMap<GroupKey, Set<RowKey>>();
-        m_vals = new LinkedHashMap<GroupKey, ColumnAggregator[]>();
+        m_rowKeys = new HashMap<>();
+        m_vals = new LinkedHashMap<>();
         final ExecutionMonitor groupExec = exec.createSubProgress(0.7);
         final DataTableSpec spec = dataTable.getDataTableSpec();
         final int rowCount = dataTable.getRowCount();
@@ -169,8 +168,7 @@ public class MemoryGroupByTable extends GroupByTable {
             addRowKey(groupKey, row.getKey());
             addRow(spec, groupKey, row);
         }
-        return createResultTable(exec.createSubExecutionContext(0.3),
-                resultSpec);
+        return createResultTable(exec.createSubExecutionContext(0.3), resultSpec);
     }
 
     private BufferedDataTable createResultTable(final ExecutionContext exec,
@@ -242,7 +240,7 @@ public class MemoryGroupByTable extends GroupByTable {
         if (isEnableHilite()) {
             Set<RowKey> keySet = m_rowKeys.get(groupKey);
             if (keySet == null) {
-                keySet = new HashSet<RowKey>();
+                keySet = new HashSet<>();
                 m_rowKeys.put(groupKey, keySet);
             }
             keySet.add(key);

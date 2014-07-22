@@ -76,8 +76,7 @@ public class AggregationColumnTableModel
      */
     public AggregationColumnTableModel() {
         super(new String[] {"Column", "Aggregation (click to change)"},
-                new Class<?>[] {ColumnAggregator.class, ColumnAggregator.class},
-                true);
+                new Class<?>[] {ColumnAggregator.class, ColumnAggregator.class}, true);
     }
     private static final long serialVersionUID = 7331177164907480373L;
 
@@ -86,8 +85,7 @@ public class AggregationColumnTableModel
      * @return indices of all rows that are compatible with the given type
      * or an empty collection if none is compatible
      */
-    public Collection<Integer> getCompatibleRowIdxs(
-            final Class<? extends DataValue> type) {
+    public Collection<Integer> getCompatibleRowIdxs(final Class<? extends DataValue> type) {
         return getRowIdxs(true, type);
     }
 
@@ -97,14 +95,12 @@ public class AggregationColumnTableModel
      * or an empty collection if all are compatible
      * @since 2.6
      */
-    public Collection<Integer> getNotCompatibleRowIdxs(
-            final Class<? extends DoubleValue> type) {
+    public Collection<Integer> getNotCompatibleRowIdxs(final Class<? extends DoubleValue> type) {
         return getRowIdxs(false, type);
     }
 
-    private Collection<Integer> getRowIdxs(final boolean compatible,
-            final Class<? extends DataValue> type) {
-        final Collection<Integer> result = new LinkedList<Integer>();
+    private Collection<Integer> getRowIdxs(final boolean compatible, final Class<? extends DataValue> type) {
+        final Collection<Integer> result = new LinkedList<>();
         for (int i = 0, length = getRowCount(); i < length; i++) {
             if ((compatible && isCompatible(i, type))
                     || (!compatible && !isCompatible(i, type))) {
@@ -119,8 +115,7 @@ public class AggregationColumnTableModel
      * @param type the type to check for compatibility
      * @return <code>true</code> if the row contains a numerical column
      */
-    public boolean isCompatible(final int row,
-            final Class<? extends DataValue> type) {
+    public boolean isCompatible(final int row, final Class<? extends DataValue> type) {
         final ColumnAggregator colAggr = getRow(row);
         return colAggr.isCompatible(type);
     }
@@ -129,15 +124,13 @@ public class AggregationColumnTableModel
      * {@inheritDoc}
      */
     @Override
-    public void setValue(final Object aValue, final int row,
-            final int columnIdx) {
+    public void setValue(final Object aValue, final int row, final int columnIdx) {
         if (aValue == null) {
             return;
         }
         if (aValue instanceof AggregationMethod) {
             assert columnIdx == 1;
-            final AggregationMethod newMethod =
-                (AggregationMethod)aValue;
+            final AggregationMethod newMethod = (AggregationMethod)aValue;
             updateMethod(row, newMethod);
         }
     }
@@ -146,8 +139,7 @@ public class AggregationColumnTableModel
      * @param selectedRows the rows to update
      * @param method the {@link AggregationMethod} to use
      */
-    protected void setAggregationMethod(final int[] selectedRows,
-            final AggregationMethod method) {
+    protected void setAggregationMethod(final int[] selectedRows, final AggregationMethod method) {
         for (final int row : selectedRows) {
             updateMethod(row, method);
         }
@@ -165,10 +157,8 @@ public class AggregationColumnTableModel
         }
         //create a new operator each time it is updated to guarantee that
         //each column has its own operator instance
-        AggregationMethod methodClone =
-            AggregationMethods.getMethod4Id(method.getId());
-        updateRow(row, new ColumnAggregator(old.getOriginalColSpec(),
-                methodClone, old.inclMissingCells()));
+        AggregationMethod methodClone = AggregationMethods.getMethod4Id(method.getId());
+        updateRow(row, new ColumnAggregator(old.getOriginalColSpec(), methodClone, old.inclMissingCells()));
     }
 
     /**
@@ -221,9 +211,8 @@ public class AggregationColumnTableModel
         if (colNames == null || colNames.isEmpty()) {
             return;
         }
-        final Set<String> colNameSet = new HashSet<String>(colNames);
-        final Collection<ColumnAggregator> colAggr2Remove =
-            new LinkedList<ColumnAggregator>();
+        final Set<String> colNameSet = new HashSet<>(colNames);
+        final Collection<ColumnAggregator> colAggr2Remove = new LinkedList<>();
         for (final ColumnAggregator colAggr : getRows()) {
             if (colNameSet.contains(colAggr.getOriginalColName())) {
                 colAggr2Remove.add(colAggr);
@@ -259,8 +248,7 @@ public class AggregationColumnTableModel
         if (specs == null || specs.length < 1) {
             return;
         }
-        final List<ColumnAggregator> aggregators =
-            new ArrayList<ColumnAggregator>(specs.length);
+        final List<ColumnAggregator> aggregators = new ArrayList<>(specs.length);
         for (final DataColumnSpec spec : specs) {
             final AggregationMethod defaultMethod =
                 AggregationMethods.getDefaultMethod(spec);

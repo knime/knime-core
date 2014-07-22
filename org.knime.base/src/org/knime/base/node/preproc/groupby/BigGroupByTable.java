@@ -86,11 +86,9 @@ import org.knime.core.util.Pair;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class BigGroupByTable extends
-GroupByTable {
+public class BigGroupByTable extends GroupByTable {
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(BigGroupByTable.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(BigGroupByTable.class);
 
     /**Constructor for class BigGroupByTable.
      * @param exec the <code>ExecutionContext</code>
@@ -157,7 +155,6 @@ GroupByTable {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected BufferedDataTable createGroupByTable(final ExecutionContext exec,
             final BufferedDataTable table, final DataTableSpec resultSpec,
@@ -207,9 +204,7 @@ GroupByTable {
         //(such as cells that contain chemical structures).
         //In this rare case this map will contain for each group of data cells
         //that are pairwise equal in the chunk a separate entry.
-        final Map<GroupKey, Pair<ColumnAggregator[], Set<RowKey>>>
-            chunkMembers = new HashMap<GroupKey,
-            Pair<ColumnAggregator[], Set<RowKey>>>(3);
+        final Map<GroupKey, Pair<ColumnAggregator[], Set<RowKey>>> chunkMembers = new HashMap<>(3);
         boolean logUnusualCells = true;
         String groupLabel = "";
         for (final DataRow row : sortedTable) {
@@ -260,12 +255,11 @@ GroupByTable {
             if (member == null) {
                 Set<RowKey> rowKeys;
                 if (isEnableHilite()) {
-                    rowKeys = new HashSet<RowKey>();
+                    rowKeys = new HashSet<>();
                 } else {
                     rowKeys = Collections.EMPTY_SET;
                 }
-                member = new Pair<ColumnAggregator[], Set<RowKey>>(
-                        cloneColumnAggregators(), rowKeys);
+                member = new Pair<>(cloneColumnAggregators(), rowKeys);
                 final DataCell[] groupKeys = new DataCell[currentGroup.length];
                 System.arraycopy(currentGroup, 0, groupKeys, 0,
                         currentGroup.length);

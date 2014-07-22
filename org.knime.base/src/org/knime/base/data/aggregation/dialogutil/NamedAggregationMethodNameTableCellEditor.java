@@ -48,14 +48,14 @@
 
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.base.data.aggregation.NamedAggregationOperator;
-
 import java.awt.Component;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.tree.DefaultTreeCellEditor;
+
+import org.knime.base.data.aggregation.NamedAggregationOperator;
 
 
 /**
@@ -65,8 +65,7 @@ import javax.swing.tree.DefaultTreeCellEditor;
  * @author Tobias Koetter, University of Konstanz
  * @since 2.6
  */
-public class NamedAggregationMethodNameTableCellEditor
-    extends DefaultCellEditor {
+public class NamedAggregationMethodNameTableCellEditor extends DefaultCellEditor {
 
     private static final long serialVersionUID = 1;
 
@@ -80,18 +79,15 @@ public class NamedAggregationMethodNameTableCellEditor
      * {@inheritDoc}
      */
     @Override
-    public Component getTableCellEditorComponent(final JTable table,
-            final Object value, final boolean isSelected, final int row,
-            final int column) {
-        String val;
+    public Component getTableCellEditorComponent(final JTable table, final Object value, final boolean isSelected,
+        final int row, final int column) {
+        final String val;
         if (value instanceof NamedAggregationOperator) {
-            final NamedAggregationOperator method =
-                (NamedAggregationOperator)value;
+            final NamedAggregationOperator method = (NamedAggregationOperator)value;
             val = method.getName();
         } else {
             val = value.toString();
         }
-        return super.getTableCellEditorComponent(table, val,
-                isSelected, row, column);
+        return super.getTableCellEditorComponent(table, val, isSelected, row, column);
     }
 }

@@ -102,8 +102,7 @@ implements TableCellRenderer, TableCellEditor, MouseListener {
      * TableColumn of the specified column.
      * @param rootPanel the AbstractAggregationPanel this button is added
      */
-    public OperatorSettingsButtonCellRenderer(
-      final AbstractAggregationPanel<?, ?, ?> rootPanel) {
+    public OperatorSettingsButtonCellRenderer(final AbstractAggregationPanel<?, ?, ?> rootPanel) {
         if (rootPanel == null) {
             throw new NullPointerException("rootPanel must not be null");
         }
@@ -142,9 +141,8 @@ implements TableCellRenderer, TableCellEditor, MouseListener {
     }
 
     @Override
-    public Component getTableCellEditorComponent(final JTable table,
-         final Object value, final boolean isSelected, final int row,
-         final int column) {
+    public Component getTableCellEditorComponent(final JTable table, final Object value, final boolean isSelected,
+        final int row, final int column) {
         if (value == null) {
             return NO_SETTINGS_COMPONENT;
         } else {
@@ -160,9 +158,8 @@ implements TableCellRenderer, TableCellEditor, MouseListener {
      * {@inheritDoc}
      */
     @Override
-    public Component getTableCellRendererComponent(final JTable table,
-       final Object value, final boolean isSelected, final boolean hasFocus,
-       final int row, final int column) {
+    public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected,
+        final boolean hasFocus, final int row, final int column) {
         if (Boolean.FALSE.equals(value)) {
             return NO_SETTINGS_COMPONENT;
         }

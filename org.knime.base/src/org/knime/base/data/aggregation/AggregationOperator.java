@@ -128,9 +128,8 @@ public abstract class AggregationOperator implements AggregationMethod {
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    public AggregationOperator(final OperatorData operatorData,
-            final GlobalSettings globalSettings,
-            final OperatorColumnSettings opColSettings) {
+    public AggregationOperator(final OperatorData operatorData, final GlobalSettings globalSettings,
+        final OperatorColumnSettings opColSettings) {
         m_globalSettings = globalSettings;
         m_opColSettings = opColSettings;
         m_operatorData = operatorData;
@@ -146,9 +145,8 @@ public abstract class AggregationOperator implements AggregationMethod {
      * @return a new instance of this operator
      *
      */
-    public abstract AggregationOperator createInstance(
-            GlobalSettings globalSettings,
-            OperatorColumnSettings opColSettings);
+    public abstract AggregationOperator createInstance(GlobalSettings globalSettings,
+        OperatorColumnSettings opColSettings);
 
     /**
      * @return the {@link OperatorData} of this operator
