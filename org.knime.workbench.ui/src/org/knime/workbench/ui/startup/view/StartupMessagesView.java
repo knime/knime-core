@@ -118,10 +118,14 @@ public class StartupMessagesView extends ViewPart {
 
             @Override
             public void widgetDefaultSelected(final SelectionEvent event) {
-                TableItem tableCell = (TableItem)event.item;
-                StartupMessage msg = (StartupMessage)tableCell.getData();
-                StartupMessageDialog dlg = new StartupMessageDialog(event.display.getActiveShell(), msg);
-                dlg.open();
+                if (event.item instanceof TableItem) {
+                    TableItem tableCell = (TableItem)event.item;
+                    if (tableCell.getData() instanceof StartupMessage) {
+                        StartupMessage msg = (StartupMessage)tableCell.getData();
+                        StartupMessageDialog dlg = new StartupMessageDialog(event.display.getActiveShell(), msg);
+                        dlg.open();
+                    }
+                }
             }
         });
     }
