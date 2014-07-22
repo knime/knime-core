@@ -67,10 +67,16 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.knime.base.data.aggregation.bitvector.BitVectorIntersectionOperator;
+import org.knime.base.data.aggregation.bitvector.BitVectorNotSetCountOperator;
+import org.knime.base.data.aggregation.bitvector.BitVectorSetCountOperator;
+import org.knime.base.data.aggregation.bitvector.BitVectorUnionOperator;
+import org.knime.base.data.aggregation.bitvector.BitVectorXOrOperator;
 import org.knime.base.data.aggregation.booleancell.FalseCountOperator;
 import org.knime.base.data.aggregation.booleancell.TrueCountOperator;
 import org.knime.base.data.aggregation.collection.AndElementCountOperator;
 import org.knime.base.data.aggregation.collection.AndElementOperator;
+import org.knime.base.data.aggregation.collection.AppendElementOperator;
 import org.knime.base.data.aggregation.collection.ElementCountOperator;
 import org.knime.base.data.aggregation.collection.OrElementCountOperator;
 import org.knime.base.data.aggregation.collection.OrElementOperator;
@@ -126,9 +132,7 @@ public final class AggregationMethods {
         Comparator<Class<? extends DataValue>> {
 
         /**The only instance of this comparator.*/
-        static final AggregationMethods.DataValueClassComparator COMPARATOR =
-            new DataValueClassComparator();
-
+        static final AggregationMethods.DataValueClassComparator COMPARATOR = new DataValueClassComparator();
 
         /**
          * {@inheritDoc}
@@ -149,7 +153,6 @@ public final class AggregationMethods {
             final String name2 = getUserTypeLabel(o2);
             return name1.compareTo(name2);
         }
-
     }
 
     private static final NodeLogger LOGGER =
@@ -166,12 +169,10 @@ public final class AggregationMethods {
     private static AggregationMethods instance = new AggregationMethods();
 
     /**Map with all valid operators that are available to the user.*/
-    private final Map<String, AggregationOperator> m_operators =
-        new LinkedHashMap<String, AggregationOperator>();
+    private final Map<String, AggregationOperator> m_operators = new LinkedHashMap<>();
     /**Map with previously used but now deprecated operators. These
      * operators are not shown to the user.*/
-    private final Map<String, AggregationOperator> m_deprecatedOperators =
-        new HashMap<String, AggregationOperator>();
+    private final Map<String, AggregationOperator> m_deprecatedOperators = new HashMap<>();
 
     private final AggregationMethod m_defNotNumericalMeth;
     private final AggregationMethod m_defNumericalMeth;
@@ -190,145 +191,125 @@ public final class AggregationMethods {
         try {
 //The collection methods
             /**And.*/
-            addOperator(new AndElementOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new AndElementOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**And count.*/
-            addOperator(
-                    new AndElementCountOperator(GlobalSettings.DEFAULT,
-                            OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new AndElementCountOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Or.*/
-            addOperator(new OrElementOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new OrElementOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Or count.*/
-            addOperator(
-                    new OrElementCountOperator(GlobalSettings.DEFAULT,
-                            OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new OrElementCountOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**XOR.*/
-            addOperator(new XORElementOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new XORElementOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**XOR count.*/
-            addOperator(
-                    new XORElementCountOperator(GlobalSettings.DEFAULT,
-                            OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new XORElementCountOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Element counter.*/
-            addOperator(
-                    new ElementCountOperator(GlobalSettings.DEFAULT,
-                            OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new ElementCountOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            /**Append.*/
+            addOperator(new AppendElementOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
 //The date methods
             /**Date mean operator.*/
-            addOperator(new DateMeanOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new DateMeanOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Median date operator.*/
-            addOperator(new MedianDateOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new MedianDateOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Day range operator.*/
-            addOperator(new DayRangeOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new DayRangeOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Milliseconds range operator.*/
-            addOperator(new MillisRangeOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new MillisRangeOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
 //The numerical methods
             /**Mean.*/
-            final AggregationOperator meanOperator =
-                new MeanOperator(GlobalSettings.DEFAULT,
+            final AggregationOperator meanOperator = new MeanOperator(GlobalSettings.DEFAULT,
                         OperatorColumnSettings.DEFAULT_EXCL_MISSING);
             addOperator(meanOperator);
             m_defNumericalMeth = getOperator(meanOperator.getId());
             /**Standard deviation.*/
-            addOperator(
-                    new StdDeviationOperator(GlobalSettings.DEFAULT,
-                            OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new StdDeviationOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Variance.*/
-            addOperator(new VarianceOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new VarianceOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Median.*/
-            addOperator(new MedianOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new MedianOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Sum.*/
-            addOperator(new SumOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new SumOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Product.*/
-            addOperator(new ProductOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new ProductOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Range.*/
-            addOperator(new RangeOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new RangeOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Geometric Mean.*/
-            addOperator(new GeometricMeanOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new GeometricMeanOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Geometric deviation.*/
-            addOperator(
-                    new GeometricStdDeviationOperator(GlobalSettings.DEFAULT,
-                            OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new GeometricStdDeviationOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
 //The boolean methods
             /**True count operator.*/
-            addOperator(new TrueCountOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new TrueCountOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**False count operator.*/
-            addOperator(new FalseCountOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            addOperator(new FalseCountOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+
+// Bit vector methods
+            /**Set count operator.*/
+            addOperator(new BitVectorSetCountOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            /**Not set count operator.*/
+            addOperator(new BitVectorNotSetCountOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            /**Union bit vector operator.*/
+            addOperator(new BitVectorUnionOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            /**Intersection bit vector operator.*/
+            addOperator(new BitVectorIntersectionOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            /**XOR bit vector operator.*/
+            addOperator(new BitVectorXOrOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
 //The general methods that work with all DataCells
             /**Takes the first cell per group.*/
-            final AggregationOperator firstOperator =
-                new FirstOperator(GlobalSettings.DEFAULT,
+            final AggregationOperator firstOperator = new FirstOperator(GlobalSettings.DEFAULT,
                         OperatorColumnSettings.DEFAULT_INCL_MISSING);
             addOperator(firstOperator);
             m_defNotNumericalMeth = getOperator(firstOperator.getId());
-            m_rowOrderMethod = new FirstOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING);
+            m_rowOrderMethod = new FirstOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING);
             /**Takes the last cell per group.*/
-            addOperator(new LastOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new LastOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Minimum.*/
-            addOperator(new MinOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new MinOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Maximum.*/
-            addOperator(new MaxOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new MaxOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Takes the value which occurs most.*/
-            addOperator(new ModeOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new ModeOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Concatenates all cell values.*/
-            addOperator(new ConcatenateOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new ConcatenateOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Concatenates all distinct cell values.*/
             addOperator(new UniqueConcatenateOperator(GlobalSettings.DEFAULT,
                     OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Concatenates all distinct cell values and counts the members.*/
-            addOperator(new UniqueConcatenateWithCountOperator(
-                    GlobalSettings.DEFAULT,
+            addOperator(new UniqueConcatenateWithCountOperator(GlobalSettings.DEFAULT,
                     OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Counts the number of unique group members.*/
-            addOperator(new UniqueCountOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new UniqueCountOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Counts the number of group members.*/
-            addOperator(new CountOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new CountOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Returns the percentage of the group.*/
-            addOperator(new PercentOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new PercentOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Counts the number of missing values per group.*/
             addOperator(new MissingValueCountOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+                OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /** Set collection.*/
-            addOperator(new SetCellOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new SetCellOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /** List collection.*/
-            addOperator(new ListCellOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new ListCellOperator(GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /** Sorted list collection.*/
-            addOperator(
-                    new SortedListCellOperator(GlobalSettings.DEFAULT,
-                            OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            addOperator(new SortedListCellOperator(GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_INCL_MISSING));
 
             //add old and deprecated operators to be backward compatible
             registerDeprecatedOperators();
         } catch (final DuplicateOperatorException e) {
-            throw new IllegalStateException(
-                    "Exception while initializing class: "
+            throw new IllegalStateException("Exception while initializing class: "
                     + getClass().getName() + " Exception: " + e.getMessage());
         }
         //register all extension point implementations
@@ -343,42 +324,29 @@ public final class AggregationMethods {
      * @throws DuplicateOperatorException if one of the methods already exists
      */
     @SuppressWarnings("deprecation")
-    private void registerDeprecatedOperators()
-        throws DuplicateOperatorException {
-        addDeprecatedOperator(new OrElementCountOperator(new OperatorData(
-                "Unique element count", true, false, CollectionDataValue.class,
-                false), GlobalSettings.DEFAULT,
-                OperatorColumnSettings.DEFAULT_INCL_MISSING));
-        addDeprecatedOperator(new FirstOperator(new OperatorData("First value",
-                    false, true, DataValue.class, false),
-                    GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
-        addDeprecatedOperator(new LastOperator(new OperatorData("Last value",
-                    false, true, DataValue.class, false),
-                    GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
-        addDeprecatedOperator(new CountOperator(new OperatorData("Value count",
-                    false, true, DataValue.class, false),
-                    GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+    private void registerDeprecatedOperators() throws DuplicateOperatorException {
+        addDeprecatedOperator(new OrElementCountOperator(new OperatorData("Unique element count", true, false,
+            CollectionDataValue.class, false), GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_INCL_MISSING));
+        addDeprecatedOperator(new FirstOperator(new OperatorData("First value", false, true, DataValue.class, false),
+                    GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+        addDeprecatedOperator(new LastOperator(new OperatorData("Last value", false, true, DataValue.class, false),
+                    GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+        addDeprecatedOperator(new CountOperator(new OperatorData("Value count", false, true, DataValue.class, false),
+                    GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
         //methods changed in KNIME version 2.4
         /** Concatenates all cell values. */
-        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated
-                .ConcatenateOperator(GlobalSettings.DEFAULT,
+        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated.ConcatenateOperator(GlobalSettings.DEFAULT,
                         OperatorColumnSettings.DEFAULT_INCL_MISSING));
         /** Concatenates all distinct cell values. */
-        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated
-                .UniqueConcatenateOperator(GlobalSettings.DEFAULT,
-                        OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated.UniqueConcatenateOperator(
+            GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
         /** Concatenates all distinct cell values and counts the members. */
-        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated
-                .UniqueConcatenateWithCountOperator(GlobalSettings.DEFAULT,
-                        OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated.UniqueConcatenateWithCountOperator(
+            GlobalSettings.DEFAULT, OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
         //methods changed in KNIME version 2.5.2
-        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated
-                .SumOperator(GlobalSettings.DEFAULT,
+        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated.SumOperator(GlobalSettings.DEFAULT,
                         OperatorColumnSettings.DEFAULT_EXCL_MISSING));
     }
 
@@ -388,17 +356,14 @@ public final class AggregationMethods {
      * @param operator the deprecated operator to register
      * @throws DuplicateOperatorException if the method already exists
      */
-    private void addDeprecatedOperator(final AggregationOperator operator)
-        throws DuplicateOperatorException {
+    private void addDeprecatedOperator(final AggregationOperator operator) throws DuplicateOperatorException {
         if (operator == null) {
             throw new NullPointerException("operator must not be null");
         }
         final String id = operator.getId();
         final AggregationOperator existingOp = getOperator(id);
         if (existingOp != null) {
-            throw new DuplicateOperatorException(
-                    "Operator with id: " + id + " already registered",
-                    existingOp);
+            throw new DuplicateOperatorException("Operator with id: " + id + " already registered", existingOp);
         }
         m_deprecatedOperators.put(id, operator);
     }
@@ -409,49 +374,40 @@ public final class AggregationMethods {
     private void registerExtensionPoints() {
         try {
             final IExtensionRegistry registry = Platform.getExtensionRegistry();
-            final IExtensionPoint point =
-                registry.getExtensionPoint(EXT_POINT_ID);
+            final IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
             if (point == null) {
                 LOGGER.error("Invalid extension point: " + EXT_POINT_ID);
-                throw new IllegalStateException("ACTIVATION ERROR: "
-                        + " --> Invalid extension point: " + EXT_POINT_ID);
+                throw new IllegalStateException("ACTIVATION ERROR: --> Invalid extension point: " + EXT_POINT_ID);
             }
-            for (final IConfigurationElement elem
-                    : point.getConfigurationElements()) {
+            for (final IConfigurationElement elem : point.getConfigurationElements()) {
                 final String operator = elem.getAttribute(EXT_POINT_ATTR_DF);
-                final String decl =
-                    elem.getDeclaringExtension().getUniqueIdentifier();
+                final String decl = elem.getDeclaringExtension().getUniqueIdentifier();
 
                 if (operator == null || operator.isEmpty()) {
-                    LOGGER.error("The extension '" + decl
-                            + "' doesn't provide the required attribute '"
+                    LOGGER.error("The extension '" + decl + "' doesn't provide the required attribute '"
                             + EXT_POINT_ATTR_DF + "'");
                     LOGGER.error("Extension " + decl + " ignored.");
                     continue;
                 }
-                boolean isDeprecated =
-                    Boolean.parseBoolean(elem.getAttribute("deprecated"));
+                boolean isDeprecated = Boolean.parseBoolean(elem.getAttribute("deprecated"));
                 try {
                     final AggregationOperator aggrOperator =
-                            (AggregationOperator)elem.createExecutableExtension(
-                                    EXT_POINT_ATTR_DF);
+                            (AggregationOperator)elem.createExecutableExtension(EXT_POINT_ATTR_DF);
                     if (isDeprecated) {
                         addDeprecatedOperator(aggrOperator);
                     } else {
                         addOperator(aggrOperator);
                     }
                 } catch (final Throwable t) {
-                    LOGGER.error("Problems during initialization of "
-                            + "aggregation operator (with id '" + operator
-                            + "'.)", t);
+                    LOGGER.error("Problems during initialization of aggregation operator (with id '" + operator
+                        + "'.)", t);
                     if (decl != null) {
                         LOGGER.error("Extension " + decl + " ignored.", t);
                     }
                 }
             }
         } catch (final Exception e) {
-            LOGGER.error("Exception while registering "
-                    + "aggregation operator extensions", e);
+            LOGGER.error("Exception while registering aggregation operator extensions", e);
         }
     }
 
@@ -463,9 +419,7 @@ public final class AggregationMethods {
         final String id = operator.getId();
         final AggregationOperator existingOp = getOperator(id);
         if (existingOp != null) {
-            throw new DuplicateOperatorException(
-                    "Operator with id: " + id + " already registered",
-                    existingOp);
+            throw new DuplicateOperatorException("Operator with id: " + id + " already registered", existingOp);
         }
         m_operators.put(id, operator);
     }
@@ -479,8 +433,7 @@ public final class AggregationMethods {
      * @throws DuplicateOperatorException if an operator with the same name
      * already exists
      */
-    public static void registerOperator(final AggregationOperator operator)
-    throws DuplicateOperatorException {
+    public static void registerOperator(final AggregationOperator operator) throws DuplicateOperatorException {
         instance().addOperator(operator);
     }
 
@@ -509,10 +462,8 @@ public final class AggregationMethods {
      * numerical columns
      * @return the {@link AggregationMethod} to use
      */
-    public static AggregationMethod getAggregationMethod(
-            final DataColumnSpec colSpec,
-            final AggregationMethod numericColMethod,
-            final AggregationMethod nominalColMethod) {
+    public static AggregationMethod getAggregationMethod(final DataColumnSpec colSpec,
+            final AggregationMethod numericColMethod, final AggregationMethod nominalColMethod) {
         if (colSpec.getType().isCompatible(DoubleValue.class)) {
             return numericColMethod;
         }
@@ -537,8 +488,7 @@ public final class AggregationMethods {
      * @since 2.10
      */
     public static List<AggregationMethod> getCompatibleMethods(final DataType type, final boolean sorted) {
-        final List<AggregationMethod> compatibleMethods =
-            new ArrayList<AggregationMethod>();
+        final List<AggregationMethod> compatibleMethods = new ArrayList<>();
         if (type == null) {
             return compatibleMethods;
         }
@@ -566,11 +516,10 @@ public final class AggregationMethods {
      * @return the aggregation methods that are compatible
      * with the given {@link DataType} grouped by the supported data type
      */
-    public static Map<Class<? extends DataValue>, List<AggregationMethod>>
-        getCompatibleMethodGroups(final DataType type) {
+    public static Map<Class<? extends DataValue>, List<AggregationMethod>> getCompatibleMethodGroups(
+        final DataType type) {
         final List<AggregationMethod> methods = getCompatibleMethods(type);
-        final Map<Class<? extends DataValue>, List<AggregationMethod>>
-            methodGroups = groupMethodsByType(methods);
+        final Map<Class<? extends DataValue>, List<AggregationMethod>> methodGroups = groupMethodsByType(methods);
         return methodGroups;
     }
 
@@ -580,26 +529,20 @@ public final class AggregationMethods {
      * with the given {@link DataType} grouped by the supported data type
      * @since 2.6
      */
-    public static List<Entry<String, List<AggregationMethod>>>
-        getCompatibleMethodGroupList(final DataType type) {
+    public static List<Entry<String, List<AggregationMethod>>> getCompatibleMethodGroupList(final DataType type) {
         final Map<Class<? extends DataValue>, List<AggregationMethod>>
         methodGroups = AggregationMethods.getCompatibleMethodGroups(type);
-        final Set<Entry<Class<? extends DataValue>, List<AggregationMethod>>>
-            methodSet = methodGroups.entrySet();
-        final List<String> labels = new ArrayList<String>(methodSet.size());
-        final Map<String, List<AggregationMethod>> labelSet =
-            new HashMap<String, List<AggregationMethod>>(methodSet.size());
+        final Set<Entry<Class<? extends DataValue>, List<AggregationMethod>>> methodSet = methodGroups.entrySet();
+        final List<String> labels = new ArrayList<>(methodSet.size());
+        final Map<String, List<AggregationMethod>> labelSet = new HashMap<>(methodSet.size());
         for (final Entry<Class<? extends DataValue>, List<AggregationMethod>>
             entry : methodSet) {
-            final String label =
-                getUserTypeLabel(entry.getKey());
+            final String label = getUserTypeLabel(entry.getKey());
             labels.add(label);
             labelSet.put(label, entry.getValue());
         }
         Collections.sort(labels);
-        final List<Entry<String, List<AggregationMethod>>> list =
-            new ArrayList<Entry<String, List<AggregationMethod>>>(
-                    methodSet.size());
+        final List<Entry<String, List<AggregationMethod>>> list = new ArrayList<>(methodSet.size());
         for (final String label : labels) {
             final List<AggregationMethod> methods = labelSet.get(label);
             final Entry<String, List<AggregationMethod>> entry =
@@ -613,8 +556,7 @@ public final class AggregationMethods {
                         return methods;
                     }
                     @Override
-                    public List<AggregationMethod> setValue(
-                            final List<AggregationMethod> value) {
+                    public List<AggregationMethod> setValue(final List<AggregationMethod> value) {
                         return methods;
                     }
             };
@@ -630,8 +572,7 @@ public final class AggregationMethods {
      * {@link AggregationOperator}
      */
     public static Collection<Class<? extends DataValue>> getSupportedTypes() {
-        final Set<Class<? extends DataValue>> supportedTypes =
-            new HashSet<Class<? extends DataValue>>();
+        final Set<Class<? extends DataValue>> supportedTypes = new HashSet<>();
         for (final AggregationOperator operator : instance.getOperators()) {
             supportedTypes.add(operator.getSupportedType());
         }
@@ -646,8 +587,7 @@ public final class AggregationMethods {
      * a capital letter such as General, Numerical or Date.
      * @return the user friendlier name starting with a capital letter
      */
-    public static String getUserTypeLabel(
-            final Class<? extends DataValue> type) {
+    public static String getUserTypeLabel(final Class<? extends DataValue> type) {
         if (type == DataValue.class) {
             return "General";
         }
@@ -680,17 +620,15 @@ public final class AggregationMethods {
      * @return a {@link Map} with the given aggregation methods grouped
      * by their supported data type.
      */
-    public static Map<Class<? extends DataValue>, List<AggregationMethod>>
-        groupMethodsByType(final List<AggregationMethod> methods) {
-        final TreeMap<Class<? extends DataValue>, List<AggregationMethod>>
-            methodGroups =
-            new TreeMap<Class<? extends DataValue>, List<AggregationMethod>>(
-                    DataValueClassComparator.COMPARATOR);
+    public static Map<Class<? extends DataValue>, List<AggregationMethod>> groupMethodsByType(
+        final List<AggregationMethod> methods) {
+        final TreeMap<Class<? extends DataValue>, List<AggregationMethod>> methodGroups =
+                new TreeMap<>(DataValueClassComparator.COMPARATOR);
         for (final AggregationMethod method : methods) {
             final Class<? extends DataValue> type = method.getSupportedType();
             List<AggregationMethod> list = methodGroups.get(type);
             if (list == null) {
-                list = new LinkedList<AggregationMethod>();
+                list = new LinkedList<>();
                 methodGroups.put(type, list);
             }
             list.add(method);
@@ -702,15 +640,12 @@ public final class AggregationMethods {
      * @param spec the {@link DataColumnSpec} to get the default method for
      * @return the default {@link AggregationMethod} for the given column spec
      */
-    public static AggregationMethod getDefaultMethod(
-            final DataColumnSpec spec) {
-        final List<AggregationMethod> methods =
-            getCompatibleMethods(spec.getType());
+    public static AggregationMethod getDefaultMethod(final DataColumnSpec spec) {
+        final List<AggregationMethod> methods = getCompatibleMethods(spec.getType());
         if (methods.size() > 0) {
             return methods.get(0);
         }
-        return new FirstOperator(GlobalSettings.DEFAULT,
-                new OperatorColumnSettings(false, null));
+        return new FirstOperator(GlobalSettings.DEFAULT, new OperatorColumnSettings(false, null));
     }
 
     /**
@@ -724,13 +659,11 @@ public final class AggregationMethods {
             final Class<? extends DataValue> dataValueClass) {
         final Map<Class<? extends DataValue>, List<AggregationMethod>> methods =
                 groupMethodsByType(getAvailableMethods());
-        final List<AggregationMethod> compatibleMethods =
-            methods.get(dataValueClass);
+        final List<AggregationMethod> compatibleMethods = methods.get(dataValueClass);
         if (compatibleMethods.size() > 0) {
             return compatibleMethods.get(0);
         }
-        return new FirstOperator(GlobalSettings.DEFAULT,
-                new OperatorColumnSettings(false, null));
+        return new FirstOperator(GlobalSettings.DEFAULT, new OperatorColumnSettings(false, null));
     }
 
     /**
@@ -738,8 +671,7 @@ public final class AggregationMethods {
      * <code>AggregationMethod</code>
      * @return the <code>AggregationMethod</code> for the given id
      */
-    public static AggregationMethod getMethod4SettingsModel(
-            final SettingsModelString model) {
+    public static AggregationMethod getMethod4SettingsModel(final SettingsModelString model) {
         if (model == null) {
             throw new NullPointerException("model must not be null");
         }
@@ -755,8 +687,7 @@ public final class AggregationMethods {
     public static AggregationMethod getMethod4Id(final String id) {
         final AggregationOperator operator = instance().getOperator(id);
         if (operator == null) {
-            throw new IllegalArgumentException("No method found for id: "
-                    + id);
+            throw new IllegalArgumentException("No method found for id: " + id);
         }
         return operator;
     }
@@ -777,16 +708,14 @@ public final class AggregationMethods {
         return cloneOperator(operator);
     }
 
-    private static AggregationOperator cloneOperator(
-                                      final AggregationOperator operator) {
+    private static AggregationOperator cloneOperator(final AggregationOperator operator) {
         if (operator == null) {
             return null;
         }
         if (!operator.hasOptionalSettings()) {
             return operator;
         }
-        return operator.createInstance(operator.getGlobalSettings(),
-                operator.getOperatorColumnSettings());
+        return operator.createInstance(operator.getGlobalSettings(), operator.getOperatorColumnSettings());
     }
 
     /**
@@ -798,11 +727,9 @@ public final class AggregationMethods {
      */
     public static JScrollPane createDescriptionPane() {
         final StringBuilder buf = getHTMLDescription();
-        final JEditorPane editorPane = new JEditorPane("text/html",
-                buf.toString());
+        final JEditorPane editorPane = new JEditorPane("text/html", buf.toString());
         editorPane.setEditable(false);
-        final JScrollPane scrollPane = new JScrollPane(editorPane,
-                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+        final JScrollPane scrollPane = new JScrollPane(editorPane, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         return scrollPane;
     }
@@ -812,11 +739,10 @@ public final class AggregationMethods {
      * and their description as a definition list.
      */
     public static StringBuilder getHTMLDescription() {
-        final Map<Class<? extends DataValue>, List<AggregationMethod>>
-            methodGroups = groupMethodsByType(getAvailableMethods());
+        final Map<Class<? extends DataValue>, List<AggregationMethod>> methodGroups =
+                groupMethodsByType(getAvailableMethods());
         final StringBuilder buf = new StringBuilder();
-        final Set<Entry<Class<? extends DataValue>, List<AggregationMethod>>>
-            groups = methodGroups.entrySet();
+        final Set<Entry<Class<? extends DataValue>, List<AggregationMethod>>> groups = methodGroups.entrySet();
         boolean first = true;
         for (final Entry<Class<? extends DataValue>, List<AggregationMethod>>
             group : groups) {
@@ -857,8 +783,7 @@ public final class AggregationMethods {
      */
     public static List<AggregationMethod> getAvailableMethods() {
         Collection<AggregationOperator> operators = instance().getOperators();
-        final List<AggregationMethod> methods =
-            new ArrayList<AggregationMethod>(operators.size());
+        final List<AggregationMethod> methods = new ArrayList<>(operators.size());
         //clone all operators prior returning
         for (AggregationOperator operator : operators) {
             methods.add(cloneOperator(operator));
