@@ -121,7 +121,7 @@ class StartupMessageLabelProvider implements ITableLabelProvider {
         if (element instanceof StartupMessage) {
             switch (columnIndex) {
                 case 0:
-                    return ((StartupMessage) element).getMessage();
+                    return ((StartupMessage) element).getShortMessage();
                 case 1:
                     Dictionary<String, String> headers = ((StartupMessage) element).getBundle().getHeaders();
                     return headers.get("Bundle-Name");

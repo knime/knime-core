@@ -52,9 +52,12 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.part.ViewPart;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
@@ -107,6 +110,20 @@ public class StartupMessagesView extends ViewPart {
 
         createTableColumns(table);
         m_tableViewer.setInput(StartupMessage.getAllStartupMessages());
+        table.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetSelected(final SelectionEvent event) {
+                // nothing to do
+            }
+
+            @Override
+            public void widgetDefaultSelected(final SelectionEvent event) {
+                TableItem tableCell = (TableItem)event.item;
+                StartupMessage msg = (StartupMessage)tableCell.getData();
+                StartupMessageDialog dlg = new StartupMessageDialog(event.display.getActiveShell(), msg);
+                dlg.open();
+            }
+        });
     }
 
     private void createTableColumns(final Table tree) {

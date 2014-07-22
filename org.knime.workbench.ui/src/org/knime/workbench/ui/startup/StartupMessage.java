@@ -112,6 +112,8 @@ public class StartupMessage {
 
     private final String m_message;
 
+    private final String m_shortMessage;
+
     private final Bundle m_bundle;
 
     private final int m_type;
@@ -125,14 +127,41 @@ public class StartupMessage {
      */
     public StartupMessage(final String message, final int type, final Bundle bundle) {
         m_message = message;
+        m_shortMessage = message;
+        m_type = type;
+        m_bundle = bundle;
+    }
+
+
+    /**
+     * Creates a new startup message.
+     *
+     * @param message the message, may include hyperlinks (see {@link #getMessage()})
+     * @param shortMessage a short message
+     * @param type the messages type, one of {@link #ERROR}, {@link #WARNING}, or {@link #INFO}
+     * @param bundle the bundle that reports the message
+     */
+    public StartupMessage(final String message, final String shortMessage, final int type, final Bundle bundle) {
+        m_message = message;
+        m_shortMessage = shortMessage;
         m_type = type;
         m_bundle = bundle;
     }
 
     /**
-     * Returns the message.
+     * Returns a short message that is display in the message view.
      *
-     * @return a message
+     * @return a short message
+     */
+    public String getShortMessage() {
+        return m_shortMessage;
+    }
+
+
+    /**
+     * Returns the complete message. It may contain hyperlinks in HTML format (e.g. <pre><a href="...">...</a></pre>).
+     *
+     * @return the complete message message
      */
     public String getMessage() {
         return m_message;
