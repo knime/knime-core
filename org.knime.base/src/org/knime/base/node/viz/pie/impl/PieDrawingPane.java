@@ -48,17 +48,6 @@
 
 package org.knime.base.node.viz.pie.impl;
 
-import org.knime.core.data.property.ColorAttr;
-
-import org.knime.base.node.viz.aggregation.AggregationModel;
-import org.knime.base.node.viz.aggregation.DrawingUtils;
-import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
-import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
-import org.knime.base.node.viz.pie.datamodel.PieSubSectionDataModel;
-import org.knime.base.node.viz.pie.datamodel.PieVizModel;
-import org.knime.base.node.viz.pie.util.GeometryUtil;
-import org.knime.base.node.viz.plotter.AbstractDrawingPane;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -74,6 +63,16 @@ import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 
 import javax.swing.ToolTipManager;
+
+import org.knime.base.node.viz.aggregation.AggregationModel;
+import org.knime.base.node.viz.aggregation.DrawingUtils;
+import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
+import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
+import org.knime.base.node.viz.pie.datamodel.PieSubSectionDataModel;
+import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+import org.knime.base.node.viz.pie.util.GeometryUtil;
+import org.knime.base.node.viz.plotter.AbstractDrawingPane;
+import org.knime.core.data.property.ColorAttr;
 
 
 /**
@@ -128,9 +127,9 @@ public class PieDrawingPane extends AbstractDrawingPane {
     /**
      * @param vizModel the visualization model to draw
      */
-    public void setVizModel(final PieVizModel vizModel) {
+    public synchronized void setVizModel(final PieVizModel vizModel) {
         if (vizModel == null) {
-            throw new NullPointerException("vizModel must not be null");
+            throw new IllegalArgumentException("vizModel must not be null");
         }
         m_vizModel = vizModel;
         repaint();
@@ -157,7 +156,7 @@ public class PieDrawingPane extends AbstractDrawingPane {
     /**
      * Resets the drawing pane.
      */
-    public void reset() {
+    public synchronized void reset() {
         m_vizModel = null;
         m_infoMsg = null;
     }
@@ -166,7 +165,7 @@ public class PieDrawingPane extends AbstractDrawingPane {
      * {@inheritDoc}
      */
     @Override
-    public void paintContent(final Graphics g) {
+    public synchronized void paintContent(final Graphics g) {
         final Graphics2D g2 = (Graphics2D)g;
         String msg = m_infoMsg;
         if (m_vizModel == null) {
@@ -360,7 +359,7 @@ public class PieDrawingPane extends AbstractDrawingPane {
      * {@inheritDoc}
      */
     @Override
-    public String getToolTipText(final MouseEvent e) {
+    public synchronized String getToolTipText(final MouseEvent e) {
         final Point p = e.getPoint();
         if (m_vizModel != null && p != null) {
             final PieSectionDataModel section =
