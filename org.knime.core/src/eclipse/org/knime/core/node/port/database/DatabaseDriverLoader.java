@@ -329,11 +329,15 @@ public final class DatabaseDriverLoader {
 
                 Bundle bundle = Platform.getBundle(bundleId);
                 URL jdbcUrl = bundle.getEntry(path);
-                ClassLoader bundleClassLoader = bundle.adapt(BundleWiring.class).getClassLoader();
-                try {
-                    loadDriver(new File(FileLocator.toFileURL(jdbcUrl).getPath()), bundleClassLoader);
-                } catch (IOException ex) {
-                    LOGGER.error("Could not load JDBC driver '" + path + "': " + ex.getMessage(), ex);
+                if (jdbcUrl != null) {
+                    ClassLoader bundleClassLoader = bundle.adapt(BundleWiring.class).getClassLoader();
+                    try {
+                        loadDriver(new File(FileLocator.toFileURL(jdbcUrl).getPath()), bundleClassLoader);
+                    } catch (IOException ex) {
+                        LOGGER.error("Could not load JDBC driver '" + path + "': " + ex.getMessage(), ex);
+                    }
+                } else {
+                    LOGGER.error("Could not find JDBC driver file '" + path + "' from plug-in '" + bundleId + "'");
                 }
             }
         }
