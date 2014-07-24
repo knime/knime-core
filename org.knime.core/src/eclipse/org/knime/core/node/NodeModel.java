@@ -815,7 +815,8 @@ public abstract class NodeModel {
                 view.callModelChanged();
             } catch (Exception e) {
                 String msg =
-                    "View [" + view.getViewName() + "] caused and error why displaying new contents: " + e.getMessage();
+                    "View [" + view.getViewName() + "] caused an error while displaying new contents: "
+                        + e.getMessage();
                 setWarningMessage(msg);
                 m_logger.debug(msg, e);
             }
