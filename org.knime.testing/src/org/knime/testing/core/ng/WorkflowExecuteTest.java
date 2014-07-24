@@ -159,7 +159,7 @@ class WorkflowExecuteTest extends WorkflowTest {
     }
 
     private static void fillStackFromThread(final ThreadInfo ti, final StringBuilder buf) {
-        buf.append("\"" + ti.getThreadName() + "\"" + " Id=" + ti.getThreadId() + " " + ti.getThreadState());
+        buf.append("\"" + ti.getThreadName() + "\" Id=" + ti.getThreadId() + " " + ti.getThreadState());
         if (ti.getLockName() != null) {
             buf.append(" on " + ti.getLockName());
         }
@@ -177,7 +177,7 @@ class WorkflowExecuteTest extends WorkflowTest {
         for (StackTraceElement ste : ti.getStackTrace()) {
             buf.append("\tat " + ste.toString());
             buf.append('\n');
-            if (i == 0 && ti.getLockInfo() != null) {
+            if ((i++ == 0) && (ti.getLockInfo() != null)) {
                 Thread.State ts = ti.getThreadState();
                 switch (ts) {
                     case BLOCKED:
