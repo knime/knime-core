@@ -177,7 +177,7 @@ class WorkflowExecuteTest extends WorkflowTest {
         for (StackTraceElement ste : ti.getStackTrace()) {
             buf.append("\tat " + ste.toString());
             buf.append('\n');
-            if ((i++ == 0) && (ti.getLockInfo() != null)) {
+            if ((i == 0) && (ti.getLockInfo() != null)) {
                 Thread.State ts = ti.getThreadState();
                 switch (ts) {
                     case BLOCKED:
@@ -202,6 +202,7 @@ class WorkflowExecuteTest extends WorkflowTest {
                     buf.append('\n');
                 }
             }
+            i++;
         }
 
         LockInfo[] locks = ti.getLockedSynchronizers();
