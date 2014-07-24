@@ -51,6 +51,7 @@ import java.io.PrintStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -230,7 +231,8 @@ public class TestflowRunnerApplication implements IApplication {
                 syserr.println("Tests aborted");
                 break;
             }
-            sysout.printf("=> Running %-" + maxNameLength + "s...", testFlow.getName());
+            sysout.printf("[%1$tH:%1$tM:%1$tS.%1$tL] => Running %2$-" + maxNameLength + "s...", new Date(),
+                testFlow.getName());
             long startTime = System.currentTimeMillis();
             WorkflowTestResult result = WorkflowTestSuite.runTest(testFlow, resultWriter);
             long duration = System.currentTimeMillis() - startTime;
