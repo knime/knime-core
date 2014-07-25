@@ -100,6 +100,8 @@ public class TestflowRunnerApplication implements IApplication {
 
     private volatile boolean m_stopped = false;
 
+    private volatile boolean m_leftDispatchLoop = false;
+
     private UntestedNodesTest m_untestedNodesTest;
 
     /**
@@ -165,7 +167,10 @@ public class TestflowRunnerApplication implements IApplication {
                     return runAllTests(resultWriter, globalStartTime);
                 } finally {
                     stop();
-                    display.wake();
+                    while (!m_leftDispatchLoop) {
+                        display.wake();
+                        Thread.sleep(100);
+                    }
                 }
             }
         };
@@ -183,6 +188,7 @@ public class TestflowRunnerApplication implements IApplication {
                 display.sleep();
             }
         }
+        m_leftDispatchLoop = true;
     }
 
     private void copyRootDirs() throws IOException {
