@@ -1126,8 +1126,9 @@ public class BatchExecutor {
      *
      * @param arg The string to split
      * @return The components of the string, no validation is done.
+     * @since 2.11
      */
-    private static String[] splitWorkflowVariableArg(final String arg) {
+    public static String[] splitWorkflowVariableArg(final String arg) {
         Tokenizer tokenizer = new Tokenizer(new StringReader(arg));
         TokenizerSettings settings = new TokenizerSettings();
         settings.addQuotePattern("\"", "\"", '\\');
@@ -1152,8 +1153,9 @@ public class BatchExecutor {
      * @param args The arguments for the variable.
      * @return A new flow variable.
      * @throws IllegalOptionException
+     * @since 2.11
      */
-    private static FlowVariable createWorkflowVariable(final String[] args) throws IllegalOptionException {
+    public static FlowVariable createWorkflowVariable(final String[] args) throws IllegalOptionException {
         if (args.length != 3) {
             throw new IndexOutOfBoundsException("Invalid argument list");
         }
