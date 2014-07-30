@@ -68,6 +68,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.BatchExecutor;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.FileUtil;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
@@ -433,6 +434,25 @@ public class TestflowRunnerApplication implements IApplication {
                 }
                 File prefsFile = new File(stringArgs[i++]);
                 BatchExecutor.setPreferences(prefsFile);
+            } else if (stringArgs[i].equals("-workflow.variable")) {
+                i++;
+                // requires another argument
+                if ((i >= stringArgs.length) || (stringArgs[i] == null) || (stringArgs[i].length() == 0)) {
+                    System.err.println("Missing variable declaration for option -workflow.variable.");
+                    return false;
+                }
+
+                String[] parts = BatchExecutor.splitWorkflowVariableArg(stringArgs[i]);
+                FlowVariable var = null;
+                try {
+                    var = BatchExecutor.createWorkflowVariable(parts);
+                } catch (Exception e) {
+                    System.err.println("Couldn't parse -workflow.variable argument: " + stringArgs[i] + ": "
+                        + e.getMessage());
+                    return false;
+                }
+                m_runConfiguration.addFlowVariable(var);
+                i++;
             } else {
                 System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
                 return false;
@@ -475,6 +495,10 @@ public class TestflowRunnerApplication implements IApplication {
                 + "each testflow. If not specified no test for memory leaks is performed.");
         System.err.println("    -preferences <file_name>: optional, specifies an exported preferences file that should"
                 + " be used to initialize preferences");
+        System.err.println("    -workflow.variable <variable-declaration>: optional, defines or overwrites workflow "
+                +  "variable 'name' with value 'value' (possibly enclosed by quotes). The 'type' must be one "
+                +  "of \"String\", \"int\" or \"double\".");
+
     }
 
     @Override

@@ -88,8 +88,7 @@ class WorkflowLoadTest extends WorkflowTest {
      * @param context the test context, must not be <code>null</code>
      */
     public WorkflowLoadTest(final File workflowDir, final File testcaseRoot, final String workflowName,
-                            final IProgressMonitor monitor, final TestrunConfiguration runConfiguration,
-                            final WorkflowTestContext context) {
+        final IProgressMonitor monitor, final TestrunConfiguration runConfiguration, final WorkflowTestContext context) {
         super(workflowName, monitor, context);
         m_workflowDir = workflowDir;
         m_testcaseRoot = testcaseRoot;
@@ -120,9 +119,8 @@ class WorkflowLoadTest extends WorkflowTest {
     }
 
     static WorkflowManager loadWorkflow(final WorkflowTest test, final TestResult result, final File workflowDir,
-                                        final File testcaseRoot, final TestrunConfiguration runConfig)
-            throws IOException, InvalidSettingsException, CanceledExecutionException,
-            UnsupportedWorkflowVersionException, LockFailedException {
+        final File testcaseRoot, final TestrunConfiguration runConfig) throws IOException, InvalidSettingsException,
+        CanceledExecutionException, UnsupportedWorkflowVersionException, LockFailedException {
         WorkflowLoadHelper loadHelper = new WorkflowLoadHelper() {
             /**
              * {@inheritDoc}
@@ -137,14 +135,16 @@ class WorkflowLoadTest extends WorkflowTest {
 
         WorkflowLoadResult loadRes = WorkflowManager.loadProject(workflowDir, new ExecutionMonitor(), loadHelper);
         if ((loadRes.getType() == LoadResultEntryType.Error)
-                || ((loadRes.getType() == LoadResultEntryType.DataLoadError) && loadRes
-                        .getGUIMustReportDataLoadErrors())) {
+            || ((loadRes.getType() == LoadResultEntryType.DataLoadError) && loadRes.getGUIMustReportDataLoadErrors())) {
             result.addFailure(test, new AssertionFailedError(loadRes.getFilteredError("", LoadResultEntryType.Error)));
         }
         if (runConfig.isCheckForLoadWarnings() && loadRes.hasWarningEntries()) {
-            result.addFailure(test, new AssertionFailedError(loadRes.getFilteredError("", LoadResultEntryType.Warning)));
+            result
+                .addFailure(test, new AssertionFailedError(loadRes.getFilteredError("", LoadResultEntryType.Warning)));
         }
 
-        return loadRes.getWorkflowManager();
+        WorkflowManager wfm = loadRes.getWorkflowManager();
+        wfm.addWorkflowVariables(true, runConfig.getFlowVariables());
+        return wfm;
     }
 }

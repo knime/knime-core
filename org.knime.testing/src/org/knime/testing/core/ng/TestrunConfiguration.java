@@ -48,6 +48,10 @@
 package org.knime.testing.core.ng;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * Common configuration for all testflows that are executed during the current run.
@@ -91,6 +95,8 @@ public class TestrunConfiguration {
     private boolean m_stacktraceOnTimeout;
 
     private boolean m_checkNodeMessages = true;
+
+    private final Collection<FlowVariable> m_flowVariables = new ArrayList<>();
 
     /**
      * Sets if dialogs for all nodes in the workflow should be tested, i.e. load settings and save settings after the
@@ -351,5 +357,23 @@ public class TestrunConfiguration {
      */
     public boolean isCheckNodeMessages() {
         return m_checkNodeMessages;
+    }
+
+    /**
+     * Adds a new flow variable to this configuration.
+     *
+     * @param var a flow variable
+     */
+    public void addFlowVariable(final FlowVariable var) {
+        m_flowVariables.add(var);
+    }
+
+    /**
+     * Returns an array with all configured flow variables.
+     *
+     * @return an array with flow variables
+     */
+    public FlowVariable[] getFlowVariables() {
+        return m_flowVariables.toArray(new FlowVariable[m_flowVariables.size()]);
     }
 }

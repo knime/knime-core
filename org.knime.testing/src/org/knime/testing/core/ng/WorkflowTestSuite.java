@@ -103,10 +103,17 @@ public class WorkflowTestSuite extends WorkflowTest {
     protected WorkflowTestSuite(final File workflowDir, final File testcaseRoot, final TestrunConfiguration runConfig,
                                 final IProgressMonitor monitor, final WorkflowTestContext testContext)
                                                                                                       throws IOException {
-        super(workflowDir.getAbsolutePath().substring(testcaseRoot.getAbsolutePath().length() + 1), monitor,
-                testContext);
+        super(getWorkflowName(workflowDir, testcaseRoot), monitor, testContext);
 
         initTestsuite(workflowDir, testcaseRoot, runConfig);
+    }
+
+    private static String getWorkflowName(final File workflowDir, final File testcaseRoot) {
+        if (workflowDir.equals(testcaseRoot)) {
+            return workflowDir.getName();
+        } else {
+            return workflowDir.getAbsolutePath().substring(testcaseRoot.getAbsolutePath().length() + 1);
+        }
     }
 
     private void initTestsuite(final File workflowDir, final File testcaseRoot, final TestrunConfiguration runConfig) {
