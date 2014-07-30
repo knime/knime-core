@@ -1206,19 +1206,19 @@
             id="org.knime.base.node.meta.feature.backwardelim.BWElimFilterNodeFactory">
       </node>
        <node
-             after="org.knime.base.node.flowvariable.variabletotablerow2.VariableToTable2NodeFactory"
+             after="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeFactory"
              category-path="/flowcontrol/variables"
              factory-class="org.knime.base.node.flowvariable.appendvariabletotable2.AppendVariableToTable2NodeFactory"
              id="org.knime.base.node.flowvariable.appendvariabletotable2.AppendVariableToTable2NodeFactory">
        </node>
        <node
-             after="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeFactory"
+             after="org.knime.base.node.flowvariable.appendvariabletotable2.AppendVariableToTable2NodeFactory"
              category-path="/flowcontrol/variables"
              factory-class="org.knime.base.node.flowvariable.variabletotablerow2.VariableToTable2NodeFactory"
              id="org.knime.base.node.flowvariable.variabletotablerow2.VariableToTable2NodeFactory">
        </node>
        <node
-             after="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory"
+             after="org.knime.base.node.flowvariable.tablecoltovariable.TableColumnToVariableNodeFactory"
              category-path="/flowcontrol/variables"
              factory-class="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeFactory"
              id="org.knime.base.node.flowvariable.tablerowtovariable.TableToVariableNodeFactory">
@@ -1592,7 +1592,7 @@
             id="org.knime.base.node.flowcontrol.trycatch.inverter.ActiveBranchInverterNodeFactory">
       </node>
       <node
-            after="org.knime.base.node.flowvariable.appendvariabletotable2.AppendVariableToTable2NodeFactory"
+            after="org.knime.base.node.flowvariable.extractvariables.ExtractVariablesDBNodeFactory"
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.flowvariable.tablecoltovariable.TableColumnToVariableNodeFactory"
             id="org.knime.base.node.flowvariable.tablecoltovariable.TableColumnToVariableNodeFactory">
