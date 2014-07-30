@@ -73,6 +73,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.PortObject;
@@ -188,19 +189,15 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
             for (int j = i + 1; j < l; j++) {
                 double d = cors.get(i, j);
                 if (d < -1.0) {
-                    if (d < -1.0 - ROUND_ERROR_OK) {
-                        throw new InvalidSettingsException(
-                                "Correlation measure is out of range: " + d);
-                    } else {
-                        cors.set(i, j, -1.0);
+                    if (d < -1.0 - 1e-4) { // this can be set more strict once bug 5455 is fixed - compare to 2.9 branch
+                        NodeLogger.getLogger(getClass()).assertLog(false, "Correlation measure is out of range: " + d);
                     }
+                    cors.set(i, j, -1.0);
                 } else if (d > 1.0) {
-                    if (d > 1.0 + ROUND_ERROR_OK) {
-                        throw new InvalidSettingsException(
-                                "Correlation measure is out of range: " + d);
-                    } else {
-                        cors.set(i, j, 1.0);
+                    if (d > 1.0 + 1e-4) {
+                        NodeLogger.getLogger(getClass()).assertLog(false, "Correlation measure is out of range: " + d);
                     }
+                    cors.set(i, j, 1.0);
                 }
             }
         }
