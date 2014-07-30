@@ -62,7 +62,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.testing.core.FullWorkflowTest;
-import org.knime.testing.core.ng.TestrunConfiguration;
+import org.knime.testing.core.TestrunConfiguration;
 
 /**
  * This class holds the settings for the testflow configuration node.

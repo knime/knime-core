@@ -56,6 +56,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.knime.testing.core.TestrunConfiguration;
 
 /**
  * Testcase that checks the used heap before and after a testflows is run. If the difference is greater than the

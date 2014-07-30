@@ -55,6 +55,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.testing.core.TestrunConfiguration;
 
 /**
  * Test that loads the workflow, saves it (potentially converting it into a new format), and finally loading it again.

@@ -58,6 +58,7 @@ import java.util.Collections;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.util.FileUtil;
+import org.knime.testing.core.TestrunConfiguration;
 
 /**
  * This class collects all testflows in a list of root directories and creates a {@link WorkflowTestSuite} for each

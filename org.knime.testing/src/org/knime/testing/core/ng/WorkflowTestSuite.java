@@ -64,6 +64,7 @@ import junit.framework.TestResult;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
+import org.knime.testing.core.TestrunConfiguration;
 
 /**
  *

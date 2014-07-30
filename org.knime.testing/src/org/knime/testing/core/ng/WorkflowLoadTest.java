@@ -64,6 +64,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.LockFailedException;
+import org.knime.testing.core.TestrunConfiguration;
 
 /**
  * Testcase that monitors loading a workflow. Errors and if desired also warnings during load are reported as failures.

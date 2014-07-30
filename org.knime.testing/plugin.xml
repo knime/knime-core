@@ -3,6 +3,7 @@
 <plugin>
    <extension-point id="TestcaseCollector" name="TestcaseCollector" schema="schema/org.knime.testing.TestcaseCollector.exsd"/>
    <extension-point id="DifferenceCheckerFactory" name="DifferenceCheckerFactory" schema="schema/org.knime.testing.DifferenceCheckerFactory.exsd"/>
+   <extension-point id="TestrunJanitor" name="TestrunJanitor" schema="schema/org.knime.core.testing.TestrunJanitor.exsd"/>
    <!-- This is an example for providing an own category 
       <extension
          point="org.knime.workbench.repository.categories">

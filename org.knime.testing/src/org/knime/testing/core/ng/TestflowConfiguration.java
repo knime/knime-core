@@ -70,6 +70,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.testing.core.TestrunConfiguration;
 import org.knime.testing.node.config.TestConfigNodeModel;
 import org.knime.testing.node.config.TestConfigSettings;
 

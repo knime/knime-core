@@ -65,6 +65,7 @@ import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.testing.core.TestrunConfiguration;
 
 /**
  * Executed a workflows and checks if all nodes are executed (except nodes that are supposed to fail). The workflow is

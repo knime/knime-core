@@ -45,7 +45,7 @@
  * History
  *   02.08.2013 (thor): created
  */
-package org.knime.testing.core.ng;
+package org.knime.testing.core;
 
 import java.io.File;
 import java.util.ArrayList;
