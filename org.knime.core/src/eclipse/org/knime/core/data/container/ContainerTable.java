@@ -240,6 +240,15 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
         ensureBufferOpen();
     }
 
+    /** Do not use!
+     * @return true when this table has been extracted to the temp location after workflow load or if this table
+     * was created during this session. It's false for tables which have not been opened.
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public boolean isOpen() {
+       return m_buffer != null;
+    }
+
     private static final BufferedDataTable[] EMPTY_ARRAY =
         new BufferedDataTable[0];
 
