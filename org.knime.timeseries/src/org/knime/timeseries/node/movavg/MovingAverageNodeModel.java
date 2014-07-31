@@ -142,13 +142,19 @@ public class MovingAverageNodeModel extends NodeModel {
         }
 
         // define weight function
-        if (m_kindOfMAModel.getStringValue() == null) {
+        String kindOfMAModelString;
+        try {
+            kindOfMAModelString = m_kindOfMAModel.getStringValue();
+        } catch (IllegalArgumentException e) {
+            throw new InvalidSettingsException(e.getMessage(), e);
+        }
+        if (kindOfMAModelString == null) {
             throw new InvalidSettingsException("No weight function selected.");
         } else {
            // create one MA-compute engine per column (overkill, I know
            // but much easier to reference later on in our DataCellFactory)
 
-            MA_METHODS method = MA_METHODS.getPolicy4Label(m_kindOfMAModel.getStringValue());
+            MA_METHODS method = MA_METHODS.getPolicy4Label(kindOfMAModelString);
             // if the center method is selected, the window size
             // has to be uneven
 
