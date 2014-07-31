@@ -814,10 +814,11 @@ public abstract class NodeModel {
             try {
                 view.callModelChanged();
             } catch (Exception e) {
-                setWarningMessage("View [" + view.getViewName()
-                        + "] could not be open, reason: " + e.getMessage());
-                m_logger.debug("View [" + view.getViewName()
-                        + "] could not be open, reason: " + e.getMessage(), e);
+                String msg =
+                    "View [" + view.getViewName() + "] caused an error while displaying new contents: "
+                        + e.getMessage();
+                setWarningMessage(msg);
+                m_logger.debug(msg, e);
             }
         }
     }

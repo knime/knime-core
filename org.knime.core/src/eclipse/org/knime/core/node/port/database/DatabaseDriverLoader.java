@@ -64,6 +64,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
@@ -328,12 +329,16 @@ public final class DatabaseDriverLoader {
                 String bundleId = e.getDeclaringExtension().getNamespaceIdentifier();
 
                 Bundle bundle = Platform.getBundle(bundleId);
-                URL jdbcUrl = bundle.getEntry(path);
-                ClassLoader bundleClassLoader = bundle.adapt(BundleWiring.class).getClassLoader();
-                try {
-                    loadDriver(new File(FileLocator.toFileURL(jdbcUrl).getPath()), bundleClassLoader);
-                } catch (IOException ex) {
-                    LOGGER.error("Could not load JDBC driver '" + path + "': " + ex.getMessage(), ex);
+                URL jdbcUrl = FileLocator.find(bundle, new Path(path), null);
+                if (jdbcUrl != null) {
+                    ClassLoader bundleClassLoader = bundle.adapt(BundleWiring.class).getClassLoader();
+                    try {
+                        loadDriver(new File(FileLocator.toFileURL(jdbcUrl).getPath()), bundleClassLoader);
+                    } catch (IOException ex) {
+                        LOGGER.error("Could not load JDBC driver '" + path + "': " + ex.getMessage(), ex);
+                    }
+                } else {
+                    LOGGER.error("Could not find JDBC driver file '" + path + "' from plug-in '" + bundleId + "'");
                 }
             }
         }

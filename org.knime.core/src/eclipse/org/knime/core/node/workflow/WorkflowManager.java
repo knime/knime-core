@@ -7715,6 +7715,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         .notFileFilter(FileFilterUtils.nameFileFilter(VMFileLocker.LOCK_FILE, IOCase.SENSITIVE)));
                     exec.setMessage("Incremental save");
                     ncDirRef.changeRoot(directory);
+                    m_workflowContext.setCurrentLocation(directory);
                     if (autoSaveDirRef != null) {
                         File newLoc = WorkflowSaveHelper.getAutoSaveDirectory(ncDirRef);
                         final File autoSaveDir = autoSaveDirRef.getFile();

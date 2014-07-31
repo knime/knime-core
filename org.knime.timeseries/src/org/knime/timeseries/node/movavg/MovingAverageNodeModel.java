@@ -78,8 +78,10 @@ import org.knime.timeseries.node.movavg.maversions.MovingAverage;
 import org.knime.timeseries.util.SlidingWindow;
 
 /**
+ * The node model for the moving average node.
  *
- * @author Rosaria Silipo
+ * @author Rosaria Silipo, Knime.com Zurich, Switzerland
+ * @author Iris Adae, University of Konstanz, Germany
  */
 public class MovingAverageNodeModel extends NodeModel {
 
@@ -140,13 +142,19 @@ public class MovingAverageNodeModel extends NodeModel {
         }
 
         // define weight function
-        if (m_kindOfMAModel.getStringValue() == null) {
+        String kindOfMAModelString;
+        try {
+            kindOfMAModelString = m_kindOfMAModel.getStringValue();
+        } catch (IllegalArgumentException e) {
+            throw new InvalidSettingsException(e.getMessage(), e);
+        }
+        if (kindOfMAModelString == null) {
             throw new InvalidSettingsException("No weight function selected.");
         } else {
            // create one MA-compute engine per column (overkill, I know
            // but much easier to reference later on in our DataCellFactory)
 
-            MA_METHODS method = MA_METHODS.getPolicy4Label(m_kindOfMAModel.getStringValue());
+            MA_METHODS method = MA_METHODS.getPolicy4Label(kindOfMAModelString);
             // if the center method is selected, the window size
             // has to be uneven
 
@@ -362,7 +370,6 @@ public class MovingAverageNodeModel extends NodeModel {
             for (int i : colindexex) {
                 cell[i] = DataType.getMissingCell();
             }
-            return oldrow;
         } else { // we add missings to the end.
 
             for (; counter < cell.length; counter++) {
