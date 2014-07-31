@@ -50,9 +50,6 @@ package org.knime.testing.core.ng;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryPoolMXBean;
-import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
 import java.util.ArrayList;
 import java.util.Formatter;
@@ -266,22 +263,12 @@ public class WorkflowTestSuite extends WorkflowTest {
     }
 
     private void logMemoryStatus() {
-        System.gc();
-
-        long maxMem = 0;
-        long usedMem = 0;
-        for (MemoryPoolMXBean memoryPool : ManagementFactory.getMemoryPoolMXBeans()) {
-            if (memoryPool.getType().equals(MemoryType.HEAP) && (memoryPool.getCollectionUsage() != null)) {
-                MemoryUsage usage = memoryPool.getUsage();
-
-                maxMem += usage.getMax();
-                usedMem += usage.getUsed();
-            }
-        }
+        MemoryUsage usage = getHeapUsage();
 
         Formatter formatter = new Formatter();
         formatter.format("===== Memory statistics: %1$,.3f MB max, %2$,.3f MB used, %3$,.3f MB free ====",
-                         maxMem / 1024.0 / 1024.0, usedMem / 1024.0 / 1024.0, (maxMem - usedMem) / 1024.0 / 1024.0);
+            usage.getMax() / 1024.0 / 1024.0, usage.getUsed() / 1024.0 / 1024.0,
+            (usage.getMax() - usage.getUsed()) / 1024.0 / 1024.0);
         m_logger.info(formatter.out().toString());
     }
 

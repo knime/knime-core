@@ -49,9 +49,11 @@ package org.knime.testing.core.ng;
 
 import java.lang.management.LockInfo;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
 import java.lang.management.MonitorInfo;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.util.Formatter;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -123,6 +125,13 @@ class WorkflowExecuteTest extends WorkflowTest {
                                 "Worklow running longer than " + (timeout / 1000.0) + " seconds.\n" + "Node status:\n"
                                         + status;
                         if (m_runConfiguration.isStacktraceOnTimeout()) {
+                            MemoryUsage usage = getHeapUsage();
+
+                            Formatter formatter = new Formatter();
+                            formatter.format("Memory usage: %1$,.3f MB max, %2$,.3f MB used, %3$,.3f MB free",
+                                usage.getMax() / 1024.0 / 1024.0, usage.getUsed() / 1024.0 / 1024.0,
+                                (usage.getMax() - usage.getUsed()) / 1024.0 / 1024.0);
+                            message += "\n" + formatter.out().toString();
                             message += "\nThread status:\n" + createStacktrace();
                         }
                         NodeLogger.getLogger(WorkflowExecuteTest.class).info(message);
@@ -160,7 +169,7 @@ class WorkflowExecuteTest extends WorkflowTest {
     }
 
     private static void fillStackFromThread(final ThreadInfo ti, final StringBuilder buf) {
-        buf.append("\"" + ti.getThreadName() + "\"" + " Id=" + ti.getThreadId() + " " + ti.getThreadState());
+        buf.append("\"" + ti.getThreadName() + "\" Id=" + ti.getThreadId() + " " + ti.getThreadState());
         if (ti.getLockName() != null) {
             buf.append(" on " + ti.getLockName());
         }
@@ -178,7 +187,7 @@ class WorkflowExecuteTest extends WorkflowTest {
         for (StackTraceElement ste : ti.getStackTrace()) {
             buf.append("\tat " + ste.toString());
             buf.append('\n');
-            if (i == 0 && ti.getLockInfo() != null) {
+            if ((i == 0) && (ti.getLockInfo() != null)) {
                 Thread.State ts = ti.getThreadState();
                 switch (ts) {
                     case BLOCKED:
@@ -203,6 +212,7 @@ class WorkflowExecuteTest extends WorkflowTest {
                     buf.append('\n');
                 }
             }
+            i++;
         }
 
         LockInfo[] locks = ti.getLockedSynchronizers();

@@ -47,9 +47,6 @@
  */
 package org.knime.testing.core.ng;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryPoolMXBean;
-import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
 
 import junit.framework.AssertionFailedError;
@@ -74,26 +71,6 @@ public class WorkflowMemLeakTest extends WorkflowTest {
         super(workflowName, monitor, context);
         m_runConfiguration = runConfiguration;
         m_initalUsage = getHeapUsage();
-    }
-
-    private static MemoryUsage getHeapUsage() {
-        System.gc();
-
-        long initMem = 0;
-        long maxMem = 0;
-        long committedMem = 0;
-        long usedMem = 0;
-        for (MemoryPoolMXBean memoryPool : ManagementFactory.getMemoryPoolMXBeans()) {
-            if (memoryPool.getType().equals(MemoryType.HEAP) && (memoryPool.getCollectionUsage() != null)) {
-                MemoryUsage usage = memoryPool.getUsage();
-
-                initMem += usage.getInit();
-                maxMem += usage.getMax();
-                committedMem += usage.getCommitted();
-                usedMem += usage.getUsed();
-            }
-        }
-        return new MemoryUsage(initMem, usedMem, committedMem, maxMem);
     }
 
     /**
