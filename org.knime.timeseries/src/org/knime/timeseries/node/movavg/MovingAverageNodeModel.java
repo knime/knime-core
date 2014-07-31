@@ -78,8 +78,10 @@ import org.knime.timeseries.node.movavg.maversions.MovingAverage;
 import org.knime.timeseries.util.SlidingWindow;
 
 /**
+ * The node model for the moving average node.
  *
- * @author Rosaria Silipo
+ * @author Rosaria Silipo, Knime.com Zurich, Switzerland
+ * @author Iris Adae, University of Konstanz, Germany
  */
 public class MovingAverageNodeModel extends NodeModel {
 
@@ -362,7 +364,6 @@ public class MovingAverageNodeModel extends NodeModel {
             for (int i : colindexex) {
                 cell[i] = DataType.getMissingCell();
             }
-            return oldrow;
         } else { // we add missings to the end.
 
             for (; counter < cell.length; counter++) {

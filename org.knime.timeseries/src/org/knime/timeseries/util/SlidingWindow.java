@@ -123,4 +123,12 @@ public class SlidingWindow<T extends Object> {
         return m_list;
     }
 
+    /**
+     *  @return true if the window size equals the number of maximal elements in the window.
+     *  @since 2.10
+     */
+    public boolean isFull() {
+        return (m_list.size() >= m_size);
+    }
+
 }

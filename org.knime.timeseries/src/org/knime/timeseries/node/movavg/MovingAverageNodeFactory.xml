@@ -7,7 +7,9 @@
         <intro>
             This node calculates the moving average of a column.
             The moving average values are displayed in a new column appended 
-            at the end of the table or (if selected) replaces the original columns..
+            at the end of the table or (if selected) replaces the original columns.
+            For all window based methods (Backward/Center/Forward simple/Gaussian, Harmonic Mean) the 
+            cells that do not have a complete window (at the beginning and the end of the table) are filled with Missing Values.
         </intro>
 
         <tab name="Options">

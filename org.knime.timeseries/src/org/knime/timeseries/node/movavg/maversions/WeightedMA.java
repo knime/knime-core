@@ -76,10 +76,11 @@ public class WeightedMA extends MovingAverage {
      */
     @Override
     public DataCell getMeanandUpdate(final double newValue) {
-        Double oldVal = m_window.addandget(newValue);
-        if (oldVal == null) {
+        // insert the value to the window
+        m_window.addandget(newValue);
+        if (!m_window.isFull()) {
             return DataType.getMissingCell();
-        }        
+        }
         return new DoubleCell(getMean());
     }
 
