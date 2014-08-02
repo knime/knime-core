@@ -145,7 +145,9 @@ final class CrossJoinerNodeModel extends NodeModel {
                     }
                 }
             }
+            rightit.close();
         }
+        leftit.close();
         dc.close();
         return new BufferedDataTable[]{(BufferedDataTable)dc.getTable()};
     }
