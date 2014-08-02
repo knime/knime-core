@@ -97,25 +97,33 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
  */
 public class StyledTextEditor extends CellEditor {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(StyledTextEditor.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(StyledTextEditor.class);
+
+    private static final RGB[] DEFAULT_COLORS = new RGB[]{//
+        fromHex("CDE280"), fromHex("D8D37B"), //
+        fromHex("93DDD2"), fromHex("D0D2B5"), //
+        fromHex("ADDF9E"), fromHex("E8AFA7"), //
+        fromHex("C4CBE0"), fromHex("E3B67D")};
+
+    private static RGB[] lastColors = null;
 
     private StyledText m_styledText;
 
     /**
-     * instance used to get layout info in a non-word-wrapping editor (the
-     * foreground text editor must be auto-wrapped otherwise the alignment is
-     * ignored!).
+     * instance used to get layout info in a non-word-wrapping editor (the foreground text editor must be auto-wrapped
+     * otherwise the alignment is ignored!).
      */
     private StyledText m_shadowStyledText;
 
-    /** List of menu items that are disabled/enabled with text selection, e.g.
-     * copy or font selection. */
+    /**
+     * List of menu items that are disabled/enabled with text selection, e.g. copy or font selection.
+     */
     private List<MenuItem> m_enableOnSelectedTextMenuItems;
 
-    /** Whether the text shall be selected when the editor is activated. It's
-     * true if the annotation contains the default text ("Double-Click to edit"
-     * or "Node x"). */
+    /**
+     * Whether the text shall be selected when the editor is activated. It's true if the annotation contains the default
+     * text ("Double-Click to edit" or "Node x").
+     */
     private boolean m_selectAllUponFocusGain;
 
     private Composite m_panel;
@@ -131,8 +139,8 @@ public class StyledTextEditor extends CellEditor {
     private MenuItem m_leftAlignMenuItem;
 
     /**
-     * Creates a workflow annotation editor (with the font set to workflow
-     * annotations default font - see #setDefaultFont(Font)).
+     * Creates a workflow annotation editor (with the font set to workflow annotations default font - see
+     * #setDefaultFont(Font)).
      */
     public StyledTextEditor() {
         super();
@@ -169,8 +177,7 @@ public class StyledTextEditor extends CellEditor {
 
     private Control createShadowText(final Composite parent) {
         m_shadowStyledText = new StyledText(parent, SWT.MULTI | SWT.FULL_SELECTION);
-        m_shadowStyledText.setLayoutData(
-                new GridData(SWT.FILL, SWT.FILL, true, true));
+        m_shadowStyledText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
         syncShadowWithEditor();
         return m_shadowStyledText;
     }
@@ -186,12 +193,10 @@ public class StyledTextEditor extends CellEditor {
     }
 
     private Control createStyledText(final Composite parent) {
-        m_styledText = new StyledText(parent, SWT.MULTI | SWT.WRAP
-                | SWT.FULL_SELECTION);
+        m_styledText = new StyledText(parent, SWT.MULTI | SWT.WRAP | SWT.FULL_SELECTION);
         // by default we are a workflow annotation editor
         // can be changed by changing the default font (setDefaultFont(Font))
-        m_styledText.setFont(
-                AnnotationEditPart.getWorkflowAnnotationDefaultFont());
+        m_styledText.setFont(AnnotationEditPart.getWorkflowAnnotationDefaultFont());
         m_styledText.setAlignment(SWT.LEFT);
         m_styledText.setText("");
         // somehow that matches the tab indent of the figure...
@@ -199,8 +204,7 @@ public class StyledTextEditor extends CellEditor {
         m_styledText.addVerifyKeyListener(new VerifyKeyListener() {
             @Override
             public void verifyKey(final VerifyEvent event) {
-                if (event.character == SWT.CR
-                    && (event.stateMask & SWT.CTRL) != 0) {
+                if (event.character == SWT.CR && (event.stateMask & SWT.CTRL) != 0) {
                     event.doit = false;
                 }
             }
@@ -251,8 +255,7 @@ public class StyledTextEditor extends CellEditor {
                 selectionChanged();
             }
         });
-        m_styledText.setLayoutData(
-                new GridData(SWT.FILL, SWT.FILL, true, true));
+        m_styledText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
         addMenu(m_styledText);
         // toolbar gets created first - enable its style buttons!
         selectionChanged();
@@ -261,11 +264,11 @@ public class StyledTextEditor extends CellEditor {
 
     /**
      * Changes the font of unformatted text ranges.
+     *
      * @param newDefaultFont The font to use, not null
      */
     public void setDefaultFont(final Font newDefaultFont) {
-        if (newDefaultFont != null && !newDefaultFont.equals(
-                m_styledText.getFont())) {
+        if (newDefaultFont != null && !newDefaultFont.equals(m_styledText.getFont())) {
             m_styledText.setFont(newDefaultFont);
         }
     }
@@ -274,15 +277,14 @@ public class StyledTextEditor extends CellEditor {
      * {@inheritDoc}
      */
     @Override
-    protected void fireEditorValueChanged(final boolean oldValidState,
-            final boolean newValidState) {
+    protected void fireEditorValueChanged(final boolean oldValidState, final boolean newValidState) {
         syncShadowWithEditor();
         super.fireEditorValueChanged(oldValidState, newValidState);
     }
 
     /**
-     * Sets the style range for the new text. Copies it from the left neighbor
-     * (or from the right neighbor, if there is no left neighbor).
+     * Sets the style range for the new text. Copies it from the left neighbor (or from the right neighbor, if there is
+     * no left neighbor).
      *
      * @param startIdx
      * @param length
@@ -303,8 +305,7 @@ public class StyledTextEditor extends CellEditor {
         } else {
             extStyles = m_styledText.getStyleRanges(startIdx - 1, 1);
         }
-        if (extStyles == null || extStyles.length != 1
-                || extStyles[0] == null) {
+        if (extStyles == null || extStyles.length != 1 || extStyles[0] == null) {
             // no style to extend over inserted text
             return;
         }
@@ -348,20 +349,16 @@ public class StyledTextEditor extends CellEditor {
         // alignment
         img = ImageRepository.getImage("icons/annotations/alignment_10.png");
 
-        MenuItem alignmentMenuItem = addMenuItem(menu, "alignment",
-                SWT.CASCADE, "Alignment", img);
+        MenuItem alignmentMenuItem = addMenuItem(menu, "alignment", SWT.CASCADE, "Alignment", img);
 
         final Menu alignMenu = new Menu(alignmentMenuItem);
         alignmentMenuItem.setMenu(alignMenu);
 
-        m_leftAlignMenuItem = addMenuItem(alignMenu, "alignment_left",
-                SWT.RADIO, "Left", null);
+        m_leftAlignMenuItem = addMenuItem(alignMenu, "alignment_left", SWT.RADIO, "Left", null);
 
-        m_centerAlignMenuItem = addMenuItem(alignMenu, "alignment_center",
-                SWT.RADIO, "Center", null);
+        m_centerAlignMenuItem = addMenuItem(alignMenu, "alignment_center", SWT.RADIO, "Center", null);
 
-        m_rightAlignMenuItem = addMenuItem(alignMenu, "alignment_right",
-                SWT.RADIO, "Right", null);
+        m_rightAlignMenuItem = addMenuItem(alignMenu, "alignment_right", SWT.RADIO, "Right", null);
 
         new MenuItem(menu, SWT.SEPARATOR);
         // contains buttons being en/disabled with selection
@@ -401,8 +398,8 @@ public class StyledTextEditor extends CellEditor {
         parent.setMenu(menu);
     }
 
-    private MenuItem addMenuItem(final Menu menuMgr, final String id,
-            final int style, final String text, final Image img) {
+    private MenuItem addMenuItem(final Menu menuMgr, final String id, final int style, final String text,
+        final Image img) {
         MenuItem menuItem = new MenuItem(menuMgr, style);
         SelectionAdapter selListener = new SelectionAdapter() {
             @Override
@@ -414,6 +411,7 @@ public class StyledTextEditor extends CellEditor {
                     m_allowFocusLost.set(true);
                 }
             }
+
             @Override
             public void widgetDefaultSelected(final SelectionEvent e) {
                 super.widgetSelected(e);
@@ -524,9 +522,8 @@ public class StyledTextEditor extends CellEditor {
     /**
      * {@inheritDoc}
      *
-     * @return a {@link AnnotationData} with the new text and style ranges -
-     *         and with the same ID as the original annotation (the one the
-     *         editor was initialized with) - but in a new object.
+     * @return a {@link AnnotationData} with the new text and style ranges - and with the same ID as the original
+     *         annotation (the one the editor was initialized with) - but in a new object.
      */
     @Override
     protected Object doGetValue() {
@@ -557,14 +554,14 @@ public class StyledTextEditor extends CellEditor {
         Annotation wa = (Annotation)value;
         int alignment;
         switch (wa.getAlignment()) {
-        case CENTER:
-            alignment = SWT.CENTER;
-            break;
-        case RIGHT:
-            alignment = SWT.RIGHT;
-            break;
-        default:
-            alignment = SWT.LEFT;
+            case CENTER:
+                alignment = SWT.CENTER;
+                break;
+            case RIGHT:
+                alignment = SWT.RIGHT;
+                break;
+            default:
+                alignment = SWT.LEFT;
         }
         checkSelectionOfAlignmentMenuItems(alignment);
         m_selectAllUponFocusGain = false;
@@ -578,23 +575,19 @@ public class StyledTextEditor extends CellEditor {
             }
         } else {
             text = wa.getText();
-            m_selectAllUponFocusGain =
-                AddAnnotationCommand.INITIAL_FLOWANNO_TEXT.equals(text);
+            m_selectAllUponFocusGain = AddAnnotationCommand.INITIAL_FLOWANNO_TEXT.equals(text);
         }
         m_styledText.setAlignment(alignment);
         m_styledText.setText(text);
-        m_styledText.setStyleRanges(AnnotationEditPart.toSWTStyleRanges(
-                wa.getData(), m_styledText.getFont()));
-        setBackgroundColor(AnnotationEditPart.RGBintToColor(wa
-                .getBgColor()));
+        m_styledText.setStyleRanges(AnnotationEditPart.toSWTStyleRanges(wa.getData(), m_styledText.getFont()));
+        setBackgroundColor(AnnotationEditPart.RGBintToColor(wa.getBgColor()));
         syncShadowWithEditor();
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean isCopyEnabled() {
-        return !m_styledText.isDisposed()
-            && m_styledText.getSelectionCount() > 0;
+        return !m_styledText.isDisposed() && m_styledText.getSelectionCount() > 0;
     }
 
     /** {@inheritDoc} */
@@ -618,8 +611,7 @@ public class StyledTextEditor extends CellEditor {
     /** {@inheritDoc} */
     @Override
     public boolean isCutEnabled() {
-        return !m_styledText.isDisposed()
-            && m_styledText.getSelectionCount() > 0;
+        return !m_styledText.isDisposed() && m_styledText.getSelectionCount() > 0;
     }
 
     /** {@inheritDoc} */
@@ -645,26 +637,28 @@ public class StyledTextEditor extends CellEditor {
         setSWTStyle(SWT.BOLD);
     }
 
-    /** Update selection state of alignment buttons in menu.
+    /**
+     * Update selection state of alignment buttons in menu.
+     *
      * @param swtAlignment SWT.LEFT, CENTER, or RIGHT
      */
     private void checkSelectionOfAlignmentMenuItems(final int swtAlignment) {
-        MenuItem[] alignmentMenuItems = new MenuItem[] {
-                m_leftAlignMenuItem, m_centerAlignMenuItem, m_rightAlignMenuItem};
+        MenuItem[] alignmentMenuItems =
+            new MenuItem[]{m_leftAlignMenuItem, m_centerAlignMenuItem, m_rightAlignMenuItem};
         MenuItem activeMenuItem;
         switch (swtAlignment) {
-        case SWT.LEFT:
-            activeMenuItem = m_leftAlignMenuItem;
-            break;
-        case SWT.CENTER:
-            activeMenuItem = m_centerAlignMenuItem;
-            break;
-        case SWT.RIGHT:
-            activeMenuItem = m_rightAlignMenuItem;
-            break;
-        default:
-            LOGGER.coding("Invalid alignment (ignored): " + swtAlignment);
-            return;
+            case SWT.LEFT:
+                activeMenuItem = m_leftAlignMenuItem;
+                break;
+            case SWT.CENTER:
+                activeMenuItem = m_centerAlignMenuItem;
+                break;
+            case SWT.RIGHT:
+                activeMenuItem = m_rightAlignMenuItem;
+                break;
+            default:
+                LOGGER.coding("Invalid alignment (ignored): " + swtAlignment);
+                return;
         }
         for (MenuItem m : alignmentMenuItems) {
             m.setSelection(m == activeMenuItem);
@@ -675,36 +669,29 @@ public class StyledTextEditor extends CellEditor {
         List<StyleRange> styles = getStylesInSelection();
         boolean setAttr = true;
         for (StyleRange s : styles) {
-            if (s.font != null
-                    && (s.font.getFontData()[0].getStyle() & swtStyle) != 0) {
+            if (s.font != null && (s.font.getFontData()[0].getStyle() & swtStyle) != 0) {
                 setAttr = false;
                 break;
             }
         }
         for (StyleRange s : styles) {
             if (setAttr) {
-                s.font =
-                        AnnotationEditPart.FONT_STORE.addStyleToFont(s.font,
-                                swtStyle);
+                s.font = AnnotationEditPart.FONT_STORE.addStyleToFont(s.font, swtStyle);
             } else {
-                s.font =
-                        AnnotationEditPart.FONT_STORE.removeStyleFromFont(
-                                s.font, swtStyle);
+                s.font = AnnotationEditPart.FONT_STORE.removeStyleFromFont(s.font, swtStyle);
             }
             m_styledText.setStyleRange(s);
         }
     }
 
     /**
-     * Returns a list of ordered styles in the selected range. For regions in
-     * the selection that do not have a style yet, it inserts a new (empty)
-     * style. The styles are ordered and not overlapping. If there is no
-     * selection in the control, an empty list is returned, never null.
-     * Contained styles should be applied individually (after possible
+     * Returns a list of ordered styles in the selected range. For regions in the selection that do not have a style
+     * yet, it inserts a new (empty) style. The styles are ordered and not overlapping. If there is no selection in the
+     * control, an empty list is returned, never null. Contained styles should be applied individually (after possible
      * modification) with setStyleRange().
      *
-     * @return styles for the entire selected range, ordered and not
-     *         overlapping. Empty list, if no selection exists, never null.
+     * @return styles for the entire selected range, ordered and not overlapping. Empty list, if no selection exists,
+     *         never null.
      */
     private List<StyleRange> getStylesInSelection() {
         int[] sel = m_styledText.getSelectionRanges();
@@ -726,8 +713,7 @@ public class StyledTextEditor extends CellEditor {
             int lastEnd = start; // not yet covered index
             for (StyleRange s : styles) {
                 if (s.start < lastEnd) {
-                    LOGGER.error("StyleRanges not ordered! "
-                            + "Style might be messed up");
+                    LOGGER.error("StyleRanges not ordered! Style might be messed up");
                 }
                 if (lastEnd < s.start) {
                     // create style for range not covered by next exiting style
@@ -759,11 +745,14 @@ public class StyledTextEditor extends CellEditor {
 
     private void bgColor() {
         ColorDialog colDlg = new ColorDialog(m_styledText.getShell());
+        RGB[] toSet = lastColors == null ? DEFAULT_COLORS : lastColors;
         colDlg.setText("Change the Background Color");
+        colDlg.setRGBs(toSet);
         if (m_backgroundColor != null) {
             colDlg.setRGB(m_backgroundColor.getRGB());
         }
         RGB newBGCol = colDlg.open();
+        lastColors = colDlg.getRGBs();
         if (newBGCol == null) {
             // user canceled
             return;
@@ -772,20 +761,33 @@ public class StyledTextEditor extends CellEditor {
         applyBackgroundColor();
     }
 
-    /** Change alignment.
+    /**
+     * @return
+     */
+    private static RGB fromHex(final String hex) {
+        int color = Integer.parseInt(hex, 16);
+        int r = (color >> 16) & 255;
+        int g = (color >> 8) & 255;
+        int b = color & 255;
+        return new RGB(r, g, b);
+    }
+
+    /**
+     * Change alignment.
+     *
      * @param alignment SWT.LEFT|CENTER|RIGHT.
      */
     private void alignment(final int alignment) {
         int newAlignment;
         switch (alignment) {
-        case SWT.CENTER:
-            newAlignment = alignment;
-            break;
-        case SWT.RIGHT:
-            newAlignment = alignment;
-            break;
-        default:
-            newAlignment = SWT.LEFT;
+            case SWT.CENTER:
+                newAlignment = alignment;
+                break;
+            case SWT.RIGHT:
+                newAlignment = alignment;
+                break;
+            default:
+                newAlignment = SWT.LEFT;
         }
         checkSelectionOfAlignmentMenuItems(newAlignment);
         m_styledText.setAlignment(newAlignment);
@@ -842,13 +844,11 @@ public class StyledTextEditor extends CellEditor {
             return;
         }
         RGB newRGB = fd.getRGB();
-        Color newCol =
-                newRGB == null ? null : AnnotationEditPart.RGBtoColor(newRGB);
+        Color newCol = newRGB == null ? null : AnnotationEditPart.RGBtoColor(newRGB);
         for (StyleRange style : sel) {
             style.font =
-                    AnnotationEditPart.FONT_STORE.getFont(
-                            newFontData.getName(), newFontData.getHeight(),
-                            newFontData.getStyle());
+                AnnotationEditPart.FONT_STORE.getFont(newFontData.getName(), newFontData.getHeight(),
+                    newFontData.getStyle());
             if (newCol != null) {
                 style.foreground = newCol;
             }
