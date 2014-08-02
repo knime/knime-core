@@ -127,7 +127,7 @@ public final class DatabaseWriterConnection {
                 try {
                     // try to count all rows to see if table exists
                     final String query =
-                        dbConn.getUtility().getStatementManipulator().limitRows("SELECT * FROM " + table, 0);
+                        dbConn.getUtility().getStatementManipulator().forMetadataOnly("SELECT * FROM " + table);
                     statement = conn.createStatement();
                     LOGGER.debug("Executing SQL statement as executeQuery: " + query);
                     rs = statement.executeQuery(query);

@@ -70,7 +70,8 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 /**
  * This is the model implementation of "SQL Inject" node.
  *
- * @author Alexander Fillbrunn
+ *
+ * @author Alexander Fillbrunn, University of Konstanz, Germany
  * @since 2.10
  */
 public class SQLInjectNodeModel extends NodeModel {
@@ -103,9 +104,18 @@ public class SQLInjectNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         exec.setMessage("Retrieving metadata from database");
 
-        DatabaseConnectionPortObject dbIn = (DatabaseConnectionPortObject)inData[0];
-        String sql = peekFlowVariableString(m_flowVariableName.getStringValue());
 
+        final String varName = m_flowVariableName.getStringValue();
+        if (varName == null) {
+            throw new InvalidSettingsException("No flow variable for the SQL statement selected");
+        }
+
+        final String sql = peekFlowVariableString(varName);
+        if (sql == null) {
+            throw new InvalidSettingsException("The selected flow variable is not assigned");
+        }
+
+        DatabaseConnectionPortObject dbIn = (DatabaseConnectionPortObject)inData[0];
         DatabaseConnectionSettings inSettings = dbIn.getConnectionSettings(getCredentialsProvider());
         // Attach the SQL query
         DatabaseQueryConnectionSettings outSettings = new DatabaseQueryConnectionSettings(inSettings, sql);

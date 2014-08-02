@@ -66,7 +66,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * complex dialog please derive directly from
  * {@link org.knime.core.node.NodeDialogPane}.
  *
- * @author Alexander Fillbrunn
+ * @author Alexander Fillbrunn, University of Konstanz, Germany
  * @since 2.10
  */
 public class SQLInjectNodeDialog extends DefaultNodeSettingsPane {
@@ -86,7 +86,7 @@ public class SQLInjectNodeDialog extends DefaultNodeSettingsPane {
 
         m_flowVarSelection = new DialogComponentFlowVariableNameSelection(
                                       m_flowVarSettingsModel, "Flow Variable with SQL Query",
-                                      flowVars, true, FlowVariable.Type.STRING);
+                                      flowVars, false, FlowVariable.Type.STRING);
 
         addDialogComponent(m_flowVarSelection);
     }
