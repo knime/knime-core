@@ -64,6 +64,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
 import org.ccil.cowan.tagsoup.Parser;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.knime.core.node.KNIMEConstants;
 import org.w3c.dom.Comment;
@@ -96,7 +97,10 @@ class TipsAndNewsInjector extends AbstractInjector {
             transformerFactory);
         URL tipsTricksUrl = null;
         try {
-            tipsTricksUrl = new URL("http://www.knime.org/tips-and-tricks?knid=" + KNIMEConstants.getKNIMEInstanceID());
+            tipsTricksUrl =
+                new URL("http://www.knime.org/tips-and-tricks?knid=" + KNIMEConstants.getKNIMEInstanceID()
+                    + "&version=" + KNIMEConstants.VERSION + "&os=" + Platform.getOS() + "&arch="
+                    + Platform.getOSArch());
         } catch (MalformedURLException ex) {
             // does not happen
         }
