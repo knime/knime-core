@@ -52,7 +52,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
@@ -87,6 +86,9 @@ public final class PortUtil {
     private static final Map<Class<? extends PortObjectSpec>,
     PortObjectSpecSerializer<?>> PORT_SPEC_SERIALIZER_MAP = new ConcurrentHashMap<>();
 
+    private static final Map<Class<? extends PortObject>,
+    PortObjectSerializer<?>> PORT_OBJECT_SERIALIZER_MAP = new ConcurrentHashMap<>();
+
     private PortUtil() {
     }
 
@@ -120,10 +122,6 @@ public final class PortUtil {
         PORT_SPEC_SERIALIZER_MAP.put(cl, result);
         return result;
     }
-
-    private static final Map<Class<? extends PortObject>,
-    PortObjectSerializer<?>> PORT_OBJECT_SERIALIZER_MAP =
-        new HashMap<Class<? extends PortObject>, PortObjectSerializer<?>>();
 
     /**
      * Get the globally used serializer for {@link PortObject} objects
