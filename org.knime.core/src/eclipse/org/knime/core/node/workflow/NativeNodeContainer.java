@@ -182,17 +182,6 @@ public class NativeNodeContainer extends SingleNodeContainer {
         return m_node;
     }
 
-    /**
-     * @return reference to underlying node.
-     * @deprecated Method is going to be removed in future versions. Use
-     * {@link #getNode()} instead.
-     * Currently used to enable workaround for bug #2136 (see also bug #2137)
-     */
-    @Deprecated
-    public Node getNodeReferenceBug2136() {
-        return getNode();
-    }
-
     /** @return reference to underlying node's model. */
     public NodeModel getNodeModel() {
         return getNode().getNodeModel();

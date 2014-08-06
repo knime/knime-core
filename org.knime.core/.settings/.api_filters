@@ -26,6 +26,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NativeNodeContainer.java" type="org.knime.core.node.workflow.NativeNodeContainer">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NativeNodeContainer"/>
+                <message_argument value="getNodeReferenceBug2136()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/execresult/NodeExecutionResult.java" type="org.knime.core.node.workflow.execresult.NodeExecutionResult">
         <filter id="643842064">
             <message_arguments>
