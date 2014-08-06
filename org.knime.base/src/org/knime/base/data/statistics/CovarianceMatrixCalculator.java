@@ -236,6 +236,12 @@ public final class CovarianceMatrixCalculator {
         return m_resultSpec;
     }
 
+    /** Assuming you have columns A, B, C, D the column pairs of co-variance are
+     * AA, AB, AC, AD, BB, BC, BD, CC, CD, DD.
+     * To get 0,3 you compute (0)+3,
+     * To get 1,2 you compute (4)+2
+     * To get 2,2 you compute (4+3)+2
+     */
     private static int index(final int max, final int row, final int col) {
         return partialGaussSum(max, row) + col;
     }
