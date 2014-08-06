@@ -100,6 +100,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
+import org.knime.core.node.port.inactive.InactiveBranchPortObject;
+import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
@@ -1013,27 +1015,45 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
 
     /** Copies data from virtual output node into m_outputs, notifies state listeners if not
      * processing call from parent.
-     * @param newState TODO*/
+     * @param newState State of the internal WFM to decide whether to publish ports and/or specs. */
     @SuppressWarnings("null")
     private boolean setVirtualOutputIntoOutport(final InternalNodeContainerState newState) {
         // retrieve results and copy to outports
         final VirtualSubNodeOutputNodeModel virtualOutNodeModel = getVirtualOutNodeModel();
+        final boolean isInactive = getVirtualOutNode().isInactive();
         final VirtualSubNodeExchange outputExchange = virtualOutNodeModel.getOutputExchange();
 
-        boolean publishObjects = outputExchange != null && newState.isExecuted();
-        boolean publishSpecs = outputExchange != null
+        // put objects into output if state of WFM is executed
+        boolean publishObjects = newState.isExecuted();
+        // publishObjects implies that output node has data or is inactive
+        assert !publishObjects || (isInactive || outputExchange != null) : "output node must have data or be inactive";
+
+        boolean publishSpecs = (isInactive || outputExchange != null)
                 && (newState.isConfigured() || newState.isExecuted() || newState.isExecutionInProgress());
+
         boolean changed = false;
-        PortObjectSpec[] outSpecs = publishSpecs ? outputExchange.getPortSpecs() : null;
-        PortObject[] outObjects = publishObjects ? outputExchange.getPortObjects() : null;
         for (int i = 1; i < m_outputs.length; i++) {
-            changed = m_outputs[i].setSpec(outSpecs == null ? null : outSpecs[i - 1]) || changed;
-            changed = m_outputs[i].setObject(outObjects == null ? null : outObjects[i - 1]) || changed;
+            // not publish spec:     null output
+            // inactive output node: inactive branch port object
+            // otherwise:            use data from output node
+            final PortObjectSpec spec = publishSpecs ? (isInactive ? InactiveBranchPortObjectSpec.INSTANCE
+                : outputExchange.getPortSpecs()[i - 1]) : null;
+            changed = m_outputs[i].setSpec(spec) || changed;
+
+            final PortObject object = publishObjects ? (isInactive ? InactiveBranchPortObject.INSTANCE
+                : outputExchange.getPortObjects()[i - 1]) : null;
+            changed = m_outputs[i].setObject(object) || changed;
         }
-        changed = m_outputs[0].setSpec(publishSpecs ? FlowVariablePortObjectSpec.INSTANCE : null) || changed;
-        changed = m_outputs[0].setObject(publishObjects ? FlowVariablePortObject.INSTANCE : null) || changed;
+        final PortObjectSpec spec = publishSpecs ? (isInactive ? InactiveBranchPortObjectSpec.INSTANCE
+            : FlowVariablePortObjectSpec.INSTANCE) : null;
+        changed = m_outputs[0].setSpec(spec) || changed;
+
+        final PortObject object = publishObjects ? (isInactive ? InactiveBranchPortObject.INSTANCE
+            : FlowVariablePortObject.INSTANCE) : null;
+        changed = m_outputs[0].setObject(object) || changed;
+
         final FlowObjectStack outgoingFlowObjectStack = getOutgoingFlowObjectStack();
-        if (publishObjects) {
+        if (publishObjects && !isInactive) {
             for (FlowVariable f : outputExchange.getFlowVariables()) {
                 outgoingFlowObjectStack.push(f.cloneAndUnsetOwner());
             }
