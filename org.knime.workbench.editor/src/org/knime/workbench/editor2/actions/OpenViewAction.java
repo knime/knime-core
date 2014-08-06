@@ -56,7 +56,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
 
@@ -117,47 +116,22 @@ public class OpenViewAction extends Action {
      */
     @Override
     public void run() {
-        LOGGER.debug("Open Node View " + m_nodeContainer.getName() + " (#"
-                + m_index + ")");
+        LOGGER.debug("Open Node View " + m_nodeContainer.getName() + " (#" + m_index + ")");
         try {
-            final String title = m_nodeContainer.getViewName(m_index) + " - "
-                + m_nodeContainer.getDisplayLabel();
-
-            Runnable runner = new Runnable() {
+            final String title = m_nodeContainer.getViewName(m_index) + " - " + m_nodeContainer.getDisplayLabel();
+            SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    Node.invokeOpenView(
-                            m_nodeContainer.getView(m_index), title);
+                    Node.invokeOpenView(m_nodeContainer.getView(m_index), title);
                 }
-            };
-            // workaround for bug 2136: Schrodinger views must be opened
-            // in non-AWT thread (unchecked call to SU.invokeAndWait)
-            // This fix is to be reverted in future versions,
-            // see bug 2137 for details
-            boolean isSchrodinger = false;
-            if (m_nodeContainer instanceof NativeNodeContainer) {
-                NativeNodeContainer snc = (NativeNodeContainer)m_nodeContainer;
-                String clName = snc.getNodeReferenceBug2136().getFactory().getClass().getName();
-                isSchrodinger = clName.startsWith("com.schrodinger.knime.node.");
-            }
-            if (isSchrodinger) {
-                Display.getDefault().asyncExec(runner);
-            } else {
-                SwingUtilities.invokeLater(runner);
-            }
+            });
         } catch (Throwable t) {
-            MessageBox mb = new MessageBox(
-                    Display.getDefault().getActiveShell(),
-                    SWT.ICON_ERROR | SWT.OK);
+            MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
             mb.setText("View cannot be opened");
-            mb.setMessage("The view cannot be opened for the "
-                    + "following reason:\n" + t.getMessage());
+            mb.setMessage("The view cannot be opened for the following reason:\n" + t.getMessage());
             mb.open();
-            LOGGER.error("The view for node '"
-                    + m_nodeContainer.getNameWithID() + "' has thrown a '"
-                    + t.getClass().getSimpleName()
-                    + "'. That is most likely an "
-                    + "implementation error.", t);
+            LOGGER.error("The view for node '" + m_nodeContainer.getNameWithID() + "' has thrown a '"
+                + t.getClass().getSimpleName() + "'. That is most likely an " + "implementation error.", t);
         }
     }
 
