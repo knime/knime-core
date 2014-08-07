@@ -34,7 +34,6 @@ All other trademarks are the property of their respective owners.
 -Dosgi.classloader.lock=classname
 -XX:+UnlockDiagnosticVMOptions
 -XX:+UnsyncloadClass 
--XX:-UseSplitVerifier
 -Dknime.enable.fastload=true</vmArgs>
       <vmArgsMac>-XstartOnFirstThread
 -Xdock:icon=../Resources/Knime.icns
