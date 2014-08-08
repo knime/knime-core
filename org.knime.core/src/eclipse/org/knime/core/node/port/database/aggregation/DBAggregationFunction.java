@@ -44,46 +44,32 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   17.06.2014 (thor): created
+ *   01.08.2014 (koetter): created
  */
-package org.knime.core.node.port.database;
+package org.knime.core.node.port.database.aggregation;
 
+import org.knime.core.data.DataType;
 
 /**
- * Database utility for MS SQL Server.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 2.10
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @since 2.11
  */
-public class SQLServerUtility extends DatabaseUtility {
-    private static class SQLServerStatementManipulator extends StatementManipulator {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String limitRows(final String sql, final long count) {
-            return "SELECT TOP " + count + " * FROM (" + sql + ") " + getTempTableName();
-        }
-    }
-
-    private static final StatementManipulator MANIPULATOR = new SQLServerStatementManipulator();
-
-    /**The unique database identifier.*/
-    static final String DATABASE_IDENTIFIER = "sqlserver";
+public interface DBAggregationFunction {
 
     /**
-     * {@inheritDoc}
+     * @return the name of the function
      */
-    @Override
-    public String getDatabaseIdentifier() {
-        return DATABASE_IDENTIFIER;
-    }
+    public String getName();
 
     /**
-     * {@inheritDoc}
+     * @param originalType Type of the column that will be aggregated
+     * @return The type of the aggregated column
      */
-    @Override
-    public StatementManipulator getStatementManipulator() {
-        return MANIPULATOR;
-    }
+    public DataType getType(final DataType originalType);
+
+    /**
+     * @return the description for this function
+     */
+    public String getDescription();
 }

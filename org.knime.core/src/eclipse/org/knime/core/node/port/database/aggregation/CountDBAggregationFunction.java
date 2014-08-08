@@ -44,46 +44,62 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   17.06.2014 (thor): created
+ *   01.08.2014 (koetter): created
  */
-package org.knime.core.node.port.database;
+package org.knime.core.node.port.database.aggregation;
 
+import org.knime.core.data.DataType;
+import org.knime.core.data.def.LongCell;
 
 /**
- * Database utility for MS SQL Server.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 2.10
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @since 2.11
  */
-public class SQLServerUtility extends DatabaseUtility {
-    private static class SQLServerStatementManipulator extends StatementManipulator {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String limitRows(final String sql, final long count) {
-            return "SELECT TOP " + count + " * FROM (" + sql + ") " + getTempTableName();
+public final class CountDBAggregationFunction implements DBAggregationFunction {
+
+    private static volatile CountDBAggregationFunction instance;
+
+    private CountDBAggregationFunction() {
+        //avoid object creation
+    }
+
+    /**
+     * Returns the only instance of this class.
+     * @return the only instance
+     */
+    public static CountDBAggregationFunction getInstance() {
+        if (instance == null) {
+            synchronized (CountDBAggregationFunction.class) {
+                if (instance == null) {
+                    instance = new CountDBAggregationFunction();
+                }
+            }
         }
-    }
-
-    private static final StatementManipulator MANIPULATOR = new SQLServerStatementManipulator();
-
-    /**The unique database identifier.*/
-    static final String DATABASE_IDENTIFIER = "sqlserver";
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDatabaseIdentifier() {
-        return DATABASE_IDENTIFIER;
+        return instance;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public StatementManipulator getStatementManipulator() {
-        return MANIPULATOR;
+    public String getName() {
+        return "COUNT";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType(final DataType originalType) {
+        return LongCell.TYPE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return "Counts the number of returned values.";
     }
 }

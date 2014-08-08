@@ -104,6 +104,17 @@ public class MySQLUtility extends DatabaseUtility {
 
     private static final StatementManipulator MANIPULATOR = new MySQLStatementManipulator();
 
+    /**The unique database identifier.*/
+    static final String DATABASE_IDENTIFIER = "mysql";
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDatabaseIdentifier() {
+        return DATABASE_IDENTIFIER;
+    }
+
     /**
      * {@inheritDoc}
      */

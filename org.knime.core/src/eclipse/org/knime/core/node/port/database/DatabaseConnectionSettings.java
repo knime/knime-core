@@ -238,6 +238,9 @@ public class DatabaseConnectionSettings {
     private boolean m_retrieveMetadataInConfigure;
 
     private boolean m_allowSpacesInColumnNames;
+    /**Access this field only via the {@link #getDatabaseIdentifier()} method since it might be <code>null</code>
+     * in which case the identifier gets extracted from the JDBC url.*/
+    private String m_dbIdentifier;
 
     // this is to fix bug #4066 and not exposed to the user
     private boolean m_rowIdsStartWithZero;
@@ -257,6 +260,7 @@ public class DatabaseConnectionSettings {
         // create database name from driver class
         m_jdbcUrl = DatabaseDriverLoader.getURLForDriver(m_driver);
         m_allowSpacesInColumnNames = true;
+        m_dbIdentifier = null;
     }
 
     /** Create a default database connection object.
@@ -281,9 +285,29 @@ public class DatabaseConnectionSettings {
      * @param timezone the TimeZone to correct data/time/timestamp fields
      * @since 2.8
      */
+    @Deprecated
     public DatabaseConnectionSettings(final String driver, final String jdbcUrl,
             final String user, final String pass, final String credName, final String timezone) {
-        this();
+//        this();
+        this(null, driver, jdbcUrl, user, pass, credName, timezone);
+    }
+
+    /** Create a default database connection object.
+     * @param dbIdentifier the unique database identifier used to retrieve the {@link DatabaseUtility} class
+     * ( see {@link DatabaseUtility#getDatabaseIdentifier()}) or <code>null</code> if the second part of the JDBC url
+     * should be used {@link #getDatabaseIdentifierFromJDBCUrl(String)}
+     * @param driver the database driver
+     * @param jdbcUrl database URL
+     * @param user user name
+     * @param pass password for user name
+     * @param credName credential id from {@link CredentialsProvider} or null
+     * @param timezone the TimeZone to correct data/time/timestamp fields
+     * @since 2.11
+     */
+    public DatabaseConnectionSettings(final String dbIdentifier, final String driver, final String jdbcUrl,
+            final String user, final String pass, final String credName, final String timezone) {
+//        this();
+        m_dbIdentifier = dbIdentifier;
         m_driver   = driver;
         m_jdbcUrl  = jdbcUrl;
         m_user     = user;
@@ -301,7 +325,7 @@ public class DatabaseConnectionSettings {
      */
     public DatabaseConnectionSettings(final ConfigRO config, final CredentialsProvider cp)
             throws InvalidSettingsException {
-        this();
+//        this();
         loadValidatedConnection(config, cp);
     }
 
@@ -321,6 +345,7 @@ public class DatabaseConnectionSettings {
         m_allowSpacesInColumnNames = conn.m_allowSpacesInColumnNames;
         m_rowIdsStartWithZero = conn.m_rowIdsStartWithZero;
         m_retrieveMetadataInConfigure = conn.m_retrieveMetadataInConfigure;
+        m_dbIdentifier = conn.getDatabaseIdentifier();
     }
 
     /** Map the keeps database connection based on the user and URL. */
@@ -537,6 +562,7 @@ public class DatabaseConnectionSettings {
         settings.addBoolean("retrieveMetadataInConfigure", m_retrieveMetadataInConfigure);
         settings.addBoolean("allowSpacesInColumnNames", m_allowSpacesInColumnNames);
         settings.addBoolean("rowIdsStartWithZero", m_rowIdsStartWithZero);
+        settings.addString("databaseIdentifier", m_dbIdentifier);
     }
 
     /**
@@ -571,7 +597,7 @@ public class DatabaseConnectionSettings {
             throw new InvalidSettingsException("Connection settings not available!");
         }
         String driver = settings.getString("driver");
-        String database = settings.getString("database");
+        String jdbcUrl = settings.getString("database");
 
         String user = "";
         String password = null;
@@ -605,6 +631,7 @@ public class DatabaseConnectionSettings {
                 LOGGER.error("Password could not be decrypted, reason: " + e.getMessage());
             }
         }
+        final String dbIdentifier = settings.getString("databaseIdentifier", null);
         // write settings or skip it
         if (write) {
             m_driver = driver;
@@ -615,7 +642,7 @@ public class DatabaseConnectionSettings {
                 m_credName = credName;
             } else {
                 if ((m_user != null) && (m_jdbcUrl != null) && (m_pass != null)) {
-                    if (!m_user.equals(user) || !m_jdbcUrl.equals(database) || !m_pass.equals(password)) {
+                    if (!m_user.equals(user) || !m_jdbcUrl.equals(jdbcUrl) || !m_pass.equals(password)) {
                         changed = true;
                     }
                 }
@@ -623,12 +650,13 @@ public class DatabaseConnectionSettings {
             }
             m_user = user;
             m_pass = (password == null ? "" : password);
-            m_jdbcUrl = database;
+            m_jdbcUrl = jdbcUrl;
             m_timezone = timezone;
             m_validateConnection = validateConnection;
             m_retrieveMetadataInConfigure = retrieveMetadataInConfigure;
             m_allowSpacesInColumnNames = allowSpacesInColumnNames;
             m_rowIdsStartWithZero = rowIdsStartWithZero;
+            m_dbIdentifier = dbIdentifier;
             DATABASE_URLS.add(m_jdbcUrl);
             return changed;
         }
@@ -713,6 +741,30 @@ public class DatabaseConnectionSettings {
     @Deprecated
     public final String getDBName() {
         return m_jdbcUrl;
+    }
+
+    /**
+     * @return the dbIdentifier the unique database identifier usually the second part of the JDBC url
+     * @see #getDatabaseIdentifierFromJDBCUrl(String)
+     * @since 2.11
+     */
+    public String getDatabaseIdentifier() {
+        if (m_dbIdentifier == null) {
+            return getDatabaseIdentifierFromJDBCUrl(m_jdbcUrl);
+        }
+        return m_dbIdentifier;
+    }
+
+    /**
+     * @param databaseIdentifier the unique database identifier if not specified the second part of the JDBC url
+     * is used (see {@link #getDatabaseIdentifierFromJDBCUrl(String)}.
+     * @since 2.11
+     */
+    public void setDatabaseIdentifier(final String databaseIdentifier) {
+        if (databaseIdentifier == null || databaseIdentifier.isEmpty()) {
+            throw new IllegalArgumentException("databaseIdentifier must not be empty");
+        }
+        m_dbIdentifier = databaseIdentifier;
     }
 
     /**
@@ -981,10 +1033,19 @@ public class DatabaseConnectionSettings {
      * @since 2.10
      */
     public DatabaseUtility getUtility() {
-        String[] parts = m_jdbcUrl.split(":");
+        return  DatabaseUtility.getUtility(getDatabaseIdentifier());
+    }
+
+    /**
+     * @param jdbcUrl the JDBC url must not be <code>null</code>
+     * @return the database identifier based on the given JDBC url
+     * @since 2.11
+     */
+    public static String getDatabaseIdentifierFromJDBCUrl(final String jdbcUrl) {
+        final String[] parts = jdbcUrl.split(":");
         if ((parts.length < 2) || !"jdbc".equals(parts[0])) {
-            throw new IllegalArgumentException("Invalid JDBC URL in settings: " + m_jdbcUrl);
+            throw new IllegalArgumentException("Invalid JDBC URL in settings: " + jdbcUrl);
         }
-        return  DatabaseUtility.getUtility(parts[1]);
+        return parts[1];
     }
 }

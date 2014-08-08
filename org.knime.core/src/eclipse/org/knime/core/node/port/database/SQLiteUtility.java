@@ -81,6 +81,17 @@ public class SQLiteUtility extends DatabaseUtility {
 
     private static final StatementManipulator MANIPULATOR = new SQLiteStatementManipulator();
 
+    /**The unique database identifier.*/
+    static final String DATABASE_IDENTIFIER = "sqlite";
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDatabaseIdentifier() {
+        return DATABASE_IDENTIFIER;
+    }
+
     /**
      * {@inheritDoc}
      */

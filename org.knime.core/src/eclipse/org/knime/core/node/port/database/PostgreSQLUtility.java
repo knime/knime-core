@@ -82,6 +82,17 @@ public class PostgreSQLUtility extends DatabaseUtility {
 
     private static final StatementManipulator MANIPULATOR = new PostgreSQLStatementManipulator();
 
+    /**The unique database identifier.*/
+    static final String DATABASE_IDENTIFIER = "postgresql";
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDatabaseIdentifier() {
+        return DATABASE_IDENTIFIER;
+    }
+
     /**
      * {@inheritDoc}
      */

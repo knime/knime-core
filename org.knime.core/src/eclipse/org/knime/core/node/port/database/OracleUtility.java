@@ -86,6 +86,17 @@ public class OracleUtility extends DatabaseUtility {
 
     private static final StatementManipulator MANIPULATOR = new OracleStatementManipulator();
 
+    /**The unique database identifier.*/
+    static final String DATABASE_IDENTIFIER = "oracle";
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDatabaseIdentifier() {
+        return DATABASE_IDENTIFIER;
+    }
+
     /**
      * {@inheritDoc}
      */

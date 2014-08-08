@@ -44,46 +44,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   17.06.2014 (thor): created
+ *   03.08.2014 (koetter): created
  */
-package org.knime.core.node.port.database;
+package org.knime.core.node.port.database.aggregation;
 
+import java.util.Comparator;
 
 /**
- * Database utility for MS SQL Server.
- *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 2.10
+ * Compares two {@link DBAggregationFunction}s based on their name.
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @since 2.11
  */
-public class SQLServerUtility extends DatabaseUtility {
-    private static class SQLServerStatementManipulator extends StatementManipulator {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String limitRows(final String sql, final long count) {
-            return "SELECT TOP " + count + " * FROM (" + sql + ") " + getTempTableName();
+public final class DBAggregationFunctionNameComparator implements Comparator<DBAggregationFunction> {
+
+    /**Descending order comparator.*/
+    public static final DBAggregationFunctionNameComparator DESC = new DBAggregationFunctionNameComparator(-1);
+    /**Ascending order comparator.*/
+    public static final DBAggregationFunctionNameComparator ASC = new DBAggregationFunctionNameComparator(1);
+
+    private final int m_ascending;
+
+    private DBAggregationFunctionNameComparator(final int manipulator) {
+        m_ascending = manipulator;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int compare(final DBAggregationFunction o1, final DBAggregationFunction o2) {
+        if (o1 == o2) {
+            return 0;
         }
+        if (o1 == null) {
+            return 1 * m_ascending;
+        }
+        if (o2 == null) {
+            return -1 * m_ascending;
+        }
+        return o1.getName().compareTo(o2.getName()) * m_ascending;
     }
 
-    private static final StatementManipulator MANIPULATOR = new SQLServerStatementManipulator();
-
-    /**The unique database identifier.*/
-    static final String DATABASE_IDENTIFIER = "sqlserver";
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDatabaseIdentifier() {
-        return DATABASE_IDENTIFIER;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StatementManipulator getStatementManipulator() {
-        return MANIPULATOR;
-    }
 }
