@@ -62,7 +62,7 @@
          <attribute name="database" type="string" use="required">
             <annotation>
                <documentation>
-                  Identifier for the database, as used in JDBC URLs (e.g. &quot;postgresql&quot; for &quot;jdbc:postgresql:...&quot;).
+                  Identifier for the database, usually the second part of the JDBC URLs (e.g. &quot;postgresql&quot; for &quot;jdbc:postgresql:...&quot;). Needs to be identical with the {DatabaseUtility#getDatabaseIdentifier()} method.
                </documentation>
             </annotation>
          </attribute>
