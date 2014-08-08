@@ -49,6 +49,7 @@ package org.knime.workbench.repository.view;
 
 import java.util.Arrays;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.ControlContribution;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
@@ -56,21 +57,22 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 
 /**
- * Contribution Item in der RepositoryView. This registers a
- * <code>RepositoryViewFilter</code> on the viewer, that is able to filter
- * rquested nodes.
+ * Contribution Item within the RepositoryView. This registers a <code>RepositoryViewFilter</code> on the viewer, that is
+ * able to filter requested nodes.
  *
  * @see RepositoryViewFilter
  *
  * @author Florian Georg, University of Konstanz
  */
-public class FilterViewContributionItem extends ControlContribution implements
-        KeyListener {
+public class FilterViewContributionItem extends ControlContribution implements KeyListener {
     private final TreeViewer m_viewer;
 
     private Combo m_combo;
@@ -79,15 +81,16 @@ public class FilterViewContributionItem extends ControlContribution implements
 
     private final boolean m_liveUpdate;
 
+    private static final boolean IS_OS_WINDOWS = Platform.OS_WIN32.equals(Platform.getOS());
+
     /**
      * Creates the contribution item.
      *
      * @param viewer The viewer.
      * @param filter The filter to use.
      */
-    public FilterViewContributionItem(final TreeViewer viewer,
-            final TextualViewFilter filter) {
-       this(viewer, filter, true);
+    public FilterViewContributionItem(final TreeViewer viewer, final TextualViewFilter filter) {
+        this(viewer, filter, true);
     }
 
     /**
@@ -95,12 +98,11 @@ public class FilterViewContributionItem extends ControlContribution implements
      *
      * @param viewer The viewer.
      * @param filter The filter to use.
-     * @param liveUpdate Set to true if the filter should be updated on every
-     *      key pressed. If false, it is only updated on pressing enter.
+     * @param liveUpdate Set to true if the filter should be updated on every key pressed. If false, it is only updated
+     *            on pressing enter.
      *
      */
-    public FilterViewContributionItem(final TreeViewer viewer,
-            final TextualViewFilter filter, final boolean liveUpdate) {
+    public FilterViewContributionItem(final TreeViewer viewer, final TextualViewFilter filter, final boolean liveUpdate) {
         super("org.knime.workbench.repository.view.FilterViewContributionItem");
         m_viewer = viewer;
         m_filter = filter;
@@ -162,8 +164,7 @@ public class FilterViewContributionItem extends ControlContribution implements
         boolean update = m_liveUpdate;
 
         if (e.character == SWT.CR) {
-            if ((str.length() > 0)
-                    && (!Arrays.asList(m_combo.getItems()).contains(str))) {
+            if ((str.length() > 0) && (!Arrays.asList(m_combo.getItems()).contains(str))) {
                 m_combo.add(str, 0);
                 m_combo.select(0);
             }
@@ -174,6 +175,17 @@ public class FilterViewContributionItem extends ControlContribution implements
             update = true;
         }
 
+
+        Point backup = null;
+
+        if (IS_OS_WINDOWS) {
+            Rectangle bounds = m_viewer.getTree().getParent().getShell().getBounds();
+            // Bug 2809 -
+            // on windows the search is much slower if the cursor is within the KNIME window.
+            // so we just set it somewhere outside and restore it afterwards
+            backup = Display.getCurrent().getCursorLocation();
+            Display.getCurrent().setCursorLocation(new Point(bounds.x - 2, bounds.y - 2));
+        }
         m_viewer.getControl().setRedraw(false);
         try {
             if (str.length() == 0) {
@@ -190,6 +202,9 @@ public class FilterViewContributionItem extends ControlContribution implements
                 }
             }
         } finally {
+            if (backup != null) {
+                Display.getCurrent().setCursorLocation(backup);
+            }
             m_viewer.getControl().setRedraw(true);
         }
     }
