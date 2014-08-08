@@ -115,19 +115,13 @@ final class DBUpdateNodeModel extends NodeModel {
             throws InvalidSettingsException {
         DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
 
-        // check table name
-        if ((m_tableName == null) || m_tableName.trim().isEmpty()) {
-            throw new InvalidSettingsException(
-                "Configure node and enter a valid table name.");
-        }
-
         // check optional incoming connection
         if ((inSpecs.length > 1) && (inSpecs[1] instanceof DatabaseConnectionPortObjectSpec)) {
             DatabaseConnectionSettings connSettings =
-                ((DatabaseConnectionPortObjectSpec)inSpecs[1]).getConnectionSettings(getCredentialsProvider());
+                    ((DatabaseConnectionPortObjectSpec)inSpecs[1]).getConnectionSettings(getCredentialsProvider());
 
             if ((connSettings.getJDBCUrl() == null) || connSettings.getJDBCUrl().isEmpty()
-                || (connSettings.getDriver() == null) || connSettings.getDriver().isEmpty()) {
+                    || (connSettings.getDriver() == null) || connSettings.getDriver().isEmpty()) {
                 throw new InvalidSettingsException("No valid database connection provided via second input port");
             }
 
@@ -140,13 +134,19 @@ final class DBUpdateNodeModel extends NodeModel {
             }
         }
 
+        // check table name
+        if ((m_tableName == null) || m_tableName.trim().isEmpty()) {
+            throw new InvalidSettingsException(
+                "Configure node and enter a valid table name.");
+        }
+
         // check SET and WHERE for overlapping columns
-        final List<String> setIncludes = new ArrayList<String>(
+        final List<String> setIncludes = new ArrayList<>(
                 Arrays.asList(m_configSET.applyTo(tableSpec).getIncludes()));
         if (setIncludes.isEmpty()) {
             throw new InvalidSettingsException("No SET column selected.");
         }
-        final List<String> whereIncludes = new ArrayList<String>(
+        final List<String> whereIncludes = new ArrayList<>(
                 Arrays.asList(m_configWHERE.applyTo(tableSpec).getIncludes()));
         if (whereIncludes.isEmpty()) {
             throw new InvalidSettingsException("No WHERE column selected.");

@@ -258,6 +258,23 @@ final class DBWriterNodeModel extends NodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
+        // check optional incoming connection
+        if ((inSpecs.length > 1) && (inSpecs[1] instanceof DatabaseConnectionPortObjectSpec)) {
+            DatabaseConnectionSettings connSettings =
+                    ((DatabaseConnectionPortObjectSpec)inSpecs[1]).getConnectionSettings(getCredentialsProvider());
+
+            if ((connSettings.getJDBCUrl() == null) || connSettings.getJDBCUrl().isEmpty()
+                    || (connSettings.getDriver() == null) || connSettings.getDriver().isEmpty()) {
+                throw new InvalidSettingsException("No valid database connection provided via second input port");
+            }
+            if (!connSettings.getUtility().supportsInsert()) {
+                throw new InvalidSettingsException("Connected database does not support insert operations");
+            }
+        } else {
+            if (!m_conn.getUtility().supportsInsert()) {
+                throw new InvalidSettingsException("Selected database does not support insert operations");
+            }
+        }
 
         // check table name
         if ((m_tableName == null) || m_tableName.trim().isEmpty()) {
@@ -270,23 +287,6 @@ final class DBWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException("No columns in input data.");
         }
 
-        // check optional incoming connection
-        if ((inSpecs.length > 1) && (inSpecs[1] instanceof DatabaseConnectionPortObjectSpec)) {
-            DatabaseConnectionSettings connSettings =
-                ((DatabaseConnectionPortObjectSpec)inSpecs[1]).getConnectionSettings(getCredentialsProvider());
-
-            if ((connSettings.getJDBCUrl() == null) || connSettings.getJDBCUrl().isEmpty()
-                || (connSettings.getDriver() == null) || connSettings.getDriver().isEmpty()) {
-                throw new InvalidSettingsException("No valid database connection provided via second input port");
-            }
-            if (!connSettings.getUtility().supportsInsert()) {
-                throw new InvalidSettingsException("Connected database does not support insert operations");
-            }
-        } else {
-            if (!m_conn.getUtility().supportsInsert()) {
-                throw new InvalidSettingsException("Selected database does not support insert operations");
-            }
-        }
 
 
         // copy map to ensure only columns which are with the data
