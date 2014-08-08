@@ -70,7 +70,9 @@ import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabaseReaderConnection;
+import org.knime.core.node.port.database.DatabaseUtility;
 import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 
 /**
  * @author Thomas Gabriel, University of Konstanz
@@ -180,8 +182,8 @@ final class DBGroupByNodeModel extends DBNodeModel {
      * @return Spec of the output database object
      * @throws InvalidSettingsException If the current settings are invalid
      */
-    private DatabasePortObjectSpec createDbOutSpec(final DatabasePortObjectSpec inSpec, final boolean checkRetrieveMetadata)
-            throws InvalidSettingsException {
+    private DatabasePortObjectSpec createDbOutSpec(final DatabasePortObjectSpec inSpec,
+        final boolean checkRetrieveMetadata) throws InvalidSettingsException {
         if (m_groupByCols.getIncludeList().isEmpty() && m_aggregatedColumns.length == 0) {
             throw new InvalidSettingsException("Please select at least one group or aggregation column");
         }
@@ -193,7 +195,7 @@ final class DBGroupByNodeModel extends DBNodeModel {
             return null;
         }
 
-        DataTableSpec tableSpec = createOutSpec(inSpec.getDataTableSpec(), connection, newQuery);
+        DataTableSpec tableSpec = createOutSpec(inSpec.getDataTableSpec(), connection, newQuery, checkRetrieveMetadata);
         return new DatabasePortObjectSpec(tableSpec, connection.createConnectionModel());
     }
 
@@ -249,11 +251,12 @@ final class DBGroupByNodeModel extends DBNodeModel {
 
     /**
      * @param inSpec Spec of the input table
+     * @param checkRetrieveMetadata
      * @return Spec of the output table
      * @throws InvalidSettingsException if settings do not match the input specification
      */
     private DataTableSpec createOutSpec(final DataTableSpec inSpec, final DatabaseConnectionSettings settings,
-        final String query) throws InvalidSettingsException {
+        final String query, final boolean ignoreExceptions) throws InvalidSettingsException {
         // Try get spec from database
         try {
             DatabaseQueryConnectionSettings querySettings = new DatabaseQueryConnectionSettings(settings, query);
@@ -262,9 +265,12 @@ final class DBGroupByNodeModel extends DBNodeModel {
         } catch (SQLException e) {
             NodeLogger.getLogger(getClass()).info("Could not determine table spec from database, trying to guess now",
                 e);
+            if (!ignoreExceptions) {
+                throw new InvalidSettingsException("Error in automatically build sql statement: " + e.getMessage());
+            }
             // Otherwise guess spec
         }
-        List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>();
+        List<DataColumnSpec> colSpecs = new ArrayList<>();
         // Add all group by columns
         for (String col : m_groupByCols.getIncludeList()) {
             colSpecs.add(inSpec.getColumnSpec(col));
@@ -277,9 +283,10 @@ final class DBGroupByNodeModel extends DBNodeModel {
             if (inSpec.getColumnSpec(col) == null) {
                 throw new InvalidSettingsException("Column '" + col + "' in aggregation " + method + " does not exist");
             }
-
+            final DatabaseUtility databaseUtility = settings.getUtility();
+            final DBAggregationFunction function = databaseUtility.getAggregationFunction(method);
             // Get type of column after aggregation
-            DataType type = DBGroupByAggregationMethod.valueOf(method).getType(inSpec.getColumnSpec(col).getType());
+            DataType type = function.getType(inSpec.getColumnSpec(col).getType());
             colSpecs.add(new DataColumnSpecCreator(generateColumnName(col, method), type).createSpec());
         }
         return new DataTableSpec(colSpecs.toArray(new DataColumnSpec[colSpecs.size()]));

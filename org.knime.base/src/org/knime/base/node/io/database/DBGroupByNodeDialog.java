@@ -198,14 +198,14 @@ final class DBGroupByNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
-        DatabasePortObjectSpec dbspec = (DatabasePortObjectSpec)specs[0];
+        final DatabasePortObjectSpec dbspec = (DatabasePortObjectSpec)specs[0];
         final DataTableSpec spec = dbspec.getDataTableSpec();
         try {
             m_columnNamePolicy.loadSettingsFrom(settings);
         } catch (final InvalidSettingsException e) {
             throw new NotConfigurableException(e.getMessage());
         }
-        m_aggregationPanel.loadSettingsFrom(settings, spec);
+        m_aggregationPanel.loadSettingsFrom(settings, dbspec, spec);
         m_groupCol.loadSettingsFrom(settings, new DataTableSpec[]{spec});
         columnsChanged();
     }

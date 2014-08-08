@@ -54,6 +54,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
@@ -77,6 +79,11 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.database.DatabasePortObjectSpec;
+import org.knime.core.node.port.database.DatabaseUtility;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionNameComparator;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 import org.knime.core.util.Pair;
 
@@ -93,15 +100,17 @@ final class DBGroupByAggregationPanel extends JPanel {
 
     private static final int METHOD_INDEX = 1;
 
-    private JList<DataColumnSpec> m_columns = new JList<DataColumnSpec>();
+    private JList<DataColumnSpec> m_columns = new JList<>();
 
-    private DefaultListModel<DataColumnSpec> m_columnsModel = new DefaultListModel<DataColumnSpec>();
+    private DefaultListModel<DataColumnSpec> m_columnsModel = new DefaultListModel<>();
 
     private DataTableSpec m_spec = new DataTableSpec();
 
-    private List<String> m_excluded = new ArrayList<String>(0);
+    private List<String> m_excluded = new ArrayList<>(0);
 
     private JTable m_aggregatedColumns = new JTable();
+
+    private final JComboBox<String> m_aggregationFunctionComboBox;
 
     private DefaultTableModel m_aggregatedColumnsModel = new DefaultTableModel() {
         private static final long serialVersionUID = -2005832659273670911L;
@@ -111,17 +120,20 @@ final class DBGroupByAggregationPanel extends JPanel {
         }
     };
 
+    private DatabasePortObjectSpec m_dbspec;
+
+
     /**
      * Creates the group by aggregation panel.
+     * Use the {@link #setSupportedAggregationFunctions(Collection)}
      */
     DBGroupByAggregationPanel() {
         m_aggregatedColumns.setModel(m_aggregatedColumnsModel);
         m_aggregatedColumnsModel.addColumn("Column");
         m_aggregatedColumnsModel.addColumn("Aggregation");
-        // Make aggregation method selectable through combo box
+        m_aggregationFunctionComboBox = new JComboBox<>();
         m_aggregatedColumns.getColumnModel().getColumn(METHOD_INDEX)
-            .setCellEditor(new DefaultCellEditor(
-                new JComboBox<String>(DBGroupByAggregationMethod.getAllMethodNames())));
+            .setCellEditor(new DefaultCellEditor(m_aggregationFunctionComboBox));
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         setBorder(BorderFactory.createTitledBorder(" Aggregation settings "));
         m_columns.setModel(m_columnsModel);
@@ -149,6 +161,19 @@ final class DBGroupByAggregationPanel extends JPanel {
         add(createTableComponent());
     }
 
+
+    /**
+     * @param supportedFunctions the {@link DBAggregationFunction}s that should be displayed to the user for selection
+     */
+    private void setSupportedAggregationFunctions(final Collection<DBAggregationFunction> supportedFunctions) {
+        final DBAggregationFunction[] sortedFunctions = supportedFunctions.toArray(new DBAggregationFunction[0]);
+        Arrays.sort(sortedFunctions, DBAggregationFunctionNameComparator.ASC);
+        m_aggregationFunctionComboBox.removeAllItems();
+        for (final DBAggregationFunction function : sortedFunctions) {
+            m_aggregationFunctionComboBox.addItem(function.getName());
+        }
+    }
+
     /**
      * @param excludedColumns Columns that are excluded from the list of columns available for aggregation
      */
@@ -166,9 +191,22 @@ final class DBGroupByAggregationPanel extends JPanel {
 
     /**
      * @param settings The settings to load from
+     * @param dbspec {@link DatabasePortObjectSpec} with the database information e.g. the supported
+     * {@link DBAggregationFunction}s
      * @param spec The spec containing the available columns
+     * @throws NotConfigurableException if the connection settings cannot retrieved from the
+     * {@link DatabasePortObjectSpec}.
      */
-    void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec spec) {
+    void loadSettingsFrom(final NodeSettingsRO settings, final DatabasePortObjectSpec dbspec,
+        final DataTableSpec spec) throws NotConfigurableException {
+        m_dbspec = dbspec;
+        try {
+            final DatabaseUtility utility = m_dbspec.getConnectionSettings(null).getUtility();
+            final Collection<DBAggregationFunction> aggregationFunctions = utility.getSupportedAggregationFunctions();
+            setSupportedAggregationFunctions(aggregationFunctions);
+        } catch (final InvalidSettingsException e) {
+            throw new NotConfigurableException(e.getMessage());
+        }
         m_spec = spec;
         m_aggregatedColumnsModel.setRowCount(0);
         String[] columns = settings.getStringArray(DBGroupByNodeModel.CFG_AGGREGATED_COLUMNS, new String[0]);
@@ -184,14 +222,13 @@ final class DBGroupByAggregationPanel extends JPanel {
      * @throws InvalidSettingsException If the current settings are invalid
      */
     void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
-        List<Pair<String, String>> pairs = new ArrayList<Pair<String, String>>();
+        List<Pair<String, String>> pairs = new ArrayList<>();
         String[] columns = new String[m_aggregatedColumnsModel.getRowCount()];
         String[] methods = new String[m_aggregatedColumnsModel.getRowCount()];
         for (int i = 0; i < m_aggregatedColumnsModel.getRowCount(); i++) {
             Vector<?> row = (Vector<?>)m_aggregatedColumnsModel.getDataVector().elementAt(i);
             Pair<String, String> pair =
-                new Pair<String, String>(row.elementAt(COLUMN_INDEX).toString(),
-                        row.elementAt(METHOD_INDEX).toString());
+                    new Pair<>(row.elementAt(COLUMN_INDEX).toString(), row.elementAt(METHOD_INDEX).toString());
             if (pairs.contains(pair)) {
                 throw new InvalidSettingsException("Duplicate settings: Column " + pair.getFirst()
                     + " with aggregation method " + pair.getSecond());
@@ -217,7 +254,7 @@ final class DBGroupByAggregationPanel extends JPanel {
         List<DataColumnSpec> selections = m_columns.getSelectedValuesList();
         for (DataColumnSpec spec : selections) {
             String selection = spec.getName();
-            m_aggregatedColumnsModel.addRow(new Object[]{selection, DBGroupByAggregationMethod.AVG.name()});
+            m_aggregatedColumnsModel.addRow(new Object[]{selection, m_aggregationFunctionComboBox.getItemAt(0)});
         }
     }
 
@@ -233,7 +270,7 @@ final class DBGroupByAggregationPanel extends JPanel {
         Enumeration<DataColumnSpec> specs = m_columnsModel.elements();
         while (specs.hasMoreElements()) {
             String column = specs.nextElement().getName();
-            m_aggregatedColumnsModel.addRow(new Object[]{column, DBGroupByAggregationMethod.AVG.name()});
+            m_aggregatedColumnsModel.addRow(new Object[]{column, m_aggregationFunctionComboBox.getItemAt(0)});
         }
     }
 
@@ -329,5 +366,4 @@ final class DBGroupByAggregationPanel extends JPanel {
         pane.setBorder(BorderFactory.createTitledBorder("Aggregated columns"));
         return pane;
     }
-
 }
