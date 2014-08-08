@@ -45,7 +45,8 @@
 package org.knime.base.node.io.database;
 
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
@@ -82,6 +83,7 @@ public class DatabaseLoopingNodeDialogPane extends DBReaderDialogPane {
     /**
      * Creates a new dialog for the Database Looping node.
      */
+    @SuppressWarnings("unchecked")
     DatabaseLoopingNodeDialogPane() {
         super(true, true);
         m_columns = new DialogComponentColumnNameSelection(createColumnModel(),
@@ -92,14 +94,25 @@ public class DatabaseLoopingNodeDialogPane extends DBReaderDialogPane {
             "Append grid column");
         m_noValues = new DialogComponentNumber(
                 createNoValuesModel(), "No of Values per Query", 1);
-        JPanel southPanel = new JPanel(new GridLayout(4, 1));
-        southPanel.setBorder(BorderFactory.createTitledBorder(
-            " Loop Settings "));
-        southPanel.add(m_columns.getComponentPanel());
-        southPanel.add(m_aggregatebyRow.getComponentPanel());
-        southPanel.add(m_appendGridColumn.getComponentPanel());
-        southPanel.add(m_noValues.getComponentPanel());
-        JPanel columnPanel = super.getPanel();
+        final JPanel southPanel = new JPanel(new GridBagLayout());
+        southPanel.setBorder(BorderFactory.createTitledBorder(" Loop Settings "));
+        final GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.LINE_START;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.fill = GridBagConstraints.NONE;
+        c.gridwidth = 3;
+        c.weightx = 1;
+        southPanel.add(m_columns.getComponentPanel(), c);
+        c.weightx = 0;
+        c.gridwidth = 1;
+        c.gridy++;
+        southPanel.add(m_aggregatebyRow.getComponentPanel(), c);
+        c.gridx++;
+        southPanel.add(m_appendGridColumn.getComponentPanel(), c);
+        c.gridx++;
+        southPanel.add(m_noValues.getComponentPanel(), c);
+        final JPanel columnPanel = super.getPanel();
         columnPanel.add(southPanel, BorderLayout.SOUTH);
     }
 
