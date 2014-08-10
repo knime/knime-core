@@ -115,23 +115,25 @@ public class DatabaseUtility {
         }
         DatabaseUtility utility = UTILITY_MAP.get(dbIdentifier);
         if (utility == null) {
-            IExtensionRegistry registry = Platform.getExtensionRegistry();
-            IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
+            final IExtensionRegistry registry = Platform.getExtensionRegistry();
+            final IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
             assert point != null : "Invalid extension point id: " + EXT_POINT_ID;
-
             for (IExtension ext : point.getExtensions()) {
-                IConfigurationElement[] elements = ext.getConfigurationElements();
+                final IConfigurationElement[] elements = ext.getConfigurationElements();
                 for (IConfigurationElement utilityElement : elements) {
                     final String extensionPointDBIdentifier = utilityElement.getAttribute("database");
                     if (dbIdentifier.equals(extensionPointDBIdentifier)) {
                         try {
                             utility = (DatabaseUtility)utilityElement.createExecutableExtension("class");
-                            if (!utility.getDatabaseIdentifier().equals(dbIdentifier)) {
+                            if (utility.getDatabaseIdentifier().equals(dbIdentifier)) {
+                                break;
+                            } else {
                                 NodeLogger.getLogger(DatabaseUtility.class).error(
                                     "Extension point database identifier and database identifier of implementing class "
                                     + "are different extension point identifier: " + extensionPointDBIdentifier
                                     + " implementing class identifier: " + utility.getDatabaseIdentifier()
                                     + ". This might result in problems when fetching the DatabaseUtility class.");
+                                utility = null;
                             }
                         } catch (CoreException ex) {
                             NodeLogger.getLogger(DatabaseUtility.class).error(
@@ -141,6 +143,9 @@ public class DatabaseUtility {
                                     + ex.getMessage(), ex);
                         }
                     }
+                }
+                if (utility != null) {
+                    break;
                 }
             }
 
@@ -198,7 +203,14 @@ public class DatabaseUtility {
         }
         m_supportedAggregationFunctions = new HashMap<>(f.length);
         for (DBAggregationFunction function : f) {
-            m_supportedAggregationFunctions.put(function.getName(), function);
+            final DBAggregationFunction duplicateFunction =
+                    m_supportedAggregationFunctions.put(function.getName(), function);
+            if (duplicateFunction != null) {
+                NodeLogger.getLogger(DatabaseUtility.class).error(
+                    "Duplicate aggregation function found for name: " + function.getName()
+                    + " class 1: " + function.getClass().getName()
+                    + " class 2:" + duplicateFunction.getClass().getName());
+            }
         }
     }
 
