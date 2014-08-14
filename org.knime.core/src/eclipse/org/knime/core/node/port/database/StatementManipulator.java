@@ -107,7 +107,8 @@ public class StatementManipulator {
     }
 
     /**
-     * Quotes a column name if it contains white spaces.
+     * Quotes a column name if it contains characters that need
+     * quoting e.g. white spaces.
      *
      * @param colName the column's name
      * @return the column's name, possibly quoted
@@ -120,6 +121,19 @@ public class StatementManipulator {
             // no need to quote
             return colName;
         }
+    }
+
+    /**
+     * Replaces all characters that are not supported by the database in
+     * identifiers with supported characters.
+     *
+     * @param colName the name to convert into a valid db column name
+     * @return the given name with all characters replaced that are not
+     * supported by the database
+     * @since 2.10
+     */
+    public String getValidColumnName(final String colName) {
+        return colName;
     }
 
     /**
