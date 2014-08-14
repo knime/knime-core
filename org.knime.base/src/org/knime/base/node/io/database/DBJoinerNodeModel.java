@@ -134,6 +134,9 @@ final class DBJoinerNodeModel extends DBNodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        if (m_settings.getLeftJoinOnColumns().length < 1) {
+            throw new InvalidSettingsException("At least one pair of columns to join on has to be selected");
+        }
         return new PortObjectSpec[]{createDbOutSpec((DatabasePortObjectSpec)inSpecs[0],
             (DatabasePortObjectSpec)inSpecs[1])};
     }
@@ -153,13 +156,17 @@ final class DBJoinerNodeModel extends DBNodeModel {
         // Calculate output columns
         Pair<Map<String, String>, Map<String, String>> columnMaps =
             createOutputColumnMaps(inSpecLeft.getDataTableSpec(), inSpecRight.getDataTableSpec());
+        if (columnMaps.getFirst().size() + columnMaps.getSecond().size() < 1) {
+            throw new InvalidSettingsException("No column selected");
+        }
         // Create output query
         String newQuery =
             createQuery(connectionLeft.getQuery(), connectionRight.getQuery(), connectionLeft.getUtility()
                 .getStatementManipulator(), columnMaps);
         // Create output spec
         DataTableSpec tableSpec =
-            createOutSpec(inSpecLeft.getDataTableSpec(), inSpecRight.getDataTableSpec(), columnMaps);
+            createOutSpec(inSpecLeft.getDataTableSpec(), inSpecRight.getDataTableSpec(), columnMaps, connectionLeft
+                .getUtility().getStatementManipulator());
         DatabaseQueryConnectionSettings connection = createDBQueryConnection(inSpecLeft, newQuery);
         return new DatabasePortObjectSpec(tableSpec, connection.createConnectionModel());
     }
@@ -228,19 +235,19 @@ final class DBJoinerNodeModel extends DBNodeModel {
      * @return Spec for the data table that will be created when executing the query
      */
     private DataTableSpec createOutSpec(final DataTableSpec inSpecLeft, final DataTableSpec inSpecRight,
-        final Pair<Map<String, String>, Map<String, String>> columnMaps) {
+        final Pair<Map<String, String>, Map<String, String>> columnMaps, final StatementManipulator manipulator) {
         List<DataColumnSpec> colSpecs = new ArrayList<DataColumnSpec>();
         // Add columns from left table
         Map<String, String> leftColumns = columnMaps.getFirst();
         for (String oldName : leftColumns.keySet()) {
-            colSpecs.add(new DataColumnSpecCreator(leftColumns.get(oldName), inSpecLeft.getColumnSpec(oldName)
-                .getType()).createSpec());
+            colSpecs.add(new DataColumnSpecCreator(manipulator.getValidColumnName(leftColumns.get(oldName)), inSpecLeft
+                .getColumnSpec(oldName).getType()).createSpec());
         }
         // Add columns from right table
         Map<String, String> rightColumns = columnMaps.getSecond();
         for (String oldName : rightColumns.keySet()) {
-            colSpecs.add(new DataColumnSpecCreator(rightColumns.get(oldName), inSpecRight.getColumnSpec(oldName)
-                .getType()).createSpec());
+            colSpecs.add(new DataColumnSpecCreator(manipulator.getValidColumnName(rightColumns.get(oldName)),
+                inSpecRight.getColumnSpec(oldName).getType()).createSpec());
         }
         return new DataTableSpec(colSpecs.toArray(new DataColumnSpec[colSpecs.size()]));
     }
@@ -284,7 +291,10 @@ final class DBJoinerNodeModel extends DBNodeModel {
             leftColumnsToFilter = new ArrayList<String>(0);
         }
         // Add selected columns
-        for (String column : m_settings.getLeftColumns()) {
+        String[] selectedLeftColumns =
+            m_settings.getAllLeftColumns() ? leftSpec.getColumnNames() : getAvailableColumns(
+                m_settings.getLeftColumns(), leftSpec);
+        for (String column : selectedLeftColumns) {
             if (!leftColumnsToFilter.contains(column)) {
                 String newName = uniqueColumnName(column, leftMap.values(), rightMap.values());
                 if (newName != null) {
@@ -300,7 +310,10 @@ final class DBJoinerNodeModel extends DBNodeModel {
             rightColumnsToFilter = new ArrayList<String>(0);
         }
         // Add selected columns
-        for (String column : m_settings.getRightColumns()) {
+        String[] selectedRightColumns =
+                m_settings.getAllRightColumns() ? rightSpec.getColumnNames() : getAvailableColumns(
+                    m_settings.getRightColumns(), rightSpec);
+        for (String column : selectedRightColumns) {
             if (!rightColumnsToFilter.contains(column)) {
                 String newName = uniqueColumnName(column, leftMap.values(), rightMap.values());
                 if (newName != null) {
@@ -309,6 +322,16 @@ final class DBJoinerNodeModel extends DBNodeModel {
             }
         }
         return new Pair<Map<String, String>, Map<String, String>>(leftMap, rightMap);
+    }
+
+    private String[] getAvailableColumns(final String[] columns, final DataTableSpec spec) {
+        List<String> availableColumns = new ArrayList<String>();
+        for (String column : columns) {
+            if (spec.containsName(column)) {
+                availableColumns.add(column);
+            }
+        }
+        return availableColumns.toArray(new String[availableColumns.size()]);
     }
 
     /**
