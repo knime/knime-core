@@ -949,6 +949,8 @@ public final class Node implements NodeModelWarningListener {
         } catch (Throwable th) {
             boolean isCanceled = th instanceof CanceledExecutionException;
             isCanceled = isCanceled || th instanceof InterruptedException;
+            // TODO this can all be shortened to exec.isCanceled()?
+            isCanceled = isCanceled || exec.isCanceled();
             // writing to a buffer is done asynchronously -- if this thread
             // is interrupted while waiting for the IO thread to flush we take
             // it as a graceful exit
