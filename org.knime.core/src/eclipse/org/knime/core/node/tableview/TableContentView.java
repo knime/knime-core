@@ -581,58 +581,9 @@ public class TableContentView extends JTable {
     }
 
     /** {@inheritDoc} */
-    @SuppressWarnings("serial")
     @Override
     protected JTableHeader createDefaultTableHeader() {
-        return new JTableHeader(columnModel) {
-            /** {@inheritDoc} */
-            @Override
-            public Dimension getPreferredSize() {
-                // get preferred width for all columns and if there is any one that needs more than allocated
-                // space add at most two more "rows" to the column header
-                Dimension d = super.getPreferredSize();
-                if (isPreferredSizeSet()) {
-                    return d;
-                }
-                TableCellRenderer r = getDefaultRenderer();
-                TableColumnModel cM = getColumnModel();
-                int prefHeight = d.height;
-                if (r instanceof ColumnHeaderRenderer && ((ColumnHeaderRenderer)r).isWrapHeader()) {
-                    ColumnHeaderRenderer chr = (ColumnHeaderRenderer)r;
-                    for (Enumeration<TableColumn> enu = cM.getColumns(); enu.hasMoreElements();) {
-                        TableColumn tc = enu.nextElement();
-                        int tcPreferredWidth = tc.getWidth(); // includes icon
-                        // this is what tc.sizeWidthToFit() does, too
-                        int col = TableContentView.this.convertColumnIndexToView(tc.getModelIndex());
-                        Component c = chr.getTableCellRendererComponent(TableContentView.this,
-                                            tc.getHeaderValue(), false, false, 0, col);
-                        Dimension prefSize = c.getPreferredSize();
-                        int prefTextWidth = prefSize.width; // includes icon
-                        if (c == chr) { // almost surely, unless overwritten
-                            int prefTextWidth2 = chr.getPreferredTextWidth();
-                            if (prefTextWidth2 > 0) {       // correct by icon space
-                                int iconWidth = prefSize.width - prefTextWidth2;
-                                prefTextWidth = prefTextWidth2;
-                                tcPreferredWidth -= iconWidth;
-                            }
-                        }
-                        int tcBestHeight;
-                        if (prefTextWidth > 2 * tcPreferredWidth) {
-                            tcBestHeight = 3 * d.height;
-                        } else if (prefTextWidth > tcPreferredWidth) {
-                            tcBestHeight = 2 * d.height;
-                        } else {
-                            tcBestHeight = d.height;
-                        }
-                        prefHeight = Math.max(prefHeight, Math.min(80, tcBestHeight));
-                    }
-                }
-                if (prefHeight != d.height) {
-                    return new Dimension(d.width, prefHeight);
-                }
-                return d;
-            }
-        };
+        return new TableContentViewTableHeader(this, columnModel);
     }
 
     /** Method being invoked when the table is (re-)constructed to get
