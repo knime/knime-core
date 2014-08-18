@@ -80,21 +80,18 @@ import org.knime.workbench.editor2.actions.CheckUpdateMetaNodeLinkAllAction;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
-
 /**
- * A runnable which is used by the {@link WorkflowEditor} to load a workflow
- * with a progress bar. NOTE: As the {@link UIManager} holds a reference to this
- * runnable an own class file is necessary such that all references to the
- * created workflow manager can be deleted, otherwise the manager can not be
- * deleted later and the memory can not be freed.
+ * A runnable which is used by the {@link WorkflowEditor} to load a workflow with a progress bar. NOTE: As the
+ * {@link UIManager} holds a reference to this runnable an own class file is necessary such that all references to the
+ * created workflow manager can be deleted, otherwise the manager can not be deleted later and the memory can not be
+ * freed.
  *
  * @author Christoph Sieb, University of Konstanz
  * @author Fabian Dill, University of Konstanz
  */
 class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(LoadWorkflowRunnable.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(LoadWorkflowRunnable.class);
 
     private WorkflowEditor m_editor;
 
@@ -122,8 +119,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
     /**
      *
-     * @return the throwable which was thrown during the loading of the workflow
-     * or null, if no throwable was thrown
+     * @return the throwable which was thrown during the loading of the workflow or null, if no throwable was thrown
      */
     Throwable getThrowable() {
         return m_throwable;
@@ -146,10 +142,8 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
         try {
             // create progress monitor
-            ProgressHandler progressHandler = new ProgressHandler(pm, 101,
-                    "Loading workflow...");
-            final CheckCancelNodeProgressMonitor progressMonitor
-                = new CheckCancelNodeProgressMonitor(pm);
+            ProgressHandler progressHandler = new ProgressHandler(pm, 101, "Loading workflow...");
+            final CheckCancelNodeProgressMonitor progressMonitor = new CheckCancelNodeProgressMonitor(pm);
             progressMonitor.addProgressListener(progressHandler);
 
             File workflowDirectory = m_workflowFile.getParentFile();
@@ -157,8 +151,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             GUIWorkflowLoadHelper loadHelper =
                 new GUIWorkflowLoadHelper(d, workflowDirectory.getName(), workflowDirectory, m_mountpointRoot);
             final WorkflowLoadResult result =
-                WorkflowManager.loadProject(workflowDirectory,
-                    new ExecutionMonitor(progressMonitor), loadHelper);
+                WorkflowManager.loadProject(workflowDirectory, new ExecutionMonitor(progressMonitor), loadHelper);
             final WorkflowManager wm = result.getWorkflowManager();
             m_editor.setWorkflowManager(wm);
             pm.subTask("Finished.");
@@ -167,32 +160,27 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                 m_editor.markDirty();
             }
 
-            final IStatus status = createStatus(result,
-                    !result.getGUIMustReportDataLoadErrors());
+            final IStatus status = createStatus(result, !result.getGUIMustReportDataLoadErrors());
             final String message;
             switch (status.getSeverity()) {
-            case IStatus.OK:
-                message = "No problems during load.";
-                break;
-            case IStatus.WARNING:
-                message = "Warnings during load";
-                logPreseveLineBreaks("Warnings during load: "
-                        + result.getFilteredError(
-                                "", LoadResultEntryType.Warning), false);
-                break;
-            default:
-                message = "Errors during load";
-                logPreseveLineBreaks("Errors during load: "
-                        + result.getFilteredError(
-                                "", LoadResultEntryType.Warning), true);
+                case IStatus.OK:
+                    message = "No problems during load.";
+                    break;
+                case IStatus.WARNING:
+                    message = "Warnings during load";
+                    logPreseveLineBreaks(
+                        "Warnings during load: " + result.getFilteredError("", LoadResultEntryType.Warning), false);
+                    break;
+                default:
+                    message = "Errors during load";
+                    logPreseveLineBreaks(
+                        "Errors during load: " + result.getFilteredError("", LoadResultEntryType.Warning), true);
             }
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
                     // will not open if status is OK.
-                    ErrorDialog.openError(
-                            Display.getDefault().getActiveShell(),
-                            "Workflow Load", message, status);
+                    ErrorDialog.openError(Display.getDefault().getActiveShell(), "Workflow Load", message, status);
                 }
             });
             final List<NodeID> linkedMNs = wm.getLinkedMetaNodes(true);
@@ -201,8 +189,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                 m_editor.addAfterOpenRunnable(new Runnable() {
                     @Override
                     public void run() {
-                        postLoadCheckForMetaNodeUpdates(
-                                editor, wm, linkedMNs);
+                        postLoadCheckForMetaNodeUpdates(editor, wm, linkedMNs);
                     };
                 });
             }
@@ -219,22 +206,17 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                 // workflow
                 createEmptyWorkflow = true;
             } else {
-                LOGGER.error("Could not load workflow from: "
-                        + m_workflowFile.getName(), ioe);
+                LOGGER.error("Could not load workflow from: " + m_workflowFile.getName(), ioe);
             }
         } catch (InvalidSettingsException ise) {
-            LOGGER.error("Could not load workflow from: "
-                    + m_workflowFile.getName(), ise);
+            LOGGER.error("Could not load workflow from: " + m_workflowFile.getName(), ise);
             m_throwable = ise;
         } catch (UnsupportedWorkflowVersionException uve) {
-            m_loadingCanceledMessage =
-                "Canceled workflow load due to incompatible version";
+            m_loadingCanceledMessage = "Canceled workflow load due to incompatible version";
             LOGGER.info(m_loadingCanceledMessage, uve);
             m_editor.setWorkflowManager(null);
         } catch (CanceledExecutionException cee) {
-            m_loadingCanceledMessage =
-                "Canceled loading workflow: "
-                + m_workflowFile.getParentFile().getName();
+            m_loadingCanceledMessage = "Canceled loading workflow: " + m_workflowFile.getParentFile().getName();
             LOGGER.info(m_loadingCanceledMessage, cee);
             m_editor.setWorkflowManager(null);
         } catch (LockFailedException lfe) {
@@ -262,8 +244,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                 fac.setMountpointRoot(m_mountpointRoot);
                 creationHelper.setWorkflowContext(fac.createContext());
 
-                m_editor.setWorkflowManager(WorkflowManager.ROOT
-                        .createAndAddProject(name, creationHelper));
+                m_editor.setWorkflowManager(WorkflowManager.ROOT.createAndAddProject(name, creationHelper));
                 // save empty project immediately
                 // bugfix 1341 -> see WorkflowEditor line 1294
                 // (resource delta visitor movedTo)
@@ -289,14 +270,15 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
         return m_loadingCanceledMessage != null;
     }
 
-    /** @return the loadingCanceledMessage, non-null if
-     * {@link #hasLoadingBeenCanceled()}. */
+    /**
+     * @return the loadingCanceledMessage, non-null if {@link #hasLoadingBeenCanceled()}.
+     */
     public String getLoadingCanceledMessage() {
         return m_loadingCanceledMessage;
     }
 
-    static void postLoadCheckForMetaNodeUpdates(final WorkflowEditor editor,
-            final WorkflowManager parent, final List<NodeID> links) {
+    static void postLoadCheckForMetaNodeUpdates(final WorkflowEditor editor, final WorkflowManager parent,
+        final List<NodeID> links) {
         StringBuilder m = new StringBuilder("The workflow contains ");
         if (links.size() == 1) {
             m.append("one meta node link (\"");
@@ -309,8 +291,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
         final String message = m.toString();
         final AtomicBoolean result = new AtomicBoolean(false);
-        final IPreferenceStore corePrefStore =
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        final IPreferenceStore corePrefStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
         final String pKey = PreferenceConstants.P_META_NODE_LINK_UPDATE_ON_LOAD;
         String pref = corePrefStore.getString(pKey);
         boolean showInfoMsg = true;
@@ -325,17 +306,15 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                 @Override
                 public void run() {
                     Shell activeShell = display.getActiveShell();
-                    MessageDialogWithToggle dlg = MessageDialogWithToggle.
-                        openYesNoCancelQuestion(activeShell,
-                                "Meta Node Link Update", message,
-                                "Remember my decision", false, corePrefStore,
-                                pKey);
+                    MessageDialogWithToggle dlg =
+                        MessageDialogWithToggle.openYesNoCancelQuestion(activeShell, "Meta Node Link Update", message,
+                            "Remember my decision", false, corePrefStore, pKey);
                     switch (dlg.getReturnCode()) {
-                    case IDialogConstants.YES_ID:
-                        result.set(true);
-                        break;
-                    default:
-                        result.set(false);
+                        case IDialogConstants.YES_ID:
+                            result.set(true);
+                            break;
+                        default:
+                            result.set(false);
                     }
                 }
             });
@@ -346,4 +325,3 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
     }
 
 }
-
