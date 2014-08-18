@@ -256,7 +256,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                 try {
                     NodeSettingsRO subSettings = settings.getNodeSettings(Integer.toString(e.getKey().getIndex()));
                     valueConfig.loadValueInDialog(subSettings);
-                    QuickFormConfigurationPanel value = (QuickFormConfigurationPanel)e.getValue();
+                    QuickFormConfigurationPanel value = m_quickFormInputNodePanels.get(e.getKey());
                     value.loadSettings(valueConfig);
                 } catch (InvalidSettingsException ise) {
                     // no op
