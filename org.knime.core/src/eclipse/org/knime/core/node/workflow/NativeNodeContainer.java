@@ -383,6 +383,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
             switch (getInternalState()) {
             case EXECUTED_QUEUED:
             case CONFIGURED_QUEUED:
+                IWriteFileStoreHandler fsh = initFileStore(getParent().getFileStoreHandlerRepository());
+                m_node.setFileStoreHandler(fsh);
                 setInternalState(InternalNodeContainerState.PREEXECUTE);
                 return true;
             default:
@@ -435,6 +437,40 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 throwIllegalStateException();
             }
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void mimicRemotePreExecute() {
+        synchronized (m_nodeMutex) {
+            getProgressMonitor().reset();
+            switch (getInternalState()) {
+            case EXECUTED_MARKEDFOREXEC:
+            case CONFIGURED_MARKEDFOREXEC:
+            case UNCONFIGURED_MARKEDFOREXEC:
+                IWriteFileStoreHandler fsh = initFileStore(getParent().getFileStoreHandlerRepository());
+                m_node.setFileStoreHandler(fsh);
+                setInternalState(InternalNodeContainerState.PREEXECUTE);
+                break;
+            case EXECUTED:
+                // ignore executed nodes
+                break;
+            default:
+                throwIllegalStateException();
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    void mimicRemoteExecuted(final NodeContainerExecutionStatus status) {
+        synchronized (m_nodeMutex) {
+            super.mimicRemoteExecuted(status);
+            setExecutionEnvironment(null);
+        }
+
     }
 
     /** {@inheritDoc} */
@@ -494,12 +530,14 @@ public class NativeNodeContainer extends SingleNodeContainer {
     /** {@inheritDoc} */
     @Override
     public NodeContainerExecutionStatus performExecuteNode(final PortObject[] inObjects) {
-        IWriteFileStoreHandler fsh = initFileStore(getParent().getFileStoreHandlerRepository());
-        m_node.setFileStoreHandler(fsh);
+        IFileStoreHandler fsh = m_node.getFileStoreHandler();
+
         // this call requires the FSH to be set on the node (ideally would take
         // it as an argument but createExecutionContext became API unfortunately)
         ExecutionContext ec = createExecutionContext();
-        fsh.open(ec);
+        if (fsh instanceof IWriteFileStoreHandler)  {
+            ((IWriteFileStoreHandler)fsh).open(ec);
+        }
         ExecutionEnvironment ev = getExecutionEnvironment();
 
         boolean success;

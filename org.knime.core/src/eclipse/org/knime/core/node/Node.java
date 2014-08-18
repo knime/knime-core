@@ -321,6 +321,7 @@ public final class Node implements NodeModelWarningListener {
      */
     void load(final NodePersistor loader, final ExecutionMonitor exec,
             final LoadResult loadResult) throws CanceledExecutionException {
+        m_fileStoreHandler = loader.getFileStoreHandler();
         loadDataAndInternals(loader, exec, loadResult);
         exec.setProgress(1.0);
     }
@@ -421,7 +422,6 @@ public final class Node implements NodeModelWarningListener {
 
         boolean hasContent = loader.hasContent();
         m_model.setHasContent(hasContent);
-        m_fileStoreHandler = loader.getFileStoreHandler();
         for (int i = 0; i < getNrOutPorts(); i++) {
             PortObjectSpec spec = loader.getPortObjectSpec(i);
             if (checkPortObjectSpecClass(spec, i)) {

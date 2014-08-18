@@ -4201,6 +4201,27 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
+    boolean performStateTransitionQUEUED() {
+        assert !isLocalWFM() : "Not to be called on workflow manager running locally (expected different job manager)";
+        assert Thread.holdsLock(m_nodeMutex);
+        // switch state from marked to queued
+        switch (getInternalState()) {
+        // also allow unconfigured-mark as there may be configured_marked nodes also
+        case UNCONFIGURED_MARKEDFOREXEC:
+        case CONFIGURED_MARKEDFOREXEC:
+            setInternalState(InternalNodeContainerState.CONFIGURED_QUEUED);
+            break;
+        case EXECUTED_MARKEDFOREXEC:
+            setInternalState(InternalNodeContainerState.EXECUTED_QUEUED);
+            break;
+        default:
+            throwIllegalStateException();
+        }
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     boolean performStateTransitionPREEXECUTE() {
         assert !isLocalWFM() : "Execution of meta node not allowed"
             + " for locally executing (sub-)flows";
@@ -4788,7 +4809,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // this is a remotely executed workflow, cancel its execution
                 // and let the execution job take care of a state updates of
                 // the contained nodes.
-                assert !isLocalWFM();
                 job.cancel();
             } else {
                 for (NodeContainer nc : m_workflow.getNodeValues()) {
