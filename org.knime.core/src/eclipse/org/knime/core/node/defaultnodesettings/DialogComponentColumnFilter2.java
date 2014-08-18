@@ -116,15 +116,13 @@ public class DialogComponentColumnFilter2 extends DialogComponent {
         DataColumnSpecFilterConfiguration modelConfig = model.getFilterConfiguration();
         DataColumnSpecFilterConfiguration panelConfig = modelConfig.clone();
         m_colFilterPanel.saveConfiguration(panelConfig);
-        if (!modelConfig.equals(panelConfig)) {
-            // only update if out of sync
-            m_componentUpdateOngoing = true;
-            try {
-                // causes events to be fired and recursive calls, prevent updates
-                m_colFilterPanel.loadConfiguration(modelConfig, (DataTableSpec)getLastTableSpec(m_inPortIdx));
-            } finally {
-                m_componentUpdateOngoing = false;
-            }
+        // bug 4681, we always load since the specs could have changed
+        m_componentUpdateOngoing = true;
+        try {
+            // causes events to be fired and recursive calls, prevent updates
+            m_colFilterPanel.loadConfiguration(modelConfig, (DataTableSpec)getLastTableSpec(m_inPortIdx));
+        } finally {
+            m_componentUpdateOngoing = false;
         }
 
         m_colFilterPanel.setEnabled(model.isEnabled());
