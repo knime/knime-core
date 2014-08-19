@@ -383,8 +383,6 @@ public class NativeNodeContainer extends SingleNodeContainer {
             switch (getInternalState()) {
             case EXECUTED_QUEUED:
             case CONFIGURED_QUEUED:
-                IWriteFileStoreHandler fsh = initFileStore(getParent().getFileStoreHandlerRepository());
-                m_node.setFileStoreHandler(fsh);
                 setInternalState(InternalNodeContainerState.PREEXECUTE);
                 return true;
             default:
@@ -415,6 +413,8 @@ public class NativeNodeContainer extends SingleNodeContainer {
                 } else {
                     setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
                 }
+                IWriteFileStoreHandler fsh = initFileStore(getParent().getFileStoreHandlerRepository());
+                m_node.setFileStoreHandler(fsh);
                 break;
             default:
                 throwIllegalStateException();
@@ -448,6 +448,9 @@ public class NativeNodeContainer extends SingleNodeContainer {
             case EXECUTED_MARKEDFOREXEC:
             case CONFIGURED_MARKEDFOREXEC:
             case UNCONFIGURED_MARKEDFOREXEC:
+                // ideally opening the file store handler would be done in "mimicRemoteExecuting" (consistently to
+                // performStateTransitionEXECUTING) but remote execution isn't split up that nicely - there is only
+                // pre-execute and executed
                 IWriteFileStoreHandler fsh = initFileStore(getParent().getFileStoreHandlerRepository());
                 m_node.setFileStoreHandler(fsh);
                 setInternalState(InternalNodeContainerState.PREEXECUTE);
