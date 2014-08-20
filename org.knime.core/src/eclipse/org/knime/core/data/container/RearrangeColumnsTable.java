@@ -74,6 +74,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
@@ -324,6 +325,7 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
             }
             newColSpecsList.add(s.getColSpec());
         }
+        initProcessing(newColsProducerMapping, context);
         final int newColCount = newColSpecsList.size();
         DataColumnSpec[] newColSpecs = newColSpecsList.toArray(new DataColumnSpec[newColSpecsList.size()]);
         ContainerTable appendTable;
@@ -380,14 +382,29 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
         return new RearrangeColumnsTable(table, includesIndex, isFromRefTable, spec, appendTable);
     }
 
+    /** Set a file store factory on the {@link AbstractCellFactory}.
+     * See {@link AbstractCellFactory#getFileStoreFactory()} for details.
+     * @param newColumnFactoryList To work on.
+     * @param ctx Non-null context to init {@link FileStoreFactory}.
+     * @since 2.11
+     */
+    static void initProcessing(final NewColumnsProducerMapping newColumnFactoryList, final ExecutionContext ctx) {
+        FileStoreFactory fsFactory = FileStoreFactory.createWorkflowFileStoreFactory(ctx);
+        for (CellFactory uniqueFactory : newColumnFactoryList.getUniqueCellFactoryMap().keySet()) {
+            if (uniqueFactory instanceof AbstractCellFactory) {
+                ((AbstractCellFactory)uniqueFactory).setFileStoreFactory(fsFactory);
+            }
+        }
+    }
     /**
-     * Calls {@link AbstractCellFactory#afterProcessing()} on all unique factories in the argument.
-     *
-     * @param newColumnFactoryList
+     * Calls {@link AbstractCellFactory#afterProcessing()} and
+     * {@link AbstractCellFactory#setFileStoreFactory(FileStoreFactory)} on all unique factories in the argument.
+     * @param newColumnFactoryList ...
      */
     static void finishProcessing(final NewColumnsProducerMapping newColumnFactoryList) {
         for (CellFactory uniqueFactory : newColumnFactoryList.getUniqueCellFactoryMap().keySet()) {
             if (uniqueFactory instanceof AbstractCellFactory) {
+                ((AbstractCellFactory)uniqueFactory).setFileStoreFactory(null);
                 ((AbstractCellFactory)uniqueFactory).afterProcessing();
             }
         }
@@ -485,9 +502,8 @@ public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTabl
             List<Pair<Integer, Integer>> list = e.getValue();
             DataCell[] fromFac = factory.getCells(row);
             if (fromFac.length != list.size()) {
-                String error =
-                    String.format("New cells array length conflict: expected %d, actual %d (class %s)", list.size(),
-                        fromFac.length, factory.getClass().getName());
+                String error = String.format("New cells array length conflict: expected %d, actual %d (class %s)",
+                    list.size(), fromFac.length, factory.getClass().getName());
                 if (fromFac.length < list.size()) {
                     throw new IndexOutOfBoundsException(error);
                 } else {

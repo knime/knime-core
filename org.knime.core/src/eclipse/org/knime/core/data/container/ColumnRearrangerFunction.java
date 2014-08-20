@@ -52,6 +52,7 @@ import java.util.Vector;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
 import org.knime.core.data.container.RearrangeColumnsTable.NewColumnsProducerMapping;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.streamable.StreamableFunction;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
 
@@ -105,6 +106,13 @@ final class ColumnRearrangerFunction extends StreamableFunction {
 
     /** {@inheritDoc} */
     @Override
+    public void init(final ExecutionContext ctx) throws Exception {
+        super.init(ctx);
+        RearrangeColumnsTable.initProcessing(m_newColumnsMapping, ctx);
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public DataRow compute(final DataRow inputRow) {
         DataRow appendRow = RearrangeColumnsTable.calcNewCellsForRow(inputRow, m_newColumnsMapping);
         return JoinTableIterator.createOutputRow(inputRow, appendRow, m_includesIndices, m_isFromRefTables);
@@ -115,6 +123,7 @@ final class ColumnRearrangerFunction extends StreamableFunction {
     public void finish() {
         super.finish();
         RearrangeColumnsTable.finishProcessing(m_newColumnsMapping);
+
     }
 
     /** {@inheritDoc} */

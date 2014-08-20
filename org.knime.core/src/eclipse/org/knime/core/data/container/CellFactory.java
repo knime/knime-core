@@ -57,7 +57,7 @@ import org.knime.core.node.ExecutionMonitor;
  * <p>
  * Note, it's strongly recommend to extend the abstract classes {@link AbstractCellFactory} and
  * {@link SingleCellFactory} instead of implementing this interface. These classes also enable the parallel processing
- * of the input table.
+ * of the input table and access to a {@link org.knime.core.data.filestore.FileStoreFactory}.
  *
  * @see org.knime.core.data.container.ColumnRearranger
  * @see org.knime.core.data.container.ColumnRearranger#append(CellFactory)

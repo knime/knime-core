@@ -51,6 +51,7 @@ import java.util.Arrays;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
@@ -72,6 +73,8 @@ public abstract class AbstractCellFactory implements CellFactory {
     private int m_maxParallelWorkers = -1;
     private int m_maxQueueSize = -1;
 
+    private FileStoreFactory m_factory;
+
     /** Creates instance, which will produce content for the columns as
      * specified by the array argument. The calculation is done sequentially
      * (no parallel processing of input).
@@ -83,6 +86,23 @@ public abstract class AbstractCellFactory implements CellFactory {
                     + "contain null elements");
         }
         m_colSpecs = colSpecs;
+    }
+
+    /** Called by the framework to set the file store factory prior execution.
+     * See {@link #getFileStoreFactory()}.
+     * @param factory The factory to set or null (after processing of the table). */
+    final void setFileStoreFactory(final FileStoreFactory factory) {
+        m_factory = factory;
+    }
+
+    /** Access to a file store factory during the invocation of {@link #getCells(org.knime.core.data.DataRow)}. This
+     * method returns a non-null file store factory only during processing of the input table (when getCells is called).
+     * @return the factory A non-null factory when {@link #getCells(org.knime.core.data.DataRow)} is (repeatedly) called
+     * by the framework.
+     * @since 2.11
+     */
+    protected final FileStoreFactory getFileStoreFactory() {
+        return m_factory;
     }
 
     /** Creates instance, which will produce content for the columns as

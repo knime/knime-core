@@ -66,6 +66,7 @@ public abstract class StreamableFunction extends StreamableOperator {
             final ExecutionContext ctx) throws Exception {
         RowInput rowInput = ((RowInput)inputs[0]);
         RowOutput rowOutput = ((RowOutput)outputs[0]);
+        init(ctx);
         DataRow inputRow;
         long index = 0;
         while ((inputRow = rowInput.poll()) != null) {
@@ -76,6 +77,15 @@ public abstract class StreamableFunction extends StreamableOperator {
         rowInput.close();
         rowOutput.close();
         finish();
+    }
+
+    /** Called once before the execution starts. Allows sub-classes to init file store factory etc.
+     * @param ctx non null execution context (used for file store creation only)
+     * @throws Exception Any exception.
+     * @since 2.11
+     */
+    public void init(final ExecutionContext ctx) throws Exception {
+        // no op
     }
 
     /** Single row computation.
