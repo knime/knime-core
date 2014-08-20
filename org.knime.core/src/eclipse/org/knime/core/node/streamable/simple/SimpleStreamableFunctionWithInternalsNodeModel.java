@@ -62,15 +62,15 @@ import org.knime.core.node.streamable.StreamableFunction;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
 
 /**
- * Abstract class of node that computes a simple (1:1) function but needs to
- * have some final processing afterwards (mostly only setting an error message).
+ * Abstract class of node that computes a simple (1:1) function but needs to have some final processing afterwards
+ * (mostly only setting an error message).
  *
  * @param <T> The sub type of the internals used by the implementation
  * @since 2.6
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class SimpleStreamableFunctionWithInternalsNodeModel<T extends StreamableOperatorInternals> extends
-        SimpleStreamableFunctionNodeModel {
+    SimpleStreamableFunctionNodeModel {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(SimpleStreamableFunctionWithInternalsNodeModel.class);
 
@@ -79,8 +79,8 @@ public abstract class SimpleStreamableFunctionWithInternalsNodeModel<T extends S
     /**
      * New node model (one in, one out).
      *
-     * @param cl The class of the {@link StreamableOperatorInternals} (used for
-     *            instantiation of arrays and new instances).
+     * @param cl The class of the {@link StreamableOperatorInternals} (used for instantiation of arrays and new
+     *            instances).
      * */
     public SimpleStreamableFunctionWithInternalsNodeModel(final Class<T> cl) {
         m_class = cl;
@@ -88,8 +88,7 @@ public abstract class SimpleStreamableFunctionWithInternalsNodeModel<T extends S
     }
 
     /**
-     * Creates new empty instance of the internals. Default implementation uses
-     * reflection and calls no-arg constructor.
+     * Creates new empty instance of the internals. Default implementation uses reflection and calls no-arg constructor.
      *
      * @return A new instance of the internals (not null!)
      */
@@ -98,16 +97,16 @@ public abstract class SimpleStreamableFunctionWithInternalsNodeModel<T extends S
             return m_class.newInstance();
         } catch (Exception e) {
             final String msg =
-                    "Internals class \"" + m_class.getSimpleName()
-                            + "\" does not appear to have public default constructor";
+                "Internals class \"" + m_class.getSimpleName()
+                    + "\" does not appear to have public default constructor";
             LOGGER.coding(msg, e);
             throw new IllegalStateException(msg, e);
         }
     }
 
     /**
-     * Called the merge operator to merge internals created by different
-     * streamble operators (possibly on remote machines).
+     * Called the merge operator to merge internals created by different streamble operators (possibly on remote
+     * machines).
      *
      * @param operatorInternals The internals to merge.
      * @return A new merged internals object.
@@ -115,8 +114,8 @@ public abstract class SimpleStreamableFunctionWithInternalsNodeModel<T extends S
     protected abstract T mergeStreamingOperatorInternals(final T[] operatorInternals);
 
     /**
-     * Finalizes execution with a merged internals object. Clients can access
-     * its fields and update view content or set warning messages.
+     * Finalizes execution with a merged internals object. Clients can access its fields and update view content or set
+     * warning messages.
      *
      * @param operatorInternals The merged internals object.
      */
@@ -128,20 +127,21 @@ public abstract class SimpleStreamableFunctionWithInternalsNodeModel<T extends S
         final T emptyInternals = createStreamingOperatorInternals();
         if (emptyInternals == null) {
             throw new NullPointerException("createStreamingOperatorInternals " + "in class "
-                    + getClass().getSimpleName() + " must not return null");
+                + getClass().getSimpleName() + " must not return null");
         }
         return createColumnRearranger(spec, emptyInternals);
     }
 
     /** {@inheritDoc} */
     @Override
-    public StreamableFunction createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+    public StreamableFunction
+        createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec in = (DataTableSpec)inSpecs[0];
         final T emptyInternals = createStreamingOperatorInternals();
         if (emptyInternals == null) {
             throw new NullPointerException("createStreamingOperatorInternals" + " in class "
-                    + getClass().getSimpleName() + " must not return null");
+                + getClass().getSimpleName() + " must not return null");
         }
         return createColumnRearranger(in, emptyInternals).createStreamableFunction(emptyInternals);
     }
@@ -149,26 +149,23 @@ public abstract class SimpleStreamableFunctionWithInternalsNodeModel<T extends S
     /** {@inheritDoc} */
     @Override
     public void finishStreamableExecution(final StreamableOperatorInternals internals, final ExecutionContext exec,
-            final PortOutput[] output) throws Exception {
+        final PortOutput[] output) throws Exception {
         finishStreamableExecution(m_class.cast(internals));
     }
 
     /**
-     * Extends the behavior of
-     * {@link SimpleStreamableFunctionNodeModel#createColumnRearranger(DataTableSpec)}
-     * by an empty internals object that is filled while processing the data.
+     * Extends the behavior of {@link SimpleStreamableFunctionNodeModel#createColumnRearranger(DataTableSpec)} by an
+     * empty internals object that is filled while processing the data.
      *
      * @param spec ...
-     * @param emptyInternals The empty internals. Should be passed on to the
-     *            cell factory (and filled in the
-     *            {@link org.knime.core.data.container.AbstractCellFactory#afterProcessing()}
-     *            method).
+     * @param emptyInternals The empty internals. Should be passed on to the cell factory (and filled in the
+     *            {@link org.knime.core.data.container.AbstractCellFactory#afterProcessing()} method).
      * @return ...
      * @throws InvalidSettingsException ...
      *
      */
     protected abstract ColumnRearranger createColumnRearranger(final DataTableSpec spec, final T emptyInternals)
-            throws InvalidSettingsException;
+        throws InvalidSettingsException;
 
     /** {@inheritDoc} */
     @Override
@@ -185,8 +182,7 @@ public abstract class SimpleStreamableFunctionWithInternalsNodeModel<T extends S
                         throw new NullPointerException("internals at position " + i + " is null");
                     } else if (!m_class.isInstance(o)) {
                         throw new IllegalStateException(String.format("Internals at position %d is not of expected "
-                                + "class \"%s\", it's a \"%s\"", i, m_class.getSimpleName(), o.getClass()
-                                .getSimpleName()));
+                            + "class \"%s\", it's a \"%s\"", i, m_class.getSimpleName(), o.getClass().getSimpleName()));
                     }
                     castedInternals[i] = m_class.cast(o);
                 }

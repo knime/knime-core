@@ -65,45 +65,47 @@ import org.knime.core.node.streamable.PartitionInfo;
 import org.knime.core.node.streamable.StreamableFunction;
 import org.knime.core.node.streamable.StreamableFunctionProducer;
 
-/** Abstract definition of a node that applies a simple function using
- * a {@link ColumnRearranger}. Each input row is mapped to an output row.
+/**
+ * Abstract definition of a node that applies a simple function using a {@link ColumnRearranger}. Each input row is
+ * mapped to an output row.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.6
  */
-public abstract class SimpleStreamableFunctionNodeModel extends NodeModel
-    implements StreamableFunctionProducer {
+public abstract class SimpleStreamableFunctionNodeModel extends NodeModel implements StreamableFunctionProducer {
 
-    /** Default constructor, defining one data input and one data output
-     * port.  */
+    /**
+     * Default constructor, defining one data input and one data output port.
+     */
     public SimpleStreamableFunctionNodeModel() {
         super(1, 1);
     }
 
     /** {@inheritDoc} */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
+        throws Exception {
         BufferedDataTable in = inData[0];
         ColumnRearranger r = createColumnRearranger(in.getDataTableSpec());
         BufferedDataTable out = exec.createColumnRearrangeTable(in, r, exec);
-        return new BufferedDataTable[] {out};
+        return new BufferedDataTable[]{out};
     }
 
     /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(
-            final DataTableSpec[] inSpecs) throws InvalidSettingsException {
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         DataTableSpec in = inSpecs[0];
         ColumnRearranger r = createColumnRearranger(in);
         DataTableSpec out = r.createSpec();
-        return new DataTableSpec[] {out};
+        return new DataTableSpec[]{out};
     }
 
-    /** Can the computation of the individual nodes run in parallel? Default
-     * is <code>true</code> but subclasses can enforce sequential access by
-     * overwriting this method and returning <code>false</code>.
-     * @return true (possibly overwritten). */
+    /**
+     * Can the computation of the individual nodes run in parallel? Default is <code>true</code> but subclasses can
+     * enforce sequential access by overwriting this method and returning <code>false</code>.
+     *
+     * @return true (possibly overwritten).
+     */
     protected boolean isDistributable() {
         return true;
     }
@@ -111,35 +113,34 @@ public abstract class SimpleStreamableFunctionNodeModel extends NodeModel
     /** {@inheritDoc} */
     @Override
     public InputPortRole[] getInputPortRoles() {
-        InputPortRole in = isDistributable()
-            ? InputPortRole.DISTRIBUTED_STREAMABLE
-            : InputPortRole.NONDISTRIBUTED_STREAMABLE;
-        return new InputPortRole[] {in};
+        InputPortRole in =
+            isDistributable() ? InputPortRole.DISTRIBUTED_STREAMABLE : InputPortRole.NONDISTRIBUTED_STREAMABLE;
+        return new InputPortRole[]{in};
     }
 
     /** {@inheritDoc} */
     @Override
     public OutputPortRole[] getOutputPortRoles() {
-        OutputPortRole out = isDistributable()
-            ? OutputPortRole.DISTRIBUTED : OutputPortRole.NONDISTRIBUTED;
-        return new OutputPortRole[] {out};
+        OutputPortRole out = isDistributable() ? OutputPortRole.DISTRIBUTED : OutputPortRole.NONDISTRIBUTED;
+        return new OutputPortRole[]{out};
     }
 
-    /** Creates a column rearranger that describes the changes to the input
-     * table. Sub classes will check the consistency of the input table with
-     * their settings (fail with {@link InvalidSettingsException} if necessary)
-     * and then return a customized {@link ColumnRearranger}.
+    /**
+     * Creates a column rearranger that describes the changes to the input table. Sub classes will check the consistency
+     * of the input table with their settings (fail with {@link InvalidSettingsException} if necessary) and then return
+     * a customized {@link ColumnRearranger}.
+     *
      * @param spec The spec of the input table.
      * @return A column rearranger describing the changes, never null.
-     * @throws InvalidSettingsException If the settings or the input
-     * are invalid. */
-    protected abstract ColumnRearranger createColumnRearranger(
-            final DataTableSpec spec) throws InvalidSettingsException;
+     * @throws InvalidSettingsException If the settings or the input are invalid.
+     */
+    protected abstract ColumnRearranger createColumnRearranger(final DataTableSpec spec)
+        throws InvalidSettingsException;
 
-   /** {@inheritDoc} */
+    /** {@inheritDoc} */
     @Override
-    public StreamableFunction createStreamableOperator(
-            final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+    public StreamableFunction
+        createStreamableOperator(final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec in = (DataTableSpec)inSpecs[0];
         return createColumnRearranger(in).createStreamableFunction();
@@ -153,17 +154,15 @@ public abstract class SimpleStreamableFunctionNodeModel extends NodeModel
 
     /** {@inheritDoc} */
     @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec)
-    throws IOException, CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
         // possibly overwritten
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec)
-    throws IOException, CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
         // possibly overwritten
     }
 
