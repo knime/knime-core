@@ -89,40 +89,38 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.MultiThreadWorker;
 import org.knime.core.util.Pair;
 
-
 /**
- * Table implementation that is created based on a ColumnRearranger. This class
- * is not intended for subclassing or to be used directly in any node
- * implementation. Instead use the functionality provided through the
- * {@link ColumnRearranger} and the {@link org.knime.core.node.ExecutionContext}
- * that is provided in the NodeModel's execute method. See
+ * Table implementation that is created based on a ColumnRearranger. This class is not intended for subclassing or to be
+ * used directly in any node implementation. Instead use the functionality provided through the {@link ColumnRearranger}
+ * and the {@link org.knime.core.node.ExecutionContext} that is provided in the NodeModel's execute method. See
  * {@link ColumnRearranger} for more details on how to use them.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
-public final class RearrangeColumnsTable
-    implements DataTable, KnowsRowCountTable {
+public final class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(RearrangeColumnsTable.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(RearrangeColumnsTable.class);
 
     private static final RowKey DUMMY_KEY = new RowKey("non-existing");
-    private static final DataRow DUMMY_ROW =
-        new DefaultRow(DUMMY_KEY, new DataCell[0]);
 
-    /** If this table just filters columns from the reference table, we use
-     * this dummy iterator to provide empty appended cells.
+    private static final DataRow DUMMY_ROW = new DefaultRow(DUMMY_KEY, new DataCell[0]);
+
+    /**
+     * If this table just filters columns from the reference table, we use this dummy iterator to provide empty appended
+     * cells.
      */
-    private static final CloseableRowIterator EMPTY_ITERATOR =
-        new CloseableRowIterator() {
+    private static final CloseableRowIterator EMPTY_ITERATOR = new CloseableRowIterator() {
         @Override
         public boolean hasNext() {
             return true;
         }
+
         @Override
         public DataRow next() {
             return DUMMY_ROW;
         }
+
         @Override
         public void close() {
             // no op
@@ -130,23 +128,29 @@ public final class RearrangeColumnsTable
     };
 
     private static final String CFG_INTERNAL_META = "meta_internal";
+
     private static final String CFG_REFERENCE_ID = "table_reference_ID";
+
     private static final String CFG_MAP = "table_internal_map";
+
     private static final String CFG_FLAGS = "table_internal_flags";
 
     private final DataTableSpec m_spec;
+
     private final BufferedDataTable m_reference;
+
     private final int[] m_map;
+
     private final boolean[] m_isFromRefTable;
+
     private final ContainerTable m_appendTable;
 
     /*
      * Used from the factory method, see below.
      * @see #create(ColumnRearranger, BufferedDataTable, ExecutionMonitor)
      */
-    private RearrangeColumnsTable(final BufferedDataTable reference,
-            final int[] map, final boolean[] isFromRefTable,
-            final DataTableSpec spec, final ContainerTable appendTbl) {
+    private RearrangeColumnsTable(final BufferedDataTable reference, final int[] map, final boolean[] isFromRefTable,
+        final DataTableSpec spec, final ContainerTable appendTbl) {
         m_spec = spec;
         m_reference = reference;
         m_appendTable = appendTbl;
@@ -155,18 +159,17 @@ public final class RearrangeColumnsTable
     }
 
     /**
-     * Creates new object based on the content in <code>settings</code> and
-     * the content from the file <code>f</code>. Used when the data is restored
-     * from disc.
+     * Creates new object based on the content in <code>settings</code> and the content from the file <code>f</code>.
+     * Used when the data is restored from disc.
      *
-     * <p><b>Note</b>: You should not be required to use this constructor!
+     * <p>
+     * <b>Note</b>: You should not be required to use this constructor!
+     *
      * @param f The file to read from the newly appended columns.
-     * @param settings The settings containing the information how to assemble
-     *         the table.
+     * @param settings The settings containing the information how to assemble the table.
      * @param tblRep The table repository (only available during start)
-     * @param spec The data table spec of the resulting table. This argument
-     * is <code>null</code> when the data to restore is written using
-     * KNIME 1.1.x or before.
+     * @param spec The data table spec of the resulting table. This argument is <code>null</code> when the data to
+     *            restore is written using KNIME 1.1.x or before.
      * @param tableID buffer ID of underlying buffer.
      * @param bufferRep Repository of buffers for blob (de)serialization.
      * @param fileStoreHandlerRepository ...
@@ -174,15 +177,11 @@ public final class RearrangeColumnsTable
      * @throws InvalidSettingsException If the settings are invalid.
      * @noreference
      */
-    public RearrangeColumnsTable(final ReferencedFile f,
-            final NodeSettingsRO settings,
-            final Map<Integer, BufferedDataTable> tblRep,
-            final DataTableSpec spec, final int tableID,
-            final HashMap<Integer, ContainerTable> bufferRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository)
+    public RearrangeColumnsTable(final ReferencedFile f, final NodeSettingsRO settings,
+        final Map<Integer, BufferedDataTable> tblRep, final DataTableSpec spec, final int tableID,
+        final HashMap<Integer, ContainerTable> bufferRep, final FileStoreHandlerRepository fileStoreHandlerRepository)
         throws IOException, InvalidSettingsException {
-        NodeSettingsRO subSettings =
-            settings.getNodeSettings(CFG_INTERNAL_META);
+        NodeSettingsRO subSettings = settings.getNodeSettings(CFG_INTERNAL_META);
         int refTableID = subSettings.getInt(CFG_REFERENCE_ID);
         m_reference = BufferedDataTable.getDataTable(tblRep, refTableID);
         m_map = subSettings.getIntArray(CFG_MAP);
@@ -200,13 +199,11 @@ public final class RearrangeColumnsTable
             // was written with version 1.1.x or before (i.e. table spec
             // is contained in zip file)
             if (spec == null) {
-                m_appendTable = DataContainer.readFromZip(
-                        f, new NoKeyBufferCreator());
+                m_appendTable = DataContainer.readFromZip(f, new NoKeyBufferCreator());
                 DataTableSpec appendSpec = m_appendTable.getDataTableSpec();
                 if (appendSpec.getNumColumns() != appendColCount) {
-                    throw new IOException("Inconsistency in data file \""
-                            + f + "\", read " + appendSpec.getNumColumns()
-                            + " columns, expected " + appendColCount);
+                    throw new IOException("Inconsistency in data file \"" + f + "\", read "
+                        + appendSpec.getNumColumns() + " columns, expected " + appendColCount);
                 }
                 for (int i = 0; i < appendSpec.getNumColumns(); i++) {
                     appendColSpecs[i] = appendSpec.getColumnSpec(i);
@@ -221,11 +218,10 @@ public final class RearrangeColumnsTable
                 }
                 assert index == appendColCount;
                 DataTableSpec appendSpec = new DataTableSpec(appendColSpecs);
-                CopyOnAccessTask noKeyBufferOnAccessTask = new CopyOnAccessTask(
-                        f, appendSpec, tableID, bufferRep,
-                        fileStoreHandlerRepository, new NoKeyBufferCreator());
-                m_appendTable = DataContainer.readFromZipDelayed(
-                        noKeyBufferOnAccessTask, appendSpec);
+                CopyOnAccessTask noKeyBufferOnAccessTask =
+                    new CopyOnAccessTask(f, appendSpec, tableID, bufferRep, fileStoreHandlerRepository,
+                        new NoKeyBufferCreator());
+                m_appendTable = DataContainer.readFromZipDelayed(noKeyBufferOnAccessTask, appendSpec);
             }
         } else {
             m_appendTable = null;
@@ -243,7 +239,9 @@ public final class RearrangeColumnsTable
         m_spec = new DataTableSpec(colSpecs);
     }
 
-    /** Get handle to the reference table in an array of length 1.
+    /**
+     * Get handle to the reference table in an array of length 1.
+     *
      * @return The table providing likely most of the columns and the rowkeys.
      */
     @Override
@@ -251,10 +249,11 @@ public final class RearrangeColumnsTable
         return new BufferedDataTable[]{m_reference};
     }
 
-    /** Get reference to the appended table. This table must not be used
-     * publicly as the append table is corrupted: It does not contain proper
-     * row keys (it contains only the appended columns). This method returns
-     * null if this table only filters out some of the columns.
+    /**
+     * Get reference to the appended table. This table must not be used publicly as the append table is corrupted: It
+     * does not contain proper row keys (it contains only the appended columns). This method returns null if this table
+     * only filters out some of the columns.
+     *
      * @return Reference to append table.
      */
     public ContainerTable getAppendTable() {
@@ -280,33 +279,28 @@ public final class RearrangeColumnsTable
         } else {
             appendIt = EMPTY_ITERATOR;
         }
-        return new JoinTableIterator(
-                m_reference.iterator(), appendIt, m_map, m_isFromRefTable);
+        return new JoinTableIterator(m_reference.iterator(), appendIt, m_map, m_isFromRefTable);
     }
 
     /**
-     * This factory method is intended to be used immediately before the
-     * {@link BufferedDataTable} is created.
+     * This factory method is intended to be used immediately before the {@link BufferedDataTable} is created.
+     *
      * @param rearranger The meta information how to assemble everything.
      * @param table The reference table.
      * @param subProgress The progress monitor for progress/cancel.
      * @param context Used for data container creation.
      * @return The newly created table.
      * @throws CanceledExecutionException If canceled.
-     * @throws IllegalArgumentException If the spec is not equal to the
-     * spec of the rearranger.
+     * @throws IllegalArgumentException If the spec is not equal to the spec of the rearranger.
      */
-    public static RearrangeColumnsTable create(
-            final ColumnRearranger rearranger, final BufferedDataTable table,
-            final ExecutionMonitor subProgress, final ExecutionContext context)
-        throws CanceledExecutionException {
+    public static RearrangeColumnsTable create(final ColumnRearranger rearranger, final BufferedDataTable table,
+        final ExecutionMonitor subProgress, final ExecutionContext context) throws CanceledExecutionException {
         DataTableSpec originalSpec = rearranger.getOriginalSpec();
         Vector<SpecAndFactoryObject> includes = rearranger.getIncludes();
         // names and types of the specs must match
         if (!table.getDataTableSpec().equalStructure(originalSpec)) {
-            throw new IllegalArgumentException(
-                    "The argument table's spec does not match the original "
-                    + "spec passed in the constructor.");
+            throw new IllegalArgumentException("The argument table's spec does not match the original "
+                + "spec passed in the constructor.");
         }
         int size = includes.size();
         ArrayList<DataColumnSpec> newColSpecsList = new ArrayList<DataColumnSpec>();
@@ -331,8 +325,7 @@ public final class RearrangeColumnsTable
             newColSpecsList.add(s.getColSpec());
         }
         final int newColCount = newColSpecsList.size();
-        DataColumnSpec[] newColSpecs =
-            newColSpecsList.toArray(new DataColumnSpec[newColSpecsList.size()]);
+        DataColumnSpec[] newColSpecs = newColSpecsList.toArray(new DataColumnSpec[newColSpecsList.size()]);
         ContainerTable appendTable;
         DataTableSpec appendTableSpec;
         // for a pure filter (a table that just hides some columns from
@@ -384,13 +377,14 @@ public final class RearrangeColumnsTable
         }
         DataTableSpec spec = new DataTableSpec(colSpecs);
         finishProcessing(newColsProducerMapping);
-        return new RearrangeColumnsTable(
-                table, includesIndex, isFromRefTable, spec, appendTable);
+        return new RearrangeColumnsTable(table, includesIndex, isFromRefTable, spec, appendTable);
     }
 
-    /** Calls {@link AbstractCellFactory#afterProcessing()} on all unique
-     * factories in the argument.
-     * @param newColumnFactoryList */
+    /**
+     * Calls {@link AbstractCellFactory#afterProcessing()} on all unique factories in the argument.
+     *
+     * @param newColumnFactoryList
+     */
     static void finishProcessing(final NewColumnsProducerMapping newColumnFactoryList) {
         for (CellFactory uniqueFactory : newColumnFactoryList.getUniqueCellFactoryMap().keySet()) {
             if (uniqueFactory instanceof AbstractCellFactory) {
@@ -400,9 +394,9 @@ public final class RearrangeColumnsTable
     }
 
     /** Processes input sequentially in the caller thread. */
-    private static void calcNewColsSynchronously(final BufferedDataTable table,
-            final ExecutionMonitor subProgress, final NewColumnsProducerMapping newColsProducerMapping,
-            final DataContainer container) throws CanceledExecutionException {
+    private static void calcNewColsSynchronously(final BufferedDataTable table, final ExecutionMonitor subProgress,
+        final NewColumnsProducerMapping newColsProducerMapping, final DataContainer container)
+        throws CanceledExecutionException {
         int finalRowCount = table.getRowCount();
         Set<CellFactory> newColsFactories = newColsProducerMapping.getUniqueCellFactoryMap().keySet();
         final int factoryCount = newColsFactories.size();
@@ -422,13 +416,12 @@ public final class RearrangeColumnsTable
         }
     }
 
-    /** Processes input concurrently using a
-     * {@link ConcurrentNewColCalculator}. */
-    private static void calcNewColsASynchronously(final BufferedDataTable table,
-            final ExecutionMonitor subProgress,
-            final NewColumnsProducerMapping newColsProducerMapping,
-            final DataContainer container)
-            throws CanceledExecutionException {
+    /**
+     * Processes input concurrently using a {@link ConcurrentNewColCalculator}.
+     */
+    private static void calcNewColsASynchronously(final BufferedDataTable table, final ExecutionMonitor subProgress,
+        final NewColumnsProducerMapping newColsProducerMapping, final DataContainer container)
+        throws CanceledExecutionException {
         int finalRowCount = table.getRowCount();
         CellFactory facForProgress = null;
         int workers = Integer.MAX_VALUE;
@@ -441,8 +434,7 @@ public final class RearrangeColumnsTable
                 queueSize = Math.min(queueSize, acf.getMaxQueueSize());
             } else {
                 throw new IllegalStateException("Coding problem: This method"
-                        + " should not have been called as the cell factories"
-                        + " do not allow parallel processing");
+                    + " should not have been called as the cell factories do not allow parallel processing");
             }
             if ((facForProgress == null) || !specAndFac.isNewColumn()) {
                 facForProgress = specAndFac.getFactory();
@@ -451,14 +443,13 @@ public final class RearrangeColumnsTable
         assert facForProgress != null;
         assert workers > 0 : "Nr workers <= 0: " + workers;
         assert queueSize > 0 : "queue size <= 0: " + queueSize;
-        ConcurrentNewColCalculator calculator = new ConcurrentNewColCalculator(
-                queueSize, workers, container, subProgress, finalRowCount,
+        ConcurrentNewColCalculator calculator =
+            new ConcurrentNewColCalculator(queueSize, workers, container, subProgress, finalRowCount,
                 newColsProducerMapping, facForProgress);
         try {
             calculator.run(table);
         } catch (InterruptedException e) {
-            CanceledExecutionException cee =
-                new CanceledExecutionException(e.getMessage());
+            CanceledExecutionException cee = new CanceledExecutionException(e.getMessage());
             cee.initCause(e);
             throw cee;
         } catch (ExecutionException e) {
@@ -475,8 +466,10 @@ public final class RearrangeColumnsTable
 
     private static Set<Class<? extends CellFactory>> codingProblemsCellFactoryClasses;
 
-    /** Calls for an input row the list of cell factories to produce the
-     * output row (contains only the new cells, merged later).
+    /**
+     * Calls for an input row the list of cell factories to produce the output row (contains only the new cells, merged
+     * later).
+     *
      * @param unconvertedRow The input row to be processed
      * @param producerMap For each new (or replaced) column the factory.
      * @return The output row.
@@ -486,14 +479,15 @@ public final class RearrangeColumnsTable
         DataCell[] newCells = new DataCell[newColCount];
         DataRow row = applyDataTypeConverters(unconvertedRow, producerMap, newCells);
         IdentityHashMap<CellFactory, List<Pair<Integer, Integer>>> uniqueCellFactoryMap =
-                producerMap.getUniqueCellFactoryMap();
+            producerMap.getUniqueCellFactoryMap();
         for (Map.Entry<CellFactory, List<Pair<Integer, Integer>>> e : uniqueCellFactoryMap.entrySet()) {
             CellFactory factory = e.getKey();
             List<Pair<Integer, Integer>> list = e.getValue();
             DataCell[] fromFac = factory.getCells(row);
             if (fromFac.length != list.size()) {
-                String error = String.format("New cells array length conflict: expected %d, actual %d (class %s)",
-                                             list.size(), fromFac.length, factory.getClass().getName());
+                String error =
+                    String.format("New cells array length conflict: expected %d, actual %d (class %s)", list.size(),
+                        fromFac.length, factory.getClass().getName());
                 if (fromFac.length < list.size()) {
                     throw new IndexOutOfBoundsException(error);
                 } else {
@@ -519,21 +513,23 @@ public final class RearrangeColumnsTable
         return appendix;
     }
 
-    /** Used when {@link ColumnRearranger#ensureColumnIsConverted(DataCellTypeConverter, int)} is called.
-     * It preproccesses the row and replaces the column to be converted by the the result of the given converter.
+    /**
+     * Used when {@link ColumnRearranger#ensureColumnIsConverted(DataCellTypeConverter, int)} is called. It
+     * preproccesses the row and replaces the column to be converted by the the result of the given converter.
+     *
      * @param row The original input row.
      * @param producerMap The object having the converter list (or not)
      * @param newCells
      * @return The input row if no converter applied or a modified copy of the input row.
      */
-    private static DataRow applyDataTypeConverters(final DataRow row,
-               final NewColumnsProducerMapping producerMap, final DataCell[] newCells) {
+    private static DataRow applyDataTypeConverters(final DataRow row, final NewColumnsProducerMapping producerMap,
+        final DataCell[] newCells) {
         List<Pair<SpecAndFactoryObject, Integer>> converterToIndexMap = producerMap.getConverterToIndexMap();
         if (!converterToIndexMap.isEmpty()) {
             DataCell[] inputRowCells = new DataCell[row.getNumCells()];
             for (int i = 0; i < inputRowCells.length; i++) {
-                inputRowCells[i] = row instanceof BlobSupportDataRow
-                        ? ((BlobSupportDataRow)row).getRawCell(i) : row.getCell(i);
+                inputRowCells[i] =
+                    row instanceof BlobSupportDataRow ? ((BlobSupportDataRow)row).getRawCell(i) : row.getCell(i);
             }
             for (Pair<SpecAndFactoryObject, Integer> entry : converterToIndexMap) {
                 SpecAndFactoryObject specAndObject = entry.getFirst();
@@ -549,14 +545,14 @@ public final class RearrangeColumnsTable
         return row;
     }
 
-    /** Counts for the argument collection the number of unique cell factories.
+    /**
+     * Counts for the argument collection the number of unique cell factories.
+     *
      * @param facs To count in (length = number of newly created columns)
      * @return The number of unique factories (in most cases just 1)
      */
-    static Collection<CellFactory> getUniqueProducerFactories(
-            final Collection<SpecAndFactoryObject> facs) {
-        IdentityHashMap<CellFactory, Object> counter =
-            new IdentityHashMap<CellFactory, Object>();
+    static Collection<CellFactory> getUniqueProducerFactories(final Collection<SpecAndFactoryObject> facs) {
+        IdentityHashMap<CellFactory, Object> counter = new IdentityHashMap<CellFactory, Object>();
         for (SpecAndFactoryObject s : facs) {
             CellFactory factory = s.getFactory();
             counter.put(factory, null);
@@ -564,7 +560,9 @@ public final class RearrangeColumnsTable
         return counter.keySet();
     }
 
-    /** The list of SpecAndFactoryObject that produce new columns.
+    /**
+     * The list of SpecAndFactoryObject that produce new columns.
+     *
      * @param includes All column representations
      * @return The list of data producers.
      */
@@ -584,8 +582,8 @@ public final class RearrangeColumnsTable
      * {@inheritDoc}
      */
     @Override
-    public void saveToFile(final File f, final NodeSettingsWO s, final ExecutionMonitor exec)
-        throws IOException, CanceledExecutionException {
+    public void saveToFile(final File f, final NodeSettingsWO s, final ExecutionMonitor exec) throws IOException,
+        CanceledExecutionException {
         NodeSettingsWO subSettings = s.addNodeSettings(CFG_INTERNAL_META);
         subSettings.addInt(CFG_REFERENCE_ID, m_reference.getBufferedTableId());
         subSettings.addIntArray(CFG_MAP, m_map);
@@ -597,8 +595,8 @@ public final class RearrangeColumnsTable
     }
 
     /**
-     * Do not call this method! It's used internally to delete temp files.
-     * Any iteration on the table will fail!
+     * Do not call this method! It's used internally to delete temp files. Any iteration on the table will fail!
+     *
      * @see KnowsRowCountTable#clear()
      */
     @Override
@@ -608,8 +606,9 @@ public final class RearrangeColumnsTable
         }
     }
 
-    /** Internal use.
-     * {@inheritDoc} */
+    /**
+     * Internal use. {@inheritDoc}
+     */
     @Override
     public void ensureOpen() {
         if (m_appendTable != null) {
@@ -621,8 +620,7 @@ public final class RearrangeColumnsTable
      * {@inheritDoc}
      */
     @Override
-    public void putIntoTableRepository(
-            final HashMap<Integer, ContainerTable> rep) {
+    public void putIntoTableRepository(final HashMap<Integer, ContainerTable> rep) {
         if (m_appendTable != null) {
             rep.put(m_appendTable.getBufferID(), m_appendTable);
         }
@@ -632,13 +630,11 @@ public final class RearrangeColumnsTable
      * {@inheritDoc}
      */
     @Override
-    public boolean removeFromTableRepository(
-            final HashMap<Integer, ContainerTable> rep) {
+    public boolean removeFromTableRepository(final HashMap<Integer, ContainerTable> rep) {
         if (m_appendTable != null) {
             int id = m_appendTable.getBufferID();
             if (rep.remove(id) == null) {
-                LOGGER.debug("Failed to remove appended table with id "
-                        + id + " from global table repository.");
+                LOGGER.debug("Failed to remove appended table with id " + id + " from global table repository.");
                 return false;
             }
             return true;
@@ -647,42 +643,40 @@ public final class RearrangeColumnsTable
     }
 
     /** Creates NoKeyBuffer objects rather then Buffer objects. */
-    private static class NoKeyBufferCreator
-        extends DataContainer.BufferCreator {
+    private static class NoKeyBufferCreator extends DataContainer.BufferCreator {
 
         /** {@inheritDoc} */
         @Override
         Buffer createBuffer(final int rowsInMemory, final int bufferID,
-                final Map<Integer, ContainerTable> globalTableRep,
-                final Map<Integer, ContainerTable> localTableRep,
-                final IWriteFileStoreHandler fileStoreHandler) {
-            return new NoKeyBuffer(rowsInMemory, bufferID, globalTableRep,
-                    localTableRep, fileStoreHandler);
+            final Map<Integer, ContainerTable> globalTableRep, final Map<Integer, ContainerTable> localTableRep,
+            final IWriteFileStoreHandler fileStoreHandler) {
+            return new NoKeyBuffer(rowsInMemory, bufferID, globalTableRep, localTableRep, fileStoreHandler);
         }
 
         /** {@inheritDoc} */
         @Override
-        Buffer createBuffer(final File binFile, final File blobDir,
-                final File fileStoreDir, final DataTableSpec spec,
-                final InputStream metaIn, final int bufID,
-                final Map<Integer, ContainerTable> tblRep, final FileStoreHandlerRepository fileStoreHandlerRepository)
-            throws IOException {
-            return new NoKeyBuffer(binFile, blobDir, spec,
-                    metaIn, bufID, tblRep, fileStoreHandlerRepository);
+        Buffer createBuffer(final File binFile, final File blobDir, final File fileStoreDir, final DataTableSpec spec,
+            final InputStream metaIn, final int bufID, final Map<Integer, ContainerTable> tblRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
+            return new NoKeyBuffer(binFile, blobDir, spec, metaIn, bufID, tblRep, fileStoreHandlerRepository);
         }
     }
 
-    /** The MultiThreadWorker that processes the input rows concurrently. Only
-     * used if the cell factory is an {@link AbstractCellFactory} with
-     * parallel processing (
-     * {@link AbstractCellFactory#setParallelProcessing(boolean)})
+    /**
+     * The MultiThreadWorker that processes the input rows concurrently. Only used if the cell factory is an
+     * {@link AbstractCellFactory} with parallel processing ( {@link AbstractCellFactory#setParallelProcessing(boolean)}
+     * )
      */
     private static final class ConcurrentNewColCalculator extends MultiThreadWorker<DataRow, DataRow> {
 
         private final ExecutionMonitor m_subProgress;
+
         private NewColumnsProducerMapping m_reducedList;
+
         private DataContainer m_container;
+
         private final int m_totalRowCount;
+
         private final CellFactory m_facForProgress;
 
         /**
@@ -692,14 +686,11 @@ public final class RearrangeColumnsTable
          * @param subProgress
          * @param reducedList
          * @param newColCount
-         * @param container */
-        private ConcurrentNewColCalculator(final int maxQueueSize,
-                final int maxActiveInstanceSize,
-                final DataContainer container,
-                final ExecutionMonitor subProgress,
-                final int totalRowCount,
-                final NewColumnsProducerMapping reducedList,
-                final CellFactory facForProgress) {
+         * @param container
+         */
+        private ConcurrentNewColCalculator(final int maxQueueSize, final int maxActiveInstanceSize,
+            final DataContainer container, final ExecutionMonitor subProgress, final int totalRowCount,
+            final NewColumnsProducerMapping reducedList, final CellFactory facForProgress) {
             super(maxQueueSize, maxActiveInstanceSize);
             m_container = container;
             m_subProgress = subProgress;
@@ -710,18 +701,17 @@ public final class RearrangeColumnsTable
 
         /** {@inheritDoc} */
         @Override
-        protected DataRow compute(final DataRow in,
-                final long index) throws Exception {
+        protected DataRow compute(final DataRow in, final long index) throws Exception {
             return calcNewCellsForRow(in, m_reducedList);
         }
 
         /** {@inheritDoc} */
         @Override
-        protected void processFinished(final ComputationTask task)
-                throws ExecutionException, CancellationException, InterruptedException {
+        protected void processFinished(final ComputationTask task) throws ExecutionException, CancellationException,
+            InterruptedException {
             int r = (int)task.getIndex(); // row count in table is integer
             RowKey key = task.getInput().getKey();
-            DataRow append = task.get();  // exception falls through
+            DataRow append = task.get(); // exception falls through
             m_container.addRowToTable(append);
             m_facForProgress.setProgress(r + 1, m_totalRowCount, key, m_subProgress);
             try {
@@ -733,13 +723,16 @@ public final class RearrangeColumnsTable
 
     }
 
-    /** A class that helps to distinguish SpecAndFactoryObjects. There are three kinds: representing input columns,
+    /**
+     * A class that helps to distinguish SpecAndFactoryObjects. There are three kinds: representing input columns,
      * created with a cell factory, created with a converter (often molecular type adapter)
      */
     static final class NewColumnsProducerMapping {
 
         private final List<SpecAndFactoryObject> m_allNewColumnsList;
+
         private final List<Pair<SpecAndFactoryObject, Integer>> m_converterToIndexMap;
+
         private final IdentityHashMap<CellFactory, List<Pair<Integer, Integer>>> m_uniqueCellFactoryMap;
 
         private NewColumnsProducerMapping(final Vector<SpecAndFactoryObject> includes) {
@@ -784,9 +777,11 @@ public final class RearrangeColumnsTable
             return m_allNewColumnsList.size();
         }
 
-        /** A map that for each cell factory (often only 0 or 1) keeps a list of two-index pairs. The first index
-         * is the index in the created new cells array (containing all columns that need to be saved). The second
-         * index describes the position of the created cell in the cell factories getCells() method.
+        /**
+         * A map that for each cell factory (often only 0 or 1) keeps a list of two-index pairs. The first index is the
+         * index in the created new cells array (containing all columns that need to be saved). The second index
+         * describes the position of the created cell in the cell factories getCells() method.
+         *
          * @return the uniqueCellFactoryMap
          */
         IdentityHashMap<CellFactory, List<Pair<Integer, Integer>>> getUniqueCellFactoryMap() {
