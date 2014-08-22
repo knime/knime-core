@@ -33,5 +33,37 @@ a data &quot;workflow&quot;
                class="org.knime.workbench.repository.util.NodeDocuGenerator">
          </run>
       </application>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.knime.workbench.repository.view.QuickNodeInsertionHandler"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+SPACE">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command 
+            categoryId="knime.command.category"
+            defaultHandler="org.knime.workbench.repository.view.QuickNodeInsertionHandler"
+            description="Quick Node Insertion"
+            id="org.knime.workbench.repository.view.QuickNodeInsertionHandler"
+            name="Quick Node Insertion">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:view?after=additions">
+         <command
+               commandId="org.knime.workbench.repository.view.QuickNodeInsertionHandler"
+               icon="icons/search.gif"
+               label="Quick Node Insertion..."
+               style="push"
+               tooltip="Dialog for searching and inserting nodes.">
+         </command>
+      </menuContribution>
    </extension>   
 </plugin>

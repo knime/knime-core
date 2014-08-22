@@ -75,7 +75,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.part.DrillDownAdapter;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.IPropertySourceProvider;
@@ -96,34 +95,27 @@ import org.knime.workbench.repository.model.Root;
 import org.osgi.framework.FrameworkUtil;
 
 /**
- * This view shows the content of the repository that was loaded from the
- * contributing extensions. It mainly includes a tree viewer which shows the
- * hierarchy of categories / nodes.
+ * This view shows the content of the repository that was loaded from the contributing extensions. It mainly includes a
+ * tree viewer which shows the hierarchy of categories / nodes.
  *
  * @author Florian Georg, University of Konstanz
  * @author Thorsten Meinl, University of Konstanz
  */
-public abstract class AbstractRepositoryView extends ViewPart implements
-        RepositoryManager.Listener {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(AbstractRepositoryView.class);
+public abstract class AbstractRepositoryView extends ViewPart implements RepositoryManager.Listener {
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(AbstractRepositoryView.class);
 
     /**
-     * The tree component for showing the repository contents. It will be
-     * initialized in {@link #createPartControl(Composite)}, thus do not try to
-     * use if before.
+     * The tree component for showing the repository contents. It will be initialized in
+     * {@link #createPartControl(Composite)}, thus do not try to use if before.
      */
     protected TreeViewer m_viewer;
 
-    private DrillDownAdapter m_drillDownAdapter;
-
-    private final IPropertySourceProvider m_propertyProvider =
-            new PropertyProvider();
+    private final IPropertySourceProvider m_propertyProvider = new PropertyProvider();
 
     private FilterViewContributionItem m_toolbarFilterCombo;
 
     private static final Boolean NON_INSTANT_SEARCH = Boolean
-            .getBoolean(KNIMEConstants.PROPERTY_REPOSITORY_NON_INSTANT_SEARCH);
+        .getBoolean(KNIMEConstants.PROPERTY_REPOSITORY_NON_INSTANT_SEARCH);
 
     private int m_nodeCounter = 0;
 
@@ -136,18 +128,16 @@ public abstract class AbstractRepositoryView extends ViewPart implements
     }
 
     /**
-     * This callback creates the content of the view. The TreeViewer is
-     * initialized.
+     * This callback creates the content of the view. The TreeViewer is initialized.
      *
-     * @see org.eclipse.ui.IWorkbenchPart
-     *      #createPartControl(org.eclipse.swt.widgets.Composite)
+     * @see org.eclipse.ui.IWorkbenchPart #createPartControl(org.eclipse.swt.widgets.Composite)
+     * @param parent the parent composite
      */
     @Override
     public void createPartControl(final Composite parent) {
         parent.setCursor(new Cursor(Display.getDefault(), SWT.CURSOR_WAIT));
 
-        m_viewer =
-                new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+        m_viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
         m_viewer.getControl().setToolTipText("Loading node repository...");
         m_viewer.setContentProvider(new RepositoryContentProvider());
         m_viewer.setLabelProvider(new RepositoryLabelProvider());
@@ -159,22 +149,15 @@ public abstract class AbstractRepositoryView extends ViewPart implements
         this.getSite().setSelectionProvider(m_viewer);
         // The viewer supports drag&drop
         // (well, actually only drag - objects are dropped into the editor ;-)
-        Transfer[] transfers =
-                new Transfer[]{LocalSelectionTransfer.getTransfer()};
-        m_viewer.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers,
-                new NodeTemplateDragListener(m_viewer));
-        PlatformUI
-                .getWorkbench()
-                .getHelpSystem()
-                .setHelp(m_viewer.getControl(),
-                        "org.knime.workbench.help.repository_view_context");
+        Transfer[] transfers = new Transfer[]{LocalSelectionTransfer.getTransfer()};
+        m_viewer.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new NodeTemplateDragListener(m_viewer));
+        PlatformUI.getWorkbench().getHelpSystem()
+            .setHelp(m_viewer.getControl(), "org.knime.workbench.help.repository_view_context");
 
-        boolean fastLoad =
-                Boolean.getBoolean(KNIMEConstants.PROPERTY_ENABLE_FAST_LOADING);
+        boolean fastLoad = Boolean.getBoolean(KNIMEConstants.PROPERTY_ENABLE_FAST_LOADING);
 
         if (fastLoad) {
-            final Job treeUpdater = new KNIMEJob("Node Repository Loader",
-                    FrameworkUtil.getBundle(getClass())) {
+            final Job treeUpdater = new KNIMEJob("Node Repository Loader", FrameworkUtil.getBundle(getClass())) {
                 @Override
                 protected IStatus run(final IProgressMonitor monitor) {
                     readRepository(parent, monitor);
@@ -189,8 +172,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements
     }
 
     /**
-     * This method reads the repository contents and sets them as model into the
-     * {@link #m_viewer tree view}.
+     * This method reads the repository contents and sets them as model into the {@link #m_viewer tree view}.
      *
      * @param parent the parent component of this view
      * @param monitor a progress monitor, must not be <code>null</code>
@@ -215,17 +197,14 @@ public abstract class AbstractRepositoryView extends ViewPart implements
         m_viewer.addDoubleClickListener(new IDoubleClickListener() {
             @Override
             public void doubleClick(final DoubleClickEvent event) {
-                Object o =
-                        ((IStructuredSelection)event.getSelection())
-                                .getFirstElement();
+                Object o = ((IStructuredSelection)event.getSelection()).getFirstElement();
                 if (o instanceof NodeTemplate) {
                     NodeTemplate tmplt = (NodeTemplate)o;
                     NodeFactory<? extends NodeModel> nodeFact;
                     try {
                         nodeFact = tmplt.createFactoryInstance();
                     } catch (Exception e) {
-                        LOGGER.error("Unable to instantiate the selected node "
-                                + tmplt.getFactory().getName(), e);
+                        LOGGER.error("Unable to instantiate the selected node " + tmplt.getFactory().getName(), e);
                         return;
                     }
                     boolean added = NodeProvider.INSTANCE.addNode(nodeFact);
@@ -236,8 +215,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements
                 if (o instanceof MetaNodeTemplate) {
                     MetaNodeTemplate mnt = (MetaNodeTemplate)o;
                     NodeID metaNode = mnt.getManager().getID();
-                    NodeProvider.INSTANCE.addMetaNode(
-                            RepositoryFactory.META_NODE_ROOT, metaNode);
+                    NodeProvider.INSTANCE.addMetaNode(RepositoryFactory.META_NODE_ROOT, metaNode);
                 }
             }
         });
@@ -260,8 +238,6 @@ public abstract class AbstractRepositoryView extends ViewPart implements
 
     private void contributeToActionBars() {
         // Create drill down adapter
-        m_drillDownAdapter = new DrillDownAdapter(m_viewer);
-
         IActionBars bars = getViewSite().getActionBars();
         fillLocalPullDown(bars.getMenuManager());
         fillLocalToolBar(bars.getToolBarManager());
@@ -270,14 +246,11 @@ public abstract class AbstractRepositoryView extends ViewPart implements
 
     private void fillLocalPullDown(final IMenuManager manager) {
         // register drill down actions
-        m_drillDownAdapter.addNavigationActions(manager);
-
         manager.add(new Separator());
     }
 
     /**
-     * Fills the context menu for the repository view. Subclasses can add
-     * additional entries.
+     * Fills the context menu for the repository view. Subclasses can add additional entries.
      *
      * @param manager the menu manager for the context menu
      */
@@ -287,28 +260,25 @@ public abstract class AbstractRepositoryView extends ViewPart implements
         // manager.add(new Separator());
 
         // register drill down actions
-        m_drillDownAdapter.addNavigationActions(manager);
 
         // Other plug-ins can contribute there actions here
         manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
     }
 
     /**
-     * Fills the tool bar of the repository view. Subclasses can add additional
-     * buttons to the toolbar.
+     * Fills the tool bar of the repository view. Subclasses can add additional buttons to the toolbar.
      *
      * @param manager the toolbar manager
      */
     protected void fillLocalToolBar(final IToolBarManager manager) {
         // create the combo contribution item that can filter our view
+        //        manager.
+        manager.add(new QuickNodeInsertionConstributionItem());
         m_toolbarFilterCombo =
-                new FilterViewContributionItem(m_viewer,
-                        new RepositoryViewFilter(), !NON_INSTANT_SEARCH);
+            new FilterViewContributionItem(m_viewer, new RepositoryViewFilter(), !NON_INSTANT_SEARCH);
         manager.add(m_toolbarFilterCombo);
         manager.add(new Separator());
-
-        // add drill down actions to local tool bar
-        m_drillDownAdapter.addNavigationActions(manager);
+        //        manager.
     }
 
     /**
@@ -339,8 +309,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements
         /**
          * Delegates the request, if the object is an IAdaptable.
          *
-         * @see org.eclipse.ui.views.properties.IPropertySourceProvider#
-         *      getPropertySource(java.lang.Object)
+         * @see org.eclipse.ui.views.properties.IPropertySourceProvider# getPropertySource(java.lang.Object)
          */
         @Override
         public IPropertySource getPropertySource(final Object object) {
@@ -348,8 +317,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements
             if (object instanceof IAdaptable) {
                 IAdaptable adaptable = (IAdaptable)object;
 
-                return (IPropertySource)adaptable
-                        .getAdapter(IPropertySource.class);
+                return (IPropertySource)adaptable.getAdapter(IPropertySource.class);
             }
 
             // well, no :-(
@@ -399,9 +367,8 @@ public abstract class AbstractRepositoryView extends ViewPart implements
             @Override
             public void run() {
                 if (!m_viewer.getControl().isDisposed()) {
-                    m_viewer.getControl().setToolTipText(
-                            "Loading node repository... " + m_nodeCounter
-                            + " nodes found");
+                    m_viewer.getControl()
+                        .setToolTipText("Loading node repository... " + m_nodeCounter + " nodes found");
                     if (m_viewer.getInput() != transformedRepository) {
                         m_viewer.setInput(transformedRepository);
                     } else {
@@ -418,11 +385,9 @@ public abstract class AbstractRepositoryView extends ViewPart implements
     }
 
     /**
-     * This method may be overridden by subclasses in order to transform the
-     * current repository into a different structure. The method gets the
-     * current repository (its root) as argument and should return a new
-     * repository (its root). The default implementation does not change the
-     * repository.
+     * This method may be overridden by subclasses in order to transform the current repository into a different
+     * structure. The method gets the current repository (its root) as argument and should return a new repository (its
+     * root). The default implementation does not change the repository.
      *
      * @param originalRoot the root if the original repository
      * @return the root of a potentially transformed repository

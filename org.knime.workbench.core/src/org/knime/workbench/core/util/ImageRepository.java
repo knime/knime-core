@@ -130,6 +130,8 @@ public final class ImageRepository {
         Delete("icons/delete.png"),
         /** Icon for startup messages view. */
         StartupMessages("icons/startupMessages.png"),
+        /** Icon showing a magnifier glass. */
+        Search("icons/search.gif"),
 
         /** Icon for a folder. */
         Folder("icons/folder.png"),
