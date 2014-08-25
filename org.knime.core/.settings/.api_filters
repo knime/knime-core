@@ -26,6 +26,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/StatementManipulator.java" type="org.knime.core.node.port.database.StatementManipulator">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="2.10"/>
+                <message_argument value="2.11"/>
+                <message_argument value="getValidColumnName(String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NativeNodeContainer.java" type="org.knime.core.node.workflow.NativeNodeContainer">
         <filter id="338792546">
             <message_arguments>
