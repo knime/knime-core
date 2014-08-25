@@ -6032,23 +6032,48 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /**
      * @return list of errors messages (list empty if none exist).
+     * @deprecated Use {@link #getNodeMessages(Type...)} instead.
      */
+    @Deprecated
     public List<NodeMessage> getNodeErrorMessages() {
-        ArrayList<NodeMessage> result = new ArrayList<NodeMessage>();
-        for (NodeContainer nc : m_workflow.getNodeValues()) {
-            if (nc instanceof SingleNodeContainer) {
-                if (nc.getNodeMessage().getMessageType()
-                        .equals(NodeMessage.Type.ERROR)) {
-                    result.add(nc.getNodeMessage());
-                }
-            } else {
-                assert nc instanceof WorkflowManager;
-                List<NodeMessage> subResult
-                        = ((WorkflowManager)nc).getNodeErrorMessages();
-                result.addAll(subResult);
-            }
+        List<NodeMessage> result = new ArrayList<>();
+        for (Pair<String, NodeMessage> p : getNodeMessages(NodeMessage.Type.ERROR)) {
+            result.add(p.getSecond());
         }
         return result;
+    }
+
+    /** Get all node messages, recursively collected from all contained.
+     * @param types A list of messge types (e.g. all errors and warnings). Argument must not be empty,
+     *        null or contain null values
+     * @return list of errors messages (list empty if none exist).
+     * @throws IllegalArgumentException If argument is invalid.
+     * @since 2.11
+     */
+    public List<Pair<String, NodeMessage>> getNodeMessages(final NodeMessage.Type... types) {
+        CheckUtils.checkArgumentNotNull(types, "Argument must not be null");
+        final List<Type> asList = Arrays.asList(types);
+        CheckUtils.checkArgument(asList.size() > 0 && !asList.contains(null),
+            "Type list must not be empty, nor contain null");
+        synchronized (m_workflowMutex) {
+            ArrayList<Pair<String, NodeMessage>> result = new ArrayList<>();
+            for (NodeContainer nc : m_workflow.getNodeValues()) {
+                if (nc instanceof NativeNodeContainer) {
+                    if (asList.contains(nc.getNodeMessage().getMessageType())) {
+                        result.add(Pair.create(nc.getNameWithID(), nc.getNodeMessage()));
+                    }
+                } else if (nc instanceof SubNodeContainer) {
+                    List<Pair<String, NodeMessage>> subResult =
+                            ((SubNodeContainer)nc).getWorkflowManager().getNodeMessages(types);
+                    result.addAll(subResult);
+                } else {
+                    assert nc instanceof WorkflowManager;
+                    List<Pair<String, NodeMessage>> subResult = ((WorkflowManager)nc).getNodeMessages(types);
+                    result.addAll(subResult);
+                }
+            }
+            return result;
+        }
     }
 
     /** Return list of nodes that are part of the same scope as the given one.

@@ -59,6 +59,7 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.preproc.groupby.GroupByNodeDialog;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -68,6 +69,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
  * The node dialog of the pivot node.
@@ -88,9 +90,11 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
     private final DialogComponentBoolean m_domainComponent;
 
     /** Constructor for class Pivot2NodeDialog. */
+    @SuppressWarnings("unchecked")
     public Pivot2NodeDialog() {
 //pivot column box
-        m_pivotCol = new DialogComponentColumnFilter(m_pivotCols, 0, false);
+        m_pivotCol = new DialogComponentColumnFilter(m_pivotCols, 0, false,
+            new ColumnFilterPanel.ValueClassFilter(DataValue.class), false);
         //we are only interested in showing the invalid include columns
         m_pivotCol.setShowInvalidIncludeColumns(true);
         m_pivotCol.setIncludeTitle(" Pivot column(s) ");

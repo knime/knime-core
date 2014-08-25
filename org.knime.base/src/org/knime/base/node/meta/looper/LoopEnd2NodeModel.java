@@ -138,7 +138,9 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
 
         if (m_settings.ignoreEmptyTables1() && inData[0].getRowCount() < 1) {
             if (m_emptyTable[0] == null) {
-                m_emptyTable[0] = inData[0];
+                BufferedDataContainer cont = exec.createDataContainer(inData[0].getDataTableSpec());
+                cont.close();
+                m_emptyTable[0] = cont.getTable();
             }
         } else if (m_resultContainer[0] == null) {
             m_resultContainer[0] = exec.createDataContainer(createSpec(inData[0]
@@ -146,7 +148,9 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
         }
         if (m_settings.ignoreEmptyTables2() && inData[1].getRowCount() < 1) {
             if (m_emptyTable[1] == null) {
-                m_emptyTable[1] = inData[1];
+                BufferedDataContainer cont = exec.createDataContainer(inData[1].getDataTableSpec());
+                cont.close();
+                m_emptyTable[1] = cont.getTable();
             }
         } else if (m_resultContainer[1] == null) {
             m_resultContainer[1] = exec.createDataContainer(createSpec(inData[1]
@@ -279,6 +283,7 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected void reset() {
         m_resultContainer = new BufferedDataContainer[2];
+        m_emptyTable = new BufferedDataTable[2];
         m_count = 0;
     }
 

@@ -140,7 +140,9 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
         BufferedDataTable in = inData[0];
         if (m_settings.ignoreEmptyTables() && in.getRowCount() < 1) {
             if (m_emptyTable == null) {
-                m_emptyTable = in;
+                BufferedDataContainer cont = exec.createDataContainer(in.getDataTableSpec());
+                cont.close();
+                m_emptyTable = cont.getTable();
             }
         } else {
             DataTableSpec amendedSpec = createSpec(in.getDataTableSpec());
@@ -247,6 +249,7 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected void reset() {
         m_resultContainer = null;
+        m_emptyTable = null;
         m_count = 0;
         m_startTime = 0;
     }

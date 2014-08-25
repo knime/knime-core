@@ -52,10 +52,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.eclipse.core.runtime.FileLocator;
@@ -65,6 +67,7 @@ import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 
@@ -96,7 +99,7 @@ public abstract class WorkflowTestCase extends TestCase {
         setManager(m);
         return m.getID();
     }
-    
+
     protected WorkflowManager loadWorkflow(final File workflowDir) throws Exception {
         WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(
                 workflowDir, new ExecutionMonitor(),
@@ -127,7 +130,7 @@ public abstract class WorkflowTestCase extends TestCase {
         classSimpleName = classSimpleName.substring(0, 1).toLowerCase() + classSimpleName.substring(1);
         return getWorkflowDirectory(classSimpleName);
     }
-    
+
     protected File getWorkflowDirectory(final String pathRelativeToTestClass) throws Exception {
         ClassLoader l = getClass().getClassLoader();
         String workflowDirString = getClass().getPackage().getName();
@@ -137,11 +140,11 @@ public abstract class WorkflowTestCase extends TestCase {
         if (workflowURL == null) {
             throw new Exception("Can't load workflow that's expected to be in directory " + workflowDirPath);
         }
-        
+
         if (!"file".equals(workflowURL.getProtocol())) {
             workflowURL = FileLocator.resolve(workflowURL);
         }
-        
+
         File workflowDir = new File(workflowURL.getFile());
         if (!workflowDir.isDirectory()) {
             throw new Exception("Can't load workflow directory: "
@@ -169,13 +172,13 @@ public abstract class WorkflowTestCase extends TestCase {
         NodeContainer nc = findNodeContainer(id);
         checkState(nc, expected);
     }
-    
+
     protected void checkStateOfMany(final InternalNodeContainerState state, final NodeID... ids) throws Exception {
         for (NodeID id : ids) {
             checkState(id, state);
         }
     }
-    
+
     protected void checkState(final NodeContainer nc,
             final InternalNodeContainerState... expected) throws Exception {
         InternalNodeContainerState actual = nc.getInternalState();
@@ -227,24 +230,47 @@ public abstract class WorkflowTestCase extends TestCase {
         }
     }
 
+    /** Find the workflow manager that directly contains the node with the argument ID.
+     * @param id ID to query
+     * @return parent workflow of node with ID (might be meta node or wfm in subnode).
+     */
     protected WorkflowManager findParent(final NodeID id) {
-        if (m_manager == null) {
-            throw new NullPointerException("WorkflowManager not set.");
+        CheckUtils.checkArgumentNotNull(m_manager, "WFM not set");
+        final NodeID mgrID = m_manager.getID();
+        CheckUtils.checkArgument(id.hasPrefix(mgrID), "NodeID %s has not same prefix as WFM: %s", id, mgrID);
+
+        // this is tricky since we have to deal with subnode containers also. subnode contain a wfm with id suffix "0".
+        // this could be a node to query in a subnode
+        // 0       - ID of m_manager
+        // 0:1     - ID of contained subnode container
+        // 0:1:0   - ID of WFM in subnode container
+        // 0:1:0:2 - ID of node within subnode
+
+        // here is node contained in a meta node
+        // 0       - ID of m_manager
+        // 0:2     - ID of contained meta node / wfm
+        // 0:1:2   - ID of node within meta node
+
+        Stack<NodeID> prefixStack = new Stack<>();
+        NodeID currentID = id;
+        while (!currentID.hasSamePrefix(mgrID)) {
+            currentID = currentID.getPrefix();
+            prefixStack.push(currentID);
         }
-        if (!id.hasPrefix(m_manager.getID())) {
-            throw new IllegalArgumentException("NodeID " + id + " has not "
-                    + "same prefix as WorkflowManager: " + m_manager.getID());
-        }
-        if (!id.hasSamePrefix(m_manager.getID())) {
-            WorkflowManager myParent = findParent(id.getPrefix());
-            NodeContainer current = myParent.getNodeContainer(id.getPrefix());
-            if (!(current instanceof WorkflowManager)) {
-                throw new IllegalArgumentException("Parent is not a WFM: "
-                        + current.getNameWithID());
+        NodeContainerParent currentParent = m_manager;
+        while (!prefixStack.isEmpty()) {
+            if (currentParent instanceof WorkflowManager) {
+                currentParent = ((WorkflowManager)currentParent).getNodeContainer(
+                    prefixStack.pop(), NodeContainerParent.class, true);
+            } else if (currentParent instanceof SubNodeContainer) {
+                SubNodeContainer subnode = (SubNodeContainer)currentParent;
+                NodeID expectedWFMID = prefixStack.pop();
+                final WorkflowManager innerWFM = subnode.getWorkflowManager();
+                Assert.assertEquals(innerWFM.getID(), expectedWFMID);
+                currentParent = innerWFM;
             }
-            return (WorkflowManager)current;
         }
-        return m_manager;
+        return (WorkflowManager)currentParent;
     }
 
     protected NodeContainer findNodeContainer(final NodeID id)
@@ -419,7 +445,7 @@ public abstract class WorkflowTestCase extends TestCase {
             m_lock.unlock();
             nc.removeNodeStateChangeListener(l);
         }
-        assertFalse("Lock not to be held by current thread as workflow mutex will be aquired", 
+        assertFalse("Lock not to be held by current thread as workflow mutex will be aquired",
                 m_lock.isHeldByCurrentThread()) ;
         // ugly workaround: The state changes happen in the wfm which does it synchronized on
         // m_workflowMutex. The conditions above only check for "executionInProgress", it does
@@ -469,11 +495,11 @@ public abstract class WorkflowTestCase extends TestCase {
         dumpWorkflowToLog(m_manager);
     }
 
-    protected void dumpWorkflowToLog(WorkflowManager manager) throws IOException {
+    protected void dumpWorkflowToLog(final WorkflowManager manager) throws IOException {
         String toString = manager.printNodeSummary(manager.getID(), 0);
         dumpLineBreakStringToLog(toString);
     }
-    
+
     protected void dumpLineBreakStringToLog(final String s) throws IOException {
         BufferedReader r = new BufferedReader(new StringReader(s));
         String line;
