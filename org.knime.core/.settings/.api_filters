@@ -3,7 +3,7 @@
     <resource path="META-INF/MANIFEST.MF">
         <filter id="924844039">
             <message_arguments>
-                <message_argument value="2.10.1"/>
+                <message_argument value="2.10.2"/>
                 <message_argument value="2.10.0"/>
             </message_arguments>
         </filter>
@@ -12,7 +12,7 @@
         <filter id="305365105">
             <message_arguments>
                 <message_argument value="schemaorg_apache_xmlbeans.system.s4DE157293290DD62F2AF6232BA1F9605.TypeSystemHolder"/>
-                <message_argument value="org.knime.core_2.10.1"/>
+                <message_argument value="org.knime.core_2.10.2"/>
             </message_arguments>
         </filter>
     </resource>
@@ -31,6 +31,15 @@
                 <message_argument value="IFileStoreHandler"/>
                 <message_argument value="NodeContentPersistor"/>
                 <message_argument value="getFileStoreHandler()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="2.11"/>
+                <message_argument value="2.10"/>
+                <message_argument value="getNodeMessages(NodeMessage.Type[])"/>
             </message_arguments>
         </filter>
     </resource>
