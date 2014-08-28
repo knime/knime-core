@@ -1385,6 +1385,9 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         WorkflowPersistor workflowPersistor = subNodePersistor.getWorkflowPersistor();
         // TODO pass in a filter input stack
         m_wfm.loadContent(workflowPersistor, tblRep, inStack, exec, loadResult, preserveNodeMessage);
+        if (workflowPersistor.isDirtyAfterLoad() || m_wfm.isDirty()) {
+            setDirty();
+        }
         NodeSettingsRO modelSettings = subNodePersistor.getSNCSettings().getModelSettings();
         if (modelSettings != null) {
             try {
