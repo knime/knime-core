@@ -98,4 +98,10 @@ public final class InactiveBranchPortObjectSpec implements PortObjectSpec {
         return new JComponent[0];
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return "Inactive Port Object Spec (Singleton)";
+    }
+
 }

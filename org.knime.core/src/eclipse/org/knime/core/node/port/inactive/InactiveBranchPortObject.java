@@ -67,8 +67,7 @@ import org.knime.core.node.port.PortObjectZipOutputStream;
 public final class InactiveBranchPortObject implements PortObject {
 
     /** Singleton to be used. */
-    public static final InactiveBranchPortObject INSTANCE =
-            new InactiveBranchPortObject();
+    public static final InactiveBranchPortObject INSTANCE = new InactiveBranchPortObject();
 
     private InactiveBranchPortObject() {
         // singleton
@@ -101,28 +100,28 @@ public final class InactiveBranchPortObject implements PortObject {
         };
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public String getSummary() {
-        return "Skipped Port Object";
+        return "Inactive Port Object";
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public PortObjectSpec getSpec() {
         return InactiveBranchPortObjectSpec.INSTANCE;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public JComponent[] getViews() {
         return new JComponent[0];
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return "Inactive Port Object (Singleton)";
     }
 
 }
