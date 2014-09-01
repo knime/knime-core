@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -208,12 +209,10 @@ public class CollapseSubNodeAction extends AbstractNodeAction {
                 getCommandStack().execute(cmnc);
             }
         } catch (IllegalArgumentException e) {
-            MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(), SWT.ERROR);
             final String error = "Collapsing to Sub Node failed: " + e.getMessage();
             LOGGER.error(error, e);
-            mb.setMessage(error);
-            mb.setText("Collapse failed");
-            mb.open();
+            MessageDialog.open(MessageDialog.ERROR, Display.getCurrent().getActiveShell(), "Collapse failed",
+                error, SWT.NONE);
         }
         try {
             // Give focus to the editor again. Otherwise the actions (selection)
