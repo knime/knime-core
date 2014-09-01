@@ -324,8 +324,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             m_outputs[i + 1] = new Output(content.getOutPort(i).getPortType());
             m_outports[i + 1] = new NodeContainerOutPort(this, m_outputs[i + 1].getType(), i + 1);
         }
-        m_outputs[0] = new Output(FlowVariablePortObject.TYPE);
-        m_outports[0] = new NodeContainerOutPort(this, FlowVariablePortObject.TYPE, 0);
+        m_outputs[0] = new Output(FlowVariablePortObject.TYPE_OPTIONAL);
+        m_outports[0] = new NodeContainerOutPort(this, FlowVariablePortObject.TYPE_OPTIONAL, 0);
         Pair<int[], int[]> minMaxCoordinates = getMinMaxCoordinates();
         // add virtual in/out nodes and connect them
         NodeID inNodeID = addVirtualInNode(inTypes, minMaxCoordinates);
@@ -664,7 +664,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     @Override
     public URL getIcon() {
-        // TODO return useful Icons
         return SubNodeContainer.class.getResource("virtual/subnode/empty.png");
     }
 
@@ -673,7 +672,6 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     @Override
     public NodeType getType() {
-        // TODO create and return matching icon
         return NodeType.Subnode;
     }
 

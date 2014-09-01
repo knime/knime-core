@@ -296,7 +296,7 @@ public final class FileSubNodeContainerPersistor extends FileSingleNodeContainer
             // output of subnode is represented by input of virtual out node.
             outportSetKeys = outportsSettings.keySet();
             m_outPortTemplates = new WorkflowPortTemplate[outportSetKeys.size() + 1];
-            m_outPortTemplates[0] = new WorkflowPortTemplate(0, FlowVariablePortObject.TYPE);
+            m_outPortTemplates[0] = new WorkflowPortTemplate(0, FlowVariablePortObject.TYPE_OPTIONAL);
             for (int i = 1; i < m_outPortTemplates.length; i++) { // fallback values, correctly set below
                 m_outPortTemplates[i] = new WorkflowPortTemplate(i, BufferedDataTable.TYPE);
             }
