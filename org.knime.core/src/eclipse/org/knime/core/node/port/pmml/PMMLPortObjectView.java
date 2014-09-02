@@ -45,20 +45,28 @@
 package org.knime.core.node.port.pmml;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.Enumeration;
 import java.util.Set;
 
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeView;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.pmml.PMMLModelType;
 import org.xml.sax.InputSource;
 
@@ -98,6 +106,22 @@ public class PMMLPortObjectView extends JComponent {
         }
         m_tree = new JTree();
         create();
+        JButton expandAll = new JButton("Expand All");
+        expandAll.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                expandTree(m_tree, true);
+            }
+        });
+        JButton collapseAll = new JButton("Collapse All");
+        collapseAll.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                expandTree(m_tree, false);
+                m_tree.expandRow(0);
+            }
+        });
+        add(ViewUtils.getInFlowLayout(FlowLayout.RIGHT, expandAll, collapseAll), BorderLayout.NORTH);
     }
 
     private void create() {
@@ -118,6 +142,31 @@ public class PMMLPortObjectView extends JComponent {
             // log and return a "error during saving" component
             LOGGER.error("PMML contains errors", e);
             PMMLPortObjectView.this.add(new JLabel("PMML contains errors: " + e.getMessage()));
+        }
+    }
+
+    private static void expandTree(final JTree tree, final boolean expand) {
+        TreeNode root = (TreeNode) tree.getModel().getRoot();
+        expandAll(tree, new TreePath(root), expand);
+    }
+
+    private static void expandAll(final JTree tree, final TreePath path, final boolean expand) {
+        TreeNode node = (TreeNode) path.getLastPathComponent();
+
+        if (node.getChildCount() >= 0) {
+            Enumeration<?> enumeration = node.children();
+            while (enumeration.hasMoreElements()) {
+                TreeNode n = (TreeNode) enumeration.nextElement();
+                TreePath p = path.pathByAddingChild(n);
+
+                expandAll(tree, p, expand);
+            }
+        }
+
+        if (expand) {
+            tree.expandPath(path);
+        } else {
+            tree.collapsePath(path);
         }
     }
 
