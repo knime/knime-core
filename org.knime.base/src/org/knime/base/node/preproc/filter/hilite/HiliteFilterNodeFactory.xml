@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./hiliterowfilter.gif" type="Manipulator">
-    <name>HiLite Filter</name>
+    <name>HiLite Row Filter</name>
     <shortDescription>Partitions input rows based on their current hilite status.</shortDescription>
     <fullDescription>
         <intro>
 			This node separates hilited from non-hilited rows in the
 			input data according to their hilite status at the time of 
-			node's execution. Both tables are then passed to outports. Note, 
+			node's execution. Both tables are then passed to out-ports. Note, 
 			hilite changes that happen after the execution are not reflected 
 			in the output tables. You will need to reset and execute the node
 			again if you want to get a partitioning based on the changed state.
