@@ -68,8 +68,7 @@ import org.xml.sax.InputSource;
  */
 public class PMMLPortObjectView extends JComponent {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            PMMLPortObjectView.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(PMMLPortObjectView.class);
 
     private final PMMLPortObject m_portObject;
 
@@ -105,29 +104,25 @@ public class PMMLPortObjectView extends JComponent {
 
     private void create() {
         // serialize port object
-            synchronized (m_lock) {
-                try {
+        synchronized (m_lock) {
+            try {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 m_portObject.save(out);
                 SAXParserFactory saxFac = SAXParserFactory.newInstance();
                 SAXParser parser = saxFac.newSAXParser();
                 XMLTreeCreator treeCreator = new XMLTreeCreator();
-                parser.parse(new InputSource(new ByteArrayInputStream(
-                        out.toByteArray())), treeCreator);
-                m_tree.setModel(new DefaultTreeModel(
-                        treeCreator.getTreeNode()));
+                parser.parse(new InputSource(new ByteArrayInputStream(out.toByteArray())), treeCreator);
+                m_tree.setModel(new DefaultTreeModel(treeCreator.getTreeNode()));
                 add(new JScrollPane(m_tree));
                 revalidate();
-//                JTree tree = new JTree(treeCreator.getTreeNode());
-//                add(tree);
+                //                JTree tree = new JTree(treeCreator.getTreeNode());
+                //                add(tree);
             } catch (Exception e) {
                 // log and return a "error during saving" component
                 LOGGER.error("PMML contains errors", e);
-                PMMLPortObjectView.this.add(
-                        new JLabel("PMML contains errors: " + e.getMessage()));
+                PMMLPortObjectView.this.add(new JLabel("PMML contains errors: " + e.getMessage()));
             }
         }
     }
-
 
 }
