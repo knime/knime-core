@@ -51,6 +51,7 @@ import java.awt.event.ActionListener;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Enumeration;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.swing.JButton;
@@ -107,18 +108,31 @@ public class PMMLPortObjectView extends JComponent {
         m_tree = new JTree();
         create();
         JButton expandAll = new JButton("Expand All");
+        expandAll.setToolTipText("Expand the current selection or the entire tree if nothing is selected.");
         expandAll.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
-                expandTree(m_tree, true);
+                TreePath selectionPath = m_tree.getSelectionPath();
+                if (selectionPath == null) {
+                    selectionPath = new TreePath(m_tree.getModel().getRoot());
+                }
+                expandAll(m_tree, selectionPath, true);
             }
         });
         JButton collapseAll = new JButton("Collapse All");
+        collapseAll.setToolTipText("Collapse the current selection or the entire tree if nothing is selected.");
         collapseAll.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
-                expandTree(m_tree, false);
-                m_tree.expandRow(0);
+                TreePath selectionPath = m_tree.getSelectionPath();
+                final TreePath rootTreePath = new TreePath(m_tree.getModel().getRoot());
+                if (selectionPath == null) {
+                    selectionPath = rootTreePath;
+                }
+                expandAll(m_tree, selectionPath, false);
+                if (Objects.equals(selectionPath, rootTreePath)) {
+                    m_tree.expandRow(0);
+                }
             }
         });
         add(ViewUtils.getInFlowLayout(FlowLayout.RIGHT, expandAll, collapseAll), BorderLayout.NORTH);
@@ -145,14 +159,8 @@ public class PMMLPortObjectView extends JComponent {
         }
     }
 
-    private static void expandTree(final JTree tree, final boolean expand) {
-        TreeNode root = (TreeNode) tree.getModel().getRoot();
-        expandAll(tree, new TreePath(root), expand);
-    }
-
     private static void expandAll(final JTree tree, final TreePath path, final boolean expand) {
         TreeNode node = (TreeNode) path.getLastPathComponent();
-
         if (node.getChildCount() >= 0) {
             Enumeration<?> enumeration = node.children();
             while (enumeration.hasMoreElements()) {
