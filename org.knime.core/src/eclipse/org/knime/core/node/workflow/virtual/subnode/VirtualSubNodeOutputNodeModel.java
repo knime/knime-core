@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -59,15 +60,19 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.ExtendedScopeNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.inactive.InactiveBranchConsumer;
+import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
+import org.knime.core.node.workflow.ExecutionEnvironment;
 import org.knime.core.node.workflow.FlowVariable;
+
 
 
 /** NodeModel to subnode virtual output node.
@@ -75,7 +80,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.10
  */
-public final class VirtualSubNodeOutputNodeModel extends NodeModel {
+public final class VirtualSubNodeOutputNodeModel extends ExtendedScopeNodeModel implements InactiveBranchConsumer {
 
     /** Holds the data (specs, objects, flow vars), gets update on reset, configure, execute. */
     private int m_numberOfPorts;
@@ -99,6 +104,23 @@ public final class VirtualSubNodeOutputNodeModel extends NodeModel {
             m_configuration = VirtualSubNodeOutputConfiguration.newDefault(m_numberOfPorts);
         }
         return new PortObjectSpec[0];
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected PortObject[] executeModel(final PortObject[] rawData, final ExecutionEnvironment exEnv,
+        final ExecutionContext exec) throws Exception {
+        PortObject[] result;
+        // if optional input is connected and inactive the entire output is inactive
+        if (rawData[0] instanceof InactiveBranchPortObject) {
+            PortObject[] exchange = new PortObject[getNrOutPorts()];
+            Arrays.fill(exchange, InactiveBranchPortObject.INSTANCE);
+            setNewExchange(new VirtualSubNodeExchange(exchange, Collections.<FlowVariable>emptyList()));
+            result = new PortObject[] {InactiveBranchPortObject.INSTANCE};
+        } else {
+            result = super.executeModel(rawData, exEnv, exec);
+        }
+        return result;
     }
 
     /** {@inheritDoc} */

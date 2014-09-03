@@ -50,22 +50,25 @@ package org.knime.core.node.workflow.virtual.subnode;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.ExtendedScopeNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.variable.FlowVariableFilterConfiguration;
+import org.knime.core.node.workflow.ExecutionEnvironment;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.SubNodeContainer;
@@ -76,7 +79,7 @@ import org.knime.core.node.workflow.SubNodeContainer;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.10
  */
-public final class VirtualSubNodeInputNodeModel extends NodeModel {
+public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
 
     /** Needed to fetch data and flow object stack. */
     private int m_numberOfPorts;
@@ -107,12 +110,10 @@ public final class VirtualSubNodeInputNodeModel extends NodeModel {
         return m_subNodeContainer.getFlowObjectStack();
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
-            throws Exception {
+    protected PortObject[] executeModel(final PortObject[] rawData,
+        final ExecutionEnvironment exEnv, final ExecutionContext exec) throws Exception {
         CheckUtils.checkNotNull(m_subNodeContainer, "No subnode container set");
         PortObject[] dataFromParent = m_subNodeContainer.fetchInputDataFromParent();
         if (dataFromParent == null) {
@@ -120,6 +121,29 @@ public final class VirtualSubNodeInputNodeModel extends NodeModel {
             Thread.currentThread().interrupt();
             return null;
         }
+        // a node is marked as inactive if any of its inputs is inactive, including the flow variable port to which
+        // the plain "execute" method has no access.
+        boolean containsInactive = false;
+        for (PortObject o : dataFromParent) {
+            if (o instanceof InactiveBranchPortObject) {
+                containsInactive = true;
+                break;
+            }
+        }
+        if (containsInactive) {
+            PortObject[] clone = ArrayUtils.clone(dataFromParent);
+            Arrays.fill(clone, InactiveBranchPortObject.INSTANCE);
+            return clone;
+        } else {
+            return super.executeModel(rawData, exEnv, exec);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
+            throws Exception {
+        PortObject[] dataFromParent = m_subNodeContainer.fetchInputDataFromParent();
         String prefix = m_configuration.getFlowVariablePrefix() == null ? "" : m_configuration.getFlowVariablePrefix();
         FlowVariableFilterConfiguration filterConfiguration = m_configuration.getFilterConfiguration();
         Map<String, FlowVariable> availableVariables = getSubNodeContainerFlowObjectStack().getAvailableFlowVariables();
