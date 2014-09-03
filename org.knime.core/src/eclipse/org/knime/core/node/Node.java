@@ -638,14 +638,14 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * @return The total number of input ports.
+     * @return The total number of input ports, includes flow variable port.
      */
     public int getNrInPorts() {
         return m_model.getNrInPorts() + 1;
     }
 
     /**
-     * @return The total number of output ports.
+     * @return The total number of output ports, includes flow variable port.
      */
     public int getNrOutPorts() {
         return m_model.getNrOutPorts() + 1;
@@ -836,7 +836,7 @@ public final class Node implements NodeModelWarningListener {
      * method also returns false without executing this node or any further
      * connected node.
      *
-     * @param rawData the data from the predecessor.
+     * @param rawInData the data from the predecessor, includes flow variable port.
      * @param exEnv the environment for the execution.
      * @param exec The execution monitor.
      * @return <code>true</code> if execution was successful otherwise
@@ -845,7 +845,7 @@ public final class Node implements NodeModelWarningListener {
      * @noreference This method is not intended to be referenced by clients.
      * @since 2.8
      */
-    public boolean execute(final PortObject[] rawData, final ExecutionEnvironment exEnv, final ExecutionContext exec) {
+    public boolean execute(final PortObject[] rawInData, final ExecutionEnvironment exEnv, final ExecutionContext exec) {
         m_logger.assertLog(NodeContext.getContext() != null,
             "No node context available, please check call hierarchy and fix it");
 
@@ -857,20 +857,119 @@ public final class Node implements NodeModelWarningListener {
         // => force a clear of the model's content here
         m_model.setHasContent(false);
 
-        // check if the node is part of a skipped branch and return
-        // appropriate objects without actually configuring the node.
-        // We also need to make sure that we don't run InactiveBranchConsumers
-        // if they are in the middle of an inactive scope or loop so this
-        // check is not trivial...
-        boolean isInactive = false;
+        // check if the node is part of a skipped branch and return appropriate objects without actually executing
+        // the node. We also need to make sure that we don't run InactiveBranchConsumers if they are in the middle of
+        // an inactive scope or loop so this check is not trivial...
+
         // are we not a consumer and any of the incoming branches are inactive?
-        isInactive = isInactive || (!isInactiveBranchConsumer() && containsInactiveObjects(rawData));
+        boolean isInactive = !isInactiveBranchConsumer() && containsInactiveObjects(rawInData);
+
         // are we a consumer but in the middle of an inactive scope?
         FlowObjectStack inStack = getFlowObjectStack();
         FlowScopeContext peekfsc = inStack.peek(FlowScopeContext.class);
         if (peekfsc != null) {
             isInactive = isInactive || peekfsc.isInactiveScope();
         }
+
+        PortObject[] newOutData;
+        if (isInactive) {
+            // just a normal node: skip execution and fill output ports with inactive markers
+            newOutData = new PortObject[getNrOutPorts()];
+            Arrays.fill(newOutData, InactiveBranchPortObject.INSTANCE);
+        } else {
+            PortObject[] newInData = new PortObject[rawInData.length];
+            newInData[0] = rawInData[0]; // flow variable port (or inactive)
+            // check for existence of all input tables
+            for (int i = 1; i < rawInData.length; i++) {
+                if (rawInData[i] == null && !m_inputs[i].getType().isOptional()) {
+                    createErrorMessageAndNotify("Couldn't get data from predecessor (Port No." + i + ").");
+                    return false;
+                }
+                if (rawInData[i] == null) { // optional input
+                    newInData[i] = null;  // (checked above)
+                } else if (rawInData[i] instanceof BufferedDataTable) {
+                    newInData[i] = rawInData[i];
+                } else {
+                    exec.setMessage("Copying input object at port " +  i);
+                    ExecutionMonitor subExec = exec.createSubProgress(0.0);
+                    try {
+                        newInData[i] = copyPortObject(rawInData[i], subExec);
+                    } catch (CanceledExecutionException e) {
+                        createWarningMessageAndNotify("Execution canceled");
+                        return false;
+                    } catch (Throwable e) {
+                        createErrorMessageAndNotify("Unable to clone input data at port " + i + " ("
+                                + m_inputs[i].getName() + "): " + e.getMessage(), e);
+                        return false;
+                    }
+                }
+            }
+
+            PortObject[] rawOutData;
+            try {
+                // INVOKE MODEL'S EXECUTE
+                // (warnings will now be processed "automatically" - we listen)
+                rawOutData = invokeFullyNodeModelExecute(exec, exEnv, newInData);
+            } catch (Throwable th) {
+                boolean isCanceled = th instanceof CanceledExecutionException;
+                isCanceled = isCanceled || th instanceof InterruptedException;
+                // TODO this can all be shortened to exec.isCanceled()?
+                isCanceled = isCanceled || exec.isCanceled();
+                // writing to a buffer is done asynchronously -- if this thread
+                // is interrupted while waiting for the IO thread to flush we take
+                // it as a graceful exit
+                isCanceled = isCanceled || (th instanceof DataContainerException
+                        && th.getCause() instanceof InterruptedException);
+                if (isCanceled) {
+                    // clear the flag so that the ThreadPool does not kill the thread
+                    Thread.interrupted();
+
+                    reset();
+                    createWarningMessageAndNotify("Execution canceled");
+                    return false;
+                } else {
+                    // check if we are inside a try-catch block (only if it was a real
+                    // error - not when canceled!)
+                    FlowObjectStack flowObjectStack = getFlowObjectStack();
+                    FlowTryCatchContext tcslc = flowObjectStack.peek(FlowTryCatchContext.class);
+                    if ((tcslc != null) && (!tcslc.isInactiveScope())) {
+                        // failure inside an active try-catch:
+                        // make node inactive but preserve error message.
+                        reset();
+                        PortObject[] outs = new PortObject[getNrOutPorts()];
+                        Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
+                        setOutPortObjects(outs, false, false);
+                        createErrorMessageAndNotify("Execution failed in Try-Catch block: " + th.getMessage());
+                        // and push information onto stack so catch-node can report it:
+                        FlowObjectStack fos = getNodeModel().getOutgoingFlowObjectStack();
+                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_FLAG, 1));
+                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_NODE, getName()));
+                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_REASON, th.getMessage()));
+                        StringWriter thstack = new StringWriter();
+                        th.printStackTrace(new PrintWriter(thstack));
+                        fos.push(new FlowVariable(FlowTryCatchContext.ERROR_STACKTRACE, thstack.toString()));
+                        return true;
+                    }
+                }
+                String message = "Execute failed: ";
+                if (th.getMessage() != null && th.getMessage().length() >= 5) {
+                    message = message.concat(th.getMessage());
+                } else {
+                    message = message.concat("(\"" + th.getClass().getSimpleName()
+                            + "\"): " + th.getMessage());
+                }
+                reset();
+                createErrorMessageAndNotify(message, th);
+                return false;
+            }
+            // copy to new array to prevent later modification in client code
+            newOutData = Arrays.copyOf(rawOutData, rawOutData.length);
+            if (newOutData[0] instanceof InactiveBranchPortObject) {
+                Arrays.fill(newOutData, InactiveBranchPortObject.INSTANCE);
+                isInactive = true;
+            }
+        }
+
         if (isInactive) {
             if (m_model instanceof ScopeStartNode) {
                 // inactive scope start node must indicate to their scope
@@ -900,119 +999,19 @@ public final class Node implements NodeModelWarningListener {
 //                    getOutgoingFlowObjectStack().pop(FlowScopeContext.class);
                 }
             }
-            // just a normal node: skip execution and fill output ports with inactive markers
-            PortObject[] outs = new PortObject[getNrOutPorts()];
-            Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
-            setOutPortObjects(outs, false, false);
-            assert !m_model.hasContent();
-            return true;
-        }
-
-        // copy input port objects, ignoring the 0-variable port:
-        PortObject[] data = Arrays.copyOfRange(rawData, 1, rawData.length);
-
-        PortObject[] inData = new PortObject[data.length];
-        // check for existence of all input tables
-        for (int i = 0; i < data.length; i++) {
-            if (data[i] == null && !m_inputs[i + 1].getType().isOptional()) {
-                m_logger.error("execute failed, input contains null");
-                // TODO NEWWFM state event
-                // TODO: also notify message/progress listeners
-                createErrorMessageAndNotify("Couldn't get data from predecessor (Port No." + i + ").");
-                // notifyStateListeners(new NodeStateChangedEvent.EndExecute());
-                return false;
-            }
-            if (data[i] == null) { // optional input
-                inData[i] = null;  // (checked above)
-            } else if (data[i] instanceof BufferedDataTable) {
-                inData[i] = data[i];
-            } else {
-                exec.setMessage("Copying input object at port " +  i);
-                ExecutionMonitor subExec = exec.createSubProgress(0.0);
-                try {
-                    inData[i] = copyPortObject(data[i], subExec);
-                } catch (CanceledExecutionException e) {
-                    createWarningMessageAndNotify("Execution canceled");
-                    return false;
-                } catch (Throwable e) {
-                    createErrorMessageAndNotify("Unable to clone input data at port " + i + ": " + e.getMessage(), e);
-                    return false;
-                }
+            assert !m_model.hasContent() : "Inactive node should have no content in node model";
+        } else {
+            for (int p = 1; p < getNrOutPorts(); p++) {
+                m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p - 1);
             }
         }
-
-        PortObject[] rawOutData; // the new DTs from the model
-        try {
-            // INVOKE MODEL'S EXECUTE
-            // (warnings will now be processed "automatically" - we listen)
-            rawOutData = invokeNodeModelExecute(exec, exEnv, inData);
-        } catch (Throwable th) {
-            boolean isCanceled = th instanceof CanceledExecutionException;
-            isCanceled = isCanceled || th instanceof InterruptedException;
-            // TODO this can all be shortened to exec.isCanceled()?
-            isCanceled = isCanceled || exec.isCanceled();
-            // writing to a buffer is done asynchronously -- if this thread
-            // is interrupted while waiting for the IO thread to flush we take
-            // it as a graceful exit
-            isCanceled = isCanceled || (th instanceof DataContainerException
-                                && th.getCause() instanceof InterruptedException);
-            if (isCanceled) {
-                // clear the flag so that the ThreadPool does not kill the
-                // thread
-                Thread.interrupted();
-
-                reset();
-                createWarningMessageAndNotify("Execution canceled");
-                return false;
-            } else {
-                // check if we are inside a try-catch block (only if it was a real
-                // error - not when canceled!)
-                FlowObjectStack flowObjectStack = getFlowObjectStack();
-                FlowTryCatchContext tcslc = flowObjectStack.peek(FlowTryCatchContext.class);
-                if ((tcslc != null) && (!tcslc.isInactiveScope())) {
-                    // failure inside an active try-catch:
-                    // make node inactive but preserve error message.
-                    reset();
-                    PortObject[] outs = new PortObject[getNrOutPorts()];
-                    Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
-                    setOutPortObjects(outs, false, false);
-                    createErrorMessageAndNotify("Execution failed in Try-Catch block: " + th.getMessage());
-                    // and push information onto stack so catch-node can report it:
-                    FlowObjectStack fos = getNodeModel().getOutgoingFlowObjectStack();
-                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_FLAG, 1));
-                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_NODE, getName()));
-                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_REASON, th.getMessage()));
-                    StringWriter thstack = new StringWriter();
-                    th.printStackTrace(new PrintWriter(thstack));
-                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_STACKTRACE, thstack.toString()));
-                    return true;
-                }
-            }
-            String message = "Execute failed: ";
-            if (th.getMessage() != null && th.getMessage().length() >= 5) {
-                message = message.concat(th.getMessage());
-            } else {
-                message = message.concat("(\"" + th.getClass().getSimpleName()
-                        + "\"): " + th.getMessage());
-            }
-            reset();
-            createErrorMessageAndNotify(message, th);
-            return false;
-        }
-        // add variable port at index 0
-        PortObject[] newOutData = new PortObject[rawOutData.length + 1];
-        System.arraycopy(rawOutData, 0, newOutData, 1, rawOutData.length);
-        newOutData[0] = FlowVariablePortObject.INSTANCE;
 
         // check if we see a loop status in the NodeModel
         FlowLoopContext slc = m_model.getLoopContext();
-        boolean continuesLoop = (slc != null);
+        boolean continuesLoop = (slc != null); // cannot be true for inactive nodes, see getLoopContext method
         boolean tolerateOutSpecDiff = (exEnv != null) && (exEnv.reExecute());
         if (!setOutPortObjects(newOutData, continuesLoop, tolerateOutSpecDiff)) {
             return false;
-        }
-        for (int p = 1; p < getNrOutPorts(); p++) {
-            m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p - 1);
         }
 
         // there might be previous internal tables in a loop (tables are kept between loop iterations)
@@ -1039,14 +1038,14 @@ public final class Node implements NodeModelWarningListener {
                     PortObject t = internalObjects[i];
                     if (t instanceof BufferedDataTable) {
                         // if table is one of the input tables, wrap it in WrappedTable (otherwise table get's copied)
-                        for (int in = 0; in < inData.length; in++) {
-                            if (t == inData[in]) {
+                        for (int in = 0; in < rawInData.length; in++) {
+                            if (t == rawInData[in]) {
                                 t = exec.createWrappedTable((BufferedDataTable)t);
                                 break;
                             }
                         }
                     } else {
-                        if (t != null && ArrayUtils.indexOf(rawOutData, t) < 0) {
+                        if (t != null && ArrayUtils.indexOf(newOutData, t) < 0) {
                             createErrorMessageAndNotify(String.format("Internally held port object at index %d (class "
                                     + "%s) is not part of any output", i, t.getClass().getSimpleName()));
                             return false;
@@ -1079,22 +1078,40 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.6
      */
     public PortObject[] invokeNodeModelExecute(final ExecutionContext exec,
-              final PortObject[] inData) throws Exception {
+        final PortObject[] inData) throws Exception {
         return invokeNodeModelExecute(exec, new ExecutionEnvironment(), inData);
     }
 
-    /** Invokes protected method {@link NodeModel#executeModel(
-     * PortObject[], ExecutionEnvironment, ExecutionContext)}. Isolated in a separate method call
-     * as it may be (ab)used by other executors.
+    /** Calls {@link #invokeFullyNodeModelExecute(ExecutionContext, ExecutionEnvironment, PortObject[])} with
+     * additional array element indicating flow variable port. This method is to be used when the caller doesn't use
+     * the optional flow variable in and output, e.g. for source nodes the argument array has length 0.
      * @param exec The execution context.
      * @param exEnv The execution environment.
      * @param inData The input data to the node (excluding flow var port)
-     * @return The output of node
+     * @return The output of node, exluding flow var port
      * @throws Exception An exception thrown by the client.
      * @since 2.8
      */
     public PortObject[] invokeNodeModelExecute(final ExecutionContext exec, final ExecutionEnvironment exEnv,
             final PortObject[] inData) throws Exception {
+        PortObject[] extendedInData = ArrayUtils.add(inData, 0, FlowVariablePortObject.INSTANCE);
+        PortObject[] extendedOutData = invokeFullyNodeModelExecute(exec, exEnv, extendedInData);
+        return ArrayUtils.remove(extendedOutData, 0);
+    }
+
+    /** Invokes package private method {@link NodeModel#executeModel(PortObject[], ExecutionEnvironment,
+     * ExecutionContext)}. The array argument and result include the optional flow variable in- and output (all nodes
+     * have at least one in- and one output).
+     * <p>Isolated in a separate method call as it may be (ab)used by other executors.
+     * @param exec The execution context.
+     * @param exEnv The execution environment.
+     * @param inData The input data to the node (including flow var port)
+     * @return The output of node, including flow variable port
+     * @throws Exception An exception thrown by the client.
+     * @since 2.11
+     */
+    public PortObject[] invokeFullyNodeModelExecute(final ExecutionContext exec, final ExecutionEnvironment exEnv,
+        final PortObject[] inData) throws Exception {
         // this may not have a NodeContext set (when run through 3rd party executor)
         return m_model.executeModel(inData, exEnv, exec);
     }

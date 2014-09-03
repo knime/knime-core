@@ -54,6 +54,7 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
@@ -61,6 +62,7 @@ import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
@@ -499,8 +501,8 @@ public abstract class NodeModel {
      * addition, this method notifies all assigned views of the model about the
      * changes.
      *
-     * @param data An array of <code>DataTable</code> objects holding the data
-     *            from the inputs.
+     * @param rawData An array of <code>PortObject</code> objects holding the data
+     *            from the inputs (includes flow variable port).
      * @param exEnv The execution environment used for execution of this model.
      * @param exec The execution monitor which is passed to the execute method
      *            of this model.
@@ -521,8 +523,9 @@ public abstract class NodeModel {
      * @noreference This method is not intended to be referenced by clients
      *              (use Node class instead)
      */
-    final PortObject[] executeModel(final PortObject[] data, final ExecutionEnvironment exEnv,
+    PortObject[] executeModel(final PortObject[] rawData, final ExecutionEnvironment exEnv,
             final ExecutionContext exec) throws Exception {
+        final PortObject[] data = ArrayUtils.remove(rawData, 0);
         assert (data != null && data.length == getNrInPorts());
         assert (exec != null);
 
@@ -643,7 +646,10 @@ public abstract class NodeModel {
         }
 
         setHasContent(true);
-        return outData;
+        PortObject[] rawOutData = new PortObject[getNrOutPorts() + 1];
+        rawOutData[0] = FlowVariablePortObject.INSTANCE;
+        System.arraycopy(outData, 0, rawOutData, 1, outData.length);
+        return rawOutData;
     } // executeModel(PortObject[],ExecutionMonitor)
 
     /**
@@ -1708,7 +1714,7 @@ public abstract class NodeModel {
         if (partitionIndex != 0) {
             throw new IllegalStateException("Default implementation of a"
                     + "streaming execution should not be distributed (this "
-                    + "appears to be partition " + partitionIndex);
+                    + "appears to be partition " + partitionIndex + ")");
         }
         return new StreamableOperator() {
 
@@ -1720,7 +1726,11 @@ public abstract class NodeModel {
                 for (int i = 0; i < inputs.length; i++) {
                     inObjects[i] = ((PortObjectInput)inputs[i]).getPortObject();
                 }
-                PortObject[] outObjects = executeModel(inObjects, null, ctx);
+                // add flow variable port and remove it later from result - executeModel expects it
+                PortObject[] extendedInData = ArrayUtils.add(inObjects, 0, FlowVariablePortObject.INSTANCE);
+                PortObject[] extendedOutData = executeModel(extendedInData, null, ctx);
+                PortObject[] outObjects = ArrayUtils.remove(extendedOutData, 0);
+
                 for (int i = 0; i < outputs.length; i++) {
                     ((PortObjectOutput)outputs[i]).setPortObject(outObjects[i]);
                 }
