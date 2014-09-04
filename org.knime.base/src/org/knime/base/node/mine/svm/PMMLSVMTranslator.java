@@ -81,6 +81,7 @@ import org.knime.base.node.mine.svm.kernel.Kernel;
 import org.knime.base.node.mine.svm.kernel.KernelFactory;
 import org.knime.base.node.mine.svm.kernel.KernelFactory.KernelType;
 import org.knime.base.node.mine.svm.util.DoubleVector;
+import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
@@ -230,7 +231,7 @@ public class PMMLSVMTranslator implements PMMLTranslator {
                 String vectorId = supportVector.getVectorId();
                 String classValue = getClassValue(vectorId);
                 supportVectors[i] =
-                        new DoubleVector(vectors.get(vectorId), classValue);
+                        new DoubleVector(new RowKey(vectorId), vectors.get(vectorId), classValue);
             }
             Coefficients coef = supportVectorMachine.getCoefficients();
             double threshold = coef.getAbsoluteValue();
