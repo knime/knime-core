@@ -66,6 +66,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.xmlbeans.XmlException;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
@@ -534,8 +535,13 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         VirtualSubNodeInputNodeModel inNode = getVirtualInNodeModel();
         VirtualSubNodeOutputNodeModel outNode = getVirtualOutNodeModel();
         String description = inNode.getSubNodeDescription();
-        // Generate short text from long text
-        String sDescription = shortenText(description.replace("\n", " "), 200);
+        String sDescription;
+        if (StringUtils.isEmpty(description)) {
+            sDescription = "";
+        } else {
+            sDescription = StringUtils.split(description, ".\n")[0];
+            sDescription = StringUtils.abbreviate(sDescription, 200);
+        }
         String[] inPortNames = inNode.getPortNames();
         String[] inPortDescriptions = inNode.getPortDescriptions();
         String[] outPortNames = outNode.getPortNames();
@@ -638,46 +644,21 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     }
 
     /**
-     * Puts the text into the element while replacing new lines with <br /> elements.
+     * Puts the text into the element while replacing new lines with &lt;br /> elements.
      *
      * @param element The element to add to
      * @param text The text to add
-     * @param defaultTextIfEmpty TODO
+     * @param defaultTextIfEmpty Text to show if <code>text</code> is empty.
      */
     private void addText(final Element element, final String text, final String defaultTextIfEmpty) {
         Document doc = element.getOwnerDocument();
-        final boolean useDefault = text.isEmpty();
-        String[] splitText = (useDefault ? defaultTextIfEmpty : text).split("\n");
+        String[] splitText = (text.isEmpty() ? defaultTextIfEmpty : text).split("\n");
         for (int i = 0; i < splitText.length; i++) {
-            if (useDefault && NO_DESCRIPTION_SET.equals(splitText[i])) { // make warning italic
-                org.w3c.dom.Node child = element.appendChild(doc.createElement("i"));
-                child.appendChild(doc.createTextNode(splitText[i]));
-            } else {
-                element.appendChild(doc.createTextNode(splitText[i]));
-            }
+            element.appendChild(doc.createTextNode(splitText[i]));
             if (i + 1 < splitText.length) {
                 element.appendChild(doc.createElement("br"));
             }
         }
-    }
-
-    /**
-     * @param text The text that should be shortened
-     * @param maxLength The maximum length of the text
-     * @return The shortened text cut of at the last complete word (if possible) and followed by ...
-     */
-    private String shortenText(final String text, final int maxLength) {
-        if (text.length() <= maxLength) {
-            return text;
-        }
-        // reserve last three characters for ...
-        int actualMaxLength = maxLength >= 3 ? maxLength - 3 : 0;
-        String shortenedText = text.substring(0, actualMaxLength);
-        int lastIndex = Math.max(shortenedText.lastIndexOf(" "), shortenedText.lastIndexOf("\n"));
-        if (lastIndex >= 0) {
-            shortenedText = shortenedText.substring(0, lastIndex);
-        }
-        return shortenedText + "...";
     }
 
     /**
