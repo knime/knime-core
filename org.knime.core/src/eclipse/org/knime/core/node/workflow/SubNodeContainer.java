@@ -139,6 +139,9 @@ import org.w3c.dom.Element;
  */
 public final class SubNodeContainer extends SingleNodeContainer implements NodeContainerParent, NodeContainerTemplate {
 
+    /** Shown in help description when nothing is set in input/output node. */
+    private static final String NO_DESCRIPTION_SET = "<no description set>";
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(SubNodeContainer.class);
 
     /** Keeps outgoing information (specs, objects, HiLiteHandlers...). */
@@ -563,20 +566,21 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
             // shortDescription
             Element shortDescription = doc.createElement("shortDescription");
             knimeNode.appendChild(shortDescription);
-            addText(shortDescription, sDescription);
+            addText(shortDescription, sDescription, NO_DESCRIPTION_SET);
             // fullDescription
             Element fullDescription = doc.createElement("fullDescription");
             knimeNode.appendChild(fullDescription);
             // intro
             Element intro = doc.createElement("intro");
             fullDescription.appendChild(intro);
-            addText(intro, description);
+            addText(intro, description, NO_DESCRIPTION_SET + "\nIn order to set a description browse the input node "
+                    + "contained in the subnode and change its configuration.");
             // option
             for (int i = 0; i < optionNames.size(); i++) {
                 Element option = doc.createElement("option");
                 fullDescription.appendChild(option);
                 option.setAttribute("name", optionNames.get(i));
-                addText(option, optionDescriptions.get(i));
+                addText(option, optionDescriptions.get(i), "");
             }
             // ports
             Element ports = doc.createElement("ports");
@@ -587,7 +591,12 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 ports.appendChild(inPort);
                 inPort.setAttribute("index", "" + i);
                 inPort.setAttribute("name", inPortNames[i]);
-                addText(inPort, inPortDescriptions[i]);
+                String defaultText = NO_DESCRIPTION_SET;
+                if (i == 0) {
+                    defaultText += "\nChange this label by browsing the input node contained in the subnode "
+                            + "and changing its configuration.";
+                }
+                addText(inPort, inPortDescriptions[i], defaultText);
             }
             // outPort
             for (int i = 0; i < outPortNames.length; i++) {
@@ -595,7 +604,12 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 ports.appendChild(outPort);
                 outPort.setAttribute("index", "" + i);
                 outPort.setAttribute("name", outPortNames[i]);
-                addText(outPort, outPortDescriptions[i]);
+                String defaultText = NO_DESCRIPTION_SET;
+                if (i == 0) {
+                    defaultText += "\nChange this label by browsing the output node contained in the subnode "
+                            + "and changing its configuration.";
+                }
+                addText(outPort, outPortDescriptions[i], defaultText);
             }
             return new NodeDescription27Proxy(doc).getXMLDescription();
         } catch (ParserConfigurationException | DOMException | XmlException e) {
@@ -628,12 +642,19 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      *
      * @param element The element to add to
      * @param text The text to add
+     * @param defaultTextIfEmpty TODO
      */
-    private void addText(final Element element, final String text) {
+    private void addText(final Element element, final String text, final String defaultTextIfEmpty) {
         Document doc = element.getOwnerDocument();
-        String[] splitText = text.split("\n");
+        final boolean useDefault = text.isEmpty();
+        String[] splitText = (useDefault ? defaultTextIfEmpty : text).split("\n");
         for (int i = 0; i < splitText.length; i++) {
-            element.appendChild(doc.createTextNode(splitText[i]));
+            if (useDefault && NO_DESCRIPTION_SET.equals(splitText[i])) { // make warning italic
+                org.w3c.dom.Node child = element.appendChild(doc.createElement("i"));
+                child.appendChild(doc.createTextNode(splitText[i]));
+            } else {
+                element.appendChild(doc.createTextNode(splitText[i]));
+            }
             if (i + 1 < splitText.length) {
                 element.appendChild(doc.createElement("br"));
             }
