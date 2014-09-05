@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,59 +41,52 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   17.07.2014 (koetter): created
  */
-
 package org.knime.base.data.aggregation.dialogutil;
 
 import java.awt.Component;
 
+import javax.swing.DefaultCellEditor;
 import javax.swing.JTable;
-import javax.swing.table.TableModel;
+import javax.swing.JTextField;
 
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.core.data.DataType;
 
 /**
- * Include missing cell table cell renderer that contains most
- * of the code from the {JTable$BooleanRenderer} class.
- * @author Tobias Koetter, University of Konstanz
+ * {@link DataTypeAggregator} table cell editor class that allows the user to choose from the supported
+ * {@link AggregationMethod}s for {@link DataType} of the current {@link DataTypeAggregator}.
+ *
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @since 2.11
  */
-public class IncludeMissingCellRenderer extends BooleanCellRenderer {
-    private static final long serialVersionUID = 4646190851811197484L;
-    private final TableModel m_model;
+public class PatternTableCellEditor extends DefaultCellEditor {
 
-    /**Constructor for class IncludeMissingCellRenderer.
-     * @param tableModel the table model with the values that should
-     * be rendered
+    private static final long serialVersionUID = 1;
+
+    /**Constructor for class AggregationMethodTableCellEditor.
      */
-    public IncludeMissingCellRenderer(final TableModel tableModel) {
-        super();
-        if (tableModel == null) {
-            throw new NullPointerException(
-                    "Table model must not be null");
-        }
-        m_model = tableModel;
+    public PatternTableCellEditor() {
+        super(new JTextField());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected,
-            final boolean hasFocus, final int row, final int column) {
-        super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-        setEnabled(m_model.isCellEditable(row, column));
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        final String superText = super.getToolTipText();
-        if (superText != null) {
-            return superText;
+    public Component getTableCellEditorComponent(final JTable table, final Object value, final boolean isSelected,
+        final int row, final int column) {
+        final String val;
+        if (value instanceof PatternAggregator) {
+            final PatternAggregator method = (PatternAggregator)value;
+            val = method.getInputPattern();
+        } else {
+            val = value.toString();
         }
-        return "Tick to include missing cells";
+        return super.getTableCellEditorComponent(table, val, isSelected, row, column);
     }
 }

@@ -61,8 +61,7 @@ import org.knime.base.data.aggregation.AggregationMethodDecorator;
  * {@link TableModel} operates with
  * @since 2.6
  */
-public interface AggregationTableModel<O extends AggregationMethodDecorator>
-    extends TableModel {
+public interface AggregationTableModel<O extends AggregationMethodDecorator> extends TableModel {
 
     /**
      * Removes all entries from the table.

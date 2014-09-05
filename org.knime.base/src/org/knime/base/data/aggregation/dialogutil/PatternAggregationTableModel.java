@@ -68,7 +68,7 @@ import org.knime.core.data.DataType;
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class RegexAggregationTableModel extends AbstractAggregationTableModel<RegexAggregator> {
+public class PatternAggregationTableModel extends AbstractAggregationTableModel<PatternAggregator> {
 
     private static final long serialVersionUID = 1L;
     private JPanel m_panel;
@@ -76,9 +76,9 @@ public class RegexAggregationTableModel extends AbstractAggregationTableModel<Re
     /**
      * Constructor.
      */
-    RegexAggregationTableModel() {
-        super(new String[] {"Regular expression (double click to change)", "Aggregation (click to change)"},
-            new Class[] {RegexAggregator.class, RegexAggregator.class}, true);
+    PatternAggregationTableModel() {
+        super(new String[] {"Search pattern (double click to change)", "RegEx", "Aggregation (click to change)"},
+            new Class[] {PatternAggregator.class, Boolean.class, PatternAggregator.class}, true);
     }
 
 
@@ -90,51 +90,76 @@ public class RegexAggregationTableModel extends AbstractAggregationTableModel<Re
         if (aValue == null) {
             return;
         }
-        if (columnIdx == 0) {
-            updateRegex(row, aValue.toString());
-        }
-        if (columnIdx == 1) {
-            if (aValue instanceof AggregationMethod) {
-                assert columnIdx == 1;
-                final AggregationMethod newMethod = (AggregationMethod)aValue;
-                updateMethod(row, newMethod);
-            }
+        switch (columnIdx) {
+            case 0:
+                updateRegexPattern(row, aValue.toString());
+                break;
+            case 1:
+                if (aValue instanceof Boolean) {
+                    updateIsRegex(row, ((Boolean)aValue).booleanValue());
+                }
+            case 2:
+                if (aValue instanceof AggregationMethod) {
+                    final AggregationMethod newMethod = (AggregationMethod)aValue;
+                    updateMethod(row, newMethod);
+                }
+                break;
         }
     }
+
+    /**
+     * @param row
+     * @param isRegex
+     */
+    private void updateIsRegex(final int row, final boolean isRegex) {
+        final PatternAggregator old = getRow(row);
+        if (old.isRegex() == isRegex) {
+            //check if the method has changed
+            return;
+        }
+        updateRegex(row, old.getInputPattern(), isRegex, old);
+    }
+
 
     /**
      * @param row the row index
      * @param regex the new regular expression to use
      */
-    private void updateRegex(final int row, final String regex) {
-        final RegexAggregator old = getRow(row);
-        if (old.getRegex().equals(regex)) {
+    private void updateRegexPattern(final int row, final String regex) {
+        final PatternAggregator old = getRow(row);
+        if (old.getInputPattern().equals(regex)) {
             //check if the method has changed
             return;
         }
-        //create a new operator each time it is updated to guarantee that
+        updateRegex(row, regex, old.isRegex(), old);
+    }
+
+    private void updateRegex(final int row, final String pattern, final boolean isRegex, final PatternAggregator old) {
+      //create a new operator each time it is updated to guarantee that
         //each column has its own operator instance
         final AggregationMethod methodClone = AggregationMethods.getMethod4Id(old.getMethodTemplate().getId());
-        final RegexAggregator regexAggregator = new RegexAggregator(regex, methodClone, old.inclMissingCells());
+        final PatternAggregator regexAggregator =
+                new PatternAggregator(pattern, isRegex, methodClone, old.inclMissingCells());
         if (!regexAggregator.isValid()) {
             try {
-                Pattern.compile(regex);
+                Pattern.compile(pattern);
             } catch (PatternSyntaxException e) {
                 final Component root = SwingUtilities.getRoot(m_panel);
                 JOptionPane.showMessageDialog(root, "<html><body><p>Invalid regular expression:</p><p>"
-                        + regex + "</p><p>" + e.getDescription() + " at position " + e.getIndex() + "</p>",
+                        + pattern + "</p><p>" + e.getDescription() + " at position " + e.getIndex() + "</p>",
                     "Invalid regular expression", JOptionPane.ERROR_MESSAGE);
             }
         }
         updateRow(row, regexAggregator);
     }
 
+
     /**
      * @param row the row to update
      * @param method the {@link AggregationMethod} to use
      */
     private void updateMethod(final int row, final AggregationMethod method) {
-        final RegexAggregator old = getRow(row);
+        final PatternAggregator old = getRow(row);
         if (old.getMethodTemplate().equals(method)) {
             //check if the method has changed
             return;
@@ -142,7 +167,8 @@ public class RegexAggregationTableModel extends AbstractAggregationTableModel<Re
         //create a new operator each time it is updated to guarantee that
         //each column has its own operator instance
         final AggregationMethod methodClone = AggregationMethods.getMethod4Id(method.getId());
-        updateRow(row, new RegexAggregator(old.getRegex(), methodClone, old.inclMissingCells()));
+        updateRow(row, new PatternAggregator(old.getInputPattern(), old.isRegex(), methodClone,
+            old.inclMissingCells()));
     }
 
     /**
@@ -150,7 +176,7 @@ public class RegexAggregationTableModel extends AbstractAggregationTableModel<Re
      */
     @Override
     public boolean isCellEditable(final int row, final int columnIdx) {
-        final RegexAggregator operator = getRow(row);
+        final PatternAggregator operator = getRow(row);
         if (!operator.isValid()) {
             //the row is not editable if the operator is invalid
             return columnIdx == 0;
@@ -168,6 +194,8 @@ public class RegexAggregationTableModel extends AbstractAggregationTableModel<Re
                 return true;
             case 1:
                 return true;
+            case 2:
+                return true;
             default:
                 return false;
         }
@@ -178,11 +206,13 @@ public class RegexAggregationTableModel extends AbstractAggregationTableModel<Re
      */
     @Override
     protected Object getValueAtRow(final int row, final int columnIndex) {
-        final RegexAggregator aggregator = getRow(row);
+        final PatternAggregator aggregator = getRow(row);
         switch (columnIndex) {
         case 0:
             return aggregator;
         case 1:
+            return Boolean.valueOf(aggregator.isRegex());
+        case 2:
             return aggregator;
 
         default:
@@ -190,7 +220,6 @@ public class RegexAggregationTableModel extends AbstractAggregationTableModel<Re
         }
         return null;
     }
-
 
     /**
      * @param panel the {@link JPanel} this model is used in

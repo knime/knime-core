@@ -66,7 +66,7 @@ import org.knime.core.data.DataType;
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class RegexAggregatorTableCellEditor extends AbstractAggregationMethodTableCellEditor {
+public class PatternAggregatorTableCellEditor extends AbstractAggregationMethodTableCellEditor {
 
     private static final long serialVersionUID = 1L;
 

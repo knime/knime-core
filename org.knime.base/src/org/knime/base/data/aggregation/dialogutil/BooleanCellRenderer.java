@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,37 +41,38 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   01.09.2014 (koetter): created
  */
-
 package org.knime.base.data.aggregation.dialogutil;
 
 import java.awt.Component;
 
+import javax.swing.JCheckBox;
 import javax.swing.JTable;
-import javax.swing.table.TableModel;
-
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.UIResource;
+import javax.swing.table.TableCellRenderer;
 
 /**
- * Include missing cell table cell renderer that contains most
- * of the code from the {JTable$BooleanRenderer} class.
- * @author Tobias Koetter, University of Konstanz
+ * {@link TableCellRenderer} that renders a check box for a boolean value.
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @since 2.11
  */
-public class IncludeMissingCellRenderer extends BooleanCellRenderer {
-    private static final long serialVersionUID = 4646190851811197484L;
-    private final TableModel m_model;
+public class BooleanCellRenderer extends JCheckBox implements TableCellRenderer, UIResource {
+    private static final long serialVersionUID = 1L;
+    private static final Border NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
 
-    /**Constructor for class IncludeMissingCellRenderer.
-     * @param tableModel the table model with the values that should
-     * be rendered
-     */
-    public IncludeMissingCellRenderer(final TableModel tableModel) {
+    /**Constructor.*/
+    public BooleanCellRenderer() {
         super();
-        if (tableModel == null) {
-            throw new NullPointerException(
-                    "Table model must not be null");
-        }
-        m_model = tableModel;
+        setHorizontalAlignment(SwingConstants.CENTER);
+        setBorderPainted(true);
     }
 
     /**
@@ -79,8 +81,19 @@ public class IncludeMissingCellRenderer extends BooleanCellRenderer {
     @Override
     public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected,
             final boolean hasFocus, final int row, final int column) {
-        super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-        setEnabled(m_model.isCellEditable(row, column));
+        if (isSelected) {
+            setForeground(table.getSelectionForeground());
+            super.setBackground(table.getSelectionBackground());
+        } else {
+            setForeground(table.getForeground());
+            setBackground(table.getBackground());
+        }
+        setSelected((value != null && ((Boolean)value).booleanValue()));
+        if (hasFocus) {
+            setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
+        } else {
+            setBorder(NO_FOCUS_BORDER);
+        }
         return this;
     }
 
@@ -93,6 +106,6 @@ public class IncludeMissingCellRenderer extends BooleanCellRenderer {
         if (superText != null) {
             return superText;
         }
-        return "Tick to include missing cells";
+        return "Tick if the pattern is a regular expression";
     }
 }

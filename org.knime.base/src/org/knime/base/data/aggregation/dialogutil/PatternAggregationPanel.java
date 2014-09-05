@@ -80,8 +80,10 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class RegexAggregationPanel
-extends AbstractAggregationPanel<RegexAggregationTableModel, RegexAggregator, Object> {
+public class PatternAggregationPanel
+extends AbstractAggregationPanel<PatternAggregationTableModel, PatternAggregator, Object> {
+
+    private static final int REGEX_SIZE = 45;
 
     private String m_key;
 
@@ -89,9 +91,9 @@ extends AbstractAggregationPanel<RegexAggregationTableModel, RegexAggregator, Ob
      * Constructor.
      * @param key the unique settings key
      */
-    public RegexAggregationPanel(final String key) {
+    public PatternAggregationPanel(final String key) {
         super("Aggregation Settings", "Data types", new DefaultListCellRenderer(), "Aggregation methods",
-            new RegexAggregationTableModel());
+            new PatternAggregationTableModel());
         if (key == null || key.isEmpty()) {
             throw new IllegalArgumentException("key must not be empty");
         }
@@ -112,16 +114,16 @@ extends AbstractAggregationPanel<RegexAggregationTableModel, RegexAggregator, Ob
      */
     @Override
     protected Component createButtonComponent() {
-        final JButton addRegexButton = new JButton("Add new regex");
+        final JButton addRegexButton = new JButton("Add");
         addRegexButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
-                final List<RegexAggregator> methods = new LinkedList<>();
-                methods.add(new RegexAggregator(".*", AggregationMethods.getDefaultNotNumericalMethod()));
+                final List<PatternAggregator> methods = new LinkedList<>();
+                methods.add(new PatternAggregator(".*", true, AggregationMethods.getDefaultNotNumericalMethod()));
                 addMethods(methods);
             }
         });
-        final JButton removeSelectedButton = new JButton("Remove selected");
+        final JButton removeSelectedButton = new JButton("Remove");
         removeSelectedButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
@@ -180,16 +182,19 @@ extends AbstractAggregationPanel<RegexAggregationTableModel, RegexAggregator, Ob
                 @Override
                 public void renderComponent(final DefaultTableCellRenderer c,
                                             final AggregationMethodDecorator method) {
-                    if (method instanceof RegexAggregator) {
-                        final RegexAggregator aggregator = (RegexAggregator)method;
-                        final String regex = aggregator.getRegex();
+                    if (method instanceof PatternAggregator) {
+                        final PatternAggregator aggregator = (PatternAggregator)method;
+                        final String regex = aggregator.getInputPattern();
                         c.setText(regex);
                     }
                 }
             }, true, "Double click to change regular expression. Right mouse click for context menu."));
-        columnModel.getColumn(0).setCellEditor(new RegexTableCellEditor());
-        columnModel.getColumn(1).setCellEditor(new RegexAggregatorTableCellEditor());
-        columnModel.getColumn(1).setCellRenderer(
+        columnModel.getColumn(0).setCellEditor(new PatternTableCellEditor());
+        columnModel.getColumn(1).setCellRenderer(new BooleanCellRenderer());
+        columnModel.getColumn(1).setMinWidth(REGEX_SIZE);
+        columnModel.getColumn(1).setMaxWidth(REGEX_SIZE);
+        columnModel.getColumn(2).setCellEditor(new PatternAggregatorTableCellEditor());
+        columnModel.getColumn(2).setCellRenderer(
                 new AggregationMethodDecoratorTableCellRenderer(new ValueRenderer() {
                     @Override
                     public void renderComponent(final DefaultTableCellRenderer c,
@@ -241,7 +246,7 @@ extends AbstractAggregationPanel<RegexAggregationTableModel, RegexAggregator, Ob
      */
     public void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec spec)
     throws InvalidSettingsException {
-        final List<RegexAggregator> aggregators = RegexAggregator.loadAggregators(settings, m_key, spec);
+        final List<PatternAggregator> aggregators = PatternAggregator.loadAggregators(settings, m_key, spec);
         initialize(Collections.EMPTY_LIST, aggregators, spec);
     }
 
@@ -249,13 +254,13 @@ extends AbstractAggregationPanel<RegexAggregationTableModel, RegexAggregator, Ob
      * @param settings {@link NodeSettingsWO}
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
-        RegexAggregator.saveAggregators(settings, m_key, getTableModel().getRows());
+        PatternAggregator.saveAggregators(settings, m_key, getTableModel().getRows());
     }
     /**
      * {@inheritDoc}
      */
     @Override
-    protected RegexAggregator getOperator(final Object selectedListElement) {
-        return new RegexAggregator(".*", AggregationMethods.getDefaultNotNumericalMethod());
+    protected PatternAggregator getOperator(final Object selectedListElement) {
+        return new PatternAggregator(".*", true, AggregationMethods.getDefaultNotNumericalMethod());
     }
 }

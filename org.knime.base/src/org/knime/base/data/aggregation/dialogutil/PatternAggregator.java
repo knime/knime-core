@@ -57,6 +57,7 @@ import java.util.regex.PatternSyntaxException;
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethodDecorator;
 import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.util.WildcardMatcher;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
@@ -74,82 +75,104 @@ import com.sun.org.apache.xml.internal.security.encryption.AgreementMethod;
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class RegexAggregator extends AggregationMethodDecorator {
+public class PatternAggregator extends AggregationMethodDecorator {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(RegexAggregator.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(PatternAggregator.class);
 
     private static final String CNFG_DATA_TYPE_AGGR_SECTION = "regexAggregators";
-    private static final String CNFG_REGEX = "regularExpression";
+    private static final String CNFG_INPUT_PATTERN = "inputPattern";
+    private static final String CNFG_IS_REGEX = "isRegularExpression";
 
-    private final String m_regex;
+    private final String m_inputPattern;
+
+    private final boolean m_isRegex;
 
     private final Pattern m_pattern;
 
     /**
-     * @param regex the regular expression
+     * @param pattern the search pattern
+     * @param isRegex <code>true</code> if the pattern is a regular expression
      * @param method {@link AgreementMethod}
      */
-    public RegexAggregator(final String regex, final AggregationMethod method) {
-        this(regex, method, method.supportsMissingValueOption());
+    public PatternAggregator(final String pattern, final boolean isRegex, final AggregationMethod method) {
+        this(pattern, isRegex, method, method.supportsMissingValueOption());
     }
 
     /**
-     * @param regex the regular expression
+     * @param pattern the search pattern
+     * @param isRegex <code>true</code> if the pattern is a regular expression
      * @param method {@link AgreementMethod}
      * @param inclMissing <code>true</code> if missing values should be considered
      */
-    public RegexAggregator(final String regex, final AggregationMethod method, final boolean inclMissing) {
+    public PatternAggregator(final String pattern, final boolean isRegex, final AggregationMethod method,
+        final boolean inclMissing) {
         super(method, inclMissing);
-        m_regex = regex;
-        Pattern pattern = null;
-        try {
-            pattern = Pattern.compile(regex);
-        } catch (PatternSyntaxException e) {
-            //catch regular expression syntax exceptions
+        m_inputPattern = pattern;
+        m_isRegex = isRegex;
+        Pattern regexPattern = null;
+        if (m_isRegex) {
+            try {
+                regexPattern = Pattern.compile(pattern);
+            } catch (PatternSyntaxException e) {
+                //catch regular expression syntax exceptions
+            }
+        } else {
+            final String wildcardToRegex = WildcardMatcher.wildcardToRegex(pattern);
+            try {
+                regexPattern = Pattern.compile(wildcardToRegex);
+            } catch (PatternSyntaxException ex) {
+                //catch regular expression syntax exceptions
+            }
         }
-        m_pattern = pattern;
+        m_pattern = regexPattern;
         setValid(m_pattern != null);
+    }
+    /**
+     * @return <code>true</code> if the input pattern was a regular expression otherwise <code>false</code>
+     */
+    public boolean isRegex() {
+        return m_isRegex;
     }
 
     /**
      * @return the pattern or <code>null</code> if the regular expression is not valid
      * @see #isValid()
      */
-    public Pattern getPattern() {
+    public Pattern getRegexPattern() {
         return m_pattern;
     }
 
     /**
      * @return the regular expression to use
      */
-    public String getRegex() {
-        return m_regex;
+    public String getInputPattern() {
+        return m_inputPattern;
     }
 
     /**
-     * Creates a {@link List} with all {@link RegexAggregator}s that were
+     * Creates a {@link List} with all {@link PatternAggregator}s that were
      * stored in the settings.
      *
      * @param settings the settings object to read from
      * @param key the unique settings key
-     * @return {@link List} with the {@link RegexAggregator}s
+     * @return {@link List} with the {@link PatternAggregator}s
      * @throws InvalidSettingsException if the settings are invalid
      */
-    public static List<RegexAggregator> loadAggregators(final NodeSettingsRO settings, final String key)
+    public static List<PatternAggregator> loadAggregators(final NodeSettingsRO settings, final String key)
             throws InvalidSettingsException {
         return loadAggregators(settings, key, null);
     }
     /**
-     * Creates a {@link List} with all {@link RegexAggregator}s that were
+     * Creates a {@link List} with all {@link PatternAggregator}s that were
      * stored in the settings.
      *
      * @param settings the settings object to read from
      * @param key the unique settings key
      * @param spec {@link DataTableSpec} of the input table if available
-     * @return {@link List} with the {@link RegexAggregator}s
+     * @return {@link List} with the {@link PatternAggregator}s
      * @throws InvalidSettingsException if the settings are invalid
      */
-    public static List<RegexAggregator> loadAggregators(final NodeSettingsRO settings, final String key,
+    public static List<PatternAggregator> loadAggregators(final NodeSettingsRO settings, final String key,
         final DataTableSpec spec) throws InvalidSettingsException {
         if (settings == null) {
             throw new IllegalArgumentException("settings must not be null");
@@ -158,11 +181,12 @@ public class RegexAggregator extends AggregationMethodDecorator {
             throw new IllegalArgumentException("key must not be empty");
         }
         final Config cnfg = settings.getConfig(key);
-        final String[] regexs = cnfg.getStringArray(CNFG_REGEX);
+        final String[] regexs = cnfg.getStringArray(CNFG_INPUT_PATTERN);
+        final boolean[] isRegex = cnfg.getBooleanArray(CNFG_IS_REGEX);
         final String[] aggrMethods = cnfg.getStringArray(CNFG_AGGR_METHODS);
         boolean[] inclMissingVals = null;
         inclMissingVals = cnfg.getBooleanArray(CNFG_INCL_MISSING_VALS);
-        final List<RegexAggregator> aggrList = new LinkedList<>();
+        final List<PatternAggregator> aggrList = new LinkedList<>();
         if (aggrMethods.length != regexs.length) {
             throw new InvalidSettingsException("Data type array and aggregation method array should be of equal size");
         }
@@ -175,7 +199,7 @@ public class RegexAggregator extends AggregationMethodDecorator {
                 //get the default behavior of the method
                 inclMissingVal = method.inclMissingCells();
             }
-            final RegexAggregator aggr = new RegexAggregator(regexs[i], method, inclMissingVal);
+            final PatternAggregator aggr = new PatternAggregator(regexs[i], isRegex[i], method, inclMissingVal);
             if (aggr.hasOptionalSettings()) {
                 try {
                     final NodeSettingsRO operatorSettings = settings.getNodeSettings(
@@ -202,18 +226,18 @@ public class RegexAggregator extends AggregationMethodDecorator {
      * @param aggr
      * @return
      */
-    private static String createSettingsKey(final RegexAggregator aggr) {
+    private static String createSettingsKey(final PatternAggregator aggr) {
         //the method id and the data type are unique since
-        return aggr.getId() + "_" + aggr.getRegex();
+        return aggr.getId() + "_" + aggr.getInputPattern();
     }
 
     /**
      * @param settings the settings object to write to
      * @param key the unique settings key
-     * @param aggregators the {@link RegexAggregator} objects to save
+     * @param aggregators the {@link PatternAggregator} objects to save
      */
     public static void saveAggregators(final NodeSettingsWO settings, final String key,
-        final Collection<RegexAggregator> aggregators) {
+        final Collection<PatternAggregator> aggregators) {
         if (key == null || key.isEmpty()) {
             throw new IllegalArgumentException("key must not be empty");
         }
@@ -224,13 +248,15 @@ public class RegexAggregator extends AggregationMethodDecorator {
             throw new NullPointerException("cols must not be null");
         }
         final String[] aggrMethods = new String[aggregators.size()];
+        final boolean[] isRegex = new boolean[aggregators.size()];
         final boolean[] inclMissingVals = new boolean[aggregators.size()];
-        final String[] regexs = new String[aggregators.size()];
+        final String[] inputPatterns = new String[aggregators.size()];
         int i = 0;
-        for (RegexAggregator aggr : aggregators) {
+        for (PatternAggregator aggr : aggregators) {
             final AggregationMethod method = aggr.getMethodTemplate();
             aggrMethods[i] = aggr.getId();
-            regexs[i] = aggr.getRegex();
+            inputPatterns[i] = aggr.getInputPattern();
+            isRegex[i] = aggr.m_isRegex;
             inclMissingVals[i] = aggr.inclMissingCells();
             if (aggr.hasOptionalSettings()) {
                 try {
@@ -245,23 +271,24 @@ public class RegexAggregator extends AggregationMethodDecorator {
             i++;
         }
         final Config cnfg = settings.addConfig(CNFG_DATA_TYPE_AGGR_SECTION);
-        cnfg.addStringArray(CNFG_REGEX, regexs);
+        cnfg.addStringArray(CNFG_INPUT_PATTERN, inputPatterns);
+        cnfg.addBooleanArray(CNFG_IS_REGEX, isRegex);
         cnfg.addStringArray(CNFG_AGGR_METHODS, aggrMethods);
         cnfg.addBooleanArray(CNFG_INCL_MISSING_VALS, inclMissingVals);
     }
 
     /**
-     * Validates the operator specific settings of all {@link RegexAggregator}s
+     * Validates the operator specific settings of all {@link PatternAggregator}s
      * that require additional settings.
      *
      * @param settings the settings to validate
      * @param aggregators the operators to validate
      * @throws InvalidSettingsException if the settings of an operator are not valid
      */
-    public static void validateSettings(final NodeSettingsRO settings, final List<RegexAggregator> aggregators)
+    public static void validateSettings(final NodeSettingsRO settings, final List<PatternAggregator> aggregators)
             throws InvalidSettingsException {
         for (int i = 0, length = aggregators.size(); i < length; i++) {
-            final RegexAggregator aggr = aggregators.get(i);
+            final PatternAggregator aggr = aggregators.get(i);
             if (aggr.hasOptionalSettings()) {
                 final NodeSettingsRO operatorSettings =
                     settings.getNodeSettings(createSettingsKey(aggr));
@@ -270,7 +297,7 @@ public class RegexAggregator extends AggregationMethodDecorator {
                 } catch (InvalidSettingsException e) {
                     throw new InvalidSettingsException(
                        "Invalid settings for aggreation operator '" + aggr.getLabel() + "' for datat type '"
-                        + aggr.getRegex() + "', reason: " + e.getMessage());
+                        + aggr.getInputPattern() + "', reason: " + e.getMessage());
                 }
             }
         }

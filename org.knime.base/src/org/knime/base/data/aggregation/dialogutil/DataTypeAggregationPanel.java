@@ -50,9 +50,11 @@ package org.knime.base.data.aggregation.dialogutil;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -64,6 +66,7 @@ import org.knime.base.data.aggregation.AggregationMethodDecorator;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.dialogutil.AggregationMethodDecoratorTableCellRenderer.ValueRenderer;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.collection.ListCell;
@@ -100,7 +103,7 @@ extends AbstractAggregationPanel<DataTypeAggregationTableModel, DataTypeAggregat
             throw new IllegalArgumentException("key must not be empty");
         }
         m_key = key;
-        initialize(getTypeList(), Collections.EMPTY_LIST, null);
+        initialize(getTypeList(null), Collections.EMPTY_LIST, null);
     }
 
     /**
@@ -177,20 +180,28 @@ extends AbstractAggregationPanel<DataTypeAggregationTableModel, DataTypeAggregat
     }
 
     /**
+     * @param spec
      * @return the {@link List} of {@link DataType}s the user can choose from
      */
-    private List<DataType> getTypeList() {
+    private List<DataType> getTypeList(final DataTableSpec spec) {
+        final Set<DataType> types = new HashSet<>();
         final DataType generalType = DataType.getType(DataCell.class);
-        final List<DataType> typeList = new LinkedList<>();
-        typeList.add(generalType);
-        typeList.add(BooleanCell.TYPE);
-        typeList.add(IntCell.TYPE);
-        typeList.add(LongCell.TYPE);
-        typeList.add(DoubleCell.TYPE);
-        typeList.add(StringCell.TYPE);
-        typeList.add(DateAndTimeCell.TYPE);
-        typeList.add(ListCell.getCollectionType(generalType));
-        typeList.add(SetCell.getCollectionType(generalType));
+        types.add(generalType);
+        types.add(BooleanCell.TYPE);
+        types.add(IntCell.TYPE);
+        types.add(LongCell.TYPE);
+        types.add(DoubleCell.TYPE);
+        types.add(StringCell.TYPE);
+        types.add(DateAndTimeCell.TYPE);
+        types.add(ListCell.getCollectionType(generalType));
+        types.add(SetCell.getCollectionType(generalType));
+        if (spec != null) {
+            for (DataColumnSpec colSpec : spec) {
+                types.add(colSpec.getType());
+            }
+        }
+        final List<DataType> typeList = new ArrayList<>(types);
+        Collections.sort(typeList, DataTypeNameSorter.getInstance());
         return typeList;
     }
 
@@ -201,7 +212,7 @@ extends AbstractAggregationPanel<DataTypeAggregationTableModel, DataTypeAggregat
      */
     public void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec spec)
     throws InvalidSettingsException {
-        final List<DataType> typeList = getTypeList();
+        final List<DataType> typeList = getTypeList(spec);
         final List<DataTypeAggregator> aggregators = DataTypeAggregator.loadAggregators(settings, m_key, spec);
         initialize(typeList, aggregators, spec);
     }

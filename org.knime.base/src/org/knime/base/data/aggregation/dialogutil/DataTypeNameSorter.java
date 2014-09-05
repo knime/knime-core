@@ -44,49 +44,56 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   17.07.2014 (koetter): created
+ *   04.09.2014 (koetter): created
  */
 package org.knime.base.data.aggregation.dialogutil;
 
-import java.awt.Component;
+import java.util.Comparator;
 
-import javax.swing.DefaultCellEditor;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-
-import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.core.data.DataType;
 
 /**
- * {@link DataTypeAggregator} table cell editor class that allows the user to choose from the supported
- * {@link AggregationMethod}s for {@link DataType} of the current {@link DataTypeAggregator}.
- *
+ * Compares to {@link DataType}s based on their string representation.
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class RegexTableCellEditor extends DefaultCellEditor {
+public final class DataTypeNameSorter implements Comparator<DataType> {
 
-    private static final long serialVersionUID = 1;
+    private static volatile DataTypeNameSorter instance;
 
-    /**Constructor for class AggregationMethodTableCellEditor.
+    private DataTypeNameSorter() {
+        //avoid object creation
+    }
+
+    /**
+     * Returns the only instance of this class.
+     * @return the only instance
      */
-    public RegexTableCellEditor() {
-        super(new JTextField());
+    public static DataTypeNameSorter getInstance() {
+        if (instance == null) {
+            synchronized (DataTypeNameSorter.class) {
+                if (instance == null) {
+                    instance = new DataTypeNameSorter();
+                }
+            }
+        }
+        return instance;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Component getTableCellEditorComponent(final JTable table, final Object value, final boolean isSelected,
-        final int row, final int column) {
-        final String val;
-        if (value instanceof RegexAggregator) {
-            final RegexAggregator method = (RegexAggregator)value;
-            val = method.getRegex();
-        } else {
-            val = value.toString();
+    public int compare(final DataType o1, final DataType o2) {
+        if (o1 == o2) {
+            return 0;
         }
-        return super.getTableCellEditorComponent(table, val, isSelected, row, column);
+        if (o1 == null) {
+            return -1;
+        }
+        if (o2 == null) {
+            return 1;
+        }
+        return o1.toString().compareTo(o2.toString());
     }
 }
