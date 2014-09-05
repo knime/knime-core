@@ -44,47 +44,32 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   01.08.2014 (koetter): created
+ *   27.08.2014 (koetter): created
  */
-package org.knime.core.node.port.database.aggregation;
+package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.def.LongCell;
+import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 
 /**
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public final class CountDBAggregationFunction implements DBAggregationFunction {
-
-    private static volatile CountDBAggregationFunction instance;
-
-    private CountDBAggregationFunction() {
-        //avoid object creation
-    }
+public class CountDistinctDBAggregationFunction extends AbstractDistinctDBAggregationFunction {
 
     /**
-     * Returns the only instance of this class.
-     * @return the only instance
+     * Constructor.
      */
-    public static CountDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (CountDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new CountDBAggregationFunction();
-                }
-            }
-        }
-        return instance;
+    public CountDistinctDBAggregationFunction() {
+        this(false);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return "COUNT";
+    private CountDistinctDBAggregationFunction(final boolean distinct) {
+        super(distinct);
     }
 
     /**
@@ -99,7 +84,40 @@ public final class CountDBAggregationFunction implements DBAggregationFunction {
      * {@inheritDoc}
      */
     @Override
+    public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
+        final String colName) {
+        return buildSQLFragment("COUNT", manipulator, tableName, colName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DBAggregationFunction createInstance() {
+        return new CountDistinctDBAggregationFunction(isSelected());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getName() {
+        return "COUNT";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isCompatible(final DataType type) {
+        return type.isCompatible(DataValue.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String getDescription() {
-        return "Counts the number of returned values.";
+        return "Counts the number of (distinct) returned values.";
     }
 }

@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,47 +40,43 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   01.08.2014 (koetter): created
+ * -------------------------------------------------------------------
  */
-package org.knime.core.node.port.database.aggregation;
 
-import org.knime.core.data.DataType;
-import org.knime.core.node.port.database.StatementManipulator;
+package org.knime.core.node.port.database.aggregation.function.concatenate;
+
+
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+
+import javax.swing.JPanel;
+
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 
 /**
+ * {@link JPanel} that allows the user to specify layout mapping settings.
  *
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter
  * @since 2.11
  */
-public interface DBAggregationFunction extends AggregationFunction {
+public class ConcatDBAggregationFuntionSettingsPanel extends JPanel {
 
+    private static final long serialVersionUID = 1;
     /**
-     * @param originalType Type of the column that will be aggregated
-     * @return The type of the aggregated column
+     * @param settings the {@link ConcatDBAggregationFuntionSettings} to use
      */
-    public DataType getType(final DataType originalType);
-
-    /**
-     * @param manipulator {@link StatementManipulator} for quoting the column name if necessary
-     * @param columnName the column to use
-     * @param tableName the name of the table the column belongs to
-     * @return the sql fragment to use in the sql query e.g. SUM(colName)
-     */
-    public String getSQLFragment(StatementManipulator manipulator, String tableName, String columnName);
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DBAggregationFunction createInstance();
-
-    /**
-     * @return the name of the function used in the column name
-     */
-    public String getColumnName();
-
+    public ConcatDBAggregationFuntionSettingsPanel(final ConcatDBAggregationFuntionSettings settings) {
+        final JPanel rootPanel = new JPanel(new GridBagLayout());
+//        rootPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+//                .createEtchedBorder(), " Settings "));
+        final GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.FIRST_LINE_START;
+        c.gridx = 0;
+        c.gridy = 0;
+        final SettingsModelString xModel = settings.getSeparatorModel();
+        rootPanel.add(new DialogComponentString(xModel, "Separator: ").getComponentPanel(), c);
+        add(rootPanel);
+    }
 }

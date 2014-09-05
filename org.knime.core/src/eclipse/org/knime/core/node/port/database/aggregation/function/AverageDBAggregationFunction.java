@@ -46,58 +46,37 @@
  * History
  *   01.08.2014 (koetter): created
  */
-package org.knime.core.node.port.database.aggregation;
+package org.knime.core.node.port.database.aggregation.function;
 
-import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public final class FirstDBAggregationFunction implements DBAggregationFunction {
-    private static volatile FirstDBAggregationFunction instance;
+public final class AverageDBAggregationFunction extends SimpleDBAggregationFunction {
 
-    private FirstDBAggregationFunction() {
-        //avoid object creation
+    private static volatile AverageDBAggregationFunction instance;
+
+    private AverageDBAggregationFunction() {
+        super("AVG", "Computes the average.", DoubleCell.TYPE, DoubleValue.class);
     }
 
     /**
      * Returns the only instance of this class.
      * @return the only instance
      */
-    public static FirstDBAggregationFunction getInstance() {
+    public static AverageDBAggregationFunction getInstance() {
         if (instance == null) {
-            synchronized (FirstDBAggregationFunction.class) {
+            synchronized (AverageDBAggregationFunction.class) {
                 if (instance == null) {
-                    instance = new FirstDBAggregationFunction();
+                    instance = new AverageDBAggregationFunction();
                 }
             }
         }
         return instance;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return "First";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataType getType(final DataType originalType) {
-        return originalType;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Returns the first value.";
     }
 }

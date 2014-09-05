@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,64 +40,44 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   01.08.2014 (koetter): created
+ * -------------------------------------------------------------------
  */
-package org.knime.core.node.port.database.aggregation;
 
-import org.knime.core.data.DataType;
+package org.knime.core.node.port.database.aggregation.function.booleanoption;
+
+
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+
+import javax.swing.JPanel;
+
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+
 
 /**
+ * {@link JPanel} that allows the user to specify layout mapping settings.
  *
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @author Tobias Koetter
  * @since 2.11
  */
-public final class MaxDBAggregationFunction implements DBAggregationFunction {
+public class BooleanFuntionSettingsPanel extends JPanel {
 
-    private static volatile MaxDBAggregationFunction instance;
-
-    private MaxDBAggregationFunction() {
-        //avoid object creation
-    }
-
+    private static final long serialVersionUID = 1;
     /**
-     * Returns the only instance of this class.
-     * @return the only instance
+     * @param settings the {@link BooleanFuntionSettings} to use
+     * @param label the label of the boolean option
      */
-    public static MaxDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (MaxDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new MaxDBAggregationFunction();
-                }
-            }
-        }
-        return instance;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return "MAX";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataType getType(final DataType originalType) {
-        return originalType;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Returns the maximum value.";
+    public BooleanFuntionSettingsPanel(final BooleanFuntionSettings settings, final String label) {
+        final JPanel rootPanel = new JPanel(new GridBagLayout());
+//        rootPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
+//                .createEtchedBorder(), " Settings "));
+        final GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.FIRST_LINE_START;
+        c.gridx = 0;
+        c.gridy = 0;
+        final SettingsModelBoolean xModel = settings.getModel();
+        rootPanel.add(new DialogComponentBoolean(xModel, label).getComponentPanel(), c);
+        add(rootPanel);
     }
 }

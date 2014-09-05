@@ -44,44 +44,58 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   01.08.2014 (koetter): created
+ *   27.08.2014 (koetter): created
  */
-package org.knime.core.node.port.database.aggregation;
+package org.knime.core.node.port.database.aggregation.function;
 
-import org.knime.core.data.DataType;
+
 import org.knime.core.node.port.database.StatementManipulator;
-
+import org.knime.core.node.port.database.aggregation.function.booleanoption.AbstractBooleanDBAggregationFunction;
 
 /**
+ * Abstract class that provides a dialog where the user can select if distinct should be used in the function.
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public interface DBAggregationFunction extends AggregationFunction {
+public abstract class AbstractDistinctDBAggregationFunction extends AbstractBooleanDBAggregationFunction {
 
     /**
-     * @param originalType Type of the column that will be aggregated
-     * @return The type of the aggregated column
+     * @param distinct <code>true</code> for distinct
      */
-    public DataType getType(final DataType originalType);
-
-    /**
-     * @param manipulator {@link StatementManipulator} for quoting the column name if necessary
-     * @param columnName the column to use
-     * @param tableName the name of the table the column belongs to
-     * @return the sql fragment to use in the sql query e.g. SUM(colName)
-     */
-    public String getSQLFragment(StatementManipulator manipulator, String tableName, String columnName);
+    protected AbstractDistinctDBAggregationFunction(final boolean distinct) {
+        super("distinct", distinct);
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DBAggregationFunction createInstance();
+    public String getId() {
+        return getName() + "_DISTINCT";
+    }
 
     /**
-     * @return the name of the function used in the column name
+     * {@inheritDoc}
      */
-    public String getColumnName();
+    @Override
+    public String getColumnName() {
+        if (isSelected()) {
+            return getName() + "_DISTINCT";
+        }
+        return getName();
+    }
 
+    /**
+     * @param function the aggregation function e.g. count, sum, etc.
+     * @param manipulator the {@link StatementManipulator}
+     * @param tableName the name of the table the column belongs to
+     * @param colName the column name
+     * @return the sql fragment
+     */
+    protected String buildSQLFragment(final String function, final StatementManipulator manipulator,
+        final String tableName, final String colName) {
+        return function + "(" + (isSelected() ? "DISTINCT " : "")
+                + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(colName) + ")";
+    }
 }

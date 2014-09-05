@@ -44,44 +44,86 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   01.08.2014 (koetter): created
+ *   28.08.2014 (koetter): created
  */
-package org.knime.core.node.port.database.aggregation;
+package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.StatementManipulator;
-
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnDBAggregationFunction;
 
 /**
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public interface DBAggregationFunction extends AggregationFunction {
+public class CorrDBAggregationFunction extends AbstractColumnDBAggregationFunction {
 
     /**
-     * @param originalType Type of the column that will be aggregated
-     * @return The type of the aggregated column
+     * Constructor.
      */
-    public DataType getType(final DataType originalType);
-
+    public CorrDBAggregationFunction() {
+        super("Second column: ", null, DoubleValue.class);
+    }
     /**
-     * @param manipulator {@link StatementManipulator} for quoting the column name if necessary
-     * @param columnName the column to use
-     * @param tableName the name of the table the column belongs to
-     * @return the sql fragment to use in the sql query e.g. SUM(colName)
+     * {@inheritDoc}
      */
-    public String getSQLFragment(StatementManipulator manipulator, String tableName, String columnName);
+    @Override
+    public DataType getType(final DataType originalType) {
+        return DoubleCell.TYPE;
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DBAggregationFunction createInstance();
+    public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
+        final String columnName) {
+        return getName() + "(" + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(columnName)
+                + ", " + manipulator.quoteIdentifier(tableName) + "."
+                + manipulator.quoteIdentifier(getSelectedColumnName()) + ")";
+    }
 
     /**
-     * @return the name of the function used in the column name
+     * {@inheritDoc}
      */
-    public String getColumnName();
+    @Override
+    public DBAggregationFunction createInstance() {
+        return new CorrDBAggregationFunction();
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getName() {
+        return "CORR";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getId() {
+        return getName();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isCompatible(final DataType type) {
+        return type.isCompatible(DoubleValue.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return "Computes the correlation coefficient for the two columns per group.";
+    }
 }

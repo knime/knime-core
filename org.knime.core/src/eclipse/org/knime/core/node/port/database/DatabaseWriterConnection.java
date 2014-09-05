@@ -817,10 +817,14 @@ public final class DatabaseWriterConnection {
     }
 
     private static String replaceColumnName(final String oldName, final DatabaseConnectionSettings settings) {
+        final String colName;
         if (!settings.getAllowSpacesInColumnNames()) {
-            return oldName.replaceAll("[^a-zA-Z0-9]", "_");
+            //TK_TODO: this might replace not only spaces!!!
+            colName = oldName.replaceAll("[^a-zA-Z0-9]", "_");
         } else {
-            return settings.getUtility().getStatementManipulator().quoteColumn(oldName);
+            colName = oldName;
         }
+        //always call the quote method to also quote key words etc.
+        return settings.getUtility().getStatementManipulator().quoteIdentifier(colName);
     }
 }

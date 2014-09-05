@@ -82,8 +82,8 @@ public class StatementManipulator {
     }
 
 //    /**
-//     * Modifies the incoming SQL query so that the number of rows is limited. The default implementation uses the LIMIT
-//     * clause.
+//     * Modifies the incoming SQL query so that the number of rows is limited. The default implementation uses the
+//     * LIMIT clause.
 //     *
 //     * @param sql any valid SQL query
 //     * @param offset the offset
@@ -107,12 +107,26 @@ public class StatementManipulator {
     }
 
     /**
+     * Quotes an identifier e.g. column or table name if it contains characters that need
+     * quoting e.g. white spaces.
+     *
+     * @param identifier the identifier to quote
+     * @return the identifier, possibly quoted
+     * @since 2.11
+     */
+    public String quoteIdentifier(final String identifier) {
+        return quoteColumn(identifier);
+    }
+
+    /**
      * Quotes a column name if it contains characters that need
      * quoting e.g. white spaces.
      *
      * @param colName the column's name
      * @return the column's name, possibly quoted
+     * @deprecated use {@link #quoteIdentifier(String)} instead
      */
+    @Deprecated
     public String quoteColumn(final String colName) {
         Matcher m = ESCAPE_CHARACTER_PATTERN.matcher(colName);
         if (m.find()) {

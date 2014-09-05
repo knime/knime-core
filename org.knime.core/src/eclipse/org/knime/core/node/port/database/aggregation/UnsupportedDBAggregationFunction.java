@@ -44,44 +44,52 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   01.08.2014 (koetter): created
+ *   03.09.2014 (koetter): created
  */
 package org.knime.core.node.port.database.aggregation;
 
-import org.knime.core.data.DataType;
-import org.knime.core.node.port.database.StatementManipulator;
-
+import org.knime.core.data.DataValue;
+import org.knime.core.data.def.StringCell;
 
 /**
- *
+ * Class that indicates an unsupported db aggregation function.
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public interface DBAggregationFunction extends AggregationFunction {
+public class UnsupportedDBAggregationFunction extends SimpleDBAggregationFunction
+implements InvalidAggregationFunction {
+
+    private final String m_dbIdentifier;
 
     /**
-     * @param originalType Type of the column that will be aggregated
-     * @return The type of the aggregated column
+     * @param name the name of the function
+     * @param dbIdentifier the database identifier. Can be <code>null</code> if unknown.
      */
-    public DataType getType(final DataType originalType);
+    public UnsupportedDBAggregationFunction(final String name, final String dbIdentifier) {
+        super(name, createMessage(name, dbIdentifier), StringCell.TYPE, DataValue.class);
+        m_dbIdentifier = dbIdentifier;
+    }
+
+    private static String createMessage(final String name, final String dbIdentifier) {
+        final String msg = "The function '" + name + "' is not supported by ";
+        if (dbIdentifier != null) {
+            return msg + dbIdentifier + ".";
+        }
+        return msg + "the current database.";
+    }
 
     /**
-     * @param manipulator {@link StatementManipulator} for quoting the column name if necessary
-     * @param columnName the column to use
-     * @param tableName the name of the table the column belongs to
-     * @return the sql fragment to use in the sql query e.g. SUM(colName)
+     * @return the dbIdentifier might be <code>null</code>
      */
-    public String getSQLFragment(StatementManipulator manipulator, String tableName, String columnName);
+    public String getDbIdentifier() {
+        return m_dbIdentifier;
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DBAggregationFunction createInstance();
-
-    /**
-     * @return the name of the function used in the column name
-     */
-    public String getColumnName();
-
+    public String getErrorMessage() {
+        return getDescription();
+    }
 }

@@ -47,10 +47,11 @@
  */
 package org.knime.core.node.port.database;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
@@ -60,14 +61,16 @@ import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.database.aggregation.AverageDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.CountDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.FirstDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.LastDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.MaxDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.MinDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.SumDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.UnsupportedDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.AverageDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.CountDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.FirstDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.LastDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.MaxDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.MinDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.SumDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.custom.CustomDBAggregationFunction;
 
 /**
  * This class is the entry point for database specific routines and information. All implementations must be
@@ -94,7 +97,7 @@ public class DatabaseUtility {
         MaxDBAggregationFunction.getInstance(), MinDBAggregationFunction.getInstance(),
         SumDBAggregationFunction.getInstance()};
 
-    private final HashMap<String, DBAggregationFunction> m_supportedAggregationFunctions;
+    private final HashMap<String, DBAggregationFunction> m_aggregationFunctions;
 
     private final String m_dbIdentifier;
 
@@ -179,7 +182,9 @@ public class DatabaseUtility {
 
     /**
      * Constructor that uses all default aggregation methods.
+     * @see #DatabaseUtility(String, StatementManipulator, DBAggregationFunction...)
      */
+    @Deprecated
     public DatabaseUtility() {
         this(null, null, (DBAggregationFunction[]) null);
     }
@@ -187,30 +192,34 @@ public class DatabaseUtility {
     /**
      * @param dbIdentifier the unique database identifier or <code>null</code> to use default
      * @param stmtManipulator  the {@link StatementManipulator} or <code>null</code> to use default
-     * @param supportedFunctions array of all supported {@link DBAggregationFunction}s or <code>null</code>
+     * @param aggregationFunctions array of all {@link DBAggregationFunction}s or <code>null</code>
      * to use default
      * @since 2.11
      */
     public DatabaseUtility(final String dbIdentifier, final StatementManipulator stmtManipulator,
-        final DBAggregationFunction... supportedFunctions) {
+        final DBAggregationFunction... aggregationFunctions) {
         m_dbIdentifier = dbIdentifier != null ? dbIdentifier : DEFAULT_DATABASE_IDENTIFIER;
         m_stmtManipulator = stmtManipulator != null ? stmtManipulator : DEFAULT_MANIPULATOR;
         final DBAggregationFunction[] f;
-        if (supportedFunctions != null) {
-            f = supportedFunctions;
+        if (aggregationFunctions != null) {
+            f = aggregationFunctions;
         } else {
             f = DEFAULT_AGGREGATION_FUNCTIONS;
         }
-        m_supportedAggregationFunctions = new HashMap<>(f.length);
+        m_aggregationFunctions = new HashMap<>(f.length);
         for (DBAggregationFunction function : f) {
-            final DBAggregationFunction duplicateFunction =
-                    m_supportedAggregationFunctions.put(function.getName(), function);
+            final DBAggregationFunction duplicateFunction = m_aggregationFunctions.put(function.getId(), function);
             if (duplicateFunction != null) {
                 NodeLogger.getLogger(DatabaseUtility.class).error(
-                    "Duplicate aggregation function found for name: " + function.getName()
+                    "Duplicate aggregation function found for id: " + function.getId()
                     + " class 1: " + function.getClass().getName()
-                    + " class 2:" + duplicateFunction.getClass().getName());
+                    + " class 2: " + duplicateFunction.getClass().getName());
             }
+        }
+        //add the custom function if it does not exists since it is of use to all databases
+        if (!m_aggregationFunctions.containsKey(CustomDBAggregationFunction.ID)) {
+            final CustomDBAggregationFunction customFunction = new CustomDBAggregationFunction();
+            m_aggregationFunctions.put(customFunction.getId(), customFunction);
         }
     }
 
@@ -232,20 +241,29 @@ public class DatabaseUtility {
     }
 
     /**
-     * @return unmodifiable {@link Collection} of all supported {@link DBAggregationFunction}s
+     * @return {@link Collection} of all supported {@link DBAggregationFunction}s
      * @since 2.11
      */
-    public Collection<DBAggregationFunction> getSupportedAggregationFunctions() {
-        return Collections.unmodifiableCollection(m_supportedAggregationFunctions.values());
+    public Collection<DBAggregationFunction> getAggregationFunctions() {
+        final List<DBAggregationFunction> clone = new ArrayList<>(m_aggregationFunctions.size());
+        for (DBAggregationFunction function: m_aggregationFunctions.values()) {
+            clone.add(function.createInstance());
+        }
+        return clone;
     }
 
     /**
-     * @param name the name of the {@link DBAggregationFunction}
-     * @return the {@link DBAggregationFunction} for the given name or <code>null</code>
+     * @param id the id as returned by {@link DBAggregationFunction#getId()}
+     * @return the {@link DBAggregationFunction} for the given name or an instance of the
+     * {@link UnsupportedDBAggregationFunction} that has the given id
      * @since 2.11
      */
-    public DBAggregationFunction getAggregationFunction(final String name) {
-        return m_supportedAggregationFunctions.get(name);
+    public DBAggregationFunction getAggregationFunction(final String id) {
+        final DBAggregationFunction function = m_aggregationFunctions.get(id);
+        if (function != null) {
+            return function.createInstance();
+        }
+        return new UnsupportedDBAggregationFunction(id, getDatabaseIdentifier());
     }
 
     /**

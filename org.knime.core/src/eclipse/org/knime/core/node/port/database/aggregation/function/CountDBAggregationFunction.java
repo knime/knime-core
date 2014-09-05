@@ -46,42 +46,37 @@
  * History
  *   01.08.2014 (koetter): created
  */
-package org.knime.core.node.port.database.aggregation;
+package org.knime.core.node.port.database.aggregation.function;
 
-import org.knime.core.data.DataType;
-import org.knime.core.node.port.database.StatementManipulator;
-
+import org.knime.core.data.DataValue;
+import org.knime.core.data.def.LongCell;
+import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public interface DBAggregationFunction extends AggregationFunction {
+public final class CountDBAggregationFunction extends SimpleDBAggregationFunction {
+
+    private static volatile CountDBAggregationFunction instance;
+
+    private CountDBAggregationFunction() {
+        super("COUNT", "Counts the number of returned values.", LongCell.TYPE, DataValue.class);
+    }
 
     /**
-     * @param originalType Type of the column that will be aggregated
-     * @return The type of the aggregated column
+     * Returns the only instance of this class.
+     * @return the only instance
      */
-    public DataType getType(final DataType originalType);
-
-    /**
-     * @param manipulator {@link StatementManipulator} for quoting the column name if necessary
-     * @param columnName the column to use
-     * @param tableName the name of the table the column belongs to
-     * @return the sql fragment to use in the sql query e.g. SUM(colName)
-     */
-    public String getSQLFragment(StatementManipulator manipulator, String tableName, String columnName);
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DBAggregationFunction createInstance();
-
-    /**
-     * @return the name of the function used in the column name
-     */
-    public String getColumnName();
-
+    public static CountDBAggregationFunction getInstance() {
+        if (instance == null) {
+            synchronized (CountDBAggregationFunction.class) {
+                if (instance == null) {
+                    instance = new CountDBAggregationFunction();
+                }
+            }
+        }
+        return instance;
+    }
 }

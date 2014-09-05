@@ -44,44 +44,39 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   01.08.2014 (koetter): created
+ *   20.08.2014 (koetter): created
  */
 package org.knime.core.node.port.database.aggregation;
 
-import org.knime.core.data.DataType;
-import org.knime.core.node.port.database.StatementManipulator;
+import java.util.Collection;
+import java.util.LinkedList;
 
+import org.knime.core.data.DataType;
 
 /**
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public interface DBAggregationFunction extends AggregationFunction {
+public final class DBAggregationFunctionUtil {
+
+    private DBAggregationFunctionUtil() {
+        // TK_TODO Auto-generated constructor stub
+    }
 
     /**
-     * @param originalType Type of the column that will be aggregated
-     * @return The type of the aggregated column
+     * @param type the {@link DataType} to check
+     * @param functions the {@link DBAggregationFunction}s to check
+     * @return all of the given {@link DBAggregationFunction} that are compatible with the given {@link DataType}
      */
-    public DataType getType(final DataType originalType);
-
-    /**
-     * @param manipulator {@link StatementManipulator} for quoting the column name if necessary
-     * @param columnName the column to use
-     * @param tableName the name of the table the column belongs to
-     * @return the sql fragment to use in the sql query e.g. SUM(colName)
-     */
-    public String getSQLFragment(StatementManipulator manipulator, String tableName, String columnName);
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DBAggregationFunction createInstance();
-
-    /**
-     * @return the name of the function used in the column name
-     */
-    public String getColumnName();
-
+    public static Collection<DBAggregationFunction> getCompatibleFunctions(final DataType type,
+        final Collection<DBAggregationFunction> functions) {
+        final LinkedList<DBAggregationFunction> compatibleFunctions = new LinkedList<>();
+        for (final DBAggregationFunction function : functions) {
+            if (function.isCompatible(type)) {
+                compatibleFunctions.add(function);
+            }
+        }
+        return compatibleFunctions;
+    }
 }

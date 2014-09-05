@@ -68,8 +68,9 @@ public class SQLServerUtility extends DatabaseUtility {
 
     private static final StatementManipulator MANIPULATOR = new SQLServerStatementManipulator();
 
-    /**The unique database identifier.*/
-    static final String DATABASE_IDENTIFIER = "sqlserver";
+    /**The unique database identifier.
+     * @since 2.11*/
+    public static final String DATABASE_IDENTIFIER = "sqlserver";
 
     /**
      * {@inheritDoc}

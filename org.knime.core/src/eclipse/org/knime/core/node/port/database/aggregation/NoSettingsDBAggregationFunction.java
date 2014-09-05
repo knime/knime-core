@@ -44,44 +44,125 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   01.08.2014 (koetter): created
+ *   20.08.2014 (koetter): created
  */
 package org.knime.core.node.port.database.aggregation;
 
-import org.knime.core.data.DataType;
+import java.awt.Component;
+
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.database.StatementManipulator;
 
-
 /**
- *
+ * This class should be extended by {@link DBAggregationFunction}s that do not need additional settings.
+ * Abstract class that implements the {@link DBAggregationFunction} interface and handles the additional settings
+ * method.
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public interface DBAggregationFunction extends AggregationFunction {
-
-    /**
-     * @param originalType Type of the column that will be aggregated
-     * @return The type of the aggregated column
-     */
-    public DataType getType(final DataType originalType);
-
-    /**
-     * @param manipulator {@link StatementManipulator} for quoting the column name if necessary
-     * @param columnName the column to use
-     * @param tableName the name of the table the column belongs to
-     * @return the sql fragment to use in the sql query e.g. SUM(colName)
-     */
-    public String getSQLFragment(StatementManipulator manipulator, String tableName, String columnName);
+public abstract class NoSettingsDBAggregationFunction implements DBAggregationFunction {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DBAggregationFunction createInstance();
+    public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
+        final String columnName) {
+        return getName() + "("
+                + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(columnName) + ")";
+    }
 
     /**
-     * @return the name of the function used in the column name
+     * {@inheritDoc}
      */
-    public String getColumnName();
+    @Override
+    public DBAggregationFunction createInstance() {
+        //since the  method has no settings we can return the same instance
+        return this;
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getId() {
+        return getName();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getColumnName() {
+        return getName();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasOptionalSettings() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Component getSettingsPanel(final DataTableSpec spec) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec spec)
+            throws NotConfigurableException {
+        //nothing to do
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadValidatedSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        //nothing to do
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void saveSettingsTo(final NodeSettingsWO settings) {
+        //nothing to do
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+      //nothing to do
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void validate() throws InvalidSettingsException {
+        //nothing to validate
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void configure(final DataTableSpec spec) throws InvalidSettingsException {
+      //nothing to do
+    }
 }

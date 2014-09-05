@@ -72,6 +72,24 @@ public class OracleUtility extends DatabaseUtility {
             return limitRows(sql, 0);
         }
 
+        /**
+         * {@inheritDoc}
+         * @deprecated
+         */
+        @Deprecated
+        @Override
+        public String quoteColumn(final String colName) {
+            return "\"" + colName + "\"";
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String quoteIdentifier(final String identifier) {
+            return quoteColumn(identifier);
+        }
+
 //        /**
 //         * {@inheritDoc}
 //         */
@@ -79,15 +97,16 @@ public class OracleUtility extends DatabaseUtility {
 //        public String limitRows(final String sql, final long count, final long offset) {
 //            String tempTableName = getTempTableName();
 //
-//            return "SELECT * FROM (SELECT rownum __rnum__, " + tempTableName + ".* FROM (" + sql + ") " + tempTableName
+//          return "SELECT * FROM (SELECT rownum __rnum__, " + tempTableName + ".* FROM (" + sql + ") " + tempTableName
 //                + " WHERE rownum <= " + (offset + count) + ") " + getTempTableName() + " WHERE rnum > " + offset;
 //        }
     }
 
     private static final StatementManipulator MANIPULATOR = new OracleStatementManipulator();
 
-    /**The unique database identifier.*/
-    static final String DATABASE_IDENTIFIER = "oracle";
+    /**The unique database identifier.
+     * @since 2.11*/
+    public static final String DATABASE_IDENTIFIER = "oracle";
 
     /**
      * {@inheritDoc}

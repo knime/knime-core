@@ -44,64 +44,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   01.08.2014 (koetter): created
+ *   03.08.2014 (koetter): created
  */
 package org.knime.core.node.port.database.aggregation;
 
-import org.knime.core.data.DataType;
-import org.knime.core.data.def.DoubleCell;
+import java.util.Comparator;
 
 /**
- *
+ * Compares two {@link DBAggregationFunction}s based on their name.
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public final class AverageDBAggregationFunction implements DBAggregationFunction {
+public final class DBAggregationFunctionLabelComparator implements Comparator<DBAggregationFunction> {
 
-    private static volatile AverageDBAggregationFunction instance;
+    /**Descending order comparator.*/
+    public static final DBAggregationFunctionLabelComparator DESC = new DBAggregationFunctionLabelComparator(-1);
+    /**Ascending order comparator.*/
+    public static final DBAggregationFunctionLabelComparator ASC = new DBAggregationFunctionLabelComparator(1);
 
-    private AverageDBAggregationFunction() {
-        //avoid object creation
+    private final int m_ascending;
+
+    private DBAggregationFunctionLabelComparator(final int manipulator) {
+        m_ascending = manipulator;
     }
 
     /**
-     * Returns the only instance of this class.
-     * @return the only instance
+     * {@inheritDoc}
      */
-    public static AverageDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (AverageDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new AverageDBAggregationFunction();
-                }
-            }
+    @Override
+    public int compare(final DBAggregationFunction o1, final DBAggregationFunction o2) {
+        if (o1 == o2) {
+            return 0;
         }
-        return instance;
+        if (o1 == null) {
+            return 1 * m_ascending;
+        }
+        if (o2 == null) {
+            return -1 * m_ascending;
+        }
+        return o1.getName().compareTo(o2.getName()) * m_ascending;
     }
 
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return "AVG";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataType getType(final DataType originalType) {
-        return DoubleCell.TYPE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Computes the average.";
-    }
 }

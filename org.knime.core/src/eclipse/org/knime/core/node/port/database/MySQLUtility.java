@@ -63,7 +63,9 @@ public class MySQLUtility extends DatabaseUtility {
     private static class MySQLStatementManipulator extends StatementManipulator {
         /**
          * {@inheritDoc}
+         * @deprecated
          */
+        @Deprecated
         @Override
         public String quoteColumn(final String colName) {
             Matcher m = ESCAPE_CHARACTER_PATTERN.matcher(colName);
@@ -73,6 +75,14 @@ public class MySQLUtility extends DatabaseUtility {
                 // no need to quote
                 return colName;
             }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String quoteIdentifier(final String identifier) {
+            return quoteColumn(identifier);
         }
 
         /**
@@ -104,11 +114,13 @@ public class MySQLUtility extends DatabaseUtility {
 
     private static final StatementManipulator MANIPULATOR = new MySQLStatementManipulator();
 
-    /**The unique database identifier.*/
-    static final String DATABASE_IDENTIFIER = "mysql";
+    /**The unique database identifier.
+     * @since 2.11*/
+    public static final String DATABASE_IDENTIFIER = "mysql";
 
     /**
      * {@inheritDoc}
+     * @since 2.11
      */
     @Override
     public String getDatabaseIdentifier() {

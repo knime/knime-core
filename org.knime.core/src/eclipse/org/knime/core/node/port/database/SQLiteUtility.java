@@ -47,6 +47,13 @@
  */
 package org.knime.core.node.port.database;
 
+import org.knime.core.node.port.database.aggregation.function.AverageDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.CountDistinctDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.GroupConcatDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.MaxDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.MinDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.SumDBAggregationFunction;
+
 /**
  * Database utility for SQLite.
  *
@@ -81,22 +88,17 @@ public class SQLiteUtility extends DatabaseUtility {
 
     private static final StatementManipulator MANIPULATOR = new SQLiteStatementManipulator();
 
-    /**The unique database identifier.*/
-    static final String DATABASE_IDENTIFIER = "sqlite";
+    /**The unique database identifier.
+     * @since 2.11*/
+    public static final String DATABASE_IDENTIFIER = "sqlite";
 
     /**
-     * {@inheritDoc}
+     * Constructor.
      */
-    @Override
-    public String getDatabaseIdentifier() {
-        return DATABASE_IDENTIFIER;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StatementManipulator getStatementManipulator() {
-        return MANIPULATOR;
+    public SQLiteUtility() {
+        super(DATABASE_IDENTIFIER, MANIPULATOR,  AverageDBAggregationFunction.getInstance(),
+            new CountDistinctDBAggregationFunction(), MaxDBAggregationFunction.getInstance(),
+            MinDBAggregationFunction.getInstance(), SumDBAggregationFunction.getInstance(),
+            new GroupConcatDBAggregationFunction());
     }
 }

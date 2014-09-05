@@ -50,6 +50,20 @@ package org.knime.core.node.port.database;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.knime.core.node.port.database.aggregation.function.AverageDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.BitAndDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.BitOrDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.CorrDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.CountDistinctDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.GroupConcatDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.MaxDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.MinDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.StdDevPopDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.StdDevSampDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.SumDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.VarPopDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregationFunction;
+
 /**
  * Database utility for PostgreSQL.
  *
@@ -82,22 +96,20 @@ public class PostgreSQLUtility extends DatabaseUtility {
 
     private static final StatementManipulator MANIPULATOR = new PostgreSQLStatementManipulator();
 
-    /**The unique database identifier.*/
-    static final String DATABASE_IDENTIFIER = "postgresql";
+    /**The unique database identifier.
+     * @since 2.11*/
+    public static final String DATABASE_IDENTIFIER = "postgresql";
 
     /**
-     * {@inheritDoc}
+     *
      */
-    @Override
-    public String getDatabaseIdentifier() {
-        return DATABASE_IDENTIFIER;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StatementManipulator getStatementManipulator() {
-        return MANIPULATOR;
+    public PostgreSQLUtility() {
+        super(DATABASE_IDENTIFIER, MANIPULATOR, AverageDBAggregationFunction.getInstance(),
+            new CountDistinctDBAggregationFunction(), MaxDBAggregationFunction.getInstance(),
+            MinDBAggregationFunction.getInstance(), SumDBAggregationFunction.getInstance(),
+            new GroupConcatDBAggregationFunction("STRING_AGG"), BitAndDBAggregationFunction.getInstance(),
+            BitOrDBAggregationFunction.getInstance(), StdDevPopDBAggregationFunction.getInstance(),
+            StdDevSampDBAggregationFunction.getInstance(), VarPopDBAggregationFunction.getInstance(),
+            VarSampDBAggregationFunction.getInstance(), new CorrDBAggregationFunction());
     }
 }

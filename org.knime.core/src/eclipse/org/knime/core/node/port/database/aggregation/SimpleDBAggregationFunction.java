@@ -44,46 +44,39 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   01.08.2014 (koetter): created
+ *   28.08.2014 (koetter): created
  */
 package org.knime.core.node.port.database.aggregation;
 
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 
 /**
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public final class LastDBAggregationFunction implements DBAggregationFunction {
+public class SimpleDBAggregationFunction extends NoSettingsDBAggregationFunction {
 
-    private static volatile LastDBAggregationFunction instance;
-
-    private LastDBAggregationFunction() {
-        //avoid object creation
-    }
-
-    /**
-     * Returns the only instance of this class.
-     * @return the only instance
-     */
-    public static LastDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (LastDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new LastDBAggregationFunction();
-                }
-            }
-        }
-        return instance;
-    }
+    private final String m_name;
+    private final String m_description;
+    private final DataType m_type;
+    private final Class<DataValue> m_compatibleClasses;
 
     /**
-     * {@inheritDoc}
+     * @param name the name of the function which is also used as id and as the function in the sql fragment
+     * @param description the description
+     * @param type the return type or <code>null</code> if the original type is returned
+     * @param compatibleClasses the compatible {@link DataValue} class
+     *
      */
-    @Override
-    public String getName() {
-        return "LAST";
+    @SuppressWarnings("unchecked")
+    public SimpleDBAggregationFunction(final String name, final String description, final DataType type,
+        final Class<? extends DataValue> compatibleClasses) {
+            m_name = name;
+            m_description = description;
+            m_type = type;
+            m_compatibleClasses = (Class<DataValue>)compatibleClasses;
     }
 
     /**
@@ -91,7 +84,26 @@ public final class LastDBAggregationFunction implements DBAggregationFunction {
      */
     @Override
     public DataType getType(final DataType originalType) {
-        return originalType;
+        if (m_type == null) {
+            return originalType;
+        }
+        return m_type;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getName() {
+        return m_name;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isCompatible(final DataType type) {
+        return type.isCompatible(m_compatibleClasses);
     }
 
     /**
@@ -99,6 +111,6 @@ public final class LastDBAggregationFunction implements DBAggregationFunction {
      */
     @Override
     public String getDescription() {
-        return "Returns the last value.";
+        return m_description;
     }
 }

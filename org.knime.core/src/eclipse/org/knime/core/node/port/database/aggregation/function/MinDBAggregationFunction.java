@@ -44,45 +44,38 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   03.08.2014 (koetter): created
+ *   01.08.2014 (koetter): created
  */
-package org.knime.core.node.port.database.aggregation;
+package org.knime.core.node.port.database.aggregation.function;
 
-import java.util.Comparator;
+import org.knime.core.data.DataValue;
+import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
- * Compares two {@link DBAggregationFunction}s based on their name.
+ *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public final class DBAggregationFunctionNameComparator implements Comparator<DBAggregationFunction> {
+public final class MinDBAggregationFunction extends SimpleDBAggregationFunction {
 
-    /**Descending order comparator.*/
-    public static final DBAggregationFunctionNameComparator DESC = new DBAggregationFunctionNameComparator(-1);
-    /**Ascending order comparator.*/
-    public static final DBAggregationFunctionNameComparator ASC = new DBAggregationFunctionNameComparator(1);
+    private static volatile MinDBAggregationFunction instance;
 
-    private final int m_ascending;
-
-    private DBAggregationFunctionNameComparator(final int manipulator) {
-        m_ascending = manipulator;
+    private MinDBAggregationFunction() {
+        super("MIN", "Returns the minimum value of each group.", null, DataValue.class);
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the only instance of this class.
+     * @return the only instance
      */
-    @Override
-    public int compare(final DBAggregationFunction o1, final DBAggregationFunction o2) {
-        if (o1 == o2) {
-            return 0;
+    public static MinDBAggregationFunction getInstance() {
+        if (instance == null) {
+            synchronized (MinDBAggregationFunction.class) {
+                if (instance == null) {
+                    instance = new MinDBAggregationFunction();
+                }
+            }
         }
-        if (o1 == null) {
-            return 1 * m_ascending;
-        }
-        if (o2 == null) {
-            return -1 * m_ascending;
-        }
-        return o1.getName().compareTo(o2.getName()) * m_ascending;
+        return instance;
     }
-
 }

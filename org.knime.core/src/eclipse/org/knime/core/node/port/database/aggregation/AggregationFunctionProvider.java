@@ -44,61 +44,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   01.08.2014 (koetter): created
+ *   20.08.2014 (koetter): created
  */
 package org.knime.core.node.port.database.aggregation;
+
+import java.util.List;
 
 import org.knime.core.data.DataType;
 
 /**
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @param <F> the type of {@link AggregationFunction} to return
  * @since 2.11
  */
-public final class SumDBAggregationFunction implements DBAggregationFunction {
-
-    private static volatile SumDBAggregationFunction instance;
-
-    private SumDBAggregationFunction() {
-        //avoid object creation
-    }
+public interface AggregationFunctionProvider <F extends AggregationFunction> {
+    /**
+     * @param type the {@link DataType} to check
+     * @param sorted <code>true</code> if the compatible methods should be sorted in ascending order by the
+     * user displayed label
+     * @return all {@link AggregationFunction}s that are compatible with
+     * the given {@link DataType} or an empty list if none is compatible
+     */
+    public List<F> getCompatibleMethods(final DataType type, final boolean sorted);
 
     /**
-     * Returns the only instance of this class.
-     * @return the only instance
+     * @param id the id of the {@link AggregationFunction}
+     * @return the {@link AggregationFunction} for the given id or <code>null</code> if none exists
      */
-    public static SumDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (SumDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new SumDBAggregationFunction();
-                }
-            }
-        }
-        return instance;
-    }
+    public F getMethod4Id(String id);
 
     /**
-     * {@inheritDoc}
+     * @param type the {@link DataType}
+     * @return the default {@link AggregationFunction}
      */
-    @Override
-    public String getName() {
-        return "SUM";
-    }
+    public F getDefaultMethod(DataType type);
 
     /**
-     * {@inheritDoc}
+     * @param sorted <code>true</code> if the list should be sorted by name
+     * @return all supported {@link AggregationFunction}s
      */
-    @Override
-    public DataType getType(final DataType originalType) {
-        return originalType;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Returns the sum of the values.";
-    }
+    public List<F> getFunctions(boolean sorted);
 }
