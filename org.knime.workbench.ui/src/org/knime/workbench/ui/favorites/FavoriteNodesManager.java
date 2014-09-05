@@ -65,6 +65,7 @@ import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.repository.RepositoryManager;
+import org.knime.workbench.repository.model.AbstractRepositoryObject;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.NodeTemplate;
@@ -78,30 +79,36 @@ import org.osgi.framework.FrameworkUtil;
  */
 public final class FavoriteNodesManager {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            FavoriteNodesManager.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(FavoriteNodesManager.class);
 
     private static FavoriteNodesManager instance;
 
     private Root m_root;
+
     private Category m_favNodes;
+
     private Category m_freqNodes;
+
     private Category m_lastNodes;
 
     // loading and saving
     private static final String TAG_FAVORITES = "favoritenodes";
-    private static final String TAG_PERSONAL_FAVS = "personals";
-    private static final String TAG_MOST_FREQUENT = "frequents";
-    private static final String TAG_LAST_USED = "lastused";
-    private static final String TAG_FAVORITE = "favorite";
-    private static final String TAG_NODE_ID = "nodeid";
 
+    private static final String TAG_PERSONAL_FAVS = "personals";
+
+    private static final String TAG_MOST_FREQUENT = "frequents";
+
+    private static final String TAG_LAST_USED = "lastused";
+
+    private static final String TAG_FAVORITE = "favorite";
+
+    private static final String TAG_NODE_ID = "nodeid";
 
     /** ID of the personal favorites category. */
     public static final String FAV_CAT_ID = "fav";
+
     /**
-     * Title of the personal favorites category
-     * (used by {@link FavoriteNodesDropTarget}).
+     * Title of the personal favorites category (used by {@link FavoriteNodesDropTarget}).
      */
     static final String FAV_TITLE = "Personal favorite nodes";
 
@@ -130,13 +137,11 @@ public final class FavoriteNodesManager {
 
     /**
      *
-     * @return the tree model with three categories: favorites, most frequent
-     * and last used
+     * @return the tree model with three categories: favorites, most frequent and last used
      */
     public Root getRoot() {
         return m_root;
     }
-
 
     /**
      *
@@ -146,23 +151,20 @@ public final class FavoriteNodesManager {
 
         m_root = new Root();
         m_root.setSortChildren(false);
-        m_favNodes = new Category(FAV_CAT_ID, FAV_TITLE, pluginID);
-        m_favNodes.setIcon(ImageRepository
-                .getImage(SharedImages.FavoriteNodesFolder));
+        m_favNodes = new CopyingCategory(FAV_CAT_ID, FAV_TITLE, pluginID);
+        m_favNodes.setIcon(ImageRepository.getImage(SharedImages.FavoriteNodesFolder));
         m_favNodes.setAfterID("");
         m_favNodes.setSortChildren(true);
         m_root.addChild(m_favNodes);
 
-        m_freqNodes = new Category("freq", "Most frequently used nodes", pluginID);
-        m_freqNodes.setIcon(ImageRepository
-                .getImage(SharedImages.FavoriteNodesFrequentlyUsed));
+        m_freqNodes = new CopyingCategory("freq", "Most frequently used nodes", pluginID);
+        m_freqNodes.setIcon(ImageRepository.getImage(SharedImages.FavoriteNodesFrequentlyUsed));
         m_freqNodes.setAfterID("fav");
         m_freqNodes.setSortChildren(false);
         m_root.addChild(m_freqNodes);
 
-        m_lastNodes = new Category("last", "Last used nodes", pluginID);
-        m_lastNodes.setIcon(ImageRepository
-                .getImage(SharedImages.FavoriteNodesLastUsed));
+        m_lastNodes = new CopyingCategory("last", "Last used nodes", pluginID);
+        m_lastNodes.setIcon(ImageRepository.getImage(SharedImages.FavoriteNodesLastUsed));
         m_lastNodes.setAfterID("freq");
         m_lastNodes.setSortChildren(false);
         m_root.addChild(m_lastNodes);
@@ -170,13 +172,12 @@ public final class FavoriteNodesManager {
         loadFavorites();
     }
 
-
     /**
      *
      * @param node adds this node to the favorite nodes category
      */
     public void addFavoriteNode(final NodeTemplate node) {
-        m_favNodes.addChild(node);
+        m_favNodes.addChild((NodeTemplate)node.deepCopy());
     }
 
     /**
@@ -188,8 +189,7 @@ public final class FavoriteNodesManager {
     }
 
     /**
-     * Updates the categories most frequent and last used with the information
-     * from the {@link NodeUsageRegistry}.
+     * Updates the categories most frequent and last used with the information from the {@link NodeUsageRegistry}.
      */
     public void updateNodes() {
         updateLastUsedNodes();
@@ -232,8 +232,7 @@ public final class FavoriteNodesManager {
                     writer.close();
                 }
             } catch (IOException ioe) {
-                LOGGER.error("Error closing input stream for FavoriteNodes ",
-                        ioe);
+                LOGGER.error("Error closing input stream for FavoriteNodes ", ioe);
             }
         }
     }
@@ -254,8 +253,7 @@ public final class FavoriteNodesManager {
     }
 
     private File getFavoriteNodesFile() {
-        return KNIMEUIPlugin.getDefault()
-            .getStateLocation().append("favoriteNodes.xml").toFile();
+        return KNIMEUIPlugin.getDefault().getStateLocation().append("favoriteNodes.xml").toFile();
     }
 
     private void loadFavorites() {
@@ -293,5 +291,28 @@ public final class FavoriteNodesManager {
         IMemento lastNodes = favoriteNodes.getChild(TAG_LAST_USED);
         NodeUsageRegistry.loadLastUsedNodes(lastNodes);
         updateNodes();
+    }
+
+    /**
+     * The category class for the favorite categories. It copies the given {@link AbstractRepositoryObject} before
+     * adding them to itself, this is done to preserve the parent of the added child. Since #hashCode and
+     * #equals(Object) are implemented by the subclasses of {@link AbstractRepositoryObject} there should be no side
+     * effects.
+     *
+     * @author Marcel Hanser
+     */
+    private static class CopyingCategory extends Category {
+
+        public CopyingCategory(final String id, final String name, final String contributingPlugin) {
+            super(id, name, contributingPlugin);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean addChild(final AbstractRepositoryObject child) {
+            return super.addChild((AbstractRepositoryObject)child.deepCopy());
+        }
     }
 }
