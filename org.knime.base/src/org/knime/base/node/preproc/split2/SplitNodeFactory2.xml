@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./splitter.png" type="Manipulator">
-    <name>Column Splitter</name>
+    <name>Splitter</name>
     <shortDescription>Splits the columns of the input table into two output tables.</shortDescription>
     <fullDescription>
         <intro>
