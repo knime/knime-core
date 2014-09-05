@@ -208,7 +208,7 @@ public class QuickNodeInsertionHandler extends AbstractHandler {
 
                                 int index = (i == -1 ? 0 : (e.keyCode == KEY_UP ? i - 1 : i + 1));
                                 if (index >= 0 && index < items.length) {
-                                    m_viewer.setSelection(new StructuredSelection(items[index].getData()));
+                                    m_viewer.setSelection(new StructuredSelection(items[index].getData()), true);
                                 }
                             }
                         }
