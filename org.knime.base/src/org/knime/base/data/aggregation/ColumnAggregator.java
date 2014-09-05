@@ -318,7 +318,7 @@ public class ColumnAggregator extends AggregationMethodDecorator {
             throw new NullPointerException("settings must not be null");
         }
         if (aggregators == null) {
-            throw new NullPointerException("cols must not be null");
+            throw new NullPointerException("aggregators must not be null");
         }
         final String[] colNames = new String[aggregators.size()];
         final String[] aggrMethods = new String[aggregators.size()];
