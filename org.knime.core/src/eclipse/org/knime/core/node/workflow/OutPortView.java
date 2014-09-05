@@ -96,13 +96,12 @@ public class OutPortView extends JFrame {
 
     private final LoadingPanel m_loadingPanel = new LoadingPanel();
 
-    private static final ExecutorService UPDATE_EXECUTOR =
-        Executors.newCachedThreadPool(new ThreadFactory() {
+    private static final ExecutorService UPDATE_EXECUTOR = Executors.newCachedThreadPool(new ThreadFactory() {
         private final AtomicInteger m_counter = new AtomicInteger();
+
         @Override
         public Thread newThread(final Runnable r) {
-            Thread t = new Thread(r, "OutPortView-Updater-"
-                    + m_counter.incrementAndGet());
+            Thread t = new Thread(r, "OutPortView-Updater-" + m_counter.incrementAndGet());
             t.setDaemon(true);
             return t;
         }
@@ -173,32 +172,31 @@ public class OutPortView extends JFrame {
         repaint();
     }
 
-
     /**
-     * Sets this frame in the center of the screen observing the current screen
-     * size.
+     * Sets this frame in the center of the screen observing the current screen size.
      */
     private void setLocation() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        setBounds(Math.max(0, (screenSize.width - getWidth()) / 2), Math.max(0,
-                (screenSize.height - getHeight()) / 2), Math.min(
-                screenSize.width, getWidth()), Math.min(
-                        screenSize.height, getHeight()));
+        setBounds(Math.max(0, (screenSize.width - getWidth()) / 2), Math.max(0, (screenSize.height - getHeight()) / 2),
+            Math.min(screenSize.width, getWidth()), Math.min(screenSize.height, getHeight()));
     }
 
-
-    /** A utility class that aggregates all objects that are updated in the
-     * update method.
+    /**
+     * A utility class that aggregates all objects that are updated in the update method.
      */
     private static final class UpdateObject {
         private final PortObject m_portObject;
+
         private final PortObjectSpec m_portObjectSpec;
+
         private final FlowObjectStack m_flowObjectStack;
+
         private final CredentialsProvider m_credentialsProvider;
+
         private final NodeContext m_nodeContext;
 
-        private UpdateObject(final PortObject po, final PortObjectSpec spec,
-                final FlowObjectStack stack, final CredentialsProvider prov) {
+        private UpdateObject(final PortObject po, final PortObjectSpec spec, final FlowObjectStack stack,
+            final CredentialsProvider prov) {
             m_portObject = po;
             m_portObjectSpec = spec;
             m_flowObjectStack = stack;
@@ -207,23 +205,19 @@ public class OutPortView extends JFrame {
         }
     }
 
-    private final AtomicReference<UpdateObject> m_updateObjectReference =
-        new AtomicReference<UpdateObject>();
+    private final AtomicReference<UpdateObject> m_updateObjectReference = new AtomicReference<UpdateObject>();
 
     /**
      * Sets the content of the view.
+     *
      * @param portObject a data table, model content or other
-     * @param portObjectSpec data table spec or model content
-     *         spec or other spec
+     * @param portObjectSpec data table spec or model content spec or other spec
      * @param stack The {@link FlowObjectStack} of the node.
      * @param credentials the CredenialsProvider used in out-port view
      */
-    void update(final PortObject portObject,
-            final PortObjectSpec portObjectSpec,
-            final FlowObjectStack stack,
-            final CredentialsProvider credentials) {
-        UpdateObject updateObject = new UpdateObject(portObject,
-                portObjectSpec, stack, credentials);
+    void update(final PortObject portObject, final PortObjectSpec portObjectSpec, final FlowObjectStack stack,
+        final CredentialsProvider credentials) {
+        UpdateObject updateObject = new UpdateObject(portObject, portObjectSpec, stack, credentials);
 
         // set update object, run update thread only if there was no previous
         // update object (otherwise an update is currently ongoing)
@@ -264,14 +258,11 @@ public class OutPortView extends JFrame {
 
             private void runWithContext() {
                 // add all port object tabs
-                final Map<String, JComponent> views
-                    = new LinkedHashMap<String, JComponent>();
+                final Map<String, JComponent> views = new LinkedHashMap<String, JComponent>();
                 PortObject portObject = updateObject.m_portObject;
-                PortObjectSpec portObjectSpec =
-                    updateObject.m_portObjectSpec;
+                PortObjectSpec portObjectSpec = updateObject.m_portObjectSpec;
                 FlowObjectStack stack = updateObject.m_flowObjectStack;
-                CredentialsProvider credentials =
-                    updateObject.m_credentialsProvider;
+                CredentialsProvider credentials = updateObject.m_credentialsProvider;
                 if (portObject != null) {
                     JComponent[] poViews = portObject.getViews();
                     if (poViews != null) {
@@ -280,8 +271,7 @@ public class OutPortView extends JFrame {
                             // DatabasePortObject to create db connection
                             // while accessing data for preview
                             if (comp instanceof DatabaseOutPortPanel) {
-                                DatabaseOutPortPanel dbcomp
-                                = (DatabaseOutPortPanel) comp;
+                                DatabaseOutPortPanel dbcomp = (DatabaseOutPortPanel)comp;
                                 dbcomp.setCredentialsProvider(credentials);
                             }
                             views.put(comp.getName(), comp);
@@ -311,10 +301,8 @@ public class OutPortView extends JFrame {
                 views.put("Flow Variables", stackView);
 
                 m_tabbedPane.removeAll();
-                for (Map.Entry<String, JComponent>entry
-                        : views.entrySet()) {
-                    m_tabbedPane.addTab(entry.getKey(),
-                            entry.getValue());
+                for (Map.Entry<String, JComponent> entry : views.entrySet()) {
+                    m_tabbedPane.addTab(entry.getKey(), entry.getValue());
                 }
                 remove(m_loadingPanel);
                 add(m_tabbedPane);
