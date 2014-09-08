@@ -199,7 +199,6 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
                 // this was the last iteration - close container and continue
                 m_resultContainer.close();
                 BufferedDataTable outTable = m_resultContainer.getTable();
-                m_resultContainer.close();
                 m_resultContainer = null;
                 m_count = 0;
                 LOGGER.debug("Total loop execution time: "
