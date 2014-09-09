@@ -65,11 +65,11 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSetFactory;
+import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
-import org.knime.core.node.workflow.FileWorkflowPersistor;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.repository.model.Category;
@@ -200,7 +200,7 @@ public final class RepositoryFactory {
             // Load images from declaring plugin
             Image icon = null;
             if (iconPath != null) {
-                icon = ImageRepository.getImage(pluginId, iconPath);
+                icon = ImageRepository.getScaledImage(pluginId, iconPath, 16, 16);
             }
             if (icon == null) {
                 LOGGER.coding("Icon '" + iconPath + "' for metanode "
@@ -283,7 +283,7 @@ public final class RepositoryFactory {
                                 .getImage(SharedImages.DefaultCategoryIcon);
 
             } else {
-                img = ImageRepository.getImage(pluginID, iconPath);
+                img = ImageRepository.getScaledImage(pluginID, iconPath, 16, 16);
                 if (img == null) {
                     LOGGER.coding("Icon '" + element.getAttribute("icon")
                             + "' for category " + cat.getPath() + "/"

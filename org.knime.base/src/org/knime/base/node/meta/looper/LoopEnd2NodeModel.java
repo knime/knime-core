@@ -138,23 +138,21 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
 
         if (m_settings.ignoreEmptyTables1() && inData[0].getRowCount() < 1) {
             if (m_emptyTable[0] == null) {
-                BufferedDataContainer cont = exec.createDataContainer(inData[0].getDataTableSpec());
+                BufferedDataContainer cont = exec.createDataContainer(createSpec(inData[0].getDataTableSpec()));
                 cont.close();
                 m_emptyTable[0] = cont.getTable();
             }
         } else if (m_resultContainer[0] == null) {
-            m_resultContainer[0] = exec.createDataContainer(createSpec(inData[0]
-                    .getDataTableSpec()));
+            m_resultContainer[0] = exec.createDataContainer(createSpec(inData[0].getDataTableSpec()));
         }
         if (m_settings.ignoreEmptyTables2() && inData[1].getRowCount() < 1) {
             if (m_emptyTable[1] == null) {
-                BufferedDataContainer cont = exec.createDataContainer(inData[1].getDataTableSpec());
+                BufferedDataContainer cont = exec.createDataContainer(createSpec(inData[1].getDataTableSpec()));
                 cont.close();
                 m_emptyTable[1] = cont.getTable();
             }
         } else if (m_resultContainer[1] == null) {
-            m_resultContainer[1] = exec.createDataContainer(createSpec(inData[1]
-                    .getDataTableSpec()));
+            m_resultContainer[1] = exec.createDataContainer(createSpec(inData[1].getDataTableSpec()));
         }
 
         final IntCell currIterCell = new IntCell(m_count);

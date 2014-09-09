@@ -7,7 +7,7 @@
         <intro>
 			This node separates hilited from non-hilited rows in the
 			input data according to their hilite status at the time of 
-			node's execution. Both tables are then passed to outports. Note, 
+			node's execution. Both tables are then passed to out-ports. Note, 
 			hilite changes that happen after the execution are not reflected 
 			in the output tables. You will need to reset and execute the node
 			again if you want to get a partitioning based on the changed state.

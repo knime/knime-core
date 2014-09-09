@@ -499,6 +499,35 @@ public final class ImageRepository {
     }
 
     /**
+     * Returns an image for an "external" image. The image is given by the plug-in an the path relative to the plug-in
+     * root.
+     * 
+     * @param pluginID the plug-in's id
+     * @param path the path of the image
+     * @param width the desired icon width
+     * @param height the desired icon height
+     * @return an image or <code>null</code> if the image does not exist
+     * @since 2.10
+     */
+    public static Image getScaledImage(final String pluginID, final String path, final int width, final int height) {
+        if (path == null) {
+            LOGGER.error("Null path passed to getImage (pluginID: " + pluginID + ")");
+            return REGISTRY.get("###MISSING_IMAGE###");
+        }
+
+        final String key = "bundle://" + pluginID + "/" + path + "@" + width + "x" + height;
+        Image img = REGISTRY.get(key);
+        if (img != null) {
+            return img;
+        } else {
+            Image unscaled = getImage(pluginID, path);
+            Image scaled = new Image(Display.getDefault(), unscaled.getImageData().scaledTo(width, height));
+            REGISTRY.put(key, scaled);
+            return scaled;
+        }
+    }
+
+    /**
      * Returns an image descriptor for an "external" image. The image is given
      * by the plug-in an the path relative to the plug-in root.
      *

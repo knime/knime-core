@@ -20,7 +20,7 @@
         </intro>
         <option name="Append Annotation">
             Enter a new, non-empty annotation string which is then applied to 
-            the current set of hilit rows. All sub-sequent annotations to the 
+            the current set of hilit rows. All subsequent annotations to the 
             same row, will be appended to the current string and separated by 
             comma. If selected, a new column with the current annotation is
             appended to the table.
