@@ -65,7 +65,7 @@ public class IncludeMissingCellRenderer extends BooleanCellRenderer {
      * be rendered
      */
     public IncludeMissingCellRenderer(final TableModel tableModel) {
-        super();
+        super("Tick to include missing cells");
         if (tableModel == null) {
             throw new NullPointerException(
                     "Table model must not be null");
@@ -89,10 +89,10 @@ public class IncludeMissingCellRenderer extends BooleanCellRenderer {
      */
     @Override
     public String getToolTipText() {
-        final String superText = super.getToolTipText();
-        if (superText != null) {
-            return superText;
+        if (isEnabled()) {
+            return "Tick to include missing cells";
+        } else {
+            return "Selected method does not support missing values";
         }
-        return "Tick to include missing cells";
     }
 }

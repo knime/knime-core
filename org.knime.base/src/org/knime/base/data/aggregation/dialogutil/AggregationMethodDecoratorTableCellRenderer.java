@@ -63,6 +63,7 @@ import org.knime.base.data.aggregation.AggregationMethodDecorator;
  * @author Tobias Koetter, University of Konstanz
  * @since 2.8
  */
+@Deprecated
 public class AggregationMethodDecoratorTableCellRenderer extends DefaultTableCellRenderer {
     private static final long serialVersionUID = 1L;
 

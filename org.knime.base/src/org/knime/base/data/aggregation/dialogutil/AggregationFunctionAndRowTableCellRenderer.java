@@ -44,56 +44,59 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   04.09.2014 (koetter): created
+ *   25.08.2014 (koetter): created
  */
 package org.knime.base.data.aggregation.dialogutil;
 
-import java.util.Comparator;
+import java.awt.Color;
+import java.awt.Component;
 
-import org.knime.core.data.DataType;
+import javax.swing.BorderFactory;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
+
+import org.knime.core.node.port.database.aggregation.AggregationFunction;
+import org.knime.core.node.port.database.aggregation.InvalidAggregationFunction;
 
 /**
- * Compares to {@link DataType}s based on their string representation.
+ * {@link TableCellRenderer} that checks if the value being renderer is of type {@link AggregationFunction}
+ * or {@link AggregationFunctionRow} in either case it will renderer the name of the function or the function returned
+ * by the row.
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @see AggregationFunctionRowTableCellRenderer
  * @since 2.11
  */
-public final class DataTypeNameSorter implements Comparator<DataType> {
+public class AggregationFunctionAndRowTableCellRenderer extends DefaultTableCellRenderer {
 
-    private static volatile DataTypeNameSorter instance;
-
-    private DataTypeNameSorter() {
-        //avoid object creation
-    }
-
-    /**
-     * Returns the only instance of this class.
-     * @return the only instance
-     */
-    public static DataTypeNameSorter getInstance() {
-        if (instance == null) {
-            synchronized (DataTypeNameSorter.class) {
-                if (instance == null) {
-                    instance = new DataTypeNameSorter();
-                }
-            }
-        }
-        return instance;
-    }
+    private static final long serialVersionUID = 1L;
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int compare(final DataType o1, final DataType o2) {
-        if (o1 == o2) {
-            return 0;
+    public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean isSelected,
+        final boolean hasFocus, final int row, final int column) {
+        final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        assert (c == this);
+        final AggregationFunction function;
+        if (value instanceof AggregationFunctionRow) {
+            function = ((AggregationFunctionRow<?>)value).getFunction();
+        } else if (value instanceof AggregationFunction) {
+            function = (AggregationFunction) value;
+        } else {
+            function = null;
         }
-        if (o1 == null) {
-            return -1;
+        if (function != null) {
+            if (function instanceof InvalidAggregationFunction) {
+                //set a red border for invalid methods
+                setBorder(BorderFactory.createLineBorder(Color.RED));
+            } else {
+                setBorder(null);
+            }
+            setText(function.getLabel());
+            setToolTipText(function.getDescription());
         }
-        if (o2 == null) {
-            return 1;
-        }
-        return o1.toString().compareTo(o2.toString());
+        return this;
     }
 }

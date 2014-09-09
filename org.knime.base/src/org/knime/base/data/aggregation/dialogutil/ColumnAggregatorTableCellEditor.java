@@ -63,7 +63,9 @@ import org.knime.core.data.DataType;
  *
  * @author Tobias Koetter, University of Konstanz
  * @since 2.8
+ * @deprecated
  */
+@Deprecated
 public class ColumnAggregatorTableCellEditor extends AbstractAggregationMethodTableCellEditor {
 
     private static final long serialVersionUID = 1415862346615703238L;

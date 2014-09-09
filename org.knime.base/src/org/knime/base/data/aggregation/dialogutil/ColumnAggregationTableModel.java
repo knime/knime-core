@@ -55,18 +55,21 @@ import java.util.Set;
 
 import javax.swing.table.DefaultTableModel;
 
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.NamedAggregationOperator;
 
 
 /**
  * This {@link DefaultTableModel} holds all aggregation columns and their
- * aggregation method.
+ * aggregation method. It is used in the Column Aggregator node
+ * which allows to specify a set of aggregation methods for a selected list of columns.
  *
  * @author Tobias Koetter, University of Konstanz
  * @since 2.6
  */
 public class ColumnAggregationTableModel
-    extends AbstractAggregationTableModel<NamedAggregationOperator> {
+    extends AbstractAggregationTableModel<AggregationMethod, NamedAggregationOperator> {
 
     private static final long serialVersionUID = 1;
 
@@ -75,7 +78,7 @@ public class ColumnAggregationTableModel
      */
     protected ColumnAggregationTableModel() {
         super(new String[] {"Column name (double click to change) ", "Aggregation method"},
-            new Class[] {NamedAggregationOperator.class, String.class}, true);
+            new Class[] {NamedAggregationOperator.class, String.class}, true, AggregationMethods.getInstance());
     }
 
     /**
@@ -94,12 +97,9 @@ public class ColumnAggregationTableModel
      * {@inheritDoc}
      */
     @Override
-    protected void setValue(final Object aValue, final int row,
-            final int columnIdx) {
+    protected void setValue(final Object aValue, final int row, final int columnIdx) {
         if (aValue instanceof String) {
-            final String newName =
-                (String)aValue;
-            assert columnIdx == 1;
+            final String newName = (String)aValue;
             try {
                 updateOperatorName(row, newName);
             } catch (final IllegalArgumentException e) {

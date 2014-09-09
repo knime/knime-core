@@ -69,14 +69,16 @@ import org.knime.core.data.DoubleValue;
  *
  * @author Tobias Koetter, University of Konstanz
  */
+@Deprecated
 public class AggregationColumnTableModel
-    extends AbstractAggregationTableModel<ColumnAggregator> {
+    extends AbstractAggregationTableModel<AggregationMethod, ColumnAggregator> {
 
     /**Constructor for class AggregationColumnTableModel.
      */
     public AggregationColumnTableModel() {
         super(new String[] {"Column", "Aggregation (click to change)"},
-                new Class<?>[] {ColumnAggregator.class, ColumnAggregator.class}, true);
+                new Class<?>[] {ColumnAggregator.class, ColumnAggregator.class}, true,
+                AggregationMethods.getInstance());
     }
     private static final long serialVersionUID = 7331177164907480373L;
 

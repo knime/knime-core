@@ -62,8 +62,8 @@ import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
-import org.knime.base.data.aggregation.dialogutil.DataTypeAggregator;
-import org.knime.base.data.aggregation.dialogutil.RegexAggregator;
+import org.knime.base.data.aggregation.dialogutil.pattern.PatternAggregator;
+import org.knime.base.data.aggregation.dialogutil.type.DataTypeAggregator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -166,8 +166,8 @@ public class GroupByNodeModel extends NodeModel {
     /**Configuration key for the data type based aggregation methods.*/
     static final String CFG_DATA_TYPE_AGGREGATORS = "dataTypeAggregators";
 
-    /**Configuration key for the regular expression based aggregation methods.*/
-    static final String CFG_REGEX_AGGREGATORS = "regexAggregators";
+    /**Configuration key for the pattern based aggregation methods.*/
+    static final String CFG_PATTERN_AGGREGATORS = "patternAggregators";
 
     private final SettingsModelFilterString m_groupByCols =
         new SettingsModelFilterString(CFG_GROUP_BY_COLUMNS);
@@ -205,11 +205,11 @@ public class GroupByNodeModel extends NodeModel {
 
     private final List<ColumnAggregator> m_columnAggregators = new LinkedList<>();
 
-    private List<ColumnAggregator> m_columnAggregators2Use;
-
     private final Collection<DataTypeAggregator> m_dataTypeAggregators = new LinkedList<>();
 
-    private final Collection<RegexAggregator> m_regexAggregators = new LinkedList<>();
+    private final Collection<PatternAggregator> m_patternAggregators = new LinkedList<>();
+
+    private final List<ColumnAggregator> m_columnAggregators2Use = new LinkedList<>();
 
     /**
      * Node returns a new hilite handler instance.
@@ -294,7 +294,7 @@ public class GroupByNodeModel extends NodeModel {
         } else {
             ColumnAggregator.saveColumnAggregators(settings, m_columnAggregators);
         }
-        RegexAggregator.saveAggregators(settings, CFG_REGEX_AGGREGATORS, m_regexAggregators);
+        PatternAggregator.saveAggregators(settings, CFG_PATTERN_AGGREGATORS, m_patternAggregators);
         DataTypeAggregator.saveAggregators(settings, CFG_DATA_TYPE_AGGREGATORS, m_dataTypeAggregators);
         m_columnNamePolicy.saveSettingsTo(settings);
         m_retainOrder.saveSettingsTo(settings);
@@ -322,15 +322,15 @@ public class GroupByNodeModel extends NodeModel {
         try {
             final List<ColumnAggregator> aggregators = ColumnAggregator.loadColumnAggregators(settings);
             final List<DataTypeAggregator> typeAggregators = new LinkedList<>();
-            final List<RegexAggregator> regexAggregators = new LinkedList<>();
+            final List<PatternAggregator> patternAggregators = new LinkedList<>();
             try {
-                regexAggregators.addAll(RegexAggregator.loadAggregators(settings, CFG_REGEX_AGGREGATORS));
+                patternAggregators.addAll(PatternAggregator.loadAggregators(settings, CFG_PATTERN_AGGREGATORS));
                 typeAggregators.addAll(DataTypeAggregator.loadAggregators(settings, CFG_DATA_TYPE_AGGREGATORS));
             } catch (InvalidSettingsException e) {
                 // introduced in 2.11
             }
             if (groupByCols.isEmpty() && aggregators.isEmpty()
-                    && regexAggregators.isEmpty() && typeAggregators.isEmpty()) {
+                    && patternAggregators.isEmpty() && typeAggregators.isEmpty()) {
                 throw new IllegalArgumentException("Please select at least one group column or aggregation option");
             }
             ColumnNamePolicy namePolicy;
@@ -342,21 +342,6 @@ public class GroupByNodeModel extends NodeModel {
                 namePolicy = compGetColumnNamePolicy(settings);
             }
             checkDuplicateAggregators(namePolicy, aggregators);
-            try {
-                ColumnAggregator.validateSettings(settings, aggregators);
-            } catch (InvalidSettingsException e) {
-                throw new IllegalArgumentException(e.getMessage());
-            }
-            try {
-                RegexAggregator.validateSettings(settings, regexAggregators);
-            } catch (InvalidSettingsException e) {
-                throw new IllegalArgumentException(e.getMessage());
-            }
-            try {
-                DataTypeAggregator.validateSettings(settings, typeAggregators);
-            } catch (InvalidSettingsException e) {
-                throw new IllegalArgumentException(e.getMessage());
-            }
         } catch (final InvalidSettingsException e) {
             // these settings are prior Knime 2.0 and can't contain
             // a column several times
@@ -421,10 +406,10 @@ public class GroupByNodeModel extends NodeModel {
             m_oldNumerical = settings.getString(OLD_CFG_NUMERIC_COL_METHOD);
             m_oldNominal = settings.getString(OLD_CFG_NOMINAL_COL_METHOD);
         }
-        m_regexAggregators.clear();
+        m_patternAggregators.clear();
         m_dataTypeAggregators.clear();
         try {
-            m_regexAggregators.addAll(RegexAggregator.loadAggregators(settings, CFG_REGEX_AGGREGATORS));
+            m_patternAggregators.addAll(PatternAggregator.loadAggregators(settings, CFG_PATTERN_AGGREGATORS));
             m_dataTypeAggregators.addAll(DataTypeAggregator.loadAggregators(settings, CFG_DATA_TYPE_AGGREGATORS));
         } catch (final InvalidSettingsException e) {
             // introduced in KNIME 2.11
@@ -481,7 +466,7 @@ public class GroupByNodeModel extends NodeModel {
         for (final ColumnAggregator colAggr : m_columnAggregators) {
             colAggr.reset();
         }
-        m_columnAggregators2Use = null;
+        m_columnAggregators2Use.clear();
     }
 
     /**
@@ -539,56 +524,17 @@ public class GroupByNodeModel extends NodeModel {
      */
     protected final DataTableSpec createGroupBySpec(final DataTableSpec origSpec, final List<String> groupByCols)
             throws InvalidSettingsException {
-        // remove all column aggregator
-        m_columnAggregators2Use = new ArrayList<>(m_columnAggregators.size());
+        m_columnAggregators2Use.clear();
         final ArrayList<ColumnAggregator> invalidColAggrs = new ArrayList<>(1);
-        final Set<String> usedColNames = new HashSet<>(groupByCols);
-        for (final ColumnAggregator colAggr : m_columnAggregators) {
-            final String originalColName = colAggr.getOriginalColName();
-            final DataColumnSpec colSpec = origSpec.getColumnSpec(originalColName);
-            if (colSpec != null && colSpec.getType().equals(colAggr.getOriginalDataType())) {
-                usedColNames.add(originalColName);
-                m_columnAggregators2Use.add(colAggr);
-            } else {
-                invalidColAggrs.add(colAggr);
-            }
-        }
-        if (origSpec.getNumColumns() > usedColNames.size() && !m_regexAggregators.isEmpty()) {
-            for (final DataColumnSpec spec : origSpec) {
-                if (!usedColNames.contains(spec.getName())) {
-                    for (final RegexAggregator regexAggr : m_regexAggregators) {
-                        Pattern pattern = regexAggr.getPattern();
-                        if (pattern != null && pattern.matcher(spec.getName()).matches()
-                                && regexAggr.isCompatible(spec)) {
-                            final ColumnAggregator colAggregator = new ColumnAggregator(spec,
-                                regexAggr.getMethodTemplate(), regexAggr.inclMissingCells());
-                            m_columnAggregators2Use.add(colAggregator);
-                            usedColNames.add(spec.getName());
-                        }
-                    }
-                }
-            }
-        }
-        //check if some columns are left
-        if (origSpec.getNumColumns() > usedColNames.size() && !m_dataTypeAggregators.isEmpty()) {
-            for (final DataColumnSpec spec : origSpec) {
-                if (!usedColNames.contains(spec.getName())) {
-                    final DataType dataType = spec.getType();
-                    for (final DataTypeAggregator typeAggregator : m_dataTypeAggregators) {
-                        if (typeAggregator.isCompatibleType(dataType)) {
-                            final ColumnAggregator colAggregator = new ColumnAggregator(spec,
-                                typeAggregator.getMethodTemplate(), typeAggregator.inclMissingCells());
-                            m_columnAggregators2Use.add(colAggregator);
-                            usedColNames.add(spec.getName());
-                        }
-                    }
-                }
-            }
+        m_columnAggregators2Use.addAll(GroupByNodeModel.getAggregators(origSpec,
+            m_columnAggregators, m_patternAggregators, m_dataTypeAggregators, invalidColAggrs));
+        if (m_columnAggregators2Use.isEmpty()) {
+            setWarningMessage("No aggregation column defined");
         }
         if (m_columnAggregators2Use.isEmpty()) {
             setWarningMessage("No aggregation column defined");
         }
-        LOGGER.info(m_columnAggregators2Use);
+        LOGGER.debug(m_columnAggregators2Use);
         if (!invalidColAggrs.isEmpty()) {
             setWarningMessage(invalidColAggrs.size() + " invalid aggregation column(s) found.");
         }
@@ -883,6 +829,73 @@ public class GroupByNodeModel extends NodeModel {
         if (m_columnAggregators.isEmpty() && m_oldNumerical != null && m_oldNominal != null) {
             m_columnAggregators.addAll(compCreateColumnAggregators(spec, groupByCols, m_oldNumerical, m_oldNominal));
         }
+    }
+
+    /**
+     * Creates a {@link List} with all {@link ColumnAggregator}s to use based on the given input settings.
+     * Columns are only added once for the different aggregator types in the order they are added to the function
+     * e.g. all column that are handled by one of the given {@link ColumnAggregator} are ignored by the
+     * pattern and data type based aggregator all columns that are handled by one of the pattern based aggregators
+     * is ignored by the data type based aggregators.
+     * @param inputSpec the {@link DataTableSpec} of the input table
+     * @param columnAggregators the manually added {@link ColumnAggregator}s
+     * @param patternAggregators the {@link PatternAggregator}s
+     * @param dataTypeAggregators the {@link DataTypeAggregator}s
+     * @param invalidColAggrs empty {@link List} that is filled with the invalid column aggregators can be
+     * <code>null</code>
+     * @return the list of all {@link ColumnAggregator}s to use based on the given aggregator
+     * @since 2.11
+     */
+    public static List<ColumnAggregator> getAggregators(final DataTableSpec inputSpec,
+        final List<ColumnAggregator> columnAggregators, final Collection<PatternAggregator> patternAggregators,
+        final Collection<DataTypeAggregator> dataTypeAggregators, final List<ColumnAggregator> invalidColAggrs) {
+        final List<ColumnAggregator> columnAggregators2Use = new ArrayList<>(columnAggregators.size());
+        final Set<String> usedColNames = new HashSet<>(inputSpec.getNumColumns());
+        for (final ColumnAggregator colAggr : columnAggregators) {
+            final String originalColName = colAggr.getOriginalColName();
+            final DataColumnSpec colSpec = inputSpec.getColumnSpec(originalColName);
+            if (colSpec != null && colSpec.getType().equals(colAggr.getOriginalDataType())) {
+                usedColNames.add(originalColName);
+                columnAggregators2Use.add(colAggr);
+            } else {
+                if (invalidColAggrs != null) {
+                    invalidColAggrs.add(colAggr);
+                }
+            }
+        }
+        if (inputSpec.getNumColumns() > usedColNames.size() && !patternAggregators.isEmpty()) {
+            for (final DataColumnSpec spec : inputSpec) {
+                if (!usedColNames.contains(spec.getName())) {
+                    for (final PatternAggregator patternAggr : patternAggregators) {
+                        Pattern pattern = patternAggr.getRegexPattern();
+                        if (pattern != null && pattern.matcher(spec.getName()).matches()
+                                && patternAggr.isCompatible(spec)) {
+                            final ColumnAggregator colAggregator = new ColumnAggregator(spec,
+                                patternAggr.getMethodTemplate(), patternAggr.inclMissingCells());
+                            columnAggregators2Use.add(colAggregator);
+                            usedColNames.add(spec.getName());
+                        }
+                    }
+                }
+            }
+        }
+        //check if some columns are left
+        if (inputSpec.getNumColumns() > usedColNames.size() && !dataTypeAggregators.isEmpty()) {
+            for (final DataColumnSpec spec : inputSpec) {
+                if (!usedColNames.contains(spec.getName())) {
+                    final DataType dataType = spec.getType();
+                    for (final DataTypeAggregator typeAggregator : dataTypeAggregators) {
+                        if (typeAggregator.isCompatibleType(dataType)) {
+                            final ColumnAggregator colAggregator = new ColumnAggregator(spec,
+                                typeAggregator.getMethodTemplate(), typeAggregator.inclMissingCells());
+                            columnAggregators2Use.add(colAggregator);
+                            usedColNames.add(spec.getName());
+                        }
+                    }
+                }
+            }
+        }
+        return columnAggregators2Use;
     }
 
     /**

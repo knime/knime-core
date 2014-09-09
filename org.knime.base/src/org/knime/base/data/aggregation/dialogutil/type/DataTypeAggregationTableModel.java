@@ -44,49 +44,97 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   17.07.2014 (koetter): created
+ *   06.07.2014 (koetter): created
  */
-package org.knime.base.data.aggregation.dialogutil;
-
-import java.awt.Component;
-
-import javax.swing.DefaultCellEditor;
-import javax.swing.JTable;
-import javax.swing.JTextField;
+package org.knime.base.data.aggregation.dialogutil.type;
 
 import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.dialogutil.AbstractAggregationTableModel;
 import org.knime.core.data.DataType;
 
+
+
+
 /**
- * {@link DataTypeAggregator} table cell editor class that allows the user to choose from the supported
- * {@link AggregationMethod}s for {@link DataType} of the current {@link DataTypeAggregator}.
- *
+ * {@link AbstractAggregationTableModel} that stores {@link DataType}s and the {@link AggregationMethod} to use.
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class PatternTableCellEditor extends DefaultCellEditor {
+public class DataTypeAggregationTableModel
+    extends AbstractAggregationTableModel<AggregationMethod, DataTypeAggregator> {
 
-    private static final long serialVersionUID = 1;
+    private static final long serialVersionUID = 1L;
 
-    /**Constructor for class AggregationMethodTableCellEditor.
+    /**
+     * Constructor.
      */
-    public PatternTableCellEditor() {
-        super(new JTextField());
+    DataTypeAggregationTableModel() {
+        super(new String[] {"Data type", "Aggregation (click to change)"},
+            new Class[] {DataTypeAggregator.class, DataTypeAggregator.class}, true, AggregationMethods.getInstance());
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setValue(final Object aValue, final int row, final int columnIdx) {
+        if (aValue == null) {
+            return;
+        }
+        if (aValue instanceof AggregationMethod) {
+            assert columnIdx == 1;
+            final AggregationMethod newMethod = (AggregationMethod)aValue;
+            updateMethod(row, newMethod);
+        }
+    }
+
+    /**
+     * @param row the row to update
+     * @param method the {@link AggregationMethod} to use
+     */
+    private void updateMethod(final int row, final AggregationMethod method) {
+        final DataTypeAggregator old = getRow(row);
+        if (old.getMethodTemplate().equals(method)) {
+            //check if the method has changed
+            return;
+        }
+        //create a new operator each time it is updated to guarantee that
+        //each column has its own operator instance
+        final AggregationMethod methodClone = AggregationMethods.getMethod4Id(method.getId());
+        updateRow(row, new DataTypeAggregator(old.getDataType(), methodClone, old.inclMissingCells()));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Component getTableCellEditorComponent(final JTable table, final Object value, final boolean isSelected,
-        final int row, final int column) {
-        final String val;
-        if (value instanceof PatternAggregator) {
-            final PatternAggregator method = (PatternAggregator)value;
-            val = method.getInputPattern();
-        } else {
-            val = value.toString();
+    protected boolean isEditable(final int row, final int columnIdx) {
+        switch (columnIdx) {
+            case 1:
+                return true;
+            default:
+                return false;
         }
-        return super.getTableCellEditorComponent(table, val, isSelected, row, column);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Object getValueAtRow(final int row, final int columnIndex) {
+        final DataTypeAggregator aggregator = getRow(row);
+        switch (columnIndex) {
+        case 0:
+            return aggregator;
+        case 1:
+            return aggregator;
+
+        default:
+            break;
+        }
+        return null;
+    }
+
 }

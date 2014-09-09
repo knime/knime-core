@@ -62,6 +62,7 @@ import org.knime.base.data.aggregation.AggregationMethod;
  *
  * @author Tobias Koetter, University of Konstanz
  */
+@Deprecated
 public class AggregationMethodTableCellRenderer extends DefaultTableCellRenderer {
   private static final long serialVersionUID = -2935929914992836023L;
 

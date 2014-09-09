@@ -46,7 +46,7 @@
  * History
  *   06.07.2014 (koetter): created
  */
-package org.knime.base.data.aggregation.dialogutil;
+package org.knime.base.data.aggregation.dialogutil.type;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -62,9 +62,11 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
 
 import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethodDecorator;
 import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.dialogutil.AggregationMethodDecoratorTableCellRenderer.ValueRenderer;
+import org.knime.base.data.aggregation.dialogutil.AbstractAggregationPanel;
+import org.knime.base.data.aggregation.dialogutil.AggregationFunctionAndRowTableCellRenderer;
+import org.knime.base.data.aggregation.dialogutil.AggregationFunctionRowTableCellRenderer;
+import org.knime.base.data.aggregation.dialogutil.AggregationFunctionRowTableCellRenderer.ValueRenderer;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -89,6 +91,8 @@ import org.knime.core.node.util.DataTypeListCellRenderer;
  */
 public class DataTypeAggregationPanel
 extends AbstractAggregationPanel<DataTypeAggregationTableModel, DataTypeAggregator, DataType> {
+    /**The default title of the panel to display in a dialog.*/
+    public static final String DEFAULT_TITLE = "Type Based Aggregation";
 
     private final String m_key;
 
@@ -112,27 +116,16 @@ extends AbstractAggregationPanel<DataTypeAggregationTableModel, DataTypeAggregat
     @Override
     protected void adaptTableColumnModel(final TableColumnModel columnModel) {
         columnModel.getColumn(0).setCellRenderer(
-            new AggregationMethodDecoratorTableCellRenderer(new ValueRenderer() {
+            new AggregationFunctionRowTableCellRenderer<>(new ValueRenderer<DataTypeAggregator>() {
                 @Override
-                public void renderComponent(final DefaultTableCellRenderer c,
-                                            final AggregationMethodDecorator method) {
-                    if (method instanceof DataTypeAggregator) {
-                        final DataTypeAggregator aggregator = (DataTypeAggregator)method;
-                        final DataType dataType = aggregator.getDataType();
-                        c.setText(dataType.toString());
-                        c.setIcon(dataType.getIcon());
-                    }
+                public void renderComponent(final DefaultTableCellRenderer c, final DataTypeAggregator row) {
+                    final DataType dataType = row.getDataType();
+                    c.setText(dataType.toString());
+                    c.setIcon(dataType.getIcon());
                 }
             }, true, "Double click to remove data type. Right mouse click for context menu."));
         columnModel.getColumn(1).setCellEditor(new DataTypeAggregatorTableCellEditor());
-        columnModel.getColumn(1).setCellRenderer(
-                new AggregationMethodDecoratorTableCellRenderer(new ValueRenderer() {
-                    @Override
-                    public void renderComponent(final DefaultTableCellRenderer c,
-                                                final AggregationMethodDecorator method) {
-                        c.setText(method.getLabel());
-                    }
-                }, false));
+        columnModel.getColumn(1).setCellRenderer(new AggregationFunctionAndRowTableCellRenderer());
         columnModel.getColumn(0).setPreferredWidth(170);
         columnModel.getColumn(1).setPreferredWidth(150);
     }
@@ -161,7 +154,7 @@ extends AbstractAggregationPanel<DataTypeAggregationTableModel, DataTypeAggregat
                  */
                 @Override
                 public void actionPerformed(final ActionEvent e) {
-                    selectAllSelectedMethods();
+                    selectAllRows();
                 }
             });
             menu.add(item);
@@ -174,7 +167,7 @@ extends AbstractAggregationPanel<DataTypeAggregationTableModel, DataTypeAggregat
      * {@inheritDoc}
      */
     @Override
-    protected DataTypeAggregator getOperator(final DataType selectedListElement) {
+    protected DataTypeAggregator createRow(final DataType selectedListElement) {
         List<AggregationMethod> compatibleMethods = AggregationMethods.getCompatibleMethods(selectedListElement);
         return new DataTypeAggregator(selectedListElement, compatibleMethods.iterator().next());
     }

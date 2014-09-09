@@ -78,7 +78,9 @@ import org.knime.core.node.NotConfigurableException;
  * {@link AggregationMethod}.
  * @author Tobias Koetter, University of Konstanz
  * @since 2.8
+ * @see AggregationSettingsDialog
  */
+@Deprecated
 public class AggregationParameterDialog extends JDialog {
 
     /**This is the first version of the dialog.*/
@@ -210,10 +212,8 @@ public class AggregationParameterDialog extends JDialog {
     }
 
     private boolean validateSettings() {
-        final NodeSettings tmpSettings = new NodeSettings("tmp");
-        m_method.saveSettingsTo(tmpSettings);
         try {
-            m_method.validateSettings(tmpSettings);
+            m_method.validate();
             return true;
         } catch (InvalidSettingsException e) {
             //show the error message

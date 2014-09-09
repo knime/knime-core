@@ -473,6 +473,7 @@ public abstract class AggregationOperator implements AggregationMethod {
      * @param type the {@link DataType} to check for compatibility
      * @return true if this method supports the given {@link DataType}
      */
+    @Override
     public boolean isCompatible(final DataType type) {
         if (type == null) {
             throw new NullPointerException("type must not be null");
@@ -579,6 +580,16 @@ public abstract class AggregationOperator implements AggregationMethod {
     @Override
     public void validateSettings(final NodeSettingsRO settings)
         throws InvalidSettingsException {
+        // nothing to validate by default override if operator requires settings
+    }
+
+    /**
+     * Override this method if the operator requires additional settings.
+     * {@inheritDoc}
+     * @since 2.11
+     */
+    @Override
+    public void validate() throws InvalidSettingsException {
         // nothing to validate by default override if operator requires settings
     }
 

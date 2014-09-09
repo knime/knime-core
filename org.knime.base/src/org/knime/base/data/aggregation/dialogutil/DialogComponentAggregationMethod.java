@@ -137,7 +137,7 @@ public class DialogComponentAggregationMethod extends DialogComponent
         }
         m_label = new JLabel(label);
         m_aggregationMethod = new JComboBox<>();
-        m_aggregationMethod.setRenderer(new AggregationMethodListCellRenderer());
+        m_aggregationMethod.setRenderer(new AggregationFunctionAndRowListCellRenderer());
 
         for (final AggregationMethod o : methods) {
             if (o == null) {
@@ -508,7 +508,7 @@ public class DialogComponentAggregationMethod extends DialogComponent
             } else {
                 spec = (DataTableSpec)getLastTableSpec(specIdx);
             }
-            final AggregationParameterDialog dialog = new AggregationParameterDialog(f,
+            final AggregationSettingsDialog dialog = new AggregationSettingsDialog(f,
                                            getSelectedAggregationMethod(), spec);
             //center the dialog
             dialog.setLocationRelativeTo(c);

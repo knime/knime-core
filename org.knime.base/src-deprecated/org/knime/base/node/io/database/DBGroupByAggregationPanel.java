@@ -83,7 +83,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
 import org.knime.core.node.port.database.DatabaseUtility;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunctionNameComparator;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionLabelComparator;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 import org.knime.core.util.Pair;
 
@@ -167,10 +167,10 @@ final class DBGroupByAggregationPanel extends JPanel {
      */
     private void setSupportedAggregationFunctions(final Collection<DBAggregationFunction> supportedFunctions) {
         final DBAggregationFunction[] sortedFunctions = supportedFunctions.toArray(new DBAggregationFunction[0]);
-        Arrays.sort(sortedFunctions, DBAggregationFunctionNameComparator.ASC);
+        Arrays.sort(sortedFunctions, DBAggregationFunctionLabelComparator.ASC);
         m_aggregationFunctionComboBox.removeAllItems();
         for (final DBAggregationFunction function : sortedFunctions) {
-            m_aggregationFunctionComboBox.addItem(function.getName());
+            m_aggregationFunctionComboBox.addItem(function.getLabel());
         }
     }
 
@@ -202,7 +202,7 @@ final class DBGroupByAggregationPanel extends JPanel {
         m_dbspec = dbspec;
         try {
             final DatabaseUtility utility = m_dbspec.getConnectionSettings(null).getUtility();
-            final Collection<DBAggregationFunction> aggregationFunctions = utility.getSupportedAggregationFunctions();
+            final Collection<DBAggregationFunction> aggregationFunctions = utility.getAggregationFunctions();
             setSupportedAggregationFunctions(aggregationFunctions);
         } catch (final InvalidSettingsException e) {
             throw new NotConfigurableException(e.getMessage());

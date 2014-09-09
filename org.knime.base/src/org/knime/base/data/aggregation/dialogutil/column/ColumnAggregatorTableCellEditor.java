@@ -1,6 +1,5 @@
 /*
  * ------------------------------------------------------------------------
- *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -41,98 +40,58 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
- * History
- *   06.07.2014 (koetter): created
  */
-package org.knime.base.data.aggregation.dialogutil;
+
+package org.knime.base.data.aggregation.dialogutil.column;
+
+import javax.swing.JTable;
 
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.dialogutil.AbstractAggregationFunctionTableCellEditor;
 import org.knime.core.data.DataType;
-
-
+import org.knime.core.node.port.database.aggregation.AggregationFunction;
 
 
 /**
- * {@link AbstractAggregationTableModel} that stores {@link DataType}s and the {@link AggregationMethod} to use.
- * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
- * @since 2.11
+ * Extends the {@link AbstractAggregationFunctionTableCellEditor} class to provide the
+ * aggregation function selection box for the {@link ColumnAggregator}.
+ *
+ * @author Tobias Koetter, University of Konstanz
+ * @since 2.8
  */
-public class DataTypeAggregationTableModel extends AbstractAggregationTableModel<DataTypeAggregator> {
+public class ColumnAggregatorTableCellEditor
+    extends AbstractAggregationFunctionTableCellEditor<AggregationMethod, ColumnAggregator> {
 
     private static final long serialVersionUID = 1L;
 
     /**
      * Constructor.
      */
-    DataTypeAggregationTableModel() {
-        super(new String[] {"Data type", "Aggregation (click to change)"},
-            new Class[] {DataTypeAggregator.class, DataTypeAggregator.class}, true);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void setValue(final Object aValue, final int row, final int columnIdx) {
-        if (aValue == null) {
-            return;
-        }
-        if (aValue instanceof AggregationMethod) {
-            assert columnIdx == 1;
-            final AggregationMethod newMethod = (AggregationMethod)aValue;
-            updateMethod(row, newMethod);
-        }
-    }
-
-    /**
-     * @param row the row to update
-     * @param method the {@link AggregationMethod} to use
-     */
-    private void updateMethod(final int row, final AggregationMethod method) {
-        final DataTypeAggregator old = getRow(row);
-        if (old.getMethodTemplate().equals(method)) {
-            //check if the method has changed
-            return;
-        }
-        //create a new operator each time it is updated to guarantee that
-        //each column has its own operator instance
-        final AggregationMethod methodClone = AggregationMethods.getMethod4Id(method.getId());
-        updateRow(row, new DataTypeAggregator(old.getDataType(), methodClone, old.inclMissingCells()));
+    public ColumnAggregatorTableCellEditor() {
+        super(AggregationMethods.getInstance());
     }
 
     /**
      * {@inheritDoc}
+     * @since 2.11
      */
     @Override
-    protected boolean isEditable(final int row, final int columnIdx) {
-        switch (columnIdx) {
-            case 1:
-                return true;
-            default:
-                return false;
-        }
+    protected AggregationFunction getSelectedAggregationMethod(final JTable table, final ColumnAggregator value,
+        final boolean isSelected, final int row, final int column) {
+        return value.getMethodTemplate();
     }
 
     /**
      * {@inheritDoc}
+     * @since 2.11
      */
     @Override
-    protected Object getValueAtRow(final int row, final int columnIndex) {
-        final DataTypeAggregator aggregator = getRow(row);
-        switch (columnIndex) {
-        case 0:
-            return aggregator;
-        case 1:
-            return aggregator;
-
-        default:
-            break;
-        }
-        return null;
+    protected DataType getDataType(final JTable table, final ColumnAggregator value, final boolean isSelected,
+        final int row, final int column) {
+        return value.getOriginalColSpec().getType();
     }
-
 }

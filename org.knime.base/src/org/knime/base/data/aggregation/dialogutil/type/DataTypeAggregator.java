@@ -46,22 +46,22 @@
  * History
  *   06.07.2014 (koetter): created
  */
-package org.knime.base.data.aggregation.dialogutil;
+package org.knime.base.data.aggregation.dialogutil.type;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethodDecorator;
-import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.config.Config;
 
 import com.sun.org.apache.xml.internal.security.encryption.AgreementMethod;
 
@@ -77,7 +77,7 @@ public class DataTypeAggregator extends AggregationMethodDecorator {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(DataTypeAggregator.class);
 
     private static final String CNFG_DATA_TYPE_AGGR_SECTION = "dataTypeAggregators";
-    private static final String CNFG_COL_TYPES = "columnTypes";
+    private static final String CNFG_DATA_TYPE = "dataType";
 
     private final DataType m_type;
 
@@ -146,54 +146,20 @@ public class DataTypeAggregator extends AggregationMethodDecorator {
         if (key == null || key.isEmpty()) {
             throw new IllegalArgumentException("key must not be empty");
         }
-        final Config cnfg = settings.getConfig(key);
-        final DataType[] colTypes = cnfg.getDataTypeArray(CNFG_COL_TYPES);
-        final String[] aggrMethods = cnfg.getStringArray(CNFG_AGGR_METHODS);
-        boolean[] inclMissingVals = null;
-        inclMissingVals = cnfg.getBooleanArray(CNFG_INCL_MISSING_VALS);
-        final List<DataTypeAggregator> aggrList = new LinkedList<>();
-        if (aggrMethods.length != colTypes.length) {
-            throw new InvalidSettingsException("Data type array and aggregation method array should be of equal size");
+        if (!settings.containsKey(key)) {
+            return Collections.EMPTY_LIST;
         }
-        for (int i = 0, length = aggrMethods.length; i < length; i++) {
-            final AggregationMethod method = AggregationMethods.getMethod4Id(aggrMethods[i]);
-            final boolean inclMissingVal;
-            if (inclMissingVals != null) {
-                inclMissingVal = inclMissingVals[i];
-            } else {
-                //get the default behavior of the method
-                inclMissingVal = method.inclMissingCells();
-            }
-            final DataTypeAggregator aggr = new DataTypeAggregator(colTypes[i], method, inclMissingVal);
-            if (aggr.hasOptionalSettings()) {
-                try {
-                    final NodeSettingsRO operatorSettings = settings.getNodeSettings(
-                                   createSettingsKey(aggr));
-                    if (spec != null) {
-                        //this method is called from the dialog
-                        aggr.loadSettingsFrom(operatorSettings, spec);
-                    } else {
-                        //this method is called from the node model where we do not
-                        //have the DataTableSpec
-                        aggr.loadValidatedSettings(operatorSettings);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Exception while loading settings for aggreation operator '"
-                        + aggr.getId() + "', reason: " + e.getMessage());
-                }
-            }
-            aggrList.add(aggr);
+        final NodeSettingsRO root = settings.getNodeSettings(key);
+        final Set<String> settingsKeys = root.keySet();
+        final List<DataTypeAggregator> aggrList = new ArrayList<>(settingsKeys.size());
+        for (String settingsKey : settingsKeys) {
+            final NodeSettingsRO cfg = root.getNodeSettings(settingsKey);
+            final DataType colType = cfg.getDataType(CNFG_DATA_TYPE);
+            final boolean inclMissing = cfg.getBoolean(CNFG_INCL_MISSING_VALS);
+            final AggregationMethod method = AggregationMethodDecorator.loadMethod(spec, cfg);
+            aggrList.add(new DataTypeAggregator(colType, method, inclMissing));
         }
         return aggrList;
-    }
-
-    /**
-     * @param aggr
-     * @return
-     */
-    private static String createSettingsKey(final DataTypeAggregator aggr) {
-        //the method id and the data type are unique since
-        return aggr.getId() + "_" + aggr.getDataType().toString();
     }
 
     /**
@@ -212,56 +178,13 @@ public class DataTypeAggregator extends AggregationMethodDecorator {
         if (aggregators == null) {
             throw new NullPointerException("cols must not be null");
         }
-        final String[] aggrMethods = new String[aggregators.size()];
-        final boolean[] inclMissingVals = new boolean[aggregators.size()];
-        final DataType[] types = new DataType[aggregators.size()];
-        int i = 0;
+        final NodeSettingsWO root = settings.addNodeSettings(key);
+        int idx = 0;
         for (DataTypeAggregator aggr : aggregators) {
-            final AggregationMethod method = aggr.getMethodTemplate();
-            aggrMethods[i] = aggr.getId();
-            types[i] = aggr.getDataType();
-            inclMissingVals[i] = aggr.inclMissingCells();
-            if (aggr.hasOptionalSettings()) {
-                try {
-                    final NodeSettingsWO operatorSettings = settings.addNodeSettings(createSettingsKey(aggr));
-                    method.saveSettingsTo(operatorSettings);
-                } catch (Exception e) {
-                    LOGGER.error(
-                        "Exception while saving settings for aggreation operator '"
-                        + aggr.getId() + "', reason: " + e.getMessage());
-                }
-            }
-            i++;
-        }
-        final Config cnfg = settings.addConfig(CNFG_DATA_TYPE_AGGR_SECTION);
-        cnfg.addDataTypeArray(CNFG_COL_TYPES, types);
-        cnfg.addStringArray(CNFG_AGGR_METHODS, aggrMethods);
-        cnfg.addBooleanArray(CNFG_INCL_MISSING_VALS, inclMissingVals);
-    }
-
-    /**
-     * Validates the operator specific settings of all {@link DataTypeAggregator}s
-     * that require additional settings.
-     *
-     * @param settings the settings to validate
-     * @param aggregators the operators to validate
-     * @throws InvalidSettingsException if the settings of an operator are not valid
-     */
-    public static void validateSettings(final NodeSettingsRO settings, final List<DataTypeAggregator> aggregators)
-            throws InvalidSettingsException {
-        for (int i = 0, length = aggregators.size(); i < length; i++) {
-            final DataTypeAggregator aggr = aggregators.get(i);
-            if (aggr.hasOptionalSettings()) {
-                final NodeSettingsRO operatorSettings =
-                    settings.getNodeSettings(createSettingsKey(aggr));
-                try {
-                    aggr.validateSettings(operatorSettings);
-                } catch (InvalidSettingsException e) {
-                    throw new InvalidSettingsException(
-                       "Invalid settings for aggreation operator '" + aggr.getLabel() + "' for datat type '"
-                        + aggr.getDataType() + "', reason: " + e.getMessage());
-                }
-            }
+            final NodeSettingsWO cfg = root.addNodeSettings("f_" + idx++);
+            cfg.addDataType(CNFG_DATA_TYPE, aggr.getDataType());
+            cfg.addBoolean(CNFG_INCL_MISSING_VALS, aggr.inclMissingCells());
+            AggregationMethodDecorator.saveMethod(cfg, aggr.getMethodTemplate());
         }
     }
 }

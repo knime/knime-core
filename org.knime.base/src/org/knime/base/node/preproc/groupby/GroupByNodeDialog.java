@@ -64,9 +64,9 @@ import javax.swing.event.ChangeListener;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
-import org.knime.base.data.aggregation.dialogutil.AggregationColumnPanel;
-import org.knime.base.data.aggregation.dialogutil.DataTypeAggregationPanel;
-import org.knime.base.data.aggregation.dialogutil.RegexAggregationPanel;
+import org.knime.base.data.aggregation.dialogutil.column.AggregationColumnPanel;
+import org.knime.base.data.aggregation.dialogutil.pattern.PatternAggregationPanel;
+import org.knime.base.data.aggregation.dialogutil.type.DataTypeAggregationPanel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -94,9 +94,6 @@ import org.knime.core.node.util.ColumnFilterPanel;
  * @author Tobias Koetter, University of Konstanz
  */
 public class GroupByNodeDialog extends NodeDialogPane {
-
-    /**The width of the default component.*/
-    public static final int DEFAULT_WIDTH = 680;
 
     /**The height of the default component.*/
     public static final int DEFAULT_HEIGHT = 370;
@@ -138,8 +135,8 @@ public class GroupByNodeDialog extends NodeDialogPane {
     private final DataTypeAggregationPanel m_dataTypeAggrPanel =
             new DataTypeAggregationPanel(GroupByNodeModel.CFG_DATA_TYPE_AGGREGATORS);
 
-    private final RegexAggregationPanel m_regexAggrPanel =
-            new RegexAggregationPanel(GroupByNodeModel.CFG_REGEX_AGGREGATORS);
+    private final PatternAggregationPanel m_patternAggrPanel =
+            new PatternAggregationPanel(GroupByNodeModel.CFG_PATTERN_AGGREGATORS);
 
     //used to now the implementation version of the node
     private final SettingsModelInteger m_version = GroupByNodeModel.createVersionModel();
@@ -149,12 +146,12 @@ public class GroupByNodeDialog extends NodeDialogPane {
     }
 
     /**Constructor for class GroupByNodeDialog.
-     * @param showRegex <code>true</code> if the regex based aggregation selection should be displayed
+     * @param showPattern <code>true</code> if the pattern based aggregation selection should be displayed
      * @param showType <code>true</code> if the type based aggregation selection should be displayed
      * @since 2.11
      */
     @SuppressWarnings("unchecked")
-    public GroupByNodeDialog(final boolean showRegex, final boolean showType) {
+    public GroupByNodeDialog(final boolean showPattern, final boolean showType) {
 //create the root tab
         m_tabs = new JTabbedPane();
         m_tabs.setBorder(BorderFactory.createTitledBorder(""));
@@ -188,41 +185,46 @@ public class GroupByNodeDialog extends NodeDialogPane {
         groupColFilterPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), " Group settings "));
         groupColPanel.add(groupColFilterPanel, c);
-        c.gridy = 1;
-        c.weightx = 0;
-        c.weighty = 0;
-        groupColPanel.add(createAdvancedOptionsBox(), c);
         m_tabs.addTab("Groups", groupColPanel);
 
         final JPanel columnBasedPanel = new JPanel();
         columnBasedPanel.setLayout(new BoxLayout(columnBasedPanel, BoxLayout.Y_AXIS));
         columnBasedPanel.add(m_aggrColPanel.getComponentPanel());
-//        columnBasedPanel.add(createAdvancedOptionsBox());
-        m_tabs.addTab("Manual Aggregation", columnBasedPanel);
+        m_tabs.addTab(AggregationColumnPanel.DEFAULT_TITLE, columnBasedPanel);
 
-        if (showRegex) {
-            final JPanel regexPanel = new JPanel();
-            regexPanel.setLayout(new BoxLayout(regexPanel, BoxLayout.Y_AXIS));
-            regexPanel.add(m_regexAggrPanel.getComponentPanel());
-            m_tabs.addTab("Regex Based Aggregation", regexPanel);
+        if (showPattern) {
+            final JPanel patternPanel = new JPanel();
+            patternPanel.setLayout(new BoxLayout(patternPanel, BoxLayout.Y_AXIS));
+            patternPanel.add(m_patternAggrPanel.getComponentPanel());
+            m_tabs.addTab(PatternAggregationPanel.DEFAULT_TITLE, patternPanel);
         }
         if (showType) {
             final JPanel typeBasedPanel = new JPanel();
             typeBasedPanel.setLayout(new BoxLayout(typeBasedPanel, BoxLayout.Y_AXIS));
             typeBasedPanel.add(m_dataTypeAggrPanel.getComponentPanel());
-            m_tabs.addTab("Type Based Aggregation", typeBasedPanel);
+            m_tabs.addTab(DataTypeAggregationPanel.DEFAULT_TITLE, typeBasedPanel);
         }
 
 //calculate the component size
-        int width = (int)Math.max(groupColPanel.
-                getMinimumSize().getWidth(), m_aggrColPanel.
-                    getComponentPanel().getMinimumSize().getWidth());
-        width = Math.max(width, DEFAULT_WIDTH);
-        final Dimension dimension =
-            new Dimension(width, DEFAULT_HEIGHT);
+        final int width = (int)m_tabs.getMinimumSize().getWidth();
+        final Dimension dimension = new Dimension(width, DEFAULT_HEIGHT);
         m_tabs.setMinimumSize(dimension);
         m_tabs.setPreferredSize(dimension);
-        super.addTab("Settings", m_tabs);
+        final JPanel topBottomPanel = new JPanel(new GridBagLayout());
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1;
+        c.weighty = 1;
+        topBottomPanel.add(m_tabs, c);
+        c.gridy++;
+        c.anchor = GridBagConstraints.LINE_START;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 0;
+        c.weighty = 0;
+        topBottomPanel.add(createAdvancedOptionsBox(), c);
+        super.addTab("Settings", topBottomPanel);
 
         //add the  process in memory change listener
         m_inMemory.addChangeListener(new ChangeListener() {
@@ -305,9 +307,24 @@ public class GroupByNodeDialog extends NodeDialogPane {
 
         c.gridy++;
         c.gridx = 0;
+        c.anchor = GridBagConstraints.FIRST_LINE_START;
         rootPanel.add(maxNoneNumericVals.getComponentPanel(), c);
         c.gridx++;
-        rootPanel.add(valueDelimiter.getComponentPanel(), c);
+        c.anchor = GridBagConstraints.LINE_START;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridwidth = GridBagConstraints.REMAINDER;
+        final JPanel fakePanel = new JPanel(new GridBagLayout());
+        final GridBagConstraints gc = new GridBagConstraints();
+        gc.anchor = GridBagConstraints.LINE_START;
+        gc.gridx = 0;
+        gc.gridy = 0;
+        gc.fill = GridBagConstraints.NONE;
+        fakePanel.add(valueDelimiter.getComponentPanel(), gc);
+        gc.fill = GridBagConstraints.HORIZONTAL;
+        gc.weightx = 1;
+        gc.gridy++;
+        fakePanel.add(new JPanel(), gc);
+        rootPanel.add(fakePanel, c);
         return rootPanel;
     }
 
@@ -352,7 +369,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
             m_aggrColPanel.initialize(spec, columnMethods);
         }
         try {
-            m_regexAggrPanel.loadSettingsFrom(settings, spec);
+            m_patternAggrPanel.loadSettingsFrom(settings, spec);
             m_dataTypeAggrPanel.loadSettingsFrom(settings, spec);
         } catch (InvalidSettingsException e) {
             //introduced in 2.11
@@ -396,11 +413,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        //check if the dialog contains invalid group columns
-        final Set<String> invalidInclCols = m_groupCol.getInvalidIncludeColumns();
-        if (invalidInclCols != null && !invalidInclCols.isEmpty()) {
-            throw new InvalidSettingsException(invalidInclCols.size()  + " invalid group columns found.");
-        }
+        validateSettings(settings);
         m_groupCol.saveSettingsTo(settings);
         m_maxUniqueValues.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
@@ -409,11 +422,27 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_sortInMemory.saveSettingsTo(settings);
         m_columnNamePolicy.saveSettingsTo(settings);
         m_aggrColPanel.saveSettingsTo(settings);
-        m_regexAggrPanel.saveSettingsTo(settings);
+        m_patternAggrPanel.saveSettingsTo(settings);
         m_dataTypeAggrPanel.saveSettingsTo(settings);
         m_retainOrder.saveSettingsTo(settings);
         m_inMemory.saveSettingsTo(settings);
 
         m_version.saveSettingsTo(settings);
+    }
+
+    private void validateSettings(final NodeSettingsWO settings) throws InvalidSettingsException {
+      //check if the dialog contains invalid group columns
+        final Set<String> invalidInclCols = m_groupCol.getInvalidIncludeColumns();
+        if (invalidInclCols != null && !invalidInclCols.isEmpty()) {
+            throw new InvalidSettingsException(invalidInclCols.size()  + " invalid group columns found.");
+        }
+        final ColumnNamePolicy columnNamePolicy =
+                ColumnNamePolicy.getPolicy4Label(m_columnNamePolicy.getStringValue());
+        if (columnNamePolicy == null) {
+            throw new InvalidSettingsException("Invalid column name policy");
+        }
+        m_aggrColPanel.validate();
+        m_patternAggrPanel.validate();
+        m_dataTypeAggrPanel.validate();
     }
 }

@@ -1029,7 +1029,7 @@
       <node
             after="org.knime.base.node.io.database.DBSorterNodeFactory"
             category-path="/database/database-manipulation"
-            factory-class="org.knime.base.node.io.database.DBGroupByNodeFactory"
+            factory-class="org.knime.base.node.io.database.groupby.DBGroupByNodeFactory2"
             id="org.knime.base.node.io.database.DBGroupByNodeFactory"/>
       <node
             after="org.knime.base.node.io.database.DBGroupByNodeFactory"

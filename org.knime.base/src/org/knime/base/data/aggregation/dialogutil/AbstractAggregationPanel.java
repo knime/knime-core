@@ -78,6 +78,7 @@ import javax.swing.table.TableModel;
 
 import org.knime.base.data.aggregation.AggregationMethodDecorator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
 
 
 /**
@@ -87,24 +88,20 @@ import org.knime.core.data.DataTableSpec;
  * of type {@link AggregationTableModel} that contains the selected options
  * from the left with additional information on the right.
  *
- * @author Tobias Koetter, University of Konstanz
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @param <T> the {@link AggregationTableModel} implementation to work with
- * @param <O> the {@link AggregationMethodDecorator} implementation to work
- * with
+ * @param <R> the {@link AggregationFunctionRow} implementation to work with
  * @param <L> the class of the list elements the user can choose from
- * @since 2.6
  * @see AggregationTableModel
- * @see AggregationMethodDecorator
+ * @see AggregationFunctionRow
  */
-public abstract class AbstractAggregationPanel
-<T extends AggregationTableModel<O>, O extends AggregationMethodDecorator,
-    L extends Object> extends MouseAdapter {
+public abstract class AbstractAggregationPanel <T extends AggregationTableModel<R>, R extends AggregationFunctionRow<?>,
+L extends Object> extends MouseAdapter {
 
     /**The size of the incl./excl. missing cells column.*/
     public static final int MISSING_CELL_OPTION_SIZE = 45;
 
-    /**The size of the settings button cells column.
-     * @since 2.7*/
+    /**The size of the settings button cells column.*/
     public static final int SETTINGS_BUTTON_CELL_SIZE = 60;
 
     /**The initial dimension of this panel.*/
@@ -215,8 +212,8 @@ public abstract class AbstractAggregationPanel
                     MISSING_CELL_OPTION_SIZE);
         }
         int buttonColIdx = m_tableModel.getSettingsButtonColIdx();
-        final OperatorSettingsButtonCellRenderer settingsButton =
-            new OperatorSettingsButtonCellRenderer(this);
+        final AggregationSettingsButtonCellRenderer settingsButton =
+            new AggregationSettingsButtonCellRenderer(this);
         columnModel.getColumn(buttonColIdx).setCellEditor(settingsButton);
         columnModel.getColumn(buttonColIdx).setCellRenderer(settingsButton);
         columnModel.getColumn(buttonColIdx).setMinWidth(SETTINGS_BUTTON_CELL_SIZE);
@@ -253,12 +250,23 @@ public abstract class AbstractAggregationPanel
     protected abstract JPopupMenu createTablePopupMenu();
 
     /**
+     * @param selectedListElement the list element to create the {@link AggregationFunctionRow} for
+     * @return the concrete implementation of the used {@link AggregationFunctionRow} class
+     * @since 2.11
+     */
+    protected abstract R createRow(final L selectedListElement);
+
+    /**
      * @param selectedListElement the list element to create the
      * {@link AggregationMethodDecorator} for
      * @return the concrete implementation of the used
      * {@link AggregationMethodDecorator} class
+     * @see #createRow(Object)
      */
-    protected abstract O getOperator(final L selectedListElement);
+    @Deprecated
+    protected AggregationMethodDecorator getOperator(final L selectedListElement) {
+        return (AggregationMethodDecorator)createRow(selectedListElement);
+    }
 
     /**
      * @return the {@link MouseAdapter} that should be registered for
@@ -323,18 +331,17 @@ public abstract class AbstractAggregationPanel
      * options to choose from
      */
     protected Component createListComponent(final String title) {
-        final Box avMethodsBox = new Box(BoxLayout.X_AXIS);
+        final Box listBox = new Box(BoxLayout.X_AXIS);
         if (title != null) {
             final Border border = BorderFactory.createTitledBorder(title);
-            avMethodsBox.setBorder(border);
+            listBox.setBorder(border);
         }
-        final JScrollPane compMethodsList =
-            new JScrollPane(getList());
+        final JScrollPane list = new JScrollPane(getList());
         final Dimension dimension = new Dimension(125, COMPONENT_HEIGHT);
-        compMethodsList.setMinimumSize(dimension);
-        compMethodsList.setPreferredSize(dimension);
-        avMethodsBox.add(compMethodsList);
-        return avMethodsBox;
+        list.setMinimumSize(dimension);
+        list.setPreferredSize(dimension);
+        listBox.add(list);
+        return listBox;
     }
 
     /**
@@ -464,29 +471,29 @@ public abstract class AbstractAggregationPanel
         if (values == null || values.size() < 1) {
             return;
         }
-        final List<O> methods = getOperators(values);
-        addMethods(methods);
+        final List<R> methods = createRows(values);
+        addRows(methods);
     }
 
     /**
-     *  Adds all columns to the aggregation column table.
+     *  Adds all list objects as new rows to the aggregation column table.
      */
     protected void onAddAll() {
-        final List<O> methods = getOperators(getListModel());
-        addMethods(methods);
+        final List<R> rows = createRows(getListModel());
+        addRows(rows);
     }
 
     /**
-     * @param methods {@link List} of methods to add to the table model
+     * @param rows {@link List} of {@link AggregationFunctionRow}s to add to the table model
      * @since 2.11
      */
-    protected void addMethods(final List<O> methods) {
-        if (methods == null) {
+    protected void addRows(final List<R> rows) {
+        if (rows == null) {
             throw new IllegalArgumentException("methods must not be null");
         }
         final T tableModel = getTableModel();
         final int rowCountBefore = tableModel.getRowCount();
-        tableModel.add(methods);
+        tableModel.add(rows);
         final int rowCountAfter = tableModel.getRowCount();
         final JTable table = getTable();
         final ListSelectionModel selectionModel = table.getSelectionModel();
@@ -513,26 +520,26 @@ public abstract class AbstractAggregationPanel
         getTableModel().removeAll();
     }
 
-    private List<O> getOperators(final DefaultListModel<L> listModel) {
-      final List<O> methods = new ArrayList<>(listModel.size());
+    private List<R> createRows(final DefaultListModel<L> listModel) {
+      final List<R> rows = new ArrayList<>(listModel.size());
       for (int i = 0, size = listModel.getSize(); i < size; i++) {
           final L listEntry = listModel.get(i);
-          final O operator = getOperator(listEntry);
-          methods.add(operator);
+          final R row = createRow(listEntry);
+          rows.add(row);
       }
-      return methods;
+      return rows;
     }
 
     /**
      * @param values the user selected values to add
      * @return the wrapped objects to add to the table model
      */
-    private List<O> getOperators(final List<L> values) {
-        final List<O> methods = new ArrayList<>(values.size());
+    private List<R> createRows(final List<L> values) {
+        final List<R> rows = new ArrayList<>(values.size());
         for (final L value : values) {
-            methods.add(getOperator(value));
+            rows.add(createRow(value));
         }
-        return methods;
+        return rows;
     }
 
     /**
@@ -545,15 +552,25 @@ public abstract class AbstractAggregationPanel
 
     /**
      * Selects all selected methods.
+     * @since 2.11
      */
-    protected void selectAllSelectedMethods() {
+    protected void selectAllRows() {
         getTable().selectAll();
+    }
+    /**
+     * Selects all selected methods.
+     * @see #selectAllRows()
+     */
+    @Deprecated
+    protected void selectAllSelectedMethods() {
+        selectAllRows();
     }
 
     /**
      * Selects all compatible methods.
+     * @since 2.11
      */
-    protected void selectAllCompatibleMethods() {
+    protected void selectAllCompatibleRows() {
         final int size = getListModel().size();
         final int[] indices = new int[size];
         for (int i = 0; i < size; i++) {
@@ -562,6 +579,14 @@ public abstract class AbstractAggregationPanel
         getList().setSelectedIndices(indices);
     }
 
+    /**
+     * Selects all compatible methods.
+     * @see #selectAllCompatibleRows()
+     */
+    @Deprecated
+    protected void selectAllCompatibleMethods() {
+        selectAllCompatibleRows();
+    }
     /**
      * @return <code>true</code> if at least one row is selected
      */
@@ -617,7 +642,6 @@ public abstract class AbstractAggregationPanel
 
     /**
      * @return the {@link DataTableSpec} of the input table
-     * @since 2.7
      */
     public DataTableSpec getInputTableSpec() {
         return m_inputTableSpec;
@@ -626,18 +650,32 @@ public abstract class AbstractAggregationPanel
     /**
      * Initializes the panel.
      * @param listElements the elements the user can choose from
-     * @param operators of {@link AggregationMethodDecorator}s
-     * that are initially used
+     * @param rows {@link AggregationFunctionRow}s that are initially used
      * @param spec input {@link DataTableSpec}
-     * @since 2.7
      */
-    protected void initialize(final List<L> listElements, final List<O> operators, final DataTableSpec spec) {
+    protected void initialize(final List<L> listElements, final List<R> rows, final DataTableSpec spec) {
         m_inputTableSpec = spec;
         getListModel().clear();
         final Collection<L> types = listElements;
         for (final L type : types) {
             getListModel().addElement(type);
         }
-        getTableModel().initialize(operators);
+        getTableModel().initialize(rows);
+    }
+
+    /**
+     * Validates the internal state of the aggregation functions.
+     * @throws InvalidSettingsException if the internal state of a function is invalid
+     * @since 2.11
+     */
+    public void validate() throws InvalidSettingsException {
+        final List<R> rows = getTableModel().getRows();
+        for (R r : rows) {
+            if (!r.isValid()) {
+                throw new InvalidSettingsException("Invalid row found for aggregation function: "
+                        + r.getFunction().getLabel());
+            }
+            r.getFunction().validate();
+        }
     }
 }

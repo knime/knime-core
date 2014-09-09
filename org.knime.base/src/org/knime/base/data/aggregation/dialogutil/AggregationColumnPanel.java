@@ -66,6 +66,7 @@ import org.knime.base.data.aggregation.AggregationMethodDecorator;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.dialogutil.AggregationMethodDecoratorTableCellRenderer.ValueRenderer;
+import org.knime.base.data.aggregation.dialogutil.column.ColumnAggregatorTableCellEditor;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -84,6 +85,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  *
  * @author Tobias Koetter, University of Konstanz
  */
+@Deprecated
 public class AggregationColumnPanel
     extends AbstractAggregationPanel<AggregationColumnTableModel, ColumnAggregator, DataColumnSpec> {
 
@@ -481,10 +483,12 @@ public class AggregationColumnPanel
     }
 
     /**
-     * {@inheritDoc}
+     * @param colSpec the input column spec
+     * @return the {@link ColumnAggregator}
      * @since 2.6
      */
     @Override
+    @Deprecated
     protected ColumnAggregator getOperator(final DataColumnSpec colSpec) {
         final AggregationMethod defaultMethod = AggregationMethods.getDefaultMethod(colSpec);
         return new ColumnAggregator(colSpec, defaultMethod);
@@ -507,8 +511,18 @@ public class AggregationColumnPanel
      * table model where you can call the <code>selectAll()</code> method.
      * @see #getTable()
      */
+    @Override
     @Deprecated
     protected void selectAllRows() {
         getTable().selectAll();
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.11
+     */
+    @Override
+    protected ColumnAggregator createRow(final DataColumnSpec selectedListElement) {
+        return getOperator(selectedListElement);
     }
 }

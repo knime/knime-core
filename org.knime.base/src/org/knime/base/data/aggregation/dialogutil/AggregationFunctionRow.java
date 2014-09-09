@@ -44,60 +44,48 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   17.07.2014 (koetter): created
+ *   20.08.2014 (koetter): created
  */
 package org.knime.base.data.aggregation.dialogutil;
 
-import java.util.Collections;
-import java.util.List;
-
-import javax.swing.JTable;
-
-import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethodDecorator;
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
+import org.knime.core.node.port.database.aggregation.AggregationFunction;
 
 /**
- * {@link DataTypeAggregator} table cell editor class that allows the user to choose from the supported
- * {@link AggregationMethod}s for {@link DataType} of the current {@link DataTypeAggregator}.
- *
+ * Interface that describes a row in an {@link AggregationFunction} table. It provides functions to check
+ * if the row is valid and the missing cell handling.
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @param <F> the {@link AggregationFunction} this row contains
  * @since 2.11
  */
-public class PatternAggregatorTableCellEditor extends AbstractAggregationMethodTableCellEditor {
-
-    private static final long serialVersionUID = 1L;
+public interface AggregationFunctionRow<F extends AggregationFunction> {
 
     /**
-     * {@inheritDoc}
+     * @return the {@link AggregationFunction}
      */
-    @Override
-    protected AggregationMethod getSelectedAggregationMethod(final JTable table, final Object value,
-        final boolean isSelected, final int row, final int column) {
-        if (value instanceof AggregationMethodDecorator) {
-            return ((AggregationMethodDecorator)value).getMethodTemplate();
-        }
-        return null;
-    }
+    public F getFunction();
 
     /**
-     * {@inheritDoc}
+     * @return <code>true</code> if the row is valid
      */
-    @Override
-    protected DataType getDataType(final JTable table, final Object value, final boolean isSelected,
-        final int row, final int column) {
-        return DataType.getType(DataCell.class);
-    }
+    public boolean isValid();
 
     /**
-     * {@inheritDoc}
+     * @param valid <code>true</code> if the row is valid
      */
-    @Override
-    public List<AggregationMethod> getCompatibleMethods(final DataType type) {
-        final List<AggregationMethod> availableMethods = AggregationMethods.getAvailableMethods();
-        Collections.sort(availableMethods, AggregationMethod.ASC_NAME_COMPARATOR);
-        return availableMethods;
-    }
+    public void setValid(final boolean valid);
+
+    /**
+     * @return <code>true</code> if the {@link AggregationFunction} supports missing values
+     */
+    public boolean supportsMissingValueOption();
+
+    /**
+     * @return <code>true</code> if missing cells should be included
+     */
+    public boolean inclMissingCells();
+
+    /**
+     * @param inclMissingCells <code>true</code> if missing values should be considered
+     */
+    public void setInclMissingCells(final boolean inclMissingCells);
 }

@@ -60,7 +60,8 @@ import org.knime.base.data.aggregation.NamedAggregationOperator;
 
 /**
  * Extends the {@link DefaultTreeCellEditor} class to allow changing of the
- * method name.
+ * method name. It is used in the Column Aggregator node
+ * which allows to specify a set of aggregation methods for a selected list of columns.
  *
  * @author Tobias Koetter, University of Konstanz
  * @since 2.6

@@ -69,7 +69,7 @@ public abstract class AbstractAggregationMethodTableCellEditor  extends DefaultC
     /**Constructor for class AggregationMethodTableCellEditor.
      */
     public AbstractAggregationMethodTableCellEditor() {
-        super(new AggregationMethodComboBox());
+        super(new AggregationFunctionComboBox());
     }
 
     /**
@@ -136,7 +136,7 @@ public abstract class AbstractAggregationMethodTableCellEditor  extends DefaultC
     /**
      * @return the {@link AggregationMethodComboBox}
      */
-    protected AggregationMethodComboBox getBox() {
-        return (AggregationMethodComboBox)getComponent();
+    protected AggregationFunctionComboBox getBox() {
+        return (AggregationFunctionComboBox)getComponent();
     }
 }

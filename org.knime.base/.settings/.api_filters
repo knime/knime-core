@@ -513,10 +513,98 @@
         </filter>
     </resource>
     <resource path="src/org/knime/base/data/aggregation/AggregationMethod.java" type="org.knime.base.data.aggregation.AggregationMethod">
-        <filter id="403767336">
+        <filter id="403984517">
             <message_arguments>
                 <message_argument value="org.knime.base.data.aggregation.AggregationMethod"/>
-                <message_argument value="ASC_NAME_COMPARATOR"/>
+                <message_argument value="org.knime.core.node.port.database.aggregation.AggregationFunction"/>
+                <message_argument value="getId()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/data/aggregation/dialogutil/AbstractAggregationPanel.java" type="org.knime.base.data.aggregation.dialogutil.AbstractAggregationPanel">
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AbstractAggregationPanel"/>
+                <message_argument value="createRow(L)"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AbstractAggregationPanel"/>
+                <message_argument value="O"/>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AggregationFunctionRow"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AbstractAggregationPanel"/>
+                <message_argument value="O"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/data/aggregation/dialogutil/AbstractAggregationTableModel.java" type="org.knime.base.data.aggregation.dialogutil.AbstractAggregationTableModel">
+        <filter id="336793632">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AbstractAggregationTableModel"/>
+                <message_argument value="R"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AbstractAggregationTableModel"/>
+                <message_argument value="getRow(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AbstractAggregationTableModel"/>
+                <message_argument value="O"/>
+                <message_argument value="org.knime.core.node.port.database.aggregation.AggregationFunction"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AbstractAggregationTableModel"/>
+                <message_argument value="O"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/data/aggregation/dialogutil/AggregationTableModel.java" type="org.knime.base.data.aggregation.dialogutil.AggregationTableModel">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AggregationTableModel"/>
+                <message_argument value="containsRowWithSettings()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AggregationTableModel"/>
+                <message_argument value="getRow(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AggregationTableModel"/>
+                <message_argument value="getRows()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AggregationTableModel"/>
+                <message_argument value="getRow(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="437350426">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AggregationTableModel"/>
+                <message_argument value="O"/>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AggregationFunctionRow"/>
+            </message_arguments>
+        </filter>
+        <filter id="439378009">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AggregationTableModel"/>
+                <message_argument value="O"/>
             </message_arguments>
         </filter>
     </resource>
@@ -739,6 +827,12 @@
         </filter>
     </resource>
     <resource path="src/org/knime/base/node/preproc/groupby/GroupByNodeDialog.java" type="org.knime.base.node.preproc.groupby.GroupByNodeDialog">
+        <filter id="338755678">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.groupby.GroupByNodeDialog"/>
+                <message_argument value="DEFAULT_WIDTH"/>
+            </message_arguments>
+        </filter>
         <filter id="388194388">
             <message_arguments>
                 <message_argument value="org.knime.base.node.preproc.groupby.GroupByNodeDialog"/>

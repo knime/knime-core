@@ -55,7 +55,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Combines a method with the name to use for this method.
+ * Combines a method with the name to use for this method. It is used in the Column Aggregator node
+ * which allows to specify a set of aggregation methods for a selected list of columns.
  *
  * @author Tobias Koetter, University of Konstanz
  * @since 2.6
@@ -165,8 +166,7 @@ public class NamedAggregationOperator extends AggregationMethodDecorator {
             settings.getStringArray(CNFG_AGGR_METHODS);
         final boolean[] inclMissingVals =
             settings.getBooleanArray(CNFG_INCL_MISSING_VALS);
-        final List<NamedAggregationOperator> colAggrList =
-            new LinkedList<NamedAggregationOperator>();
+        final List<NamedAggregationOperator> colAggrList = new LinkedList<>();
         if (aggrMethods.length != resultColNames.length) {
             throw new InvalidSettingsException("Name array and "
                 + "aggregation method array should be of equal size");
@@ -217,8 +217,7 @@ public class NamedAggregationOperator extends AggregationMethodDecorator {
         for (NamedAggregationOperator operator : operators) {
             if (operator.hasOptionalSettings()) {
                 try {
-                    final NodeSettingsRO operatorSettings = settings.getNodeSettings(
-                                     createSettingsKey(operator));
+                    final NodeSettingsRO operatorSettings = settings.getNodeSettings(createSettingsKey(operator));
                     operator.validateSettings(operatorSettings);
                 } catch (InvalidSettingsException e) {
                     throw new InvalidSettingsException(

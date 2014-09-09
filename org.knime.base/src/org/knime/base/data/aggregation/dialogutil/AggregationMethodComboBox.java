@@ -61,6 +61,7 @@ import org.knime.core.data.DataType;
  *
  * @author Tobias Koetter, University of Konstanz
  */
+@Deprecated
 public class AggregationMethodComboBox extends JComboBox<AggregationMethod> {
 
     private static final long serialVersionUID = -8712817491828316484L;

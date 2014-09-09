@@ -47,14 +47,18 @@ package org.knime.base.data.aggregation;
 import java.awt.Component;
 import java.util.Collection;
 
+import org.knime.base.data.aggregation.dialogutil.AggregationFunctionRow;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.database.aggregation.AggregationFunction;
+import org.knime.core.node.port.database.aggregation.InvalidAggregationFunction;
 
 /**
  * Utility class that bundles an {@link AggregationMethod} with an
@@ -65,7 +69,10 @@ import org.knime.core.node.NotConfigurableException;
  * @author Tobias Koetter, University of Konstanz
  * @since 2.6
  */
-public abstract class AggregationMethodDecorator implements AggregationMethod {
+public abstract class AggregationMethodDecorator implements AggregationMethod,
+    AggregationFunctionRow<AggregationMethod> {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(AggregationMethodDecorator.class);
 
     /**Config key for the aggregation method.*/
     protected static final String CNFG_AGGR_METHODS = "aggregationMethod";
@@ -115,6 +122,15 @@ public abstract class AggregationMethodDecorator implements AggregationMethod {
     }
 
     /**
+     * {@inheritDoc}
+     * @since 2.11
+     */
+    @Override
+    public AggregationMethod getFunction() {
+        return getMethodTemplate();
+    }
+
+    /**
      * @return the inclMissingCells <code>true</code> if missing values should
      * be considered
      */
@@ -126,6 +142,7 @@ public abstract class AggregationMethodDecorator implements AggregationMethod {
     /**
      * @param inclMissingCells the inclMissingCells to set
      */
+    @Override
     public void setInclMissingCells(final boolean inclMissingCells) {
         m_inclMissingCells = inclMissingCells;
     }
@@ -184,6 +201,7 @@ public abstract class AggregationMethodDecorator implements AggregationMethod {
      * @return <code>true</code> if the operator is valid otherwise <code>false</code>
      * @since 2.8
      */
+    @Override
     public boolean isValid() {
         return m_valid;
     }
@@ -192,6 +210,7 @@ public abstract class AggregationMethodDecorator implements AggregationMethod {
      * @param valid <code>true</code> if the {@link ColumnAggregator} is valid
      * @since 2.8
      */
+    @Override
     public void setValid(final boolean valid) {
         m_valid = valid;
     }
@@ -212,6 +231,7 @@ public abstract class AggregationMethodDecorator implements AggregationMethod {
      * @return <code>true</code> if this method supports the given
      * {@link DataType}
      */
+    @Override
     public boolean isCompatible(final DataType type) {
         if (type == null) {
             throw new NullPointerException("type must not be null");
@@ -311,6 +331,15 @@ public abstract class AggregationMethodDecorator implements AggregationMethod {
 
     /**
      * {@inheritDoc}
+     * @since 2.11
+     */
+    @Override
+    public void validate() throws InvalidSettingsException {
+        m_operatorTemplate.validate();
+    }
+
+    /**
+     * {@inheritDoc}
      * @since 2.7
      */
     @Override
@@ -333,5 +362,60 @@ public abstract class AggregationMethodDecorator implements AggregationMethod {
     @Override
     public String toString() {
         return m_operatorTemplate.getLabel() + " " + m_inclMissingCells;
+    }
+
+    /**
+     * @param cfg {@link NodeSettingsWO} to write to
+     * @param method the {@link AggregationFunction} to save
+     * @since 2.11
+     */
+    public static void saveMethod(final NodeSettingsWO cfg, final AggregationMethod method) {
+        cfg.addString(CNFG_AGGR_METHODS, method.getId());
+        if (method.hasOptionalSettings()) {
+            try {
+                final NodeSettingsWO subConfig = cfg.addNodeSettings("functionSettings");
+                method.saveSettingsTo(subConfig);
+            } catch (Exception e) {
+                LOGGER.error("Exception while saving settings for aggreation method '"
+                    + method.getId() + "', reason: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * @param tableSpec optional input {@link DataTableSpec}
+     * @param cfg {@link NodeSettingsRO} to read from
+     * @return the {@link AggregationFunction}
+     * @throws InvalidSettingsException if the settings of the function are invalid
+     * @since 2.11
+     */
+    public static AggregationMethod loadMethod(final DataTableSpec tableSpec, final NodeSettingsRO cfg)
+                throws InvalidSettingsException {
+        final String functionId = cfg.getString(CNFG_AGGR_METHODS);
+        final AggregationMethod function = AggregationMethods.getMethod4Id(functionId);
+        if (function instanceof InvalidAggregationFunction) {
+            final String errMsg = "Exception while loading aggregation method. "
+                    + ((InvalidAggregationFunction)function).getErrorMessage();
+            LOGGER.warn(errMsg);
+        } else {
+            if (function.hasOptionalSettings()) {
+                try {
+                    final NodeSettingsRO subSettings = cfg.getNodeSettings("functionSettings");
+                    if (tableSpec != null) {
+                        //this method is called from the dialog
+                        function.loadSettingsFrom(subSettings, tableSpec);
+                    } else {
+                        //this method is called from the node model where we do not
+                        //have the DataTableSpec
+                        function.loadValidatedSettings(subSettings);
+                    }
+                } catch (Exception e) {
+                    final String errMsg = "Exception while loading settings for aggreation function '"
+                        + function.getId() + "', reason: " + e.getMessage();
+                    LOGGER.error(errMsg);
+                }
+            }
+        }
+        return function;
     }
 }

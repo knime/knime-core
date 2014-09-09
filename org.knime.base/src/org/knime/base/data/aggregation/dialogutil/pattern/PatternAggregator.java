@@ -46,25 +46,24 @@
  * History
  *   06.07.2014 (koetter): created
  */
-package org.knime.base.data.aggregation.dialogutil;
+package org.knime.base.data.aggregation.dialogutil.pattern;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethodDecorator;
-import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.util.WildcardMatcher;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.config.Config;
 
 import com.sun.org.apache.xml.internal.security.encryption.AgreementMethod;
 
@@ -77,9 +76,6 @@ import com.sun.org.apache.xml.internal.security.encryption.AgreementMethod;
  */
 public class PatternAggregator extends AggregationMethodDecorator {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(PatternAggregator.class);
-
-    private static final String CNFG_DATA_TYPE_AGGR_SECTION = "regexAggregators";
     private static final String CNFG_INPUT_PATTERN = "inputPattern";
     private static final String CNFG_IS_REGEX = "isRegularExpression";
 
@@ -180,55 +176,21 @@ public class PatternAggregator extends AggregationMethodDecorator {
         if (key == null || key.isEmpty()) {
             throw new IllegalArgumentException("key must not be empty");
         }
-        final Config cnfg = settings.getConfig(key);
-        final String[] regexs = cnfg.getStringArray(CNFG_INPUT_PATTERN);
-        final boolean[] isRegex = cnfg.getBooleanArray(CNFG_IS_REGEX);
-        final String[] aggrMethods = cnfg.getStringArray(CNFG_AGGR_METHODS);
-        boolean[] inclMissingVals = null;
-        inclMissingVals = cnfg.getBooleanArray(CNFG_INCL_MISSING_VALS);
-        final List<PatternAggregator> aggrList = new LinkedList<>();
-        if (aggrMethods.length != regexs.length) {
-            throw new InvalidSettingsException("Data type array and aggregation method array should be of equal size");
+        if (!settings.containsKey(key)) {
+            return Collections.EMPTY_LIST;
         }
-        for (int i = 0, length = aggrMethods.length; i < length; i++) {
-            final AggregationMethod method = AggregationMethods.getMethod4Id(aggrMethods[i]);
-            final boolean inclMissingVal;
-            if (inclMissingVals != null) {
-                inclMissingVal = inclMissingVals[i];
-            } else {
-                //get the default behavior of the method
-                inclMissingVal = method.inclMissingCells();
-            }
-            final PatternAggregator aggr = new PatternAggregator(regexs[i], isRegex[i], method, inclMissingVal);
-            if (aggr.hasOptionalSettings()) {
-                try {
-                    final NodeSettingsRO operatorSettings = settings.getNodeSettings(
-                                   createSettingsKey(aggr));
-                    if (spec != null) {
-                        //this method is called from the dialog
-                        aggr.loadSettingsFrom(operatorSettings, spec);
-                    } else {
-                        //this method is called from the node model where we do not
-                        //have the DataTableSpec
-                        aggr.loadValidatedSettings(operatorSettings);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Exception while loading settings for aggreation operator '"
-                        + aggr.getId() + "', reason: " + e.getMessage());
-                }
-            }
-            aggrList.add(aggr);
+        final NodeSettingsRO root = settings.getNodeSettings(key);
+        final Set<String> settingsKeys = root.keySet();
+        final List<PatternAggregator> aggrList = new ArrayList<>(settingsKeys.size());
+        for (String settingsKey : settingsKeys) {
+            final NodeSettingsRO cfg = root.getNodeSettings(settingsKey);
+            final String inputPattern = cfg.getString(CNFG_INPUT_PATTERN);
+            final boolean isRegex = cfg.getBoolean(CNFG_IS_REGEX);
+            final boolean inclMissing = cfg.getBoolean(CNFG_INCL_MISSING_VALS);
+            final AggregationMethod method = AggregationMethodDecorator.loadMethod(spec, cfg);
+            aggrList.add(new PatternAggregator(inputPattern, isRegex, method, inclMissing));
         }
         return aggrList;
-    }
-
-    /**
-     * @param aggr
-     * @return
-     */
-    private static String createSettingsKey(final PatternAggregator aggr) {
-        //the method id and the data type are unique since
-        return aggr.getId() + "_" + aggr.getInputPattern();
     }
 
     /**
@@ -245,61 +207,16 @@ public class PatternAggregator extends AggregationMethodDecorator {
             throw new NullPointerException("settings must not be null");
         }
         if (aggregators == null) {
-            throw new NullPointerException("cols must not be null");
+            return;
         }
-        final String[] aggrMethods = new String[aggregators.size()];
-        final boolean[] isRegex = new boolean[aggregators.size()];
-        final boolean[] inclMissingVals = new boolean[aggregators.size()];
-        final String[] inputPatterns = new String[aggregators.size()];
-        int i = 0;
+        final NodeSettingsWO root = settings.addNodeSettings(key);
+        int idx = 0;
         for (PatternAggregator aggr : aggregators) {
-            final AggregationMethod method = aggr.getMethodTemplate();
-            aggrMethods[i] = aggr.getId();
-            inputPatterns[i] = aggr.getInputPattern();
-            isRegex[i] = aggr.m_isRegex;
-            inclMissingVals[i] = aggr.inclMissingCells();
-            if (aggr.hasOptionalSettings()) {
-                try {
-                    final NodeSettingsWO operatorSettings = settings.addNodeSettings(createSettingsKey(aggr));
-                    method.saveSettingsTo(operatorSettings);
-                } catch (Exception e) {
-                    LOGGER.error(
-                        "Exception while saving settings for aggreation operator '"
-                        + aggr.getId() + "', reason: " + e.getMessage());
-                }
-            }
-            i++;
-        }
-        final Config cnfg = settings.addConfig(CNFG_DATA_TYPE_AGGR_SECTION);
-        cnfg.addStringArray(CNFG_INPUT_PATTERN, inputPatterns);
-        cnfg.addBooleanArray(CNFG_IS_REGEX, isRegex);
-        cnfg.addStringArray(CNFG_AGGR_METHODS, aggrMethods);
-        cnfg.addBooleanArray(CNFG_INCL_MISSING_VALS, inclMissingVals);
-    }
-
-    /**
-     * Validates the operator specific settings of all {@link PatternAggregator}s
-     * that require additional settings.
-     *
-     * @param settings the settings to validate
-     * @param aggregators the operators to validate
-     * @throws InvalidSettingsException if the settings of an operator are not valid
-     */
-    public static void validateSettings(final NodeSettingsRO settings, final List<PatternAggregator> aggregators)
-            throws InvalidSettingsException {
-        for (int i = 0, length = aggregators.size(); i < length; i++) {
-            final PatternAggregator aggr = aggregators.get(i);
-            if (aggr.hasOptionalSettings()) {
-                final NodeSettingsRO operatorSettings =
-                    settings.getNodeSettings(createSettingsKey(aggr));
-                try {
-                    aggr.validateSettings(operatorSettings);
-                } catch (InvalidSettingsException e) {
-                    throw new InvalidSettingsException(
-                       "Invalid settings for aggreation operator '" + aggr.getLabel() + "' for datat type '"
-                        + aggr.getInputPattern() + "', reason: " + e.getMessage());
-                }
-            }
+            final NodeSettingsWO cfg = root.addNodeSettings("f_" + idx++);
+            cfg.addString(CNFG_INPUT_PATTERN, aggr.getInputPattern());
+            cfg.addBoolean(CNFG_IS_REGEX, aggr.m_isRegex);
+            cfg.addBoolean(CNFG_INCL_MISSING_VALS, aggr.inclMissingCells());
+            AggregationMethodDecorator.saveMethod(cfg, aggr.getMethodTemplate());
         }
     }
 }

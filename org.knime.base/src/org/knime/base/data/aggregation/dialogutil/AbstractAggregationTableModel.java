@@ -55,26 +55,29 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableModel;
 
 import org.knime.base.data.aggregation.AggregationMethodDecorator;
+import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.core.node.port.database.aggregation.AggregationFunction;
+import org.knime.core.node.port.database.aggregation.AggregationFunctionProvider;
 
 
 /**
  * This {@link DefaultTableModel} holds all aggregation columns and their
  * aggregation method.
  *
- * @author Tobias Koetter, University of Konstanz
- * @param <O> the {@link AggregationMethodDecorator} implementation
- * @since 2.6
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @param <F> the {@link AggregationFunction} implementation
+ * @param <R> the {@link AggregationFunctionRow} implementation
  */
-public abstract class AbstractAggregationTableModel <O extends AggregationMethodDecorator> extends AbstractTableModel
-        implements AggregationTableModel<O> {
+public abstract class AbstractAggregationTableModel <F extends AggregationFunction, R extends AggregationFunctionRow<F>>
+    extends AbstractTableModel implements AggregationTableModel<R> {
 
     /**The name of the settings column in the aggregation panel.*/
     private static final String SETTINGS_COL_NAME = "Parameter";
 
     private static final long serialVersionUID = 1;
 
-    private final List<O> m_operators = new ArrayList<>();
+    private final List<R> m_rows = new ArrayList<>();
 
     private final int m_missingColIdx;
 
@@ -84,6 +87,7 @@ public abstract class AbstractAggregationTableModel <O extends AggregationMethod
 
     private final String[] m_colNames;
 
+    private AggregationFunctionProvider<F> m_provider = null;
     /**Constructor for class AbstractAggregationTableModel.
      * include/exclude missing cell option should be added
      * @param colNames the column classes without the missing cell option column
@@ -91,8 +95,22 @@ public abstract class AbstractAggregationTableModel <O extends AggregationMethod
      * column
      * @param appendMissingCol <code>true</code> if a column to change the
      */
-    public AbstractAggregationTableModel(final String[] colNames,
-            final Class<?>[] colClasses, final boolean appendMissingCol) {
+    @Deprecated
+    public AbstractAggregationTableModel(final String[] colNames, final Class<?>[] colClasses,
+        final boolean appendMissingCol) {
+        this(colNames, colClasses, appendMissingCol, (AggregationFunctionProvider<F>)AggregationMethods.getInstance());
+    }
+    /**Constructor for class AbstractAggregationTableModel.
+     * include/exclude missing cell option should be added
+     * @param colNames the column classes without the missing cell option column
+     * @param colClasses the column classes without the missing cell option
+     * column
+     * @param appendMissingCol <code>true</code> if a column to change the
+     * @param provider {@link AggregationFunctionProvider}
+     * @since 2.11
+     */
+    public AbstractAggregationTableModel(final String[] colNames, final Class<?>[] colClasses,
+        final boolean appendMissingCol, final AggregationFunctionProvider<F> provider) {
         if (colClasses == null) {
             throw new NullPointerException("colClasses must not be null");
         }
@@ -125,25 +143,42 @@ public abstract class AbstractAggregationTableModel <O extends AggregationMethod
             m_classes[m_settingsColIdx] = Boolean.class;
 
         }
+        m_provider = provider;
     }
 
     /**
      * Initializes the column aggregator table with the given
      * {@link ColumnAggregator}s.
-     * @param operators the {@link AggregationMethodDecorator} {@link List}
+     * @param rows the {@link AggregationFunctionRow} {@link List}
      */
     @Override
-    public void initialize(final List<O> operators) {
-        m_operators.clear();
-        m_operators.addAll(operators);
+    public void initialize(final List<R> rows) {
+        m_rows.clear();
+        m_rows.addAll(rows);
     }
 
     /**
-     * Removes all operators.
+     * @param provider the {@link AggregationFunctionProvider}
+     * @since 2.11
+     */
+    public void setAggregationFunctionProvider(final AggregationFunctionProvider<F> provider) {
+        m_provider = provider;
+    }
+
+    /**
+     * @return the {@link AggregationFunctionProvider} might be <code>null</code>
+     * @since 2.11
+     */
+    public AggregationFunctionProvider<F> getAggregationFunctionProvider() {
+        return m_provider;
+    }
+
+    /**
+     * Removes all {@link AggregationFunctionRow}s.
      */
     @Override
     public void removeAll() {
-        m_operators.clear();
+        m_rows.clear();
         fireTableDataChanged();
     }
 
@@ -170,7 +205,7 @@ public abstract class AbstractAggregationTableModel <O extends AggregationMethod
      * @param row the index of the row to toggle the missing cell option
      */
     protected void toggleMissingCellOption(final int row) {
-        final O operator = getOperator(row);
+        final R operator = getRow(row);
         if (operator.supportsMissingValueOption()) {
             operator.setInclMissingCells(!operator.inclMissingCells());
             fireTableRowsUpdated(row, row);
@@ -182,7 +217,7 @@ public abstract class AbstractAggregationTableModel <O extends AggregationMethod
      */
     @Override
     public void setValueAt(final Object aValue, final int row, final int columnIdx) {
-        if (row < 0 || row >= m_operators.size()) {
+        if (row < 0 || row >= m_rows.size()) {
             //this might happen if the user removes a row that he also
             //edited e.g. changed the name of the result column
             fireTableDataChanged();
@@ -212,41 +247,29 @@ public abstract class AbstractAggregationTableModel <O extends AggregationMethod
      * considered during aggregation
      */
     protected void updateInclMissing(final int row, final boolean inclMissingVals) {
-        final AggregationMethodDecorator operator = getOperator(row);
+        final R operator = getRow(row);
         if (operator.supportsMissingValueOption()) {
             operator.setInclMissingCells(inclMissingVals);
         }
     }
 
     /**
-     * @param row the index of the row
-     * @return the aggregator for the row with the given index
-     */
-    private O getOperator(final int row) {
-        if (row < 0 || m_operators.size() <= row) {
-            throw new IllegalArgumentException("Invalid row index: " + row);
-        }
-        final O operators = m_operators.get(row);
-        return operators;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
-    public boolean isCellEditable(final int row, final int columnIdx) {
-        final O operator = getOperator(row);
-        if (!operator.isValid()) {
-            //the row is not editable if the operator is invalid
+    public boolean isCellEditable(final int rowIdx, final int columnIdx) {
+        final R row = getRow(rowIdx);
+        if (!row.isValid()) {
+            //the row is not editable if the row is invalid
             return false;
         }
         if (columnIdx == m_missingColIdx) {
-            return operator.supportsMissingValueOption();
+            return row.supportsMissingValueOption();
         }
         if (columnIdx == m_settingsColIdx) {
-            return operator.hasOptionalSettings();
+            return row.getFunction().hasOptionalSettings();
         }
-        return isEditable(row, columnIdx);
+        return isEditable(rowIdx, columnIdx);
     }
 
     /**
@@ -270,22 +293,23 @@ public abstract class AbstractAggregationTableModel <O extends AggregationMethod
     protected abstract Object getValueAtRow(int row, int columnIndex);
 
     /**
-     * @return the rows {@link List}
+     * {@inheritDoc}
      */
-    public List<O> getRows() {
-        return Collections.unmodifiableList(m_operators);
+    @Override
+    public List<R> getRows() {
+        return Collections.unmodifiableList(m_rows);
     }
 
     /**
      * {@inheritDoc}
-     * @since 2.7
+     * @since 2.11
      */
     @Override
-    public O getRow(final int row) {
+    public R getRow(final int row) {
         if (row < 0 || getRowCount() <= row) {
             throw new IllegalArgumentException("Invalid row index: " + row);
         }
-        return m_operators.get(row);
+        return m_rows.get(row);
     }
 
     /**
@@ -293,7 +317,7 @@ public abstract class AbstractAggregationTableModel <O extends AggregationMethod
      */
     @Override
     public int getRowCount() {
-        return m_operators.size();
+        return m_rows.size();
     }
 
     /**
@@ -326,10 +350,10 @@ public abstract class AbstractAggregationTableModel <O extends AggregationMethod
     @Override
     public Object getValueAt(final int row, final int columnIndex) {
         if (columnIndex == m_missingColIdx) {
-            return Boolean.valueOf(getOperator(row).inclMissingCells());
+            return Boolean.valueOf(getRow(row).inclMissingCells());
         }
         if (columnIndex == m_settingsColIdx) {
-            return Boolean.valueOf(getOperator(row).hasOptionalSettings());
+            return Boolean.valueOf(getRow(row).getFunction().hasOptionalSettings());
         }
         return getValueAtRow(row, columnIndex);
     }
@@ -342,18 +366,18 @@ public abstract class AbstractAggregationTableModel <O extends AggregationMethod
         if (idxs == null || idxs.length < 1) {
             return;
         }
-        final List<O> ops2remove = new LinkedList<>();
+        final List<R> rows2remove = new LinkedList<>();
         for (final int idx : idxs) {
-            ops2remove.add(m_operators.get(idx));
+            rows2remove.add(m_rows.get(idx));
         }
-        remove(ops2remove);
+        remove(rows2remove);
     }
 
     /**
-     * @param ops2Remove the operators to remove
+     * @param ops2Remove the rows to remove
      */
-    protected void remove(final Collection<O> ops2Remove) {
-        m_operators.removeAll(ops2Remove);
+    protected void remove(final Collection<R> ops2Remove) {
+        m_rows.removeAll(ops2Remove);
         fireTableDataChanged();
     }
 
@@ -361,37 +385,57 @@ public abstract class AbstractAggregationTableModel <O extends AggregationMethod
      * {@inheritDoc}
      */
     @Override
-    public void add(final List<O> operators) {
-        if (operators == null || operators.isEmpty()) {
+    public void add(final List<R> rows) {
+        if (rows == null || rows.isEmpty()) {
             return;
         }
-        if (m_operators.addAll(operators)) {
+        if (m_rows.addAll(rows)) {
             //notify the rest if the rows have changed
             fireTableDataChanged();
         }
     }
 
     /**
-     * @param row the index of the row to replace
-     * @param operator the new operator to use
+     * @param rowIdx the index of the row to update
+     * @param row the row
      */
-    protected void updateRow(final int row, final O operator) {
-        m_operators.set(row, operator);
-        fireTableRowsUpdated(row, row);
+    @Deprecated
+    @SuppressWarnings("unchecked")
+    protected void updateRow(final int rowIdx, final AggregationMethodDecorator row) {
+        updateRow(rowIdx, (R)row);
+    }
+
+    /**
+     * @param rowIdx the index of the row to replace
+     * @param row the new row to use
+     * @since 2.11
+     */
+    protected void updateRow(final int rowIdx, final R row) {
+        m_rows.set(rowIdx, row);
+        fireTableRowsUpdated(rowIdx, rowIdx);
     }
 
     /**
      * {@inheritDoc}
-     * @since 2.7
+     * @since 2.11
      */
     @Override
-    public boolean containsSettingsOperator() {
-        for (O op : getRows()) {
-            if (op.hasOptionalSettings()) {
+    public boolean containsRowWithSettings() {
+        for (R op : getRows()) {
+            if (op.getFunction().hasOptionalSettings()) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * @return true if one of the operators contains settings
+     */
+    @Override
+    @Deprecated
+    public boolean containsSettingsOperator() {
+        return containsRowWithSettings();
     }
 
     /**
@@ -404,7 +448,6 @@ public abstract class AbstractAggregationTableModel <O extends AggregationMethod
 
     /**
      * {@inheritDoc}
-     * @since 2.7
      */
     @Override
     public int getSettingsButtonColIdx() {

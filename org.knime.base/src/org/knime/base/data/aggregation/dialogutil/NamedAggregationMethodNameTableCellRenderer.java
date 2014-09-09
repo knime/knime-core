@@ -58,7 +58,8 @@ import org.knime.base.data.aggregation.NamedAggregationOperator;
 /**
  * Table cell renderer that checks if the value being renderer is of type
  * <code>AggregationMethod</code> if so it will renderer the name of the method.
- * If not, the passed value's toString() method is used for rendering.
+ * If not, the passed value's toString() method is used for rendering. It is used in the Column Aggregator node
+ * which allows to specify a set of aggregation methods for a selected list of columns.
  *
  * @author Tobias Koetter, University of Konstanz
  * @since 2.6

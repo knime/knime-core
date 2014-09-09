@@ -46,7 +46,7 @@
  * History
  *   06.07.2014 (koetter): created
  */
-package org.knime.base.data.aggregation.dialogutil;
+package org.knime.base.data.aggregation.dialogutil.pattern;
 
 import java.awt.Component;
 import java.util.regex.Pattern;
@@ -58,6 +58,7 @@ import javax.swing.SwingUtilities;
 
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.dialogutil.AbstractAggregationTableModel;
 import org.knime.core.data.DataType;
 
 
@@ -68,7 +69,7 @@ import org.knime.core.data.DataType;
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class PatternAggregationTableModel extends AbstractAggregationTableModel<PatternAggregator> {
+public class PatternAggregationTableModel extends AbstractAggregationTableModel<AggregationMethod, PatternAggregator> {
 
     private static final long serialVersionUID = 1L;
     private JPanel m_panel;
@@ -78,7 +79,8 @@ public class PatternAggregationTableModel extends AbstractAggregationTableModel<
      */
     PatternAggregationTableModel() {
         super(new String[] {"Search pattern (double click to change)", "RegEx", "Aggregation (click to change)"},
-            new Class[] {PatternAggregator.class, Boolean.class, PatternAggregator.class}, true);
+            new Class[] {PatternAggregator.class, Boolean.class, PatternAggregator.class}, true,
+            AggregationMethods.getInstance());
     }
 
 

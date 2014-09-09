@@ -44,35 +44,73 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   17.07.2014 (koetter): created
+ *   22.08.2014 (koetter): created
  */
-package org.knime.base.data.aggregation.dialogutil;
+package org.knime.base.node.io.database.groupby.dialog;
 
-import javax.swing.JTable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethodDecorator;
 import org.knime.core.data.DataType;
+import org.knime.core.node.port.database.DatabaseUtility;
+import org.knime.core.node.port.database.aggregation.AggregationFunctionProvider;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionLabelComparator;
 
 /**
- * {@link DataTypeAggregator} table cell editor class that allows the user to choose from the supported
- * {@link AggregationMethod}s for {@link DataType} of the current {@link DataTypeAggregator}.
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class DataTypeAggregatorTableCellEditor extends AbstractAggregationMethodTableCellEditor {
+public class DBAggregationFunctionProvider implements AggregationFunctionProvider<DBAggregationFunction> {
 
-    private static final long serialVersionUID = 1L;
+    private final DatabaseUtility m_utility;
+
+    /**
+     * @param utility {@link DatabaseUtility}
+     */
+    public DBAggregationFunctionProvider(final DatabaseUtility utility) {
+        m_utility = utility;
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected AggregationMethod getSelectedAggregationMethod(final JTable table, final Object value,
-        final boolean isSelected, final int row, final int column) {
-        if (value instanceof AggregationMethodDecorator) {
-            return ((AggregationMethodDecorator)value).getMethodTemplate();
+    public List<DBAggregationFunction> getCompatibleFunctions(final DataType type, final boolean sorted) {
+        final Collection<DBAggregationFunction> aggregationFunctions = m_utility.getAggregationFunctions();
+        final List<DBAggregationFunction> compatible = new ArrayList<>(aggregationFunctions.size());
+        for (DBAggregationFunction function : aggregationFunctions) {
+            if (type == null || function.isCompatible(type)) {
+                compatible.add(function);
+            }
+        }
+        if (sorted) {
+            Collections.sort(compatible, DBAggregationFunctionLabelComparator.ASC);
+        }
+        return compatible;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DBAggregationFunction getFunction(final String id) {
+        return m_utility.getAggregationFunction(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DBAggregationFunction getDefaultFunction(final DataType type) {
+        final Collection<DBAggregationFunction> aggregationFunctions = m_utility.getAggregationFunctions();
+        for (DBAggregationFunction function : aggregationFunctions) {
+            if (function.isCompatible(type)) {
+                return function;
+            }
         }
         return null;
     }
@@ -81,12 +119,7 @@ public class DataTypeAggregatorTableCellEditor extends AbstractAggregationMethod
      * {@inheritDoc}
      */
     @Override
-    protected DataType getDataType(final JTable table, final Object value, final boolean isSelected,
-        final int row, final int column) {
-        if (value instanceof DataTypeAggregator) {
-            return ((DataTypeAggregator)value).getDataType();
-        }
-        return null;
+    public List<DBAggregationFunction> getFunctions(final boolean sorted) {
+        return getCompatibleFunctions(null, sorted);
     }
-
 }

@@ -353,6 +353,7 @@ public class ColumnAggregator extends AggregationMethodDecorator {
         cnfg.addBooleanArray(CNFG_INCL_MISSING_VALS, inclMissingVals);
     }
 
+
     /**
      * Validates the operator specific settings of all {@link ColumnAggregator}s
      * that require additional settings.
@@ -362,20 +363,11 @@ public class ColumnAggregator extends AggregationMethodDecorator {
      * @throws InvalidSettingsException if the settings of an operator are not valid
      * @since 2.7
      */
+    @Deprecated
     public static void validateSettings(final NodeSettingsRO settings, final List<ColumnAggregator> aggregators)
-        throws InvalidSettingsException {
-        for (int i = 0, length = aggregators.size(); i < length; i++) {
-            final ColumnAggregator colAggr = aggregators.get(i);
-            if (colAggr.hasOptionalSettings()) {
-                final NodeSettingsRO operatorSettings = settings.getNodeSettings(createSettingsKey(colAggr));
-                try {
-                    colAggr.validateSettings(operatorSettings);
-                } catch (InvalidSettingsException e) {
-                    throw new InvalidSettingsException("Invalid settings for aggreation operator '"
-                        + colAggr.getLabel() + "' for column '" + colAggr.getOriginalColName()
-                        + "', reason: " + e.getMessage());
-                }
-            }
+            throws InvalidSettingsException {
+        for (ColumnAggregator columnAggregator : aggregators) {
+            columnAggregator.validateSettings(settings);
         }
     }
 

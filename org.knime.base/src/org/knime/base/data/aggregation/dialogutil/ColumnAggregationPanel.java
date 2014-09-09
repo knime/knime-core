@@ -58,6 +58,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.table.TableColumnModel;
 
 import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethodDecorator;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.NamedAggregationOperator;
 import org.knime.core.data.DataTableSpec;
@@ -70,7 +71,8 @@ import org.knime.core.node.config.Config;
 
 /**
  * This class creates the aggregation column panel that allows the user to
- * define the aggregation columns and their aggregation method.
+ * define the aggregation columns and their aggregation method. It is used in the Column Aggregator node
+ * which allows to specify a set of aggregation methods for a selected list of columns.
  *
  * @author Tobias Koetter, University of Konstanz
  * @since 2.6
@@ -111,7 +113,7 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
                  */
                 @Override
                 public void actionPerformed(final ActionEvent e) {
-                    selectAllSelectedMethods();
+                    selectAllRows();
                 }
             });
             menu.add(item);
@@ -147,8 +149,7 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
      * no border should be used
      */
     public ColumnAggregationPanel(final String title) {
-        super(title, " Aggregation methods ",
-                new AggregationMethodListCellRenderer(),
+        super(title, " Aggregation methods ", new AggregationFunctionAndRowListCellRenderer(),
                 " To change multiple columns use right mouse click for context menu. ",
                 new ColumnAggregationTableModel());
     }
@@ -253,13 +254,25 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
 
     /**
      * {@inheritDoc}
+     * @since 2.11
      */
     @Override
-    protected NamedAggregationOperator getOperator(final AggregationMethod method) {
-        //create a new instance to guarantee that each aggregation operator
+    protected NamedAggregationOperator createRow(final AggregationMethod method) {
+      //create a new instance to guarantee that each aggregation operator
         //uses its own instance
-        final AggregationMethod clonedMethod =
-            AggregationMethods.getMethod4Id(method.getId());
+        final AggregationMethod clonedMethod = AggregationMethods.getMethod4Id(method.getId());
         return new NamedAggregationOperator(clonedMethod);
+    }
+    /**
+     * @param selectedListElement the list element to create the
+     * {@link AggregationMethodDecorator} for
+     * @return the concrete implementation of the used
+     * {@link AggregationMethodDecorator} class
+     * @see #createRow(AggregationMethod)
+     */
+    @Override
+    @Deprecated
+    protected NamedAggregationOperator getOperator(final AggregationMethod selectedListElement) {
+        return createRow(selectedListElement);
     }
 }

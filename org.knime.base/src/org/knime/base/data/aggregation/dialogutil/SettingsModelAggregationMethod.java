@@ -59,7 +59,6 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -317,12 +316,10 @@ public class SettingsModelAggregationMethod extends SettingsModel {
      */
     protected void validateSettingsBeforeSave() throws InvalidSettingsException {
         if (m_maxUniqueValues < 0) {
-            throw new InvalidSettingsException("MAximum unique values must be positive.");
+            throw new InvalidSettingsException("Maximum unique values must be positive.");
         }
         if (m_method.hasOptionalSettings()) {
-            final NodeSettings settings = new NodeSettings("tmp");
-            m_method.saveSettingsTo(settings);
-            m_method.validateSettings(settings);
+            m_method.validate();
         }
 
     }

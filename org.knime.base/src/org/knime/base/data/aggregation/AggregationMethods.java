@@ -63,6 +63,7 @@ import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -118,6 +119,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.port.database.aggregation.AggregationFunctionProvider;
 
 
 /**
@@ -126,7 +128,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public final class AggregationMethods {
+public final class AggregationMethods implements AggregationFunctionProvider<AggregationMethod> {
 
     private static final class DataValueClassComparator implements
         Comparator<Class<? extends DataValue>> {
@@ -165,8 +167,8 @@ public final class AggregationMethods {
     /**The attribute of the aggregation method extension point.*/
     public static final String EXT_POINT_ATTR_DF = "AggregationOperator";
 
-    /**Singleton instance.*/
-    private static AggregationMethods instance = new AggregationMethods();
+    private static volatile AggregationMethods instance;
+
 
     /**Map with all valid operators that are available to the user.*/
     private final Map<String, AggregationOperator> m_operators = new LinkedHashMap<>();
@@ -177,14 +179,6 @@ public final class AggregationMethods {
     private final AggregationMethod m_defNotNumericalMeth;
     private final AggregationMethod m_defNumericalMeth;
     private final AggregationMethod m_rowOrderMethod;
-
-    /**
-     * Returns the only instance of this class.
-     * @return the only instance
-     */
-    private static AggregationMethods instance() {
-        return instance;
-    }
 
     private AggregationMethods() {
         //add all default methods
@@ -317,6 +311,22 @@ public final class AggregationMethods {
     }
 
     /**
+     * Returns the only instance of this class.
+     * @return the only instance
+     * @since 2.11
+     */
+    public static AggregationMethods getInstance() {
+        if (instance == null) {
+            synchronized (AggregationMethods.class) {
+                if (instance == null) {
+                    instance = new AggregationMethods();
+                }
+            }
+        }
+        return instance;
+    }
+
+    /**
      * This method registers previous methods which are deprecated in order to
      * be backward compatible. The methods are stored separate from the
      * methods to use.
@@ -434,7 +444,7 @@ public final class AggregationMethods {
      * already exists
      */
     public static void registerOperator(final AggregationOperator operator) throws DuplicateOperatorException {
-        instance().addOperator(operator);
+        getInstance().addOperator(operator);
     }
 
     /**
@@ -443,7 +453,7 @@ public final class AggregationMethods {
      * registered
      */
     public static boolean operatorExists(final String id) {
-            return instance().getOperator(id) != null;
+            return getInstance().getOperator(id) != null;
     }
 
     /**
@@ -500,7 +510,7 @@ public final class AggregationMethods {
         } else {
             dataType = type;
         }
-        for (final AggregationOperator operator : instance().getOperators()) {
+        for (final AggregationOperator operator : getInstance().getOperators()) {
             if (operator.isCompatible(dataType)) {
                 compatibleMethods.add(cloneOperator(operator));
             }
@@ -641,7 +651,11 @@ public final class AggregationMethods {
      * @return the default {@link AggregationMethod} for the given column spec
      */
     public static AggregationMethod getDefaultMethod(final DataColumnSpec spec) {
-        final List<AggregationMethod> methods = getCompatibleMethods(spec.getType());
+        return getDefaultMethod(spec.getType());
+    }
+
+    private static AggregationMethod getDefaultMethod(final DataType type) {
+        final List<AggregationMethod> methods = getCompatibleMethods(type);
         if (methods.size() > 0) {
             return methods.get(0);
         }
@@ -685,7 +699,7 @@ public final class AggregationMethods {
      * exists for the given id
      */
     public static AggregationMethod getMethod4Id(final String id) {
-        final AggregationOperator operator = instance().getOperator(id);
+        final AggregationOperator operator = getInstance().getOperator(id);
         if (operator == null) {
             throw new IllegalArgumentException("No method found for id: " + id);
         }
@@ -767,7 +781,7 @@ public final class AggregationMethods {
                 buf.append("</b></dt>");
                 buf.append("\n");
                 buf.append("<dd>");
-                buf.append(method.getDescription());
+                buf.append(StringEscapeUtils.escapeHtml(method.getDescription()));
                 buf.append("</dd>");
                 buf.append("\n");
             }
@@ -782,7 +796,7 @@ public final class AggregationMethods {
      * operator name
      */
     public static List<AggregationMethod> getAvailableMethods() {
-        Collection<AggregationOperator> operators = instance().getOperators();
+        Collection<AggregationOperator> operators = getInstance().getOperators();
         final List<AggregationMethod> methods = new ArrayList<>(operators.size());
         //clone all operators prior returning
         for (AggregationOperator operator : operators) {
@@ -796,14 +810,14 @@ public final class AggregationMethods {
      * @return the default not numerical method
      */
     public static AggregationMethod getDefaultNotNumericalMethod() {
-        return instance().m_defNotNumericalMeth;
+        return getInstance().m_defNotNumericalMeth;
     }
 
     /**
      * @return the default numerical method
      */
     public static AggregationMethod getDefaultNumericalMethod() {
-        return instance().m_defNumericalMeth;
+        return getInstance().m_defNumericalMeth;
     }
 
     /**
@@ -811,6 +825,46 @@ public final class AggregationMethods {
      * table if the row order should be retained
      */
     public static AggregationMethod getRowOrderMethod() {
-        return instance().m_rowOrderMethod;
+        return getInstance().m_rowOrderMethod;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.11
+     */
+    @Override
+    public List<AggregationMethod> getCompatibleFunctions(final DataType type, final boolean sorted) {
+        return getCompatibleMethods(type, sorted);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.11
+     */
+    @Override
+    public AggregationMethod getFunction(final String id) {
+        return getMethod4Id(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.11
+     */
+    @Override
+    public AggregationMethod getDefaultFunction(final DataType type) {
+        return getDefaultMethod(type);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.11
+     */
+    @Override
+    public List<AggregationMethod> getFunctions(final boolean sorted) {
+        final List<AggregationMethod> methods = getAvailableMethods();
+        if (sorted) {
+            Collections.sort(methods);
+        }
+        return methods;
     }
 }

@@ -46,7 +46,7 @@
  * History
  *   18.07.2014 (koetter): created
  */
-package org.knime.base.data.aggregation.dialogutil;
+package org.knime.base.data.aggregation.dialogutil.pattern;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -67,9 +67,12 @@ import javax.swing.JPopupMenu;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
 
-import org.knime.base.data.aggregation.AggregationMethodDecorator;
 import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.dialogutil.AggregationMethodDecoratorTableCellRenderer.ValueRenderer;
+import org.knime.base.data.aggregation.dialogutil.AbstractAggregationPanel;
+import org.knime.base.data.aggregation.dialogutil.AggregationFunctionAndRowTableCellRenderer;
+import org.knime.base.data.aggregation.dialogutil.AggregationFunctionRowTableCellRenderer;
+import org.knime.base.data.aggregation.dialogutil.AggregationFunctionRowTableCellRenderer.ValueRenderer;
+import org.knime.base.data.aggregation.dialogutil.BooleanCellRenderer;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -82,6 +85,8 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class PatternAggregationPanel
 extends AbstractAggregationPanel<PatternAggregationTableModel, PatternAggregator, Object> {
+    /**The default title of the panel to display in a dialog.*/
+    public static final String DEFAULT_TITLE = "Pattern Based Aggregation";
 
     private static final int REGEX_SIZE = 45;
 
@@ -120,7 +125,7 @@ extends AbstractAggregationPanel<PatternAggregationTableModel, PatternAggregator
             public void actionPerformed(final ActionEvent e) {
                 final List<PatternAggregator> methods = new LinkedList<>();
                 methods.add(new PatternAggregator(".*", true, AggregationMethods.getDefaultNotNumericalMethod()));
-                addMethods(methods);
+                addRows(methods);
             }
         });
         final JButton removeSelectedButton = new JButton("Remove");
@@ -178,30 +183,20 @@ extends AbstractAggregationPanel<PatternAggregationTableModel, PatternAggregator
     @Override
     protected void adaptTableColumnModel(final TableColumnModel columnModel) {
         columnModel.getColumn(0).setCellRenderer(
-            new AggregationMethodDecoratorTableCellRenderer(new ValueRenderer() {
+            new AggregationFunctionRowTableCellRenderer<>(new ValueRenderer<PatternAggregator>() {
                 @Override
-                public void renderComponent(final DefaultTableCellRenderer c,
-                                            final AggregationMethodDecorator method) {
-                    if (method instanceof PatternAggregator) {
-                        final PatternAggregator aggregator = (PatternAggregator)method;
-                        final String regex = aggregator.getInputPattern();
-                        c.setText(regex);
-                    }
+                public void renderComponent(final DefaultTableCellRenderer c, final PatternAggregator row) {
+                    final String regex = row.getInputPattern();
+                    c.setText(regex);
                 }
-            }, true, "Double click to change regular expression. Right mouse click for context menu."));
+            }, true, "Double click to change search pattern. Right mouse click for context menu."));
         columnModel.getColumn(0).setCellEditor(new PatternTableCellEditor());
-        columnModel.getColumn(1).setCellRenderer(new BooleanCellRenderer());
+        columnModel.getColumn(1).setCellRenderer(new BooleanCellRenderer(
+            "Tick if the pattern is a regular expression"));
         columnModel.getColumn(1).setMinWidth(REGEX_SIZE);
         columnModel.getColumn(1).setMaxWidth(REGEX_SIZE);
         columnModel.getColumn(2).setCellEditor(new PatternAggregatorTableCellEditor());
-        columnModel.getColumn(2).setCellRenderer(
-                new AggregationMethodDecoratorTableCellRenderer(new ValueRenderer() {
-                    @Override
-                    public void renderComponent(final DefaultTableCellRenderer c,
-                                                final AggregationMethodDecorator method) {
-                        c.setText(method.getLabel());
-                    }
-                }, false));
+        columnModel.getColumn(2).setCellRenderer(new AggregationFunctionAndRowTableCellRenderer());
         columnModel.getColumn(0).setPreferredWidth(250);
         columnModel.getColumn(1).setPreferredWidth(150);
     }
@@ -230,7 +225,7 @@ extends AbstractAggregationPanel<PatternAggregationTableModel, PatternAggregator
                  */
                 @Override
                 public void actionPerformed(final ActionEvent e) {
-                    selectAllSelectedMethods();
+                    selectAllRows();
                 }
             });
             menu.add(item);
@@ -256,11 +251,12 @@ extends AbstractAggregationPanel<PatternAggregationTableModel, PatternAggregator
     public void saveSettingsTo(final NodeSettingsWO settings) {
         PatternAggregator.saveAggregators(settings, m_key, getTableModel().getRows());
     }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PatternAggregator getOperator(final Object selectedListElement) {
+    protected PatternAggregator createRow(final Object selectedListElement) {
         return new PatternAggregator(".*", true, AggregationMethods.getDefaultNotNumericalMethod());
     }
 }

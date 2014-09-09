@@ -75,6 +75,7 @@ import org.knime.core.node.NotConfigurableException;
  * Rob Camick</a>.
  * @since 2.7
  */
+@Deprecated
 public class OperatorSettingsButtonCellRenderer extends AbstractCellEditor
 implements TableCellRenderer, TableCellEditor, MouseListener {
 
@@ -188,7 +189,7 @@ implements TableCellRenderer, TableCellEditor, MouseListener {
         final int row = table.convertRowIndexToModel(table.getEditingRow());
         fireEditingStopped();
 
-        final AggregationMethod aggr = m_rootPanel.getTableModel().getRow(row);
+        final AggregationMethod aggr = (AggregationMethod)m_rootPanel.getTableModel().getRow(row);
         if (!aggr.hasOptionalSettings()) {
             //the operator has no additional settings
             return;

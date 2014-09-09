@@ -49,19 +49,14 @@ import java.util.List;
 
 import javax.swing.table.TableModel;
 
-import org.knime.base.data.aggregation.AggregationMethodDecorator;
-
 
 /**
- * {@link TableModel} that allows the displaying and editing of
- * {@link AggregationMethodDecorator}s.
+ * {@link TableModel} that allows the displaying and editing of {@link AggregationFunctionRow}s.
  *
- * @author Tobias Koetter, University of Konstanz
- * @param <O> the {@link AggregationMethodDecorator} implementation this
- * {@link TableModel} operates with
- * @since 2.6
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @param <R> the {@link AggregationFunctionRow} implementation this {@link TableModel} operates with
  */
-public interface AggregationTableModel<O extends AggregationMethodDecorator> extends TableModel {
+public interface AggregationTableModel<R extends AggregationFunctionRow<?>> extends TableModel {
 
     /**
      * Removes all entries from the table.
@@ -74,9 +69,9 @@ public interface AggregationTableModel<O extends AggregationMethodDecorator> ext
     public void remove(int... idxs);
 
     /**
-     * @param operators the {@link AggregationMethodDecorator}s to add
+     * @param rows the {@link AggregationFunctionRow}s to add
      */
-    public void add(List<O> operators);
+    public void add(List<R> rows);
 
     /**
      * @param idxs the row indices to toggle the missing cell option for
@@ -85,20 +80,18 @@ public interface AggregationTableModel<O extends AggregationMethodDecorator> ext
 
     /**
      * This method is used to initialize the {@link TableModel} with the
-     * initial selected {@link AggregationMethodDecorator}s.
-     * @param operators initial selected {@link AggregationMethodDecorator}s
+     * initial selected {@link AggregationFunctionRow}s.
+     * @param rows initial selected {@link AggregationFunctionRow}s
      */
-    public void initialize(final List<O> operators);
+    public void initialize(final List<R> rows);
 
     /**
-     * @return the index of the missing cell option column or -1 if the table
-     * does not contain such a column
+     * @return the index of the missing cell option column or -1 if the table does not contain such a column
      */
     public int getMissingCellOptionColIdx();
 
     /**
      * @return the index of the aggregation operator settings button column
-     * @since 2.7
      */
     public int getSettingsButtonColIdx();
 
@@ -106,14 +99,27 @@ public interface AggregationTableModel<O extends AggregationMethodDecorator> ext
     /**
      * @param row the index of the row
      * @return the row with the given index
-     * @since 2.7
+     * @since 2.11
      */
-    public O getRow(final int row);
+    public R getRow(final int row);
 
     /**
-     * @return <code>true</code> if one of the rows contains a parameter that requires
-     * additional settings
-     * @since 2.7
+     * @return the rows as unmodifiable {@link List}
+     * @since 2.11
      */
+    public List<R> getRows();
+
+    /**
+     * @return <code>true</code> if one of the rows contains a row that requires additional settings
+     * @since 2.11
+     */
+    public boolean containsRowWithSettings();
+
+    /**
+     * @return true if one of the rows contains a row that requires additional settings
+     * @see #containsRowWithSettings()
+     * @deprecated
+     */
+    @Deprecated
     public boolean containsSettingsOperator();
 }

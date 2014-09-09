@@ -67,10 +67,13 @@ import javax.swing.table.TableCellRenderer;
 public class BooleanCellRenderer extends JCheckBox implements TableCellRenderer, UIResource {
     private static final long serialVersionUID = 1L;
     private static final Border NO_FOCUS_BORDER = new EmptyBorder(1, 1, 1, 1);
+    private final String m_tooltip;
 
-    /**Constructor.*/
-    public BooleanCellRenderer() {
+    /**Constructor.
+     * @param tooltip the tooltip to display or <code>null</code> for none*/
+    public BooleanCellRenderer(final String tooltip) {
         super();
+        m_tooltip = tooltip;
         setHorizontalAlignment(SwingConstants.CENTER);
         setBorderPainted(true);
     }
@@ -106,6 +109,6 @@ public class BooleanCellRenderer extends JCheckBox implements TableCellRenderer,
         if (superText != null) {
             return superText;
         }
-        return "Tick if the pattern is a regular expression";
+        return m_tooltip;
     }
 }
