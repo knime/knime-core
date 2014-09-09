@@ -235,8 +235,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         });
 
 //add description tab
-        final Component descriptionTab =
-            AggregationMethods.createDescriptionPane();
+        final Component descriptionTab = AggregationMethods.createDescriptionPane();
         descriptionTab.setMinimumSize(dimension);
         descriptionTab.setMaximumSize(dimension);
         descriptionTab.setPreferredSize(dimension);

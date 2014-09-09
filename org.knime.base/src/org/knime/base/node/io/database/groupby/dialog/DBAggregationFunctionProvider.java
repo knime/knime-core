@@ -53,6 +53,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.swing.JComponent;
+import javax.swing.JEditorPane;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
+
+import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.DataType;
 import org.knime.core.node.port.database.DatabaseUtility;
 import org.knime.core.node.port.database.aggregation.AggregationFunctionProvider;
@@ -121,5 +127,42 @@ public class DBAggregationFunctionProvider implements AggregationFunctionProvide
     @Override
     public List<DBAggregationFunction> getFunctions(final boolean sorted) {
         return getCompatibleFunctions(null, sorted);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public JComponent getDescriptionPane() {
+        final StringBuilder buf = getHTMLDescription();
+        final JEditorPane editorPane = new JEditorPane("text/html", buf.toString());
+        editorPane.setEditable(false);
+        final JScrollPane scrollPane = new JScrollPane(editorPane, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        return scrollPane;
+    }
+
+    /**
+     * @return the HTML String that lists all available aggregation methods
+     * and their description as a definition list.
+     */
+    private StringBuilder getHTMLDescription() {
+        final List<DBAggregationFunction> functions = getFunctions(true);
+        final StringBuilder buf = new StringBuilder();
+        buf.append("<dl>");
+        buf.append("\n");
+        for (final DBAggregationFunction function : functions) {
+            buf.append("<dt><b>");
+            buf.append(function.getLabel());
+            buf.append("</b></dt>");
+            buf.append("\n");
+            buf.append("<dd>");
+            buf.append(StringEscapeUtils.escapeHtml(function.getDescription()));
+            buf.append("</dd>");
+            buf.append("\n");
+        }
+        //close the last definition list
+        buf.append("</dl>");
+        return buf;
     }
 }

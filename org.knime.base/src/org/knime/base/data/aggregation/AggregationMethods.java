@@ -59,6 +59,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
+import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
@@ -730,6 +731,15 @@ public final class AggregationMethods implements AggregationFunctionProvider<Agg
             return operator;
         }
         return operator.createInstance(operator.getGlobalSettings(), operator.getOperatorColumnSettings());
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.11
+     */
+    @Override
+    public JComponent getDescriptionPane() {
+        return AggregationMethods.createDescriptionPane();
     }
 
     /**

@@ -60,6 +60,10 @@ import javax.swing.JTabbedPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.data.aggregation.dialogutil.column.AggregationColumnPanel;
+import org.knime.base.data.aggregation.dialogutil.pattern.PatternAggregationPanel;
+import org.knime.base.data.aggregation.dialogutil.type.DataTypeAggregationPanel;
+import org.knime.base.node.io.database.groupby.dialog.DBAggregationFunctionProvider;
 import org.knime.base.node.io.database.groupby.dialog.column.DBColumnAggregationFunctionPanel;
 import org.knime.base.node.io.database.groupby.dialog.pattern.DBPatternAggregationFunctionPanel;
 import org.knime.base.node.io.database.groupby.dialog.type.DBDataTypeAggregationFunctionPanel;
@@ -118,6 +122,8 @@ final class DBGroupByNodeDialog2 extends NodeDialogPane {
 
     private final SettingsModelString m_countStarColName = DBGroupByNodeModel2.createCountStarColNameModel();
 
+    private final JPanel m_descriptionTab = new JPanel(new GridBagLayout());
+
     /**
      * Constructor for class GroupByNodeDialog.
      */
@@ -158,9 +164,9 @@ final class DBGroupByNodeDialog2 extends NodeDialogPane {
         final JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         //The aggregation column box
-        m_tabs.addTab("Manual", m_aggregationPanel.getComponentPanel());
-        m_tabs.addTab("Pattern", m_patternPanel.getComponentPanel());
-        m_tabs.addTab("Type", m_typePanel.getComponentPanel());
+        m_tabs.addTab(AggregationColumnPanel.DEFAULT_TITLE, m_aggregationPanel.getComponentPanel());
+        m_tabs.addTab(PatternAggregationPanel.DEFAULT_TITLE, m_patternPanel.getComponentPanel());
+        m_tabs.addTab(DataTypeAggregationPanel.DEFAULT_TITLE, m_typePanel.getComponentPanel());
         //calculate the component size
         int width =
             (int)Math.max(m_groupCol.getComponentPanel().getMinimumSize().getWidth(),
@@ -186,6 +192,12 @@ final class DBGroupByNodeDialog2 extends NodeDialogPane {
         c.weighty = 0;
         topBottomPanel.add(createAdvancedOptionsPanel(), c);
         super.addTab("Settings", topBottomPanel);
+
+        //add description tab
+        m_descriptionTab.setMinimumSize(dimension);
+        m_descriptionTab.setMaximumSize(dimension);
+        m_descriptionTab.setPreferredSize(dimension);
+        super.addTab("Description", m_descriptionTab);
     }
 
     private JComponent createAdvancedOptionsPanel() {
@@ -232,6 +244,9 @@ final class DBGroupByNodeDialog2 extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
         final DatabasePortObjectSpec dbspec = (DatabasePortObjectSpec)specs[0];
+        if (dbspec == null) {
+            throw new NotConfigurableException("No input connection found.");
+        }
         final DataTableSpec spec = dbspec.getDataTableSpec();
         try {
             final DatabaseQueryConnectionSettings connectionSettings = dbspec.getConnectionSettings(null);
@@ -242,6 +257,15 @@ final class DBGroupByNodeDialog2 extends NodeDialogPane {
             m_typePanel.loadSettingsFrom(settings, dbIdentifier, spec);
             m_addCountStar.loadSettingsFrom(settings);
             m_countStarColName.loadSettingsFrom(settings);
+            final DBAggregationFunctionProvider functionProvider =
+                    new DBAggregationFunctionProvider(connectionSettings.getUtility());
+            m_descriptionTab.removeAll();
+            final GridBagConstraints c = new GridBagConstraints();
+            c.anchor = GridBagConstraints.CENTER;
+            c.fill = GridBagConstraints.BOTH;
+            c.weightx = 1;
+            c.weighty = 1;
+            m_descriptionTab.add(functionProvider.getDescriptionPane(), c);
         } catch (final InvalidSettingsException e) {
             throw new NotConfigurableException(e.getMessage());
         }

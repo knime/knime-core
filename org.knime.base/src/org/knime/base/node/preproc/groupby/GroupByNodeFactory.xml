@@ -17,7 +17,7 @@
            </p>
            <p>
            The columns to aggregate can be either defined by selecting the columns directly, 
-           by name based on a regular expression or based on the data type. Input columns are handled in
+           by name based on a search pattern or based on the data type. Input columns are handled in
            this order and only considered once e.g. columns that are added directly on the
            "Manual Aggregation" tab are ignored even if their name matches a search pattern on the 
            "Pattern Based Aggregation" tab or their type matches a defined type on the
@@ -160,7 +160,7 @@
                 Select one or more data type from the available type list. 
                 Change the aggregation method in the Aggregation 
                 column of the table. You can add the same data type multiple
-                times. 
+                times. The list contains standard types e.g. Double, String etc. and all types of the input table.
             </option>
             <option name="Missing">
                 Missing values are considered during aggregation if the missing 

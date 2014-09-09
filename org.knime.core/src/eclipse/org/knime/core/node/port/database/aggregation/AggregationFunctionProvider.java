@@ -50,6 +50,8 @@ package org.knime.core.node.port.database.aggregation;
 
 import java.util.List;
 
+import javax.swing.JComponent;
+
 import org.knime.core.data.DataType;
 
 /**
@@ -85,4 +87,13 @@ public interface AggregationFunctionProvider <F extends AggregationFunction> {
      * @return all supported {@link AggregationFunction}s
      */
     public List<F> getFunctions(boolean sorted);
+
+    /**
+     * Creates a {@link JComponent} that lists all available aggregation
+     * functions including a short description of each.
+     *
+     * @return a {@link JComponent} that can be added to any dialog to display all available aggregation functions
+     * and their description.
+     */
+    public JComponent getDescriptionPane();
 }
