@@ -80,8 +80,7 @@ public class OperatorColumnSettings {
      * with a unique key which are accessible in the
      * <code>AggregationMethod</code> implementations.
      */
-    private final Map<String, Object> m_keyValueMap =
-        new HashMap<String, Object>();
+    private final Map<String, Object> m_keyValueMap = new HashMap<>();
 
     /**Constructor for class OperatorSeetings.
      *
