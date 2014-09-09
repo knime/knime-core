@@ -69,7 +69,8 @@ public class BitVectorNotSetCountOperator extends AggregationOperator {
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    public BitVectorNotSetCountOperator(final GlobalSettings globalSettings, final OperatorColumnSettings opColSettings) {
+    public BitVectorNotSetCountOperator(final GlobalSettings globalSettings,
+        final OperatorColumnSettings opColSettings) {
         this(new OperatorData("Bit vector not set count", "#not set", false, false, BitVectorValue.class, false),
                 globalSettings, AggregationOperator.setInclMissingFlag(opColSettings, false));
     }

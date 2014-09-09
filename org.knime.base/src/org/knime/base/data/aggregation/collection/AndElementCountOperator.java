@@ -45,15 +45,14 @@
 
 package org.knime.base.data.aggregation.collection;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.collection.CollectionDataValue;
-import org.knime.core.data.def.IntCell;
-
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.def.IntCell;
 
 
 /**
@@ -106,8 +105,7 @@ public class AndElementCountOperator extends AndElementOperator {
      */
     @Override
     public String getDescription() {
-        return "Creates an IntCell that contains the size of the "
-        + "intersection of all collection elements per group."
+        return "Creates an IntCell that contains the size of the intersection of all collection elements per group. "
         + "Only elements that are present in all collections count.";
     }
 
