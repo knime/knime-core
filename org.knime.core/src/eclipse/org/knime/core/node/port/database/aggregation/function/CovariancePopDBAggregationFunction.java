@@ -55,7 +55,7 @@ public class CovariancePopDBAggregationFunction extends AbstractColumnDBAggregat
     @Override
     public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
         final String colName) {
-        return getName() + "(" + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(colName)
+        return getLabel() + "(" + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(colName)
                 + ", " + manipulator.quoteIdentifier(tableName) + "."
                 + manipulator.quoteIdentifier(getSelectedColumnName()) + ")";
     }
@@ -72,7 +72,7 @@ public class CovariancePopDBAggregationFunction extends AbstractColumnDBAggregat
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
+    public String getLabel() {
         return "COVAR_POP";
     }
 
@@ -81,7 +81,7 @@ public class CovariancePopDBAggregationFunction extends AbstractColumnDBAggregat
      */
     @Override
     public String getId() {
-        return getName();
+        return getLabel();
     }
 
     /**

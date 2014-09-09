@@ -82,7 +82,7 @@ public class CorrDBAggregationFunction extends AbstractColumnDBAggregationFuncti
     @Override
     public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
         final String columnName) {
-        return getName() + "(" + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(columnName)
+        return getLabel() + "(" + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(columnName)
                 + ", " + manipulator.quoteIdentifier(tableName) + "."
                 + manipulator.quoteIdentifier(getSelectedColumnName()) + ")";
     }
@@ -99,7 +99,7 @@ public class CorrDBAggregationFunction extends AbstractColumnDBAggregationFuncti
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
+    public String getLabel() {
         return "CORR";
     }
 
@@ -108,7 +108,7 @@ public class CorrDBAggregationFunction extends AbstractColumnDBAggregationFuncti
      */
     @Override
     public String getId() {
-        return getName();
+        return getLabel();
     }
 
     /**

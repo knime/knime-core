@@ -101,7 +101,7 @@ public class CountDistinctDBAggregationFunction extends AbstractDistinctDBAggreg
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
+    public String getLabel() {
         return "COUNT";
     }
 

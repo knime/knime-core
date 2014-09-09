@@ -67,14 +67,14 @@ public final class GroupConcatDBAggregationFunction extends AbstractConcatDBAggr
      */
     @Override
     public String getColumnName() {
-        return getName();
+        return getLabel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
+    public String getLabel() {
         return m_name;
     }
 
@@ -101,7 +101,7 @@ public final class GroupConcatDBAggregationFunction extends AbstractConcatDBAggr
      */
     @Override
     public String getId() {
-        return getName();
+        return getLabel();
     }
 
     /**

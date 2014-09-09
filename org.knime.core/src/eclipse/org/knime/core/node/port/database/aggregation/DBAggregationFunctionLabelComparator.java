@@ -82,7 +82,7 @@ public final class DBAggregationFunctionLabelComparator implements Comparator<DB
         if (o2 == null) {
             return -1 * m_ascending;
         }
-        return o1.getName().compareTo(o2.getName()) * m_ascending;
+        return o1.getLabel().compareTo(o2.getLabel()) * m_ascending;
     }
 
 }

@@ -66,19 +66,19 @@ public interface AggregationFunctionProvider <F extends AggregationFunction> {
      * @return all {@link AggregationFunction}s that are compatible with
      * the given {@link DataType} or an empty list if none is compatible
      */
-    public List<F> getCompatibleMethods(final DataType type, final boolean sorted);
+    public List<F> getCompatibleFunctions(final DataType type, final boolean sorted);
 
     /**
      * @param id the id of the {@link AggregationFunction}
      * @return the {@link AggregationFunction} for the given id or <code>null</code> if none exists
      */
-    public F getMethod4Id(String id);
+    public F getFunction(String id);
 
     /**
      * @param type the {@link DataType}
      * @return the default {@link AggregationFunction}
      */
-    public F getDefaultMethod(DataType type);
+    public F getDefaultFunction(DataType type);
 
     /**
      * @param sorted <code>true</code> if the list should be sorted by name

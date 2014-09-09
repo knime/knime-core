@@ -75,7 +75,7 @@ public final class SumDistinctDBAggregationFunction extends AbstractDistinctDBAg
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
+    public String getLabel() {
         return "SUM";
     }
 

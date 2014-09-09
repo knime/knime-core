@@ -49,6 +49,7 @@
 package org.knime.core.node.port.database.aggregation;
 
 import org.knime.core.data.DataType;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.database.StatementManipulator;
 
 
@@ -74,14 +75,19 @@ public interface DBAggregationFunction extends AggregationFunction {
     public String getSQLFragment(StatementManipulator manipulator, String tableName, String columnName);
 
     /**
-     * {@inheritDoc}
+     * @return a new instance of this {@link AggregationFunction}
      */
-    @Override
     public DBAggregationFunction createInstance();
 
     /**
      * @return the name of the function used in the column name
      */
     public String getColumnName();
+
+    /**
+     * Validates the internal state (e.g. settings) of the function.
+     * @throws InvalidSettingsException if the internal state is invalid
+     */
+    public void validate() throws InvalidSettingsException;
 
 }

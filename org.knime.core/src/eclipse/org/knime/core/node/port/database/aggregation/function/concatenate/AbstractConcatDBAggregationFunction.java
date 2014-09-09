@@ -66,7 +66,7 @@ public abstract class AbstractConcatDBAggregationFunction implements DBAggregati
      * {@inheritDoc}
      */
     @Override
-    public Component getSettingsPanel(final DataTableSpec spec) {
+    public Component getSettingsPanel() {
         if (m_settingsPanel == null) {
             m_settingsPanel = new ConcatDBAggregationFuntionSettingsPanel(m_settings);
         }

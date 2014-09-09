@@ -72,7 +72,7 @@ public abstract class AbstractDistinctDBAggregationFunction extends AbstractBool
      */
     @Override
     public String getId() {
-        return getName() + "_DISTINCT";
+        return getLabel() + "_DISTINCT";
     }
 
     /**
@@ -81,9 +81,9 @@ public abstract class AbstractDistinctDBAggregationFunction extends AbstractBool
     @Override
     public String getColumnName() {
         if (isSelected()) {
-            return getName() + "_DISTINCT";
+            return getLabel() + "_DISTINCT";
         }
-        return getName();
+        return getLabel();
     }
 
     /**

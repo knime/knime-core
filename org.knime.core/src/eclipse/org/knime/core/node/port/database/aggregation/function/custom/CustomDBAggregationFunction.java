@@ -85,7 +85,7 @@ public class CustomDBAggregationFunction implements DBAggregationFunction {
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
+    public String getLabel() {
         return ID;
     }
 
@@ -165,9 +165,9 @@ public class CustomDBAggregationFunction implements DBAggregationFunction {
      * {@inheritDoc}
      */
     @Override
-    public CustomDBAggregationFuntionSettingsPanel getSettingsPanel(final DataTableSpec spec) {
+    public CustomDBAggregationFuntionSettingsPanel getSettingsPanel() {
         if (m_settingsPanel == null) {
-            m_settingsPanel = new CustomDBAggregationFuntionSettingsPanel(spec, m_settings);
+            m_settingsPanel = new CustomDBAggregationFuntionSettingsPanel(m_settings);
         }
         return m_settingsPanel;
     }
@@ -186,7 +186,7 @@ public class CustomDBAggregationFunction implements DBAggregationFunction {
     @Override
     public void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec spec)
             throws NotConfigurableException {
-        getSettingsPanel(spec).loadSettingsFrom(settings, spec);
+        getSettingsPanel().loadSettingsFrom(settings, spec);
     }
 
     /**

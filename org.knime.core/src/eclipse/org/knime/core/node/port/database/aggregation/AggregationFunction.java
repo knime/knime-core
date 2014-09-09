@@ -65,15 +65,20 @@ import org.knime.core.node.NotConfigurableException;
  * @since 2.11
  */
 public interface AggregationFunction {
-    /**
-     * @return the name of the function to display to the user
-     */
-    public String getName();
 
     /**
+     * The unique identifier of the function that is used for registration and
+     * identification of the aggregation method. The id is an internal
+     * used variable that is not displayed to the user.
+     *
      * @return the unique id of this function
      */
-    public String getId();
+    String getId();
+
+    /**
+     * @return the label that is displayed to the user
+     */
+    String getLabel();
 
     /**
      * @param type the {@link DataType} check for compatibility
@@ -84,12 +89,7 @@ public interface AggregationFunction {
     /**
      * @return the description for this function
      */
-    public String getDescription();
-
-    /**
-     * @return a new instance of this {@link AggregationFunction}
-     */
-    public AggregationFunction createInstance();
+    String getDescription();
 
     /**
      * This method indicates if the operator requires additional settings.
@@ -99,30 +99,28 @@ public interface AggregationFunction {
      * #saveSettingsTo(NodeSettingsWO) and #resetSettings()).
      * @return <code>true</code> if the operator requires additional
      * settings
-     * @see #getSettingsPanel(DataTableSpec)
+     * @see #getSettingsPanel()
      * @see #validateSettings(NodeSettingsRO)
      * @see #loadValidatedSettings(NodeSettingsRO)
      * @see #loadSettingsFrom(NodeSettingsRO, DataTableSpec)
      * @see #saveSettingsTo(NodeSettingsWO)
      */
-    public boolean hasOptionalSettings();
+    boolean hasOptionalSettings();
 
     /**
      * Returns the optional {@link Component} that allows the user to adjust
      * all {@link DBAggregationFunction} specific settings. Methods that do need
      * additional settings must override this method in order to return
      * their settings panel.
-     * @param spec the {@link DataTableSpec} of the input table
-     *
      * @return the Component that contains all necessary settings
      */
-    public Component getSettingsPanel(final DataTableSpec spec);
+    Component getSettingsPanel();
 
     /**
      * This method is called in the {@link NodeModel} to load the settings
      * that have been saved ({@link #saveSettingsTo(NodeSettingsWO)}) by the
      * {@link DBAggregationFunction} used in the in the additional settings panel
-     * ({@link #getSettingsPanel(DataTableSpec)}) into the {@link DBAggregationFunction}
+     * ({@link #getSettingsPanel()}) into the {@link DBAggregationFunction}
      * that is actually used in the {@link NodeModel}. Each operator gets its
      * own {@link NodeSettingsRO} object to ensure the uniqueness of the
      * settings keys.
@@ -131,11 +129,11 @@ public interface AggregationFunction {
      * settings
      * @throws InvalidSettingsException if a property is not available
      */
-    public void loadValidatedSettings(final NodeSettingsRO settings)
+    void loadValidatedSettings(final NodeSettingsRO settings)
     throws InvalidSettingsException;
 
     /**
-     * This method is called prior the {@link #getSettingsPanel(DataTableSpec)} method
+     * This method is called prior the {@link #getSettingsPanel()} method
      * is called and the dialog is opened. This method should be used
      * to load all settings form the provided settings object and to adjust
      * the corresponding dialog components accordingly. Each operator gets
@@ -149,16 +147,16 @@ public interface AggregationFunction {
      * of invalid settings or if any preconditions are not fulfilled, e.g.
      * no nominal column in input table, etc.
      */
-    public void loadSettingsFrom(final NodeSettingsRO settings,
+    void loadSettingsFrom(final NodeSettingsRO settings,
                  final DataTableSpec spec) throws NotConfigurableException;
 
     /**
      * This method is called from the {@link NodeDialog} and {@link NodeModel} in
      * order to save the additional settings. It is also called prior the
-     * {@link #getSettingsPanel(DataTableSpec)} method in order to save the current settings.
+     * {@link #getSettingsPanel()} method in order to save the current settings.
      * The saved settings are used to initialize the settings panel by calling
      * {@link #loadSettingsFrom(NodeSettingsRO, DataTableSpec)} prior
-     * calling {@link #getSettingsPanel(DataTableSpec)} and to restore the previous (default) setting
+     * calling {@link #getSettingsPanel()} and to restore the previous (default) setting
      * by calling the {@link #loadValidatedSettings(NodeSettingsRO)}
      * when the user closes the dialog in any other way then by clicking on the OK button!
      * Each operator gets its own {@link NodeSettingsRO} object to ensure
@@ -166,7 +164,7 @@ public interface AggregationFunction {
      *
      * @param settings the {@link NodeSettingsWO} to save the optional settings
      */
-    public void saveSettingsTo(final NodeSettingsWO settings);
+    void saveSettingsTo(final NodeSettingsWO settings);
 
     /**
      * This method is called from the {@link NodeDialog} when the user closes
@@ -181,13 +179,7 @@ public interface AggregationFunction {
      * @throws InvalidSettingsException if the settings are invalid
      * @see #loadValidatedSettings(NodeSettingsRO)
      */
-    public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
-
-    /**
-     * Validates the internal state (e.g. settings) of the function.
-     * @throws InvalidSettingsException if the internal state is invalid
-     */
-    public void validate() throws InvalidSettingsException;
+    void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
 
     /**
      * This method is called from {@link NodeModel} in the <code>configure()</code> in
@@ -198,6 +190,6 @@ public interface AggregationFunction {
      * @throws InvalidSettingsException if the settings are invalid
      * @see #loadValidatedSettings(NodeSettingsRO)
      */
-    public void configure(final DataTableSpec spec)
+    void configure(final DataTableSpec spec)
         throws InvalidSettingsException;
 }

@@ -94,7 +94,7 @@ public class SimpleDBAggregationFunction extends NoSettingsDBAggregationFunction
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
+    public String getLabel() {
         return m_name;
     }
 

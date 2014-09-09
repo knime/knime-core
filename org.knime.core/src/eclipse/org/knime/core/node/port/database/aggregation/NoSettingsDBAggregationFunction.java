@@ -72,7 +72,7 @@ public abstract class NoSettingsDBAggregationFunction implements DBAggregationFu
     @Override
     public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
         final String columnName) {
-        return getName() + "("
+        return getLabel() + "("
                 + manipulator.quoteIdentifier(tableName) + "." + manipulator.quoteIdentifier(columnName) + ")";
     }
 
@@ -90,7 +90,7 @@ public abstract class NoSettingsDBAggregationFunction implements DBAggregationFu
      */
     @Override
     public String getId() {
-        return getName();
+        return getLabel();
     }
 
     /**
@@ -98,7 +98,7 @@ public abstract class NoSettingsDBAggregationFunction implements DBAggregationFu
      */
     @Override
     public String getColumnName() {
-        return getName();
+        return getLabel();
     }
 
     /**
@@ -113,7 +113,7 @@ public abstract class NoSettingsDBAggregationFunction implements DBAggregationFu
      * {@inheritDoc}
      */
     @Override
-    public Component getSettingsPanel(final DataTableSpec spec) {
+    public Component getSettingsPanel() {
         return null;
     }
 

@@ -77,12 +77,10 @@ public class CustomDBAggregationFuntionSettingsPanel extends JPanel {
     private DialogComponentString m_functionComponent;
 
     /**
-     * @param spec input {@link DataTableSpec}
      * @param settings the {@link CustomDBAggregationFuntionSettings} to use
      */
     @SuppressWarnings("unchecked")
-    public CustomDBAggregationFuntionSettingsPanel(final DataTableSpec spec,
-        final CustomDBAggregationFuntionSettings settings) {
+    public CustomDBAggregationFuntionSettingsPanel(final CustomDBAggregationFuntionSettings settings) {
         setLayout(new GridBagLayout());
         final GridBagConstraints c = new GridBagConstraints();
         c.anchor = GridBagConstraints.LINE_START;

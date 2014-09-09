@@ -86,7 +86,7 @@ public abstract class AbstractColumnDBAggregationFunction implements DBAggregati
      */
     @Override
     public String getColumnName() {
-        return getName() + "_" + getSelectedColumnName();
+        return getLabel() + "_" + getSelectedColumnName();
     }
 
     /**
@@ -108,7 +108,7 @@ public abstract class AbstractColumnDBAggregationFunction implements DBAggregati
      * {@inheritDoc}
      */
     @Override
-    public ColumnFuntionSettingsPanel getSettingsPanel(final DataTableSpec spec) {
+    public ColumnFuntionSettingsPanel getSettingsPanel() {
         if (m_settingsPanel == null) {
             m_settingsPanel = new ColumnFuntionSettingsPanel(m_settings, m_label, m_classFilter);
         }
@@ -129,7 +129,7 @@ public abstract class AbstractColumnDBAggregationFunction implements DBAggregati
     @Override
     public void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec spec)
             throws NotConfigurableException {
-        getSettingsPanel(spec).loadSettingsFrom(settings, spec);
+        getSettingsPanel().loadSettingsFrom(settings, spec);
     }
 
     /**

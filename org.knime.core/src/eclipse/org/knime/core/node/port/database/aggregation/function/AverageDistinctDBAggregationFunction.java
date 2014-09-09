@@ -72,7 +72,7 @@ public final class AverageDistinctDBAggregationFunction extends AbstractDistinct
      * {@inheritDoc}
      */
     @Override
-    public String getName() {
+    public String getLabel() {
         return "AVG";
     }
 

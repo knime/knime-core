@@ -97,7 +97,7 @@ public abstract class AbstractBooleanDBAggregationFunction implements DBAggregat
      * {@inheritDoc}
      */
     @Override
-    public Component getSettingsPanel(final DataTableSpec spec) {
+    public Component getSettingsPanel() {
         if (m_settingsPanel == null) {
             m_settingsPanel = new BooleanFuntionSettingsPanel(m_settings, m_optionName);
         }
