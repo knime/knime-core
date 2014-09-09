@@ -61,15 +61,16 @@ import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
  * Abstract class derives the general {@link NodeModel} for all database node
  * implementations.
  * @author Thomas Gabriel, University of Konstanz
+ * @since 2.11
  */
-abstract class DBNodeModel extends NodeModel {
+public abstract class DBNodeModel extends NodeModel {
 
     /**
      * Creates a new database reader.
      * @param inPorts array of input port types
      * @param outPorts array of output port types
      */
-    DBNodeModel(final PortType[] inPorts, final PortType[] outPorts) {
+    protected DBNodeModel(final PortType[] inPorts, final PortType[] outPorts) {
         super(inPorts, outPorts);
     }
 
@@ -134,7 +135,7 @@ abstract class DBNodeModel extends NodeModel {
      * @throws InvalidSettingsException if the query to create the new table
      *         inside the database could not be executed
      */
-    final DatabaseQueryConnectionSettings createDBQueryConnection(
+    protected final DatabaseQueryConnectionSettings createDBQueryConnection(
             final DatabasePortObjectSpec spec, final String newQuery)
             throws InvalidSettingsException {
         DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
