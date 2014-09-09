@@ -278,12 +278,10 @@ public class ColumnAggregatorNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "Please select at least one aggregation method");
         }
-        final Map<String, Integer> colNames =
-            new HashMap<String, Integer>(methods.size());
+        final Map<String, Integer> colNames = new HashMap<>(methods.size());
         int colIdx = 1;
         for (final NamedAggregationOperator method : methods) {
-            final Integer oldIdx =
-                colNames.put(method.getName(), Integer.valueOf(colIdx));
+            final Integer oldIdx = colNames.put(method.getName(), Integer.valueOf(colIdx));
             if (oldIdx != null) {
                 throw new InvalidSettingsException("Duplicate column name '"
                         + method.getName() + "' found in row " + oldIdx
