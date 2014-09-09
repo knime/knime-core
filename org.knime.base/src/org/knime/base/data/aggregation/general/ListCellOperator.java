@@ -156,7 +156,6 @@ public class ListCellOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Creates a ListCell that contains all elements "
-            + "per group (including missing values).";
+        return "Creates a ListCell that contains all elements per group.";
     }
 }

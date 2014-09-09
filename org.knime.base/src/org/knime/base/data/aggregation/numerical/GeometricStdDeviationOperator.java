@@ -49,7 +49,6 @@ import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
@@ -115,6 +114,6 @@ public class GeometricStdDeviationOperator extends StdDeviationOperator {
     @Override
     public String getDescription() {
         return "Calculates the geometric standard deviation per group."
-        + " The method returns NaN if any of the values is &lt;= 0.";
+        + " The method returns NaN if any of the values is <= 0.";
     }
 }

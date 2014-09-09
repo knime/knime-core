@@ -156,6 +156,6 @@ public class SetCellOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Creates a SetCell that contains each element only once per group (including missing values).";
+        return "Creates a SetCell that contains each element only once per group.";
     }
 }

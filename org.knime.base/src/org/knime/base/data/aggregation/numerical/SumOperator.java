@@ -183,7 +183,7 @@ public class SumOperator extends AggregationOperator {
     public String getDescription() {
         return "Calculates the sum per group. For int and long cells, the "
             + "operator might return a missing cell and mark the column as "
-            + "skipped if the sum exceeds the limit of int (2<sup>31</sup>-1)"
-            + " resp. long (2<sup>62</sup>-1).";
+            + "skipped if the sum exceeds the limit of int (2^31-1)"
+            + " resp. long (2^62-1).";
     }
 }

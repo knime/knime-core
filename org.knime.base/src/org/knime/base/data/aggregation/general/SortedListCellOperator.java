@@ -134,7 +134,6 @@ public class SortedListCellOperator extends ListCellOperator {
      */
     @Override
     public String getDescription() {
-        return "Creates a sorted ListCell that contains all elements "
-            + "per group (including missing values).";
+        return "Creates a sorted ListCell that contains all elements per group.";
     }
 }

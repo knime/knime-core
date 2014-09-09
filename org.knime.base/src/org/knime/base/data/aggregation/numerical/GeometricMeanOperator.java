@@ -141,8 +141,7 @@ public class GeometricMeanOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Calculates the geometric mean value per group."
-        + " The method returns NaN if any of the values is &lt; 0."
+        return "Calculates the geometric mean value per group. The method returns NaN if any of the values is < 0."
         + " If any of the values is 0 the result is also 0.";
     }
 }
