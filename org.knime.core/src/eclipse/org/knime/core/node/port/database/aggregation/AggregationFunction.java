@@ -173,13 +173,22 @@ public interface AggregationFunction {
      * calling the {@link #loadValidatedSettings(NodeSettingsRO)}.
      * Each operator gets its own {@link NodeSettingsRO} object to ensure the
      * uniqueness of the settings keys.
+     * This function has been replaced by the {@link #validate()} method.
      *
      * @param settings the {@link NodeSettingsRO} that contains the optional
      * settings to validate
      * @throws InvalidSettingsException if the settings are invalid
-     * @see #loadValidatedSettings(NodeSettingsRO)
+     * @see #validate()
      */
     void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException;
+
+    /**
+     * Validates the internal state (e.g. settings) of the function.
+     * This method is typically called in the node dialog in order to validate the settings of each
+     * {@link AggregationFunction} before saving it.
+     * @throws InvalidSettingsException if the internal state is invalid
+     */
+    public void validate() throws InvalidSettingsException;
 
     /**
      * This method is called from {@link NodeModel} in the <code>configure()</code> in
