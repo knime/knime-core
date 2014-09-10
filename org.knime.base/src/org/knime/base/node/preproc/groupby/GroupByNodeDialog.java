@@ -373,12 +373,6 @@ public class GroupByNodeDialog extends NodeDialogPane {
         } catch (InvalidSettingsException e) {
             //introduced in 2.11
         }
-//        try {
-//            //this option was introduced in Knime 2.10
-//            m_defaultAggrPanel.loadSettingsFrom(settings, spec);
-//        } catch (final InvalidSettingsException e) {
-//            // nothing to do this is an old dialog
-//        }
         try {
             //this option was introduced in Knime 2.0.3+
             m_retainOrder.loadSettingsFrom(settings);

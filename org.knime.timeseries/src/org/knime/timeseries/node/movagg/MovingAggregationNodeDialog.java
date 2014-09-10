@@ -56,11 +56,14 @@ import java.awt.GridBagLayout;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.dialogutil.AggregationColumnPanel;
+import org.knime.base.data.aggregation.dialogutil.column.AggregationColumnPanel;
+import org.knime.base.data.aggregation.dialogutil.pattern.PatternAggregationPanel;
+import org.knime.base.data.aggregation.dialogutil.type.DataTypeAggregationPanel;
 import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
 import org.knime.base.node.preproc.groupby.GroupByNodeDialog;
 import org.knime.core.data.DataTableSpec;
@@ -88,6 +91,12 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 public class MovingAggregationNodeDialog extends NodeDialogPane {
 
     private final AggregationColumnPanel m_aggrColPanel = new AggregationColumnPanel(null);
+
+    private final DataTypeAggregationPanel m_dataTypeAggrPanel =
+            new DataTypeAggregationPanel(MovingAggregationNodeModel.CFG_DATA_TYPE_AGGREGATORS);
+
+    private final PatternAggregationPanel m_patternAggrPanel =
+            new PatternAggregationPanel(MovingAggregationNodeModel.CFG_PATTERN_AGGREGATORS);
 
     private SettingsModelBoolean m_handleMissingsModel = MovingAggregationNodeModel.createHandleMissingsModel();
     private final DialogComponent m_handleMissings = new DialogComponentBoolean(m_handleMissingsModel,
@@ -154,8 +163,7 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
         rootPanel.add(aggregationBox, c);
         addTab("Settings", rootPanel);
       //calculate the component size
-        int width = (int)m_aggrColPanel.getComponentPanel().getMinimumSize().getWidth();
-        width = Math.max(width, GroupByNodeDialog.DEFAULT_WIDTH);
+        final int width = (int)m_aggrColPanel.getComponentPanel().getMinimumSize().getWidth();
         final Dimension dimension = new Dimension(width, GroupByNodeDialog.DEFAULT_HEIGHT);
       //add description tab
         final Component descriptionTab = AggregationMethods.createDescriptionPane();
@@ -198,6 +206,10 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
     }
 
     private JPanel createAgggregationPanel() {
+        final JTabbedPane aggregationPanel = new JTabbedPane();
+        aggregationPanel.add(AggregationColumnPanel.DEFAULT_TITLE, m_aggrColPanel.getComponentPanel());
+        aggregationPanel.add(PatternAggregationPanel.DEFAULT_TITLE, m_patternAggrPanel.getComponentPanel());
+        aggregationPanel.add(DataTypeAggregationPanel.DEFAULT_TITLE, m_dataTypeAggrPanel.getComponentPanel());
         final JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(
             BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Aggregation settings "));
@@ -209,7 +221,7 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
         c.weightx = 1;
         c.weighty = 1;
         c.gridwidth = 4;
-        panel.add(m_aggrColPanel.getComponentPanel(), c);
+        panel.add(aggregationPanel, c);
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0;
         c.weighty = 0;
@@ -251,6 +263,12 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
         } catch (InvalidSettingsException e) {
             throw new NotConfigurableException(e.getMessage(), e);
         }
+        try {
+            m_patternAggrPanel.loadSettingsFrom(settings, specs[0]);
+            m_dataTypeAggrPanel.loadSettingsFrom(settings, specs[0]);
+        } catch (InvalidSettingsException e) {
+            //introduced in 2.11
+        }
     }
 
     /**
@@ -258,6 +276,7 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        validateSettings(settings);
         m_winLength.saveSettingsTo(settings);
         m_windowType.saveSettingsTo(settings);
         m_cumulativeComp.saveSettingsTo(settings);
@@ -268,5 +287,13 @@ public class MovingAggregationNodeDialog extends NodeDialogPane {
         m_valueDelimiter.saveSettingsTo(settings);
         m_maxNoneNumericVals.saveSettingsTo(settings);
         m_aggrColPanel.saveSettingsTo(settings);
+        m_patternAggrPanel.saveSettingsTo(settings);
+        m_dataTypeAggrPanel.saveSettingsTo(settings);
+    }
+
+    private void validateSettings(final NodeSettingsWO settings) throws InvalidSettingsException {
+        m_aggrColPanel.validate();
+        m_patternAggrPanel.validate();
+        m_dataTypeAggrPanel.validate();
     }
 }

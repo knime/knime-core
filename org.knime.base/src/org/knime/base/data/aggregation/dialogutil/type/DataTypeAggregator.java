@@ -59,7 +59,6 @@ import org.knime.base.data.aggregation.AggregationMethodDecorator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -74,9 +73,6 @@ import com.sun.org.apache.xml.internal.security.encryption.AgreementMethod;
  */
 public class DataTypeAggregator extends AggregationMethodDecorator {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(DataTypeAggregator.class);
-
-    private static final String CNFG_DATA_TYPE_AGGR_SECTION = "dataTypeAggregators";
     private static final String CNFG_DATA_TYPE = "dataType";
 
     private final DataType m_type;

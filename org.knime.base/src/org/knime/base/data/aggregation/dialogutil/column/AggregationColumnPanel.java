@@ -85,11 +85,11 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * define the aggregation columns and their aggregation method.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @since 2.11
  */
 public class AggregationColumnPanel
     extends AbstractAggregationPanel<AggregationColumnTableModel, ColumnAggregator, DataColumnSpec> {
-    /**The default title of the panel to display in a dialog.
-     * @since 2.11*/
+    /**The default title of the panel to display in a dialog.*/
     public static final String DEFAULT_TITLE = "Manual Aggregation";
 
     /**This field holds all columns of the input table.*/

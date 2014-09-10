@@ -28,7 +28,7 @@
             and select the aggregation method to use.
            </p>
            <p>
-            In the "Pattern Based Aggregation" tab you can assign aggregation methods to columns based on a specified 
+            In the "Pattern Based Aggregation" tab you can assign aggregation methods to columns based on a  
             search pattern. The pattern can be either a string with wildcards or a
             <a href="http://www.java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html#sum">regular expression</a>.
             Columns where the name matches the pattern but where the data type is not compatible with the
@@ -38,7 +38,7 @@
            <p>
             The "Type Based Aggregation" tab allows to select an aggregation method for all columns of a certain 
             data type e.g. to compute the mean for all numerical columns (DoubleCell). Only columns that have not 
-            been handled by the other tabs e.g. Group, column based and pattern based are considered.
+            been handled by the other tabs e.g. group, column based and pattern based are considered.
             The data type list to choose from contains basic types e.g String, Double, etc. and all data types 
             the current input table contains.
            </p>
@@ -100,7 +100,9 @@
                 Use the "Add" button to add a new row with a search pattern to the aggregation settings.
                 The search pattern can either be a string with wildcards or a 
                 <a href="http://www.java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html#sum">regular expression</a>.
-                Supported wildcards are * (matches any number of characters) and ? (matches one character). 
+                Supported wildcards are * (matches any number of characters) and ? (matches one character) e.g. KNI*
+                would match all strings that start with KNI such as KNIME whereas KNI? would match only strings that start
+                with KNI followed by a fourth character. 
                 Double click the "Search pattern" cell to edit the pattern. 
                 The cell is colored in red if the pattern is invalid.
             </option>

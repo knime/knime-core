@@ -51,15 +51,17 @@ package org.knime.timeseries.node.movagg;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.dialogutil.pattern.PatternAggregator;
+import org.knime.base.data.aggregation.dialogutil.type.DataTypeAggregator;
 import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
 import org.knime.base.node.preproc.groupby.GroupByNodeModel;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.node.BufferedDataTable;
@@ -67,6 +69,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -83,7 +86,13 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class MovingAggregationNodeModel extends NodeModel {
 
-    private final List<ColumnAggregator> m_columnAggregators = new LinkedList<>();
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(MovingAggregationNodeModel.class);
+
+    /**Configuration key for the data type based aggregation methods.*/
+    static final String CFG_DATA_TYPE_AGGREGATORS = "dataTypeAggregators";
+
+    /**Configuration key for the pattern based aggregation methods.*/
+    static final String CFG_PATTERN_AGGREGATORS = "patternAggregators";
 
     private final SettingsModelInteger m_winLength = createWindowLengthModel();
 
@@ -102,6 +111,12 @@ public class MovingAggregationNodeModel extends NodeModel {
     private final SettingsModelBoolean m_cumulativeComputing = createCumulativeComputingModel();
 
     private final SettingsModelString m_windowType = createWindowTypeModel();
+
+    private final List<ColumnAggregator> m_columnAggregators = new LinkedList<>();
+
+    private final Collection<DataTypeAggregator> m_dataTypeAggregators = new LinkedList<>();
+
+    private final Collection<PatternAggregator> m_patternAggregators = new LinkedList<>();
 
     private List<ColumnAggregator> m_columnAggregators2Use = new LinkedList<>();
 
@@ -186,23 +201,17 @@ public class MovingAggregationNodeModel extends NodeModel {
             throw new InvalidSettingsException("No input table specification available");
         }
         final DataTableSpec inputSpec = inSpecs[0];
-        // remove all column aggregator
         m_columnAggregators2Use.clear();
         final ArrayList<ColumnAggregator> invalidColAggrs = new ArrayList<>(1);
-        for (final ColumnAggregator colAggr : m_columnAggregators) {
-            final DataColumnSpec colSpec = inputSpec.getColumnSpec(colAggr.getOriginalColName());
-            if (colSpec != null && colSpec.getType().equals(colAggr.getOriginalDataType())) {
-                m_columnAggregators2Use.add(colAggr);
-            } else {
-                invalidColAggrs.add(colAggr);
-            }
+        m_columnAggregators2Use.addAll(GroupByNodeModel.getAggregators(inputSpec,
+            m_columnAggregators, m_patternAggregators, m_dataTypeAggregators, invalidColAggrs));
+        if (m_columnAggregators2Use.isEmpty()) {
+            setWarningMessage("No aggregation column defined");
         }
         if (!invalidColAggrs.isEmpty()) {
             setWarningMessage(invalidColAggrs.size() + " invalid aggregation column(s) found.");
         }
-        if (m_columnAggregators2Use.isEmpty()) {
-            throw new InvalidSettingsException("No aggregation column defined");
-        }
+        LOGGER.debug(m_columnAggregators2Use);
         final MovingAggregationTableFactory tableFactory =
                 createTableFactory(FileStoreFactory.createNotInWorkflowFileStoreFactory(), inputSpec);
         return new DataTableSpec[] {tableFactory.createResultSpec()};
@@ -258,6 +267,8 @@ public class MovingAggregationNodeModel extends NodeModel {
         m_valueDelimiter.saveSettingsTo(settings);
         m_columnNamePolicy.saveSettingsTo(settings);
         ColumnAggregator.saveColumnAggregators(settings, m_columnAggregators);
+        PatternAggregator.saveAggregators(settings, CFG_PATTERN_AGGREGATORS, m_patternAggregators);
+        DataTypeAggregator.saveAggregators(settings, CFG_DATA_TYPE_AGGREGATORS, m_dataTypeAggregators);
     }
 
     /**
@@ -273,8 +284,16 @@ public class MovingAggregationNodeModel extends NodeModel {
         m_maxUniqueVals.validateSettings(settings);
         m_valueDelimiter.validateSettings(settings);
         final List<ColumnAggregator> aggregators = ColumnAggregator.loadColumnAggregators(settings);
-        if (aggregators.isEmpty()) {
-            throw new IllegalArgumentException("Please select at least one aggregation column");
+        final List<DataTypeAggregator> typeAggregators = new LinkedList<>();
+        final List<PatternAggregator> regexAggregators = new LinkedList<>();
+        try {
+            regexAggregators.addAll(PatternAggregator.loadAggregators(settings, CFG_PATTERN_AGGREGATORS));
+            typeAggregators.addAll(DataTypeAggregator.loadAggregators(settings, CFG_DATA_TYPE_AGGREGATORS));
+        } catch (InvalidSettingsException e) {
+            // introduced in 2.11
+        }
+        if (aggregators.isEmpty() && regexAggregators.isEmpty() && typeAggregators.isEmpty()) {
+            throw new IllegalArgumentException("Please select at least one aggregation option");
         }
         final String policyLabel =
                 ((SettingsModelString) m_columnNamePolicy.createCloneWithValidatedValue(settings)).getStringValue();
@@ -284,7 +303,6 @@ public class MovingAggregationNodeModel extends NodeModel {
         } catch (IllegalArgumentException e) {
             throw new InvalidSettingsException(e.getMessage());
         }
-        ColumnAggregator.validateSettings(settings, aggregators);
         final boolean removeAggrCols = ((SettingsModelBoolean)
                 m_removeAggregationCols.createCloneWithValidatedValue(settings)).getBooleanValue();
         if (ColumnNamePolicy.KEEP_ORIGINAL_NAME.equals(namePolicy) && !removeAggrCols) {
@@ -309,6 +327,14 @@ public class MovingAggregationNodeModel extends NodeModel {
         m_columnNamePolicy.loadSettingsFrom(settings);
         m_columnAggregators.clear();
         m_columnAggregators.addAll(ColumnAggregator.loadColumnAggregators(settings));
+        m_patternAggregators.clear();
+        m_dataTypeAggregators.clear();
+        try {
+            m_patternAggregators.addAll(PatternAggregator.loadAggregators(settings, CFG_PATTERN_AGGREGATORS));
+            m_dataTypeAggregators.addAll(DataTypeAggregator.loadAggregators(settings, CFG_DATA_TYPE_AGGREGATORS));
+        } catch (final InvalidSettingsException e) {
+            // introduced in KNIME 2.11
+        }
     }
 
     /**

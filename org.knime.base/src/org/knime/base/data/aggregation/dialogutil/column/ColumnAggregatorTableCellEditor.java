@@ -61,7 +61,7 @@ import org.knime.core.node.port.database.aggregation.AggregationFunction;
  * aggregation function selection box for the {@link ColumnAggregator}.
  *
  * @author Tobias Koetter, University of Konstanz
- * @since 2.8
+ * @since 2.11
  */
 public class ColumnAggregatorTableCellEditor
     extends AbstractAggregationFunctionTableCellEditor<AggregationMethod, ColumnAggregator> {
