@@ -105,7 +105,7 @@ public class XMLCellContent implements XMLValue {
                     cause = cause.getCause();
                 }
                 if (cause instanceof SAXException) {
-                    throw ex;
+                    throw (SAXException)cause;
                 } else {
                     throw ex;
                 }
