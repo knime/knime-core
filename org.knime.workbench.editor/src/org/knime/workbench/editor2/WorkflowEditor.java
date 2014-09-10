@@ -244,6 +244,7 @@ import org.knime.workbench.explorer.filesystem.ExplorerFileSystem;
 import org.knime.workbench.explorer.filesystem.LocalExplorerFileStore;
 import org.knime.workbench.explorer.filesystem.RemoteExplorerFileStore;
 import org.knime.workbench.explorer.view.AbstractContentProvider;
+import org.knime.workbench.explorer.view.AbstractContentProvider.AfterRunCallback;
 import org.knime.workbench.explorer.view.ContentObject;
 import org.knime.workbench.explorer.view.dialogs.OverwriteAndMergeInfo;
 import org.knime.workbench.explorer.view.dialogs.SnapshotPanel;
@@ -1689,8 +1690,13 @@ public class WorkflowEditor extends GraphicalEditor implements
                 return;
             }
             try {
-                newWorkflowDir.getContentProvider().performUpload((LocalExplorerFileStore)localFS,
-                    (RemoteExplorerFileStore)newWorkflowDir, /*deleteSource=*/false, new NullProgressMonitor());
+                newWorkflowDir.getContentProvider().performUploadAsync((LocalExplorerFileStore)localFS,
+                    (RemoteExplorerFileStore)newWorkflowDir, /*deleteSource=*/false, new AfterRunCallback() {
+                        @Override
+                        public void afterCompletion(final Throwable throwable) {
+                            // TODO: find ExplorerView and select newWorkflowDir.
+                        }
+                    });
             } catch (CoreException e) {
                 String msg =
                     "\"Save As...\" failed to upload the workflow to the selected remote location\n(" + e.getMessage()
