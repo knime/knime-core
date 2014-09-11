@@ -51,8 +51,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
-import java.util.Enumeration;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -61,16 +63,20 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.base.node.jsnippet.JavaSnippetUtil;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.StringHistory;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.SimpleFileFilter;
 
 /**
@@ -81,9 +87,10 @@ import org.knime.core.util.SimpleFileFilter;
 @SuppressWarnings("serial")
 public class JarListPanel extends JPanel {
 
-    private final JList m_addJarList;
-    private JButton m_addButton;
-    private JButton m_removeButton;
+    private final JList<String> m_addJarList;
+    private final JButton m_addJarFilesButton;
+    private final JButton m_addJarURLsButton;
+    private final JButton m_removeButton;
 
     private JFileChooser m_jarFileChooser;
     private String[] m_filesCache;
@@ -91,7 +98,7 @@ public class JarListPanel extends JPanel {
     /** Inits GUI. */
     public JarListPanel() {
         super(new BorderLayout());
-        m_addJarList = new JList(new DefaultListModel()) {
+        m_addJarList = new JList<String>(new DefaultListModel<String>()) {
             /** {@inheritDoc} */
             @Override
             protected void processComponentKeyEvent(final KeyEvent e) {
@@ -106,12 +113,21 @@ public class JarListPanel extends JPanel {
         m_addJarList.setCellRenderer(new ConvenientComboBoxRenderer());
         add(new JScrollPane(m_addJarList), BorderLayout.CENTER);
         JPanel southP = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
-        m_addButton = new JButton("Add...");
-        m_addButton.addActionListener(new ActionListener() {
+        m_addJarFilesButton = new JButton("Add File(s)...");
+        m_addJarFilesButton.addActionListener(new ActionListener() {
             /** {@inheritDoc} */
             @Override
             public void actionPerformed(final ActionEvent e) {
-                onJarAdd();
+                onJarFileAdd();
+            }
+        });
+        m_addJarURLsButton = new JButton("Add KNIME URL...");
+        m_addJarURLsButton.setToolTipText("Add 'knime' URLs that resolve to local paths");
+        m_addJarURLsButton.addActionListener(new ActionListener() {
+            /** {@inheritDoc} */
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                onJarURLAdd();
             }
         });
         m_removeButton = new JButton("Remove");
@@ -130,7 +146,8 @@ public class JarListPanel extends JPanel {
             }
         });
         m_removeButton.setEnabled(!m_addJarList.isSelectionEmpty());
-        southP.add(m_addButton);
+        southP.add(m_addJarFilesButton);
+        southP.add(m_addJarURLsButton);
         southP.add(m_removeButton);
         add(southP, BorderLayout.SOUTH);
 
@@ -141,14 +158,10 @@ public class JarListPanel extends JPanel {
         add(northP, BorderLayout.NORTH);
     }
 
-    private void onJarAdd() {
-        DefaultListModel model = (DefaultListModel)m_addJarList.getModel();
-        Set<Object> hash = new HashSet<Object>();
-        for (Enumeration<?> e = model.elements(); e.hasMoreElements();) {
-            hash.add(e.nextElement());
-        }
-        StringHistory history =
-            StringHistory.getInstance("java_snippet_jar_dirs");
+    private void onJarFileAdd() {
+        DefaultListModel<String> model = (DefaultListModel<String>)m_addJarList.getModel();
+        Set<String> hash = new HashSet<>(Collections.list(model.elements()));
+        StringHistory history = StringHistory.getInstance("java_snippet_jar_dirs");
         if (m_jarFileChooser == null) {
             File dir = null;
             for (String h : history.getHistory()) {
@@ -159,8 +172,7 @@ public class JarListPanel extends JPanel {
                 }
             }
             m_jarFileChooser = new JFileChooser(dir);
-            m_jarFileChooser.setFileFilter(
-                    new SimpleFileFilter(".zip", ".jar"));
+            m_jarFileChooser.setFileFilter(new SimpleFileFilter(".zip", ".jar"));
             m_jarFileChooser.setMultiSelectionEnabled(true);
         }
         int result = m_jarFileChooser.showDialog(m_addJarList, "Select");
@@ -172,8 +184,39 @@ public class JarListPanel extends JPanel {
                     model.addElement(s);
                 }
             }
-            history.add(
-                    m_jarFileChooser.getCurrentDirectory().getAbsolutePath());
+            history.add(m_jarFileChooser.getCurrentDirectory().getAbsolutePath());
+        }
+    }
+
+    @SuppressWarnings("null")
+    private void onJarURLAdd() {
+        DefaultListModel<String> model = (DefaultListModel<String>)m_addJarList.getModel();
+        Set<String> hash = new HashSet<>(Collections.list(model.elements()));
+        String input = "knime://knime.workflow/example.jar";
+        boolean valid;
+        do {
+            input = JOptionPane.showInputDialog(this, "Enter a \"knime:\" URL to a JAR file", input);
+            if (StringUtils.isEmpty(input)) {
+                valid = true;
+            } else {
+                URL url;
+                try {
+                    url = new URL(input);
+                    File file = FileUtil.getFileFromURL(url);
+                    CheckUtils.checkArgument(file != null, "Could not resolve to local file");
+                    CheckUtils.checkArgument(file.exists(),
+                        "File does not exists; location resolved to\n%s", file.getAbsolutePath());
+                    valid = true;
+                } catch (MalformedURLException | IllegalArgumentException mfe) {
+                    JOptionPane.showMessageDialog(this, "Invalid URL\n" + mfe.getMessage(),
+                        "Error parsing URL", JOptionPane.ERROR_MESSAGE);
+                    valid = false;
+                    continue;
+                }
+            }
+        } while (!valid);
+        if (!StringUtils.isEmpty(input) && hash.add(input)) {
+            model.addElement(input);
         }
     }
 
@@ -213,13 +256,12 @@ public class JarListPanel extends JPanel {
             }
         }
         if (doUpdate) {
-            DefaultListModel jarListModel =
-                (DefaultListModel)m_addJarList.getModel();
+            DefaultListModel<String> jarListModel = (DefaultListModel<String>)m_addJarList.getModel();
             jarListModel.removeAllElements();
             for (String f : files) {
                 try {
-                    File file = JavaSnippetUtil.toFile(f);
-                    jarListModel.addElement(file.getAbsolutePath());
+                    JavaSnippetUtil.toFile(f); // validate existence etc.
+                    jarListModel.addElement(f);
                 } catch (InvalidSettingsException e) {
                     // ignore
                 }
@@ -233,8 +275,7 @@ public class JarListPanel extends JPanel {
      * @return the jar files
      */
     public String[] getJarFiles() {
-        DefaultListModel jarListModel =
-            (DefaultListModel)m_addJarList.getModel();
+        DefaultListModel<String> jarListModel = (DefaultListModel<String>)m_addJarList.getModel();
         String[] copy = new String[jarListModel.getSize()];
         if (jarListModel.getSize() > 0) {
             jarListModel.copyInto(copy);
@@ -253,7 +294,7 @@ public class JarListPanel extends JPanel {
     public void setEnabled(final boolean enabled) {
         if (isEnabled() != enabled) {
             m_addJarList.setEnabled(enabled);
-            m_addButton.setEnabled(enabled);
+            m_addJarFilesButton.setEnabled(enabled);
             m_removeButton.setEnabled(enabled);
         }
         super.setEnabled(enabled);

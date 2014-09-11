@@ -48,9 +48,13 @@
 package org.knime.base.node.jsnippet;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.FileUtil;
 
 /**
  * Utility method for the Java Snippet nodes.
@@ -70,28 +74,21 @@ public final class JavaSnippetUtil {
      * @throws InvalidSettingsException if argument is null, empty or the file
      * does not exist.
      */
-    public static final File toFile(final String location)
-        throws InvalidSettingsException {
-        if (location == null || location.length() == 0) {
-            throw new InvalidSettingsException(
-                    "Invalid (empty) jar file location");
-        }
+    public static final File toFile(final String location) throws InvalidSettingsException {
+        CheckUtils.checkSetting(StringUtils.isNotEmpty(location), "Invalid (empty) jar file location");
         File result;
-        if (location.startsWith("file:/")) {
-            try {
-                URL fileURL = new URL(location);
-                result = new File(fileURL.toURI());
-            } catch (Exception e) {
-                throw new InvalidSettingsException("Can't read file "
-                        + "URL \"" + location + "\"; invalid class path", e);
-            }
+        URL url = null;
+        try {
+            url = new URL(location);
+        } catch (MalformedURLException mue) {
+        }
+        if (url != null) {
+            result = FileUtil.getFileFromURL(url);
         } else {
             result = new File(location);
         }
-        if (!result.exists()) {
-            throw new InvalidSettingsException("Can't read file \""
-                    + location + "\"; invalid class path");
-        }
+        CheckUtils.checkSetting(result != null && result.exists(),
+                "Can't read file \"%s\"; invalid class path", location);
         return result;
     }
 

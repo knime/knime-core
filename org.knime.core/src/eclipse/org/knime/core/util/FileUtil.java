@@ -59,6 +59,7 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
@@ -80,6 +81,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.util.pathresolve.ResolverUtil;
 
 /**
  * Utility class to do some basic file handling that is not available through
@@ -1009,28 +1011,33 @@ public final class FileUtil {
     }
 
     /**
-     * Returns the file path from a 'file' URL.
+     * Returns the file path from a 'file' or 'knime' URL. For the latter the file is tried to be resolved, whereby
+     * only local files (e.g. workflow relative URLs) are successfully resolved. If the 'knime' URL points to a file
+     * located on a KNIME server it throws an exception with a proper cause and message.
      *
-     * @param fileUrl an URL with the 'file' protocol
+     * @param fileUrl an URL with the 'file' or 'knime' protocol
      * @return the path
-     * @throws IllegalArgumentException if the URL is not a file URL
+     * @throws IllegalArgumentException if the URL is not denote a local file.
      */
     public static File getFileFromURL(final URL fileUrl) {
-        if (fileUrl.getProtocol().equalsIgnoreCase("file") || fileUrl.getProtocol().equalsIgnoreCase("knime")) {
+        if (fileUrl.getProtocol().equalsIgnoreCase("file")) {
             File dataFile = new File(fileUrl.getPath());
             if (!dataFile.exists()) {
                 try {
-                    dataFile =
-                            new File(URLDecoder.decode(fileUrl.getPath(),
-                                    "UTF-8"));
+                    dataFile = new File(URLDecoder.decode(fileUrl.getPath(), "UTF-8"));
                 } catch (UnsupportedEncodingException ex) {
                     // ignore it
                 }
             }
             return dataFile;
+        } else if (fileUrl.getProtocol().equalsIgnoreCase("knime")) {
+            try {
+                return ResolverUtil.resolveURItoLocalFile(fileUrl.toURI());
+            } catch (IOException | URISyntaxException e) {
+                throw new IllegalArgumentException(e.getMessage(), e);
+            }
         } else {
-            throw new IllegalArgumentException("Not a file URL: '" + fileUrl
-                    + "'");
+            throw new IllegalArgumentException("Not a file or knime URL: '" + fileUrl + "'");
         }
     }
 
