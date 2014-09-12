@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./hiliteCollector.png" type="Visualizer" deprecated="true">
-    <name>HiLite Collector</name>
+    <name>HiLite Row Collector</name>
     
     <shortDescription>
         Node allows to apply annotations to sets of hilit rows within a view.

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./many2one.png" type="Manipulator" deprecated="true">
-    <name>Many2One (PMML)</name>
+    <name>Many to One (PMML)</name>
     
     <shortDescription>
         Transforms the values of multiple columns into a single column while generating PMML. 
