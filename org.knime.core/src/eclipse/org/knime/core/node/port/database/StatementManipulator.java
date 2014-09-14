@@ -64,7 +64,7 @@ public class StatementManipulator {
     /**
      * Pattern for matching any character that needs escaping.
      */
-    protected static final Pattern ESCAPE_CHARACTER_PATTERN = Pattern.compile("(\\s|[()])+");
+    protected static final Pattern ESCAPE_CHARACTER_PATTERN = Pattern.compile("(\\s|[()-])+");
 
 
     private final Random m_rand = new Random();
