@@ -71,7 +71,8 @@ public class SQLiteUtility extends DatabaseUtility {
          */
         @Override
         public String unquoteColumn(final String colName) {
-            if (colName.startsWith("\"") && colName.endsWith("\"") && colName.contains(" ")) {
+            if (colName.startsWith("\"") && colName.endsWith("\"")
+                && !SAVE_COLUMN_NAME_PATTERN.matcher(colName.substring(1, colName.length() - 1)).matches()) {
                 return colName.substring(1, colName.length() - 1);
             } else {
                 return colName;
