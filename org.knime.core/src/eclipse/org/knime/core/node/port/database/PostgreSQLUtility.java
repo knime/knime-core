@@ -47,6 +47,8 @@
  */
 package org.knime.core.node.port.database;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -88,5 +90,26 @@ public class PostgreSQLUtility extends DatabaseUtility {
     @Override
     public StatementManipulator getStatementManipulator() {
         return MANIPULATOR;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean tableExists(final Connection conn, final String tableName) throws SQLException {
+        try (ResultSet rs = conn.getMetaData().getTables(null, null, tableName, null)) {
+            if (rs.next()) {
+                return true;
+            }
+        }
+
+        if (!tableName.startsWith("\"")) {
+            // try also with lowercase name
+            try (ResultSet rs = conn.getMetaData().getTables(null, null, tableName.toLowerCase(), null)) {
+                return rs.next();
+            }
+        } else {
+            return false;
+        }
     }
 }

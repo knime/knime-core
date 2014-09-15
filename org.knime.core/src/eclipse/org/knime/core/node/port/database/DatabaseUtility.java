@@ -47,6 +47,9 @@
  */
 package org.knime.core.node.port.database;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -146,5 +149,20 @@ public class DatabaseUtility {
      */
     public boolean supportsDelete() {
         return true;
+    }
+
+    /**
+     * Returns whether the given table name exists in the database denoted by the connection.
+     *
+     * @param conn a database connection
+     * @param tableName the table's name
+     * @return <code>true</code> if the table exists, <code>false</code> otherwise
+     * @throws SQLException if an DB error occurs
+     * @since 2.10
+     */
+    public boolean tableExists(final Connection conn, final String tableName) throws SQLException {
+        try (ResultSet rs = conn.getMetaData().getTables(null, null, tableName, null)) {
+            return rs.next();
+        }
     }
 }

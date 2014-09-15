@@ -121,12 +121,7 @@ public final class DatabaseWriterConnection {
             final int[] mapping;
             // append data to existing table
             if (appendData) {
-                boolean tableExists;
-                try (ResultSet rs = conn.getMetaData().getTables(null, null, table, null)) {
-                    tableExists = rs.next();
-                }
-
-                if (tableExists) {
+                if (dbConn.getUtility().tableExists(conn, table)) {
                     String query =
                         dbConn.getUtility().getStatementManipulator().forMetadataOnly("SELECT * FROM " + table);
                     try (ResultSet rs = conn.createStatement().executeQuery(query)) {
