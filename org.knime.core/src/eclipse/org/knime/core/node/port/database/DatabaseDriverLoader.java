@@ -231,7 +231,9 @@ public final class DatabaseDriverLoader {
                             String driverName = d.toString();
                             DRIVER_MAP.put(driverName, d);
                             DRIVERFILE_TO_DRIVERCLASS.put(driverName, file);
-                        } catch (InstantiationException | IllegalAccessException ex) {
+                        } catch (InstantiationException | IllegalAccessException | ExceptionInInitializerError
+                                | NoClassDefFoundError ex) {
+                            // also catching a few errors, see bug #5582 for details
                             LOGGER.info("Could not create instance of JDBC driver class '" + driverClass.getName()
                                 + "': " + ex.getMessage(), ex);
                         }
