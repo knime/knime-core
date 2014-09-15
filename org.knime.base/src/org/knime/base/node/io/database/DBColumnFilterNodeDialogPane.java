@@ -46,6 +46,7 @@
 package org.knime.base.node.io.database;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -55,6 +56,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.database.DatabasePortObjectSpec;
+import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
  *
@@ -68,8 +70,9 @@ final class DBColumnFilterNodeDialogPane extends NodeDialogPane {
      * Create query dialog with text box to enter table name.
      */
     DBColumnFilterNodeDialogPane() {
-        m_panel = new DialogComponentColumnFilter(
-            createColumnFilterModel(), 0, false);
+        m_panel =
+            new DialogComponentColumnFilter(createColumnFilterModel(), 0, false,
+                new ColumnFilterPanel.ValueClassFilter(DataValue.class), false);
         super.addTab("Column Filter", m_panel.getComponentPanel());
     }
 
