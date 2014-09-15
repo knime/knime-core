@@ -63,9 +63,18 @@ import java.util.regex.Pattern;
 public class StatementManipulator {
     /**
      * Pattern for matching any character that needs escaping.
+     *
+     * @deprecated use {@link #SAVE_COLUMN_NAME_PATTERN} instead (and negate the condition) because this pattern is not
+     *             complete
      */
+    @Deprecated
     protected static final Pattern ESCAPE_CHARACTER_PATTERN = Pattern.compile("(\\s|[()-])+");
 
+    /**
+     * Pattern for matching any column name that needs no escaping.
+     * @since 2.10
+     */
+    protected static final Pattern SAVE_COLUMN_NAME_PATTERN = Pattern.compile("^[\\w\\d]+$");
 
     private final Random m_rand = new Random();
 
@@ -114,8 +123,8 @@ public class StatementManipulator {
      * @return the column's name, possibly quoted
      */
     public String quoteColumn(final String colName) {
-        Matcher m = ESCAPE_CHARACTER_PATTERN.matcher(colName);
-        if (m.find()) {
+        Matcher m = SAVE_COLUMN_NAME_PATTERN.matcher(colName);
+        if (!m.matches()) {
             return "\"" + colName + "\"";
         } else {
             // no need to quote

@@ -67,8 +67,8 @@ public class MySQLUtility extends DatabaseUtility {
          */
         @Override
         public String quoteColumn(final String colName) {
-            Matcher m = ESCAPE_CHARACTER_PATTERN.matcher(colName);
-            if (m.find()) {
+            Matcher m = SAVE_COLUMN_NAME_PATTERN.matcher(colName);
+            if (!m.matches()) {
                 return "`" + colName + "`";
             } else {
                 // no need to quote
