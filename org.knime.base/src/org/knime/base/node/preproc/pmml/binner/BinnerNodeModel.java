@@ -53,6 +53,7 @@ import java.util.Set;
 
 import org.knime.base.node.preproc.pmml.binner.BinnerColumnFactory.Bin;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -160,16 +161,24 @@ final class BinnerNodeModel extends NodeModel {
         for (String columnKey : m_columnToBins.keySet()) {
             assert m_columnToAppended.containsKey(columnKey) : columnKey;
             if (!inDataSpec.containsName(columnKey)) {
-                throw new InvalidSettingsException("Binner: column "
-                        + columnKey + " not found in spec.");
+                throw new InvalidSettingsException("Binner: column \"" + columnKey
+                    + "\" not found in spec.");
+            }
+            if (!inDataSpec.getColumnSpec(columnKey).getType().isCompatible(DoubleValue.class)) {
+                throw new InvalidSettingsException("Binner: column \"" + columnKey
+                    + "\" not compatible with double-type.");
             }
             String appended = m_columnToAppended.get(columnKey);
             if (appended != null) {
                 if (inDataSpec.containsName(appended)) {
                     throw new InvalidSettingsException("Binner: duplicate "
-                            + "appended column " + appended + " in spec.");
+                            + "appended column \"" + appended + "\" in spec.");
                 }
             }
+        }
+        // set warning when no binning is defined
+        if (m_columnToBins.isEmpty()) {
+            super.setWarningMessage("No column select for binning.");
         }
         // generate numeric binned table spec
         DataTableSpec outDataSpec = createColReg(inDataSpec).createSpec();
