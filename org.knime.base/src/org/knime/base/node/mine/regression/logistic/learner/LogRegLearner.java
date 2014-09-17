@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -77,6 +78,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.ConvenienceMethods;
 
 /**
@@ -163,8 +165,8 @@ public final class LogRegLearner {
             warning.append(ConvenienceMethods.getShortStringFrom(exclude, 5));
             warning.append(exclude.size() == 1 ? " has a constant value " : " have constant values ");
             warning.append(" - will be ignored during training");
-            m_warningMessage = warning.toString();
-            LOGGER.warn(m_warningMessage);
+            LOGGER.warn(warning.toString());
+            m_warningMessage = (m_warningMessage == null ? "" : m_warningMessage + "\n") + warning.toString();
             // re-init learner so that it has the correct learning columns
             init(data.getDataTableSpec(), inPMMLSpec, exclude);
         }
@@ -212,9 +214,29 @@ public final class LogRegLearner {
         domainCreator.updateDomain(data, exec);
 
         DataTableSpec spec = domainCreator.createSpec();
+        CheckUtils.checkSetting(spec.getColumnSpec(targetCol).getDomain().hasValues(), "Target column '%s' has too many"
+                + " unique values - consider to use domain calucator node before to enforce calculation", targetCol);
         BufferedDataTable newDataTable = exec.createSpecReplacerTable(data, spec);
+        // bug fix 5580 - ignore columns with too many different values
+        Set<String> columnWithTooManyDomainValues = new LinkedHashSet<>();
+        for (String learningField : m_pmmlOutSpec.getLearningFields()) {
+            DataColumnSpec columnSpec = spec.getColumnSpec(learningField);
+            if (columnSpec.getType().isCompatible(NominalValue.class) && !columnSpec.getDomain().hasValues()) {
+                columnWithTooManyDomainValues.add(learningField);
+            }
+        }
+        if (!columnWithTooManyDomainValues.isEmpty()) {
+            StringBuilder warning = new StringBuilder();
+            warning.append(columnWithTooManyDomainValues.size() == 1 ? "Column " : "Columns ");
+            warning.append(ConvenienceMethods.getShortStringFrom(columnWithTooManyDomainValues, 5));
+            warning.append(columnWithTooManyDomainValues.size() == 1 ? " has " : " have ");
+            warning.append("too many different values - will be ignored during training ");
+            warning.append("(enforce inclusion by using a domain calculator node before)");
+            LOGGER.warn(warning.toString());
+            m_warningMessage = (m_warningMessage == null ? "" : m_warningMessage + "\n") + warning.toString();
+        }
         // initialize m_learner so that it has the correct DataTableSpec of the input
-        init(newDataTable.getDataTableSpec(), inPMMLSpec, Collections.<String>emptySet());
+        init(newDataTable.getDataTableSpec(), inPMMLSpec, columnWithTooManyDomainValues);
         return newDataTable;
     }
 
