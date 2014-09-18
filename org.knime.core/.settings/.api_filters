@@ -26,7 +26,23 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/DatabaseUtility.java" type="org.knime.core.node.port.database.DatabaseUtility">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="2.10"/>
+                <message_argument value="2.11"/>
+                <message_argument value="tableExists(Connection, String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/port/database/StatementManipulator.java" type="org.knime.core.node.port.database.StatementManipulator">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="2.10"/>
+                <message_argument value="2.11"/>
+                <message_argument value="SAVE_COLUMN_NAME_PATTERN"/>
+            </message_arguments>
+        </filter>
         <filter id="1141899266">
             <message_arguments>
                 <message_argument value="2.10"/>
@@ -40,6 +56,26 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.NativeNodeContainer"/>
                 <message_argument value="getNodeReferenceBug2136()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerParent.java" type="org.knime.core.node.workflow.NodeContainerParent">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainerParent"/>
+                <message_argument value="canConfigureNodes()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="canConfigureNodes()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainer.java" type="org.knime.core.node.workflow.SubNodeContainer">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="canConfigureNodes()"/>
             </message_arguments>
         </filter>
     </resource>
