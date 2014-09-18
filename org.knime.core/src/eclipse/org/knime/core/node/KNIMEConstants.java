@@ -314,7 +314,7 @@ public final class KNIMEConstants {
 
 
     static {
-        BUILD_DATE = "August 04, 2014";
+        BUILD_DATE = "September 19, 2014";
         String versionString;
         Bundle coreBundle = OSGIHelper.getBundle(KNIMEConstants.class);
         if (coreBundle != null) {
