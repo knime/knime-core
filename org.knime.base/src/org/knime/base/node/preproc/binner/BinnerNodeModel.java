@@ -53,6 +53,7 @@ import java.util.Set;
 
 import org.knime.base.node.preproc.binner.BinnerColumnFactory.Bin;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -66,7 +67,7 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * Bins numeric columns into intervals which are then returned as string-type
  * columns.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class BinnerNodeModel extends NodeModel {
@@ -80,10 +81,10 @@ final class BinnerNodeModel extends NodeModel {
     static final String IS_APPENDED = "_is_appended";
 
     /** Selected columns for binning. */
-    private final Map<String, Bin[]> m_columnToBins = 
+    private final Map<String, Bin[]> m_columnToBins =
         new HashMap<String, Bin[]>();
 
-    private final Map<String, String> m_columnToAppended = 
+    private final Map<String, String> m_columnToAppended =
         new HashMap<String, String>();
 
     /** Keeps index of the input port which is 0. */
@@ -119,7 +120,7 @@ final class BinnerNodeModel extends NodeModel {
 
     /**
      * Passes the input spec to the output.
-     * 
+     *
      * @param inSpecs The input spec.
      * @return The generated output specs.
      * @throws InvalidSettingsException If column to bin cannot be identified.
@@ -130,16 +131,24 @@ final class BinnerNodeModel extends NodeModel {
         for (String columnKey : m_columnToBins.keySet()) {
             assert m_columnToAppended.containsKey(columnKey) : columnKey;
             if (!inSpecs[INPORT].containsName(columnKey)) {
-                throw new InvalidSettingsException("Binner: column "
-                        + columnKey + " not found in spec.");
+                throw new InvalidSettingsException("Binner: column \"" + columnKey
+                    + "\" not found in spec.");
+            }
+            if (!inSpecs[INPORT].getColumnSpec(columnKey).getType().isCompatible(DoubleValue.class)) {
+                throw new InvalidSettingsException("Binner: column \"" + columnKey
+                    + "\" not compatible with double-type.");
             }
             String appended = m_columnToAppended.get(columnKey);
             if (appended != null) {
                 if (inSpecs[INPORT].containsName(appended)) {
                     throw new InvalidSettingsException("Binner: duplicate "
-                            + "appended column " + appended + " in spec.");
+                            + "appended column \"" + appended + "\" in spec.");
                 }
             }
+        }
+        // set warning when no binning is defined
+        if (m_columnToBins.isEmpty()) {
+            super.setWarningMessage("No column select for binning.");
         }
         // generate numeric binned table spec
         DataTableSpec spec = createColReg(inSpecs[INPORT]).createSpec();
@@ -165,7 +174,7 @@ final class BinnerNodeModel extends NodeModel {
             Set<String> hashBinNames = new HashSet<String>();
             for (Bin b : bins) {
                 if (hashBinNames.contains(b.getBinName())) {
-                    setWarningMessage("Bin name \"" + b.getBinName() 
+                    setWarningMessage("Bin name \"" + b.getBinName()
                             + "\" is used for different intervals.");
                 }
                 hashBinNames.add(b.getBinName());

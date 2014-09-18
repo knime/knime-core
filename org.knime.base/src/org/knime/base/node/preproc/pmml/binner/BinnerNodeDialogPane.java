@@ -923,11 +923,6 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                 m_numMdl.addElement(cspec);
             }
         }
-        // no column found for binning
-        if (m_numMdl.getSize() == 0) {
-            throw new NotConfigurableException(
-                    "No column found to define intervals.");
-        }
         String[] columns = settings.getStringArray(
                 BinnerNodeModel.NUMERIC_COLUMNS, (String[])null);
         // if numeric columns in settings, select first
@@ -936,9 +931,13 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                 if (!spec.containsName(columns[i])) {
                     continue;
                 }
-                NodeSettingsRO col;
+                DataTableSpec dataspec = (DataTableSpec) specs[0];
+                DataType type = dataspec.getColumnSpec(columns[i]).getType();
+                if (!type.isCompatible(DoubleValue.class)) {
+                    continue;
+                }
 
-                DataType type = spec.getColumnSpec(columns[i]).getType();
+                NodeSettingsRO col;
                 try {
                     col = settings.getNodeSettings(columns[i].toString());
                 } catch (InvalidSettingsException ise) {

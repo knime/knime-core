@@ -176,6 +176,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             /**
              *
              */
+            @Override
             public void valueChanged(final ListSelectionEvent e) {
                 columnChanged();
                 numericPanel.validate();
@@ -256,7 +257,6 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
          * @param parent used to refresh column list is number of bins has
          *            changed
          * @param type the type for the spinner model
-         *
          */
         IntervalPanel(final String column, final String appendColumn,
                 final Component parent, final DataType type) {
@@ -268,9 +268,8 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             m_intervalList.setFont(font);
             final JButton addButton = new JButton("Add");
             addButton.addActionListener(new ActionListener() {
-                /**
-                 *
-                 */
+                /** {@inheritDoc} */
+                @Override
                 public void actionPerformed(final ActionEvent e) {
                     final int size = m_intervalMdl.getSize();
                     // if the first interval is added
@@ -322,9 +321,8 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             });
             final JButton removeButton = new JButton("Remove");
             removeButton.addActionListener(new ActionListener() {
-                /**
-                 *
-                 */
+                /** {@inheritDoc} */
+                @Override
                 public void actionPerformed(final ActionEvent e) {
                     IntervalItemPanel p = (IntervalItemPanel)m_intervalList
                             .getSelectedValue();
@@ -361,11 +359,9 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             selInterval.validate();
             selInterval.repaint();
 
-            m_intervalList
-                    .addListSelectionListener(new ListSelectionListener() {
-                        /**
-                         *
-                         */
+            m_intervalList.addListSelectionListener(new ListSelectionListener() {
+                        /** {@inheritDoc} */
+                        @Override
                         public void valueChanged(final ListSelectionEvent e) {
                             selInterval.removeAll();
                             Object o = m_intervalList.getSelectedValue();
@@ -405,9 +401,8 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                     + "instead of replacing the input column.");
             m_appendName.setPreferredSize(new Dimension(150, 20));
             m_appendColumn.addItemListener(new ItemListener() {
-                /**
-                 * {@inheritDoc}
-                 */
+                /** {@inheritDoc} */
+                @Override
                 public void itemStateChanged(final ItemEvent e) {
                     if (m_appendColumn.isSelected()) {
                         m_appendName.setEnabled(true);
@@ -599,6 +594,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
 
         private void initListener() {
             m_left.addChangeListener(new ChangeListener() {
+                @Override
                 public void stateChanged(final ChangeEvent e) {
                     repairLeft();
                 }
@@ -618,6 +614,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             });
 
             m_right.addChangeListener(new ChangeListener() {
+                @Override
                 public void stateChanged(final ChangeEvent e) {
                     repairRight();
                 }
@@ -637,6 +634,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             });
 
             m_borderLeft.addItemListener(new ItemListener() {
+                @Override
                 public void itemStateChanged(final ItemEvent e) {
                     IntervalItemPanel prev = m_parent
                             .getPrevious(IntervalItemPanel.this);
@@ -648,6 +646,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             });
 
             m_borderRight.addItemListener(new ItemListener() {
+                @Override
                 public void itemStateChanged(final ItemEvent e) {
                     IntervalItemPanel next = m_parent
                             .getNext(IntervalItemPanel.this);
@@ -659,14 +658,17 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             });
 
             m_bin.getDocument().addDocumentListener(new DocumentListener() {
+                @Override
                 public void changedUpdate(final DocumentEvent e) {
                     myRepaint();
                 }
 
+                @Override
                 public void insertUpdate(final DocumentEvent e) {
                     changedUpdate(e);
                 }
 
+                @Override
                 public void removeUpdate(final DocumentEvent e) {
                     changedUpdate(e);
                 }
@@ -911,11 +913,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                 m_numMdl.addElement(cspec);
             }
         }
-        // no column found for binning
-        if (m_numMdl.getSize() == 0) {
-            throw new NotConfigurableException(
-                    "No column found to define intervals.");
-        }
+
         String[] columns = settings.getStringArray(
                 BinnerNodeModel.NUMERIC_COLUMNS, (String[])null);
         // if numeric columns in settings, select first
@@ -924,9 +922,11 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                 if (!specs[0].containsName(columns[i])) {
                     continue;
                 }
-                NodeSettingsRO col;
-
                 DataType type = specs[0].getColumnSpec(columns[i]).getType();
+                if (!type.isCompatible(DoubleValue.class)) {
+                    continue;
+                }
+                NodeSettingsRO col;
                 try {
                     col = settings.getNodeSettings(columns[i].toString());
                 } catch (InvalidSettingsException ise) {

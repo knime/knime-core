@@ -196,7 +196,7 @@ public final class DatabaseQueryConnectionSettings
         settingsChanged |= (newQuery != m_query) && (newQuery != null) && !newQuery.equals(m_query);
         m_query = newQuery;
 
-        boolean newValidateQuery = !settings.getBoolean("execute_without_configure");
+        boolean newValidateQuery = !settings.getBoolean("execute_without_configure", false);
         settingsChanged |= (newValidateQuery != m_validateQuery);
         m_validateQuery = newValidateQuery;
 

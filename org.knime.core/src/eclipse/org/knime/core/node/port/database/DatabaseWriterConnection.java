@@ -59,7 +59,6 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -122,162 +121,145 @@ public final class DatabaseWriterConnection {
             final int[] mapping;
             // append data to existing table
             if (appendData) {
-                Statement statement = null;
-                ResultSet rs = null;
-                try {
-                    // try to count all rows to see if table exists
-                    final String query =
+                if (dbConn.getUtility().tableExists(conn, table)) {
+                    String query =
                         dbConn.getUtility().getStatementManipulator().forMetadataOnly("SELECT * FROM " + table);
-                    statement = conn.createStatement();
-                    LOGGER.debug("Executing SQL statement as executeQuery: " + query);
-                    rs = statement.executeQuery(query);
-                } catch (SQLException ex) {
-                    if (statement == null) {
-                        Throwable cause = ExceptionUtils.getRootCause(ex);
-                        if (cause == null) {
-                            cause = ex;
+                    try (ResultSet rs = conn.createStatement().executeQuery(query)) {
+                        ResultSetMetaData rsmd = rs.getMetaData();
+                        final Map<String, Integer> columnNames =
+                                new LinkedHashMap<String, Integer>();
+                        for (int i = 0; i < spec.getNumColumns(); i++) {
+                            String colName = replaceColumnName(spec.getColumnSpec(i).getName(), dbConn);
+                            columnNames.put(colName.toLowerCase(), i);
                         }
 
-                        throw new SQLException("Could not create SQL statement," + " reason: " + cause.getMessage(),
-                            cause);
+                        // sanity check to lock if all input columns are in db
+                        ArrayList<String> columnNotInSpec = new ArrayList<String>(
+                                columnNames.keySet());
+                        for (int i = 0; i < rsmd.getColumnCount(); i++) {
+                            String colName = replaceColumnName(rsmd.getColumnName(i + 1), dbConn);
+                            if (columnNames.containsKey(colName.toLowerCase())) {
+                                columnNotInSpec.remove(colName.toLowerCase());
+                            }
+                            columnNamesForInsertStatement.append(colName).append(',');
+                        }
+                        if (rsmd.getColumnCount() > 0) {
+                            columnNamesForInsertStatement.deleteCharAt(columnNamesForInsertStatement.length() - 1);
+                        }
+                        columnNamesForInsertStatement.append(')');
+
+                        if (columnNotInSpec.size() > 0) {
+                            throw new RuntimeException("No. of columns in input"
+                                    + " table > in database; not existing columns: "
+                                    + columnNotInSpec.toString());
+                        }
+                        mapping = new int[rsmd.getColumnCount()];
+                        for (int i = 0; i < mapping.length; i++) {
+                            String name = replaceColumnName(rsmd.getColumnName(i + 1), dbConn).toLowerCase();
+                            if (!columnNames.containsKey(name)) {
+                                mapping[i] = -1;
+                                continue;
+                            }
+                            mapping[i] = columnNames.get(name);
+                            DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
+                            int type = rsmd.getColumnType(i + 1);
+                            switch (type) {
+                                // check all boolean compatible types
+                                case Types.BIT:
+                                case Types.BOOLEAN:
+                                    // types must be compatible to BooleanValue
+                                    if (!cspec.getType().isCompatible(BooleanValue.class)) {
+                                        throw new RuntimeException("Column \"" + name
+                                            + "\" of type \"" + cspec.getType()
+                                            + "\" from input does not match type "
+                                            + "\"" + rsmd.getColumnTypeName(i + 1)
+                                            + "\" in database at position " + i);
+                                    }
+                                    break;
+                                    // check all int compatible types
+                                case Types.TINYINT:
+                                case Types.SMALLINT:
+                                case Types.INTEGER:
+                                    // types must be compatible to IntValue
+                                    if (!cspec.getType().isCompatible(IntValue.class)) {
+                                        throw new RuntimeException("Column \"" + name
+                                            + "\" of type \"" + cspec.getType()
+                                            + "\" from input does not match type "
+                                            + "\"" + rsmd.getColumnTypeName(i + 1)
+                                            + "\" in database at position " + i);
+                                    }
+                                    break;
+                                case Types.BIGINT:
+                                    // types must also be compatible to LongValue
+                                    if (!cspec.getType().isCompatible(LongValue.class)) {
+                                        throw new RuntimeException("Column \"" + name
+                                            + "\" of type \"" + cspec.getType()
+                                            + "\" from input does not match type "
+                                            + "\"" + rsmd.getColumnTypeName(i + 1)
+                                            + "\" in database at position " + i);
+                                    }
+                                    break;
+                                    // check all double compatible types
+                                case Types.FLOAT:
+                                case Types.DOUBLE:
+                                case Types.NUMERIC:
+                                case Types.DECIMAL:
+                                case Types.REAL:
+                                    // types must also be compatible to DoubleValue
+                                    if (!cspec.getType().isCompatible(DoubleValue.class)) {
+                                        throw new RuntimeException("Column \"" + name
+                                            + "\" of type \"" + cspec.getType()
+                                            + "\" from input does not match type "
+                                            + "\"" + rsmd.getColumnTypeName(i + 1)
+                                            + "\" in database at position " + i);
+                                    }
+                                    break;
+                                    // check for date-and-time compatible types
+                                case Types.DATE:
+                                case Types.TIME:
+                                case Types.TIMESTAMP:
+                                    // types must also be compatible to DataValue
+                                    if (!cspec.getType().isCompatible(DateAndTimeValue.class)) {
+                                        throw new RuntimeException("Column \"" + name
+                                            + "\" of type \"" + cspec.getType()
+                                            + "\" from input does not match type "
+                                            + "\"" + rsmd.getColumnTypeName(i + 1)
+                                            + "\" in database at position " + i);
+                                    }
+                                    break;
+                                    // check for blob compatible types
+                                case Types.BLOB:
+                                case Types.BINARY:
+                                case Types.LONGVARBINARY:
+                                    // types must also be compatible to DataValue
+                                    if (!cspec.getType().isCompatible(BinaryObjectDataValue.class)) {
+                                        throw new RuntimeException("Column \"" + name
+                                            + "\" of type \"" + cspec.getType()
+                                            + "\" from input does not match type "
+                                            + "\"" + rsmd.getColumnTypeName(i + 1)
+                                            + "\" in database at position " + i);
+                                    }
+                                    break;
+                                    // all other cases are defined as StringValue types
+                            }
+                        }
                     }
+                } else {
                     LOGGER.info("Table \"" + table
-                            + "\" does not exist in database, "
-                            + "will create new table.");
+                        + "\" does not exist in database, "
+                        + "will create new table.");
                     // and create new table
                     final String query =
-                        "CREATE TABLE " + table + " "
-                            + createStmt(spec, sqlTypes, dbConn, columnNamesForInsertStatement);
+                            "CREATE TABLE " + table + " "
+                                    + createStmt(spec, sqlTypes, dbConn, columnNamesForInsertStatement);
                     LOGGER.debug("Executing SQL statement as execute: " + query);
+                    Statement statement = conn.createStatement();
                     statement.execute(query);
-                }
-                // if table exists
-                if (rs != null) {
-                    ResultSetMetaData rsmd = rs.getMetaData();
-                    final Map<String, Integer> columnNames =
-                        new LinkedHashMap<String, Integer>();
-                    for (int i = 0; i < spec.getNumColumns(); i++) {
-                        String colName = replaceColumnName(spec.getColumnSpec(i).getName(), dbConn);
-                        columnNames.put(colName.toLowerCase(), i);
-                    }
-                    // sanity check to lock if all input columns are in db
-                    ArrayList<String> columnNotInSpec = new ArrayList<String>(
-                            columnNames.keySet());
-                    for (int i = 0; i < rsmd.getColumnCount(); i++) {
-                        String colName = replaceColumnName(rsmd.getColumnName(i + 1), dbConn);
-                        if (columnNames.containsKey(colName.toLowerCase())) {
-                            columnNotInSpec.remove(colName.toLowerCase());
-                        }
-                        columnNamesForInsertStatement.append(colName).append(',');
-                    }
-                    if (rsmd.getColumnCount() > 0) {
-                        columnNamesForInsertStatement.deleteCharAt(columnNamesForInsertStatement.length() - 1);
-                    }
-                    columnNamesForInsertStatement.append(')');
-
-                    if (columnNotInSpec.size() > 0) {
-                        throw new RuntimeException("No. of columns in input"
-                                + " table > in database; not existing columns: "
-                                + columnNotInSpec.toString());
-                    }
-                    mapping = new int[rsmd.getColumnCount()];
-                    for (int i = 0; i < mapping.length; i++) {
-                        String name = replaceColumnName(rsmd.getColumnName(i + 1), dbConn).toLowerCase();
-                        if (!columnNames.containsKey(name)) {
-                            mapping[i] = -1;
-                            continue;
-                        }
-                        mapping[i] = columnNames.get(name);
-                        DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
-                        int type = rsmd.getColumnType(i + 1);
-                        switch (type) {
-                            // check all boolean compatible types
-                            case Types.BIT:
-                            case Types.BOOLEAN:
-                                // types must be compatible to BooleanValue
-                                if (!cspec.getType().isCompatible(BooleanValue.class)) {
-                                    throw new RuntimeException("Column \"" + name
-                                        + "\" of type \"" + cspec.getType()
-                                        + "\" from input does not match type "
-                                        + "\"" + rsmd.getColumnTypeName(i + 1)
-                                        + "\" in database at position " + i);
-                                }
-                                break;
-                            // check all int compatible types
-                            case Types.TINYINT:
-                            case Types.SMALLINT:
-                            case Types.INTEGER:
-                                // types must be compatible to IntValue
-                                if (!cspec.getType().isCompatible(IntValue.class)) {
-                                    throw new RuntimeException("Column \"" + name
-                                        + "\" of type \"" + cspec.getType()
-                                        + "\" from input does not match type "
-                                        + "\"" + rsmd.getColumnTypeName(i + 1)
-                                        + "\" in database at position " + i);
-                                }
-                                break;
-                            case Types.BIGINT:
-                                // types must also be compatible to LongValue
-                                if (!cspec.getType().isCompatible(LongValue.class)) {
-                                    throw new RuntimeException("Column \"" + name
-                                        + "\" of type \"" + cspec.getType()
-                                        + "\" from input does not match type "
-                                        + "\"" + rsmd.getColumnTypeName(i + 1)
-                                        + "\" in database at position " + i);
-                                }
-                            break;
-                            // check all double compatible types
-                            case Types.FLOAT:
-                            case Types.DOUBLE:
-                            case Types.NUMERIC:
-                            case Types.DECIMAL:
-                            case Types.REAL:
-                                // types must also be compatible to DoubleValue
-                                if (!cspec.getType().isCompatible(DoubleValue.class)) {
-                                    throw new RuntimeException("Column \"" + name
-                                        + "\" of type \"" + cspec.getType()
-                                        + "\" from input does not match type "
-                                        + "\"" + rsmd.getColumnTypeName(i + 1)
-                                        + "\" in database at position " + i);
-                                }
-                                break;
-                            // check for date-and-time compatible types
-                            case Types.DATE:
-                            case Types.TIME:
-                            case Types.TIMESTAMP:
-                                // types must also be compatible to DataValue
-                                if (!cspec.getType().isCompatible(DateAndTimeValue.class)) {
-                                    throw new RuntimeException("Column \"" + name
-                                        + "\" of type \"" + cspec.getType()
-                                        + "\" from input does not match type "
-                                        + "\"" + rsmd.getColumnTypeName(i + 1)
-                                        + "\" in database at position " + i);
-                                }
-                                break;
-                            // check for blob compatible types
-                            case Types.BLOB:
-                            case Types.BINARY:
-                            case Types.LONGVARBINARY:
-                                // types must also be compatible to DataValue
-                                if (!cspec.getType().isCompatible(BinaryObjectDataValue.class)) {
-                                    throw new RuntimeException("Column \"" + name
-                                        + "\" of type \"" + cspec.getType()
-                                        + "\" from input does not match type "
-                                        + "\"" + rsmd.getColumnTypeName(i + 1)
-                                        + "\" in database at position " + i);
-                                }
-                                break;
-                            // all other cases are defined as StringValue types
-                        }
-                    }
-                    rs.close();
-                } else {
                     mapping = new int[spec.getNumColumns()];
                     for (int k = 0; k < mapping.length; k++) {
                         mapping[k] = k;
                     }
                 }
-                statement.close();
             } else {
                 mapping = new int[spec.getNumColumns()];
                 for (int k = 0; k < mapping.length; k++) {

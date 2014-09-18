@@ -50,6 +50,7 @@ package org.knime.core.node.port.database;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.knime.core.node.NodeLogger;
 
@@ -68,8 +69,8 @@ public class MySQLUtility extends DatabaseUtility {
         @Deprecated
         @Override
         public String quoteColumn(final String colName) {
-            Matcher m = ESCAPE_CHARACTER_PATTERN.matcher(colName);
-            if (m.find()) {
+            Matcher m = SAVE_COLUMN_NAME_PATTERN.matcher(colName);
+            if (!m.matches()) {
                 return "`" + colName + "`";
             } else {
                 // no need to quote
@@ -100,6 +101,24 @@ public class MySQLUtility extends DatabaseUtility {
                 statement.setFetchSize(Integer.MIN_VALUE);
                 NodeLogger.getLogger(getClass()).info(
                     "Database fetchsize for MySQL database set to " + Integer.MIN_VALUE + ".");
+            }
+        }
+
+        // pattern that matches all(?) SQL queries for which we must NOT append a LIMIT without wrapping the query first
+        private static final Pattern UNSAVE_LIMIT_PATTERN = Pattern.compile(
+            "(?i)(?:LIMIT\\s+\\d+|PROCEDURE\\s+\\S+|INTO\\s+\\S+|FOR\\s+UPDATE|LOCK\\s+IN\\s+SHARE\\s+MODE)");
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String limitRows(final String sql, final long count) {
+            Matcher m = UNSAVE_LIMIT_PATTERN.matcher(sql);
+            if (m.find()) {
+                // wraps the original query
+                return super.limitRows(sql, count);
+            } else {
+                return sql + " LIMIT 0";
             }
         }
 
