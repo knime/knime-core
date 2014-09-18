@@ -67,17 +67,10 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
  * @since 2.9
  */
 public abstract class AbstractDifferenceChecker<T extends DataValue> implements DifferenceChecker<T> {
-    private final SettingsModelBoolean m_ignoreColumnProperties = new SettingsModelBoolean("ignoreColumnProperties", false);
+    private final SettingsModelBoolean m_ignoreColumnProperties = new SettingsModelBoolean("ignoreColumnProperties",
+        false);
 
-    private final DialogComponentBoolean m_component = new DialogComponentBoolean(m_ignoreColumnProperties,
-            "Ignore column properties");
-
-    /**
-     * Creates a new abstract difference checker.
-     */
-    protected AbstractDifferenceChecker() {
-        m_component.setToolTipText("Ignores all properties in the data column spec");
-    }
+    private DialogComponentBoolean m_component;
 
     /**
      * {@inheritDoc}
@@ -121,6 +114,10 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
+        if (m_component == null) {
+            m_component = new DialogComponentBoolean(m_ignoreColumnProperties, "Ignore column properties");
+            m_component.setToolTipText("Ignores all properties in the data column spec");
+        }
         return Arrays.asList(m_component);
     }
 
