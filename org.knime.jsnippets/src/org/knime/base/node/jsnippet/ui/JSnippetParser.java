@@ -116,13 +116,13 @@ public class JSnippetParser extends AbstractParser {
                         (int)(d.getEndPosition()
                                 - d.getStartPosition() + 1));
                 if (d.getKind().equals(Kind.ERROR)) {
-                    notice.setLevel(ParserNotice.ERROR);
+                    notice.setLevel(ParserNotice.Level.ERROR);
 //                    LOGGER.error(d.getMessage(Locale.US));
                 } else if (d.getKind().equals(Kind.WARNING)) {
-                    notice.setLevel(ParserNotice.WARNING);
+                    notice.setLevel(ParserNotice.Level.WARNING);
 //                    LOGGER.warn(d.getMessage(Locale.US));
                 } else {
-                    notice.setLevel(ParserNotice.INFO);
+                    notice.setLevel(ParserNotice.Level.INFO);
 //                    LOGGER.debug(d.getMessage(Locale.US));
                 }
                 parseResult.addNotice(notice);

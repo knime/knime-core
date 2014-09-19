@@ -63,6 +63,7 @@ import org.fife.rsta.ac.AbstractLanguageSupport;
 import org.fife.rsta.ac.LanguageSupport;
 import org.fife.rsta.ac.LanguageSupportFactory;
 import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.OccurrenceMarker;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.Token;
@@ -204,8 +205,8 @@ public class AbstractRuleParser implements Parser {
          * {@inheritDoc}
          */
         @Override
-        public boolean getCurlyBracesDenoteCodeBlocks() {
-            return m_wrapped.getCurlyBracesDenoteCodeBlocks();
+        public boolean getCurlyBracesDenoteCodeBlocks(final int languageIndex) {
+            return m_wrapped.getCurlyBracesDenoteCodeBlocks(languageIndex);
         }
 
         /**
@@ -220,8 +221,8 @@ public class AbstractRuleParser implements Parser {
          * {@inheritDoc}
          */
         @Override
-        public String[] getLineCommentStartAndEnd() {
-            return m_wrapped.getLineCommentStartAndEnd();
+        public String[] getLineCommentStartAndEnd(final int languageIndex) {
+            return m_wrapped.getLineCommentStartAndEnd(languageIndex);
         }
 
         /**
@@ -264,19 +265,19 @@ public class AbstractRuleParser implements Parser {
                     perlStyleMode = (!escape && !perlStyleMode) || escape;
                 }
                 escape = lexeme.equals("\\") && perlStyleMode;
-                switch (token.type) {
+                switch (token.getType()) {
                     case TokenTypes.RESERVED_WORD:
                     case TokenTypes.RESERVED_WORD_2:
                     case TokenTypes.LITERAL_BOOLEAN:
                     case TokenTypes.LITERAL_CHAR:
                     case TokenTypes.COMMENT_DOCUMENTATION:
                     case TokenTypes.COMMENT_MULTILINE:
-                        token.type = TokenTypes.IDENTIFIER;
+                        token.setType(TokenTypes.IDENTIFIER);
                         break;
                     case TokenTypes.ERROR_STRING_DOUBLE:
                     case TokenTypes.LITERAL_STRING_DOUBLE_QUOTE:
                             if (token.getLexeme().endsWith("\"")) {
-                                token.type = TokenTypes.LITERAL_STRING_DOUBLE_QUOTE;
+                                token.setType(TokenTypes.LITERAL_STRING_DOUBLE_QUOTE);
                             }
                         break;
                     default:
@@ -284,10 +285,10 @@ public class AbstractRuleParser implements Parser {
                         break;
                 }
                 if (m_operators.contains(token.getLexeme())) {
-                    token.type = TokenTypes.RESERVED_WORD;
+                    token.setType(TokenTypes.RESERVED_WORD);
                 }
                 if (perlStyleMode || lexeme.equals("/")) {
-                    token.type = TokenTypes.LITERAL_STRING_DOUBLE_QUOTE;
+                    token.setType(TokenTypes.LITERAL_STRING_DOUBLE_QUOTE);
                 }
                 token = token.getNextToken();
             }
@@ -306,16 +307,16 @@ public class AbstractRuleParser implements Parser {
          * {@inheritDoc}
          */
         @Override
-        public boolean isWhitespaceVisible() {
-            return m_wrapped.isWhitespaceVisible();
+        public OccurrenceMarker getOccurrenceMarker() {
+            return m_wrapped.getOccurrenceMarker();
         }
 
         /**
          * {@inheritDoc}
          */
         @Override
-        public void setWhitespaceVisible(final boolean visible) {
-            m_wrapped.setWhitespaceVisible(visible);
+        public int getClosestStandardTokenTypeForInternalType(final int type) {
+            return m_wrapped.getClosestStandardTokenTypeForInternalType(type);
         }
 
     }
@@ -404,7 +405,7 @@ public class AbstractRuleParser implements Parser {
                 String lexeme = token.getLexeme();
                 //If it is an operator, make it a reserved word.
                 if (getOperators().contains(lexeme)) {
-                    token.type = TokenTypes.RESERVED_WORD;
+                    token.setType(TokenTypes.RESERVED_WORD);
                     token.setLanguageIndex(0);
                 }
                 sb.append(lexeme);
@@ -427,9 +428,9 @@ public class AbstractRuleParser implements Parser {
                                 "You might be referring to a column or flow variable, although no String "
                                     + "interpolation is implemented, you might want to "
                                     + "remove the quotes around the reference.", line,
-                                doc.getTokenListForLine(line).offset + lineText.lastIndexOf(lastContent),
+                                doc.getTokenListForLine(line).getOffset() + lineText.lastIndexOf(lastContent),
                                 lastContent.length());
-                        notice.setLevel(ParserNotice.WARNING);
+                        notice.setLevel(ParserNotice.Level.WARNING);
                         res.addNotice(notice);
                     }
                 }
@@ -442,7 +443,7 @@ public class AbstractRuleParser implements Parser {
                     notice = new DefaultParserNotice(this, e.getMessage(), line);
                 } else {
                     notice =
-                        new DefaultParserNotice(this, e.getMessage(), line, doc.getTokenListForLine(line).offset
+                        new DefaultParserNotice(this, e.getMessage(), line, doc.getTokenListForLine(line).getOffset()
                             + e.getErrorOffset(), sb.length() - e.getErrorOffset());
                 }
                 res.addNotice(notice);
@@ -485,9 +486,9 @@ public class AbstractRuleParser implements Parser {
         DefaultParserNotice notice =
             new DefaultParserNotice(this, wasCatchAllRule
                 ? "There was a rule that might always match, this rule will probably never be used."
-                : "This rule might never match.", line, doc.getTokenListForLine(line).offset,
+                : "This rule might never match.", line, doc.getTokenListForLine(line).getOffset(),
                 lineText.length());
-        notice.setLevel(ParserNotice.WARNING);
+        notice.setLevel(ParserNotice.Level.WARNING);
         res.addNotice(notice);
     }
 
