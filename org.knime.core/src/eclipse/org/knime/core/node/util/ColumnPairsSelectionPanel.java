@@ -266,6 +266,9 @@ public class ColumnPairsSelectionPanel extends JPanel {
         ColumnComboBoxRenderer renderer =
             (ColumnComboBoxRenderer) comboBox.getRenderer();
         renderer.setDefaultValue(selected);
+        if (!Arrays.asList(spec.getColumnNames()).contains(selected)) {
+            comboBox.setSelectedIndex(-1);
+        }
     }
 
     private void addUIControls(final int index, final String leftSelected,

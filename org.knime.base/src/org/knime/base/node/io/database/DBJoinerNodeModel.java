@@ -134,11 +134,29 @@ final class DBJoinerNodeModel extends DBNodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        checkJoinColumns(((DatabasePortObjectSpec)inSpecs[0]).getDataTableSpec(),
+            ((DatabasePortObjectSpec)inSpecs[1]).getDataTableSpec());
         if (m_settings.getLeftJoinOnColumns().length < 1) {
             throw new InvalidSettingsException("At least one pair of columns to join on has to be selected");
         }
         return new PortObjectSpec[]{createDbOutSpec((DatabasePortObjectSpec)inSpecs[0],
             (DatabasePortObjectSpec)inSpecs[1])};
+    }
+
+    private void checkJoinColumns(final DataTableSpec leftSpec, final DataTableSpec rightSpec)
+        throws InvalidSettingsException {
+        List<String> leftColumns = Arrays.asList(leftSpec.getColumnNames());
+        for (String joinColumn : m_settings.getLeftJoinOnColumns()) {
+            if (!leftColumns.contains(joinColumn)) {
+                throw new InvalidSettingsException("Left table is missing join column " + joinColumn);
+            }
+        }
+        List<String> rightColumns = Arrays.asList(rightSpec.getColumnNames());
+        for (String joinColumn : m_settings.getRightJoinOnColumns()) {
+            if (!rightColumns.contains(joinColumn)) {
+                throw new InvalidSettingsException("Right table is missing join column " + joinColumn);
+            }
+        }
     }
 
     /**
