@@ -195,13 +195,19 @@ public class RepositoryUpdater implements ProvisioningListener {
 
                 if (repoManager != null) {
                     URI removedMetadatalocation = event.getRepositoryLocation();
+                    String correspondingArtifactRepoPrefix = removedMetadatalocation.toString();
+                    if (!correspondingArtifactRepoPrefix.endsWith("/")) {
+                        correspondingArtifactRepoPrefix += "/";
+                    }
+                    correspondingArtifactRepoPrefix += "knid=";
+
                     for (URI uri : repoManager.getKnownRepositories(IRepositoryManager.REPOSITORIES_NON_LOCAL)) {
-                        if (urlContainsID(uri) && uri.toString().startsWith(removedMetadatalocation.toString())) {
+                        if (urlContainsID(uri) && uri.toString().startsWith(correspondingArtifactRepoPrefix)) {
                             repoManager.removeRepository(uri);
                         }
                     }
                     for (URI uri : repoManager.getKnownRepositories(IRepositoryManager.REPOSITORIES_DISABLED)) {
-                        if (urlContainsID(uri) && uri.toString().startsWith(removedMetadatalocation.toString())) {
+                        if (urlContainsID(uri) && uri.toString().startsWith(correspondingArtifactRepoPrefix)) {
                             repoManager.removeRepository(uri);
                         }
                     }
