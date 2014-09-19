@@ -98,20 +98,6 @@
 				table so that they also show up in the output
 				table.
 			</option>
-            <option name="Duplicate column handling">
-                The option allows you to change the behaviour if the include
-                lists of both input tables contain columns with the same name. 
-                <br/>
-                <b>Filter duplicates:</b> Only the columns from the left input table
-                will show up in the output table.
-                <br/>
-                <b>Don't execute:</b> Don't allow to execute this node if there are
-                duplicate column names in the include lists. 
-                <br/>
-                <b>Append suffix:</b> Append a suffix to the duplicate column names
-                from the right input table so that they also show up in the output
-                table.
-            </option>
 			<option name="Joining columns handling">
 				The option allows filtering the left/right
 				joining columns, i.e. the
