@@ -47,16 +47,16 @@
  */
 package org.knime.base.node.preproc.joiner;
 
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.knime.base.node.preproc.joiner.Joiner2Settings.JoinMode;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -67,12 +67,9 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.data.sort.MemoryService;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
@@ -90,179 +87,358 @@ public class JoinerTest {
     /**
      * @throws java.lang.Exception
      */
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-
-    }
-
-    /**
-     * @throws java.lang.Exception
-     */
-    @AfterClass
-    public static void tearDownAfterClass() throws Exception {
-    }
-
-    /**
-     * @throws java.lang.Exception
-     */
     @Before
     public void setUp() throws Exception {
         NodeFactory<NodeModel> dummyFactory =
             (NodeFactory)new VirtualParallelizedChunkPortObjectInNodeFactory(new PortType[0]);
-        m_exec = new ExecutionContext(
-                new DefaultNodeProgressMonitor(),
-                new Node(dummyFactory),
-                    SingleNodeContainer.MemoryPolicy.CacheOnDisc,
-                    new HashMap<Integer, ContainerTable>());
+        m_exec =
+            new ExecutionContext(new DefaultNodeProgressMonitor(), new Node(dummyFactory),
+                SingleNodeContainer.MemoryPolicy.CacheOnDisc, new HashMap<Integer, ContainerTable>());
     }
 
     /**
-     * @throws java.lang.Exception
-     */
-    @After
-    public void tearDown() throws Exception {
-    }
-
-    /**
-     * @throws CanceledExecutionException
-     * @throws InvalidSettingsException
+     * Checks whether an inner join works as expected when the number of partitions must be increased due to low memory.
+     *
+     * @throws Exception if an error occurs
      */
     @Test
-    public final void testIncreaseNumPartitionsRun()
-    	throws CanceledExecutionException, InvalidSettingsException {
+    public final void testIncreaseNumPartitionsInnerJoin() throws Exception {
 
-    	Joiner2Settings settingsRef = createReferenceSettings("Data");
-    	Joiner2Settings settingsTest = createReferenceSettings("Data");
+        Joiner2Settings settingsRef = createReferenceSettings("Data");
+        Joiner2Settings settingsTest = createReferenceSettings("Data");
 
-        // Create data with fields that consume a lot memory
-        DataTable inputTable = new TestData(100, 1);
+        BufferedDataTable leftTable = m_exec.createBufferedDataTable(new TestData(100, 1), m_exec);
+        BufferedDataTable rightTable = m_exec.createBufferedDataTable(new TestData(200, 1), m_exec);
 
-        BufferedDataTable bdt =
-            m_exec.createBufferedDataTable(inputTable, m_exec);
         // run joiner with reference settings
-        Joiner joinerRef = new Joiner(inputTable.getDataTableSpec(),
-        		inputTable.getDataTableSpec(), settingsRef);
-        BufferedDataTable reference = joinerRef.computeJoinTable(bdt, bdt,
-        		m_exec);
+        Joiner joinerRef = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(leftTable, rightTable, m_exec);
 
         // run joiner with test settings
-        Joiner joinerTest = new Joiner(inputTable.getDataTableSpec(),
-        		bdt.getDataTableSpec(), settingsTest);
-        joinerTest.setMemoryService(
-        		MemoryService.createTestCaseMemoryService(30000000L));
-        joinerTest.setNumBitsInitial(0);
-        joinerTest.setNumBitsMaximal(6);
-        BufferedDataTable test = joinerTest.computeJoinTable(bdt,
-        		bdt, m_exec);
-        performTest(reference, test);
+        Joiner joinerTest = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsTest);
+        joinerTest.setRowsAddedBeforeOOM(10);
+
+        BufferedDataTable test = joinerTest.computeJoinTable(leftTable, rightTable, m_exec);
+        compareTables(reference, test);
     }
 
     /**
-     * @throws CanceledExecutionException
-     * @throws InvalidSettingsException
+     * Checks whether a left outer join works as expected when the number of partitions must be increased due to low
+     * memory.
+     *
+     * @throws Exception if an error occurs
      */
     @Test
-    public final void testSkipPartitionsRun()
-    	throws CanceledExecutionException, InvalidSettingsException {
+    public final void testIncreaseNumPartitionsLeftOuterJoin() throws Exception {
 
-    	Joiner2Settings settingsRef = createReferenceSettings("Data");
-    	Joiner2Settings settingsTest = createReferenceSettings("Data");
+        Joiner2Settings settingsRef = createReferenceSettings("Data");
+        settingsRef.setJoinMode(JoinMode.LeftOuterJoin);
 
-        // Create data with fields that consume a lot memory
-        DataTable inputTable = new TestData(100, 1);
+        Joiner2Settings settingsTest = createReferenceSettings("Data");
+        settingsTest.setJoinMode(JoinMode.LeftOuterJoin);
 
-        BufferedDataTable bdt =
-            m_exec.createBufferedDataTable(inputTable, m_exec);
+        BufferedDataTable leftTable = m_exec.createBufferedDataTable(new TestData(200, 1), m_exec);
+        BufferedDataTable rightTable = m_exec.createBufferedDataTable(new TestData(100, 1), m_exec);
+
         // run joiner with reference settings
-        Joiner joinerRef = new Joiner(inputTable.getDataTableSpec(),
-        		inputTable.getDataTableSpec(), settingsRef);
-        BufferedDataTable reference = joinerRef.computeJoinTable(bdt, bdt,
-        		m_exec);
+        Joiner joinerRef = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(leftTable, rightTable, m_exec);
 
         // run joiner with test settings
-        Joiner joinerTest = new Joiner(inputTable.getDataTableSpec(),
-        		bdt.getDataTableSpec(), settingsTest);
-        joinerTest.setMemoryService(
-        		MemoryService.createTestCaseMemoryService(30000000L));
+        Joiner joinerTest = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsTest);
+        joinerTest.setRowsAddedBeforeOOM(10);
+
+        BufferedDataTable test = joinerTest.computeJoinTable(leftTable, rightTable, m_exec);
+        compareTables(reference, test);
+    }
+
+    /**
+     * Checks whether a right outer join works as expected when the number of partitions must be increased due to low
+     * memory.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public final void testIncreaseNumPartitionsRightOuterJoin() throws Exception {
+
+        Joiner2Settings settingsRef = createReferenceSettings("Data");
+        settingsRef.setJoinMode(JoinMode.RightOuterJoin);
+
+        Joiner2Settings settingsTest = createReferenceSettings("Data");
+        settingsTest.setJoinMode(JoinMode.RightOuterJoin);
+
+        // Create data with fields that consume a lot memory
+
+        BufferedDataTable leftTable = m_exec.createBufferedDataTable(new TestData(100, 1), m_exec);
+        BufferedDataTable rightTable = m_exec.createBufferedDataTable(new TestData(200, 1), m_exec);
+
+        // run joiner with reference settings
+        Joiner joinerRef = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(leftTable, rightTable, m_exec);
+
+        // run joiner with test settings
+        Joiner joinerTest = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsTest);
+        joinerTest.setRowsAddedBeforeOOM(10);
+        BufferedDataTable test = joinerTest.computeJoinTable(leftTable, rightTable, m_exec);
+        compareTables(reference, test);
+    }
+
+    /**
+     * Checks whether a right outer join works as expected when the number of partitions must be increased due to low
+     * memory.
+     *
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public final void testIncreaseNumPartitionsFullOuterJoin() throws Exception {
+
+        Joiner2Settings settingsRef = createReferenceSettings("Data");
+        settingsRef.setJoinMode(JoinMode.FullOuterJoin);
+
+        Joiner2Settings settingsTest = createReferenceSettings("Data");
+        settingsTest.setJoinMode(JoinMode.FullOuterJoin);
+
+        BufferedDataTable leftTable = m_exec.createBufferedDataTable(new TestData(100, 1), m_exec);
+        BufferedDataTable rightTable = m_exec.createBufferedDataTable(new TestData(200, 1), m_exec);
+        // run joiner with reference settings
+        Joiner joinerRef = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(leftTable, rightTable, m_exec);
+
+        // run joiner with test settings
+        Joiner joinerTest = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsTest);
+        joinerTest.setRowsAddedBeforeOOM(10);
+        BufferedDataTable test = joinerTest.computeJoinTable(leftTable, rightTable, m_exec);
+        compareTables(reference, test);
+    }
+
+    @Test
+    public final void testSkipPartitionsInnerJoin() throws Exception {
+
+        Joiner2Settings settingsRef = createReferenceSettings("Data");
+        Joiner2Settings settingsTest = createReferenceSettings("Data");
+
+        BufferedDataTable leftTable = m_exec.createBufferedDataTable(new TestData(100, 1), m_exec);
+        BufferedDataTable rightTable = m_exec.createBufferedDataTable(new TestData(200, 1), m_exec);
+
+        // run joiner with reference settings
+        Joiner joinerRef = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(leftTable, rightTable, m_exec);
+
+        // run joiner with test settings
+        Joiner joinerTest = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsTest);
+        joinerTest.setRowsAddedBeforeOOM(10);
         joinerTest.setNumBitsInitial(8);
-        BufferedDataTable test = joinerTest.computeJoinTable(bdt,
-        		bdt, m_exec);
-        performTest(reference, test);
+        BufferedDataTable test = joinerTest.computeJoinTable(leftTable, rightTable, m_exec);
+        compareTables(reference, test);
     }
 
-    /**
-     * @throws CanceledExecutionException
-     * @throws InvalidSettingsException
-     */
+
     @Test
-    public final void testSortPartitionsRun()
-    	throws CanceledExecutionException, InvalidSettingsException {
+    public final void testSkipPartitionsLeftOuterJoin() throws Exception {
+        Joiner2Settings settingsRef = createReferenceSettings("Data");
+        settingsRef.setJoinMode(JoinMode.LeftOuterJoin);
 
-    	Joiner2Settings settingsRef = createReferenceSettings(
-    			Joiner2Settings.ROW_KEY_IDENTIFIER);
-    	Joiner2Settings settingsTest = createReferenceSettings(
-    			Joiner2Settings.ROW_KEY_IDENTIFIER);
-    	settingsTest.setMaxOpenFiles(3);
+        Joiner2Settings settingsTest = createReferenceSettings("Data");
+        settingsTest.setJoinMode(JoinMode.LeftOuterJoin);
 
-        // Create data with fields that consume a lot memory
-        DataTable inputTable = new TestData(100, 1);
+        BufferedDataTable leftTable = m_exec.createBufferedDataTable(new TestData(200, 1), m_exec);
+        BufferedDataTable rightTable = m_exec.createBufferedDataTable(new TestData(100, 1), m_exec);
 
-        BufferedDataTable bdt =
-            m_exec.createBufferedDataTable(inputTable, m_exec);
         // run joiner with reference settings
-        Joiner joinerRef = new Joiner(inputTable.getDataTableSpec(),
-        		inputTable.getDataTableSpec(), settingsRef);
-        BufferedDataTable reference = joinerRef.computeJoinTable(bdt, bdt,
-        		m_exec);
+        Joiner joinerRef = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(leftTable, rightTable, m_exec);
 
         // run joiner with test settings
-        Joiner joinerTest = new Joiner(inputTable.getDataTableSpec(),
-        		bdt.getDataTableSpec(), settingsTest);
-        joinerTest.setMemoryService(
-        		MemoryService.createTestCaseMemoryService(30000000L));
+        Joiner joinerTest = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsTest);
+        joinerTest.setRowsAddedBeforeOOM(10);
+        joinerTest.setNumBitsInitial(8);
+        BufferedDataTable test = joinerTest.computeJoinTable(leftTable, rightTable, m_exec);
+        compareTables(reference, test);
+    }
+
+
+    @Test
+    public final void testSkipPartitionsRightOuterJoin() throws Exception {
+        Joiner2Settings settingsRef = createReferenceSettings("Data");
+        settingsRef.setJoinMode(JoinMode.RightOuterJoin);
+
+        Joiner2Settings settingsTest = createReferenceSettings("Data");
+        settingsTest.setJoinMode(JoinMode.RightOuterJoin);
+
+        BufferedDataTable leftTable = m_exec.createBufferedDataTable(new TestData(100, 1), m_exec);
+        BufferedDataTable rightTable = m_exec.createBufferedDataTable(new TestData(200, 1), m_exec);
+
+        // run joiner with reference settings
+        Joiner joinerRef = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(leftTable, rightTable, m_exec);
+
+        // run joiner with test settings
+        Joiner joinerTest = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsTest);
+        joinerTest.setRowsAddedBeforeOOM(10);
+        joinerTest.setNumBitsInitial(8);
+        BufferedDataTable test = joinerTest.computeJoinTable(leftTable, rightTable, m_exec);
+        compareTables(reference, test);
+    }
+
+
+    @Test
+    public final void testSkipPartitionsFullOuterJoin() throws Exception {
+        Joiner2Settings settingsRef = createReferenceSettings("Data");
+        settingsRef.setJoinMode(JoinMode.FullOuterJoin);
+
+        Joiner2Settings settingsTest = createReferenceSettings("Data");
+        settingsTest.setJoinMode(JoinMode.FullOuterJoin);
+
+        BufferedDataTable leftTable = m_exec.createBufferedDataTable(new TestData(100, 1), m_exec);
+        BufferedDataTable rightTable = m_exec.createBufferedDataTable(new TestData(200, 1), m_exec);
+
+        // run joiner with reference settings
+        Joiner joinerRef = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(leftTable, rightTable, m_exec);
+
+        // run joiner with test settings
+        Joiner joinerTest = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsTest);
+        joinerTest.setRowsAddedBeforeOOM(10);
+        joinerTest.setNumBitsInitial(8);
+        BufferedDataTable test = joinerTest.computeJoinTable(leftTable, rightTable, m_exec);
+        compareTables(reference, test);
+    }
+
+    @Test
+    public void testSortPartitionsInnerJoin() throws Exception {
+        Joiner2Settings settingsRef = createReferenceSettings(Joiner2Settings.ROW_KEY_IDENTIFIER);
+        Joiner2Settings settingsTest = createReferenceSettings(Joiner2Settings.ROW_KEY_IDENTIFIER);
+        settingsTest.setMaxOpenFiles(3);
+
+        BufferedDataTable leftTable = m_exec.createBufferedDataTable(new TestData(100, 1), m_exec);
+        BufferedDataTable rightTable = m_exec.createBufferedDataTable(new TestData(200, 1), m_exec);
+
+        // run joiner with reference settings
+        Joiner joinerRef = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(leftTable, rightTable, m_exec);
+
+        // run joiner with test settings
+        Joiner joinerTest = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsTest);
+        joinerTest.setRowsAddedBeforeOOM(10);
         joinerTest.setNumBitsInitial(0);
         joinerTest.setNumBitsMaximal(6);
-        BufferedDataTable test = joinerTest.computeJoinTable(bdt,
-        		bdt, m_exec);
-        performTest(reference, test);
+        BufferedDataTable test = joinerTest.computeJoinTable(leftTable, rightTable, m_exec);
+        compareTables(reference, test);
     }
+
+
+    @Test
+    public void testSortPartitionsLeftOuterJoin() throws Exception {
+        Joiner2Settings settingsRef = createReferenceSettings(Joiner2Settings.ROW_KEY_IDENTIFIER);
+        settingsRef.setJoinMode(JoinMode.LeftOuterJoin);
+
+        Joiner2Settings settingsTest = createReferenceSettings(Joiner2Settings.ROW_KEY_IDENTIFIER);
+        settingsTest.setJoinMode(JoinMode.LeftOuterJoin);
+        settingsTest.setMaxOpenFiles(3);
+
+        BufferedDataTable leftTable = m_exec.createBufferedDataTable(new TestData(200, 1), m_exec);
+        BufferedDataTable rightTable = m_exec.createBufferedDataTable(new TestData(100, 1), m_exec);
+
+        // run joiner with reference settings
+        Joiner joinerRef = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(leftTable, rightTable, m_exec);
+
+        // run joiner with test settings
+        Joiner joinerTest = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsTest);
+        joinerTest.setRowsAddedBeforeOOM(10);
+        joinerTest.setNumBitsInitial(0);
+        joinerTest.setNumBitsMaximal(6);
+        BufferedDataTable test = joinerTest.computeJoinTable(leftTable, rightTable, m_exec);
+        compareTables(reference, test);
+    }
+
+
+    @Test
+    public void testSortPartitionsRightOuterJoin() throws Exception {
+        Joiner2Settings settingsRef = createReferenceSettings(Joiner2Settings.ROW_KEY_IDENTIFIER);
+        settingsRef.setJoinMode(JoinMode.RightOuterJoin);
+
+        Joiner2Settings settingsTest = createReferenceSettings(Joiner2Settings.ROW_KEY_IDENTIFIER);
+        settingsTest.setJoinMode(JoinMode.RightOuterJoin);
+        settingsTest.setMaxOpenFiles(3);
+
+        BufferedDataTable leftTable = m_exec.createBufferedDataTable(new TestData(100, 1), m_exec);
+        BufferedDataTable rightTable = m_exec.createBufferedDataTable(new TestData(200, 1), m_exec);
+
+        // run joiner with reference settings
+        Joiner joinerRef = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(leftTable, rightTable, m_exec);
+
+        // run joiner with test settings
+        Joiner joinerTest = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsTest);
+        joinerTest.setRowsAddedBeforeOOM(10);
+        joinerTest.setNumBitsInitial(0);
+        joinerTest.setNumBitsMaximal(6);
+        BufferedDataTable test = joinerTest.computeJoinTable(leftTable, rightTable, m_exec);
+        compareTables(reference, test);
+    }
+
+
+    @Test
+    public void testSortPartitionsFullOuterJoin() throws Exception {
+        Joiner2Settings settingsRef = createReferenceSettings(Joiner2Settings.ROW_KEY_IDENTIFIER);
+        settingsRef.setJoinMode(JoinMode.FullOuterJoin);
+
+        Joiner2Settings settingsTest = createReferenceSettings(Joiner2Settings.ROW_KEY_IDENTIFIER);
+        settingsTest.setJoinMode(JoinMode.FullOuterJoin);
+        settingsTest.setMaxOpenFiles(3);
+
+        BufferedDataTable leftTable = m_exec.createBufferedDataTable(new TestData(100, 1), m_exec);
+        BufferedDataTable rightTable = m_exec.createBufferedDataTable(new TestData(200, 1), m_exec);
+
+        // run joiner with reference settings
+        Joiner joinerRef = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(leftTable, rightTable, m_exec);
+
+        // run joiner with test settings
+        Joiner joinerTest = new Joiner(leftTable.getDataTableSpec(), rightTable.getDataTableSpec(), settingsTest);
+        joinerTest.setRowsAddedBeforeOOM(10);
+        joinerTest.setNumBitsInitial(0);
+        joinerTest.setNumBitsMaximal(6);
+        BufferedDataTable test = joinerTest.computeJoinTable(leftTable, rightTable, m_exec);
+        compareTables(reference, test);
+    }
+
 
     private Joiner2Settings createReferenceSettings(final String col) {
-    	Joiner2Settings settingsRef = new Joiner2Settings();
-    	String[] joinColumns = new String[]{col};
-    	settingsRef.setLeftJoinColumns(joinColumns);
-    	settingsRef.setRightJoinColumns(joinColumns);
-    	return settingsRef;
+        Joiner2Settings settingsRef = new Joiner2Settings();
+        String[] joinColumns = new String[]{col};
+        settingsRef.setLeftJoinColumns(joinColumns);
+        settingsRef.setRightJoinColumns(joinColumns);
+        return settingsRef;
     }
 
-
-    private void performTest(final BufferedDataTable reference,
-    		final BufferedDataTable test) {
+    private void compareTables(final BufferedDataTable reference, final BufferedDataTable test) {
         // Check if it has the same results as defaultResult
-        Assert.assertTrue(reference.getRowCount() == test.getRowCount());
+        assertThat("Unequal number of rows in result table", test.getRowCount(), is(reference.getRowCount()));
         RowIterator referenceIter = reference.iterator();
-        RowIterator iter = test.iterator();
+        RowIterator testIter = test.iterator();
         while (referenceIter.hasNext()) {
-            DataRow defaultRow = referenceIter.next();
-            DataRow row = iter.next();
-            Assert.assertTrue(defaultRow.getKey().getString().equals(
-                    row.getKey().getString()));
-            Iterator<DataCell> defaultCellIter = defaultRow.iterator();
-            Iterator<DataCell> cellIter = row.iterator();
-            while (defaultCellIter.hasNext()) {
-                Assert.assertTrue(
-                        defaultCellIter.next().equals(cellIter.next()));
+            DataRow refRow = referenceIter.next();
+            DataRow testRow = testIter.next();
+            assertThat("Unexpected row key", testRow.getKey(), is(refRow.getKey()));
+
+            Iterator<DataCell> refCell = refRow.iterator();
+            Iterator<DataCell> testCell = testRow.iterator();
+            while (refCell.hasNext()) {
+                assertThat("Unexpected cell in row " + refRow.getKey(), testCell.next(), is(refCell.next()));
             }
         }
     }
 
     private static class TestData implements DataTable {
         private final int m_size;
+
         private final int m_randSeed;
 
-        public TestData(final int size,  final int randSeed) {
-             m_size = size;
-             m_randSeed = randSeed;
+        public TestData(final int size, final int randSeed) {
+            m_size = size;
+            m_randSeed = randSeed;
         }
 
         /**
@@ -270,9 +446,8 @@ public class JoinerTest {
          */
         @Override
         public DataTableSpec getDataTableSpec() {
-            return new DataTableSpec("TestDataSpec",
-                    new String[]{"Index", "Data"},
-                    new DataType[]{IntCell.TYPE, StringCell.TYPE});
+            return new DataTableSpec("TestDataSpec", new String[]{"Index", "Data"}, new DataType[]{IntCell.TYPE,
+                StringCell.TYPE});
         }
 
         /**
@@ -285,14 +460,13 @@ public class JoinerTest {
 
         private static class TestDataIterator extends RowIterator {
             private int m_count;
+
             private final int m_size;
+
             private final Random m_rand;
-            private final int m_strCellSize;
 
             public TestDataIterator(final int size, final int randSeed) {
                 m_rand = new Random(randSeed);
-                // every output row has size * 2 bytes
-                m_strCellSize = 1000000;
                 m_size = size;
                 m_count = 0;
             }
@@ -310,22 +484,10 @@ public class JoinerTest {
              */
             @Override
             public DataRow next() {
-                m_count ++;
+                m_count++;
 
-                char[] output = new char[m_strCellSize];
-                for (int i = 0; i < m_strCellSize; i++) {
-                  // number of visible characters in ascii
-                  int visCount = 0x007E - 0x0020;
-                  // random integer with next >= 0 and next <= visCount
-                  int next = m_rand.nextInt(visCount);
-                  // space (0x0020) and visible characters, only
-                  next += 0x0020;
-                  output[i] = (char) next;
-                }
-
-                return new DefaultRow(Integer.toString(m_count),
-                        new IntCell(m_rand.nextInt()),
-                        new StringCell(new String(output)));
+                return new DefaultRow(Integer.toString(m_count), new IntCell(m_rand.nextInt()), new StringCell(
+                    Integer.toString(m_count)));
             }
         }
 
