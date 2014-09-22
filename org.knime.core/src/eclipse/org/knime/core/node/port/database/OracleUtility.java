@@ -47,6 +47,8 @@
  */
 package org.knime.core.node.port.database;
 
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+
 
 /**
  * Database utility for Oracle.
@@ -109,18 +111,9 @@ public class OracleUtility extends DatabaseUtility {
     public static final String DATABASE_IDENTIFIER = "oracle";
 
     /**
-     * {@inheritDoc}
+     * Constructor.
      */
-    @Override
-    public String getDatabaseIdentifier() {
-        return DATABASE_IDENTIFIER;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StatementManipulator getStatementManipulator() {
-        return MANIPULATOR;
+    public OracleUtility() {
+        super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunction[]) null);
     }
 }

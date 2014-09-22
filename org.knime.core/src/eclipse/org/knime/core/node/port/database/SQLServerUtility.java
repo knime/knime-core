@@ -48,6 +48,8 @@
  */
 package org.knime.core.node.port.database;
 
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+
 
 /**
  * Database utility for MS SQL Server.
@@ -73,18 +75,9 @@ public class SQLServerUtility extends DatabaseUtility {
     public static final String DATABASE_IDENTIFIER = "sqlserver";
 
     /**
-     * {@inheritDoc}
+     * Constructor.
      */
-    @Override
-    public String getDatabaseIdentifier() {
-        return DATABASE_IDENTIFIER;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StatementManipulator getStatementManipulator() {
-        return MANIPULATOR;
+    public SQLServerUtility() {
+        super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunction[]) null);
     }
 }
