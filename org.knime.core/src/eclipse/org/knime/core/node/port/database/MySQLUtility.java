@@ -53,6 +53,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.database.aggregation.function.AvgDistinctDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.BitAndDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.BitOrDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.BitXOrDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.CountDistinctDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.GroupConcatDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.MaxDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.MinDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.StdDevPopDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.StdDevSampDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.SumDistinctDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.VarPopDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregationFunction;
 
 /**
  * Database utility for MySQL.
@@ -138,19 +151,15 @@ public class MySQLUtility extends DatabaseUtility {
     public static final String DATABASE_IDENTIFIER = "mysql";
 
     /**
-     * {@inheritDoc}
-     * @since 2.11
+     *
      */
-    @Override
-    public String getDatabaseIdentifier() {
-        return DATABASE_IDENTIFIER;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public StatementManipulator getStatementManipulator() {
-        return MANIPULATOR;
+    public MySQLUtility() {
+        super(DATABASE_IDENTIFIER, MANIPULATOR, new AvgDistinctDBAggregationFunction(),
+            BitAndDBAggregationFunction.getInstance(), BitOrDBAggregationFunction.getInstance(),
+            BitXOrDBAggregationFunction.getInstance(), new CountDistinctDBAggregationFunction(),
+            new GroupConcatDBAggregationFunction(), MaxDBAggregationFunction.getInstance(),
+            MinDBAggregationFunction.getInstance(), StdDevPopDBAggregationFunction.getInstance(),
+            StdDevSampDBAggregationFunction.getInstance(), new SumDistinctDBAggregationFunction(),
+            VarPopDBAggregationFunction.getInstance(), VarSampDBAggregationFunction.getInstance());
     }
 }

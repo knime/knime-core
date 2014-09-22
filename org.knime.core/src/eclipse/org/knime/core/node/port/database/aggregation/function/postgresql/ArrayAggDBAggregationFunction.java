@@ -46,10 +46,10 @@
  * History
  *   01.08.2014 (koetter): created
  */
-package org.knime.core.node.port.database.aggregation.function;
+package org.knime.core.node.port.database.aggregation.function.postgresql;
 
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
@@ -57,23 +57,24 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public final class AverageDBAggregationFunction extends SimpleDBAggregationFunction {
+public final class ArrayAggDBAggregationFunction extends SimpleDBAggregationFunction {
 
-    private static volatile AverageDBAggregationFunction instance;
+    private static volatile ArrayAggDBAggregationFunction instance;
 
-    private AverageDBAggregationFunction() {
-        super("AVG", "Computes the average.", DoubleCell.TYPE, DoubleValue.class);
+    private ArrayAggDBAggregationFunction() {
+        super("ARRAY_AGG", "Return the input values, including nulls, concatenated into an array.", StringCell.TYPE,
+            DataValue.class);
     }
 
     /**
      * Returns the only instance of this class.
      * @return the only instance
      */
-    public static AverageDBAggregationFunction getInstance() {
+    public static ArrayAggDBAggregationFunction getInstance() {
         if (instance == null) {
-            synchronized (AverageDBAggregationFunction.class) {
+            synchronized (ArrayAggDBAggregationFunction.class) {
                 if (instance == null) {
-                    instance = new AverageDBAggregationFunction();
+                    instance = new ArrayAggDBAggregationFunction();
                 }
             }
         }

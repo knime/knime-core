@@ -32,12 +32,12 @@ import org.knime.core.node.port.database.aggregation.function.column.AbstractCol
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class CovariancePopDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+public class CovarPopDBAggregationFunction extends AbstractColumnDBAggregationFunction {
 
     /**
      * Constructor.
      */
-    public CovariancePopDBAggregationFunction() {
+    public CovarPopDBAggregationFunction() {
         super("Second column: ", null, DoubleValue.class);
     }
 
@@ -65,7 +65,7 @@ public class CovariancePopDBAggregationFunction extends AbstractColumnDBAggregat
      */
     @Override
     public DBAggregationFunction createInstance() {
-        return new CovariancePopDBAggregationFunction();
+        return new CovarPopDBAggregationFunction();
     }
 
     /**

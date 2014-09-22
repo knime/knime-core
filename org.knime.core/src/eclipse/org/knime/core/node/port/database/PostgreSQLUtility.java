@@ -52,11 +52,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.knime.core.node.port.database.aggregation.function.AverageDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.AvgDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.BitAndDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.BitOrDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.CorrDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.CountDistinctDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.CovarPopDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.CovarSampDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.GroupConcatDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.MaxDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.MinDBAggregationFunction;
@@ -65,6 +67,16 @@ import org.knime.core.node.port.database.aggregation.function.StdDevSampDBAggreg
 import org.knime.core.node.port.database.aggregation.function.SumDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.postgresql.ArrayAggDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.postgresql.RegrAvgXDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.postgresql.RegrAvgYDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.postgresql.RegrCountDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.postgresql.RegrInterceptDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.postgresql.RegrR2DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.postgresql.RegrSXXDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.postgresql.RegrSXYDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.postgresql.RegrSYYDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.postgresql.RegrSlopeDBAggregationFunction;
 
 /**
  * Database utility for PostgreSQL.
@@ -106,13 +118,19 @@ public class PostgreSQLUtility extends DatabaseUtility {
      *
      */
     public PostgreSQLUtility() {
-        super(DATABASE_IDENTIFIER, MANIPULATOR, AverageDBAggregationFunction.getInstance(),
-            new CountDistinctDBAggregationFunction(), MaxDBAggregationFunction.getInstance(),
-            MinDBAggregationFunction.getInstance(), SumDBAggregationFunction.getInstance(),
-            new GroupConcatDBAggregationFunction("STRING_AGG"), BitAndDBAggregationFunction.getInstance(),
-            BitOrDBAggregationFunction.getInstance(), StdDevPopDBAggregationFunction.getInstance(),
-            StdDevSampDBAggregationFunction.getInstance(), VarPopDBAggregationFunction.getInstance(),
-            VarSampDBAggregationFunction.getInstance(), new CorrDBAggregationFunction());
+        super(DATABASE_IDENTIFIER, MANIPULATOR, ArrayAggDBAggregationFunction.getInstance(),
+            AvgDBAggregationFunction.getInstance(), BitAndDBAggregationFunction.getInstance(),
+            BitOrDBAggregationFunction.getInstance(), new CountDistinctDBAggregationFunction(),
+            MaxDBAggregationFunction.getInstance(), MinDBAggregationFunction.getInstance(),
+            SumDBAggregationFunction.getInstance(), new GroupConcatDBAggregationFunction("STRING_AGG"),
+            new CorrDBAggregationFunction(), new CovarPopDBAggregationFunction(),
+            new CovarSampDBAggregationFunction(), new RegrAvgXDBAggregationFunction(),
+            new RegrAvgYDBAggregationFunction(), new RegrCountDBAggregationFunction(),
+            new RegrInterceptDBAggregationFunction(), new RegrR2DBAggregationFunction(),
+            new RegrSlopeDBAggregationFunction(), new RegrSXXDBAggregationFunction(),
+            new RegrSXYDBAggregationFunction(), new RegrSYYDBAggregationFunction(),
+            StdDevPopDBAggregationFunction.getInstance(), StdDevSampDBAggregationFunction.getInstance(),
+            VarPopDBAggregationFunction.getInstance(), VarSampDBAggregationFunction.getInstance());
     }
 
     /**

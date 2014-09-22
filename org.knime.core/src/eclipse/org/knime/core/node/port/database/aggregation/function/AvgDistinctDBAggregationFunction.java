@@ -44,38 +44,78 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   28.08.2014 (koetter): created
+ *   01.08.2014 (koetter): created
  */
 package org.knime.core.node.port.database.aggregation.function;
 
-import org.knime.core.data.LongValue;
-import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 
 /**
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public final class BitOrDBAggregationFunction extends SimpleDBAggregationFunction {
+public final class AvgDistinctDBAggregationFunction extends AbstractDistinctDBAggregationFunction {
 
-    private static volatile BitOrDBAggregationFunction instance;
+    /**
+     * Constructor.
+     */
+    public AvgDistinctDBAggregationFunction() {
+        this(false);
+    }
 
-    private BitOrDBAggregationFunction() {
-        super("BIT_OR", "The bitwise OR of all non-null input values, or null if none.", null, LongValue.class);
+    private AvgDistinctDBAggregationFunction(final boolean distinct) {
+        super(distinct);
     }
 
     /**
-     * Returns the only instance of this class.
-     * @return the only instance
+     * {@inheritDoc}
      */
-    public static BitOrDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (BitOrDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new BitOrDBAggregationFunction();
-                }
-            }
-        }
-        return instance;
+    @Override
+    public String getLabel() {
+        return "AVG";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataType getType(final DataType originalType) {
+        return originalType;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return "Returns the average of the (distinct) values.";
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isCompatible(final DataType type) {
+        return type.isCompatible(DoubleValue.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
+        final String colName) {
+        return buildSQLFragment("AVG", manipulator, tableName, colName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DBAggregationFunction createInstance() {
+        return new AvgDistinctDBAggregationFunction(isSelected());
     }
 }

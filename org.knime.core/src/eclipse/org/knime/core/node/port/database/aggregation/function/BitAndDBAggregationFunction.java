@@ -48,7 +48,7 @@
  */
 package org.knime.core.node.port.database.aggregation.function;
 
-import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
@@ -61,7 +61,7 @@ public final class BitAndDBAggregationFunction extends SimpleDBAggregationFuncti
     private static volatile BitAndDBAggregationFunction instance;
 
     private BitAndDBAggregationFunction() {
-        super("BIT_AND", "The bitwise AND of all non-null input values, or null if none.", null, IntValue.class);
+        super("BIT_AND", "The bitwise AND of all non-null input values, or null if none.", null, LongValue.class);
     }
 
     /**

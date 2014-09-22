@@ -56,23 +56,23 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public final class BitOrDBAggregationFunction extends SimpleDBAggregationFunction {
+public final class BitXOrDBAggregationFunction extends SimpleDBAggregationFunction {
 
-    private static volatile BitOrDBAggregationFunction instance;
+    private static volatile BitXOrDBAggregationFunction instance;
 
-    private BitOrDBAggregationFunction() {
-        super("BIT_OR", "The bitwise OR of all non-null input values, or null if none.", null, LongValue.class);
+    private BitXOrDBAggregationFunction() {
+        super("BIT_XOR", "The bitwise XOR of all non-null input values, or null if none.", null, LongValue.class);
     }
 
     /**
      * Returns the only instance of this class.
      * @return the only instance
      */
-    public static BitOrDBAggregationFunction getInstance() {
+    public static BitXOrDBAggregationFunction getInstance() {
         if (instance == null) {
-            synchronized (BitOrDBAggregationFunction.class) {
+            synchronized (BitXOrDBAggregationFunction.class) {
                 if (instance == null) {
-                    instance = new BitOrDBAggregationFunction();
+                    instance = new BitXOrDBAggregationFunction();
                 }
             }
         }

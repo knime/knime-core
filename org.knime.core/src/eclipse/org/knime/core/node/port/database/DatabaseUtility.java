@@ -66,7 +66,7 @@ import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.UnsupportedDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.AverageDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.AvgDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.CountDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.FirstDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.LastDBAggregationFunction;
@@ -95,7 +95,7 @@ public class DatabaseUtility {
     private static final StatementManipulator DEFAULT_MANIPULATOR = new StatementManipulator();
 
     private static final DBAggregationFunction[] DEFAULT_AGGREGATION_FUNCTIONS = new DBAggregationFunction[] {
-        AverageDBAggregationFunction.getInstance(), CountDBAggregationFunction.getInstance(),
+        AvgDBAggregationFunction.getInstance(), CountDBAggregationFunction.getInstance(),
         FirstDBAggregationFunction.getInstance(), LastDBAggregationFunction.getInstance(),
         MaxDBAggregationFunction.getInstance(), MinDBAggregationFunction.getInstance(),
         SumDBAggregationFunction.getInstance()};
