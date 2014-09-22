@@ -243,10 +243,10 @@ final class DBGroupByNodeDialog2 extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
-        final DatabasePortObjectSpec dbspec = (DatabasePortObjectSpec)specs[0];
-        if (dbspec == null) {
+        if (specs == null || specs.length < 1 || specs[0] == null) {
             throw new NotConfigurableException("No input connection found.");
         }
+        final DatabasePortObjectSpec dbspec = (DatabasePortObjectSpec)specs[0];
         final DataTableSpec spec = dbspec.getDataTableSpec();
         try {
             final DatabaseQueryConnectionSettings connectionSettings = dbspec.getConnectionSettings(null);
