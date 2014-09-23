@@ -177,7 +177,7 @@ final class DBJoinerNodeDialog extends NodeDialogPane {
             @Override
             protected void initComboBox(final DataTableSpec spec, final JComboBox comboBox, final String selected) {
                 super.initComboBox(spec, comboBox, selected);
-                if (selected == null) {
+                if (selected == null && comboBox.getModel().getSize() > 0) {
                     comboBox.setSelectedIndex(0);
                 }
             }
