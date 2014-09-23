@@ -198,6 +198,9 @@ final class DBGroupByNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
+        if (specs == null || specs.length < 1 || specs[0] == null) {
+            throw new NotConfigurableException("No input spec available");
+        }
         final DatabasePortObjectSpec dbspec = (DatabasePortObjectSpec)specs[0];
         final DataTableSpec spec = dbspec.getDataTableSpec();
         try {
