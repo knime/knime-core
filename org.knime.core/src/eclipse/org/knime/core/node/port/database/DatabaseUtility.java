@@ -65,7 +65,7 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.UnsupportedDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.InvalidDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.AvgDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.CountDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.FirstDBAggregationFunction;
@@ -258,7 +258,7 @@ public class DatabaseUtility {
     /**
      * @param id the id as returned by {@link DBAggregationFunction#getId()}
      * @return the {@link DBAggregationFunction} for the given name or an instance of the
-     * {@link UnsupportedDBAggregationFunction} that has the given id
+     * {@link InvalidDBAggregationFunction} that has the given id
      * @since 2.11
      */
     public DBAggregationFunction getAggregationFunction(final String id) {
@@ -266,7 +266,14 @@ public class DatabaseUtility {
         if (function != null) {
             return function.createInstance();
         }
-        return new UnsupportedDBAggregationFunction(id, getDatabaseIdentifier());
+        final String dbIdentifier = getDatabaseIdentifier();
+        String msg = "The function '" + id + "' is not supported by ";
+        if (dbIdentifier != null) {
+            msg += dbIdentifier + ".";
+        } else {
+            msg += "the current database.";
+        }
+        return new InvalidDBAggregationFunction(id, msg, dbIdentifier);
     }
 
     /**

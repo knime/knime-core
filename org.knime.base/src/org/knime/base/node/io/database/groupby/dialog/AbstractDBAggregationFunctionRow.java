@@ -57,7 +57,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.database.aggregation.AggregationFunction;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.InvalidAggregationFunction;
-import org.knime.core.node.port.database.aggregation.UnsupportedDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.InvalidDBAggregationFunction;
 
 /**
  *
@@ -179,7 +179,7 @@ implements AggregationFunctionRow<F> {
                 } catch (Exception e) {
                     final String errMsg = "Exception while loading settings for aggreation function '"
                         + function.getId() + "', reason: " + e.getMessage();
-                    function = new UnsupportedDBAggregationFunction(functionId, null);
+                    function = new InvalidDBAggregationFunction(functionId, errMsg, null);
                     LOGGER.error(errMsg);
                 }
             }

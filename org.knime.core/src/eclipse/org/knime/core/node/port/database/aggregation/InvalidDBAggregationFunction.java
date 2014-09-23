@@ -52,30 +52,24 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.def.StringCell;
 
 /**
- * Class that indicates an unsupported db aggregation function.
+ * Class that indicates an invalid db aggregation function.
+ *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class UnsupportedDBAggregationFunction extends SimpleDBAggregationFunction
+public class InvalidDBAggregationFunction extends SimpleDBAggregationFunction
 implements InvalidAggregationFunction {
 
     private final String m_dbIdentifier;
 
     /**
      * @param name the name of the function
+     * @param errorMessage the error message to show to the user
      * @param dbIdentifier the database identifier. Can be <code>null</code> if unknown.
      */
-    public UnsupportedDBAggregationFunction(final String name, final String dbIdentifier) {
-        super(name, createMessage(name, dbIdentifier), StringCell.TYPE, DataValue.class);
+    public InvalidDBAggregationFunction(final String name, final String errorMessage, final String dbIdentifier) {
+        super(name, errorMessage, StringCell.TYPE, DataValue.class);
         m_dbIdentifier = dbIdentifier;
-    }
-
-    private static String createMessage(final String name, final String dbIdentifier) {
-        final String msg = "The function '" + name + "' is not supported by ";
-        if (dbIdentifier != null) {
-            return msg + dbIdentifier + ".";
-        }
-        return msg + "the current database.";
     }
 
     /**
