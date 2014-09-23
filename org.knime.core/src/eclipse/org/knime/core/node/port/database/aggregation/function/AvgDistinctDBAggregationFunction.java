@@ -50,6 +50,7 @@ package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 
@@ -84,7 +85,7 @@ public final class AvgDistinctDBAggregationFunction extends AbstractDistinctDBAg
      */
     @Override
     public DataType getType(final DataType originalType) {
-        return originalType;
+        return DoubleCell.TYPE;
     }
 
     /**
