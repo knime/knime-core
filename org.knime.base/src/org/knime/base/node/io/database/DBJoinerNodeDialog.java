@@ -282,6 +282,9 @@ final class DBJoinerNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
         throws NotConfigurableException {
+        if (specs == null || specs.length < 2 || specs[0] == null || specs[1] == null) {
+            throw new NotConfigurableException("No input specification available.");
+        }
         DataTableSpec tableSpec1 = ((DatabasePortObjectSpec)specs[0]).getDataTableSpec();
         DataTableSpec tableSpec2 = ((DatabasePortObjectSpec)specs[1]).getDataTableSpec();
         DBJoinerSettings joinerSettings = new DBJoinerSettings();
