@@ -52,6 +52,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.knime.core.data.StringValue;
 import org.knime.core.node.port.database.aggregation.function.AvgDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.BitAndDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.BitOrDBAggregationFunction;
@@ -122,7 +123,8 @@ public class PostgreSQLUtility extends DatabaseUtility {
             AvgDBAggregationFunction.getInstance(), BitAndDBAggregationFunction.getInstance(),
             BitOrDBAggregationFunction.getInstance(), new CountDistinctDBAggregationFunction(),
             MaxDBAggregationFunction.getInstance(), MinDBAggregationFunction.getInstance(),
-            SumDBAggregationFunction.getInstance(), new GroupConcatDBAggregationFunction("STRING_AGG"),
+            SumDBAggregationFunction.getInstance(),
+            new GroupConcatDBAggregationFunction("STRING_AGG", StringValue.class),
             new CorrDBAggregationFunction(), new CovarPopDBAggregationFunction(),
             new CovarSampDBAggregationFunction(), new RegrAvgXDBAggregationFunction(),
             new RegrAvgYDBAggregationFunction(), new RegrCountDBAggregationFunction(),

@@ -22,7 +22,7 @@ package org.knime.core.node.port.database.aggregation.function;
 
 
 import org.knime.core.data.DataType;
-import org.knime.core.data.StringValue;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
@@ -38,28 +38,42 @@ public final class GroupConcatDBAggregationFunction extends AbstractConcatDBAggr
 
     private final String m_name;
     private final String m_function;
+    private final Class<? extends DataValue> m_supportedValueClass;
 
     /**
      * Constructor.
      */
     public GroupConcatDBAggregationFunction() {
-        this("GROUP_CONCAT");
+        this("GROUP_CONCAT", DataValue.class);
     }
+
+    /**
+     * Constructor.
+     * @param compatibleClasses the supported {@link DataValue} class
+     */
+    public GroupConcatDBAggregationFunction(final Class<? extends DataValue> compatibleClasses) {
+        this("GROUP_CONCAT", compatibleClasses);
+    }
+
     /**
      * @param id the id, name and function at the same time
+     * @param compatibleClasses the supported {@link DataValue} class
      */
-    public GroupConcatDBAggregationFunction(final String id) {
-        this(id, id);
+    public GroupConcatDBAggregationFunction(final String id, final Class<? extends DataValue> compatibleClasses) {
+        this(id, id, compatibleClasses);
     }
 
     /**
      * @param name the name to display
      * @param function the function to use in the sql fragment
+     * @param compatibleClasses the supported {@link DataValue} class
      */
-    public GroupConcatDBAggregationFunction(final String name, final String function) {
+    public GroupConcatDBAggregationFunction(final String name, final String function,
+        final Class<? extends DataValue> compatibleClasses) {
         super(new ConcatDBAggregationFuntionSettings(","));
         m_name = name;
         m_function = function;
+        m_supportedValueClass = compatibleClasses;
     }
 
     /**
@@ -109,7 +123,7 @@ public final class GroupConcatDBAggregationFunction extends AbstractConcatDBAggr
      */
     @Override
     public boolean isCompatible(final DataType type) {
-        return type.isCompatible(StringValue.class);
+        return type.isCompatible(m_supportedValueClass);
     }
 
     /**
@@ -134,6 +148,6 @@ public final class GroupConcatDBAggregationFunction extends AbstractConcatDBAggr
     @Override
     public DBAggregationFunction createInstance() {
         //here we have to pass the original id to have a valid clone
-        return new GroupConcatDBAggregationFunction(getId());
+        return new GroupConcatDBAggregationFunction(getId(), m_supportedValueClass);
     }
 }
