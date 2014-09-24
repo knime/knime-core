@@ -101,7 +101,13 @@ public class DatabasePortObject extends DatabaseConnectionPortObject {
     /** {@inheritDoc} */
     @Override
     public String getSummary() {
-        return "No. of columns: " + ((DatabasePortObjectSpec) m_spec).getDataTableSpec().getNumColumns();
+        StringBuilder buf = new StringBuilder();
+        buf.append("No. of columns: ").append(((DatabasePortObjectSpec) m_spec).getDataTableSpec().getNumColumns());
+        final String dbId = m_spec.getDatabaseIdentifier();
+        if (dbId != null) {
+            buf.append(" DB: ").append(dbId);
+        }
+        return buf.toString();
     }
 
     /**

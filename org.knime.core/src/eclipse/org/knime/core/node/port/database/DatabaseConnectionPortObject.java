@@ -99,12 +99,20 @@ public class DatabaseConnectionPortObject implements PortObject {
     @Override
     public String getSummary() {
         String jdbcUrl = "<unknown>";
+        String dbId = null;
         try {
-            jdbcUrl = getConnectionSettings(null).getJDBCUrl();
+            DatabaseConnectionSettings cs = getConnectionSettings(null);
+            jdbcUrl = cs.getJDBCUrl();
+            dbId = cs.getDatabaseIdentifier();
         } catch (InvalidSettingsException ex) {
             // jo mei...
         }
-        return "Database: " + jdbcUrl;
+        StringBuilder buf = new StringBuilder();
+        if (dbId != null) {
+            buf.append("DB: ").append(dbId).append(" ");
+        }
+        buf.append("URL: ").append(jdbcUrl);
+        return buf.toString();
     }
 
     /**

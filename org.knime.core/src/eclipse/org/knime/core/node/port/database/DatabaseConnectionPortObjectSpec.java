@@ -155,6 +155,20 @@ public class DatabaseConnectionPortObjectSpec implements PortObjectSpec {
     }
 
     /**
+     * @return the database identifier or <code>null</code> if it can not retrieved
+     * @since 2.11
+     */
+    public String getDatabaseIdentifier() {
+        try {
+            final DatabaseConnectionSettings cs = getConnectionSettings(null);
+            return cs.getDatabaseIdentifier();
+        } catch (InvalidSettingsException e) {
+            // we can not get the identifier
+        }
+        return null;
+    }
+
+    /**
      * Returns the connection settings for this object.
      *
      * @param credProvider a credentials provider, may be <code>null</code>

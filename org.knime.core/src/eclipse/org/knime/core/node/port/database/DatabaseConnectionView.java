@@ -77,8 +77,8 @@ final class DatabaseConnectionView extends JPanel {
         super(new GridBagLayout());
         super.setName("Connection");
         StringBuilder buf = new StringBuilder("<html><body>");
-        buf.append("<h2>Database Connection</h2>");
-        buf.append("<strong>Database Driver:</strong><br/>");
+//        buf.append("<h2>Database Connection</h2>");
+        buf.append("<strong>Database Driver:</strong>&nbsp;&nbsp;");
         buf.append("<tt>" + sett.getString("driver", "") + "</tt>");
         buf.append("<br/><br/>");
         buf.append("<strong>Database URL:</strong><br/>");
@@ -87,16 +87,16 @@ final class DatabaseConnectionView extends JPanel {
         boolean useCredential = sett.containsKey("credential_name");
         if (useCredential) {
             String credName = sett.getString("credential_name", "");
-            buf.append("<strong>Credential Name:</strong><br/>");
+            buf.append("<strong>Credential Name:</strong>&nbsp;&nbsp;");
             buf.append("<tt>" + credName + "</tt>");
         } else {
-            buf.append("<strong>User Name:</strong><br/>");
+            buf.append("<strong>User Name:</strong>&nbsp;&nbsp;");
             buf.append("<tt>" + sett.getString("user", "") + "</tt>");
         }
         final String dbIdentifier = sett.getString("databaseIdentifier", null);
         if (dbIdentifier != null) {
             buf.append("<br/><br/>");
-            buf.append("<strong>Database Identifier:</strong><br/>");
+            buf.append("<strong>Database Identifier:</strong>&nbsp;&nbsp;");
             buf.append("<tt>" + dbIdentifier + "</tt>");
         }
         final String sql = sett.getString("statement", null);
