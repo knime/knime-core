@@ -111,7 +111,9 @@ import org.knime.core.util.FileUtil;
 public final class DatabaseReaderConnection {
 
     /** Separator used to decided which SQL statements should be execute
-     * line-by-line; the semicolon is not part of the executed query. */
+     * line-by-line; the semicolon is not part of the executed query.
+     * We need the \n in addition to the semicolon to ensure that commands that contain a ;
+     * are handled correctly!*/
     public static final String SQL_QUERY_SEPARATOR = ";\n";
 
     private static final NodeLogger LOGGER =
