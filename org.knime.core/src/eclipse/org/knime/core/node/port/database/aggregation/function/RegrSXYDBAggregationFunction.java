@@ -18,7 +18,7 @@
  * History
  *   Created on 27.08.2014 by koetter
  */
-package org.knime.core.node.port.database.aggregation.function.postgresql;
+package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
@@ -32,12 +32,12 @@ import org.knime.core.node.port.database.aggregation.function.column.AbstractCol
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class RegrInterceptDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+public class RegrSXYDBAggregationFunction extends AbstractColumnDBAggregationFunction {
 
     /**
      * Constructor.
      */
-    public RegrInterceptDBAggregationFunction() {
+    public RegrSXYDBAggregationFunction() {
         super("X column: ", null, DoubleValue.class);
     }
 
@@ -65,7 +65,7 @@ public class RegrInterceptDBAggregationFunction extends AbstractColumnDBAggregat
      */
     @Override
     public DBAggregationFunction createInstance() {
-        return new RegrInterceptDBAggregationFunction();
+        return new RegrSXYDBAggregationFunction();
     }
 
     /**
@@ -73,7 +73,7 @@ public class RegrInterceptDBAggregationFunction extends AbstractColumnDBAggregat
      */
     @Override
     public String getLabel() {
-        return "REGR_INTERCEPT";
+        return "REGR_SXY";
     }
 
     /**
@@ -97,7 +97,7 @@ public class RegrInterceptDBAggregationFunction extends AbstractColumnDBAggregat
      */
     @Override
     public String getDescription() {
-        return "The function regr_intercept(Y, X) returns the y-intercept of the least-squares-fit linear equation "
-                + "determined by the (X, Y) pairs.";
+        return "The function regr_sxy(Y, X) returns the 'sum of products' of  of independent times dependent variable "
+                + "(sum(X*Y) - sum(X) * sum(Y)/N).";
     }
 }

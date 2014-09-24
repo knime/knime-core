@@ -18,7 +18,7 @@
  * History
  *   Created on 27.08.2014 by koetter
  */
-package org.knime.core.node.port.database.aggregation.function.postgresql;
+package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
@@ -32,12 +32,12 @@ import org.knime.core.node.port.database.aggregation.function.column.AbstractCol
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class RegrAvgXDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+public class RegrR2DBAggregationFunction extends AbstractColumnDBAggregationFunction {
 
     /**
      * Constructor.
      */
-    public RegrAvgXDBAggregationFunction() {
+    public RegrR2DBAggregationFunction() {
         super("X column: ", null, DoubleValue.class);
     }
 
@@ -65,7 +65,7 @@ public class RegrAvgXDBAggregationFunction extends AbstractColumnDBAggregationFu
      */
     @Override
     public DBAggregationFunction createInstance() {
-        return new RegrAvgXDBAggregationFunction();
+        return new RegrR2DBAggregationFunction();
     }
 
     /**
@@ -73,7 +73,7 @@ public class RegrAvgXDBAggregationFunction extends AbstractColumnDBAggregationFu
      */
     @Override
     public String getLabel() {
-        return "REGR_AVGY";
+        return "REGR_R2";
     }
 
     /**
@@ -97,6 +97,6 @@ public class RegrAvgXDBAggregationFunction extends AbstractColumnDBAggregationFu
      */
     @Override
     public String getDescription() {
-        return "The function regr_avgy(Y, X) returns the average of the independent variable (sum(Y)/N).";
+        return "The function regr_r2(Y, X) returns the square of the correlation coefficient.";
     }
 }

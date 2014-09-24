@@ -63,21 +63,21 @@ import org.knime.core.node.port.database.aggregation.function.CovarSampDBAggrega
 import org.knime.core.node.port.database.aggregation.function.GroupConcatDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.MaxDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.MinDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrAvgXDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrAvgYDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrCountDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrInterceptDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrR2DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrSXXDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrSXYDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrSYYDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.RegrSlopeDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.StdDevPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.StdDevSampDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.SumDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.postgresql.ArrayAggDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.postgresql.RegrAvgXDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.postgresql.RegrAvgYDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.postgresql.RegrCountDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.postgresql.RegrInterceptDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.postgresql.RegrR2DBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.postgresql.RegrSXXDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.postgresql.RegrSXYDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.postgresql.RegrSYYDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.postgresql.RegrSlopeDBAggregationFunction;
 
 /**
  * Database utility for PostgreSQL.

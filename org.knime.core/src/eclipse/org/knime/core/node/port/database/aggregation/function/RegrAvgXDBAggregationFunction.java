@@ -18,7 +18,7 @@
  * History
  *   Created on 27.08.2014 by koetter
  */
-package org.knime.core.node.port.database.aggregation.function.postgresql;
+package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
@@ -32,12 +32,12 @@ import org.knime.core.node.port.database.aggregation.function.column.AbstractCol
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class RegrSXYDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+public class RegrAvgXDBAggregationFunction extends AbstractColumnDBAggregationFunction {
 
     /**
      * Constructor.
      */
-    public RegrSXYDBAggregationFunction() {
+    public RegrAvgXDBAggregationFunction() {
         super("X column: ", null, DoubleValue.class);
     }
 
@@ -65,7 +65,7 @@ public class RegrSXYDBAggregationFunction extends AbstractColumnDBAggregationFun
      */
     @Override
     public DBAggregationFunction createInstance() {
-        return new RegrSXYDBAggregationFunction();
+        return new RegrAvgXDBAggregationFunction();
     }
 
     /**
@@ -73,7 +73,7 @@ public class RegrSXYDBAggregationFunction extends AbstractColumnDBAggregationFun
      */
     @Override
     public String getLabel() {
-        return "REGR_SXY";
+        return "REGR_AVGY";
     }
 
     /**
@@ -97,7 +97,6 @@ public class RegrSXYDBAggregationFunction extends AbstractColumnDBAggregationFun
      */
     @Override
     public String getDescription() {
-        return "The function regr_sxy(Y, X) returns the 'sum of products' of  of independent times dependent variable "
-                + "(sum(X*Y) - sum(X) * sum(Y)/N).";
+        return "The function regr_avgy(Y, X) returns the average of the independent variable (sum(Y)/N).";
     }
 }

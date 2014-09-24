@@ -18,11 +18,11 @@
  * History
  *   Created on 27.08.2014 by koetter
  */
-package org.knime.core.node.port.database.aggregation.function.postgresql;
+package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnDBAggregationFunction;
@@ -32,12 +32,12 @@ import org.knime.core.node.port.database.aggregation.function.column.AbstractCol
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class RegrSlopeDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+public class RegrCountDBAggregationFunction extends AbstractColumnDBAggregationFunction {
 
     /**
      * Constructor.
      */
-    public RegrSlopeDBAggregationFunction() {
+    public RegrCountDBAggregationFunction() {
         super("X column: ", null, DoubleValue.class);
     }
 
@@ -46,7 +46,7 @@ public class RegrSlopeDBAggregationFunction extends AbstractColumnDBAggregationF
      */
     @Override
     public DataType getType(final DataType originalType) {
-        return DoubleCell.TYPE;
+        return LongCell.TYPE;
     }
 
     /**
@@ -65,7 +65,7 @@ public class RegrSlopeDBAggregationFunction extends AbstractColumnDBAggregationF
      */
     @Override
     public DBAggregationFunction createInstance() {
-        return new RegrSlopeDBAggregationFunction();
+        return new RegrCountDBAggregationFunction();
     }
 
     /**
@@ -73,7 +73,7 @@ public class RegrSlopeDBAggregationFunction extends AbstractColumnDBAggregationF
      */
     @Override
     public String getLabel() {
-        return "REGR_SLOPE";
+        return "REGR_COUNT";
     }
 
     /**
@@ -97,7 +97,6 @@ public class RegrSlopeDBAggregationFunction extends AbstractColumnDBAggregationF
      */
     @Override
     public String getDescription() {
-        return "The function regr_slope(Y, X) returns the slope of the least-squares-fit linear equation determined "
-                + "by the (X, Y) pairs.";
+        return "The function regr_count(Y, X) returns the number of input rows in which both expressions are nonnull.";
     }
 }

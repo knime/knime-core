@@ -18,7 +18,7 @@
  * History
  *   Created on 27.08.2014 by koetter
  */
-package org.knime.core.node.port.database.aggregation.function.postgresql;
+package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
@@ -32,12 +32,12 @@ import org.knime.core.node.port.database.aggregation.function.column.AbstractCol
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class RegrAvgYDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+public class RegrSlopeDBAggregationFunction extends AbstractColumnDBAggregationFunction {
 
     /**
      * Constructor.
      */
-    public RegrAvgYDBAggregationFunction() {
+    public RegrSlopeDBAggregationFunction() {
         super("X column: ", null, DoubleValue.class);
     }
 
@@ -65,7 +65,7 @@ public class RegrAvgYDBAggregationFunction extends AbstractColumnDBAggregationFu
      */
     @Override
     public DBAggregationFunction createInstance() {
-        return new RegrAvgYDBAggregationFunction();
+        return new RegrSlopeDBAggregationFunction();
     }
 
     /**
@@ -73,7 +73,7 @@ public class RegrAvgYDBAggregationFunction extends AbstractColumnDBAggregationFu
      */
     @Override
     public String getLabel() {
-        return "REGR_AVGX";
+        return "REGR_SLOPE";
     }
 
     /**
@@ -97,6 +97,7 @@ public class RegrAvgYDBAggregationFunction extends AbstractColumnDBAggregationFu
      */
     @Override
     public String getDescription() {
-        return "The function regr_avgx(Y, X) returns the average of the independent variable (sum(X)/N).";
+        return "The function regr_slope(Y, X) returns the slope of the least-squares-fit linear equation determined "
+                + "by the (X, Y) pairs.";
     }
 }

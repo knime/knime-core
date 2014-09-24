@@ -18,11 +18,11 @@
  * History
  *   Created on 27.08.2014 by koetter
  */
-package org.knime.core.node.port.database.aggregation.function.postgresql;
+package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.LongCell;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnDBAggregationFunction;
@@ -32,12 +32,12 @@ import org.knime.core.node.port.database.aggregation.function.column.AbstractCol
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class RegrCountDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+public class RegrAvgYDBAggregationFunction extends AbstractColumnDBAggregationFunction {
 
     /**
      * Constructor.
      */
-    public RegrCountDBAggregationFunction() {
+    public RegrAvgYDBAggregationFunction() {
         super("X column: ", null, DoubleValue.class);
     }
 
@@ -46,7 +46,7 @@ public class RegrCountDBAggregationFunction extends AbstractColumnDBAggregationF
      */
     @Override
     public DataType getType(final DataType originalType) {
-        return LongCell.TYPE;
+        return DoubleCell.TYPE;
     }
 
     /**
@@ -65,7 +65,7 @@ public class RegrCountDBAggregationFunction extends AbstractColumnDBAggregationF
      */
     @Override
     public DBAggregationFunction createInstance() {
-        return new RegrCountDBAggregationFunction();
+        return new RegrAvgYDBAggregationFunction();
     }
 
     /**
@@ -73,7 +73,7 @@ public class RegrCountDBAggregationFunction extends AbstractColumnDBAggregationF
      */
     @Override
     public String getLabel() {
-        return "REGR_COUNT";
+        return "REGR_AVGX";
     }
 
     /**
@@ -97,6 +97,6 @@ public class RegrCountDBAggregationFunction extends AbstractColumnDBAggregationF
      */
     @Override
     public String getDescription() {
-        return "The function regr_count(Y, X) returns the number of input rows in which both expressions are nonnull.";
+        return "The function regr_avgx(Y, X) returns the average of the independent variable (sum(X)/N).";
     }
 }

@@ -18,7 +18,7 @@
  * History
  *   Created on 27.08.2014 by koetter
  */
-package org.knime.core.node.port.database.aggregation.function.postgresql;
+package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
@@ -32,12 +32,12 @@ import org.knime.core.node.port.database.aggregation.function.column.AbstractCol
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class RegrSXXDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+public class RegrInterceptDBAggregationFunction extends AbstractColumnDBAggregationFunction {
 
     /**
      * Constructor.
      */
-    public RegrSXXDBAggregationFunction() {
+    public RegrInterceptDBAggregationFunction() {
         super("X column: ", null, DoubleValue.class);
     }
 
@@ -65,7 +65,7 @@ public class RegrSXXDBAggregationFunction extends AbstractColumnDBAggregationFun
      */
     @Override
     public DBAggregationFunction createInstance() {
-        return new RegrSXXDBAggregationFunction();
+        return new RegrInterceptDBAggregationFunction();
     }
 
     /**
@@ -73,7 +73,7 @@ public class RegrSXXDBAggregationFunction extends AbstractColumnDBAggregationFun
      */
     @Override
     public String getLabel() {
-        return "REGR_SXX";
+        return "REGR_INTERCEPT";
     }
 
     /**
@@ -97,7 +97,7 @@ public class RegrSXXDBAggregationFunction extends AbstractColumnDBAggregationFun
      */
     @Override
     public String getDescription() {
-        return "The function regr_sxx(Y, X) returns the 'sum of squares' of the independent variable "
-                + "(sum(X^2) - sum(X)^2/N).";
+        return "The function regr_intercept(Y, X) returns the y-intercept of the least-squares-fit linear equation "
+                + "determined by the (X, Y) pairs.";
     }
 }
