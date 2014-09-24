@@ -136,13 +136,10 @@ extends AbstractAggregationPanel<DataTypeAggregationTableModel, DataTypeAggregat
     @Override
     protected JPopupMenu createTablePopupMenu() {
         final JPopupMenu menu = new JPopupMenu();
-        if (getNoOfTableRows() == 0) {
-            //the table contains no rows
-            final JMenuItem item =
-                new JMenuItem("No method(s) available");
-            item.setEnabled(false);
-            menu.add(item);
-            return menu;
+        final JMenuItem invalidRowsMenu = createInvalidRowsSelectionMenu();
+        if (invalidRowsMenu != null) {
+            menu.add(invalidRowsMenu);
+            menu.addSeparator();
         }
         if (getNoOfSelectedRows() < getNoOfTableRows()) {
             //add this option only if at least one row is not selected

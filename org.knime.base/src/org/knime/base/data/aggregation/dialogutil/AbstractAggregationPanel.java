@@ -79,6 +79,7 @@ import javax.swing.table.TableModel;
 import org.knime.base.data.aggregation.AggregationMethodDecorator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.database.aggregation.InvalidAggregationFunction;
 
 
 /**
@@ -164,11 +165,75 @@ L extends Object> extends MouseAdapter {
 
         private void maybeShowContextMenu(final MouseEvent e) {
             if (e.isPopupTrigger()) {
-                final JPopupMenu menu = createTablePopupMenu();
+                final JPopupMenu menu;
+                if (getNoOfTableRows() == 0) {
+                    menu = new JPopupMenu();
+                  //the table contains no rows
+                    final JMenuItem item =
+                        new JMenuItem("No rows available");
+                    item.setEnabled(false);
+                    menu.add(item);
+                } else {
+                    menu = createTablePopupMenu();
+                }
                 if (menu != null) {
                     menu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
+        }
+    }
+
+    /**
+     * @return the {@link JMenuItem} to select invalid rows or <code>null</code> if all rows are valid
+     * @since 2.11
+     */
+    protected JMenuItem createInvalidRowsSelectionMenu() {
+        final List<R> rows = getTableModel().getRows();
+        final List<Integer> idxs = new LinkedList<>();
+        int idx = 0;
+        for (R r : rows) {
+            if (!r.isValid() || (r.getFunction() instanceof InvalidAggregationFunction)) {
+                idxs.add(Integer.valueOf(idx));
+            }
+            idx++;
+        }
+        if (!idxs.isEmpty()) {
+            final JMenuItem selectInvalidRows = new JMenuItem("Select all invalid rows");
+            selectInvalidRows.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    updateSelection(idxs);
+                }
+            });
+            return selectInvalidRows;
+        }
+        return null;
+    }
+
+    /**
+     * @param idxs the indices to select
+     * @since 2.11
+     */
+    protected void updateSelection(final Collection<Integer> idxs) {
+        final JTable table = getTable();
+        if (idxs == null || idxs.isEmpty()) {
+            table.clearSelection();
+            return;
+        }
+        Integer first = null;
+        for (final Integer idx : idxs) {
+            if (idx.intValue() < 0) {
+                continue;
+            }
+            if (first == null) {
+                first = idx;
+                table.setRowSelectionInterval(idx.intValue(), idx.intValue());
+            } else {
+                table.addRowSelectionInterval(idx.intValue(), idx.intValue());
+            }
+        }
+        if (first != null) {
+            table.scrollRectToVisible(new Rectangle(table.getCellRect(first.intValue(), 0, true)));
         }
     }
 

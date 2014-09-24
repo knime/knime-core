@@ -181,25 +181,13 @@ public class DBPatternAggregationFunctionTableModel
         }
     }
 
-    private void updateFunction(final int row, final AggregationFunction function) {
-        final DBPatternAggregationFunctionRow old = getRow(row);
-        if (old.getFunction().getId().equals(function.getId())) {
-            //check if the method has changed
-            return;
-        }
-        //create a new operator each time it is updated to guarantee that
-        //each column has its own operator instance
-        final DBAggregationFunction cloneFunction = getAggregationFunctionProvider().getFunction(function.getId());
-        updateRow(row, new DBPatternAggregationFunctionRow(old.getInputPattern(), old.isRegex(), cloneFunction));
-    }
-
     private void updatePattern(final int rowIdx, final String inputPattern) {
         final DBPatternAggregationFunctionRow old = getRow(rowIdx);
         if (old.getInputPattern().equals(inputPattern)) {
             //check if the method has changed
             return;
         }
-        updateRow(rowIdx, inputPattern, old.isRegex(), old.getFunction().getId());
+        updateRow(rowIdx, inputPattern, old.isRegex(), old.getFunction().getId(), old.isValid());
     }
 
     private void updateIsRegex(final int rowIdx, final boolean isRegex) {
@@ -208,11 +196,20 @@ public class DBPatternAggregationFunctionTableModel
             //check if the method has changed
             return;
         }
-        updateRow(rowIdx, old.getInputPattern(), isRegex, old.getFunction().getId());
+        updateRow(rowIdx, old.getInputPattern(), isRegex, old.getFunction().getId(), old.isValid());
+    }
+
+    private void updateFunction(final int row, final AggregationFunction function) {
+        final DBPatternAggregationFunctionRow old = getRow(row);
+        if (old.getFunction().getId().equals(function.getId())) {
+            //check if the method has changed
+            return;
+        }
+        updateRow(row, old.getInputPattern(), old.isRegex(), function.getId(), old.isValid());
     }
 
     private void updateRow(final int row, final String pattern, final boolean isRegex,
-        final String functionId) {
+        final String functionId, final boolean isValid) {
       //create a new operator each time it is updated to guarantee that
         //each column has its own operator instance
         final DBAggregationFunction methodClone = getAggregationFunctionProvider().getFunction(functionId);
@@ -228,6 +225,7 @@ public class DBPatternAggregationFunctionTableModel
                     "Invalid regular expression", JOptionPane.ERROR_MESSAGE);
             }
         }
+        regexAggregator.setValid(isValid);
         updateRow(row, regexAggregator);
     }
 

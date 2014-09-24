@@ -170,7 +170,10 @@ public class DBDataTypeAggregationFunctionTableModel
         //create a new operator each time it is updated to guarantee that
         //each column has its own operator instance
         final DBAggregationFunction cloneFunction = getAggregationFunctionProvider().getFunction(function.getId());
-        updateRow(row, new DBDataTypeAggregationFunctionRow(old.getDataType(), cloneFunction));
+        final DBDataTypeAggregationFunctionRow newRow =
+                new DBDataTypeAggregationFunctionRow(old.getDataType(), cloneFunction);
+        newRow.setValid(old.isValid());
+        updateRow(row, newRow);
     }
 
     /**

@@ -106,12 +106,10 @@ DBColumnAggregationFunctionRow, DataColumnSpec> {
     @Override
     protected JPopupMenu createTablePopupMenu() {
         final JPopupMenu menu = new JPopupMenu();
-        if (getNoOfTableRows() == 0) {
-            //the table contains no rows
-            final JMenuItem item = new JMenuItem("No column(s) available");
-            item.setEnabled(false);
-            menu.add(item);
-            return menu;
+        final JMenuItem invalidRowsMenu = createInvalidRowsSelectionMenu();
+        if (invalidRowsMenu != null) {
+            menu.add(invalidRowsMenu);
+            menu.addSeparator();
         }
         createColumnSelectionMenu(menu);
         menu.addSeparator();
@@ -348,28 +346,6 @@ DBColumnAggregationFunctionRow, DataColumnSpec> {
      */
     int noOfCompatibleRows(final DataType type) {
         return getTableModel().getCompatibleRowIdxs(type).size();
-    }
-
-    /**
-     * @param idxs the indices to select
-     */
-    void updateSelection(final Collection<Integer> idxs) {
-        if (idxs == null || idxs.isEmpty()) {
-            getTable().clearSelection();
-            return;
-        }
-        boolean first = true;
-        for (final Integer idx : idxs) {
-            if (idx.intValue() < 0) {
-                continue;
-            }
-            if (first) {
-                first = false;
-                getTable().setRowSelectionInterval(idx.intValue(), idx.intValue());
-            } else {
-                getTable().addRowSelectionInterval(idx.intValue(), idx.intValue());
-            }
-        }
     }
 
     /**

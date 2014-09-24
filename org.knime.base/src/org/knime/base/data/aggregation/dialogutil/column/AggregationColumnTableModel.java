@@ -159,7 +159,10 @@ public class AggregationColumnTableModel extends AbstractAggregationTableModel<A
         //create a new operator each time it is updated to guarantee that
         //each column has its own operator instance
         AggregationMethod methodClone = AggregationMethods.getMethod4Id(method.getId());
-        updateRow(row, new ColumnAggregator(old.getOriginalColSpec(), methodClone, old.inclMissingCells()));
+        final ColumnAggregator newRow = new ColumnAggregator(old.getOriginalColSpec(), methodClone,
+            old.inclMissingCells());
+        newRow.setValid(old.isValid());
+        updateRow(row, newRow);
     }
 
     /**
