@@ -68,6 +68,7 @@ import org.knime.core.data.DoubleValue;
  * aggregation method.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @see org.knime.base.data.aggregation.dialogutil.column.AggregationColumnTableModel
  */
 @Deprecated
 public class AggregationColumnTableModel

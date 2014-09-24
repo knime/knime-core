@@ -84,6 +84,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * define the aggregation columns and their aggregation method.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @see org.knime.base.data.aggregation.dialogutil.column.AggregationColumnPanel
  */
 @Deprecated
 public class AggregationColumnPanel
@@ -372,28 +373,6 @@ public class AggregationColumnPanel
      */
     int noOfCompatibleRows(final Class<? extends DataValue> type) {
         return getTableModel().getCompatibleRowIdxs(type).size();
-    }
-
-    /**
-     * @param idxs the indices to select
-     */
-    void updateSelection(final Collection<Integer> idxs) {
-        if (idxs == null || idxs.isEmpty()) {
-            getTable().clearSelection();
-            return;
-        }
-        boolean first = true;
-        for (final Integer idx : idxs) {
-            if (idx.intValue() < 0) {
-                continue;
-            }
-            if (first) {
-                first = false;
-                getTable().setRowSelectionInterval(idx.intValue(), idx.intValue());
-            } else {
-                getTable().addRowSelectionInterval(idx.intValue(), idx.intValue());
-            }
-        }
     }
 
     /**

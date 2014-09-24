@@ -64,6 +64,7 @@ import org.knime.core.data.DataType;
  * @author Tobias Koetter, University of Konstanz
  * @since 2.8
  * @deprecated
+ * @see org.knime.base.data.aggregation.dialogutil.column.ColumnAggregatorTableCellEditor
  */
 @Deprecated
 public class ColumnAggregatorTableCellEditor extends AbstractAggregationMethodTableCellEditor {
