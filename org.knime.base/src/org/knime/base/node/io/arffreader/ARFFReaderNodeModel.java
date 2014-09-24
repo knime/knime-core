@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.02.2005 (ohl): created
  */
@@ -72,7 +72,7 @@ import org.knime.core.node.util.StringHistory;
  * The model of the ARFF reader node. The interesting work is done in the
  * {@link ARFFTable} and
  * {@link ARFFRowIterator}.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class ARFFReaderNodeModel extends NodeModel {
@@ -105,7 +105,7 @@ public class ARFFReaderNodeModel extends NodeModel {
 
     /**
      * Creates a new ARFF reader with a default file.
-     * 
+     *
      * @param arffFileLocation URL to the ARFF file to read
      */
     public ARFFReaderNodeModel(final String arffFileLocation) {
@@ -130,14 +130,10 @@ public class ARFFReaderNodeModel extends NodeModel {
             return new DataTableSpec[]{ARFFTable
                     .createDataTableSpecFromARFFfile(m_file, null)};
         } catch (IOException ioe) {
-            throw new InvalidSettingsException("ARFFReader: I/O Error", ioe);
-        } catch (InvalidSettingsException ise) {
-            throw new InvalidSettingsException("ARFFReader: ARFF Header Error",
-                    ise);
+            throw new InvalidSettingsException("ARFFReader: I/O Error: " + ioe.getMessage(), ioe);
         } catch (CanceledExecutionException cee) {
             // never flies
-            throw new InvalidSettingsException(
-                    "ARFFReader: User canceled action.");
+            throw new InvalidSettingsException("ARFFReader: User canceled action.");
         }
     }
 
@@ -236,7 +232,7 @@ public class ARFFReaderNodeModel extends NodeModel {
 
     /**
      * Tries to create an URL from the passed string.
-     * 
+     *
      * @param url the string to transform into an URL
      * @return URL if entered value could be properly tranformed, or
      * @throws MalformedURLException if the value entered in the text field was
@@ -306,7 +302,7 @@ public class ARFFReaderNodeModel extends NodeModel {
 
     /**
      * Adds the specified string to the ARFF reader/writer history.
-     * 
+     *
      * @param filename the filename to add
      */
     public static void addToFileHistory(final String filename) {
@@ -316,7 +312,7 @@ public class ARFFReaderNodeModel extends NodeModel {
 
     /**
      * FileFilter for the ARFFReader/writer file chooser dialog.
-     * 
+     *
      * @author Peter Ohl, University of Konstanz
      */
     public static class ARFFFileFilter extends FileFilter {
