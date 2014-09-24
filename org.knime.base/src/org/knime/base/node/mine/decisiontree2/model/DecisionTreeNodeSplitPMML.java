@@ -242,8 +242,7 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
         } else if (matchingChild != null) {
             return matchingChild.getClassCounts(row, spec);
         } else { // return null prediction strategy
-            LOGGER.debug("Decision Tree Prediction failed."
-                    + " Could not find branch for row '" + row.toString());
+            LOGGER.debug("No matching decision tree branch for row '" + row.toString());
             // return empty map
             return new LinkedHashMap<DataCell, Double>();
         }
@@ -261,8 +260,7 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
         } else if (matchingChild != null) {
             return matchingChild.getWinnerNode(row, spec);
         } else { // return null prediction strategy
-            LOGGER.debug("Decision Tree Prediction failed."
-                    + " Could not find branch for row '" + row.toString());
+            LOGGER.debug("No matching decision tree branch for row '" + row.toString());
             // return empty map
             return null;
         }
