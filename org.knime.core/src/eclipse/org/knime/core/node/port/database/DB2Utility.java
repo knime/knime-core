@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -43,48 +44,27 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   08.05.2014 (thor): created
+ *   17.06.2014 (thor): created
  */
 package org.knime.core.node.port.database;
 
-import org.knime.core.node.port.database.aggregation.function.AvgDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.CountDistinctDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.GroupConcatDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.MaxDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.MinDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.SumDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.sqlite.TotalDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+
 
 /**
- * Database utility for SQLite.
+ * Database utility for IBM DB2.
  *
- * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
- * @since 2.10
+ * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
+ * @since 2.11
  */
-public class SQLiteUtility extends DatabaseUtility {
-    private static class SQLiteStatementManipulator extends StatementManipulator {
+public class DB2Utility extends DatabaseUtility {
+    private static class DB2StatementManipulator extends StatementManipulator {
         /**
          * {@inheritDoc}
          */
         @Override
-        public String forMetadataOnly(final String sql) {
-            /* Fixed Bug 2874. For sqlite the data must always be
-             * fetched as the column type string is returned
-             * for all columns when fetching only meta data. */
-            return sql;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String unquoteColumn(final String colName) {
-            if (colName.startsWith("\"") && colName.endsWith("\"")
-                && !SAVE_COLUMN_NAME_PATTERN.matcher(colName.substring(1, colName.length() - 1)).matches()) {
-                return colName.substring(1, colName.length() - 1);
-            } else {
-                return colName;
-            }
+        public String limitRows(final String sql, final long count) {
+            return sql + "FETCH FIRST " + count + " ROWS ONLY";
         }
 
         /**
@@ -92,23 +72,21 @@ public class SQLiteUtility extends DatabaseUtility {
          */
         @Override
         public String[] createTableAsSelect(final String tableName, final String query) {
-            return new String[] {"CREATE TABLE " + quoteIdentifier(tableName) + " AS " + query};
+            return new String[] {"CREATE TABLE  " + quoteIdentifier(tableName) + " AS (" + query + ") WITH NO DATA",
+                "INSERT INTO " + quoteIdentifier(tableName) + " (" + query + ")"};
         }
     }
 
-    private static final StatementManipulator MANIPULATOR = new SQLiteStatementManipulator();
+    private static final StatementManipulator MANIPULATOR = new DB2StatementManipulator();
 
     /**The unique database identifier.
      * @since 2.11*/
-    public static final String DATABASE_IDENTIFIER = "sqlite";
+    public static final String DATABASE_IDENTIFIER = "db2";
 
     /**
      * Constructor.
      */
-    public SQLiteUtility() {
-        super(DATABASE_IDENTIFIER, MANIPULATOR,  AvgDBAggregationFunction.getInstance(),
-            new CountDistinctDBAggregationFunction(), new GroupConcatDBAggregationFunction(),
-            MaxDBAggregationFunction.getInstance(), MinDBAggregationFunction.getInstance(),
-            SumDBAggregationFunction.getInstance(), TotalDBAggregationFunction.getInstance());
+    public DB2Utility() {
+        super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunction[]) null);
     }
 }

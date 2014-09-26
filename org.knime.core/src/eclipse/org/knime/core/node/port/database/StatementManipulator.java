@@ -116,6 +116,25 @@ public class StatementManipulator {
     }
 
     /**
+     * @param tableName the name of the table to create
+     * @param query the select statement
+     * @return the sql statement that creates a table with the given name from the given sql query
+     * @since 2.11
+     */
+    public String[] createTableAsSelect(final String tableName, final String query) {
+        return new String[] {"CREATE TABLE " + quoteIdentifier(tableName) + " AS (" + query + ")"};
+    }
+
+    /**
+     * @param tableName the name of the table to drop
+     * @return the statement to drop the given table
+     * @since 2.11
+     */
+    public String dropTable(final String tableName) {
+        return "DROP TABLE " + quoteIdentifier(tableName);
+    }
+
+    /**
      * Quotes an identifier e.g. column or table name if it contains characters that need
      * quoting e.g. white spaces.
      *
@@ -137,6 +156,9 @@ public class StatementManipulator {
      */
     @Deprecated
     public String quoteColumn(final String colName) {
+        if (colName == null) {
+            return null;
+        }
         Matcher m = SAVE_COLUMN_NAME_PATTERN.matcher(colName);
         if (!m.matches()) {
             return "\"" + colName + "\"";

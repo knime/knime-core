@@ -66,6 +66,15 @@ public class SQLServerUtility extends DatabaseUtility {
         public String limitRows(final String sql, final long count) {
             return "SELECT TOP " + count + " * FROM (" + sql + ") " + getTempTableName();
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String[] createTableAsSelect(final String tableName, final String query) {
+            return new String[] {"SELECT * INTO " + quoteIdentifier(tableName) + " FROM (" + query + ") as "
+                    + getTempTableName()};
+        }
     }
 
     private static final StatementManipulator MANIPULATOR = new SQLServerStatementManipulator();
