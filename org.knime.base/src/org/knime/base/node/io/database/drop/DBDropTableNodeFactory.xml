@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<knimeNode xmlns="http://knime.org/node/v2.10" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://knime.org/node/v2.10 http://knime.org/node/v2.10" icon="./db_drop_table.png" type="Manipulator">
+    <name>Database Drop Table</name>
+    <shortDescription>Drops a table from the database using the input database JDBC connection.</shortDescription>
+    <fullDescription>
+        <intro>
+            This node takes a database connection as input and allows to drop a table within the database described by 
+            the incoming database JDBC connection.
+        </intro>
+        
+        <option name="Table name">
+            The name of the table to drop.
+        </option>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Database JDBC Connection">A database JDBC connection</inPort>
+        <outPort index="0" name="Database JDBC Connection">The same as input</outPort>
+    </ports>    
+</knimeNode>
