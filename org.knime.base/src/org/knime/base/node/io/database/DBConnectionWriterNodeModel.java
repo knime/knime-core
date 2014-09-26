@@ -99,8 +99,10 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         } catch (Exception e) {
             // suppress exception thrown when table does not exist in database
         }
-        conn.execute("CREATE TABLE " + tableName
-                + " AS (" + conn.getQuery() + ")", cp);
+        String[] stmts = conn.getUtility().getStatementManipulator().createTableAsSelect(tableName, conn.getQuery());
+        for (final String stmt : stmts) {
+            conn.execute(stmt, cp);
+        }
         return new BufferedDataTable[0];
     }
 
@@ -136,16 +138,21 @@ final class DBConnectionWriterNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        if (inSpecs == null || inSpecs.length < 1 || inSpecs[0] == null) {
+            throw new InvalidSettingsException("No input available");
+        }
         // check table name
         final String table = m_tableName.getStringValue();
         if (table == null || table.trim().isEmpty()) {
             throw new InvalidSettingsException(
                 "Configure node and enter a valid table name.");
         }
+        DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
         try {
-            DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-            DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
-            conn.createConnection(getCredentialsProvider());
+            final DatabaseQueryConnectionSettings conn = spec.getConnectionSettings(getCredentialsProvider());
+            if (conn.getRetrieveMetadataInConfigure()) {
+                conn.createConnection(getCredentialsProvider());
+            }
         } catch (InvalidSettingsException ise) {
             throw ise;
         } catch (Throwable t) {
