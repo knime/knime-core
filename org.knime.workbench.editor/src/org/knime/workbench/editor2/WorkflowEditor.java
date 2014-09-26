@@ -1962,9 +1962,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             .getEditorReferences()) {
             IEditorPart editorPart = editorRef.getEditor(false); // avoid restoring editor (for large workflows)
             if (editorPart == null) {
-                // Editor is not active/loaded. But tooltip may point to report template file or meta file
-                File editorDir = new File(editorRef.getTitleToolTip()).getParentFile(); // could be null!
-                if (wfDir.equals(editorDir)) {
+                // Editor is not active/loaded. But tooltip usually points to report template file or meta file
+                final String titleToolTip = editorRef.getTitleToolTip();
+                if (titleToolTip == null || wfDir.equals(new File(titleToolTip).getParentFile())) {
                     // the tooltip indicates that it is an editor for the same workflow (report/metadata/etc.)
                     editorPart = editorRef.getEditor(true); // activate/load the editor
                 }
