@@ -810,6 +810,21 @@ public final class Node implements NodeModelWarningListener {
         return false;
     }
 
+    /** Iterates the argument array and returns true if any element
+     * is instance of {@link InactiveBranchPortObjectSpec}.
+     * @param ins The input data
+     * @return true if any input is inactive.
+     * @since 2.11
+     */
+    public static boolean containsInactiveSpecs(final PortObjectSpec[] ins) {
+        for (PortObjectSpec portObjectSpec : ins) {
+            if (portObjectSpec instanceof InactiveBranchPortObjectSpec) {
+                return true;
+            }
+        }
+        return false;
+    }
+
    /**
     * @param rawData the data from the predecessor.
     * @param exec The execution monitor.
@@ -1887,23 +1902,20 @@ public final class Node implements NodeModelWarningListener {
         for (int i = 1; i < inSpecs.length; i++) {
             if (inSpecs[i] instanceof InactiveBranchPortObjectSpec) {
                 if (!isInactiveBranchConsumer()) {
-                    throw new NotConfigurableException("Can not configure"
-                            + " nodes in inactive branches.");
+                    throw new NotConfigurableException("Can not configure nodes in inactive branches.");
                 }
             }
             PortType t = getInputType(i);
-            if (!t.acceptsPortObjectSpec(inSpecs[i])
-                    && !(inSpecs[i] instanceof InactiveBranchPortObjectSpec)) {
+            if (!t.acceptsPortObjectSpec(inSpecs[i]) && !(inSpecs[i] instanceof InactiveBranchPortObjectSpec)) {
                 // wrong type and not a consumer of inactive branches either
                 // (which is the only exception for a type mismatch)
-                throw new IllegalArgumentException(
-                        "Invalid incoming port object spec \""
-                                + inSpecs[i].getClass().getSimpleName()
-                                + "\", expected \""
-                                + t.getPortObjectSpecClass().getSimpleName()
-                                + "\"");
-            } else if (inSpecs[i] == null && BufferedDataTable.TYPE.equals(t)
-                    && !t.isOptional()) {
+                // general port type compatibility is already checked when creating the connection so this error
+                // can only occur if the input is too general for this node (like a database connection to a database
+                // table(!) connection)
+                throw new NotConfigurableException("Invalid incoming port object spec \""
+                    + inSpecs[i].getClass().getSimpleName() + "\", expected \""
+                    + t.getPortObjectSpecClass().getSimpleName() + "\"");
+            } else if (inSpecs[i] == null && BufferedDataTable.TYPE.equals(t) && !t.isOptional()) {
                 corrInSpecs[i - 1] = new DataTableSpec();
             } else {
                 corrInSpecs[i - 1] = inSpecs[i];
