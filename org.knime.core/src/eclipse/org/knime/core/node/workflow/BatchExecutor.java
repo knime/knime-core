@@ -425,7 +425,7 @@ public class BatchExecutor {
      * This method is called by the constructor in order to process the command line arguments. The default
      * implementation reads the configuration for a single workflow from the arguments using
      * {@link #parseConfigFromArguments(String[])}. Subclasses may override this method to do their own processing. Keep
-     * in mind that this method is called from the constructor i.e. instance fields of subclasses are not intialized
+     * in mind that this method is called from the constructor i.e. instance fields of subclasses are not initialized
      * yet!
      *
      * @param args the command line arguments

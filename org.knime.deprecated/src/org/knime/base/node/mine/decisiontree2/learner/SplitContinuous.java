@@ -105,10 +105,10 @@ public class SplitContinuous extends Split {
      * @param averageSplitpoint if true, the split point is set as the average
      *            of the partition borders, else the upper value of the lower
      *            partition is used
-     * @param minObjectsCount the minimumn number of objects in at least two
+     * @param minObjectsCount the minimum number of objects in at least two
      *            partitions *
      * @param above the initial class distribution above this attribute list
-     * @param below the inintial class distribution below this attribute list
+     * @param below the initial class distribution below this attribute list
      */
     private void findBestSplit(final InMemoryTable table,
             final int attributeIndex,
@@ -139,7 +139,7 @@ public class SplitContinuous extends Split {
 
         // the split is determined by sweeping linearly through the
         // ordered attribute list
-        // two historgrams are maintained: one for the class distribution
+        // two histograms are maintained: one for the class distribution
         // below the current position (potential split point) and one histogram
         // for the class distribution above the current position
         // for all potential split points, the quality measure is calculates
@@ -247,7 +247,7 @@ public class SplitContinuous extends Split {
                 }
             }
 
-            // set the current values to the previouse ones
+            // set the current values to the previous ones
             previouseAttrValue = attrValue;
             previousClassValue = classValue;
             weight = row.getWeight();
