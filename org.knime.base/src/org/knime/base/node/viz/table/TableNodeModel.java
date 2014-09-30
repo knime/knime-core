@@ -46,6 +46,7 @@ package org.knime.base.node.viz.table;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -60,6 +61,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.tableview.TableContentModel;
+import org.knime.core.node.util.ViewUtils;
 
 
 /**
@@ -72,8 +74,7 @@ import org.knime.core.node.tableview.TableContentModel;
  * @author Bernd Wiswedel, University of Konstanz
  * @see org.knime.core.node.tableview.TableContentModel
  */
-public class TableNodeModel extends NodeModel
-    implements BufferedDataTableHolder {
+public class TableNodeModel extends NodeModel implements BufferedDataTableHolder {
 
     /** Index of the input port (only one anyway). */
     protected static final int INPORT = 0;
@@ -83,6 +84,10 @@ public class TableNodeModel extends NodeModel
      * "real" data structure.
      */
     private final TableContentModel m_contModel;
+
+    private BufferedDataTable m_table;
+
+    private final AtomicReference<UpdateObject> m_latestUpdateObject = new AtomicReference<>();
 
     /**
      * Constructs a new (but empty) model. The model has one input port and no
@@ -130,14 +135,9 @@ public class TableNodeModel extends NodeModel
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) {
-        assert (data != null);
-        assert (data.length == 1);
-        final DataTable in = data[0];
-        assert (in != null);
+        m_table = data[0];
         HiLiteHandler inProp = getInHiLiteHandler(INPORT);
-        m_contModel.setDataTable(in);
-        m_contModel.setHiLiteHandler(inProp);
-        assert (m_contModel.hasData());
+        updateView(new UpdateObject(m_table, inProp));
         return new BufferedDataTable[0];
     }
 
@@ -162,10 +162,7 @@ public class TableNodeModel extends NodeModel
      */
     @Override
     public BufferedDataTable[] getInternalTables() {
-        assert m_contModel.getDataTable() instanceof BufferedDataTable;
-        return new BufferedDataTable[] {
-                (BufferedDataTable)(m_contModel.getDataTable())
-        };
+        return new BufferedDataTable[] {m_table};
     }
 
     /**
@@ -173,12 +170,9 @@ public class TableNodeModel extends NodeModel
      */
     @Override
     public void setInternalTables(final BufferedDataTable[] tables) {
-        if (tables.length != 1) {
-            throw new IllegalArgumentException();
-        }
-        m_contModel.setDataTable(tables[0]);
+        m_table = tables[0];
         HiLiteHandler inProp = getInHiLiteHandler(INPORT);
-        m_contModel.setHiLiteHandler(inProp);
+        updateView(new UpdateObject(m_table, inProp));
     }
 
     /**
@@ -186,9 +180,21 @@ public class TableNodeModel extends NodeModel
      */
     @Override
     protected void reset() {
-        m_contModel.setDataTable(null);
-        m_contModel.setHiLiteHandler(null);
-        assert (!m_contModel.hasData());
+        m_table = null;
+        updateView(new UpdateObject(null, null));
+    }
+
+    private void updateView(final UpdateObject updateObject) {
+        if (m_latestUpdateObject.getAndSet(updateObject) == null) {
+            ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+                @Override
+                public void run() {
+                    UpdateObject latestUpdateObject = m_latestUpdateObject.getAndSet(null);
+                    m_contModel.setDataTable(latestUpdateObject.m_table);
+                    m_contModel.setHiLiteHandler(latestUpdateObject.m_hiliteHandler);
+                }
+            });
+        }
     }
 
     /**
@@ -220,5 +226,14 @@ public class TableNodeModel extends NodeModel
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+    }
+
+    private static final class UpdateObject {
+        private final DataTable m_table;
+        private HiLiteHandler m_hiliteHandler;
+        private UpdateObject(final DataTable table, final HiLiteHandler hiliteHandler) {
+            m_table = table;
+            m_hiliteHandler = hiliteHandler;
+        }
     }
 }
