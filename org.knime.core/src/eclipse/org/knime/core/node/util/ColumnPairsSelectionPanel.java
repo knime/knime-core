@@ -252,20 +252,26 @@ public class ColumnPairsSelectionPanel extends JPanel {
             comboBoxModel.addElement(new RowKey(ROW_KEY_COL_NAME));
         }
         comboBox.setSelectedIndex(-1);
+        boolean foundSelectedItem = false;
         if (null != selected
                 && selected.equals(m_rowKeyIdentifier)) {
+            foundSelectedItem = true;
             comboBox.setSelectedIndex(0);
         }
         for (DataColumnSpec colSpec : spec) {
             comboBoxModel.addElement(colSpec);
             if (null != selected
                     && colSpec.getName().equals(selected)) {
+                foundSelectedItem = true;
                 comboBoxModel.setSelectedItem(colSpec);
             }
         }
         ColumnComboBoxRenderer renderer =
             (ColumnComboBoxRenderer) comboBox.getRenderer();
         renderer.setDefaultValue(selected);
+        if (!foundSelectedItem) {
+            comboBox.setSelectedIndex(-1);
+        }
     }
 
     private void addUIControls(final int index, final String leftSelected,

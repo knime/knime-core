@@ -53,6 +53,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.Vector;
 
 import org.knime.core.data.DataCell;
@@ -115,6 +116,7 @@ public class ARFFTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_tSpec;
     }
@@ -122,6 +124,7 @@ public class ARFFTable implements DataTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowIterator iterator() {
         try {
             return new ARFFRowIterator(m_file, m_tSpec, m_rowPrefix);
@@ -287,16 +290,12 @@ public class ARFFTable implements DataTable {
         } // end of while (not EOF)
 
         // check uniqueness of column names
+        HashSet<String> colNames = new HashSet<>();
         for (int c = 0; c < colSpecs.size(); c++) {
-            // compare it with all specs with higher index
-            for (int h = c + 1; h < colSpecs.size(); h++) {
-                if (colSpecs.get(c).getName().equals(
-                        colSpecs.get(h).getName())) {
-                    throw new InvalidSettingsException("Two attributes with "
-                            + "equal names defined in header of file '"
-                            + fileLoc + "'.");
-                }
-            }
+            if (!colNames.add(colSpecs.get(c).getName())) {
+                throw new InvalidSettingsException("Two attributes with equal names defined in header of file '"
+                        + fileLoc + "'.");
+            } 
         }
         return new DataTableSpec(tableName, colSpecs
                 .toArray(new DataColumnSpec[colSpecs.size()]));

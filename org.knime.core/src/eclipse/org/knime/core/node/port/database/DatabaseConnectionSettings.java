@@ -469,8 +469,8 @@ public class DatabaseConnectionSettings {
                     boolean isValid = true;
                     try {
                         isValid = conn.isValid(1);
-                    } catch (final Error e) {
-                        LOGGER.debug("java.sql.Connection#isValid(1) throws error: " + e.getMessage());
+                    } catch (final Throwable t) {
+                        LOGGER.debug("java.sql.Connection#isValid(1) throws error: " + t.getMessage());
                     }
                     // and is closed
                     if (conn.isClosed() || !isValid) {

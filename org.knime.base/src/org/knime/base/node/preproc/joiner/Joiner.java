@@ -144,6 +144,8 @@ public final class Joiner {
     /** The maximal number of partitions (changed in testing routines). */
     private int m_numBitsMaximal = Integer.SIZE;
 
+    /** Only used for testcases, simulates an out-of-memory event after that many rows added in memory. */
+    private int m_rowsAddedBeforeForcedOOM;
 
     /**
      * Creates a new instance.
@@ -314,7 +316,7 @@ public final class Joiner {
             DataColumnSpec columnSpec = specs[1].getColumnSpec(i);
             if (rightCols.contains(columnSpec.getName())) {
                 if (m_settings.getDuplicateHandling().equals(DuplicateHandling.AppendSuffix)) {
-                    if (m_leftSurvivors.contains(columnSpec.getName()) 
+                    if (m_leftSurvivors.contains(columnSpec.getName())
                             || m_rightSurvivors.contains(columnSpec.getName())) {
                         String newName = columnSpec.getName();
                         do {
@@ -661,10 +663,16 @@ public final class Joiner {
 
         boolean tryToFreeMemory = true;
         int counter = 0;
+        long rowsAdded = 0;
         CloseableRowIterator leftIter = leftTable.iterator();
         while (leftIter.hasNext()) {
             exec.checkCanceled();
-            if (!m_memService.isMemoryLow()) {
+            boolean saveToAddMoreRows =
+                !m_memService.isMemoryLow()
+                    && ((m_rowsAddedBeforeForcedOOM == 0)
+                            || (rowsAdded % m_rowsAddedBeforeForcedOOM != (m_rowsAddedBeforeForcedOOM - 1)));
+
+            if (saveToAddMoreRows) {
                 DataRow row = leftIter.next();
                 InputRow inputDataRow = new InputRow(row, counter,
                         InputRow.Settings.InDataPort.Left,
@@ -675,6 +683,7 @@ public final class Joiner {
                     if (currParts.contains(partition)) {
                         addRow(leftTableHashed, leftOuterJoins,
                                 partition, tuple, inputDataRow);
+                        rowsAdded++;
                     }
                 }
                 counter++;
@@ -690,6 +699,7 @@ public final class Joiner {
                     LOGGER.debug("Forced gc() while reading inner table.");
                     continue;
                 } else {
+                    rowsAdded++;
                     tryToFreeMemory = true;
 
                     // Build list of partitions that are not empty
@@ -921,20 +931,25 @@ public final class Joiner {
                     m_inputDataRowSettings);
 
             boolean matchFoundForRightRow = false;
+            boolean deferMatch = false;
 
             for (JoinTuple joinTuple : rightRow.getJoinTuples()) {
                 int partition = joinTuple.hashCode() & m_bitMask;
                 if (!currParts.contains(partition)) {
-                    // skip when partition is not in the current partitions
+                    deferMatch = true;
+                    // skip and defer non-match when partition is not in the current partitions
                     continue;
                 }
+
                 Map<JoinTuple, Set<Integer>> leftTuples =
                     leftTableHashed.get(partition);
                 if (null == leftTuples) {
-                    // skip when the left table does not have rows that fall
+                    // skip and check for outer join when the left table does not have rows that fall
                     // in this partition
+                    deferMatch = false;
                     continue;
                 }
+
                 Set<Integer> localLeftOuterJoins = null;
                 if (m_retainLeft  && !m_matchAny) {
                     localLeftOuterJoins = leftOuterJoins.get(partition);
@@ -962,7 +977,7 @@ public final class Joiner {
             }
 
 
-            if (m_retainRight && !matchFoundForRightRow) {
+            if (m_retainRight && !matchFoundForRightRow && !deferMatch) {
                 int outRowIndex = outputCont.getRowCount();
                 // add right outer join
                 DataRow outRow = OutputRow.createDataRow(outRowIndex,
@@ -1215,11 +1230,12 @@ public final class Joiner {
     }
 
     /**
-     * Used for testing, only.
-     * @param memoryService set memory service
+     * Used for testing, only. Simulates an out-of-memory event after that many rows have been added to memory.
+     *
+     * @param maxRows the maximum number of rows before an event
      */
-    void setMemoryService(final MemoryService memoryService) {
-        m_memService = memoryService;
+    void setRowsAddedBeforeOOM(final int maxRows) {
+        m_rowsAddedBeforeForcedOOM = maxRows;
     }
 
     /**

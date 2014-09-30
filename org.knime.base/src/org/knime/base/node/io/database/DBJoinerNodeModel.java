@@ -134,11 +134,29 @@ final class DBJoinerNodeModel extends DBNodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        checkJoinColumns(((DatabasePortObjectSpec)inSpecs[0]).getDataTableSpec(),
+            ((DatabasePortObjectSpec)inSpecs[1]).getDataTableSpec());
         if (m_settings.getLeftJoinOnColumns().length < 1) {
             throw new InvalidSettingsException("At least one pair of columns to join on has to be selected");
         }
         return new PortObjectSpec[]{createDbOutSpec((DatabasePortObjectSpec)inSpecs[0],
             (DatabasePortObjectSpec)inSpecs[1])};
+    }
+
+    private void checkJoinColumns(final DataTableSpec leftSpec, final DataTableSpec rightSpec)
+        throws InvalidSettingsException {
+        List<String> leftColumns = Arrays.asList(leftSpec.getColumnNames());
+        for (String joinColumn : m_settings.getLeftJoinOnColumns()) {
+            if (!leftColumns.contains(joinColumn)) {
+                throw new InvalidSettingsException("Left table is missing join column " + joinColumn);
+            }
+        }
+        List<String> rightColumns = Arrays.asList(rightSpec.getColumnNames());
+        for (String joinColumn : m_settings.getRightJoinOnColumns()) {
+            if (!rightColumns.contains(joinColumn)) {
+                throw new InvalidSettingsException("Right table is missing join column " + joinColumn);
+            }
+        }
     }
 
     /**
@@ -151,22 +169,22 @@ final class DBJoinerNodeModel extends DBNodeModel {
         final DatabasePortObjectSpec inSpecRight) throws InvalidSettingsException {
         DatabaseQueryConnectionSettings connectionLeft = inSpecLeft.getConnectionSettings(getCredentialsProvider());
         DatabaseQueryConnectionSettings connectionRight = inSpecRight.getConnectionSettings(getCredentialsProvider());
+        StatementManipulator statementManipulator = connectionLeft.getUtility().getStatementManipulator();
         // Check first if connections are equal, otherwise abort
         checkIfDBConnectionsAreEqual(connectionLeft, connectionRight);
         // Calculate output columns
         Pair<Map<String, String>, Map<String, String>> columnMaps =
-            createOutputColumnMaps(inSpecLeft.getDataTableSpec(), inSpecRight.getDataTableSpec());
+            createOutputColumnMaps(inSpecLeft.getDataTableSpec(), inSpecRight.getDataTableSpec(), statementManipulator);
         if (columnMaps.getFirst().size() + columnMaps.getSecond().size() < 1) {
             throw new InvalidSettingsException("No column selected");
         }
         // Create output query
         String newQuery =
-            createQuery(connectionLeft.getQuery(), connectionRight.getQuery(), connectionLeft.getUtility()
-                .getStatementManipulator(), columnMaps);
+            createQuery(connectionLeft.getQuery(), connectionRight.getQuery(), statementManipulator, columnMaps);
         // Create output spec
         DataTableSpec tableSpec =
-            createOutSpec(inSpecLeft.getDataTableSpec(), inSpecRight.getDataTableSpec(), columnMaps, connectionLeft
-                .getUtility().getStatementManipulator());
+            createOutSpec(inSpecLeft.getDataTableSpec(), inSpecRight.getDataTableSpec(), columnMaps,
+                statementManipulator);
         DatabaseQueryConnectionSettings connection = createDBQueryConnection(inSpecLeft, newQuery);
         return new DatabasePortObjectSpec(tableSpec, connection.createConnectionModel());
     }
@@ -279,7 +297,8 @@ final class DBJoinerNodeModel extends DBNodeModel {
      *             selected
      */
     private Pair<Map<String, String>, Map<String, String>> createOutputColumnMaps(final DataTableSpec leftSpec,
-        final DataTableSpec rightSpec) throws InvalidSettingsException {
+        final DataTableSpec rightSpec, final StatementManipulator statementManipulator)
+        throws InvalidSettingsException {
         // Use maps that keep insert order
         Map<String, String> leftMap = new LinkedHashMap<String, String>();
         Map<String, String> rightMap = new LinkedHashMap<String, String>();
@@ -296,7 +315,7 @@ final class DBJoinerNodeModel extends DBNodeModel {
                 m_settings.getLeftColumns(), leftSpec);
         for (String column : selectedLeftColumns) {
             if (!leftColumnsToFilter.contains(column)) {
-                String newName = uniqueColumnName(column, leftMap.values(), rightMap.values());
+                String newName = uniqueColumnName(column, leftMap.values(), rightMap.values(), statementManipulator);
                 if (newName != null) {
                     leftMap.put(column, newName);
                 }
@@ -315,7 +334,7 @@ final class DBJoinerNodeModel extends DBNodeModel {
                     m_settings.getRightColumns(), rightSpec);
         for (String column : selectedRightColumns) {
             if (!rightColumnsToFilter.contains(column)) {
-                String newName = uniqueColumnName(column, leftMap.values(), rightMap.values());
+                String newName = uniqueColumnName(column, leftMap.values(), rightMap.values(), statementManipulator);
                 if (newName != null) {
                     rightMap.put(column, newName);
                 }
@@ -343,7 +362,8 @@ final class DBJoinerNodeModel extends DBNodeModel {
      *             selected
      */
     private String uniqueColumnName(final String name, final Collection<String> leftNames,
-        final Collection<String> rightNames) throws InvalidSettingsException {
+        final Collection<String> rightNames, final StatementManipulator statementManipulator)
+        throws InvalidSettingsException {
         // Start with original name
         String newName = name;
         int i = 1;
@@ -359,13 +379,18 @@ final class DBJoinerNodeModel extends DBNodeModel {
                         "Found duplicate columns, won't execute. Fix it in \"Column Selection\" tab");
                 case AppendSuffixAutomatic:
                     // Name with appended number
-                    newName = name + " (#" + i++ + ")";
+                    newName = name + " (#" + i + ")";
                     break;
                 case AppendSuffix:
                     // Append custom prefix to name
-                    newName = newName + m_settings.getCustomSuffix();
+                    newName = name;
+                    for (int j = 0; j < i; j++) {
+                        newName = newName + m_settings.getCustomSuffix();
+                    }
                     break;
             }
+            newName = statementManipulator.getValidColumnName(newName);
+            i++;
         }
         return newName;
     }
