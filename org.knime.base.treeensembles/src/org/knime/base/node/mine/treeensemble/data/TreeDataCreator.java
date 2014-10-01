@@ -63,9 +63,10 @@ import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.util.CheckUtils;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class TreeDataCreator {
@@ -185,6 +186,8 @@ public class TreeDataCreator {
             warnMsgBuilder.append("contain missing values.");
             m_warningMessage = warnMsgBuilder.toString();
         }
+        CheckUtils.checkArgument(rejectedMissings < learnData.getRowCount(),
+            "No rows left after removing missing values (table has %d row(s))", learnData.getRowCount());
         int nrLearnAttributes = 0;
         for (int i = 0; i < m_attrColCreators.length; i++) {
             nrLearnAttributes += m_attrColCreators[i].getNrAttributes();
