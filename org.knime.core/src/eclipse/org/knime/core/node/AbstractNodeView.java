@@ -142,8 +142,9 @@ public abstract class AbstractNodeView<T extends NodeModel> {
     /**
      * Method is invoked when the underlying <code>NodeModel</code> has
      * changed. Also the HiLightHandler have changed. Note, the
-     * <code>NodeModel</code> content may be not available. Be sure to
-     * modify GUI components in the EventDispatchThread only.
+     * <code>NodeModel</code> content may be not available. The framework
+     * calls this method in the EventDispatchThread (GUI updates can be done
+     * directly in the calling thread).
      */
     protected abstract void modelChanged();
 

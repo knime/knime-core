@@ -55,7 +55,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
@@ -152,9 +151,6 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
 
     /** Warning label showing the current warning message of the node model. */
     private final JLabel m_warningLabel;
-
-    /** Used temporarily in setComponent to remember the most recent component that needs to be set by the EDT. */
-    private final AtomicReference<UpdateObject> m_updateObject = new AtomicReference<>();
 
     /**
      * This class sends property events when the status changes.
@@ -280,8 +276,13 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
     /** {@inheritDoc} */
     @Override
     final void callModelChanged() {
-        super.callModelChanged();
-        setComponent(m_comp);
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            @Override
+            public void run() {
+                NodeView.super.callModelChanged();
+                setComponent(m_comp);
+            }
+        });
     }
 
     /**
@@ -497,43 +498,40 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
      * @param comp Component to set in the center of the view.
      */
     protected final void setComponent(final Component comp) {
-        if (m_updateObject.getAndSet(new UpdateObject(comp)) == null) {
-            ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
-                @Override
-                public void run() {
-                    Component latestComp = m_updateObject.getAndSet(null).m_component;
-                    // pack frame only when setting the component for the first time
-                    boolean pack = false;
-                    if (!getNodeModel().hasContent() && m_noDataComp != null) {
-                        setComponentIntern(m_noDataComp);
-                    } else {
-                        setComponentIntern(latestComp);
-                        if (!m_componentSet) {
-                            pack = true;
-                        }
-                        m_componentSet = true;
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            @Override
+            public void run() {
+                // pack frame only when setting the component for the first time
+                boolean pack = false;
+                if (!getNodeModel().hasContent() && m_noDataComp != null) {
+                    setComponentIntern(m_noDataComp);
+                } else {
+                    setComponentIntern(comp);
+                    if (!m_componentSet) {
+                        pack = true;
                     }
-                    m_comp = latestComp;
-                    if (pack) {
-                        /*
-                         * This is necessary when the view was opened before the
-                         * node was executed. When the node gets executed the view
-                         * has to be resized and adapted to its content.
-                         * We had to remove the call to pack() in order to make it
-                         * run on a Mac Now we manually resize the frame
-                         */
-                        m_frame.invalidate();
-                        m_frame.validate();
-                        Dimension size = m_frame.getRootPane().getPreferredSize();
-                        m_frame.setSize(size);
-                    } else {
-                        m_frame.invalidate();
-                        m_frame.validate();
-                    }
-                    m_frame.repaint();
+                    m_componentSet = true;
                 }
-            });
-        }
+                m_comp = comp;
+                if (pack) {
+                    /*
+                     * This is necessary when the view was opened before the
+                     * node was executed. When the node gets executed the view
+                     * has to be resized and adapted to its content.
+                     * We had to remove the call to pack() in order to make it
+                     * run on a Mac Now we manually resize the frame
+                     */
+                    m_frame.invalidate();
+                    m_frame.validate();
+                    Dimension size = m_frame.getRootPane().getPreferredSize();
+                    m_frame.setSize(size);
+                } else {
+                    m_frame.invalidate();
+                    m_frame.validate();
+                }
+                m_frame.repaint();
+            }
+        });
     }
 
     /**
