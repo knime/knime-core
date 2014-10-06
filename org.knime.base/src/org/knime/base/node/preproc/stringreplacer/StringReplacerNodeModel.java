@@ -91,11 +91,23 @@ public class StringReplacerNodeModel extends NodeModel {
      * Creates the column rearranger that computes the new cells.
      *
      * @param spec the spec of the input table
-     * @param p the pattern that should be used for finding matches
      * @return a column rearranger
      */
-    private ColumnRearranger createRearranger(final DataTableSpec spec,
-            final Pattern p) throws InvalidSettingsException {
+    private ColumnRearranger createRearranger(final DataTableSpec spec) throws InvalidSettingsException {
+        String regex;
+        int flags = 0;
+        if (m_settings.patternIsRegex()) {
+            regex = m_settings.pattern();
+        } else {
+            regex = WildcardMatcher.wildcardToRegex(m_settings.pattern(), m_settings.enableEscaping());
+            flags = Pattern.DOTALL | Pattern.MULTILINE;
+        }
+        // support for \n and international characters
+        if (!m_settings.caseSensitive()) {
+            flags |= Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
+        }
+        final Pattern pattern = Pattern.compile(regex, flags);
+
         DataColumnSpec colSpec;
         if (m_settings.createNewColumn()) {
             colSpec = new DataColumnSpecCreator(m_settings.newColumnName(), StringCell.TYPE).createSpec();
@@ -119,11 +131,11 @@ public class StringReplacerNodeModel extends NodeModel {
                 }
 
                 final String stringValue = ((StringValue)cell).getStringValue();
-                Matcher m = p.matcher(stringValue);
+                Matcher m = pattern.matcher(stringValue);
                 if (m_settings.replaceAllOccurrences()) {
                     return new StringCell(m.replaceAll(replacement));
                 } else if (m.matches()) {
-                    if (".*".equals(p.pattern())) {
+                    if (".*".equals(pattern.pattern())) {
                         // .* matches twice, first for the empty string and then for the whole string
                         // therefore the replacement value is doubled
                         return new StringCell(replacement);
@@ -162,7 +174,7 @@ public class StringReplacerNodeModel extends NodeModel {
                     + "' does not exist in input table");
         }
 
-        ColumnRearranger crea = createRearranger(inSpecs[0], null);
+        ColumnRearranger crea = createRearranger(inSpecs[0]);
         return new DataTableSpec[]{crea.createSpec()};
     }
 
@@ -173,22 +185,7 @@ public class StringReplacerNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         exec.setMessage("Searching & Replacing");
-        String regex;
-        int flags = 0;
-        if (m_settings.patternIsRegex()) {
-            regex = m_settings.pattern();
-        } else {
-            regex = WildcardMatcher.wildcardToRegex(m_settings.pattern(), m_settings.enableEscaping());
-            flags = Pattern.DOTALL | Pattern.MULTILINE;
-        }
-        // support for \n and international characters
-        if (!m_settings.caseSensitive()) {
-            flags |= Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
-        }
-        Pattern p = Pattern.compile(regex, flags);
-
-        ColumnRearranger crea = createRearranger(inData[0].getDataTableSpec(), p);
-
+        ColumnRearranger crea = createRearranger(inData[0].getDataTableSpec());
         return new BufferedDataTable[]{exec.createColumnRearrangeTable(inData[0], crea, exec)};
     }
 
