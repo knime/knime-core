@@ -77,7 +77,8 @@ VM_ARGS=()
 APP_ARGS=()
 
 # extract parameters from Knime.ini
-KNIME_INI=( $(cat "$KNIME_INI_FILE") )
+KNIME_INI=()
+IFS=$'\n' read -d '' -r -a KNIME_INI < "$KNIME_INI_FILE" 
 readArguments "${KNIME_INI[@]}"
 
 # add command line parameters, they should override the parameters from the ini file
