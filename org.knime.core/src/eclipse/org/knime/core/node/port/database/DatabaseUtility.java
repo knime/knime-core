@@ -161,12 +161,15 @@ public class DatabaseUtility {
      * @since 2.10
      */
     public boolean tableExists(final Connection conn, final String tableName) throws SQLException {
+        final NodeLogger logger = NodeLogger.getLogger(getClass());
+        logger.debug("Checking if table " + tableName + " exists");
         String sql = getStatementManipulator().forMetadataOnly("SELECT 1 FROM " + tableName);
-
+        logger.debug("Execute query: " + sql);
         try (ResultSet rs = conn.createStatement().executeQuery(sql)) {
+        	logger.debug("Table " + tableName + " exists");
             return true;
         } catch (SQLException ex) {
-            NodeLogger.getLogger(getClass()).debug(
+            logger.debug(
                 "Got exception while checking for existence of table '" + tableName + "': " + ex.getMessage(), ex);
             return false; // we assume this is because the table does not exist; must be fixed!!!
         }
