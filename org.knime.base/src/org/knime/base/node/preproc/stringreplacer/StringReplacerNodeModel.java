@@ -94,19 +94,7 @@ public class StringReplacerNodeModel extends NodeModel {
      * @return a column rearranger
      */
     private ColumnRearranger createRearranger(final DataTableSpec spec) throws InvalidSettingsException {
-        String regex;
-        int flags = 0;
-        if (m_settings.patternIsRegex()) {
-            regex = m_settings.pattern();
-        } else {
-            regex = WildcardMatcher.wildcardToRegex(m_settings.pattern(), m_settings.enableEscaping());
-            flags = Pattern.DOTALL | Pattern.MULTILINE;
-        }
-        // support for \n and international characters
-        if (!m_settings.caseSensitive()) {
-            flags |= Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
-        }
-        final Pattern pattern = Pattern.compile(regex, flags);
+        final Pattern pattern = createPattern(m_settings);
 
         DataColumnSpec colSpec;
         if (m_settings.createNewColumn()) {
@@ -160,6 +148,22 @@ public class StringReplacerNodeModel extends NodeModel {
         }
 
         return crea;
+    }
+
+    private static Pattern createPattern(final StringReplacerSettings settings) {
+        String regex;
+        int flags = 0;
+        if (settings.patternIsRegex()) {
+            regex = settings.pattern();
+        } else {
+            regex = WildcardMatcher.wildcardToRegex(settings.pattern(), settings.enableEscaping());
+            flags = Pattern.DOTALL | Pattern.MULTILINE;
+        }
+        // support for \n and international characters
+        if (!settings.caseSensitive()) {
+            flags |= Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
+        }
+        return Pattern.compile(regex, flags);
     }
 
     /**
@@ -261,5 +265,6 @@ public class StringReplacerNodeModel extends NodeModel {
                     "'*' is not allowed when all occurrences of the "
                             + "pattern should be replaced");
         }
+        createPattern(s);
     }
 }
