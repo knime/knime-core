@@ -402,7 +402,7 @@ public class NameFilterConfiguration implements Cloneable {
             }
             StringBuilder excludes = new StringBuilder();
             for (String exclude : m_excludeList) {
-                includes.append(", " + exclude);
+                excludes.append(", " + exclude);
             }
             return "Includes: " + includes.toString().replaceFirst(", ", "") + "\nExcludes: "
                 + excludes.toString().replaceFirst(", ", "");
