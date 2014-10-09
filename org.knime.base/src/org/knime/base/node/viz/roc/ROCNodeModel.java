@@ -241,6 +241,7 @@ public class ROCNodeModel extends NodeModel {
             setWarningMessage("Input table contains no rows");
         }
 
+        List<ROCCurve> curves = new ArrayList<>();
         for (int i = 0; i < curvesSize; i++) {
             exec.checkCanceled();
             String c = m_settings.getCurves().get(i);
@@ -301,10 +302,11 @@ public class ROCNodeModel extends NodeModel {
                 }
             }
 
-            m_curves.add(new ROCCurve(c, xValues, yValues, area, m_settings.getMaxPoints()));
+            curves.add(new ROCCurve(c, xValues, yValues, area, m_settings.getMaxPoints()));
             outCont.addRowToTable(new DefaultRow(new RowKey(c.toString()),
                     new DoubleCell(area)));
         }
+        m_curves = curves;
 
         outCont.close();
         return new BufferedDataTable[]{outCont.getTable()};
@@ -325,14 +327,14 @@ public class ROCNodeModel extends NodeModel {
         BufferedReader in =
                 new BufferedReader(new InputStreamReader(new GZIPInputStream(
                         new FileInputStream(f))));
-        int curves;
+        int curveCount;
         try {
-            curves = Integer.parseInt(in.readLine());
+            curveCount = Integer.parseInt(in.readLine());
         } catch (final NumberFormatException e) {
             throw new IOException("Can't parse as int: " + e.getMessage(), e);
         }
-        m_curves.clear();
-        for (int i = 0; i < curves; i++) {
+        List<ROCCurve> curves = new ArrayList<>();
+        for (int i = 0; i < curveCount; i++) {
             String name = in.readLine();
             double area;
             try {
@@ -368,8 +370,9 @@ public class ROCNodeModel extends NodeModel {
                 }
             }
 
-            m_curves.add(new ROCCurve(name, x, y, area, -1));
+            curves.add(new ROCCurve(name, x, y, area, -1));
         }
+        m_curves = curves;
 
         in.close();
     }
