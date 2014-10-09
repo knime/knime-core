@@ -498,8 +498,9 @@ public class DatabaseConnectionSettings {
      * Used to sync access to all databases depending if <code>SQL_CONCURRENCY</code> is true.
      * @param conn connection used to sync access to all databases
      * @return sync object which is either the given connection or an new object (no sync necessary)
+     * @since 2.10
      */
-    final Object syncConnection(final Connection conn) {
+    public final Object syncConnection(final Connection conn) {
         if (SQL_CONCURRENCY && conn != null) {
             return conn;
         } else {
