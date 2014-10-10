@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./column_type_changer.png" type="Manipulator">
+	<name>Column Type Changer</name>
+
+	<shortDescription>
+		Converts a column of type String to a Numeric or Date
+		type, if and only if all entries could be converted.
+	</shortDescription>
+
+	<fullDescription>
+		<intro>
+			This node converts all selected string columns to a numeric or
+			date type, if and only if all entries could be converted.
+			Either choose a date pattern or enter a new one.
+		</intro>
+
+		<option name="Include">This list contains the column names which will get
+			converted if possible.
+		</option>
+		<option name="Enforce Inclusion">Select this option to enforce the current
+			inclusion list to stay the same even if the input table specification
+			changes. If some of the included columns are not available anymore, a
+			warning is displayed. (New columns will automatically be added to the
+			exclusion list.)
+		</option>
+		<option name="Select">Use these buttons to move columns between the
+			Include and Exclude list.
+		</option>
+		<option name="Exclude">
+			This list contains the column names that are
+			included in the output table without modification.
+		</option>
+		<option name="Enforce Exclusion">Select this option to enforce the current
+			exclusion list to stay the same even if the input table specification
+			changes. If some of the excluded columns are not available anymore, a
+			warning is displayed. (New columns will automatically be added to the
+			inclusion list.)
+		</option>
+		<option name="Choose a date format">Choose or enter a date pattern. (y: Year, M: Month
+			in year, d: Day in month, H: Hour in day, m: Minute in hour, s:
+			Second in minute, S: Millisecond)</option>
+	</fullDescription>
+
+	<ports>
+		<inPort index="0" name="Input">Arbitrary input data.</inPort>
+		<outPort index="0" name="Input with converted columns.">
+			Input data with converted columns.
+		</outPort>
+	</ports>
+</knimeNode>

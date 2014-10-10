@@ -1668,6 +1668,11 @@
             factory-class="org.knime.base.node.io.database.drop.DBDropTableNodeFactory"
             id="org.knime.base.node.io.database.drop.DBDropTableNodeFactory">
       </node>
+      <node
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.coltypechanger.ColumnTypeChangerNodeFactory"
+            id="org.knime.base.node.preproc.coltypechanger.ColumnTypeChangerNodeFactory">
+      </node>
 
    </extension>
    
