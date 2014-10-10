@@ -70,11 +70,16 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
  */
 public class ColumnTypeChangerNodeDialogPane extends NodeDialogPane {
 
+    /**
+     *
+     */
+    private static final double M_WEIGHTX = 0.5;
+    private static final int M_INSETS_TOP = 20;
     private final JPanel m_panel;
     private final DataColumnSpecFilterPanel m_filterPanel;
     private final JLabel m_dateBoxLabel;
     private final JComboBox<String> m_dateBox;
-    private final String[] dateFormats;
+    private final String[] m_dateFormats;
 
     /**
      * Creates a new {@link NodeDialogPane} for the column filter in order to
@@ -83,8 +88,8 @@ public class ColumnTypeChangerNodeDialogPane extends NodeDialogPane {
     public ColumnTypeChangerNodeDialogPane() {
         m_panel = new JPanel();
         m_filterPanel = new DataColumnSpecFilterPanel();
-        dateFormats = new String[]{"dd.MM.yy", "dd.MM.yy hh:mm:ss", "dd.MM.yy hh:mm:ss:SSS"};
-        m_dateBox = new JComboBox<String>(dateFormats);
+        m_dateFormats = new String[]{"dd.MM.yy", "dd.MM.yy HH:mm:ss", "dd.MM.yy HH:mm:ss:SSS", "HH:mm:ss"};
+        m_dateBox = new JComboBox<String>(m_dateFormats);
         m_dateBox.setEditable(true);
         m_dateBoxLabel = new JLabel("Choose a date format: ");
 
@@ -97,18 +102,18 @@ public class ColumnTypeChangerNodeDialogPane extends NodeDialogPane {
         m_panel.add(m_filterPanel, c);
 
         c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.5;
+        c.weightx = M_WEIGHTX;
         c.anchor = GridBagConstraints.EAST;
         c.gridwidth = 1;
-        c.insets = new Insets(20, 0, 0, 0);
+        c.insets = new Insets(M_INSETS_TOP, 0, 0, 0);
         c.gridx = 0;
         c.gridy = 1;
         m_panel.add(m_dateBoxLabel, c);
 
         c.fill = GridBagConstraints.NONE;
-        c.weightx = 0.5;
+        c.weightx = M_WEIGHTX;
         c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(20, 0, 0, 0);
+        c.insets = new Insets(M_INSETS_TOP, 0, 0, 0);
         c.gridx = 1;
         c.gridy = 1;
         m_panel.add(m_dateBox, c);

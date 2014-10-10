@@ -178,9 +178,10 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
         }
     }
 
-    private SingleCellFactory createNumberConverter(final int colIdx, final DataType type, DataColumnSpec colSpec) {
+    private SingleCellFactory
+        createNumberConverter(final int colIdx, final DataType type, final DataColumnSpec colSpec) {
         return new SingleCellFactory(colSpec) {
-            final DataCellFactory fac = new DataCellFactory();
+            private final DataCellFactory m_fac = new DataCellFactory();
 
             @Override
             public DataCell getCell(final DataRow row) {
@@ -190,7 +191,7 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
                     String str = ((StringValue)cell).getStringValue();
 
                     // create String-, Int- or DoubleCell
-                    return fac.createDataCellOfType(type, str);
+                    return m_fac.createDataCellOfType(type, str);
 
                 } else {
                     // create MissingCell
@@ -200,7 +201,7 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
         };
     }
 
-    private SingleCellFactory createLongConverter(final int colIdx, DataColumnSpec colSpec) {
+    private SingleCellFactory createLongConverter(final int colIdx, final DataColumnSpec colSpec) {
         return new SingleCellFactory(colSpec) {
             @Override
             public DataCell getCell(final DataRow row) {
@@ -218,22 +219,25 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
         };
     }
 
-    private SingleCellFactory createDateAndTimeConverter(final int colIdx, DataColumnSpec colSpec) {
+    private SingleCellFactory createDateAndTimeConverter(final int colIdx, final DataColumnSpec colSpec) {
         return new SingleCellFactory(colSpec) {
-            final Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+            private final Calendar m_cal = Calendar.getInstance(TimeZone.getDefault());
 
-            final SimpleDateFormat format = new SimpleDateFormat(m_dateFormat);
+            private final SimpleDateFormat m_format = new SimpleDateFormat(m_dateFormat);
 
-            final boolean hasTime;
+            private final boolean m_hasDate;
 
-            final boolean hasMillis;
+            private final boolean m_hasTime;
+
+            private final boolean m_hasMillis;
 
             {
                 TimeZone timeZone = TimeZone.getTimeZone("UTC");
-                format.setTimeZone(timeZone);
-                cal.setTimeZone(timeZone);
-                hasTime = m_dateFormat.contains("h");
-                hasMillis = m_dateFormat.contains("S");
+                m_format.setTimeZone(timeZone);
+                m_cal.setTimeZone(timeZone);
+                m_hasDate = m_dateFormat.contains("d");
+                m_hasTime = m_dateFormat.contains("H");
+                m_hasMillis = m_dateFormat.contains("S");
             }
 
             @Override
@@ -244,13 +248,11 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
                     String str = ((StringValue)cell).getStringValue();
 
                     try {
-                        cal.setTime(format.parse(str));
-                        return new DateAndTimeCell(cal.getTimeInMillis(), true, hasTime, hasMillis);
+                        m_cal.setTime(m_format.parse(str));
+                        return new DateAndTimeCell(m_cal.getTimeInMillis(), m_hasDate, m_hasTime, m_hasMillis);
                     } catch (ParseException e) {
                         getLogger()
-                            .warn(
-                                "Date format parsing error in row: " + row.getKey() + ", column: "
-                                    + colIdx, e);
+                            .warn("Date format parsing error in row: " + row.getKey() + ", column: " + colIdx, e);
                         return new MissingCell(e.getMessage());
                     }
 
@@ -349,7 +351,9 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
     }
 
     /**
+     * @param settings NodeSettings
      * @see org.knime.core.node.NodeModel#loadValidatedSettingsFrom(org.knime.core.node.NodeSettingsRO)
+     * @throws InvalidSettingsException invalid settings exception
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
@@ -386,9 +390,9 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
         conf.loadConfigurationInModel(settings);
-        String tmp_dateFormat = settings.getString("dateFormat");
+        String tmpDateFormat = settings.getString("dateFormat");
         try {
-            new SimpleDateFormat(tmp_dateFormat);
+            new SimpleDateFormat(tmpDateFormat);
         } catch (IllegalArgumentException e) {
             throw new InvalidSettingsException(e.getMessage(), e);
         }
@@ -404,11 +408,7 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
 
             @Override
             public boolean include(final DataColumnSpec name) {
-                if (name.getType().equals(StringCell.TYPE)) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return name.getType().equals(StringCell.TYPE);
             }
         }, NameFilterConfiguration.FILTER_BY_NAMEPATTERN);
     }
