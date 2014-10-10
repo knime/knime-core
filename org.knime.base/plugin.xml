@@ -1669,6 +1669,7 @@
             id="org.knime.base.node.io.database.drop.DBDropTableNodeFactory">
       </node>
       <node
+            category-path="/manipulation/column/column-convert+replace"
             expert-flag="false"
             factory-class="org.knime.base.node.preproc.coltypechanger.ColumnTypeChangerNodeFactory"
             id="org.knime.base.node.preproc.coltypechanger.ColumnTypeChangerNodeFactory">
