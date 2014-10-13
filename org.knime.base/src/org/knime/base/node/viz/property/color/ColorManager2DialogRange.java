@@ -219,7 +219,7 @@ public class ColorManager2DialogRange extends JPanel {
      */
     void add(final String column, final DataCell low, final DataCell upp) {
         DataCellColorEntry e1 = new DataCellColorEntry(low, Color.RED);
-        DataCellColorEntry e2 = new DataCellColorEntry(upp, Color.GREEN);
+        DataCellColorEntry e2 = new DataCellColorEntry(upp, Color.BLUE);
         m_map.put(column, new DataCellColorEntry[]{e1, e2});
     }
 
@@ -259,12 +259,10 @@ public class ColorManager2DialogRange extends JPanel {
         if (column == null) {
             return;
         }
-        int rgba0 = settings.getInt(ColorManager2NodeModel.MIN_COLOR,
-                Color.RED.getRGB());
+        int rgba0 = settings.getInt(ColorManager2NodeModel.MIN_COLOR, Color.RED.getRGB());
         Color c0 = new Color(rgba0, true);
         m_alpha = c0.getAlpha();
-        int rgba1 = settings.getInt(ColorManager2NodeModel.MAX_COLOR,
-                Color.GREEN.getRGB());
+        int rgba1 = settings.getInt(ColorManager2NodeModel.MAX_COLOR, Color.BLUE.getRGB());
         Color c1 = new Color(rgba1, true);
         assert (m_alpha == c1.getAlpha());
         DataCellColorEntry[] ex = m_map.get(column);
