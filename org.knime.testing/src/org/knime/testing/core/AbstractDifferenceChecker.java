@@ -70,7 +70,10 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
     private final SettingsModelBoolean m_ignoreColumnProperties = new SettingsModelBoolean("ignoreColumnProperties",
         false);
 
-    private DialogComponentBoolean m_component;
+    private final SettingsModelBoolean m_ignoreDomain = new SettingsModelBoolean("ignoreDomain", false);
+
+    private DialogComponentBoolean m_ignorePropertiesComponent;
+    private DialogComponentBoolean m_ignoreDomainComponent;
 
     /**
      * {@inheritDoc}
@@ -78,6 +81,14 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
     @Override
     public void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_ignoreColumnProperties.loadSettingsFrom(settings);
+
+        // added in 2.11
+        try {
+            m_ignoreDomain.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            // ignore and use default
+            m_ignoreDomain.setBooleanValue(false);
+        }
     }
 
     /**
@@ -91,6 +102,13 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
             // ignore and use default
             m_ignoreColumnProperties.setBooleanValue(false);
         }
+
+        try {
+            m_ignoreDomain.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            // ignore and use default
+            m_ignoreDomain.setBooleanValue(false);
+        }
     }
 
     /**
@@ -99,6 +117,7 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
     @Override
     public void saveSettings(final NodeSettingsWO settings) {
         m_ignoreColumnProperties.saveSettingsTo(settings);
+        m_ignoreDomain.saveSettingsTo(settings);
     }
 
     /**
@@ -107,6 +126,7 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
     @Override
     public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_ignoreColumnProperties.validateSettings(settings);
+        // don't check m_ignoreDomain, it was added in 2.11
     }
 
     /**
@@ -114,11 +134,16 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
      */
     @Override
     public List<? extends DialogComponent> getDialogComponents() {
-        if (m_component == null) {
-            m_component = new DialogComponentBoolean(m_ignoreColumnProperties, "Ignore column properties");
-            m_component.setToolTipText("Ignores all properties in the data column spec");
+        if (m_ignorePropertiesComponent == null) {
+            m_ignorePropertiesComponent = new DialogComponentBoolean(m_ignoreColumnProperties, "Ignore column properties");
+            m_ignorePropertiesComponent.setToolTipText("Ignores all properties in the data column spec");
         }
-        return Arrays.asList(m_component);
+        if (m_ignoreDomainComponent == null) {
+            m_ignoreDomainComponent = new DialogComponentBoolean(m_ignoreDomain, "Ignore column domain");
+            m_ignoreDomainComponent.setToolTipText("Ignores the domain (e.g. possible values, upper and lower bounds) "
+                + "in the data column spec");
+        }
+        return Arrays.asList(m_ignorePropertiesComponent, m_ignoreDomainComponent);
     }
 
     /**
@@ -127,5 +152,13 @@ public abstract class AbstractDifferenceChecker<T extends DataValue> implements 
     @Override
     public boolean ignoreColumnProperties() {
         return m_ignoreColumnProperties.getBooleanValue();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean ignoreDomain() {
+        return m_ignoreDomain.getBooleanValue();
     }
 }

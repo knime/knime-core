@@ -185,4 +185,11 @@ public interface DifferenceChecker<T extends DataValue> {
      * @return <code>true</code> if the properties should be ignored, <code>false</code> otherwise
      */
     boolean ignoreColumnProperties();
+
+    /**
+     * Returns whether a column's domain should be ignored while comparing two tables.
+     *
+     * @return <code>true</code> if the domain should be ignored, <code>false</code> if it should be respected
+     */
+    boolean ignoreDomain();
 }

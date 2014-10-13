@@ -154,4 +154,12 @@ public class IgnoreChecker implements DifferenceChecker<DataValue> {
     @Override
     public void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean ignoreDomain() {
+        return true;
+    }
 }

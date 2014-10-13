@@ -350,14 +350,15 @@ class DifferenceCheckerNodeModel extends NodeModel {
 
     private void checkDomain(final DataColumnSpec testColSpec, final DataColumnSpec refColSpec)
             throws InvalidSettingsException {
-        DataColumnDomain testDom = testColSpec.getDomain();
-        DataColumnDomain refDom = refColSpec.getDomain();
-        if (!refDom.equals(testDom)) {
-            DifferenceChecker<DataValue> checker =
-                    (DifferenceChecker<DataValue>)m_settings.createCheckerForColumn(refColSpec.getName());
-
-            checkPossibleValues(testColSpec, refColSpec, checker);
-            checkBounds(testColSpec, refColSpec, checker);
+        DifferenceChecker<DataValue> checker =
+                (DifferenceChecker<DataValue>)m_settings.createCheckerForColumn(refColSpec.getName());
+        if (!checker.ignoreDomain()) {
+            DataColumnDomain testDom = testColSpec.getDomain();
+            DataColumnDomain refDom = refColSpec.getDomain();
+            if (!refDom.equals(testDom)) {
+                checkPossibleValues(testColSpec, refColSpec, checker);
+                checkBounds(testColSpec, refColSpec, checker);
+            }
         }
     }
 
