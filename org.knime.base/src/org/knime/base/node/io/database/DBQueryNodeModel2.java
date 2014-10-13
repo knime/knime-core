@@ -189,7 +189,7 @@ final class DBQueryNodeModel2 extends DBNodeModel implements FlowVariableProvide
         }
         thisSelect = thisSelect.replaceAll(
                 DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER,
-                "(" + inSelect + ")");
+                "(" + inSelect + ") tempTable_" + Math.abs(System.currentTimeMillis()));
         thisSelect = FlowVariableResolver.parse(thisSelect, this);
         resultQueries.append(thisSelect);
         return resultQueries.toString();
