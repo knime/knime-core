@@ -63,10 +63,11 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.TreeItem;
 
 /**
- * Contribution Item within the RepositoryView. This registers a <code>RepositoryViewFilter</code> on the viewer, that is
- * able to filter requested nodes.
+ * Contribution Item within the RepositoryView. This registers a <code>RepositoryViewFilter</code> on the viewer, that
+ * is able to filter requested nodes.
  *
  * @see RepositoryViewFilter
  *
@@ -175,7 +176,6 @@ public class FilterViewContributionItem extends ControlContribution implements K
             update = true;
         }
 
-
         Point backup = null;
 
         if (IS_OS_WINDOWS) {
@@ -200,11 +200,17 @@ public class FilterViewContributionItem extends ControlContribution implements K
                 if (shouldExpand) {
                     m_viewer.expandAll();
                 }
+                //scroll to root
+                if (m_viewer.getTree().getItemCount() > 0) {
+                    TreeItem item = m_viewer.getTree().getItem(0);
+                    m_viewer.getTree().showItem(item);
+                }
             }
         } finally {
             if (backup != null) {
                 Display.getCurrent().setCursorLocation(backup);
             }
+
             m_viewer.getControl().setRedraw(true);
         }
     }
