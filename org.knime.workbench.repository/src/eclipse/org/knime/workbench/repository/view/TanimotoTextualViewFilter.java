@@ -67,7 +67,7 @@ final class TanimotoTextualViewFilter extends ViewerFilter {
     /**
      * Upper excluding bound of distances to a query a node may have to be labeled as a match.
      */
-    private static final double UPPER_DISTANCE_BOUND = 0.6;
+    private static final double UPPER_DISTANCE_BOUND = 0.85;
 
     private String m_query;
 
