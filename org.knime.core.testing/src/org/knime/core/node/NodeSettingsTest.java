@@ -505,7 +505,7 @@ public final class NodeSettingsTest extends TestCase {
         public String toString() {
             return "unknown";
         }
-    };
+    }
 
 
     /**
@@ -756,6 +756,41 @@ public final class NodeSettingsTest extends TestCase {
         InputStream is = new ByteArrayInputStream(os.toByteArray());
         NodeSettingsRO settings = NodeSettings.loadFromXML(is);
         assertTrue(settings.equals(SETT));
+    }
+
+    /**
+     * Checks whether the add/getPassword methods work as expected.
+     *
+     * @throws Exception if an error occurs
+     */
+    public void testPassword() throws Exception {
+        final String encKey = "LaLeLu";
+
+        try {
+            SETT.addPassword(null, encKey, "null");
+            fail();
+        } catch (IllegalArgumentException iae) {
+            // expected
+        }
+        String key = "nullString";
+        SETT.addPassword(key, encKey, null);
+        assertTrue(SETT.containsKey(key));
+        assertTrue(SETT.getPassword(key, encKey) == null);
+        assertTrue(SETT.getPassword(key, encKey, "null") == null);
+
+        key = "simplePassword";
+        SETT.addPassword(key, encKey, "B");
+        assertTrue(SETT.containsKey(key));
+        assertTrue(SETT.getPassword(key, encKey).equals("B"));
+        assertTrue(SETT.getPassword(key, encKey, null).equals("B"));
+
+        key = "emptyPassword";
+        SETT.addPassword(key, encKey, "");
+        assertTrue(SETT.containsKey(key));
+        assertTrue(SETT.getPassword(key, encKey).equals(""));
+        assertTrue(SETT.getPassword(key, encKey, null).equals(""));
+
+        assertTrue(SETT.getPassword("nonExistingPassword", encKey, "none").equals("none"));
     }
 
     /**

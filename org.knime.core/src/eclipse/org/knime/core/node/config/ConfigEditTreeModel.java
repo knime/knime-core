@@ -74,6 +74,7 @@ import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.config.base.ConfigFloatEntry;
 import org.knime.core.node.config.base.ConfigIntEntry;
 import org.knime.core.node.config.base.ConfigLongEntry;
+import org.knime.core.node.config.base.ConfigPasswordEntry;
 import org.knime.core.node.config.base.ConfigShortEntry;
 import org.knime.core.node.config.base.ConfigStringEntry;
 import org.knime.core.node.util.ConvenienceMethods;
@@ -652,6 +653,10 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                 case xdouble:
                     double d = ((ConfigDoubleEntry)newValue).getDouble();
                     exposed = new FlowVariable(newVar, d);
+                    break;
+                case xpassword:
+                    String pass = ((ConfigPasswordEntry)newValue).getPassword();
+                    exposed = new FlowVariable(newVar, pass);
                     break;
                 default:
                     throw new InvalidSettingsException("Can't export "
