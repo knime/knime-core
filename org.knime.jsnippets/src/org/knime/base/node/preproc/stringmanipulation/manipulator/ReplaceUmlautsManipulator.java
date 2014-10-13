@@ -55,7 +55,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author Tim-Oliver Buchholz
  */
 public class ReplaceUmlautsManipulator implements Manipulator {
-    private static final String[] UMLAUTS = new String[]{"ä", "Ä", "ö", "Ö", "ü", "Ü", "ß", "\u1e9e"};
+    private static final String[] UMLAUTS = new String[]{"Ã¤", "Ã„", "Ã¶", "Ã–", "Ã¼", "Ãœ", "ÃŸ", "\u1e9e"};
 
     private static final String[] REPLACEMENT_OMIT_E = new String[]{"a", "A", "o", "O", "u", "U", "ss", "Ss"};
 
@@ -64,7 +64,7 @@ public class ReplaceUmlautsManipulator implements Manipulator {
 
     /**
      * @param str where all umlauts should be replaced (must be not null)
-     * @param omitE option if 'e' should be omitted. (Ex. 'ä' --> 'ae' or 'a') (must be not null)
+     * @param omitE option if 'e' should be omitted. (Ex. 'Ã¤' --> 'ae' or 'a') (must be not null)
      * @return string without umlauts (never null)
      */
     public static String replaceUmlauts(final String str, final boolean omitE) {
@@ -116,8 +116,8 @@ public class ReplaceUmlautsManipulator implements Manipulator {
     public String getDescription() {
         // TODO Auto-generated method stub
         return "Replaces all umlauts in a string. " + "<br/><br/>" + "<strong>Examples:</strong>" + "<br/>" + "<table>"
-            + "<tr><td>replaceUmlauts(\"äöü ÄÖÜ ß\", " + "true)</td>" + "<td>=&nbsp;\"aou AOU ss\"</td></tr>"
-            + "<tr><td>replaceUmlauts(\"äöü ÄÖÜ ß\", false)</td>" + "<td>=&nbsp;\"aeoeue AeOeUe ss\"</td></tr>"
+            + "<tr><td>replaceUmlauts(\"ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½\", " + "true)</td>" + "<td>=&nbsp;\"aou AOU ss\"</td></tr>"
+            + "<tr><td>replaceUmlauts(\"ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½\", false)</td>" + "<td>=&nbsp;\"aeoeue AeOeUe ss\"</td></tr>"
             + "</table>";
     }
 
