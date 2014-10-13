@@ -609,8 +609,14 @@ public final class NodeDescriptionConverter {
             DynamicNodeDescriptionCreator.instance().addDescription(node,
                     false, builder);
 
+            String nodeID = node.getID();
+            int index = nodeID.lastIndexOf('.');
+            if (index >= 0) {
+                nodeID = Long.toHexString(Math.abs(nodeID.hashCode())) + nodeID.substring(index);
+            }
+
             String relativePath =
-                    HTML_DIR + "/" + NODES_DIR + "/" + fileName(node.getID())
+                    HTML_DIR + "/" + NODES_DIR + "/" + fileName(nodeID)
                             + ".html";
             File nodeDescription = new File(m_destinationDir, relativePath);
             Writer writer = new OutputStreamWriter(new FileOutputStream(nodeDescription), "UTF-8");
@@ -642,13 +648,13 @@ public final class NodeDescriptionConverter {
      * Removes all illegal characters for filenames from the given category/node
      * name.
      *
-     * @param categoryName to be converted into valid filename
+     * @param itemID to be converted into valid filename
      * @return categoryName as valid filename
      */
-    private static String fileName(final String categoryName) {
+    private static String fileName(final String itemID) {
         StringBuilder encode = new StringBuilder();
-        for (int i = 0; i < categoryName.length(); i++) {
-            switch (categoryName.charAt(i)) {
+        for (int i = 0; i < itemID.length(); i++) {
+            switch (itemID.charAt(i)) {
                 case '/':
                 case ' ':
                     encode.append("_");
@@ -662,7 +668,7 @@ public final class NodeDescriptionConverter {
                 case '>':
                     break;
                 default:
-                    encode.append(categoryName.charAt(i));
+                    encode.append(itemID.charAt(i));
             }
         }
         return encode.toString();
