@@ -82,14 +82,19 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.JoinManipulato
 import org.knime.base.node.preproc.stringmanipulation.manipulator.JoinSepManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.LengthManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.LowerCaseManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.MD5ChecksumManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.RegexMatcherManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.RegexReplaceManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveCharsManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveDiacriticManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharDuplicatesManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharsManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceCharsManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceCharsModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceModifiersManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceUmlautsManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReverseManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StripEndManipulator;
@@ -187,6 +192,11 @@ public final class StringManipulatorProvider implements ManipulatorProvider {
         manipulators.add(new ToNullManipulator());
         manipulators.add(new StringManipulator());
         manipulators.add(new UpperCaseManipulator());
+        manipulators.add(new ReplaceUmlautsManipulator());
+        manipulators.add(new RemoveDiacriticManipulator());
+        manipulators.add(new RegexMatcherManipulator());
+        manipulators.add(new RegexReplaceManipulator());
+        manipulators.add(new MD5ChecksumManipulator());
 
         Set<String> categories = new TreeSet<String>();
         for (Manipulator m : manipulators) {
