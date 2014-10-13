@@ -511,10 +511,19 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     /** true, if node names are hidden, otherwise false - default. */
     private boolean m_hideNodeNames = false;
 
+    /** true, if node ids are appended to the node name, otherwise false - default. */
+    private boolean m_showNodeID = false;
+
     /** @return change show/hide node label status */
     public boolean changeHideNodeNames() {
         m_hideNodeNames = !m_hideNodeNames;
         return m_hideNodeNames;
+    }
+
+    /** @return change show/hide node label status */
+    public boolean changeShowNodeID() {
+        m_showNodeID = !m_showNodeID;
+        return m_showNodeID;
     }
 
     /** @return true, if node labels are hidden, otherwise false */
@@ -522,4 +531,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         return m_hideNodeNames;
     }
 
+    /** @return true, if node ids should be appended to the node name, otherwise false */
+    public boolean showNodeId() {
+        return m_showNodeID;
+    }
 }

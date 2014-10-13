@@ -222,6 +222,7 @@ import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SaveAsSubNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SelectLoopAction;
 import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
+import org.knime.workbench.editor2.actions.ShowNodeIdsAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.SubNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
@@ -597,6 +598,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         WorkbenchPartAction saveAs = new SaveAsAction(this);
         WorkbenchPartAction print = new PrintAction(this);
         WorkbenchPartAction hideNodeName = new HideNodeNamesAction(this);
+        WorkbenchPartAction showNodeIdAction = new ShowNodeIdsAction(this);
 
         // node actions
         //
@@ -676,6 +678,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(paste);
         m_actionRegistry.registerAction(pasteContext);
         m_actionRegistry.registerAction(hideNodeName);
+        m_actionRegistry.registerAction(showNodeIdAction);
         m_actionRegistry.registerAction(collapse);
         m_actionRegistry.registerAction(collapseSub);
         m_actionRegistry.registerAction(expand);
@@ -718,6 +721,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(toggleFlowVarPorts.getId());
         m_editorActions.add(defaultOpenView.getId());
         m_editorActions.add(hideNodeName.getId());
+        m_editorActions.add(showNodeIdAction.getId());
         m_editorActions.add(collapse.getId());
         m_editorActions.add(expand.getId());
         m_editorActions.add(convert.getId());

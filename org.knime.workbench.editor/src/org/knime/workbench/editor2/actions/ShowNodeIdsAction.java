@@ -43,27 +43,96 @@
  * -------------------------------------------------------------------
  *
  */
-package org.knime.workbench.editor2.actions.delegates;
+package org.knime.workbench.editor2.actions;
 
+import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.actions.AbstractNodeAction;
-import org.knime.workbench.editor2.actions.HideNodeNamesAction;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
 /**
- * Delegator action to open the first out-port view of all selected nodes.
+ * Action to "append node ids".
  *
- * @author Thomas Gabriel, University of Konstanz
+ * @author Marcel Hanser, KNIME.com AG, Zurich
  */
-public class HideNodeNamesEditorAction extends AbstractEditorAction {
+public class ShowNodeIdsAction extends AbstractClipboardAction {
 
-    /** {@inheritDoc} */
-    @Override
-    protected AbstractNodeAction createAction(final WorkflowEditor editor) {
-        WorkflowRootEditPart part = (WorkflowRootEditPart)((editor).getViewer().getRootEditPart().getChildren().get(0));
-        HideNodeNamesAction hideNodeIdsAction = new HideNodeNamesAction(editor);
-        hideNodeIdsAction.setChecked(part.hideNodeNames());
-        return hideNodeIdsAction;
+    /** unique ID for this action. */
+    public static final String ID = "knime.action.append_node_id";
+
+    /**
+     * @param editor The workflow editor
+     */
+    public ShowNodeIdsAction(final WorkflowEditor editor) {
+        super(editor);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getId() {
+        return ID;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getText() {
+        return "Append Node Ids";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ImageDescriptor getImageDescriptor() {
+        return ImageRepository.getImageDescriptor("icons/showNodeIds.png");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ImageDescriptor getDisabledImageDescriptor() {
+        return ImageRepository.getImageDescriptor("icons/showNodeIds_disabled.png");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getToolTipText() {
+        return "Append node ids to the names";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public synchronized void runOnNodes(final NodeContainerEditPart[] parts) {
+        ScrollingGraphicalViewer provider =
+            (ScrollingGraphicalViewer)getEditor().getEditorSite().getSelectionProvider();
+        if (provider == null) {
+            return;
+        }
+
+        // get parent of the node parts
+        WorkflowRootEditPart editorPart = (WorkflowRootEditPart)provider.getRootEditPart().getChildren().get(0);
+        editorPart.changeShowNodeID();
+        for (NodeContainerEditPart edit : getAllParts(NodeContainerEditPart.class)) {
+            edit.updateHeaderField();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean internalCalculateEnabled() {
+        return true;
+    }
 }

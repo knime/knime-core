@@ -147,6 +147,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
                 }
             }
             action.setEnabled(m_decoratedAction.isEnabled());
+            action.setChecked(m_decoratedAction.isChecked());
         }
 
     }

@@ -47,23 +47,22 @@ package org.knime.workbench.editor2.actions.delegates;
 
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
-import org.knime.workbench.editor2.actions.HideNodeNamesAction;
+import org.knime.workbench.editor2.actions.ShowNodeIdsAction;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
 /**
  * Delegator action to open the first out-port view of all selected nodes.
  *
- * @author Thomas Gabriel, University of Konstanz
+ * @author Marcel Hanser, University of Konstanz
  */
-public class HideNodeNamesEditorAction extends AbstractEditorAction {
+public class ShowNodeIdsEditorAction extends AbstractEditorAction {
 
     /** {@inheritDoc} */
     @Override
     protected AbstractNodeAction createAction(final WorkflowEditor editor) {
         WorkflowRootEditPart part = (WorkflowRootEditPart)((editor).getViewer().getRootEditPart().getChildren().get(0));
-        HideNodeNamesAction hideNodeIdsAction = new HideNodeNamesAction(editor);
-        hideNodeIdsAction.setChecked(part.hideNodeNames());
-        return hideNodeIdsAction;
+        ShowNodeIdsAction showNodeIdsAction = new ShowNodeIdsAction(editor);
+        showNodeIdsAction.setChecked(part.showNodeId());
+        return showNodeIdsAction;
     }
-
 }

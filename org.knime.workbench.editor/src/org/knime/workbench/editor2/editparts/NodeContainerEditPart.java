@@ -161,14 +161,15 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeContainerEditPart.class);
 
-    private static final ExecutorService DATA_AWARE_DIALOG_EXECUTOR = Executors.newCachedThreadPool(
-        new ThreadFactory() {
+    private static final ExecutorService DATA_AWARE_DIALOG_EXECUTOR = Executors
+        .newCachedThreadPool(new ThreadFactory() {
             private final AtomicInteger m_threadIDs = new AtomicInteger();
-        @Override
-        public Thread newThread(final Runnable r) {
-            return new Thread(r, "DataAwareNode-Executor-" + m_threadIDs.incrementAndGet());
-        }
-    });
+
+            @Override
+            public Thread newThread(final Runnable r) {
+                return new Thread(r, "DataAwareNode-Executor-" + m_threadIDs.incrementAndGet());
+            }
+        });
 
     private static final Image META_NODE_LINK_GREEN_ICON = ImageRepository
         .getImage("icons/meta/metanode_link_green_decorator.png");
@@ -269,7 +270,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         ((NodeContainerFigure)getFigure()).setStateFromNC(cont);
         // set the node message
         updateNodeMessage();
-
+        callHideNodeName();
     }
 
     /**
@@ -621,7 +622,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
             f.setIcon(icon);
         }
         f.setType(type);
-        f.setLabelText(name);
+        updateLabelText();
         f.setCustomDescription(description);
     }
 
@@ -744,16 +745,19 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         final Shell shell = Display.getCurrent().getActiveShell();
         shell.setEnabled(false);
         try {
-            if (container.hasDataAwareDialogPane()
-                    && !container.isAllInputDataAvailable() && container.canExecuteUpToHere()) {
+            if (container.hasDataAwareDialogPane() && !container.isAllInputDataAvailable()
+                && container.canExecuteUpToHere()) {
                 IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
                 String prefPrompt = store.getString(PreferenceConstants.P_EXEC_NODES_DATA_AWARE_DIALOGS);
                 boolean isExecuteUpstreamNodes;
                 if (MessageDialogWithToggle.PROMPT.equals(prefPrompt)) {
-                    int returnCode = MessageDialogWithToggle.openYesNoCancelQuestion(shell, "Execute upstream nodes",
+                    int returnCode =
+                        MessageDialogWithToggle.openYesNoCancelQuestion(
+                            shell,
+                            "Execute upstream nodes",
                             "The " + container.getName() + " node can be configured using the full input data.\n\n"
-                                + "Execute upstream nodes?", "Remember my decision",
-                            false, store, PreferenceConstants.P_EXEC_NODES_DATA_AWARE_DIALOGS).getReturnCode();
+                                + "Execute upstream nodes?", "Remember my decision", false, store,
+                            PreferenceConstants.P_EXEC_NODES_DATA_AWARE_DIALOGS).getReturnCode();
                     if (returnCode == Window.CANCEL) {
                         return;
                     } else if (returnCode == IDialogConstants.YES_ID) {
@@ -1086,11 +1090,23 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
 
     /** Called when the name (label above the node) changes. */
     public void updateHeaderField() {
-        NodeContainerFigure ncFigure = (NodeContainerFigure)getFigure();
-        ncFigure.setLabelText(getNodeContainer().getName());
+        updateLabelText();
         // Bug 3037 trigger refresh of bounds
         getNodeContainer().setUIInformation(getNodeContainer().getUIInformation());
         refreshBounds();
+    }
+
+    /**
+     * Updates the label text either with or without the node id, depending on the settings in the root.
+     */
+    private void updateLabelText() {
+        WorkflowRootEditPart root = getRootEditPart();
+        NodeContainerFigure ncFigure = (NodeContainerFigure)getFigure();
+        String nodeName = getNodeContainer().getName();
+        if (root != null && root.showNodeId()) {
+            nodeName += " (#" + getNodeContainer().getID().getIndex() + ")";
+        }
+        ncFigure.setLabelText(nodeName);
     }
 
     /**
