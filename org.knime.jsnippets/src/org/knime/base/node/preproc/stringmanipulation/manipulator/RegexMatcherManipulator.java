@@ -51,6 +51,7 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
 /**
  * This Manipulator matches a string against a regex and return true or false.
  * @author Tim-Oliver Buchholz
+ * @since 2.11
  */
 public class RegexMatcherManipulator implements Manipulator {
 

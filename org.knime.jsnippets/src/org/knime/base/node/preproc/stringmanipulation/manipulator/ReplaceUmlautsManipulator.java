@@ -53,6 +53,7 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * This Manipulator replaces all umlauts in a string.
  * @author Tim-Oliver Buchholz
+ * @since 2.11
  */
 public class ReplaceUmlautsManipulator implements Manipulator {
     private static final String[] UMLAUTS = new String[]{"ä", "Ä", "ö", "Ö", "ü", "Ü", "ß", "\u1e9e"};
@@ -114,10 +115,9 @@ public class ReplaceUmlautsManipulator implements Manipulator {
      */
     @Override
     public String getDescription() {
-        // TODO Auto-generated method stub
         return "Replaces all umlauts in a string. " + "<br/><br/>" + "<strong>Examples:</strong>" + "<br/>" + "<table>"
-            + "<tr><td>replaceUmlauts(\"��� ��� �\", " + "true)</td>" + "<td>=&nbsp;\"aou AOU ss\"</td></tr>"
-            + "<tr><td>replaceUmlauts(\"��� ��� �\", false)</td>" + "<td>=&nbsp;\"aeoeue AeOeUe ss\"</td></tr>"
+            + "<tr><td>replaceUmlauts(\"äöü AÖÜ ß\", " + "true)</td>" + "<td>=&nbsp;\"aou AOU ss\"</td></tr>"
+            + "<tr><td>replaceUmlauts(\"äöü AÖÜ ß\", false)</td>" + "<td>=&nbsp;\"aeoeue AeOeUe ss\"</td></tr>"
             + "</table>";
     }
 
@@ -128,5 +128,4 @@ public class ReplaceUmlautsManipulator implements Manipulator {
     public Class<?> getReturnType() {
         return String.class;
     }
-
 }

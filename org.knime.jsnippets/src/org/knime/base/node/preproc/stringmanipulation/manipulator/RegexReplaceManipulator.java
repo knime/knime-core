@@ -54,6 +54,7 @@ import java.util.regex.Pattern;
 /**
  * This Manipulator replaces some parts of a string corresponding to the passed regex.
  * @author Tim-Oliver Buchholz
+ * @since 2.11
  */
 public class RegexReplaceManipulator implements Manipulator {
 

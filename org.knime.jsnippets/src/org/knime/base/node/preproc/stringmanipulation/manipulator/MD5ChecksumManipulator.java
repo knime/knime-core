@@ -57,6 +57,7 @@ import org.knime.core.node.NodeLogger;
 /**
  * This manipulator computs the md5 checksum of the input string.
  * @author Tim-Oliver Buchholz
+ * @since 2.11
  */
 public class MD5ChecksumManipulator implements Manipulator {
 
