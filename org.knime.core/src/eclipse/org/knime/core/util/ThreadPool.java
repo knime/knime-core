@@ -78,6 +78,7 @@ public class ThreadPool {
 
     private class MyFuture<T> extends FutureTask<T> {
         private final CountDownLatch m_startWaiter = new CountDownLatch(1);
+        private final ClassLoader m_contextClassloader = Thread.currentThread().getContextClassLoader();
 
         /**
          * @see FutureTask#FutureTask(Callable)
@@ -117,7 +118,14 @@ public class ThreadPool {
         @Override
         public void run() {
             m_startWaiter.countDown();
-            super.run();
+            // set context classloader of thread that created this task
+            ClassLoader previousContextClassloader = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(m_contextClassloader);
+            try {
+                super.run();
+            } finally {
+                Thread.currentThread().setContextClassLoader(previousContextClassloader);
+            }
         }
 
         /**
