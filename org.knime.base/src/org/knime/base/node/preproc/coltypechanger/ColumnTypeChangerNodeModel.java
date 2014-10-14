@@ -45,7 +45,11 @@
 package org.knime.base.node.preproc.coltypechanger;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -87,9 +91,13 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  */
 public class ColumnTypeChangerNodeModel extends NodeModel {
 
+    private static final String CFG_FILE = "config_file";
+
     private DataColumnSpecFilterConfiguration m_conf;
 
     private String m_dateFormat = "dd.MM.yy";
+
+    private String[][] m_reasons;
 
     /**
      * Creates a new node model with one in- and outport.
@@ -119,6 +127,8 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
         final DataType[] types = new DataType[incls.length];
         final double max = incls.length + data.getRowCount();
 
+        setReasons(new String[incls.length][3]);
+
         if (data.getRowCount() > 0) {
             // empty table check
 
@@ -127,9 +137,18 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
                     // guess for each cell in each column the best matching datatype
                     DataType newType = typeGuesser(row.getCell(data.getDataTableSpec().findColumnIndex(incls[i])));
                     if (types[i] != null) {
-                        types[i] = setType(types[i], newType);
+                        DataType toSet = setType(types[i], newType);
+                        if (toSet.equals(newType) && !toSet.equals(types[i])) {
+                            m_reasons[i][2] = row.getKey().getString();
+                            m_reasons[i][1] = newType.toString();
+                            m_reasons[i][0] = incls[i];
+                        }
+                        types[i] = toSet;
                     } else {
                         types[i] = newType;
+                        m_reasons[i][2] = row.getKey().getString();
+                        m_reasons[i][1] = newType.toString();
+                        m_reasons[i][0] = incls[i];
                     }
                     exec.checkCanceled();
                 }
@@ -347,7 +366,12 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException {
-        // no op
+        File f = new File(nodeInternDir, CFG_FILE);
+        try (ObjectInputStream o = new ObjectInputStream(new FileInputStream(f));) {
+            m_reasons = (String[][])o.readObject();
+        } catch (ClassNotFoundException e) {
+            throw new IOException("Error by reading internals.", e);
+        }
     }
 
     /**
@@ -369,7 +393,11 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException {
-        // no op
+
+        File f = new File(nodeInternDir, CFG_FILE);
+        try (ObjectOutputStream o = new ObjectOutputStream(new FileOutputStream(f))) {
+            o.writeObject(m_reasons);
+        }
     }
 
     /**
@@ -411,5 +439,19 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
                 return name.getType().equals(StringCell.TYPE);
             }
         }, NameFilterConfiguration.FILTER_BY_NAMEPATTERN);
+    }
+
+    /**
+     * @return the reasons
+     */
+    public String[][] getReasons() {
+        return m_reasons;
+    }
+
+    /**
+     * @param reasons the reasons to set
+     */
+    private void setReasons(final String[][] reasons) {
+        this.m_reasons = reasons;
     }
 }

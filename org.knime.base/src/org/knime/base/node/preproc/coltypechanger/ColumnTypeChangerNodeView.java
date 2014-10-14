@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,50 +41,66 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ *
+ * History
+ *   14.10.2014 (tibuch): created
  */
 package org.knime.base.node.preproc.coltypechanger;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+
 import org.knime.core.node.NodeView;
 
 /**
- * Factory for the Column Type Changer node.
- * @author Tim-Oliver Buchholz, University of Konstanz
+ *
+ * @author Tim-Oliver Buchholz
  */
-public class ColumnTypeChangerNodeFactory
-        extends NodeFactory<ColumnTypeChangerNodeModel> {
+public class ColumnTypeChangerNodeView extends NodeView<ColumnTypeChangerNodeModel> {
 
-    /** {@inheritDoc} */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new ColumnTypeChangerNodeDialogPane();
+    private JScrollPane m_pane;
+    private JTable m_table;
+
+    /**
+     * @param nodeModel the data model for the view
+     */
+    protected ColumnTypeChangerNodeView(final ColumnTypeChangerNodeModel nodeModel) {
+        super(nodeModel);
+
+        m_table = new JTable();
+        m_pane = new JScrollPane(m_table);
+
+        setComponent(m_pane);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public ColumnTypeChangerNodeModel createNodeModel() {
-        return new ColumnTypeChangerNodeModel();
+    protected void onClose() {
+
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public NodeView<ColumnTypeChangerNodeModel> createNodeView(
-            final int viewIndex, final ColumnTypeChangerNodeModel nodeModel) {
-        return new ColumnTypeChangerNodeView(nodeModel);
+    protected void onOpen() {
+
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected int getNrNodeViews() {
-        return 1;
-    }
+    protected void modelChanged() {
+        ColumnTypeChangerNodeModel nodeModel = getNodeModel();
+        final String[][] reasons = nodeModel.getReasons();
+        final String[] colNames = {"Column name", "Final column type", "First occurrence of final column type"};
 
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return true;
+        m_table.setModel(new DefaultTableModel(reasons, colNames));
     }
 
 }

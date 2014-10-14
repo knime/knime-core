@@ -12,7 +12,8 @@
 		<intro>
 			This node converts all selected string columns to a numeric or
 			date type, if and only if all entries could be converted.
-			Either choose a date pattern or enter a new one.
+			Either
+			choose a date pattern or enter a new one.
 		</intro>
 
 		<option name="Include">This list contains the column names which will get
@@ -39,8 +40,10 @@
 		</option>
 		<option name="Choose a date format">Choose or enter a date pattern. (y: Year, M: Month
 			in year, d: Day in month, H: Hour in day, m: Minute in hour, s:
-			Second in minute, S: Millisecond)</option>
+			Second in minute, S: Millisecond)
+		</option>
 	</fullDescription>
+
 
 	<ports>
 		<inPort index="0" name="Input">Arbitrary input data.</inPort>
@@ -48,4 +51,10 @@
 			Input data with converted columns.
 		</outPort>
 	</ports>
+
+	<views>
+		<view name="Changed Types" index="0">Table view showing the column
+			names with the final column type and the row id of the first
+			occurrence of the final type.</view>
+	</views>
 </knimeNode>
