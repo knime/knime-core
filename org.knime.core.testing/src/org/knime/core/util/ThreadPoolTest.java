@@ -47,12 +47,17 @@
  */
 package org.knime.core.util;
 
+import static org.junit.Assert.assertThat;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import junit.framework.TestCase;
 
+import org.eclipse.core.runtime.internal.adaptor.ContextFinder;
+import org.hamcrest.core.Is;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -401,5 +406,32 @@ public class ThreadPoolTest extends TestCase {
         root.waitForTermination();
         assertEquals(0, m_running.get());
         assertEquals(loops, m_finished.get());
+    }
+
+    /**
+     * Checks if the context classloader is set correctly for the threads in the pool.
+     *
+     * @throws Exception if an error occurs
+     */
+    public void testContextClassloader() throws Exception {
+        ThreadPool root = new ThreadPool(1);
+
+        Callable<ClassLoader> callable = new Callable<ClassLoader>() {
+            @Override
+            public ClassLoader call() throws Exception {
+                return Thread.currentThread().getContextClassLoader();
+            }
+        };
+
+        final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        try {
+            ClassLoader outerCl = new ContextFinder(cl);
+            Thread.currentThread().setContextClassLoader(outerCl);
+            Future<ClassLoader> future = root.enqueue(callable);
+            ClassLoader innerCl = future.get();
+            assertThat("Unexpected classloader in thread pool", innerCl, Is.is(outerCl));
+        } finally {
+            Thread.currentThread().setContextClassLoader(cl);
+        }
     }
 }
