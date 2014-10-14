@@ -70,8 +70,9 @@ public class DenseByteVector {
      * zero.
      *
      * @param length the fixed length of the vector.
+     * @since 2.11
      */
-    DenseByteVector(final int length) {
+    public DenseByteVector(final int length) {
         if (length < 0) {
             throw new IllegalArgumentException(
                     "Length of a ByteVector can't be negative.");
@@ -91,8 +92,9 @@ public class DenseByteVector {
      * interpreted as unsigned positive values in the range of 0 ... 255.
      *
      * @param counts the value to initialize the new vector with.
+     * @since 2.11
      */
-    DenseByteVector(final byte[] counts) {
+    public DenseByteVector(final byte[] counts) {
         m_storage = counts.clone();
     }
 
@@ -101,8 +103,9 @@ public class DenseByteVector {
      * is an identical copy.
      *
      * @param byteVector the byte vector to clone.
+     * @since 2.11
      */
-    DenseByteVector(final DenseByteVector byteVector) {
+    public DenseByteVector(final DenseByteVector byteVector) {
         m_storage = byteVector.m_storage.clone();
     }
 
