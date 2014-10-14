@@ -4,20 +4,20 @@
 # 
 
 SOURCE="$0"
-APP_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-SOURCE="$APP_DIR/$(basename $SOURCE)"
+APP_DIR="$(cd -P "${SOURCE%/*}" && pwd)"
+SOURCE="$APP_DIR/${SOURCE##*/})"
 while [[ -h "$SOURCE" ]]; do
     SOURCE="$(readlink "$SOURCE")"
-    APP_DIR="$APP_DIR/$(dirname "$SOURCE")"
+    APP_DIR="$APP_DIR/${$SOURCE%/*})"
 done
-KNIME_DIR="$APP_DIR/../../.."
+ECLIPSE_DIR="$APP_DIR/../../.."
 
 declare -a VM_ARGS
 declare -a APP_ARGS
 JAVA=""
 CLASSPATH=""
 APPLICATION_OR_PRODUCT_SET=0
-KNIME_INI_FILE="$APP_DIR/Knime.ini"
+INI_FILE="$APP_DIR/${SOURCE##*/}).ini"
 
 readArguments() {
     local params=("$@")
@@ -39,7 +39,7 @@ readArguments() {
             CLASSPATH="${params[i+1]}"
             ((i++))
         elif [[ "$arg" == "--launcher.ini" ]] ; then
-        	KNIME_INI_FILE=${params[i+1]}
+        	INI_FILE=${params[i+1]}
         	((i++))
         elif [[ "$arg" == "--launcher.library" ]] || [[ "$arg" == "--launcher.timeout" ]] || \
         	 [[ "$arg" == "--launcher.XXMaxPermSize" ]]; then
@@ -60,12 +60,12 @@ readArguments() {
 
 
 # detect java
-if [[ -x "$KNIME_DIR/jre/bin/java" ]]; then
+if [[ -x "$ECLIPSE_DIR/jre/bin/java" ]]; then
     # start KNIME with the java in the jre folder
-    JAVA="$KNIME_DIR/jre/bin/java"
-elif [[ -x "$KNIME_DIR/jre/Home/bin/java" ]]; then
+    JAVA="$ECLIPSE_DIR/jre/bin/java"
+elif [[ -x "$ECLIPSE_DIR/jre/Home/bin/java" ]]; then
     # start KNIME with the java in the jre folder
-    JAVA="$KNIME_DIR/jre/Home/bin/java"
+    JAVA="$ECLIPSE_DIR/jre/Home/bin/java"
 else
     JAVA=java
 fi
@@ -77,8 +77,8 @@ VM_ARGS=()
 APP_ARGS=()
 
 # extract parameters from Knime.ini
-KNIME_INI=( $(cat "$KNIME_INI_FILE") )
-readArguments "${KNIME_INI[@]}"
+ALL_ARGUMENTS=( $(cat "$INI_FILE") )
+readArguments "${ALL_ARGUMENTS[@]}"
 
 # add command line parameters, they should override the parameters from the ini file
 readArguments "$@"
