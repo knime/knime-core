@@ -56,12 +56,13 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -74,6 +75,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -100,7 +102,7 @@ public final class FilesHistoryPanel extends JPanel {
     private final List<ChangeListener> m_changeListener =
             new ArrayList<ChangeListener>();
 
-    private final JComboBox m_textBox;
+    private final JComboBox<String> m_textBox;
 
     private final JButton m_chooseButton;
 
@@ -139,14 +141,14 @@ public final class FilesHistoryPanel extends JPanel {
             final String historyID, final boolean showErrorMessage,
             final String... suffixes) {
         if (historyID == null || suffixes == null) {
-            throw new NullPointerException("Argument must not be null.");
+            throw new IllegalArgumentException("Argument must not be null.");
         }
         if (Arrays.asList(suffixes).contains(null)) {
-            throw new NullPointerException("Array must not contain null.");
+            throw new IllegalArgumentException("Array must not contain null.");
         }
         m_historyID = historyID;
         m_suffixes = suffixes;
-        m_textBox = new JComboBox(new DefaultComboBoxModel());
+        m_textBox = new JComboBox<String>(new DefaultComboBoxModel<String>());
         m_textBox.setEditable(true);
         m_textBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
 
@@ -162,6 +164,23 @@ public final class FilesHistoryPanel extends JPanel {
                         cl.stateChanged(ev);
                     }
                 }
+            }
+        });
+        ((JTextField) m_textBox.getEditor().getEditorComponent()).addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(final KeyEvent e) {
+            }
+
+            @Override
+            public void keyReleased(final KeyEvent e) {
+                ChangeEvent ev = new ChangeEvent(FilesHistoryPanel.this);
+                for (ChangeListener cl : m_changeListener) {
+                    cl.stateChanged(ev);
+                }
+            }
+
+            @Override
+            public void keyPressed(final KeyEvent e) {
             }
         });
 
@@ -319,7 +338,7 @@ public final class FilesHistoryPanel extends JPanel {
      * @see javax.swing.JComboBox#getSelectedItem()
      */
     public String getSelectedFile() {
-        return m_textBox.getEditor().getItem().toString();
+        return ((JTextField) m_textBox.getEditor().getEditorComponent()).getText();
     }
 
     /**
@@ -355,11 +374,11 @@ public final class FilesHistoryPanel extends JPanel {
                 continue;
             }
         }
-        DefaultComboBoxModel comboModel =
-                (DefaultComboBoxModel)m_textBox.getModel();
+        DefaultComboBoxModel<String> comboModel =
+                (DefaultComboBoxModel<String>)m_textBox.getModel();
         comboModel.removeAllElements();
-        for (Iterator<String> it = list.iterator(); it.hasNext();) {
-            comboModel.addElement(it.next());
+        for (String s : list) {
+            comboModel.addElement(s);
         }
         // changing the model will also change the minimum size to be
         // quite big. We have tooltips, we don't need that

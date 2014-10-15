@@ -53,11 +53,11 @@ import org.knime.core.data.xml.XMLValue;
 
 /**
  * An object to write xml cells (@link{XMLValue}).
- * 
+ *
  * @author Heiko Hofer
  */
-public interface XMLCellWriter {
-	
+public interface XMLCellWriter extends AutoCloseable {
+
 	/**
 	 * Write the given cell.
 	 * @param cell the cell to write
@@ -67,8 +67,9 @@ public interface XMLCellWriter {
 
 	/**
 	 * Close resources used for writing the xml cell.
-	 * 
+	 *
 	 * @throws IOException when an error occurs
 	 */
-	void close() throws IOException;
+	@Override
+    void close() throws IOException;
 }
