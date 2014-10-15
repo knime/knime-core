@@ -56,10 +56,13 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.File;
-import java.net.MalformedURLException;
+import java.io.IOException;
 import java.net.URL;
-import java.util.Iterator;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedHashSet;
 
 import javax.swing.Box;
@@ -71,6 +74,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -82,6 +86,7 @@ import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.node.util.StringHistory;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.SimpleFileFilter;
 
 /**
@@ -94,7 +99,7 @@ import org.knime.core.util.SimpleFileFilter;
  */
 public final class CSVFilesHistoryPanel extends JPanel {
 
-    private final JComboBox m_textBox;
+    private final JComboBox<String> m_textBox;
 
     private final JButton m_chooseButton;
 
@@ -115,7 +120,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
      * @param fvm model to allow to use a variable instead of the textfield.
      */
     CSVFilesHistoryPanel(final FlowVariableModel fvm) {
-        m_textBox = new JComboBox(new DefaultComboBoxModel());
+        m_textBox = new JComboBox<String>(new DefaultComboBoxModel<String>());
         m_textBox.setEditable(true);
         m_textBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
         m_textBox.setPreferredSize(new Dimension(300, 25));
@@ -123,6 +128,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
 
         // install listeners to update warn message whenever file name changes
         m_textBox.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 fileLocationChanged();
             }
@@ -138,14 +144,17 @@ public final class CSVFilesHistoryPanel extends JPanel {
         if (editor instanceof JTextComponent) {
             Document d = ((JTextComponent)editor).getDocument();
             d.addDocumentListener(new DocumentListener() {
+                @Override
                 public void changedUpdate(final DocumentEvent e) {
                     fileLocationChanged();
                 }
 
+                @Override
                 public void insertUpdate(final DocumentEvent e) {
                     fileLocationChanged();
                 }
 
+                @Override
                 public void removeUpdate(final DocumentEvent e) {
                     fileLocationChanged();
                 }
@@ -154,6 +163,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
 
         m_chooseButton = new JButton("Browse...");
         m_chooseButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 String newFile = getOutputFileName();
                 if (newFile != null) {
@@ -208,24 +218,29 @@ public final class CSVFilesHistoryPanel extends JPanel {
     private void fileLocationChanged() {
         String newMsg = "";
         String selFile = getSelectedFile();
-        if (selFile != null && selFile.length() > 0) {
-            File newFile = getFile(selFile);
-            if (newFile.exists()) {
-                if (newFile.isDirectory()) {
-                    newMsg = "ERROR: output file can't be a directory";
-                } else {
-                    newMsg = "Warning: selected file exists.";
+        if ((selFile != null) && !selFile.isEmpty()) {
+            try {
+                URL newUrl = FileUtil.toURL(selFile);
+                Path path = FileUtil.resolveToPath(newUrl);
+                if (path != null) {
+                    if (Files.exists(path)) {
+                        if (Files.isDirectory(path)) {
+                            newMsg = "ERROR: output file can't be a directory";
+                        } else {
+                            newMsg = "Warning: selected file exists.";
+                        }
+                    } else {
+                        if (!Files.exists(path.getParent())) {
+                            newMsg = "Warning: Directory of specified file doesn't exist and will be created";
+                        }
+                    }
                 }
-            } else {
-                if (!newFile.getParentFile().exists()) {
-                    newMsg =
-                            "Warning: Directory of specified file doesn't exist"
-                                    + " and will be created";
-                }
+            } catch (IOException ex) {
+                newMsg = "Error while check new location: " + ex.getMessage();
             }
         }
 
-        if (newMsg.length() == 0) {
+        if (newMsg.isEmpty()) {
             m_warnMsg.setForeground(m_warnMsg.getBackground());
             m_warnMsg.setText("A long msg to avoid invisibility of label");
         } else {
@@ -273,7 +288,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
      * @see javax.swing.JComboBox#getSelectedItem()
      */
     public String getSelectedFile() {
-        return m_textBox.getEditor().getItem().toString();
+        return ((JTextField) m_textBox.getEditor().getEditorComponent()).getText();
     }
 
     /**
@@ -292,54 +307,19 @@ public final class CSVFilesHistoryPanel extends JPanel {
                 StringHistory.getInstance(CSVWriterNodeModel.FILE_HISTORY_ID);
         String[] allVals = history.getHistory();
         LinkedHashSet<String> list = new LinkedHashSet<String>();
-        for (int i = 0; i < allVals.length; i++) {
-            // we used to store URLs in the history. Be backward compatible.
-            try {
-                String cur = allVals[i];
-                File file = textToFile(cur);
-                list.add(file.getAbsolutePath());
-            } catch (MalformedURLException mue) {
-                continue;
-            }
+        for (String s : allVals) {
+            list.add(s);
         }
-        DefaultComboBoxModel comboModel =
-                (DefaultComboBoxModel)m_textBox.getModel();
+        DefaultComboBoxModel<String> comboModel =
+                (DefaultComboBoxModel<String>)m_textBox.getModel();
         comboModel.removeAllElements();
-        for (Iterator<String> it = list.iterator(); it.hasNext();) {
-            comboModel.addElement(it.next());
+        for (String s : list) {
+            comboModel.addElement(s);
         }
         // changing the model will also change the minimum size to be
         // quite big. We have a tooltip, we don't need that
         Dimension newMin = new Dimension(0, getPreferredSize().height);
         setMinimumSize(newMin);
-    }
-
-    /**
-     * Tries to create a File from the passed string.
-     *
-     * @param url the string to transform into an File
-     * @return File if entered value could be properly tranformed
-     * @throws MalformedURLException if the value passed was invalid
-     */
-    private static File textToFile(final String url)
-            throws MalformedURLException {
-        if ((url == null) || (url.equals(""))) {
-            throw new MalformedURLException("Specify a not empty valid URL");
-        }
-
-        String file;
-        try {
-            URL newURL = new URL(url);
-            file = newURL.getFile();
-        } catch (MalformedURLException e) {
-            // see if they specified a file without giving the protocol
-            return new File(url);
-        }
-        if (file == null || file.equals("")) {
-            throw new MalformedURLException("Can't get file from file '" + url
-                    + "'");
-        }
-        return new File(file);
     }
 
     /**
@@ -349,7 +329,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
      * @param fileName the file name to convert to a file
      * @return a file representing fileName
      */
-    public static final File getFile(final String fileName) {
+    public static File getFile(final String fileName) {
         File f = new File(fileName);
         if (!f.isAbsolute()) {
             f = new File(new File(System.getProperty("user.home")), fileName);
@@ -357,4 +337,32 @@ public final class CSVFilesHistoryPanel extends JPanel {
         return f;
     }
 
+    /**
+     * Adds a change listener to the panel that gets notified whenever the entered file name changes.
+     *
+     * @param cl a change listener
+     * @since 2.11
+     */
+    public void addChangeListener(final ChangeListener cl) {
+        ((JTextField) m_textBox.getEditor().getEditorComponent()).addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(final KeyEvent e) {
+            }
+
+            @Override
+            public void keyReleased(final KeyEvent e) {
+                cl.stateChanged(new ChangeEvent(e.getSource()));
+            }
+
+            @Override
+            public void keyPressed(final KeyEvent e) {
+            }
+        });
+        m_textBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                cl.stateChanged(new ChangeEvent(e.getSource()));
+            }
+        });
+    }
 }

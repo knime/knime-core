@@ -58,6 +58,8 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,6 +68,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -578,4 +581,32 @@ public class DialogComponentFileChooser extends DialogComponent {
         m_fileComboBox.setToolTipText(text);
     }
 
+    /**
+     * Adds a change listener to the file choose that gets notified whenever the entered file name changes.
+     *
+     * @param cl a change listener
+     * @since 2.11
+     */
+    public void addChangeListener(final ChangeListener cl) {
+        ((JTextField) m_fileComboBox.getEditor().getEditorComponent()).addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(final KeyEvent e) {
+                cl.stateChanged(new ChangeEvent(e.getSource()));
+            }
+
+            @Override
+            public void keyReleased(final KeyEvent e) {
+            }
+
+            @Override
+            public void keyPressed(final KeyEvent e) {
+            }
+        });
+        m_fileComboBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                cl.stateChanged(new ChangeEvent(e.getSource()));
+            }
+        });
+    }
 }

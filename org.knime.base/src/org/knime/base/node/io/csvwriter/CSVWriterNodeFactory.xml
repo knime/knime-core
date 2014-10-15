@@ -5,24 +5,25 @@
 	<name>CSV Writer</name>
 	
 	<shortDescription>
-		Saves a datatable into an ASCII file.
+		Saves a data table into an ASCII file.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>
- 		This node writes out the datatable coming through its input port
- 		into a file. The node provides many options to customize the output
- 		format (see below). But there is no checking done on the settings, so 
- 		it is possible to write out the data in a format that makes it 
- 		impossible to read it in again (e. g. if you specify no data separator).
+ 		This node writes out the input data table into a file or to a remote location denoted by an URL. The node
+        provides many options to customize the output format (see below). But there is no checking done on the
+        settings, so it is possible to write out the data in a format that makes it	impossible to read it in again
+         (e. g. if you specify no data separator).<br />
+         Note that if the destination location is a remote URL not all options are available because in general it's
+         not possible to determine whether the remote location exists. In this case it will always be overwritten.
  		</intro>
  		<tab name="Settings">
  		<description>
  		    General settings regarding the output file location and formats.
  		</description>
- 		<option name="Output file location">Enter a valid file name. 
-			You can also choose a previously selected file from the drop-down list,
-			or select a file from the &quot;Browse...&quot; dialog.
+ 		<option name="Output location">Enter a valid file name or URL. 
+			You can also choose a previously selected location from the drop-down list,
+			or select a local file from the &quot;Browse...&quot; dialog.
 			</option>		
  		<option name="Write column header">If checked, the column names will be
  			written out in the first line of the output file.
@@ -30,8 +31,8 @@
  		<option name="Don&apos;t write column headers if file exists">
  			If checked, the column headers will not be written when the output
  			is appended to the already existing output file. 
- 			This is particularly useful when the csv writer is
- 			used in a LOOPER node to report results. This option is ignored
+ 			This is particularly useful when the CSV Writer is
+ 			used in a loop to report results. This option is ignored
  			when the column header is not written anyway or the file append option
  			is unchecked (see below).
 			</option>		
@@ -136,7 +137,7 @@
 	</fullDescription>
 	
 	<ports>
-		<inPort index="0" name="Input table">The Datatable to write out.</inPort>
+		<inPort index="0" name="Input table">The data table to write out.</inPort>
 	</ports>	
 </knimeNode>
 

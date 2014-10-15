@@ -51,10 +51,17 @@ package org.knime.base.node.io.csvwriter;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Date;
 import java.util.zip.GZIPOutputStream;
 
@@ -75,6 +82,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.StringHistory;
+import org.knime.core.util.FileUtil;
 
 /**
  * NodeModel to write a DataTable to a CSV (comma separated value) file.
@@ -177,12 +185,12 @@ public class CSVWriterNodeModel extends NodeModel {
                                 + " comment end pattern.");
             }
         }
-        
+
         boolean isGzip = fws.isGzipOutput();
         boolean isAppend = FileOverwritePolicy.Append.equals(
             fws.getFileOverwritePolicy());
         if (isGzip && isAppend) {
-            throw new InvalidSettingsException("Can't append to existing " 
+            throw new InvalidSettingsException("Can't append to existing "
                     + "file if output is gzip compressed");
         }
     }
@@ -211,93 +219,94 @@ public class CSVWriterNodeModel extends NodeModel {
 
         DataTable in = data[0];
 
-        File file = new File(m_settings.getFileName());
-        File parentDir = file.getParentFile();
+        URL url = FileUtil.toURL(m_settings.getFileName());
         boolean dirCreated = false;
-        if (!parentDir.exists()) {
-            if (!parentDir.mkdirs()) {
-                throw new IllegalStateException("Unable to create directory"
-                        + " for specified output file: "
-                        + parentDir.getAbsolutePath());
+        boolean writeColHeader = m_settings.writeColumnHeader();
+
+        OutputStream tempOut;
+        Path localPath = FileUtil.resolveToPath(url);
+        URLConnection urlConnection = null;
+        boolean appendToFile;
+        if (localPath != null) {
+            Path parentDir = localPath.getParent();
+
+            if (!Files.exists(parentDir)) {
+                Files.createDirectories(parentDir);
+                LOGGER.info("Created directory for specified output file: " + parentDir);
+                dirCreated = true;
             }
-            LOGGER.info("Created directory for specified output file: "
-                    + parentDir.getAbsolutePath());
-            dirCreated = true;
+
+            // figure out if the writer is actually supposed to write col headers
+            if (Files.exists(localPath)) {
+                if (writeColHeader  && m_settings.getFileOverwritePolicy().equals(FileOverwritePolicy.Append)) {
+                    // do not write headers if the file exists and we append to it
+                    writeColHeader = !m_settings.skipColHeaderIfFileExists();
+                }
+
+                switch (m_settings.getFileOverwritePolicy()) {
+                    case Append:
+                        appendToFile = true;
+                        break;
+                    case Abort:
+                        throw new IOException("File \"" + localPath + "\" exists, must not overwrite it (check "
+                            + "dialog settings)");
+                    case Overwrite:
+                        appendToFile = false;
+                        break;
+                    default:
+                        throw new IllegalStateException("Unknown case: " + m_settings.getFileOverwritePolicy());
+                }
+            } else {
+                appendToFile = false;
+            }
+            tempOut =
+                Files.newOutputStream(localPath, appendToFile ? StandardOpenOption.APPEND : StandardOpenOption.CREATE);
+        } else {
+            urlConnection = FileUtil.openOutputConnection(url, "PUT");
+            tempOut = urlConnection.getOutputStream();
+            appendToFile = false;
         }
 
-        // figure out if the writer is actually supposed to write col headers
-        boolean writeColHeader = m_settings.writeColumnHeader();
-        if (writeColHeader && file.exists()) {
-            if (m_settings.getFileOverwritePolicy().equals(
-                    FileOverwritePolicy.Append)) {
-                // do not write headers if the file exists and we append to it
-                writeColHeader = !m_settings.skipColHeaderIfFileExists();
-            }
-        }
         // make a copy of the settings with the modified value
         FileWriterSettings writerSettings = new FileWriterSettings(m_settings);
         writerSettings.setWriteColumnHeader(writeColHeader);
 
-        boolean appendToFile;
-        if (file.exists()) {
-            switch (m_settings.getFileOverwritePolicy()) {
-            case Append:
-                appendToFile = true;
-                break;
-            case Abort:
-                throw new RuntimeException("File \"" + file.getAbsolutePath()
-                        + "\" exists, must not overwrite it (check "
-                        + "dialog settings)");
-            case Overwrite:
-                appendToFile = false;
-                break;
-            default:
-                throw new InternalError("Unknown case: "
-                        + m_settings.getFileOverwritePolicy());
-            }
-        } else {
-            appendToFile = false;
-        }
-        OutputStream tempO = new FileOutputStream(file, appendToFile);
         if (m_settings.isGzipOutput()) {
-            tempO = new BufferedOutputStream(new GZIPOutputStream(tempO));
+            tempOut = new GZIPOutputStream(tempOut);
         }
-        CSVWriter tableWriter = new CSVWriter(new OutputStreamWriter(tempO),
-                        writerSettings);
+        tempOut = new BufferedOutputStream(tempOut);
+        CSVWriter tableWriter = new CSVWriter(new OutputStreamWriter(tempOut, Charset.defaultCharset()), writerSettings);
 
         // write the comment header, if we are supposed to
         writeCommentHeader(m_settings, tableWriter, data[0], appendToFile);
 
         try {
             tableWriter.write(in, exec);
-        } catch (CanceledExecutionException cee) {
-            LOGGER.info("Table FileWriter canceled.");
-            if (dirCreated) {
-                LOGGER.warn("The directory for the output file was created and"
-                        + " is not removed.");
-            }
             tableWriter.close();
-            if (file.delete()) {
-                LOGGER.debug("File " + m_settings.getFileName() + " deleted.");
+
+            if (tableWriter.hasWarningMessage()) {
+                setWarningMessage(tableWriter.getLastWarningMessage());
+            }
+
+            // execution successful return empty array
+            return new BufferedDataTable[0];
+        } catch (CanceledExecutionException cee) {
+            tableWriter.close();
+            if (localPath != null) {
+                LOGGER.info("Table FileWriter canceled.");
                 if (dirCreated) {
-                    LOGGER.debug("The directory created for the output file"
-                            + " is not removed though.");
+                    LOGGER.warn("The directory for the output file was created and is not removed.");
                 }
-            } else {
-                LOGGER.warn("Unable to delete file '"
-                        + m_settings.getFileName() + "' after cancellation.");
+                try {
+                    Files.delete(localPath);
+                    LOGGER.debug("File " + m_settings.getFileName() + " deleted.");
+                } catch (IOException ex) {
+                    LOGGER.warn("Unable to delete file '"
+                            + m_settings.getFileName() + "' after cancellation: " + ex.getMessage(), ex);
+                }
             }
             throw cee;
         }
-
-        tableWriter.close();
-
-        if (tableWriter.hasWarningMessage()) {
-            setWarningMessage(tableWriter.getLastWarningMessage());
-        }
-
-        // execution successful return empty array
-        return new BufferedDataTable[0];
     }
 
     /**
@@ -435,41 +444,50 @@ public class CSVWriterNodeModel extends NodeModel {
         if (fileName == null || fileName.length() == 0) {
             throw new InvalidSettingsException("No output file specified.");
         }
-        File file = new File(fileName);
+        try {
+            URL url = FileUtil.toURL(fileName);
+            Path localPath = FileUtil.resolveToPath(url);
+            if (localPath != null) {
+                if (Files.isDirectory(localPath)) {
+                    throw new InvalidSettingsException("Specified location is a "
+                            + "directory (\"" + localPath + "\").");
+                }
+                if (Files.exists(localPath)) {
+                    if (!Files.isWritable(localPath)) {
+                        throw new InvalidSettingsException("Cannot write to existing "
+                                + "file \"" + localPath + "\".");
+                    }
+                    switch (m_settings.getFileOverwritePolicy()) {
+                        case Abort:
+                            throw new InvalidSettingsException("File \""
+                                    + localPath
+                                    + "\" exists, must not overwrite it (check "
+                                    + "dialog settings)");
+                        case Overwrite:
+                            warnMsg +=
+                            "Selected output file exists and will be overwritten!";
+                            break;
+                        default:
+                    }
+                } else {
+                    Path parentDir = localPath.getParent();
+                    if (parentDir == null) {
+                        throw new InvalidSettingsException("Can't determine parent "
+                                + "directory of file \"" + localPath + "\"");
+                    }
+                    if (!Files.exists(parentDir)) {
+                        warnMsg +=
+                                "Directory of specified output file doesn't exist"
+                                        + " and will be created.";
+                    }
+                }
+            }
+        } catch (MalformedURLException ex) {
+            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
+        } catch (IOException ex) {
+            throw new InvalidSettingsException("I/O error while checking output:" + ex.getMessage(), ex);
+        }
 
-        if (file.isDirectory()) {
-            throw new InvalidSettingsException("Specified location  is a "
-                    + "directory (\"" + file.getAbsolutePath() + "\").");
-        }
-        if (file.exists()) {
-            if (!file.canWrite()) {
-                throw new InvalidSettingsException("Cannot write to existing "
-                        + "file \"" + file.getAbsolutePath() + "\".");
-            }
-            switch (m_settings.getFileOverwritePolicy()) {
-            case Abort:
-                throw new InvalidSettingsException("File \""
-                        + file.getAbsolutePath()
-                        + "\" exists, must not overwrite it (check "
-                        + "dialog settings)");
-            case Overwrite:
-                warnMsg +=
-                        "Selected output file exists and will be overwritten!";
-                break;
-            default:
-            }
-        } else {
-            File parentDir = file.getParentFile();
-            if (parentDir == null) {
-                throw new InvalidSettingsException("Can't determine parent "
-                        + "directory of file \"" + file + "\"");
-            }
-            if (!parentDir.exists()) {
-                warnMsg +=
-                        "Directory of specified output file doesn't exist"
-                                + " and will be created.";
-            }
-        }
 
         /*
          * check settings
@@ -530,5 +548,20 @@ public class CSVWriterNodeModel extends NodeModel {
      */
     static boolean isEmpty(final String s) {
         return !notEmpty(s);
+    }
+
+    /**
+     * Creates an URL from the "file"name entered in the dialog.
+     *
+     * @param fileName the file's name, may already be an URL
+     * @return an URL
+     * @throws MalformedURLException if the URL is malformed
+     */
+    static URL getUrl(final String fileName) throws MalformedURLException {
+        try {
+            return new URL(fileName);
+        } catch (MalformedURLException ex) {
+            return Paths.get(fileName).toAbsolutePath().toUri().toURL();
+        }
     }
 }

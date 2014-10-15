@@ -58,11 +58,15 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -1039,6 +1043,81 @@ public final class FileUtil {
         } else {
             throw new IllegalArgumentException("Not a file or knime URL: '" + fileUrl + "'");
         }
+    }
+
+    /**
+     * Tries to resolve the given URL into a local path. The method can handle all URLs that are backed by local files
+     * especially the 'knime' protocol. If the URL does not denote a local path, <code>null</code> is returned.
+     *
+     * @param url any URL
+     * @return the path or <code>null</code>
+     * @throws IOException if an I/O error occurs while resolving the URL
+     * @since 2.11
+     */
+    public static Path resolveToPath(final URL url) throws IOException {
+        URL resolvedUrl = url.openConnection().getURL();
+
+        if (resolvedUrl.getProtocol().equalsIgnoreCase("file")) {
+            Path path = Paths.get(resolvedUrl.getPath());
+            if (!Files.exists(path)) {
+                try {
+                    path = Paths.get(URLDecoder.decode(resolvedUrl.getPath(), "UTF-8"));
+                } catch (UnsupportedEncodingException ex) {
+                    // ignore it
+                }
+            }
+            return path;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Tries to convert the given path into a URL. Either the path is already a valid URL or it denotes a local file
+     * and is then converted into a file URL.
+     *
+     * @param path any path
+     * @return a URL
+     * @throws MalformedURLException if the path is neither a URL nor a proper filesystem path
+     * @since 2.11
+     */
+    public static URL toURL(final String path) throws MalformedURLException {
+        try {
+            return new URL(path);
+        } catch (MalformedURLException ex) {
+            return Paths.get(path).toAbsolutePath().toUri().toURL();
+        }
+    }
+
+    /**
+     * Tries to open an output URL connection to the given URL. If the URL is an http URL the given HTTP method is set
+     * and the response code following the initial request is evaluated. Otherwise the connection is simply configured
+     * for output.
+     *
+     * @param url any URL
+     * @param httpMethod the HTTP method in case the url is http
+     * @return a URLConnection configured for output
+     * @throws IOException if an I/O error occurs
+     * @since 2.11
+     */
+    public static URLConnection openOutputConnection(final URL url, final String httpMethod) throws IOException {
+        URLConnection urlConnection = url.openConnection();
+
+        if (urlConnection instanceof HttpURLConnection) {
+            ((HttpURLConnection)urlConnection).setRequestMethod(httpMethod);
+        }
+
+        urlConnection.setDoOutput(true);
+        urlConnection.connect();
+
+        if (urlConnection instanceof HttpURLConnection) {
+            HttpURLConnection c = (HttpURLConnection)urlConnection;
+            if (c.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                throw new IOException("Error while writing to '" + c.getURL() + "': " + c.getResponseCode() + " - "
+                    + c.getResponseMessage());
+            }
+        }
+        return urlConnection;
     }
 
     /**
