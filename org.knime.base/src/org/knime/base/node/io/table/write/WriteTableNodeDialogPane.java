@@ -47,7 +47,13 @@
  */
 package org.knime.base.node.io.table.write;
 
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Path;
+
 import javax.swing.JFileChooser;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.io.table.read.ReadTableNodeDialogPane;
 import org.knime.base.node.io.table.read.ReadTableNodeModel;
@@ -56,6 +62,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.util.FileUtil;
 
 /**
  * Dialog for the node to write arbitrary tables to a file. It only shows
@@ -68,12 +75,33 @@ public class WriteTableNodeDialogPane extends DefaultNodeSettingsPane {
      * Creates new dialog.
      */
     public WriteTableNodeDialogPane() {
-        addDialogComponent(new DialogComponentFileChooser(
-                new SettingsModelString(WriteTableNodeModel.CFG_FILENAME, ""),
-                ReadTableNodeDialogPane.class.getName(), JFileChooser.SAVE_DIALOG,
-                ReadTableNodeModel.PREFERRED_FILE_EXTENSION));
-        addDialogComponent(new DialogComponentBoolean(new SettingsModelBoolean(
-                WriteTableNodeModel.CFG_OVERWRITE_OK, false), "Overwrite OK"));
+        final DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(
+            new SettingsModelString(WriteTableNodeModel.CFG_FILENAME, ""),
+            ReadTableNodeDialogPane.class.getName(), JFileChooser.SAVE_DIALOG,
+            ReadTableNodeModel.PREFERRED_FILE_EXTENSION);
+
+        final DialogComponentBoolean overwriteOK = new DialogComponentBoolean(new SettingsModelBoolean(
+            WriteTableNodeModel.CFG_OVERWRITE_OK, false), "Overwrite OK");
+
+
+        fileChooser.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                String selFile = ((SettingsModelString) fileChooser.getModel()).getStringValue();
+                if ((selFile != null) && !selFile.isEmpty()) {
+                    try {
+                        URL newUrl = FileUtil.toURL(selFile);
+                        Path path = FileUtil.resolveToPath(newUrl);
+                        overwriteOK.getModel().setEnabled(path != null);
+                    } catch (IOException ex) {
+                        // ignore
+                    }
+                }
+            }
+        });
+
+        addDialogComponent(fileChooser);
+        addDialogComponent(overwriteOK);
     }
 
 }

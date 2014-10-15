@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   May 19, 2006 (wiswedel): created
  */
@@ -49,6 +49,11 @@ package org.knime.base.node.io.table.write;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.DataContainer;
@@ -62,6 +67,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.util.FileUtil;
 
 
 /**
@@ -70,19 +76,19 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author wiswedel, University of Konstanz
  */
 public class WriteTableNodeModel extends NodeModel {
-    
+
     /** Config identifier for the settings object. */
     static final String CFG_FILENAME = "filename";
-    
+
     /** Config identifier for overwrite OK. */
     static final String CFG_OVERWRITE_OK = "overwriteOK";
-    
+
     private final SettingsModelString m_fileName =
         new SettingsModelString(CFG_FILENAME, null);
-    
+
     private final SettingsModelBoolean m_overwriteOK =
         new SettingsModelBoolean(CFG_OVERWRITE_OK, false);
-    
+
     /** Creates new NodeModel with one input, no output ports. */
     public WriteTableNodeModel() {
         super(1, 0);
@@ -128,15 +134,24 @@ public class WriteTableNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData, 
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         BufferedDataTable in = inData[0];
         checkFileAccess(m_fileName.getStringValue());
-        DataContainer.writeToZip(in, 
-                new File(m_fileName.getStringValue()), exec);
+
+        URL url = FileUtil.toURL(m_fileName.getStringValue());
+        Path localPath = FileUtil.resolveToPath(url);
+
+        if (localPath != null) {
+            DataContainer.writeToZip(in, localPath.toFile(), exec);
+        } else {
+            try (OutputStream os = FileUtil.openOutputConnection(url, "PUT").getOutputStream()) {
+                DataContainer.writeToStream(in, os, exec);
+            }
+        }
         return new BufferedDataTable[0];
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -153,13 +168,13 @@ public class WriteTableNodeModel extends NodeModel {
             throws InvalidSettingsException {
 
         checkFileAccess(m_fileName.getStringValue());
-        
+
         return new DataTableSpec[0];
     }
 
     /**
      * Helper that checks some properties for the file argument.
-     * 
+     *
      * @param fileName The file to check
      * @throws InvalidSettingsException If that fails.
      */
@@ -168,29 +183,34 @@ public class WriteTableNodeModel extends NodeModel {
         if (fileName == null) {
             throw new InvalidSettingsException("No output file specified.");
         }
-        File file = new File(fileName);
 
-        if (file.isDirectory()) {
-            throw new InvalidSettingsException("\"" + file.getAbsolutePath()
-                    + "\" is a directory.");
-        }
-        if (!file.exists()) {
-            // dunno how to check the write access to the directory. If we can't
-            // create the file the execute of the node will fail. Well, too bad.
-            return;
-        }
-        if (!m_overwriteOK.getBooleanValue()) {
-            throw new InvalidSettingsException("File exists and can't be "
-                    + "overwritten, check dialog settings");
-        }
-        if (!file.canWrite()) {
-            throw new InvalidSettingsException("Cannot write to file \""
-                    + file.getAbsolutePath() + "\".");
-        }
-        // here it exists and we can write it: warn user!
-        setWarningMessage("Selected output file exists and will be "
-                + "overwritten!");
 
+        try {
+            URL url = FileUtil.toURL(fileName);
+            Path localPath = FileUtil.resolveToPath(url);
+            if (localPath != null) {
+                if (Files.isDirectory(localPath)) {
+                    throw new InvalidSettingsException("\"" + localPath + "\" is a directory.");
+                }
+                if (!Files.exists(localPath)) {
+                    // dunno how to check the write access to the directory. If we can't
+                    // create the file the execute of the node will fail. Well, too bad.
+                    return;
+                }
+                if (!m_overwriteOK.getBooleanValue()) {
+                    throw new InvalidSettingsException("File exists and can't be overwritten, check dialog settings");
+                }
+                if (!Files.isWritable(localPath)) {
+                    throw new InvalidSettingsException("Cannot write to file \"" + localPath + "\".");
+                }
+                // here it exists and we can write it: warn user!
+                setWarningMessage("Selected output file exists and will be overwritten!");
+            }
+        } catch (MalformedURLException ex) {
+            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
+        } catch (IOException ex) {
+            throw new InvalidSettingsException("I/O error while checking output location:" + ex.getMessage(), ex);
+        }
     }
 
     /**
@@ -213,5 +233,5 @@ public class WriteTableNodeModel extends NodeModel {
         // no internals to save
     }
 
-    
+
 }
