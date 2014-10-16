@@ -98,4 +98,10 @@ public final class FlowVariablePortObjectSpec implements PortObjectSpec {
     public JComponent[] getViews() {
         return null;
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return "Variables connection (spec)";
+    }
 }

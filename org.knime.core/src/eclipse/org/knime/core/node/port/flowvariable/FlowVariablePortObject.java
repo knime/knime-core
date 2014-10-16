@@ -140,6 +140,12 @@ public class FlowVariablePortObject implements PortObject {
 
     /** {@inheritDoc} */
     @Override
+    public String toString() {
+        return getSummary();
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
