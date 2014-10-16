@@ -17,7 +17,7 @@ declare -a APP_ARGS
 JAVA=""
 CLASSPATH=""
 APPLICATION_OR_PRODUCT_SET=0
-INI_FILE="$APP_DIR/${SOURCE##*/}).ini"
+INI_FILE="$APP_DIR/${SOURCE##*/}".ini"
 
 readArguments() {
     local params=("$@")
