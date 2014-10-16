@@ -149,7 +149,7 @@ final class FlowObjectStackView extends JPanel {
                     obj[2] = "Loop-Execute";
                     obj[3] = null;
                 } else if (s instanceof FlowScopeContext) {
-                    obj[2] = "Try-Catch Scope"  + (((FlowScopeContext)s).isInactiveScope() ? " (inactive)" : "");
+                    obj[2] = s.toString()  + (((FlowScopeContext)s).isInactiveScope() ? " (inactive)" : "");
                     obj[3] = null;
                 } else {
                     obj[2] = "unknown:" + s.toString();
