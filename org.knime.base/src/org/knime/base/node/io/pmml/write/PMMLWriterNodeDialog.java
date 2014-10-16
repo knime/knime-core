@@ -44,13 +44,20 @@
  */
 package org.knime.base.node.io.pmml.write;
 
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Path;
+
 import javax.swing.JFileChooser;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.util.FileUtil;
 
 /**
  *
@@ -62,16 +69,37 @@ public class PMMLWriterNodeDialog extends DefaultNodeSettingsPane {
      *
      */
     public PMMLWriterNodeDialog() {
-        addDialogComponent(new DialogComponentFileChooser(
-                createFileModel(), "pmml.writer.history",
-                JFileChooser.SAVE_DIALOG, ".pmml", ".xml"));
+        final DialogComponentFileChooser fileChooser =
+            new DialogComponentFileChooser(createFileModel(), "pmml.writer.history", JFileChooser.SAVE_DIALOG, ".pmml",
+                ".xml");
+
         DialogComponentBoolean validateComponent = new DialogComponentBoolean(
-                createValidateModel(), "Validate PMML before export.");
+            createValidateModel(), "Validate PMML before export.");
         validateComponent.setToolTipText("It is recommended to perform the "
                 + "validation.");
+
+        final DialogComponentBoolean overwriteOK = new DialogComponentBoolean(createOverwriteOKModel(), "Overwrite OK");
+
+        fileChooser.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                String selFile = ((SettingsModelString) fileChooser.getModel()).getStringValue();
+                if ((selFile != null) && !selFile.isEmpty()) {
+                    try {
+                        URL newUrl = FileUtil.toURL(selFile);
+                        Path path = FileUtil.resolveToPath(newUrl);
+                        overwriteOK.getModel().setEnabled(path != null);
+                    } catch (IOException ex) {
+                        // ignore
+                    }
+                }
+
+            }
+        });
+
+        addDialogComponent(fileChooser);
         addDialogComponent(validateComponent);
-        addDialogComponent(new DialogComponentBoolean(
-                createOverwriteOKModel(), "Overwrite OK"));
+        addDialogComponent(overwriteOK);
     }
 
     /**
@@ -91,5 +119,4 @@ public class PMMLWriterNodeDialog extends DefaultNodeSettingsPane {
     static SettingsModelBoolean createValidateModel() {
         return new SettingsModelBoolean("validatePMML", true);
     }
-
 }

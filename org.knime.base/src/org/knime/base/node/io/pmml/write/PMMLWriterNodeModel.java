@@ -45,8 +45,12 @@
 package org.knime.base.node.io.pmml.write;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -62,6 +66,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.util.FileUtil;
 
 /**
  *
@@ -108,13 +113,26 @@ public class PMMLWriterNodeModel extends NodeModel {
             final ExecutionContext exec)
             throws Exception {
         checkFileLocation(m_outfile.getStringValue());
-        File f = new File(m_outfile.getStringValue());
+
+        URL url = FileUtil.toURL(m_outfile.getStringValue());
+        Path localPath = FileUtil.resolveToPath(url);
         PMMLPortObject pmml = (PMMLPortObject)inData[0];
         if (m_validatePMML.getBooleanValue()) {
             pmml.validate();
         }
-        pmml.save(new FileOutputStream(f));
+
+        try (OutputStream os = openOutputStream(localPath, url)) {
+            pmml.save(os);
+        }
         return new PortObject[] {};
+    }
+
+    private static OutputStream openOutputStream(final Path localPath, final URL url) throws IOException {
+        if (localPath != null) {
+            return Files.newOutputStream(localPath);
+        } else {
+            return FileUtil.openOutputConnection(url, "PUT").getOutputStream();
+        }
     }
 
     /**
@@ -179,23 +197,35 @@ public class PMMLWriterNodeModel extends NodeModel {
     private void checkFileLocation(final String fileName)
             throws InvalidSettingsException {
         LOGGER.debug("file name: " + fileName);
-        if (fileName == null || fileName.isEmpty()) {
+        if ((fileName == null) || fileName.isEmpty()) {
             throw new InvalidSettingsException("No file name provided! "
                     + "Please enter a valid file name.");
         }
-        File f = new File(fileName);
-        File parent = f.getParentFile();
-        if (f.isDirectory() || parent == null || !parent.exists()) {
-            throw new InvalidSettingsException("File name \"" + fileName
-                    + "\" is not valid. Please enter a valid file name.");
+
+        try {
+            URL url = FileUtil.toURL(fileName);
+            Path localPath = FileUtil.resolveToPath(url);
+            if (localPath != null) {
+                Path parent = localPath.getParent();
+                if (Files.isDirectory(localPath) || (parent == null) || !Files.exists(parent)) {
+                    throw new InvalidSettingsException("File name \"" + localPath
+                        + "\" is not valid. Please enter a valid file name.");
+                }
+                if (Files.exists(localPath)) {
+                    if (m_overwriteOK.getBooleanValue()) {
+                        setWarningMessage("File exists and will be overwritten");
+                    } else {
+                        throw new InvalidSettingsException("File exists and can't be "
+                                + "overwritten, check dialog settings");
+                    }
+                }
+            }
+        } catch (MalformedURLException ex) {
+            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
+        } catch (IOException ex) {
+            throw new InvalidSettingsException("I/O error while checking output:" + ex.getMessage(), ex);
         }
-        if (f.exists() && !m_overwriteOK.getBooleanValue()) {
-            throw new InvalidSettingsException("File exists and can't be "
-                    + "overwritten, check dialog settings");
-        }
-        if (f.exists() && m_overwriteOK.getBooleanValue()) {
-            setWarningMessage("File exists and will be overwritten");
-        }
+
     }
 
     /**
