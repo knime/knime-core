@@ -231,6 +231,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     private FlowObjectStack m_incomingStack;
     private FlowObjectStack m_outgoingStack;
 
+    private final FlowSubnodeScopeContext m_subnodeScopeContext = new FlowSubnodeScopeContext();
+
     /** Helper flag to avoid state transitions as part callbacks from the inner wfm. These are ignored when execution
      * is triggered via {@link #performExecuteNode(PortObject[])} or reset via {@link #performReset()}. */
     private boolean m_isPerformingActionCalledFromParent;
@@ -283,8 +285,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      * @param content ...
      * @param name The name of the sub node
      */
-    SubNodeContainer(final WorkflowManager parent, final NodeID id, final WorkflowManager content,
-        final String name) {
+    SubNodeContainer(final WorkflowManager parent, final NodeID id, final WorkflowManager content, final String name) {
         super(parent, id);
         // Create new, internal workflow manager:
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), new PortType[]{}, new PortType[]{}, false,
@@ -838,6 +839,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
 
     /* -------------- Configuration/Execution ------------------- */
 
+
     /** {@inheritDoc} */
     @Override
     void performReset() {
@@ -855,6 +857,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     @Override
     boolean performConfigure(final PortObjectSpec[] rawInSpecs, final NodeConfigureHelper nch) {
         assert rawInSpecs.length == m_inports.length;
+        m_subnodeScopeContext.inactiveScope(Node.containsInactiveSpecs(rawInSpecs));
         m_isPerformingActionCalledFromParent = true;
         setNodeMessage(null);
         try {
@@ -1625,9 +1628,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean isInactiveBranchConsumer() {
         return false;
@@ -1741,6 +1742,22 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
 
     /** {@inheritDoc} */
     @Override
+    public boolean canConfigureNodes() {
+        final NodeContainerParent directNCParent = getDirectNCParent();
+        synchronized (directNCParent.getWorkflowMutex()) {
+            final WorkflowManager parent = getParent();
+            if (!parent.containsNodeContainer(getID())) { // called during set-up (loading via constructor)
+                return false;
+            }
+            if (!parent.assembleInputData(getID(), new PortObject[getNrInPorts()])) {
+                return false;
+            }
+            return directNCParent.canConfigureNodes();
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public boolean canResetContainedNodes() {
         return getParent().canResetSuccessors(getID());
     }
@@ -1748,18 +1765,18 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /** {@inheritDoc} */
     @Override
     public boolean isWriteProtected() {
-        return getParent().isWriteProtected();
+        return getParent().isWriteProtected() || Role.Link.equals(getTemplateInformation().getRole());
     }
 
     /** {@inheritDoc} */
     @Override
     public void pushWorkflowVariablesOnStack(final FlowObjectStack sos) {
-        // TODO - this receives the variables from the parent.
+        sos.push(m_subnodeScopeContext);
     }
 
     /** {@inheritDoc} */
     @Override
-    public final String getCipherFileName(final String fileName) {
+    public String getCipherFileName(final String fileName) {
         return WorkflowCipher.getCipherFileName(this, fileName);
     }
 
@@ -1771,7 +1788,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
 
     /** {@inheritDoc} */
     @Override
-    public final OutputStream cipherOutput(final OutputStream out) throws IOException {
+    public OutputStream cipherOutput(final OutputStream out) throws IOException {
         return getDirectNCParent().cipherOutput(out);
     }
 

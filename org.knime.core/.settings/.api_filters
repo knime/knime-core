@@ -67,6 +67,26 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerParent.java" type="org.knime.core.node.workflow.NodeContainerParent">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainerParent"/>
+                <message_argument value="canConfigureNodes()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="canConfigureNodes()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/SubNodeContainer.java" type="org.knime.core.node.workflow.SubNodeContainer">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="canConfigureNodes()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/execresult/NodeExecutionResult.java" type="org.knime.core.node.workflow.execresult.NodeExecutionResult">
         <filter id="643842064">
             <message_arguments>

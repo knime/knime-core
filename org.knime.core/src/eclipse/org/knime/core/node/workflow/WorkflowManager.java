@@ -3417,18 +3417,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public String canExpandSubNode(final NodeID subNodeID) {
         synchronized (m_workflowMutex) {
             if (!(getNodeContainer(subNodeID) instanceof SubNodeContainer)) {
-                // wrong type of node!
-                return "Can not expand "
-                        + "selected node (not a subnode).";
+                return "Can not expand selected node (not a subnode).";
             }
             if (!canRemoveNode(subNodeID)) {
-                // we can not - bail!
-                    return "Can not move subnode or nodes inside subnode "
-                            + "(node(s) or successor still executing?).";
-                }
-                WorkflowManager wfm = ((SubNodeContainer)getNodeContainer(subNodeID)).getWorkflowManager();
-                if (wfm.containsExecutedNode()) {
-                    return "Can not expand executed sub node (reset first).";
+                return "Can not move subnode or nodes inside subnode (node(s) or successor still executing?)";
+            }
+            WorkflowManager wfm = ((SubNodeContainer)getNodeContainer(subNodeID)).getWorkflowManager();
+            if (wfm.containsExecutedNode()) {
+                return "Can not expand executed sub node (reset first).";
             }
             return null;
         }
@@ -3449,17 +3445,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 return "No node with id \"" + wfmID + "\"";
             }
             if (!(nc instanceof WorkflowManager)) {
-                // wrong type of node!
                 return "Can not expand selected node (not a metanode).";
             }
             if (!canRemoveNode(wfmID)) {
-                // we can not - bail!
-                    return "Can not move metanode or nodes inside metanode "
-                            + "(node(s) or successor still executing?).";
-                }
-                WorkflowManager wfm = (WorkflowManager)(getNodeContainer(wfmID));
-                if (wfm.containsExecutedNode()) {
-                    return "Can not expand executed meta node (reset first).";
+                return "Can not move metanode or nodes inside metanode (node(s) or successor still executing?)";
+            }
+            WorkflowManager wfm = (WorkflowManager)(getNodeContainer(wfmID));
+            if (wfm.containsExecutedNode()) {
+                return "Can not expand executed meta node (reset first).";
             }
             return null;
         }
@@ -4658,6 +4651,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         checkForNodeStateChanges(true);
     }
 
+    /** {@inheritDoc}
+     * @since 2.11*/
+    @Override
+    public boolean canConfigureNodes() {
+        synchronized (m_workflowMutex) {
+            // workflows and meta nodes can always configure, nodes in subnodes need to ask parent
+            return isProject() || getDirectNCParent().canConfigureNodes();
+        }
+    }
+
     /** Check if a node can be executed directly.
      *
      * @param nodeID id of node
@@ -5572,6 +5575,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // (NodeMessage did not change -- can exit here)
                 return false;
             }
+            if (!canConfigureNodes()) {
+                if (!keepNodeMessage) {
+                    snc.setNodeMessage(new NodeMessage(NodeMessage.Type.WARNING,
+                        "Outer workflow does not have input data, execute it first"));
+                }
+                return false;
+            }
+
             // configure node only if it's not yet running, queued or done.
             // This can happen if the WFM queues a node which has more than
             // one predecessor with populated output ports but one of the

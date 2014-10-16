@@ -63,7 +63,6 @@ import java.io.OutputStream;
  */
 public interface NodeContainerParent {
 
-
     /** See {@link NodeContainer#getDirectNCParent()}.
      * @return the direct node container parent.
      */
@@ -74,6 +73,12 @@ public interface NodeContainerParent {
      * @return that property.
      */
     public boolean canResetContainedNodes();
+
+    /** May return false for nodes contained in subnodes, which cannot be configured until all data is available
+     * to the subnode. Used to ensure the user doesn't execute nodes in a subnode unless all data is available. For
+     * ordinary workflows/meta nodes it always returns true.
+     * @return that property */
+    public boolean canConfigureNodes();
 
     /** @return the workflowMutex */
     public Object getWorkflowMutex();
