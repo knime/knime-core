@@ -62,6 +62,12 @@ public final class FlowTryCatchContext extends FlowScopeContext {
 
     /** {@inheritDoc} */
     @Override
+    public String toString() {
+        return "Try-Catch Context";
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public int hashCode() {
         return super.hashCode();
     }

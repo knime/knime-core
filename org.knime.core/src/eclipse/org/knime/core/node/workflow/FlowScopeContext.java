@@ -55,6 +55,8 @@ package org.knime.core.node.workflow;
  * loops and try-catch-constructs.
  *
  * @author M. Berthold, KNIME.com, Zurich, Switzerland
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noreference Not to be used outside the core.
  * @since 2.8
  */
 public class FlowScopeContext extends FlowObject {
@@ -76,12 +78,6 @@ public class FlowScopeContext extends FlowObject {
      */
     public void inactiveScope(final boolean inactiveScope) {
         this.m_inactiveScope = inactiveScope;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return "Try-Catch Context";
     }
 
     /** {@inheritDoc} */
