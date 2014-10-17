@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,24 +41,32 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.10.2005 (mb): created
  */
 package org.knime.base.node.io.portobject;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+
 import javax.swing.JFileChooser;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.util.FileUtil;
 
 
 /** Dialog for the Predictor Writer Node - allows user to choose file name and
  * directory.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public class PortObjectWriterNodeDialog extends DefaultNodeSettingsPane {
@@ -67,13 +75,33 @@ public class PortObjectWriterNodeDialog extends DefaultNodeSettingsPane {
      * the file chooser entry.
      */
     public PortObjectWriterNodeDialog() {
-        addDialogComponent(new DialogComponentFileChooser(
-                new SettingsModelString(PortObjectWriterNodeModel.FILENAME, ""),
-                PortObjectWriterNodeDialog.class.getName(),
-                JFileChooser.SAVE_DIALOG, ".zip"));
-        addDialogComponent(new DialogComponentBoolean(new SettingsModelBoolean(
-                PortObjectWriterNodeModel.CFG_OVERWRITE_OK, false), 
-                "Overwrite OK"));
+        final DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(
+            new SettingsModelString(PortObjectWriterNodeModel.FILENAME, ""),
+            PortObjectWriterNodeDialog.class.getName(),
+            JFileChooser.SAVE_DIALOG, ".zip");
+
+        final DialogComponentBoolean overwriteOK = new DialogComponentBoolean(new SettingsModelBoolean(
+            PortObjectWriterNodeModel.CFG_OVERWRITE_OK, false),
+            "Overwrite OK");
+
+        fileChooser.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                String selFile = ((SettingsModelString) fileChooser.getModel()).getStringValue();
+                if ((selFile != null) && !selFile.isEmpty()) {
+                    try {
+                        URL newUrl = FileUtil.toURL(selFile);
+                        Path path = FileUtil.resolveToPath(newUrl);
+                        overwriteOK.getModel().setEnabled(path != null);
+                    } catch (IOException | URISyntaxException ex) {
+                        // ignore
+                    }
+                }
+
+            }
+        });
+
+        addDialogComponent(fileChooser);
+        addDialogComponent(overwriteOK);
     }
-    
 }

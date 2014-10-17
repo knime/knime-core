@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.10.2005 (mb): created
  */
@@ -49,6 +49,12 @@ package org.knime.base.node.io.portobject;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -63,11 +69,12 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
+import org.knime.core.util.FileUtil;
 
 
 /**
  * Write ModelContent object into file.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 class PortObjectWriterNodeModel extends NodeModel {
@@ -77,13 +84,13 @@ class PortObjectWriterNodeModel extends NodeModel {
 
     /** Config identifier for overwrite OK. */
     static final String CFG_OVERWRITE_OK = "overwriteOK";
-    
-    private final SettingsModelString m_fileName = 
+
+    private final SettingsModelString m_fileName =
         new SettingsModelString(FILENAME, null);
 
     private final SettingsModelBoolean m_overwriteOK =
         new SettingsModelBoolean(CFG_OVERWRITE_OK, false);
-    
+
     /**
      * Constructor: Create new NodeModel with only one Model Input Port.
      * @param writeType The type of the input port.
@@ -107,7 +114,7 @@ class PortObjectWriterNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString fileNameModel = 
+        SettingsModelString fileNameModel =
             m_fileName.createCloneWithValidatedValue(settings);
         String fileName = fileNameModel.getStringValue();
         if (fileName == null || fileName.length() == 0) {
@@ -133,7 +140,7 @@ class PortObjectWriterNodeModel extends NodeModel {
 
     /**
      * Writes model as ModelContent to file.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -141,19 +148,25 @@ class PortObjectWriterNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         String fileName = m_fileName.getStringValue();
         checkFileAccess(fileName);
-        File realFile = new File(fileName);
-        if (realFile.exists()) {
-            realFile.delete();
-        }
-        try {
-            PortUtil.writeObjectToFile(portObject[0], realFile, exec);
-        } catch (Exception e) {
-            realFile.delete();
-            throw e;
+
+        URL url = FileUtil.toURL(fileName);
+        Path localPath = FileUtil.resolveToPath(url);
+
+        if (localPath != null) {
+            try {
+                PortUtil.writeObjectToFile(portObject[0], localPath.toFile(), exec);
+            } catch (Exception e) {
+                Files.deleteIfExists(localPath);
+                throw e;
+            }
+        } else {
+            try (OutputStream os = FileUtil.openOutputConnection(url, "PUT").getOutputStream()) {
+                PortUtil.writeObjectToStream(portObject[0], os, exec);
+            }
         }
         return new PortObject[0];
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -169,39 +182,46 @@ class PortObjectWriterNodeModel extends NodeModel {
             throws InvalidSettingsException {
         String fileName = m_fileName.getStringValue();
         checkFileAccess(fileName);
-        if (new File(fileName).exists()) {
-            // here it exists and we can write it: warn user!
-            setWarningMessage("Selected output file \"" + fileName + "\"" 
-                    + " exists and will be overwritten!");
-        }
         return new PortObjectSpec[0];
     }
 
     /**
      * Helper that checks some properties for the file argument.
-     * 
+     *
      * @param fileName The file to check
      * @throws InvalidSettingsException If that fails.
      */
-    private void checkFileAccess(final String fileName)
-            throws InvalidSettingsException {
-        if (fileName == null) {
-            throw new InvalidSettingsException("No output file specified.");
+    private void checkFileAccess(final String fileName) throws InvalidSettingsException {
+        if ((fileName == null) || fileName.isEmpty()) {
+            throw new InvalidSettingsException("No file name provided! "
+                    + "Please enter a valid file name.");
         }
-        File file = new File(fileName);
-        if (file.isDirectory()) {
-            throw new InvalidSettingsException("\"" + file.getAbsolutePath()
-                    + "\" is a directory.");
-        }
-        if (file.exists()) {
-            if (!file.canWrite()) {
-                throw new InvalidSettingsException("Cannot write to file \""
-                    + file.getAbsolutePath() + "\".");
+
+        try {
+            URL url = FileUtil.toURL(fileName);
+            Path localPath = FileUtil.resolveToPath(url);
+            if (localPath != null) {
+                Path parent = localPath.getParent();
+                if (Files.isDirectory(localPath) || (parent == null) || !Files.exists(parent)) {
+                    throw new InvalidSettingsException("File name \"" + localPath
+                        + "\" is not valid. Please enter a valid file name.");
+                }
+                if (Files.exists(localPath)) {
+                    if (!m_overwriteOK.getBooleanValue()) {
+                        throw new InvalidSettingsException("File exists and can't be "
+                                + "overwritten, check dialog settings");
+                    } else if (Files.isWritable(localPath)) {
+                        throw new InvalidSettingsException("Cannot write to file \""
+                                + localPath + "\".");
+                    } else {
+                        setWarningMessage("File exists and will be overwritten");
+                    }
+                }
             }
-        }
-        if (file.exists() && !m_overwriteOK.getBooleanValue()) {
-            throw new InvalidSettingsException("File exists and can't be "
-                    + "overwritten, check dialog settings");
+        } catch (MalformedURLException | URISyntaxException ex) {
+            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
+        } catch (IOException ex) {
+            throw new InvalidSettingsException("I/O error while checking output:" + ex.getMessage(), ex);
         }
     }
 
@@ -209,8 +229,8 @@ class PortObjectWriterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) throws IOException, 
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // nothing to do here
     }
@@ -219,10 +239,10 @@ class PortObjectWriterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) throws IOException, 
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // nothing to do here
     }
- 
+
 }

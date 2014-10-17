@@ -8,10 +8,14 @@
 	</shortDescription>
 	
 	<fullDescription>
-		<intro>Writes generic port objects to a file, which can be read
-		with the Model Reader node.
+		<intro>Writes generic port objects to a file or to a remote location denoted by an URL. The file can be read
+		with the Model Reader node.<br />
+         Note that if the destination location is a remote URL not all options are available because in general it's
+         not possible to determine whether the remote location exists. In this case it will always be overwritten.  
 		</intro>
-        <option name="Selected File">The file containing the object.</option>
+        <option name="Selected File">Enter a valid file name or URL. You can also 
+        choose a previously selected location from the drop-down list, or select a local 
+        file from the "Browse..." dialog.</option>
         <option name="Overwrite OK">
             If unchecked, the node refuses to execute when the output 
             file exists (prevent unintentional overwrite).
