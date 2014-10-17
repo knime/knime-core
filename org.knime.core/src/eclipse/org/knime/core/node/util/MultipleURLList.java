@@ -145,6 +145,7 @@ public class MultipleURLList extends JScrollPane {
                     ActionEvent e2 = new ActionEvent(MyFilePanel.this, 0, "");
                     for (ActionListener al : m_selectListeners) {
                         al.actionPerformed(e2);
+                        m_filesPanel.requestFocus();
                     }
                 }
             });

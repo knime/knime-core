@@ -570,4 +570,12 @@ public final class FilesHistoryPanel extends JPanel {
             removeChangeListener(m_checkIfExistsListener);
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void requestFocus() {
+        m_textBox.getEditor().getEditorComponent().requestFocus();
+    }
 }
