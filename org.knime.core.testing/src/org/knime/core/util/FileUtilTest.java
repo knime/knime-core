@@ -109,20 +109,20 @@ public class FileUtilTest {
         url = FileUtil.toURL("C:\\Windows\\test.txt");
         assertThat("Unexpected URL", url.toString(), is("file:/C:/Windows/test.txt"));
 
+        url = FileUtil.toURL("C:/Windows/with#hash.txt");
+        assertThat("Unexpected URL", url.toString(), is("file:/C:/Windows/with%23hash.txt"));
+
+        url = FileUtil.toURL("C:/Windows/with%percent.txt");
+        assertThat("Unexpected URL", url.toString(), is("file:/C:/Windows/with%25percent.txt"));
+
+        url = FileUtil.toURL("C:/Windows/with+plus.txt");
+        assertThat("Unexpected URL", url.toString(), is("file:/C:/Windows/with+plus.txt"));
+
         url = FileUtil.toURL("file:/C:/Windows/test.txt");
         assertThat("Unexpected URL", url.toString(), is("file:/C:/Windows/test.txt"));
 
         url = FileUtil.toURL("file:/C:/Windows/with space.txt");
         assertThat("Unexpected URL", url.toString(), is("file:/C:/Windows/with%20space.txt"));
-
-        url = FileUtil.toURL("file:/C:/Windows/with#hash.txt");
-        assertThat("Unexpected URL", url.toString(), is("file:/C:/Windows/with%23hash.txt"));
-
-        url = FileUtil.toURL("file:/C:/Windows/with%percent.txt");
-        assertThat("Unexpected URL", url.toString(), is("file:/C:/Windows/with%25percent.txt"));
-
-        url = FileUtil.toURL("file:/C:/Windows/with+plus.txt");
-        assertThat("Unexpected URL", url.toString(), is("file:/C:/Windows/with+plus.txt"));
     }
 
     /**
@@ -163,23 +163,23 @@ public class FileUtilTest {
     @Test
     public void testResolveToPathWindows() throws Exception {
         assumeThat(Platform.getOS(), is(Platform.OS_WIN32));
-        URL url = new URL("file:///server/path/on/server");
-        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("/etc/passwd"));
+        URL url = new URL("file:////server/path/on/server");
+        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("\\\\server\\path\\on\\server"));
 
         url = new URL("file:/C:/tmp/with%20space");
-        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("C:/tmp/with space"));
+        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("C:\\tmp\\with space"));
 
         url = new URL("file:/C:/tmp/with space");
-        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("C:/tmp/with space"));
+        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("C:\\tmp\\with space"));
 
         url = new URL("file:/C:/tmp/with+plus");
-        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("C:/tmp/with+plus"));
+        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("C:\\tmp\\with+plus"));
 
         url = new URL("file:/C:/tmp/with%23hash");
-        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("C:/tmp/with#hash"));
+        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("C:\\tmp\\with#hash"));
 
         url = new URL("file:/C:/tmp/with%25percent");
-        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("C:/tmp/with%percent"));
+        assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("C:\\tmp\\with%percent"));
 
         url = new URL("http://www.knime.org");
         assertThat("Unexpected path", FileUtil.resolveToPath(url), is(nullValue()));
