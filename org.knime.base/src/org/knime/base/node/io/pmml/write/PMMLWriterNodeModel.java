@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -220,7 +221,7 @@ public class PMMLWriterNodeModel extends NodeModel {
                     }
                 }
             }
-        } catch (MalformedURLException ex) {
+        } catch (MalformedURLException | URISyntaxException ex) {
             throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
         } catch (IOException ex) {
             throw new InvalidSettingsException("I/O error while checking output:" + ex.getMessage(), ex);

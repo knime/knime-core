@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
@@ -214,9 +215,7 @@ public class CSVWriterNodeModel extends NodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            IOException {
-
+            final ExecutionContext exec) throws Exception {
         DataTable in = data[0];
 
         URL url = FileUtil.toURL(m_settings.getFileName());
@@ -482,7 +481,7 @@ public class CSVWriterNodeModel extends NodeModel {
                     }
                 }
             }
-        } catch (MalformedURLException ex) {
+        } catch (MalformedURLException | URISyntaxException ex) {
             throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
         } catch (IOException ex) {
             throw new InvalidSettingsException("I/O error while checking output:" + ex.getMessage(), ex);

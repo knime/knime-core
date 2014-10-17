@@ -48,6 +48,7 @@
 package org.knime.base.node.io.table.write;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 
@@ -93,7 +94,7 @@ public class WriteTableNodeDialogPane extends DefaultNodeSettingsPane {
                         URL newUrl = FileUtil.toURL(selFile);
                         Path path = FileUtil.resolveToPath(newUrl);
                         overwriteOK.getModel().setEnabled(path != null);
-                    } catch (IOException ex) {
+                    } catch (IOException | URISyntaxException ex) {
                         // ignore
                     }
                 }

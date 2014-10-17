@@ -50,6 +50,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 
@@ -135,7 +136,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
                         m_overwritePolicyAppendButton.setEnabled(path != null);
                         m_overwritePolicyOverwriteButton.setEnabled(path != null);
                         m_colHeaderWriteSkipOnAppend.setEnabled(path != null);
-                    } catch (IOException ex) {
+                    } catch (IOException | URISyntaxException ex) {
                         // ignore
                     }
                 }

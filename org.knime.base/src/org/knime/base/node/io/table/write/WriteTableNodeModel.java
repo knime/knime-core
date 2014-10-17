@@ -51,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -206,7 +207,7 @@ public class WriteTableNodeModel extends NodeModel {
                 // here it exists and we can write it: warn user!
                 setWarningMessage("Selected output file exists and will be overwritten!");
             }
-        } catch (MalformedURLException ex) {
+        } catch (MalformedURLException | URISyntaxException ex) {
             throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
         } catch (IOException ex) {
             throw new InvalidSettingsException("I/O error while checking output location:" + ex.getMessage(), ex);

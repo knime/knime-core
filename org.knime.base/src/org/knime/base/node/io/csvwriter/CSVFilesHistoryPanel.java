@@ -60,6 +60,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -235,7 +236,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
                         }
                     }
                 }
-            } catch (IOException ex) {
+            } catch (IOException | URISyntaxException ex) {
                 newMsg = "Error while check new location: " + ex.getMessage();
             }
         }

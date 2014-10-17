@@ -64,7 +64,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -1052,21 +1051,21 @@ public final class FileUtil {
      * @param url any URL
      * @return the path or <code>null</code>
      * @throws IOException if an I/O error occurs while resolving the URL
+     * @throws URISyntaxException if the passed URL does not conform with RFC2396 for URIs
      * @since 2.11
      */
-    public static Path resolveToPath(final URL url) throws IOException {
+    public static Path resolveToPath(final URL url) throws IOException, URISyntaxException {
         URL resolvedUrl = url.openConnection().getURL();
 
         if (resolvedUrl.getProtocol().equalsIgnoreCase("file")) {
-            Path path = Paths.get(resolvedUrl.getPath());
-            if (!Files.exists(path)) {
-                try {
-                    path = Paths.get(URLDecoder.decode(resolvedUrl.getPath(), "UTF-8"));
-                } catch (UnsupportedEncodingException ex) {
-                    // ignore it
-                }
+            String pathString = resolvedUrl.getPath();
+            if (pathString.contains(" ")) {
+                // fix non-encoded URL path
+                URL fixedUrl = new URL(url.toString().replace(" ", "%20"));
+                return Paths.get(fixedUrl.toURI());
+            } else {
+                return Paths.get(resolvedUrl.toURI());
             }
-            return path;
         } else {
             return null;
         }
@@ -1083,7 +1082,7 @@ public final class FileUtil {
      */
     public static URL toURL(final String path) throws MalformedURLException {
         try {
-            return new URL(path);
+            return new URL(path.replace(" ", "%20")); // replacement of spaces is a fallback only
         } catch (MalformedURLException ex) {
             return Paths.get(path).toAbsolutePath().toUri().toURL();
         }
