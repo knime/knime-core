@@ -59,9 +59,10 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -157,6 +158,7 @@ public class ARFFReaderNodeDialog extends NodeDialogPane implements
 
         JButton browse = new JButton("Browse...");
         browse.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 // sets the path in the file text field.
                 popupFileChooser();
@@ -214,14 +216,17 @@ public class ARFFReaderNodeDialog extends NodeDialogPane implements
         if (editor instanceof JTextComponent) {
             Document d = ((JTextComponent)editor).getDocument();
             d.addDocumentListener(new DocumentListener() {
+                @Override
                 public void changedUpdate(final DocumentEvent e) {
                     updateFileError();
                 }
 
+                @Override
                 public void insertUpdate(final DocumentEvent e) {
                     updateFileError();
                 }
 
+                @Override
                 public void removeUpdate(final DocumentEvent e) {
                     updateFileError();
                 }
@@ -242,6 +247,7 @@ public class ARFFReaderNodeDialog extends NodeDialogPane implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public void itemStateChanged(final ItemEvent e) {
         updateFileError();
     }
@@ -251,36 +257,33 @@ public class ARFFReaderNodeDialog extends NodeDialogPane implements
      */
     protected void updateFileError() {
         String urlInput = m_url.getEditor().getItem().toString();
-        URL urli = null;
-        String text = null;
+        String errorText = null;
 
-        if ((urlInput == null) || urlInput.equals("")) {
-            text = "";
-            m_urlError.setText("Specify valid file location");
-            return;
-        }
-
-        try {
-            urli = ARFFReaderNodeModel.stringToURL(urlInput);
+        if ((urlInput == null) || urlInput.isEmpty()) {
+            errorText = "Specify valid file location";
+        } else {
             try {
-                InputStream is = FileUtil.openStreamWithTimeout(urli);
-                if (is == null) {
-                    text = "Can't open: " + urli.toString();
+                URL newUrl = FileUtil.toURL(urlInput);
+                Path path = FileUtil.resolveToPath(newUrl);
+                if (path != null) {
+                    if (Files.isDirectory(path)) {
+                        errorText = "Location is a directory: \"" + path + "\"";
+                    }
+                    if (Files.exists(path) && !Files.isReadable(path)) {
+                        errorText = "Cannot read file \"" + path + "\".";
+                    }
                 }
-            } catch (IOException ioe) {
-                text = "Can't open: " + urli.toString();
+            } catch (IOException | URISyntaxException ex) {
+                // ignore
             }
-        } catch (MalformedURLException e) {
-            text = "Invalid file location '" + urlInput + "'";
         }
 
-        if (text == null) {
+        if (errorText == null) {
             m_urlError.setText("");
         } else {
-            m_urlError.setText(text);
+            m_urlError.setText(errorText);
             m_urlError.setVisible(true);
         }
-
     }
 
     /**
@@ -353,10 +356,6 @@ public class ARFFReaderNodeDialog extends NodeDialogPane implements
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         updateFileError();
-        if (!m_urlError.getText().equals("")) {
-            throw new InvalidSettingsException("Specify valid file location. "
-                    + "Or press 'Cancel'.");
-        }
         settings.addString(ARFFReaderNodeModel.CFGKEY_FILEURL, m_url
                 .getEditor().getItem().toString());
         settings.addString(ARFFReaderNodeModel.CFGKEY_ROWPREFIX, m_rowPrefix
