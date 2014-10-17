@@ -17,7 +17,7 @@
          not possible to determine whether the remote location exists. In this case it will always be overwritten.        
         </intro>
         <option name="Output location">Enter a valid file name or URL. You can also 
-        choose a previously selected loation from the drop-down list, or select a local 
+        choose a previously selected location from the drop-down list, or select a local 
         file from the "Browse..." dialog. 
         </option>
         <option name="Overwrite OK">
