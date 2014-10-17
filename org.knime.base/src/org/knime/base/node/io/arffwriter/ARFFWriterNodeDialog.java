@@ -41,56 +41,45 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.02.2005 (ohl): created
  */
 package org.knime.base.node.io.arffwriter;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.io.File;
-import java.net.MalformedURLException;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.text.Document;
-import javax.swing.text.JTextComponent;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.io.arffreader.ARFFReaderNodeModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.ConvenientComboBoxRenderer;
+import org.knime.core.node.util.FilesHistoryPanel;
+import org.knime.core.util.FileUtil;
 
 /**
  * Contains the dialog for the ARFF file writer.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
-public class ARFFWriterNodeDialog extends NodeDialogPane implements
-        ItemListener {
+public class ARFFWriterNodeDialog extends NodeDialogPane {
 
     private static final int VERT_SPACE = 5;
 
@@ -98,12 +87,10 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
 
     private static final int COMPONENT_HEIGHT = 25;
 
-    private static final int TEXTFIELD_WIDTH = 350;
-
-    private JComboBox m_url;
+    private FilesHistoryPanel m_url;
 
     private JLabel m_urlError;
-    
+
     private JCheckBox m_overwriteOKChecker;
 
     private static final int TABWIDTH = 600;
@@ -142,26 +129,11 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
 
         sumOfCompHeigth += COMPONENT_HEIGHT;
 
-        m_url = new JComboBox();
-        m_url.setMaximumSize(new Dimension(TEXTFIELD_WIDTH, COMPONENT_HEIGHT));
-        m_url.setMinimumSize(new Dimension(TEXTFIELD_WIDTH, COMPONENT_HEIGHT));
-        m_url
-                .setPreferredSize(new Dimension(TEXTFIELD_WIDTH,
-                        COMPONENT_HEIGHT));
-        m_url.setEditable(true);
-        m_url.setRenderer(new ConvenientComboBoxRenderer());
+        m_url = new FilesHistoryPanel("org.knime.base.node.io.arffwriter", ".arff");
+        m_url.setBorder(null);
         fileBox.add(m_url);
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
 
-        JButton browse = new JButton("Browse...");
-        browse.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
-                // sets the path in the file text field.
-                popupFileChooser();
-            }
-        });
-        fileBox.add(browse);
-        fileBox.add(Box.createHorizontalStrut(VERT_SPACE));
         sumOfCompHeigth += COMPONENT_HEIGHT + VERT_SPACE;
 
         fPanel.add(fileBox);
@@ -191,7 +163,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
         innerBox.add(Box.createVerticalStrut(VERT_SPACE));
         sumOfCompHeigth += VERT_SPACE;
 
-        
+
         innerBox.add(Box.createVerticalStrut(VERT_SPACE));
         sumOfCompHeigth += COMPONENT_HEIGHT + (2 * VERT_SPACE);
 
@@ -199,31 +171,11 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
 
         filePanel.add(innerBox);
         filePanel.add(Box.createGlue());
-        
 
-        // set a filter to the filename that fills the error text label
-        Component editor = m_url.getEditor().getEditorComponent();
-        if (editor instanceof JTextComponent) {
-            Document d = ((JTextComponent)editor).getDocument();
-            d.addDocumentListener(new DocumentListener() {
-                public void changedUpdate(final DocumentEvent e) {
-                    updateFileError();
-                }
 
-                public void insertUpdate(final DocumentEvent e) {
-                    updateFileError();
-                }
-
-                public void removeUpdate(final DocumentEvent e) {
-                    updateFileError();
-                }
-            });
-        }
-        // itemListener must be this in order to be able to remove and reset it.
-        m_url.addItemListener(this);
-        m_url.addFocusListener(new FocusAdapter() {
+        m_url.addChangeListener(new ChangeListener() {
             @Override
-            public void focusLost(final FocusEvent e) {
+            public void stateChanged(final ChangeEvent e) {
                 updateFileError();
             }
         });
@@ -232,98 +184,35 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public void itemStateChanged(final ItemEvent e) {
-        updateFileError();
-    }
-
-    /**
      * Updates the file error label whenever the fileURL entered changed.
      */
     protected void updateFileError() {
-        String urlInput = m_url.getEditor().getItem().toString();
-        URL urli = null;
-        String text = null;
-
-        if ((urlInput == null) || urlInput.equals("")) {
-            text = "";
-            m_urlError.setText("Specify valid file location");
-            return;
-        }
-
-        try {
-            urli = ARFFReaderNodeModel.stringToURL(urlInput);
-            if (urli != null) {
-                try {
-                    if (urli.getProtocol().equalsIgnoreCase("FILE")) {
-                        // Can only check files
-                        // if we have a file location check its existence
-                        File f = new File(urli.getPath());
-                        if (f.isDirectory()) {
-                            m_urlError.setText("\"" + f.getAbsolutePath()
-                                    + "\" is a directory.");
-                        }
-                        if (f.exists() && !f.canWrite()) {
-                            text = "Cannot write to file \""
-                                    + f.getAbsolutePath() + "\".";
-                        }
+        String selFile = m_url.getSelectedFile();
+        String errorText = null;
+        if ((selFile != null) && !selFile.isEmpty()) {
+            try {
+                URL newUrl = FileUtil.toURL(selFile);
+                Path path = FileUtil.resolveToPath(newUrl);
+                m_overwriteOKChecker.setEnabled(path != null);
+                if (path != null) {
+                    if (Files.isDirectory(path)) {
+                        errorText = "Location is a directory: \"" + path + "\"";
                     }
-                } catch (Exception e) {
-                    text = "Invalid file location";
+                    if (Files.exists(path) && !Files.isWritable(path)) {
+                        errorText = "Cannot write to file \"" + path + "\".";
+                    }
                 }
+            } catch (IOException | URISyntaxException ex) {
+                // ignore
             }
-        } catch (MalformedURLException mue) {
-            text = "Malformed URL.";
         }
-        if (text == null) {
+
+        if (errorText == null) {
             m_urlError.setText("");
         } else {
-            m_urlError.setText(text);
+            m_urlError.setText(errorText);
             m_urlError.setVisible(true);
         }
-    }
-
-    /**
-     * Pops up the file selection dialog and sets the selected file path into
-     * the m_url text field.
-     */
-    protected void popupFileChooser() {
-        // before opening the dialog, try extracting the file that might
-        // be specified already:
-        String startingDir = "";
-        try {
-            URL newURL = ARFFReaderNodeModel.stringToURL(m_url.getEditor()
-                    .getItem().toString());
-            if (newURL.getProtocol().equals("file")) {
-                File tmpFile = new File(newURL.getPath());
-                startingDir = tmpFile.getAbsolutePath();
-            }
-        } catch (Exception e) {
-            // no valid path - start in the default dir of the file chooser
-        }
-
-        JFileChooser chooser;
-        chooser = new JFileChooser(startingDir);
-        chooser.setAcceptAllFileFilterUsed(true);
-        chooser.setFileFilter(new ARFFReaderNodeModel.ARFFFileFilter());
-        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        int returnVal = chooser.showSaveDialog(getPanel().getParent());
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            String path;
-            try {
-                path = chooser.getSelectedFile().getAbsoluteFile().toURI()
-                        .toURL().toString();
-                if (!path.toLowerCase().endsWith(".arff")) {
-                    path += ".arff";
-                }
-            } catch (Exception e) {
-                path = "<Error: Couldn't create URL for file>";
-            }
-            m_url.setSelectedItem(path);
-            updateFileError();
-        }
-        // user canceled - do nothing.
     }
 
     /**
@@ -337,9 +226,8 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
             throw new InvalidSettingsException("Specify valid file location. "
                     + "Or press 'Cancel'.");
         }
-        settings.addString(ARFFWriterNodeModel.CFGKEY_FILENAME, m_url
-                .getEditor().getItem().toString());
-        settings.addBoolean(ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK, 
+        settings.addString(ARFFWriterNodeModel.CFGKEY_FILENAME, m_url.getSelectedFile());
+        settings.addBoolean(ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK,
                 m_overwriteOKChecker.isSelected());
     }
 
@@ -349,21 +237,8 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-
-        // set the file history for the combo box.
-        // disconnect the ItemChangelistener first
-        m_url.removeItemListener(this);
-        m_url.removeAllItems();
-        for (String str : ARFFReaderNodeModel.getFileHistory(
-        /* removeNotExistingFiles */false)) {
-            m_url.addItem(str);
-        }
-
         // set the selected file
-        m_url.setSelectedItem(settings.getString(
-                ARFFWriterNodeModel.CFGKEY_FILENAME, ""));
-
-        m_url.addItemListener(this);
+        m_url.setSelectedFile(settings.getString(ARFFWriterNodeModel.CFGKEY_FILENAME, ""));
 
         m_overwriteOKChecker.setSelected(settings.getBoolean(
                 ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK, false));
