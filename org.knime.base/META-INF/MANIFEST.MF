@@ -270,7 +270,6 @@ Require-Bundle: org.knime.core;bundle-version="[2.10.0,3.0.0)";visibility:=reexp
  org.apache.commons.math;bundle-version="[2.1.0,2.2.0)",
  org.apache.commons.httpclient;bundle-version="[3.1.0,3.2.0)",
  org.apache.commons.lang;bundle-version="[2.6.0,2.7.0)",
- com.fasterxml.jackson;bundle-version="[2.2.2,3.0.0)",
  org.apache.commons.math3;bundle-version="[3.2.0,4.0.0)",
  javax.mail.glassfish;bundle-version="[1.4.1,2.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
