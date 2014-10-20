@@ -116,7 +116,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
     /** The numeric columns' model. */
     private final DefaultListModel m_numMdl;
 
-    /** Keeps shows the currenty selected interval. */
+    /** Keeps and shows the currently selected interval. */
     private final JPanel m_numInterval;
 
     /** Keeps column data cell to interval panel settings. */
@@ -186,16 +186,15 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
         m_numList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         final JScrollPane numScroll = new JScrollPane(m_numList);
         numScroll.setMinimumSize(new Dimension(200, 155));
-        numScroll
-                .setBorder(BorderFactory.createTitledBorder(" Select Column "));
+        numScroll.setPreferredSize(new Dimension(200, 155));
+        numScroll.setBorder(BorderFactory.createTitledBorder(" Select Column "));
 
         // numeric column intervals
         m_numInterval = new JPanel(new GridLayout(1, 1));
         m_numInterval.setBorder(BorderFactory.createTitledBorder(" "));
         m_numInterval.setMinimumSize(new Dimension(350, 300));
         m_numInterval.setPreferredSize(new Dimension(350, 300));
-        JSplitPane split = new JSplitPane(
-                JSplitPane.HORIZONTAL_SPLIT, numScroll, m_numInterval);
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, numScroll, m_numInterval);
         numericPanel.add(split);
         super.addTab(" Intervals ", numericPanel);
     }
