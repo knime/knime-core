@@ -80,6 +80,7 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOffsetM
 import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOffsetModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.JoinManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.JoinSepManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.LastIndexOfCharManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.LengthManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.LowerCaseManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.MD5ChecksumManipulator;
@@ -197,6 +198,7 @@ public final class StringManipulatorProvider implements ManipulatorProvider {
         manipulators.add(new RegexMatcherManipulator());
         manipulators.add(new RegexReplaceManipulator());
         manipulators.add(new MD5ChecksumManipulator());
+        manipulators.add(new LastIndexOfCharManipulator());
 
         Set<String> categories = new TreeSet<String>();
         for (Manipulator m : manipulators) {
