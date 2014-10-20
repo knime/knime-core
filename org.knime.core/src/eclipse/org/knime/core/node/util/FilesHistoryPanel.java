@@ -59,8 +59,12 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -88,6 +92,7 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.SimpleFileFilter;
 
 /**
@@ -296,12 +301,18 @@ public final class FilesHistoryPanel extends JPanel {
         fileChooser.setFileFilter(new SimpleFileFilter(m_suffixes));
         fileChooser.setFileSelectionMode(m_selectMode);
 
-        String url = getSelectedFile();
-        File dirOrFile = getFile(url);
-        if (dirOrFile.isDirectory()) {
-            fileChooser.setCurrentDirectory(dirOrFile);
-        } else {
-            fileChooser.setSelectedFile(dirOrFile);
+        try {
+            URL url = FileUtil.toURL(getSelectedFile());
+            Path localPath = FileUtil.resolveToPath(url);
+            if (localPath != null) {
+                if (Files.isDirectory(localPath)) {
+                    fileChooser.setCurrentDirectory(localPath.toFile());
+                } else {
+                    fileChooser.setSelectedFile(localPath.toFile());
+                }
+            }
+        } catch (IOException | URISyntaxException ex) {
+            // ignore
         }
         int r = fileChooser.showDialog(FilesHistoryPanel.this, "OK");
         if (r == JFileChooser.APPROVE_OPTION) {
@@ -452,7 +463,9 @@ public final class FilesHistoryPanel extends JPanel {
      *
      * @param fileOrUrl the file name to convert to a file
      * @return a file representing fileName
+     * @deprecated use {@link FileUtil#resolveToPath(URL)} instead
      */
+    @Deprecated
     public static final File getFile(final String fileOrUrl) {
         String path = fileOrUrl;
         try {
@@ -474,19 +487,26 @@ public final class FilesHistoryPanel extends JPanel {
         String newMsg = "";
         String selFile = getSelectedFile();
         if (selFile != null && selFile.length() > 0) {
-            File newFile = getFile(selFile);
-            if (newFile.exists()) {
-                if (newFile.isDirectory()) {
-                    newMsg = "ERROR: a file can't be a directory";
-                } else {
-                    newMsg = "Warning: selected file exists.";
+            try {
+                URL url = FileUtil.toURL(selFile);
+                Path newFile = FileUtil.resolveToPath(url);
+                if (newFile != null) {
+                    if (Files.exists(newFile)) {
+                        if (Files.isDirectory(newFile)) {
+                            newMsg = "ERROR: a file can't be a directory";
+                        } else {
+                            newMsg = "Warning: selected file exists.";
+                        }
+                    } else {
+                        if (!Files.exists(newFile.getParent())) {
+                            newMsg =
+                                    "Warning: Directory of specified file doesn't exist"
+                                            + " and will be created";
+                        }
+                    }
                 }
-            } else {
-                if (!newFile.getParentFile().exists()) {
-                    newMsg =
-                            "Warning: Directory of specified file doesn't exist"
-                                    + " and will be created";
-                }
+            } catch (IOException | URISyntaxException ex) {
+                // ignore
             }
         }
 
