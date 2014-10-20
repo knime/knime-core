@@ -51,6 +51,7 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
 /**
  *
  * @author Tim-Oliver Buchholz
+ * @since 2.11
  */
 public class LastIndexOfCharManipulator implements Manipulator {
 
@@ -101,7 +102,6 @@ public class LastIndexOfCharManipulator implements Manipulator {
      */
     @Override
     public String getDescription() {
-        // TODO Auto-generated method stub
         return "Returns the index within this string of the last "
             + "occurrence of the specified character."
             + ""
@@ -110,13 +110,13 @@ public class LastIndexOfCharManipulator implements Manipulator {
             + "<strong>Examples:</strong>"
             + "<br/>"
             + "<table>"
-            + "<tr><td>indexOfChars(\"abcABCabc\", \"a\")</td>"
+            + "<tr><td>lastIndexOfChar(\"abcABCabc\", \"a\")</td>"
             + "<td>=&nbsp;6</td></tr>"
 
-            + "<tr><td>indexOfChars(\"abcABCabc\", \"A\")</td>"
+            + "<tr><td>lastIndexOfChar(\"abcABCabc\", \"A\")</td>"
             + "<td>=&nbsp;3</td></tr>"
 
-            + "<tr><td>indexOfChars(\"abcABCabc\", \"X\")</td>"
+            + "<tr><td>lastIndexOfChar(\"abcABCabc\", \"X\")</td>"
             + "<td>=&nbsp;-1</td></tr>";
     }
 
