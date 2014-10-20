@@ -47,7 +47,14 @@
  */
 package org.knime.base.node.image.imagecolwriter;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+
 import javax.swing.JFileChooser;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.image.ImageValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
@@ -56,6 +63,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.util.FileUtil;
 
 /**
  * This is the dialog for the Image writer.
@@ -82,6 +90,22 @@ public class ImageColumnWriterNodeDialogeColumn extends DefaultNodeSettingsPane 
      * Creates a new dialog.
      */
     public ImageColumnWriterNodeDialogeColumn() {
+        m_dirChooser.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                String selFile = ((SettingsModelString) m_dirChooser.getModel()).getStringValue();
+                if ((selFile != null) && !selFile.isEmpty()) {
+                    try {
+                        URL newUrl = FileUtil.toURL(selFile);
+                        Path path = FileUtil.resolveToPath(newUrl);
+                        m_overwrite.getModel().setEnabled(path != null);
+                    } catch (IOException | URISyntaxException ex) {
+                        // ignore
+                    }
+                }
+            }
+        });
+
         addDialogComponent(m_imageColumn);
         addDialogComponent(m_dirChooser);
         addDialogComponent(m_overwrite);

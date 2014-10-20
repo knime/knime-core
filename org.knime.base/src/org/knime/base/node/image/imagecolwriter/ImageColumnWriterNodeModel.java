@@ -48,9 +48,13 @@
 package org.knime.base.node.image.imagecolwriter;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -67,6 +71,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.util.FileUtil;
 
 /**
  * This is the model for the Image writer node. It takes an image column from
@@ -103,14 +108,20 @@ public class ImageColumnWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException("No output directory selected");
         }
 
-        File dir = new File(m_directory.getStringValue());
-        if (!dir.exists()) {
-            throw new InvalidSettingsException("Directory '"
-                    + dir.getAbsolutePath() + "' does not exist");
-        }
-        if (!dir.isDirectory()) {
-            throw new InvalidSettingsException("'" + dir.getAbsolutePath()
-                    + "' is not a directory");
+        try {
+            URL url = FileUtil.toURL(m_directory.getStringValue());
+            Path localPath = FileUtil.resolveToPath(url);
+            if (localPath != null) {
+                if (!Files.exists(localPath)) {
+                    throw new InvalidSettingsException("Directory '" + localPath + "' does not exist");
+                } else if (!Files.isDirectory(localPath)) {
+                    throw new InvalidSettingsException("'" + localPath + "' is not a directory");
+                }
+            }
+        } catch (MalformedURLException | URISyntaxException ex) {
+            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
+        } catch (IOException ex) {
+            throw new InvalidSettingsException("I/O error while checking output:" + ex.getMessage(), ex);
         }
 
         if (m_imageColumn.getStringValue() == null) {
@@ -151,7 +162,8 @@ public class ImageColumnWriterNodeModel extends NodeModel {
         double max = inData[0].getRowCount();
         int count = 0;
 
-        File dir = new File(m_directory.getStringValue());
+        URL remoteBaseUrl = FileUtil.toURL(m_directory.getStringValue());
+        Path localDir = FileUtil.resolveToPath(remoteBaseUrl);
 
         final int colIndex =
                 inData[0].getDataTableSpec().findColumnIndex(
@@ -164,23 +176,35 @@ public class ImageColumnWriterNodeModel extends NodeModel {
             exec.setProgress(count++ / max, "Writing " + row.getKey() + "."
                     + ext);
 
-            File imageFile = new File(dir, row.getKey() + "." + ext);
-            if (!m_overwrite.getBooleanValue() && imageFile.exists()) {
-                throw new IOException("File '" + imageFile.getAbsolutePath()
-                        + "' already exists");
+            Path imageFile = null;
+            URL imageUrl = null;
+            if (localDir != null) {
+                imageFile = localDir.resolve(row.getKey() + "." + ext);
+                if (!m_overwrite.getBooleanValue() && Files.exists(imageFile)) {
+                    throw new IOException("File '" + imageFile + "' already exists and overwrite is disabled");
+                }
+            } else {
+                imageUrl = new URL(remoteBaseUrl.toString() + row.getKey() + "." + ext);
             }
-            final File parentDir = imageFile.getParentFile();
-            if (!parentDir.isDirectory()) {
-                parentDir.mkdirs();
-            }
+
+
             ImageContent content = v.getImageContent();
-            OutputStream os = new FileOutputStream(imageFile);
-            content.save(os);
-            os.close();
+            try (OutputStream os = openOutputStream(imageUrl, imageFile)) {
+                content.save(os);
+            }
         }
 
         return new BufferedDataTable[0];
     }
+
+    private static OutputStream openOutputStream(final URL url, final Path file) throws IOException {
+        if (file != null) {
+            return Files.newOutputStream(file);
+        } else {
+            return FileUtil.openOutputConnection(url, "PUT").getOutputStream();
+        }
+    }
+
 
     /**
      * {@inheritDoc}
