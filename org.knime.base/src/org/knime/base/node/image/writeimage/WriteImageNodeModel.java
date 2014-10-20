@@ -45,9 +45,15 @@
  */
 package org.knime.base.node.image.writeimage;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -67,6 +73,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObject;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
+import org.knime.core.util.FileUtil;
 
 /**
  *
@@ -95,7 +102,7 @@ final class WriteImageNodeModel extends NodeModel {
         // how ugly - we don't know the image extension upon execution, let's
         // hope the user gave it the correct extension (e.g. ".png") already,
         // otherwise the overwriteOK check may fail during configure
-        getOutputFile("");
+        getOutputLocation("");
         ImagePortObjectSpec imageInObject = (ImagePortObjectSpec)inSpecs[0];
         DataType dataType = imageInObject.getDataType();
         if (!dataType.isCompatible(ImageValue.class)) {
@@ -104,10 +111,7 @@ final class WriteImageNodeModel extends NodeModel {
         return new PortObjectSpec[0];
     }
 
-    /**
-     * @return
-     * @throws InvalidSettingsException */
-    private File getOutputFile(final String extension)
+    private String getOutputLocation(final String extension)
         throws InvalidSettingsException {
         String outPath = m_fileOutSettings.getStringValue();
         if (outPath == null || outPath.length() == 0) {
@@ -116,22 +120,33 @@ final class WriteImageNodeModel extends NodeModel {
         if (!outPath.endsWith(extension)) {
             outPath = outPath.concat(extension);
         }
-        File f = new File(outPath);
-        if (f.isDirectory()) {
-            throw new InvalidSettingsException("Can't write to \"" + outPath
-                    + "\": it is a directory");
+
+
+        try {
+            URL url = FileUtil.toURL(outPath);
+            Path localPath = FileUtil.resolveToPath(url);
+            if (localPath != null) {
+                Path parent = localPath.getParent();
+                if (Files.isDirectory(localPath) || (parent == null) || !Files.exists(parent)) {
+                    throw new InvalidSettingsException("File name \"" + localPath
+                        + "\" is not valid. Please enter a valid file name.");
+                }
+                if (Files.exists(localPath)) {
+                    if (m_overwriteOKBoolean.getBooleanValue()) {
+                        setWarningMessage("File exists and will be overwritten");
+                    } else {
+                        throw new InvalidSettingsException("File exists and can't be "
+                                + "overwritten, check dialog settings");
+                    }
+                }
+            }
+        } catch (MalformedURLException | URISyntaxException ex) {
+            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
+        } catch (IOException ex) {
+            throw new InvalidSettingsException("I/O error while checking output:" + ex.getMessage(), ex);
         }
-        boolean overwriteOK = m_overwriteOKBoolean.getBooleanValue();
-        if (f.isFile() && !overwriteOK) {
-            throw new InvalidSettingsException("Can't write to \"" + outPath
-                    + "\": file exists (configure overwrite in dialog)");
-        }
-        File directory = f.getParentFile();
-        if (directory == null || !directory.isDirectory()) {
-            throw new InvalidSettingsException("Can't write to \"" + outPath
-                    + "\": parent directory does not exist");
-        }
-        return f;
+
+        return outPath;
     }
 
     /** {@inheritDoc} */
@@ -150,15 +165,27 @@ final class WriteImageNodeModel extends NodeModel {
         ImageValue v = (ImageValue)imageCellDC;
         ImageContent content = v.getImageContent();
         final String imageExtension = v.getImageExtension();
-        File outFile = getOutputFile("." + imageExtension);
-        final FileOutputStream out = new FileOutputStream(outFile);
-        try {
-            content.save(out);
-        } finally {
-            out.close();
+        String outputLocation = getOutputLocation("." + imageExtension);
+
+        URL url = FileUtil.toURL(outputLocation);
+        Path localPath = FileUtil.resolveToPath(url);
+
+
+        try (OutputStream os = openOutputStream(localPath, url)) {
+            content.save(os);
         }
         return new PortObject[0];
     }
+
+
+    private static OutputStream openOutputStream(final Path localPath, final URL url) throws IOException {
+        if (localPath != null) {
+            return new BufferedOutputStream(Files.newOutputStream(localPath));
+        } else {
+            return new BufferedOutputStream(FileUtil.openOutputConnection(url, "PUT").getOutputStream());
+        }
+    }
+
 
     /** {@inheritDoc} */
     @Override

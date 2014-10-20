@@ -45,7 +45,14 @@
  */
 package org.knime.base.node.image.writeimage;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+
 import javax.swing.JFileChooser;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
@@ -53,6 +60,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.util.FileUtil;
 
 /**
  *
@@ -71,12 +79,33 @@ final class WriteImageNodeDialogPane extends DefaultNodeSettingsPane {
             super.createFlowVariableModel(fileOutSettings);
         SettingsModelBoolean overwriteOKSettings =
             WriteImageNodeModel.createOverwriteOKSettings();
-        addDialogComponent(new DialogComponentFileChooser(fileOutSettings,
-                "write_png", JFileChooser.SAVE_DIALOG, false,
-                fvmModel));
+
+        final DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(fileOutSettings,
+            "write_png", JFileChooser.SAVE_DIALOG, false,
+            fvmModel);
+        final DialogComponentBoolean overwriteOK = new DialogComponentBoolean(
+            overwriteOKSettings, "Overwrite OK");
+
+
+        fileChooser.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                String selFile = ((SettingsModelString) fileChooser.getModel()).getStringValue();
+                if ((selFile != null) && !selFile.isEmpty()) {
+                    try {
+                        URL newUrl = FileUtil.toURL(selFile);
+                        Path path = FileUtil.resolveToPath(newUrl);
+                        overwriteOK.getModel().setEnabled(path != null);
+                    } catch (IOException | URISyntaxException ex) {
+                        // ignore
+                    }
+                }
+            }
+        });
+
+        addDialogComponent(fileChooser);
         setHorizontalPlacement(false);
-        addDialogComponent(new DialogComponentBoolean(
-                overwriteOKSettings, "Overwrite OK"));
+        addDialogComponent(overwriteOK);
 
     }
 }
