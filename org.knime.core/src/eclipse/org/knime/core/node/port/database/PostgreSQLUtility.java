@@ -47,8 +47,6 @@
  */
 package org.knime.core.node.port.database;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -133,26 +131,5 @@ public class PostgreSQLUtility extends DatabaseUtility {
             new RegrSXYDBAggregationFunction(), new RegrSYYDBAggregationFunction(),
             StdDevPopDBAggregationFunction.getInstance(), StdDevSampDBAggregationFunction.getInstance(),
             VarPopDBAggregationFunction.getInstance(), VarSampDBAggregationFunction.getInstance());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean tableExists(final Connection conn, final String tableName) throws SQLException {
-        try (ResultSet rs = conn.getMetaData().getTables(null, null, tableName, null)) {
-            if (rs.next()) {
-                return true;
-            }
-        }
-
-        if (!tableName.startsWith("\"")) {
-            // try also with lowercase name
-            try (ResultSet rs = conn.getMetaData().getTables(null, null, tableName.toLowerCase(), null)) {
-                return rs.next();
-            }
-        } else {
-            return false;
-        }
     }
 }
