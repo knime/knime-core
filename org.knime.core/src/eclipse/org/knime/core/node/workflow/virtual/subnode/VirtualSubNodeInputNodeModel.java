@@ -144,6 +144,14 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
     protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec)
             throws Exception {
         PortObject[] dataFromParent = m_subNodeContainer.fetchInputDataFromParent();
+        pushFlowVariables();
+        return ArrayUtils.removeAll(dataFromParent, 0);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private void pushFlowVariables() throws InvalidSettingsException {
         String prefix = m_configuration.getFlowVariablePrefix() == null ? "" : m_configuration.getFlowVariablePrefix();
         FlowVariableFilterConfiguration filterConfiguration = m_configuration.getFilterConfiguration();
         Map<String, FlowVariable> availableVariables = getSubNodeContainerFlowObjectStack().getAvailableFlowVariables();
@@ -169,10 +177,9 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
                 pushFlowVariableString(prefix + f.getName(), f.getStringValue());
                 break;
             default:
-                throw new Exception("Unsupported flow variable type: " + f.getType());
+                throw new InvalidSettingsException("Unsupported flow variable type: " + f.getType());
             }
         }
-        return ArrayUtils.removeAll(dataFromParent, 0);
     }
 
     /**
@@ -191,6 +198,7 @@ public final class VirtualSubNodeInputNodeModel extends ExtendedScopeNodeModel {
         int firstNullIndex = ArrayUtils.indexOf(specsFromParentNoFlowVar, null);
         CheckUtils.checkSetting(firstNullIndex < 0,
             "Subnode input port %d is not connected or doesn't have meta data", firstNullIndex);
+        pushFlowVariables();
         return specsFromParentNoFlowVar;
     }
 
