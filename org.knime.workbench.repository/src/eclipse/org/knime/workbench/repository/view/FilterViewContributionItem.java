@@ -119,6 +119,7 @@ public class FilterViewContributionItem extends ControlContribution implements K
         m_combo = new Combo(parent, SWT.DROP_DOWN);
         m_combo.addKeyListener(this);
         m_combo.addSelectionListener(createSelectionAdaptor());
+        m_combo.setToolTipText("Filter contents");
         return m_combo;
     }
 

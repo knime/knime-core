@@ -93,6 +93,10 @@ public class LabeledFilterViewContributionItem extends
         layout.fill = true;
         layout.wrap = false;
         layout.center = true;
+        layout.marginBottom = 0;
+        layout.marginTop = 0;
+        layout.marginLeft = 0;
+        layout.marginRight = 0;
         comp.setLayout(layout);
         m_label = new Text(comp, SWT.NONE);
         m_label.setText("Filter");
