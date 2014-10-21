@@ -189,6 +189,10 @@ public class ChangeSubNodeLinkAction extends AbstractNodeAction {
     /** {@inheritDoc} */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        if (nodeParts.length < 1) {
+            return;
+        }
+
         SubNodeContainer subNode = (SubNodeContainer)nodeParts[0].getModel();
         if (Role.Link.equals(subNode.getTemplateInformation().getRole())) {
             WorkflowManager wfm = subNode.getProjectWFM();

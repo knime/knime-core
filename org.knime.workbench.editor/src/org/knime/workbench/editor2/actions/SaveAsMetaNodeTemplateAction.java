@@ -154,6 +154,10 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
     /** {@inheritDoc} */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodes) {
+        if (nodes.length < 1) {
+            return;
+        }
+
         WorkflowManager wm = (WorkflowManager)nodes[0].getModel();
 
         List<String> validMountPointList = new ArrayList<String>();

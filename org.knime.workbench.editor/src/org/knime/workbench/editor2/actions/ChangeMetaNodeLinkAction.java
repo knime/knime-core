@@ -185,6 +185,10 @@ public class ChangeMetaNodeLinkAction extends AbstractNodeAction {
     /** {@inheritDoc} */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        if (nodeParts.length < 1) {
+            return;
+        }
+
         WorkflowManager metaNode = (WorkflowManager)nodeParts[0].getModel();
         if (Role.Link.equals(metaNode.getTemplateInformation().getRole())) {
             WorkflowManager wfm = metaNode;

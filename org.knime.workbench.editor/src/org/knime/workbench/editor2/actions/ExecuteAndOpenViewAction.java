@@ -183,9 +183,7 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Creating 'Execute and Open Views' job for "
                 + nodeParts.length + " node(s)...");
-        NodeContainerEditPart[] parts =
-            getSelectedParts(NodeContainerEditPart.class);
-        for (NodeContainerEditPart p : parts) {
+        for (NodeContainerEditPart p : nodeParts) {
             final NodeContainer cont = p.getNodeContainer();
             executeAndOpen(cont);
         }

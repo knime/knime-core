@@ -123,7 +123,9 @@ public class OpenDialogAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        final NodeContainerEditPart nodeContainerEditPart = nodeParts[0];
-        nodeContainerEditPart.openNodeDialog();
+        if (nodeParts.length > 0) {
+            final NodeContainerEditPart nodeContainerEditPart = nodeParts[0];
+            nodeContainerEditPart.openNodeDialog();
+        }
     }
 }

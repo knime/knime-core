@@ -144,9 +144,7 @@ public class OpenFirstOutPortViewAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Creating open first out-port view job for "
                 + nodeParts.length + " node(s)...");
-        NodeContainerEditPart[] parts =
-            getSelectedParts(NodeContainerEditPart.class);
-        for (NodeContainerEditPart p : parts) {
+        for (NodeContainerEditPart p : nodeParts) {
             final NodeContainer cont = p.getNodeContainer();
             // first port is flow var port
             if (cont.getNrOutPorts() >= 2) {

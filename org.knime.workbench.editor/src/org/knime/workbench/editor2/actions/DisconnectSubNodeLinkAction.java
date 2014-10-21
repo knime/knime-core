@@ -142,10 +142,8 @@ public class DisconnectSubNodeLinkAction extends AbstractNodeAction {
     /** {@inheritDoc} */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        NodeContainerEditPart[] nodes =
-            getSelectedParts(NodeContainerEditPart.class);
         List<NodeID> idList = new ArrayList<NodeID>();
-        for (NodeContainerEditPart p : nodes) {
+        for (NodeContainerEditPart p : nodeParts) {
             Object model = p.getModel();
             if (model instanceof SubNodeContainer) {
                 SubNodeContainer snc = (SubNodeContainer)model;

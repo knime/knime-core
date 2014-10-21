@@ -155,9 +155,7 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Creating open default view job for " + nodeParts.length
                 + " node(s)...");
-        NodeContainerEditPart[] parts =
-            getSelectedParts(NodeContainerEditPart.class);
-        for (NodeContainerEditPart p : parts) {
+        for (NodeContainerEditPart p : nodeParts) {
             final NodeContainer cont = p.getNodeContainer();
             if (cont.getNodeContainerState().isExecuted() && cont.getNrViews() > 0) {
                 SwingUtilities.invokeLater(new Runnable() {

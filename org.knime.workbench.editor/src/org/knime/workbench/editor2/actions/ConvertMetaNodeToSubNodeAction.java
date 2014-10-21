@@ -142,6 +142,10 @@ public class ConvertMetaNodeToSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        if (nodeParts.length < 1) {
+            return;
+        }
+
         LOGGER.debug("Creating 'Convert Meta Node to Sub Node' job for " + nodeParts.length + " node(s)...");
         try {
             WorkflowManager manager = getManager();

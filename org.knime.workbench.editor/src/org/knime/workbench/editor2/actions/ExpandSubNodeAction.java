@@ -139,6 +139,10 @@ public class ExpandSubNodeAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        if (nodeParts.length < 1) {
+            return;
+        }
+
         LOGGER.debug("Creating 'Expand Sub Node' job for " + nodeParts.length + " node(s)...");
         try {
             WorkflowManager manager = getManager();

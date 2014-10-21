@@ -127,6 +127,10 @@ public class SubNodeReconfigureAction extends AbstractNodeAction {
     /** {@inheritDoc} */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        if (nodeParts.length < 1) {
+            return;
+        }
+
         NodeContainerEditPart ep = nodeParts[0];
         ReconfigureMetaNodeWizard wizard =
                 new ReconfigureMetaNodeWizard(ep.getViewer(), (SubNodeContainer)ep.getModel());

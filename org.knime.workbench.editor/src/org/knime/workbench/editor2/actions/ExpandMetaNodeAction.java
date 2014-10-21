@@ -140,6 +140,10 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        if (nodeParts.length < 1) {
+            return;
+        }
+
         LOGGER.debug("Creating 'Expand MetaNode' job for "
                 + nodeParts.length + " node(s)...");
         try {

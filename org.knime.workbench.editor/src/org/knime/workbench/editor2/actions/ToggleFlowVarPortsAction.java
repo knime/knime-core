@@ -107,10 +107,8 @@ public class ToggleFlowVarPortsAction extends AbstractNodeAction {
     /** {@inheritDoc} */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        NodeContainerEditPart[] sels =
-            getSelectedParts(NodeContainerEditPart.class);
-        boolean isToShow = isToShowPorts(sels);
-        for (NodeContainerEditPart p : sels) {
+        boolean isToShow = isToShowPorts(nodeParts);
+        for (NodeContainerEditPart p : nodeParts) {
             p.setShowImplFlowVarPorts(isToShow);
         }
     }

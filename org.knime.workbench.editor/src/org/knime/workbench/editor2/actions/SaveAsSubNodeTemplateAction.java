@@ -158,6 +158,10 @@ public class SaveAsSubNodeTemplateAction extends AbstractNodeAction {
     /** {@inheritDoc} */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodes) {
+        if (nodes.length < 1) {
+            return;
+        }
+
         SubNodeContainer snc = (SubNodeContainer)nodes[0].getModel();
         WorkflowManager wm = snc.getWorkflowManager();
 
