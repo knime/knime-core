@@ -210,7 +210,7 @@ class PortObjectWriterNodeModel extends NodeModel {
                     if (!m_overwriteOK.getBooleanValue()) {
                         throw new InvalidSettingsException("File exists and can't be "
                                 + "overwritten, check dialog settings");
-                    } else if (Files.isWritable(localPath)) {
+                    } else if (!Files.isWritable(localPath)) {
                         throw new InvalidSettingsException("Cannot write to file \""
                                 + localPath + "\".");
                     } else {
