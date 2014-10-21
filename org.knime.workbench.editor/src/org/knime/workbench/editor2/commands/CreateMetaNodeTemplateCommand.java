@@ -125,7 +125,7 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
             IProgressService ps = wb.getProgressService();
             // this one sets the workflow manager in the editor
             loadRunnable = new LoadMetaNodeTemplateRunnable(getHostWFM(), m_templateKNIMEFolder);
-            ps.busyCursorWhile(loadRunnable);
+            ps.run(false, true, loadRunnable);
             MetaNodeLinkUpdateResult result = loadRunnable.getLoadResult();
             m_container = (NodeContainer)result.getLoadedInstance();
             if (m_container == null) {
