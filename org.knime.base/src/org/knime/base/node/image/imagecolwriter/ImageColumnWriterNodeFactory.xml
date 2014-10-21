@@ -7,9 +7,13 @@
         <intro>This node takes all images in a certain column of the input table
             and writes them, each as a separate
             file, into a directory in the
-            file system. The files will be named after the table's row keys.</intro>
+            file system or to a remote location denoted by a URL. The files will be named after the table's row keys.
+        <br />
+         Note that if the destination location is a remote URL not all options are available because in general it's
+         not possible to determine whether the remote location exists. In this case it will always be overwritten.            
+            </intro>
         <option name="Image column">Select the column containing the image cells here.</option>
-        <option name="Selected directory">Select the output directory here.</option>
+        <option name="Selected directory">Select the output location here.</option>
         <option name="Overwrite existing files">Choose if existing files should be overwritten here. If this option is unchecked, the node
             will fail if a file already exists.</option>
     </fullDescription>
