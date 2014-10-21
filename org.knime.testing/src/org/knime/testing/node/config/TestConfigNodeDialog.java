@@ -471,9 +471,9 @@ public class TestConfigNodeDialog extends NodeDialogPane {
                             .getWorkflowManager(), cont));
                 }
             } else if (cont instanceof SubNodeContainer) {
-                m_allNodesModel.addElement(cont);
-                existingNodeIds.add(TestConfigSettings
-                        .getNodeIDWithoutRootPrefix(getNodeContext().getWorkflowManager(), cont));
+//                m_allNodesModel.addElement(cont);
+//                existingNodeIds.add(TestConfigSettings
+//                        .getNodeIDWithoutRootPrefix(getNodeContext().getWorkflowManager(), cont));
                 fillNodeList(((SubNodeContainer)cont).getWorkflowManager(), existingNodeIds);
             } else if (cont instanceof WorkflowManager) {
                 m_allNodesModel.addElement(cont);

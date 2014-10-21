@@ -56,6 +56,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -65,7 +66,7 @@ import org.knime.core.node.workflow.WorkflowManager;
  */
 class WorkflowNodeMessagesTest extends WorkflowTest {
     WorkflowNodeMessagesTest(final String workflowName, final IProgressMonitor monitor,
-                             final WorkflowTestContext context) {
+        final WorkflowTestContext context) {
         super(workflowName, monitor, context);
     }
 
@@ -95,49 +96,53 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
     }
 
     private void checkNodeMessages(final TestResult result, final WorkflowManager wfm,
-                                   final TestflowConfiguration flowConfiguration) {
+        final TestflowConfiguration flowConfiguration) {
         for (NodeContainer node : wfm.getNodeContainers()) {
-            if (m_context.isPreExecutedNode(node)) {
-                continue;
-            }
-
-            NodeMessage nodeMessage = node.getNodeMessage();
-
-            Pattern expectedErrorMessage = flowConfiguration.getNodeErrorMessage(node.getID());
-            if (expectedErrorMessage != null) {
-                if (!expectedErrorMessage.matcher(nodeMessage.getMessage()).matches()) {
-                    String error =
-                            "Node '" + node.getNameWithID() + "' has unexpected error message: expected '"
-                                    + TestflowConfiguration.patternToString(expectedErrorMessage) + "', got '"
-                                    + nodeMessage.getMessage() + "'";
-                    result.addFailure(this, new AssertionFailedError(error));
+            if (!m_context.isPreExecutedNode(node)) {
+                if (node instanceof SubNodeContainer) {
+                    checkNodeMessages(result, ((SubNodeContainer)node).getWorkflowManager(), flowConfiguration);
+                } else if (node instanceof WorkflowManager) {
+                    checkNodeMessages(result, (WorkflowManager)node, flowConfiguration);
+                    checkSingleNode(result, node, flowConfiguration);
+                } else {
+                    checkSingleNode(result, node, flowConfiguration);
                 }
-            } else if (Type.ERROR.equals(nodeMessage.getMessageType())) {
+            }
+        }
+    }
+
+    private void checkSingleNode(final TestResult result, final NodeContainer node,
+        final TestflowConfiguration flowConfiguration) {
+        NodeMessage nodeMessage = node.getNodeMessage();
+
+        Pattern expectedErrorMessage = flowConfiguration.getNodeErrorMessage(node.getID());
+        if (expectedErrorMessage != null) {
+            if (!expectedErrorMessage.matcher(nodeMessage.getMessage()).matches()) {
                 String error =
-                        "Node '" + node.getNameWithID() + "' has unexpected error message: "
-                                + nodeMessage.getMessage();
+                    "Node '" + node.getNameWithID() + "' has unexpected error message: expected '"
+                        + TestflowConfiguration.patternToString(expectedErrorMessage) + "', got '"
+                        + nodeMessage.getMessage() + "'";
                 result.addFailure(this, new AssertionFailedError(error));
             }
+        } else if (Type.ERROR.equals(nodeMessage.getMessageType())) {
+            String error =
+                "Node '" + node.getNameWithID() + "' has unexpected error message: " + nodeMessage.getMessage();
+            result.addFailure(this, new AssertionFailedError(error));
+        }
 
-            Pattern expectedWarningMessage = flowConfiguration.getNodeWarningMessage(node.getID());
-            if (expectedWarningMessage != null) {
-                if (!expectedWarningMessage.matcher(nodeMessage.getMessage()).matches()) {
-                    String error =
-                            "Node '" + node.getNameWithID() + "' has unexpected warning message: expected '"
-                                    + TestflowConfiguration.patternToString(expectedWarningMessage) + "', got '"
-                                    + nodeMessage.getMessage() + "'";
-                    result.addFailure(this, new AssertionFailedError(error));
-                }
-            } else if (Type.WARNING.equals(nodeMessage.getMessageType())) {
+        Pattern expectedWarningMessage = flowConfiguration.getNodeWarningMessage(node.getID());
+        if (expectedWarningMessage != null) {
+            if (!expectedWarningMessage.matcher(nodeMessage.getMessage()).matches()) {
                 String error =
-                        "Node '" + node.getNameWithID() + "' has unexpected warning message: "
-                                + nodeMessage.getMessage();
+                    "Node '" + node.getNameWithID() + "' has unexpected warning message: expected '"
+                        + TestflowConfiguration.patternToString(expectedWarningMessage) + "', got '"
+                        + nodeMessage.getMessage() + "'";
                 result.addFailure(this, new AssertionFailedError(error));
             }
-
-            if (node instanceof WorkflowManager) {
-                checkNodeMessages(result, (WorkflowManager)node, flowConfiguration);
-            }
+        } else if (Type.WARNING.equals(nodeMessage.getMessageType())) {
+            String error =
+                "Node '" + node.getNameWithID() + "' has unexpected warning message: " + nodeMessage.getMessage();
+            result.addFailure(this, new AssertionFailedError(error));
         }
     }
 }

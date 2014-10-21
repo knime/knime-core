@@ -66,6 +66,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.testing.core.TestrunConfiguration;
 
@@ -240,7 +241,11 @@ class WorkflowExecuteTest extends WorkflowTest {
         for (NodeContainer node : wfm.getNodeContainers()) {
             NodeContainerState status = node.getNodeContainerState();
 
-            if (node instanceof SingleNodeContainer) {
+            if (node instanceof SubNodeContainer) {
+                checkExecutionStatus(result, ((SubNodeContainer)node).getWorkflowManager(), flowConfiguration);
+            } else if (node instanceof WorkflowManager) {
+                checkExecutionStatus(result, (WorkflowManager)node, flowConfiguration);
+            } else if (node instanceof SingleNodeContainer) {
                 if (!status.isExecuted() && !flowConfiguration.nodeMustFail(node.getID())) {
                     NodeMessage nodeMessage = node.getNodeMessage();
                     String error =
@@ -251,8 +256,6 @@ class WorkflowExecuteTest extends WorkflowTest {
                     String error = "Node '" + node.getNameWithID() + "' is executed although it should have failed.";
                     result.addFailure(this, new AssertionFailedError(error));
                 }
-            } else if (node instanceof WorkflowManager) {
-                checkExecutionStatus(result, (WorkflowManager)node, flowConfiguration);
             } else {
                 throw new IllegalStateException("Unknown node container type: " + node.getClass());
             }
