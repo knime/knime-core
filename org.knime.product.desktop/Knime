@@ -8,7 +8,7 @@ APP_DIR="$(cd -P "${SOURCE%/*}" && pwd)"
 SOURCE="$APP_DIR/${SOURCE##*/}"
 while [[ -h "$SOURCE" ]]; do
     SOURCE="$(readlink "$SOURCE")"
-    APP_DIR="$APP_DIR/${$SOURCE%/*}"
+    APP_DIR="$APP_DIR/${SOURCE%/*}"
 done
 ECLIPSE_DIR="$APP_DIR/../../.."
 
