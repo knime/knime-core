@@ -1659,8 +1659,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void saveNodeSettings(final NodeID id, final NodeSettingsWO settings)
     throws InvalidSettingsException {
-        NodeContainer nc = getNodeContainer(id);
-        nc.saveSettings(settings);
+        synchronized (m_workflowMutex) {
+            NodeContainer nc = getNodeContainer(id);
+            nc.saveSettings(settings);
+        }
     }
 
     /** Gets for a set of nodes their (overlapping) node settings. This is currently only the job manager but
