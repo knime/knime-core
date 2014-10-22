@@ -247,8 +247,8 @@ public class CSVWriterNodeModel extends NodeModel {
                         appendToFile = true;
                         break;
                     case Abort:
-                        throw new IOException("File \"" + localPath + "\" exists, must not overwrite it (check "
-                            + "dialog settings)");
+                        throw new IOException("File \"" + localPath + "\" exists and can't be overriden, check "
+                            + "dialog settings");
                     case Overwrite:
                         appendToFile = false;
                         break;
@@ -460,8 +460,8 @@ public class CSVWriterNodeModel extends NodeModel {
                         case Abort:
                             throw new InvalidSettingsException("File \""
                                     + localPath
-                                    + "\" exists, must not overwrite it (check "
-                                    + "dialog settings)");
+                                    + "\" exists and can't be overriden, check "
+                                    + "dialog settings");
                         case Overwrite:
                             warnMsg +=
                             "Selected output file exists and will be overwritten!";
