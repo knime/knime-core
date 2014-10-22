@@ -51,7 +51,6 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -121,20 +120,20 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
         // the panel on the left side for the filter selection
         Box selectionBox = Box.createVerticalBox();
         selectionBox.setMaximumSize(new Dimension(300, 500));
-        m_rangeInclRadio = new JRadioButton("include rows by number");
-        m_rangeExclRadio = new JRadioButton("exclude rows by number");
+        m_rangeInclRadio = new JRadioButton("Include rows by number");
+        m_rangeExclRadio = new JRadioButton("Exclude rows by number");
         m_rangeInclRadio.setActionCommand("range");
         m_rangeExclRadio.setActionCommand("range");
         addActionListener(m_rangeInclRadio);
         addActionListener(m_rangeExclRadio);
-        m_rowIDInclRadio = new JRadioButton("include rows by row ID");
-        m_rowIDExclRadio = new JRadioButton("exclude rows by row ID");
+        m_rowIDInclRadio = new JRadioButton("Include rows by row ID");
+        m_rowIDExclRadio = new JRadioButton("Exclude rows by row ID");
         m_rowIDInclRadio.setActionCommand("id");
         m_rowIDExclRadio.setActionCommand("id");
         addActionListener(m_rowIDInclRadio);
         addActionListener(m_rowIDExclRadio);
-        m_colValInclRadio = new JRadioButton("include rows by attribute value");
-        m_colValExclRadio = new JRadioButton("exclude rows by attribute value");
+        m_colValInclRadio = new JRadioButton("Include rows by attribute value");
+        m_colValExclRadio = new JRadioButton("Exclude rows by attribute value");
         m_colValInclRadio.setActionCommand("colval");
         m_colValExclRadio.setActionCommand("colval");
         addActionListener(m_colValInclRadio);
@@ -163,9 +162,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
         // in loadSettings
         m_filterPanel = new JPanel();
         m_filterPanel.setLayout(new BoxLayout(m_filterPanel, BoxLayout.Y_AXIS));
-        m_filterPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Set filter parameter:"));
-        m_filterPanel.setMaximumSize(new Dimension(450, 500));
+        m_filterPanel.setPreferredSize(new Dimension(400, 400));
         result.add(selectionBox);
         result.add(Box.createHorizontalStrut(7));
         result.add(m_filterPanel);
@@ -175,6 +172,7 @@ public class RowFilterNodeDialogPane extends NodeDialogPane {
 
     private void addActionListener(final JRadioButton rb) {
         rb.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 filterSelectionChanged(e.getActionCommand());
             }

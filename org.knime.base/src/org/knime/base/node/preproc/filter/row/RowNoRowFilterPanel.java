@@ -49,17 +49,20 @@ package org.knime.base.node.preproc.filter.row;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.text.ParseException;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
+import javax.swing.JTextArea;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -79,7 +82,7 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
 
     private final JSpinner m_last;
 
-    private final JLabel m_errText;
+    private final JTextArea m_errText;
 
     /**
      * Creates a panel containing controls to adjust settings for a row number
@@ -88,74 +91,78 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
     RowNoRowFilterPanel() {
         super(400, 350);
 
-        m_errText = new JLabel("");
+        m_errText = new JTextArea();
+        m_errText.setEditable(false);
+        m_errText.setLineWrap(true);
+        m_errText.setWrapStyleWord(true);
+        m_errText.setBackground(getBackground());
+        m_errText.setFont(new Font(m_errText.getFont().getName(), Font.BOLD, m_errText.getFont().getSize()));
+        m_errText.setMinimumSize(new Dimension(350, 50));
+        m_errText.setMaximumSize(new Dimension(350, 100));
         m_errText.setForeground(Color.RED);
-        m_first = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE,
-                10));
+
+        m_first = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
         m_first.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateErrText();
             }
         });
         m_tilEOT = new JCheckBox("to the end of the table");
         m_tilEOT.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 tilEOTChanged();
             }
         });
-        m_last = new JSpinner(new SpinnerNumberModel(1000, 1,
-                Integer.MAX_VALUE, 10));
+        m_last = new JSpinner(new SpinnerNumberModel(1000, 1, Integer.MAX_VALUE, 1));
         m_last.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateErrText();
             }
         });
         m_first.setMaximumSize(new Dimension(6022, 25));
-        m_first.setMinimumSize(new Dimension(50, 25));
-        m_first.setPreferredSize(new Dimension(50, 25));
+        m_first.setMinimumSize(new Dimension(100, 25));
+        m_first.setPreferredSize(new Dimension(100, 25));
+
         m_last.setMaximumSize(new Dimension(6022, 25));
-        m_last.setMinimumSize(new Dimension(50, 25));
-        m_last.setPreferredSize(new Dimension(50, 25));
+        m_last.setMinimumSize(new Dimension(100, 25));
+        m_last.setPreferredSize(new Dimension(100, 25));
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        JPanel framePanel = new JPanel();
-        framePanel.setLayout(new BoxLayout(framePanel, BoxLayout.Y_AXIS));
-        framePanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Row number range:"));
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Row number range"));
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.insets = new Insets(2, 2, 2, 2);
+        c.anchor = GridBagConstraints.WEST;
 
-        Box firstBox = Box.createHorizontalBox();
-        firstBox.add(Box.createHorizontalGlue());
-        firstBox.add(new JLabel("first row number:"));
-        firstBox.add(m_first);
-        firstBox.add(Box.createHorizontalGlue());
+        panel.add(new JLabel("First row number   "), c);
+        c.gridx = 1;
+        panel.add(m_first, c);
 
-        Box eotBox = Box.createHorizontalBox();
-        eotBox.add(Box.createHorizontalGlue());
-        eotBox.add(m_tilEOT);
-        eotBox.add(Box.createHorizontalGlue());
+        c.gridx = 0;
+        c.gridy++;
+        c.gridwidth = 2;
+        c.weightx = 0;
+        c.fill = GridBagConstraints.NONE;
+        panel.add(m_tilEOT, c);
 
-        Box lastBox = Box.createHorizontalBox();
-        lastBox.add(Box.createHorizontalGlue());
-        lastBox.add(new JLabel("last row number:"));
-        lastBox.add(m_last);
-        lastBox.add(Box.createHorizontalGlue());
+        c.gridx = 0;
+        c.gridy++;
+        c.gridwidth = 1;
+        panel.add(new JLabel("Last row number   "), c);
+        c.gridx = 1;
+        panel.add(m_last, c);
 
-        Box errBox = Box.createHorizontalBox();
-        errBox.add(Box.createHorizontalGlue());
-        errBox.add(m_errText);
-        errBox.add(Box.createHorizontalGlue());
-
-        framePanel.add(firstBox);
-        framePanel.add(Box.createVerticalStrut(7));
-        framePanel.add(eotBox);
-        framePanel.add(lastBox);
-        framePanel.add(Box.createVerticalStrut(7));
-        framePanel.add(errBox);
-
-        panel.add(Box.createVerticalGlue());
-        panel.add(framePanel);
-        panel.add(Box.createVerticalGlue());
+        c.gridx = 0;
+        c.gridy++;
+        c.gridwidth = 2;
+        c.weightx = 1;
+        c.weighty = 1;
+        c.fill = GridBagConstraints.BOTH;
+        panel.add(m_errText, c);
 
         this.add(panel);
     }

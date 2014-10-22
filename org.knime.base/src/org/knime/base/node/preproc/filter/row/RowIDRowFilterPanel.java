@@ -49,15 +49,18 @@ package org.knime.base.node.preproc.filter.row;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -71,7 +74,7 @@ import org.knime.core.node.InvalidSettingsException;
  * @author Peter Ohl, University of Konstanz
  */
 public class RowIDRowFilterPanel extends RowFilterPanel {
-    private JLabel m_errText;
+    private JTextArea m_errText;
 
     private JTextField m_regExpr;
 
@@ -85,22 +88,33 @@ public class RowIDRowFilterPanel extends RowFilterPanel {
     public RowIDRowFilterPanel() {
         super(400, 350);
 
-        m_errText = new JLabel();
+        m_errText = new JTextArea();
+        m_errText.setEditable(false);
+        m_errText.setLineWrap(true);
+        m_errText.setWrapStyleWord(true);
+        m_errText.setBackground(getBackground());
+        m_errText.setFont(new Font(m_errText.getFont().getName(), Font.BOLD, m_errText.getFont().getSize()));
+        m_errText.setMinimumSize(new Dimension(350, 50));
+        m_errText.setMaximumSize(new Dimension(350, 100));
         m_errText.setForeground(Color.RED);
+
         m_regExpr = new JTextField();
-        m_caseSensitive = new JCheckBox("case sensitive match.");
-        m_startsWith = new JCheckBox("row ID must only start with expression.");
+        m_caseSensitive = new JCheckBox("case sensitive match");
+        m_startsWith = new JCheckBox("row ID must only start with expression");
         m_startsWith
                 .setToolTipText("if not checked the entire row ID must match");
         m_regExpr.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
             public void insertUpdate(final DocumentEvent e) {
                 regExprChanged();
             }
 
+            @Override
             public void removeUpdate(final DocumentEvent e) {
                 regExprChanged();
             }
 
+            @Override
             public void changedUpdate(final DocumentEvent e) {
                 regExprChanged();
             }
@@ -109,27 +123,40 @@ public class RowIDRowFilterPanel extends RowFilterPanel {
         m_regExpr.setMinimumSize(new Dimension(150, 25));
         m_regExpr.setPreferredSize(new Dimension(100, 25));
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Row ID pattern:"));
+            .createEtchedBorder(), "Row ID pattern"));
 
-        Box exprBox = Box.createHorizontalBox();
-        exprBox.add(new JLabel("regular expression to match:"));
-        exprBox.add(m_regExpr);
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.insets = new Insets(2, 2, 2, 2);
+        c.anchor = GridBagConstraints.WEST;
 
-        panel.add(exprBox);
-        panel.add(m_caseSensitive);
-        panel.add(m_startsWith);
-        panel.add(m_errText);
+        panel.add(new JLabel("Regular expression   "), c);
+        c.gridx = 1;
 
-        JPanel outerPanel = new JPanel();
-        outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
-        outerPanel.add(Box.createVerticalGlue());
-        outerPanel.add(panel);
-        outerPanel.add(Box.createVerticalGlue());
+        c.weightx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(m_regExpr, c);
 
-        this.add(outerPanel);
+        c.gridx = 0;
+        c.gridy++;
+        c.weightx = 0;
+        c.fill = GridBagConstraints.NONE;
+        c.gridwidth = 2;
+
+
+        panel.add(m_caseSensitive, c);
+        c.gridy++;
+        panel.add(m_startsWith, c);
+        c.gridy++;
+        c.weighty = 1;
+        c.weightx = 1;
+        c.fill = GridBagConstraints.BOTH;
+        panel.add(m_errText, c);
+
+        this.add(panel);
 
         updateErrText();
     }

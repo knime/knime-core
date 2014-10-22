@@ -49,6 +49,10 @@ package org.knime.base.node.preproc.filter.row;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.Collections;
@@ -57,8 +61,6 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
@@ -66,6 +68,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
@@ -139,7 +142,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
 
     private JCheckBox m_isRegExpr;
 
-    private JLabel m_errText;
+    private JTextArea m_errText;
 
     private DataTableSpec m_tSpec;
 
@@ -165,126 +168,135 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
 
         instantiateComponents(parentPane, m_tSpec);
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Column value matching"));
+            .createEtchedBorder(), "Column value matching"));
 
-        /* stuff for column selection */
-        panel.add(Box.createVerticalStrut(10));
-        Box textBox = Box.createHorizontalBox();
-        textBox.add(new JLabel("select the column to test:"));
-        textBox.add(Box.createHorizontalGlue());
-        panel.add(textBox);
-        Box idxBox = Box.createHorizontalBox();
-        idxBox.add(Box.createHorizontalGlue());
-        idxBox.add(m_colCombo);
-        idxBox.add(Box.createHorizontalGlue());
-        Box deepFilteringBox = Box.createHorizontalBox();
-        deepFilteringBox.add(m_deepFiltering);
-        deepFilteringBox.add(Box.createHorizontalGlue());
-        Box topIdxBox = Box.createVerticalBox();
-        topIdxBox.add(Box.createVerticalGlue());
-        topIdxBox.add(idxBox);
-        topIdxBox.add(deepFilteringBox);
-        topIdxBox.add(Box.createVerticalGlue());
-        panel.add(topIdxBox);
-        m_colCombo.setPreferredSize(new Dimension(150, 25));
-        m_colCombo.setMinimumSize(new Dimension(75, 25));
-        m_colCombo.setMaximumSize(new Dimension(6000, 25));
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(2, 2, 2, 2);
 
 
-        /* the panel for range/regExpr matching */
-        JPanel matchPanel = new JPanel();
-        matchPanel.setLayout(new BoxLayout(matchPanel, BoxLayout.Y_AXIS));
-        matchPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "matching criteria:"));
-        Box regBox = Box.createHorizontalBox(); // regExpr radio
-        regBox.add(m_useRegExpr);
-        regBox.add(Box.createHorizontalGlue());
-        matchPanel.add(regBox);
+        panel.add(new JLabel("Column to test:   "), c);
+        c.gridx = 1;
+        panel.add(m_colCombo, c);
+        c.gridx = 0;
+        c.gridy++;
 
-        Box exprBox = Box.createHorizontalBox(); // reg expr edit field
-        exprBox.add(m_regLabel);
-        exprBox.add(Box.createHorizontalStrut(3));
-        exprBox.add(m_regExpr);
-        exprBox.add(m_regExprVarButton);
-        m_regExpr.setPreferredSize(new Dimension(150, 20));
-        m_regExpr.setMaximumSize(new Dimension(150, 20));
-        m_regExpr.setPreferredSize(new Dimension(150, 20));
-        Box caseBox = Box.createHorizontalBox();
-        caseBox.add(Box.createHorizontalGlue());
-        caseBox.add(m_caseSensitive);
-        Box patternBox = Box.createVerticalBox();
-        patternBox.add(exprBox);
-        patternBox.add(Box.createVerticalStrut(5));
-        patternBox.add(caseBox);
-        Box wildBox = Box.createVerticalBox(); // wildcard / regExpr
-        wildBox.add(m_hasWildCards);
-        wildBox.add(Box.createVerticalStrut(5));
-        wildBox.add(m_isRegExpr);
-        Box regEditBox = Box.createHorizontalBox();
-        regEditBox.add(Box.createHorizontalStrut(25));
-        regEditBox.add(Box.createHorizontalGlue());
-        regEditBox.add(patternBox);
-        regEditBox.add(Box.createHorizontalStrut(10));
-        regEditBox.add(wildBox);
-        matchPanel.add(regEditBox);
+        c.gridwidth = 2;
+        panel.add(m_deepFiltering, c);
 
-        Box rrBox = Box.createHorizontalBox(); // range radio
-        rrBox.add(m_useRange);
-        rrBox.add(Box.createHorizontalGlue());
-        matchPanel.add(rrBox);
-        Box lbBox = Box.createHorizontalBox(); // lower bound
-        lbBox.add(Box.createHorizontalGlue());
-        lbBox.add(m_lowerLabel);
-        lbBox.add(Box.createHorizontalStrut(3));
-        lbBox.add(m_lowerBound);
-        m_lowerBound.setPreferredSize(new Dimension(75, 20));
-        m_lowerBound.setMaximumSize(new Dimension(75, 20));
-        m_lowerBound.setPreferredSize(new Dimension(75, 20));
-        matchPanel.add(lbBox);
-        Box ubBox = Box.createHorizontalBox(); // upper bound
-        ubBox.add(Box.createHorizontalGlue());
-        ubBox.add(m_upperLabel);
-        ubBox.add(Box.createHorizontalStrut(3));
-        ubBox.add(m_upperBound);
-        m_upperBound.setPreferredSize(new Dimension(75, 20));
-        m_upperBound.setMaximumSize(new Dimension(75, 20));
-        m_upperBound.setPreferredSize(new Dimension(75, 20));
-        matchPanel.add(ubBox);
-        Box mvBox = Box.createHorizontalBox(); // missing value matching
-        mvBox.add(m_useMissValue);
-        mvBox.add(Box.createHorizontalGlue());
-        matchPanel.add(mvBox);
 
-        panel.add(Box.createVerticalStrut(7));
-        panel.add(matchPanel);
+        c.gridy++;
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1;
+        c.weighty = 1;
+        JPanel matchPanel = new JPanel(new GridBagLayout());
+        panel.add(matchPanel, c);
 
-        /* error display */
-        Box errBox = Box.createHorizontalBox();
-        Box errLblBox = Box.createVerticalBox();
-        errLblBox.add(m_errText);
-        m_errText.setMaximumSize(new Dimension(350, 30));
-        m_errText.setMinimumSize(new Dimension(350, 30));
-        m_errText.setPreferredSize(new Dimension(350, 30));
-        errBox.add(Box.createHorizontalGlue());
-        errBox.add(errLblBox);
-        errBox.add(Box.createHorizontalGlue());
-        // errBox.add(Box.createHorizontalGlue());
-        panel.add(Box.createHorizontalStrut(300));
-        panel.add(errBox);
-        panel.add(Box.createVerticalStrut(7));
+        matchPanel
+            .setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Matching criteria"));
 
-        panel.add(Box.createVerticalGlue()); // do we need some glue here?!?
-        panel.invalidate();
+        // pattern matching
+        c.gridwidth = 4;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.WEST;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0;
+        c.weighty = 0;
 
-        JPanel outerPanel = new JPanel();
-        outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
-        outerPanel.add(Box.createVerticalGlue());
-        outerPanel.add(panel);
-        outerPanel.add(Box.createVerticalGlue());
-        this.add(outerPanel);
+        matchPanel.add(m_useRegExpr, c);
+
+        c.gridy++;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+        c.insets = new Insets(2, 22, 2, 0);
+        matchPanel.add(m_regExpr, c);
+
+        c.gridx = 4;
+        c.gridwidth = 1;
+        c.weightx = 0;
+        c.insets = new Insets(2, 2, 2, 2);
+        c.fill = GridBagConstraints.NONE;
+        matchPanel.add(m_regExprVarButton, c);
+
+
+        c.gridx = 0;
+        c.gridy++;
+        c.gridwidth = 2;
+        c.insets = new Insets(2, 22, 2, 0);
+        matchPanel.add(m_caseSensitive, c);
+
+        c.gridx = 2;
+        c.insets = new Insets(2, 2, 2, 2);
+        matchPanel.add(m_hasWildCards, c);
+
+        c.gridy++;
+        matchPanel.add(m_isRegExpr, c);
+
+        // range checking
+        c.gridwidth = 4;
+        c.gridx = 0;
+        c.gridy++;
+        c.anchor = GridBagConstraints.WEST;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.insets = new Insets(20, 2, 2, 2);
+        matchPanel.add(m_useRange, c);
+
+        c.gridy++;
+        c.gridwidth = 1;
+        c.insets = new Insets(2, 22, 2, 10);
+        c.anchor = GridBagConstraints.EAST;
+        matchPanel.add(m_lowerLabel, c);
+
+        c.gridx = 1;
+        c.insets = new Insets(2, 2, 2, 2);
+        c.gridwidth = 3;
+        c.weightx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.anchor = GridBagConstraints.WEST;
+        matchPanel.add(m_lowerBound, c);
+
+
+        c.gridx = 0;
+        c.gridy++;
+        c.insets = new Insets(2, 22, 2, 10);
+        c.gridwidth = 1;
+        c.weightx = 0;
+        c.fill = GridBagConstraints.NONE;
+        matchPanel.add(m_upperLabel, c);
+
+        c.gridx = 1;
+        c.insets = new Insets(2, 2, 2, 2);
+        c.gridwidth = 3;
+        c.weightx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        matchPanel.add(m_upperBound, c);
+
+
+        // missing values
+        c.gridwidth = 4;
+        c.gridx = 0;
+        c.gridy++;
+        c.insets = new Insets(20, 2, 2, 2);
+        matchPanel.add(m_useMissValue, c);
+
+
+        c.gridx = 0;
+        c.gridy++;
+        c.weightx = 0;
+        c.gridwidth = 5;
+        c.fill = GridBagConstraints.BOTH;
+        c.weighty = 1;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        matchPanel.add(m_errText, c);
+
+        add(panel);
     }
 
     @SuppressWarnings("unchecked")
@@ -376,6 +388,9 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         m_regExpr = new JComboBox(getPossibleValuesOfSelectedColumn());
         m_regExpr.setEditable(true);
         m_regExpr.setSelectedItem("");
+        m_regExpr.setMinimumSize(new Dimension(50, m_regExpr.getPreferredSize().height));
+        // m_regExpr.setPreferredSize(new Dimension(200, 50));
+        m_regExpr.setMaximumSize(new Dimension(300, 50));
         JTextField ed = (JTextField)m_regExpr.getEditor().getEditorComponent();
         ed.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -434,8 +449,14 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
             }
         });
         /* and a label to display errors/warnings */
-        m_errText = new JLabel("");
-        setErrMsg("");
+        m_errText = new JTextArea();
+        m_errText.setEditable(false);
+        m_errText.setLineWrap(true);
+        m_errText.setWrapStyleWord(true);
+        m_errText.setBackground(getBackground());
+        m_errText.setFont(new Font(m_errText.getFont().getName(), Font.BOLD, m_errText.getFont().getSize()));
+        m_errText.setMinimumSize(new Dimension(350, 50));
+        m_errText.setMaximumSize(new Dimension(350, 100));
         m_errText.setForeground(Color.RED);
         /* set the default values */
         m_useRegExpr.setSelected(true);
@@ -525,7 +546,6 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         // have the err text updated
         if (m_useMissValue.isSelected()) {
             setErrMsg("");
-            validate();
         } else if (m_useRange.isSelected()) {
             boundsChanged();
         } else {
@@ -540,7 +560,6 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
     protected void boundsChanged() {
         // check if the entered value somehow goes along with the selected col.
         setErrMsg("");
-        validate();
         if (m_tSpec == null) {
             return;
         }
@@ -557,12 +576,10 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
             hiBound = getUpperBoundCell();
         } catch (InvalidSettingsException ise) {
             setErrMsg(ise.getMessage());
-            validate();
             return;
         }
         if ((lowBound == null) && (hiBound == null)) {
             setErrMsg("Specify at least one range boundary");
-            validate();
             return;
         }
         if ((lowBound != null) && (hiBound != null)) {
@@ -573,7 +590,6 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
             if (comp.compare(hiBound, lowBound) == -1) {
                 setErrMsg("The lower bound must be smaller than the"
                         + " upper bound");
-                validate();
                 return;
             }
         }
@@ -582,7 +598,6 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
                 || ((hiBound != null) && (hiBound instanceof StringCell))) {
             setErrMsg("Warning: String comparison is used for "
                     + "range checking. May not work as expected!");
-            validate();
         }
     }
 

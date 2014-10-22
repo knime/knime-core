@@ -3,7 +3,7 @@
 <knimeNode icon="./rowfilter.gif" type="Manipulator">
 	<name>Row Filter</name>
 	<shortDescription>
-		Allows filtering of datarows by certain criteria, such as row ID, 
+		Allows filtering of data rows by certain criteria, such as row ID, 
 		attribute value, and row number range.  
 	</shortDescription>
 	
@@ -48,7 +48,7 @@
 			added individually like <tt>[0123456789]</tt>, or by range). This set
 			matches any (one) character included in the set.<br />
             For a complete explanation of regular expressions see e.g. the JavaDoc
-            of the <a href="http://java.sun.com/javase/6/docs/api/java/util/regex/Pattern.html#sum">
+            of the <a href="http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html#sum">
             java.util.regex.Pattern</a> class.
 		</option>
 	    <option name="Row number range">If filter by range is selected, specify
@@ -64,7 +64,7 @@
 	</fullDescription>
 	
 	<ports>
-		<inPort index="0" name="To be filtered">Datatable from which to filter rows.</inPort>
-		<outPort index="0" name="Filtered">Datatable with rows meeting the specified criteria</outPort>
+		<inPort index="0" name="To be filtered">Data table from which to filter rows.</inPort>
+		<outPort index="0" name="Filtered">Data table with rows meeting the specified criteria</outPort>
 	</ports>	
 </knimeNode>
