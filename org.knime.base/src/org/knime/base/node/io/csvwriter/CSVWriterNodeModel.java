@@ -82,6 +82,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.FileUtil;
 
@@ -219,7 +220,6 @@ public class CSVWriterNodeModel extends NodeModel {
         DataTable in = data[0];
 
         URL url = FileUtil.toURL(m_settings.getFileName());
-        boolean dirCreated = false;
         boolean writeColHeader = m_settings.writeColumnHeader();
 
         OutputStream tempOut;
@@ -227,33 +227,14 @@ public class CSVWriterNodeModel extends NodeModel {
         URLConnection urlConnection = null;
         boolean appendToFile;
         if (localPath != null) {
-            Path parentDir = localPath.getParent();
-
-            if (!Files.exists(parentDir)) {
-                Files.createDirectories(parentDir);
-                LOGGER.info("Created directory for specified output file: " + parentDir);
-                dirCreated = true;
-            }
+            CheckUtils.checkDestinationFile(localPath, m_settings.getFileOverwritePolicy() != FileOverwritePolicy.Abort);
 
             // figure out if the writer is actually supposed to write col headers
             if (Files.exists(localPath)) {
-                if (writeColHeader  && m_settings.getFileOverwritePolicy().equals(FileOverwritePolicy.Append)) {
+                appendToFile = m_settings.getFileOverwritePolicy() == FileOverwritePolicy.Append;
+                if (writeColHeader && appendToFile) {
                     // do not write headers if the file exists and we append to it
                     writeColHeader = !m_settings.skipColHeaderIfFileExists();
-                }
-
-                switch (m_settings.getFileOverwritePolicy()) {
-                    case Append:
-                        appendToFile = true;
-                        break;
-                    case Abort:
-                        throw new IOException("File \"" + localPath + "\" exists and can't be overriden, check "
-                            + "dialog settings");
-                    case Overwrite:
-                        appendToFile = false;
-                        break;
-                    default:
-                        throw new IllegalStateException("Unknown case: " + m_settings.getFileOverwritePolicy());
                 }
             } else {
                 appendToFile = false;
@@ -290,15 +271,16 @@ public class CSVWriterNodeModel extends NodeModel {
             // execution successful return empty array
             return new BufferedDataTable[0];
         } catch (CanceledExecutionException cee) {
-            tableWriter.close();
+            try {
+                tableWriter.close();
+            } catch (IOException ex) {
+                // may happen if the stream is already closed by the interrupted thread
+            }
             if (localPath != null) {
                 LOGGER.info("Table FileWriter canceled.");
-                if (dirCreated) {
-                    LOGGER.warn("The directory for the output file was created and is not removed.");
-                }
                 try {
                     Files.delete(localPath);
-                    LOGGER.debug("File " + m_settings.getFileName() + " deleted.");
+                    LOGGER.debug("File '" + m_settings.getFileName() + "' deleted after node has been canceled.");
                 } catch (IOException ex) {
                     LOGGER.warn("Unable to delete file '"
                             + m_settings.getFileName() + "' after cancellation: " + ex.getMessage(), ex);
@@ -433,7 +415,6 @@ public class CSVWriterNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-
         String warnMsg = "";
 
         /*
@@ -447,38 +428,14 @@ public class CSVWriterNodeModel extends NodeModel {
             URL url = FileUtil.toURL(fileName);
             Path localPath = FileUtil.resolveToPath(url);
             if (localPath != null) {
-                if (Files.isDirectory(localPath)) {
-                    throw new InvalidSettingsException("Specified location is a "
-                            + "directory (\"" + localPath + "\").");
-                }
-                if (Files.exists(localPath)) {
-                    if (!Files.isWritable(localPath)) {
-                        throw new InvalidSettingsException("Cannot write to existing "
-                                + "file \"" + localPath + "\".");
+                String fileCheckWarning =
+                    CheckUtils.checkDestinationFile(localPath,
+                        m_settings.getFileOverwritePolicy() != FileOverwritePolicy.Abort);
+                if (fileCheckWarning != null) {
+                    if (m_settings.getFileOverwritePolicy() == FileOverwritePolicy.Append) {
+                        fileCheckWarning = fileCheckWarning.replace("overwritten", "appended");
                     }
-                    switch (m_settings.getFileOverwritePolicy()) {
-                        case Abort:
-                            throw new InvalidSettingsException("File \""
-                                    + localPath
-                                    + "\" exists and can't be overriden, check "
-                                    + "dialog settings");
-                        case Overwrite:
-                            warnMsg +=
-                            "Selected output file exists and will be overwritten!";
-                            break;
-                        default:
-                    }
-                } else {
-                    Path parentDir = localPath.getParent();
-                    if (parentDir == null) {
-                        throw new InvalidSettingsException("Can't determine parent "
-                                + "directory of file \"" + localPath + "\"");
-                    }
-                    if (!Files.exists(parentDir)) {
-                        warnMsg +=
-                                "Directory of specified output file doesn't exist"
-                                        + " and will be created.";
-                    }
+                    warnMsg = fileCheckWarning + "\n";
                 }
             }
         } catch (MalformedURLException | URISyntaxException ex) {
@@ -523,8 +480,8 @@ public class CSVWriterNodeModel extends NodeModel {
             }
         }
 
-        if (notEmpty(warnMsg)) {
-            setWarningMessage(warnMsg);
+        if (!warnMsg.isEmpty()) {
+            setWarningMessage(warnMsg.trim());
         }
 
         return new DataTableSpec[0];

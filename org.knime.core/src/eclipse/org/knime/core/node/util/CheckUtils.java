@@ -46,6 +46,9 @@
  */
 package org.knime.core.node.util;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import org.knime.core.node.InvalidSettingsException;
 
 /**
@@ -73,7 +76,7 @@ public final class CheckUtils {
      * @throws NullPointerException if template is <code>null</code>
      * @param <T> the type of the object
      */
-    public static final <T> T
+    public static <T> T
         checkArgumentNotNull(final T toCheck, final String template, final Object... templateArgs)
             throws IllegalArgumentException {
         return checkArgumentNotNull(toCheck, stringFormatSupplier(template, templateArgs));
@@ -86,7 +89,7 @@ public final class CheckUtils {
      * @param message the exception message
      * @throws IllegalArgumentException if predicate is <code>false</code>
      */
-    public static final void checkArgument(final boolean predicate, final String message)
+    public static void checkArgument(final boolean predicate, final String message)
         throws IllegalArgumentException {
         checkArgument(predicate, stringSupplier(message));
     }
@@ -102,7 +105,7 @@ public final class CheckUtils {
      * @throws IllegalArgumentException if predicate is <code>false</code>
      * @throws NullPointerException if the template is <code>null</code>
      */
-    public static final void
+    public static void
         checkArgument(final boolean predicate, final String template, final Object... templateArgs)
             throws IllegalArgumentException {
         checkArgument(predicate, stringFormatSupplier(template, templateArgs));
@@ -116,7 +119,7 @@ public final class CheckUtils {
      * @throws NullPointerException if toCheck is <code>null</code>
      * @param <T> the type of the object
      */
-    public static final <T> T checkNotNull(final T toCheck) throws NullPointerException {
+    public static <T> T checkNotNull(final T toCheck) throws NullPointerException {
         return checkNotNull(toCheck, stringSupplier(""));
     }
 
@@ -129,7 +132,7 @@ public final class CheckUtils {
      * @throws NullPointerException if toCheck is <code>null</code>
      * @param <T> the type of the object
      */
-    public static final <T> T checkNotNull(final T toCheck, final String message) throws NullPointerException {
+    public static <T> T checkNotNull(final T toCheck, final String message) throws NullPointerException {
         return checkNotNull(toCheck, stringSupplier(message));
     }
 
@@ -145,7 +148,7 @@ public final class CheckUtils {
      * @throws NullPointerException if the argument or template is <code>null</code>
      * @param <T> the type of the object
      */
-    public static final <T> T checkNotNull(final T toCheck, final String template, final Object... templateArgs)
+    public static <T> T checkNotNull(final T toCheck, final String template, final Object... templateArgs)
         throws NullPointerException {
         return checkNotNull(toCheck, stringFormatSupplier(template, templateArgs));
     }
@@ -161,7 +164,7 @@ public final class CheckUtils {
      * @throws InvalidSettingsException if predicate is <code>false</code>
      * @throws NullPointerException if the template is <code>null</code>
      */
-    public static final void checkSetting(final boolean predicate, final String template, final Object... templateArgs)
+    public static void checkSetting(final boolean predicate, final String template, final Object... templateArgs)
         throws InvalidSettingsException {
         checkSetting(predicate, stringFormatSupplier(template, templateArgs));
     }
@@ -179,38 +182,38 @@ public final class CheckUtils {
      * @throws NullPointerException if the template is <code>null</code>
      * @param <T> the type of the object
      */
-    public static final <T> T checkSettingNotNull(final T toCheck, final String template, final Object... templateArgs)
+    public static <T> T checkSettingNotNull(final T toCheck, final String template, final Object... templateArgs)
         throws InvalidSettingsException {
         return checkSettingNotNull(toCheck, stringFormatSupplier(template, templateArgs));
     }
 
-    private static final <T> T checkArgumentNotNull(final T argument, final Supplier<String> supplier)
+    private static <T> T checkArgumentNotNull(final T argument, final Supplier<String> supplier)
         throws IllegalArgumentException {
         checkArgument(argument != null, supplier);
         return argument;
     }
 
-    private static final <T> T checkSettingNotNull(final T argument, final Supplier<String> supplier)
+    private static <T> T checkSettingNotNull(final T argument, final Supplier<String> supplier)
         throws InvalidSettingsException {
         checkSetting(argument != null, supplier);
         return argument;
     }
 
-    private static final void checkArgument(final boolean predicate, final Supplier<String> supplier)
+    private static void checkArgument(final boolean predicate, final Supplier<String> supplier)
         throws IllegalArgumentException {
         if (!predicate) {
             throw new IllegalArgumentException(supplier.get());
         }
     }
 
-    private static final void checkSetting(final boolean predicate, final Supplier<String> supplier)
+    private static void checkSetting(final boolean predicate, final Supplier<String> supplier)
         throws InvalidSettingsException {
         if (!predicate) {
             throw new InvalidSettingsException(supplier.get());
         }
     }
 
-    private static final <T> T checkNotNull(final T argument, final Supplier<String> supplier)
+    private static <T> T checkNotNull(final T argument, final Supplier<String> supplier)
         throws NullPointerException {
         if (argument == null) {
             throw new NullPointerException(supplier.get());
@@ -241,7 +244,64 @@ public final class CheckUtils {
         };
     }
 
-    private static interface Supplier<T> {
+    private interface Supplier<T> {
         T get();
+    }
+
+    /**
+     * Does several checks for the given destination file, e.g. it it's a file, if it's writable (if it exists).
+     * Warnings are returned as strings, error cause an {@link InvalidSettingsException}.
+     *
+     * @param path the destination file
+     * @param allowOverwrite <code>true</code> if an existing file may be overwritten, <code>false</code> if overwriting
+     *            is forbidden
+     * @return <code>null</code> or a warning message
+     * @throws InvalidSettingsException if there will be a problem when writing to the file
+     * @since 2.11
+     */
+    public static String checkDestinationFile(final Path path, final boolean allowOverwrite)
+        throws InvalidSettingsException {
+        if (Files.exists(path)) {
+            if (Files.isDirectory(path)) {
+                throw new InvalidSettingsException("Output location '" + path + "' is a directory");
+            } else if (!Files.isWritable(path)) {
+                throw new InvalidSettingsException("Output file '" + path + "' is not writable");
+            } else if (allowOverwrite) {
+                return "Output file '" + path + "' exists and will be overwritten";
+            } else {
+                throw new InvalidSettingsException("Output file '" + path
+                    + "' exists and must not be overwritten due to user settings");
+            }
+        } else {
+            Path parent = path.getParent();
+            if (!Files.exists(parent)) {
+                throw new InvalidSettingsException("Directory '" + parent + "' of output file does not exist");
+            } else if (!Files.isWritable(path.getParent())) {
+                throw new InvalidSettingsException("Directory '" + parent + "' is not writable");
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Does several checks for the given destination directory, e.g. it it's a directory and if it's writable.
+     * Warnings are returned as strings, error cause an {@link InvalidSettingsException}.
+     *
+     * @param path the destination directory
+     * @return <code>null</code> or a warning message
+     * @throws InvalidSettingsException if there will be a problem when writing to the directory
+     * @since 2.11
+     */
+    public static String checkDestinationDirectory(final Path path) throws InvalidSettingsException {
+        if (Files.exists(path)) {
+            if (!Files.isDirectory(path)) {
+                throw new InvalidSettingsException("Output location '" + path + "' is not a directory");
+            } else if (!Files.isWritable(path)) {
+                throw new InvalidSettingsException("Output directory '" + path + "' is not writable");
+            }
+        } else {
+            throw new InvalidSettingsException("Output directory '" + path + "' does not exist");
+        }
+        return null;
     }
 }

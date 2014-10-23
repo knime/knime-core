@@ -104,6 +104,96 @@ import org.knime.core.util.SimpleFileFilter;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class FilesHistoryPanel extends JPanel {
+    /**
+     * A label that checks the destination location and displays a warning or error message if certain required
+     * conditions are not fulfilled (e.g. directory does not exist, file is not writable, etc.).
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 2.11
+     */
+    public static class WriterCheckLabel extends JLabel {
+        private static final long serialVersionUID = -440167673631870065L;
+
+        private static final Color ERROR = Color.RED;
+
+        private static final Color WARNING = new Color(150, 120, 0);
+
+        private static final Color INFO = new Color(64, 64, 255);
+
+        /**
+         * Checks a destination file.
+         *
+         * @param url URL of the destination file
+         */
+        public void checkDestinationFile(final URL url) {
+            try {
+                Path path = FileUtil.resolveToPath(url);
+                setText("");
+                if (path != null) {
+                    if (Files.exists(path)) {
+                        if (Files.isDirectory(path)) {
+                            setText("Error: output location is a directory");
+                            setForeground(ERROR);
+                        } else if (!Files.isWritable(path)) {
+                            setText("Error: no write permission to output file");
+                            setForeground(ERROR);
+                        } else {
+                            setText("Warning: output file exists");
+                            setForeground(WARNING);
+                        }
+                    } else {
+                        Path parent = path.getParent();
+                        if (!Files.exists(parent)) {
+                            setText("Error: directory of output file does not exist");
+                            setForeground(ERROR);
+                        } else if (!Files.isWritable(path.getParent())) {
+                            setText("Error: no write permissions in directory");
+                            setForeground(ERROR);
+                        }
+                    }
+                } else {
+                    setText("Info: remote output file will be overwritten if it exists");
+                    setForeground(INFO);
+                }
+            } catch (IOException | URISyntaxException ex) {
+                // ignore it
+            }
+        }
+
+
+        /**
+         * Checks a destination directory into which files are written.
+         *
+         * @param url URL to destination directory
+         */
+        public void checkDestinationDirectory(final URL url) {
+            try {
+                Path path = FileUtil.resolveToPath(url);
+                if (path != null) {
+                    setText("");
+                    if (Files.exists(path)) {
+                        if (!Files.isDirectory(path)) {
+                            setText("Error: output location is not a directory");
+                            setForeground(ERROR);
+                        } else if (!Files.isWritable(path)) {
+                            setText("Error: no write permission to output directory");
+                            setForeground(ERROR);
+                        }
+                    } else {
+                        setText("Error: output directory does not exist");
+                        setForeground(ERROR);
+                    }
+                } else {
+                    setText("Info: remote output directory will be overwritten if it exists");
+                    setForeground(INFO);
+                }
+            } catch (IOException | URISyntaxException ex) {
+                // ignore it
+            }
+        }
+    }
+
+
     private final List<ChangeListener> m_changeListener =
             new ArrayList<ChangeListener>();
 

@@ -110,6 +110,8 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
 
     private final JCheckBox m_useGzipChecker;
 
+    boolean m_isLocalDestination;
+
 
     /**
      * Creates a new CSV writer dialog.
@@ -132,10 +134,11 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
                     try {
                         URL newUrl = FileUtil.toURL(selFile);
                         Path path = FileUtil.resolveToPath(newUrl);
-                        m_overwritePolicyAbortButton.setEnabled(path != null);
-                        m_overwritePolicyAppendButton.setEnabled(path != null);
-                        m_overwritePolicyOverwriteButton.setEnabled(path != null);
-                        m_colHeaderWriteSkipOnAppend.setEnabled(path != null);
+                        m_isLocalDestination = (path != null);
+                        m_overwritePolicyAbortButton.setEnabled(m_isLocalDestination);
+                        m_overwritePolicyAppendButton.setEnabled(m_isLocalDestination);
+                        m_overwritePolicyOverwriteButton.setEnabled(m_isLocalDestination);
+                        checkCheckerState();
                     } catch (IOException | URISyntaxException ex) {
                         // ignore
                     }
@@ -275,8 +278,8 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
 
     /** Checks whether or not the "on file exists" check should be enabled. */
     private void checkCheckerState() {
-        m_colHeaderWriteSkipOnAppend.setEnabled(m_colHeaderChecker.isSelected()
-                && m_overwritePolicyAppendButton.isSelected());
+        m_colHeaderWriteSkipOnAppend.setEnabled(m_isLocalDestination && m_colHeaderChecker.isSelected()
+            && m_overwritePolicyAppendButton.isSelected());
     }
 
     /**
@@ -317,6 +320,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         m_advancedPanel.loadValuesIntoPanel(newValues);
         m_commentPanel.loadValuesIntoPanel(newValues);
         m_decSeparatorPanel.loadValuesIntoPanel(newValues);
+        checkCheckerState();
     }
 
     /**

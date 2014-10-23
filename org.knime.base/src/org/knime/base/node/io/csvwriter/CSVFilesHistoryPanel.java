@@ -47,9 +47,11 @@
  */
 package org.knime.base.node.io.csvwriter;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -60,19 +62,13 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.LinkedHashSet;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -86,6 +82,7 @@ import javax.swing.text.JTextComponent;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
+import org.knime.core.node.util.FilesHistoryPanel;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.SimpleFileFilter;
@@ -104,7 +101,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
 
     private final JButton m_chooseButton;
 
-    private final JLabel m_warnMsg;
+    private final FilesHistoryPanel.WriterCheckLabel m_warnMsg;
 
     /**
      * Creates new instance, sets properties, for instance renderer,
@@ -121,6 +118,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
      * @param fvm model to allow to use a variable instead of the textfield.
      */
     CSVFilesHistoryPanel(final FlowVariableModel fvm) {
+        super(new GridBagLayout());
         m_textBox = new JComboBox<String>(new DefaultComboBoxModel<String>());
         m_textBox.setEditable(true);
         m_textBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
@@ -179,18 +177,29 @@ public final class CSVFilesHistoryPanel extends JPanel {
                 }
             }
         });
-        m_warnMsg = new JLabel("");
+        m_warnMsg = new FilesHistoryPanel.WriterCheckLabel();
         // this ensures correct display of the changing label content...
         m_warnMsg.setPreferredSize(new Dimension(350, 25));
         m_warnMsg.setMinimumSize(new Dimension(350, 25));
-        m_warnMsg.setForeground(Color.red);
 
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        Box fileBox = Box.createHorizontalBox();
-        fileBox.add(m_textBox);
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.weightx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+
+        add(m_textBox, c);
+        c.gridx = 1;
+        c.weightx = 0;
+        c.fill = GridBagConstraints.NONE;
+        c.insets = new Insets(0, 5, 0, 0);
+        add(m_chooseButton, c);
+
         if (fvm != null) {
-            fileBox.add(Box.createHorizontalStrut(5));
-            fileBox.add(new FlowVariableModelButton(fvm));
+            c.gridx = 2;
+            c.insets = new Insets(2, 10, 2, 2);
+            add(new FlowVariableModelButton(fvm), c);
             fvm.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(final ChangeEvent evt) {
@@ -198,61 +207,35 @@ public final class CSVFilesHistoryPanel extends JPanel {
                             (FlowVariableModel)(evt.getSource());
                     m_textBox.setEnabled(!wvm.isVariableReplacementEnabled());
                     m_chooseButton.setEnabled(!wvm
-                            .isVariableReplacementEnabled());
+                        .isVariableReplacementEnabled());
                 }
             });
-
+            c.insets = new Insets(0, 0, 0, 0);
         }
-        fileBox.add(Box.createHorizontalStrut(5));
-        fileBox.add(m_chooseButton);
-        Box warnBox = Box.createHorizontalBox();
-        warnBox.add(m_warnMsg);
-        warnBox.add(Box.createHorizontalGlue());
-        warnBox.add(Box.createVerticalStrut(25));
 
-        add(fileBox);
-        add(warnBox);
+        c.gridx = 0;
+        c.gridy++;
+        c.weightx = 1;
+        c.insets = new Insets(0, 0, 0, 0);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridwidth = (fvm == null) ? 2 : 3;
+        add(m_warnMsg, c);
+
         updateHistory();
         fileLocationChanged();
     }
 
     private void fileLocationChanged() {
-        String newMsg = "";
         String selFile = getSelectedFile();
+        m_warnMsg.setText("");
         if ((selFile != null) && !selFile.isEmpty()) {
             try {
                 URL newUrl = FileUtil.toURL(selFile);
-                Path path = FileUtil.resolveToPath(newUrl);
-                if (path != null) {
-                    if (Files.exists(path)) {
-                        if (Files.isDirectory(path)) {
-                            newMsg = "ERROR: output file can't be a directory";
-                        } else {
-                            newMsg = "Warning: selected file exists.";
-                        }
-                    } else {
-                        if (!Files.exists(path.getParent())) {
-                            newMsg = "Warning: Directory of specified file doesn't exist and will be created";
-                        }
-                    }
-                }
-            } catch (IOException | URISyntaxException ex) {
-                newMsg = "Error while check new location: " + ex.getMessage();
+                m_warnMsg.checkDestinationFile(newUrl);
+            } catch (IOException ex) {
+                // ignore it
             }
         }
-
-        if (newMsg.isEmpty()) {
-            m_warnMsg.setForeground(m_warnMsg.getBackground());
-            m_warnMsg.setText("A long msg to avoid invisibility of label");
-        } else {
-            m_warnMsg.setForeground(Color.red);
-            m_warnMsg.setText(newMsg);
-        }
-
-        revalidate();
-        repaint();
-        invalidate();
-        repaint();
     }
 
     private String getOutputFileName() {
