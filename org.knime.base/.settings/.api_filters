@@ -656,6 +656,12 @@
                 <message_argument value="popupFileChooser()"/>
             </message_arguments>
         </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.io.arffwriter.ARFFWriterNodeDialog"/>
+                <message_argument value="updateFileError()"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/org/knime/base/node/mine/cluster/kmeans/ClusterNodeView.java" type="org.knime.base.node.mine.cluster.kmeans.ClusterNodeView">
         <filter id="338792546">

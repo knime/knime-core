@@ -50,6 +50,9 @@ package org.knime.core.node.util;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -70,8 +73,6 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -92,6 +93,7 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.SimpleFileFilter;
 
@@ -105,27 +107,90 @@ import org.knime.core.util.SimpleFileFilter;
  */
 public final class FilesHistoryPanel extends JPanel {
     /**
+     * Enum for whether and which location validation should be performed.
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 2.11
+     */
+    public static enum LocationValidation {
+        /** No location validation. */
+        None(NoCheckLabel.class),
+        /** Validate file input locations. */
+        FileInput(FileReaderCheckLabel.class),
+        /** Validate directory input locations. */
+        DirectoryInput(DirectoryReaderCheckLabel.class),
+        /** Validate file output locations. */
+        FileOutput(FileWriterCheckLabel.class),
+        /** Validate directory output locations. */
+        DirectoryOutput(DirectoryWriterCheckLabel.class);
+
+
+        private final Class<? extends LocationCheckLabel> m_labelClass;
+
+        private LocationValidation(final Class<? extends LocationCheckLabel> labelClass) {
+            m_labelClass = labelClass;
+        }
+
+        /**
+         * Creates a label for this location validation type.
+         *
+         * @return a location check label
+         */
+        public LocationCheckLabel createLabel() {
+            try {
+                return m_labelClass.newInstance();
+            } catch (InstantiationException | IllegalAccessException ex) {
+                // won't happen
+                NodeLogger.getLogger(LocationValidation.class).error(
+                    "Could not create validation label: " + ex.getMessage(), ex);
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
+    /**
+     * Abstract class for labels that do some basic checks on input/output locations.
+     *
+     * @since 2.11
+     */
+    public static abstract class LocationCheckLabel extends JLabel {
+        private static final long serialVersionUID = 6692875443028625895L;
+
+        /**
+         * Color for error messages.
+         */
+        protected static final Color ERROR = Color.RED;
+
+        /**
+         * Color for warning messages.
+         */
+        protected static final Color WARNING = new Color(150, 120, 0);
+
+        /**
+         * Color for info messages.
+         */
+        protected static final Color INFO = new Color(64, 64, 255);
+
+        /**
+         * Checks a source or destination location.
+         *
+         * @param url URL of the location
+         */
+        public abstract void checkLocation(final URL url);
+    }
+
+    /**
      * A label that checks the destination location and displays a warning or error message if certain required
      * conditions are not fulfilled (e.g. directory does not exist, file is not writable, etc.).
      *
      * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
      * @since 2.11
      */
-    public static class WriterCheckLabel extends JLabel {
+    static class FileWriterCheckLabel extends LocationCheckLabel {
         private static final long serialVersionUID = -440167673631870065L;
 
-        private static final Color ERROR = Color.RED;
-
-        private static final Color WARNING = new Color(150, 120, 0);
-
-        private static final Color INFO = new Color(64, 64, 255);
-
-        /**
-         * Checks a destination file.
-         *
-         * @param url URL of the destination file
-         */
-        public void checkDestinationFile(final URL url) {
+        @Override
+        public void checkLocation(final URL url) {
             try {
                 Path path = FileUtil.resolveToPath(url);
                 setText("");
@@ -159,14 +224,20 @@ public final class FilesHistoryPanel extends JPanel {
                 // ignore it
             }
         }
+    }
 
+    /**
+     * A label that checks the destination location and displays a warning or error message if certain required
+     * conditions are not fulfilled (e.g. directory does not exist, file is not writable, etc.).
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 2.11
+     */
+    static class DirectoryWriterCheckLabel extends LocationCheckLabel {
+        private static final long serialVersionUID = -440167673631870065L;
 
-        /**
-         * Checks a destination directory into which files are written.
-         *
-         * @param url URL to destination directory
-         */
-        public void checkDestinationDirectory(final URL url) {
+        @Override
+        public void checkLocation(final URL url) {
             try {
                 Path path = FileUtil.resolveToPath(url);
                 if (path != null) {
@@ -193,6 +264,86 @@ public final class FilesHistoryPanel extends JPanel {
         }
     }
 
+    static class NoCheckLabel extends LocationCheckLabel {
+        private static final long serialVersionUID = -440167673631870065L;
+
+        @Override
+        public void checkLocation(final URL url) {
+            // do nothing
+        }
+    }
+
+
+    /**
+     * A label that checks the source location and displays a warning or error message if certain required
+     * conditions are not fulfilled (e.g. file does not exist, file is not readable, etc.).
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 2.11
+     */
+    static class FileReaderCheckLabel extends LocationCheckLabel {
+        private static final long serialVersionUID = -440167673631870065L;
+
+        @Override
+        public void checkLocation(final URL url) {
+            try {
+                Path path = FileUtil.resolveToPath(url);
+                setText("");
+                if (path != null) {
+                    if (Files.exists(path)) {
+                        if (Files.isDirectory(path)) {
+                            setText("Error: input location is a directory");
+                            setForeground(ERROR);
+                        } else if (!Files.isReadable(path)) {
+                            setText("Error: no read permission on input file");
+                            setForeground(ERROR);
+                        }
+                    } else {
+                        setText("Error: Input file does not exist");
+                        setForeground(ERROR);
+                    }
+                }
+            } catch (IOException | URISyntaxException ex) {
+                // ignore it
+            }
+        }
+    }
+
+
+    /**
+     * A label that checks the source location and displays a warning or error message if certain required
+     * conditions are not fulfilled (e.g. directory does not exist, is not readable, etc.).
+     *
+     * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+     * @since 2.11
+     */
+    static class DirectoryReaderCheckLabel extends LocationCheckLabel {
+        private static final long serialVersionUID = -440167673631870065L;
+
+        @Override
+        public void checkLocation(final URL url) {
+            try {
+                Path path = FileUtil.resolveToPath(url);
+                if (path != null) {
+                    setText("");
+                    if (Files.exists(path)) {
+                        if (!Files.isDirectory(path)) {
+                            setText("Error: input location is not a directory");
+                            setForeground(ERROR);
+                        } else if (!Files.isReadable(path)) {
+                            setText("Error: no read permission on input directory");
+                            setForeground(ERROR);
+                        }
+                    } else {
+                        setText("Error: input directory does not exist");
+                        setForeground(ERROR);
+                    }
+                }
+            } catch (IOException | URISyntaxException ex) {
+                // ignore it
+            }
+        }
+    }
 
     private final List<ChangeListener> m_changeListener =
             new ArrayList<ChangeListener>();
@@ -205,7 +356,7 @@ public final class FilesHistoryPanel extends JPanel {
 
     private final String m_historyID;
 
-    private final JLabel m_warnMsg;
+    private final LocationCheckLabel m_warnMsg;
 
     private int m_selectMode = JFileChooser.FILES_ONLY;
 
@@ -218,9 +369,27 @@ public final class FilesHistoryPanel extends JPanel {
      * @param suffixes the set of suffixes for the file chooser
      */
     public FilesHistoryPanel(final String historyID, final String... suffixes) {
-        this(null, historyID, false, suffixes);
+        this(null, historyID, LocationValidation.None, suffixes);
     }
 
+
+    /**
+     * Creates new instance, sets properties, for instance renderer, accordingly.
+     *
+     * @param historyID identifier for the string history, see {@link StringHistory}
+     * @param suffixes the set of suffixes for the file chooser
+     * @param fvm model to allow to use a variable instead of the text field.
+     * @param showErrorMessage if true there are error messages if the file exists or the path is not available and so
+     *            on.
+     * @deprecated use {@link #FilesHistoryPanel(FlowVariableModel, String, LocationValidation, String...)} instead in
+     *             order to specify what kind of location validation to perform
+     */
+    @Deprecated
+    public FilesHistoryPanel(final FlowVariableModel fvm,
+            final String historyID, final boolean showErrorMessage,
+            final String... suffixes) {
+        this(fvm, historyID, showErrorMessage ? LocationValidation.FileOutput : LocationValidation.None, suffixes);
+    }
     /**
      * Creates new instance, sets properties, for instance renderer,
      * accordingly.
@@ -229,11 +398,11 @@ public final class FilesHistoryPanel extends JPanel {
      *            {@link StringHistory}
      * @param suffixes the set of suffixes for the file chooser
      * @param fvm model to allow to use a variable instead of the text field.
-     * @param showErrorMessage if true there are error messages if the file
-     *            exists or the path is not available and so on.
+     * @param validation what kind of validation on the location should be performed
+     * @since 2.11
      */
     public FilesHistoryPanel(final FlowVariableModel fvm,
-            final String historyID, final boolean showErrorMessage,
+            final String historyID, final LocationValidation validation,
             final String... suffixes) {
         if (historyID == null || suffixes == null) {
             throw new IllegalArgumentException("Argument must not be null.");
@@ -330,18 +499,32 @@ public final class FilesHistoryPanel extends JPanel {
                 }
             }
         });
-        m_warnMsg = new JLabel("");
+        m_warnMsg = validation.createLabel();
         // this ensures correct display of the changing label content...
         m_warnMsg.setPreferredSize(new Dimension(350, 25));
         m_warnMsg.setMinimumSize(new Dimension(350, 25));
         m_warnMsg.setForeground(Color.red);
 
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        Box fileBox = Box.createHorizontalBox();
-        fileBox.add(m_textBox);
+        setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 1;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.fill = GridBagConstraints.HORIZONTAL;
+
+        add(m_textBox, c);
+
+        c.gridx = 1;
+        c.weightx = 0;
+        c.fill = GridBagConstraints.NONE;
+        c.insets = new Insets(0, 5, 0, 0);
+        add(m_chooseButton, c);
+
         if (fvm != null) {
-            fileBox.add(Box.createHorizontalStrut(5));
-            fileBox.add(new FlowVariableModelButton(fvm));
+            c.gridx = 2;
+            c.insets = new Insets(0, 5, 0, 0);
+            add(new FlowVariableModelButton(fvm), c);
             fvm.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(final ChangeEvent evt) {
@@ -349,40 +532,52 @@ public final class FilesHistoryPanel extends JPanel {
                             (FlowVariableModel)(evt.getSource());
                     m_textBox.setEnabled(!wvm.isVariableReplacementEnabled());
                     m_chooseButton.setEnabled(!wvm
-                            .isVariableReplacementEnabled());
+                        .isVariableReplacementEnabled());
                     fileLocationChanged();
                 }
             });
 
         }
-        fileBox.add(Box.createHorizontalStrut(5));
-        fileBox.add(m_chooseButton);
-        Box warnBox = Box.createHorizontalBox();
-        warnBox.add(m_warnMsg);
-        warnBox.add(Box.createHorizontalGlue());
-        warnBox.add(Box.createVerticalStrut(25));
 
-        add(fileBox);
-        if (showErrorMessage) {
-            add(warnBox);
+        if (validation != LocationValidation.None) {
+            c.gridx = 0;
+            c.gridy++;
+            c.weightx = 1;
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.gridwidth = (fvm == null) ? 2 : 3;
+            add(m_warnMsg, c);
         }
         fileLocationChanged();
         updateHistory();
     }
 
     /**
-     * Creates new instance, sets properties, for instance renderer,
-     * accordingly.
+     * Creates new instance, sets properties, for instance renderer, accordingly.
      *
-     * @param historyID identifier for the string history, see
-     *            {@link StringHistory}
-     * @param showErrorMessage if true there are error messages if the file
-     *            exists or the path is not available and so on.
+     * @param historyID identifier for the string history, see {@link StringHistory}
+     * @param showErrorMessage if true there are error messages if the file exists or the path is not available and so
+     *            on.
+     * @deprecated use {@link #FilesHistoryPanel(String, LocationValidation)} instead in order to specify what kind of
+     *             location validation to perform
      */
+    @Deprecated
     public FilesHistoryPanel(final String historyID,
             final boolean showErrorMessage) {
         this(null, historyID, showErrorMessage);
     }
+
+
+    /**
+     * Creates new instance, sets properties, for instance renderer, accordingly.
+     *
+     * @param historyID identifier for the string history, see {@link StringHistory}
+     * @param validation what kind of validation on the location should be performed
+     * @since 2.11
+     */
+    public FilesHistoryPanel(final String historyID, final LocationValidation validation) {
+        this(null, historyID, validation);
+    }
+
 
     private String getOutputFileName() {
         // file chooser triggered by choose button
@@ -574,44 +769,16 @@ public final class FilesHistoryPanel extends JPanel {
     }
 
     private void fileLocationChanged() {
-        String newMsg = "";
         String selFile = getSelectedFile();
+        m_warnMsg.setText("");
         if (selFile != null && selFile.length() > 0) {
             try {
                 URL url = FileUtil.toURL(selFile);
-                Path newFile = FileUtil.resolveToPath(url);
-                if (newFile != null) {
-                    if (Files.exists(newFile)) {
-                        if (Files.isDirectory(newFile)) {
-                            newMsg = "ERROR: a file can't be a directory";
-                        } else {
-                            newMsg = "Warning: selected file exists.";
-                        }
-                    } else {
-                        if (!Files.exists(newFile.getParent())) {
-                            newMsg =
-                                    "Warning: Directory of specified file doesn't exist"
-                                            + " and will be created";
-                        }
-                    }
-                }
-            } catch (IOException | URISyntaxException ex) {
+                m_warnMsg.checkLocation(url);
+            } catch (IOException ex) {
                 // ignore
             }
         }
-
-        if (newMsg.length() == 0) {
-            m_warnMsg.setForeground(m_warnMsg.getBackground());
-            m_warnMsg.setText("A long msg to avoid invisibility of label");
-        } else {
-            m_warnMsg.setForeground(Color.red);
-            m_warnMsg.setText(newMsg);
-        }
-
-        revalidate();
-        repaint();
-        invalidate();
-        repaint();
     }
 
     /**

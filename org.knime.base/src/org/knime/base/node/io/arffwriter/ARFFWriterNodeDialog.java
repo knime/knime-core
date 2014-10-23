@@ -47,23 +47,14 @@
  */
 package org.knime.base.node.io.arffwriter;
 
-import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -72,7 +63,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.FilesHistoryPanel;
-import org.knime.core.util.FileUtil;
+import org.knime.core.node.util.FilesHistoryPanel.LocationValidation;
 
 /**
  * Contains the dialog for the ARFF file writer.
@@ -88,8 +79,6 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
     private static final int COMPONENT_HEIGHT = 25;
 
     private FilesHistoryPanel m_url;
-
-    private JLabel m_urlError;
 
     private JCheckBox m_overwriteOKChecker;
 
@@ -123,13 +112,10 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
                         .createEtchedBorder(),
                         "Enter location to write ARFF file to:"));
         Container fileBox = Box.createHorizontalBox();
-        fileBox.add(Box.createHorizontalStrut(20));
-        fileBox.add(new JLabel("valid location:"));
-        fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
-
         sumOfCompHeigth += COMPONENT_HEIGHT;
 
-        m_url = new FilesHistoryPanel("org.knime.base.node.io.arffwriter", ".arff");
+        m_url =
+            new FilesHistoryPanel(null, "org.knime.base.node.io.arffwriter", LocationValidation.FileOutput, ".arff");
         m_url.setBorder(null);
         fileBox.add(m_url);
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
@@ -140,19 +126,6 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
         innerBox.add(fPanel);
         innerBox.add(Box.createVerticalStrut(VERT_SPACE));
         sumOfCompHeigth += VERT_SPACE;
-
-        Container errBox = Box.createHorizontalBox();
-        errBox.add(Box.createHorizontalGlue());
-        // force certain height even if textfield is empty
-        errBox.add(Box.createVerticalStrut(COMPONENT_HEIGHT));
-        m_urlError = new JLabel("");
-        m_urlError.setForeground(Color.RED);
-        errBox.add(m_urlError);
-        errBox.add(Box.createHorizontalGlue());
-        errBox.add(Box.createHorizontalGlue());
-        innerBox.add(errBox);
-        innerBox.add(Box.createVerticalStrut(VERT_SPACE));
-        sumOfCompHeigth += COMPONENT_HEIGHT + VERT_SPACE;
 
         m_overwriteOKChecker = new JCheckBox("Overwrite OK");
         Container overwriteOKBox = Box.createHorizontalBox();
@@ -172,47 +145,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
         filePanel.add(innerBox);
         filePanel.add(Box.createGlue());
 
-
-        m_url.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                updateFileError();
-            }
-        });
-
         return filePanel;
-    }
-
-    /**
-     * Updates the file error label whenever the fileURL entered changed.
-     */
-    protected void updateFileError() {
-        String selFile = m_url.getSelectedFile();
-        String errorText = null;
-        if ((selFile != null) && !selFile.isEmpty()) {
-            try {
-                URL newUrl = FileUtil.toURL(selFile);
-                Path path = FileUtil.resolveToPath(newUrl);
-                m_overwriteOKChecker.setEnabled(path != null);
-                if (path != null) {
-                    if (Files.isDirectory(path)) {
-                        errorText = "Location is a directory: \"" + path + "\"";
-                    }
-                    if (Files.exists(path) && !Files.isWritable(path)) {
-                        errorText = "Cannot write to file \"" + path + "\".";
-                    }
-                }
-            } catch (IOException | URISyntaxException ex) {
-                // ignore
-            }
-        }
-
-        if (errorText == null) {
-            m_urlError.setText("");
-        } else {
-            m_urlError.setText(errorText);
-            m_urlError.setVisible(true);
-        }
     }
 
     /**
@@ -221,11 +154,6 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        updateFileError();
-        if (!m_urlError.getText().equals("")) {
-            throw new InvalidSettingsException("Specify valid file location. "
-                    + "Or press 'Cancel'.");
-        }
         settings.addString(ARFFWriterNodeModel.CFGKEY_FILENAME, m_url.getSelectedFile());
         settings.addBoolean(ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK,
                 m_overwriteOKChecker.isSelected());
@@ -242,6 +170,5 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
 
         m_overwriteOKChecker.setSelected(settings.getBoolean(
                 ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK, false));
-        updateFileError();
     }
 }

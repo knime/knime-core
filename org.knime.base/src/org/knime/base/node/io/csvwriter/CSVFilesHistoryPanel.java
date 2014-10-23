@@ -101,7 +101,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
 
     private final JButton m_chooseButton;
 
-    private final FilesHistoryPanel.WriterCheckLabel m_warnMsg;
+    private final FilesHistoryPanel.LocationCheckLabel m_warnMsg;
 
     /**
      * Creates new instance, sets properties, for instance renderer,
@@ -177,7 +177,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
                 }
             }
         });
-        m_warnMsg = new FilesHistoryPanel.WriterCheckLabel();
+        m_warnMsg = FilesHistoryPanel.LocationValidation.FileOutput.createLabel();
         // this ensures correct display of the changing label content...
         m_warnMsg.setPreferredSize(new Dimension(350, 25));
         m_warnMsg.setMinimumSize(new Dimension(350, 25));
@@ -231,7 +231,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
         if ((selFile != null) && !selFile.isEmpty()) {
             try {
                 URL newUrl = FileUtil.toURL(selFile);
-                m_warnMsg.checkDestinationFile(newUrl);
+                m_warnMsg.checkLocation(newUrl);
             } catch (IOException ex) {
                 // ignore it
             }

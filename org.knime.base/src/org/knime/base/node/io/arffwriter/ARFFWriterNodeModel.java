@@ -77,6 +77,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -171,10 +172,9 @@ public class ARFFWriterNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        checkFileAccess(m_location);
+        checkFileAccess(m_location, false);
         URL url = FileUtil.toURL(m_location);
         Path localPath = FileUtil.resolveToPath(url);
-
 
         DataTableSpec inSpec = inData[0].getDataTableSpec();
         int numOfCols = inSpec.getNumColumns();
@@ -282,17 +282,14 @@ public class ARFFWriterNodeModel extends NodeModel {
 
                 // see if user told us to stop.
                 // Check if execution was canceled !
-                try {
-                    exec.checkCanceled();
-                } catch (CanceledExecutionException cee) {
-                    if (localPath != null) {
-                        Files.deleteIfExists(localPath);
-                        LOGGER.debug("File '" + localPath + "' deleted.");
-                    }
-                    throw cee;
-                }
-
+                exec.checkCanceled();
             } // while (!rIter.atEnd())
+        } catch (CanceledExecutionException ex) {
+            if (localPath != null) {
+                Files.deleteIfExists(localPath);
+                LOGGER.debug("File '" + localPath + "' deleted.");
+            }
+            throw ex;
         }
 
         // execution successful return empty array
@@ -397,7 +394,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        checkFileAccess(m_location);
+        checkFileAccess(m_location, true);
 
         for (int c = 0; c < inSpecs[0].getNumColumns(); c++) {
             DataType colType = inSpecs[0].getColumnSpec(c).getType();
@@ -418,7 +415,7 @@ public class ARFFWriterNodeModel extends NodeModel {
      * @param fileName The file to check
      * @throws InvalidSettingsException if that fails
      */
-    private void checkFileAccess(final String fileName)
+    private void checkFileAccess(final String fileName, final boolean showWarnings)
             throws InvalidSettingsException {
         if ((fileName == null) || fileName.isEmpty()) {
             throw new InvalidSettingsException("No file name provided! "
@@ -429,21 +426,9 @@ public class ARFFWriterNodeModel extends NodeModel {
             URL url = FileUtil.toURL(fileName);
             Path localPath = FileUtil.resolveToPath(url);
             if (localPath != null) {
-                Path parent = localPath.getParent();
-                if (Files.isDirectory(localPath) || (parent == null) || !Files.exists(parent)) {
-                    throw new InvalidSettingsException("File name \"" + localPath
-                        + "\" is not valid. Please enter a valid file name.");
-                }
-                if (Files.exists(localPath)) {
-                    if (!m_overwriteOK) {
-                        throw new InvalidSettingsException("File \"" + localPath + "\" exists and can't be "
-                                + "overwritten, check dialog settings");
-                    } else if (!Files.isWritable(localPath)) {
-                        throw new InvalidSettingsException("Cannot write to file \""
-                                + localPath + "\".");
-                    } else {
-                        setWarningMessage("File exists and will be overwritten");
-                    }
+                String warning = CheckUtils.checkDestinationFile(localPath, m_overwriteOK);
+                if ((warning != null) && showWarnings) {
+                    setWarningMessage(warning);
                 }
             }
         } catch (MalformedURLException | URISyntaxException ex) {
