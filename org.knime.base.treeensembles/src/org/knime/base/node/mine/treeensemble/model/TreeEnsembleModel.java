@@ -73,14 +73,13 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.util.NonClosableInputStream;
-import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class TreeEnsembleModel {
@@ -209,7 +208,7 @@ public final class TreeEnsembleModel {
      * Get a table spec representing the learn attributes (not the target!). For ordinary data it is just a subset of
      * the input columns, for bit vector data it's an expanded table spec with each bit represented by a StringCell
      * column ("0" or "1"), whose name is "Bit x".
-     * 
+     *
      * @param learnSpec The original learn spec (which is also the return value for ordinary data)
      * @return Such a learn attribute spec.
      */
@@ -315,7 +314,7 @@ public final class TreeEnsembleModel {
 
     /**
      * Saves ensemble to target in binary format, output is NOT closed afterwards.
-     * 
+     *
      * @param out ...
      * @param exec ...
      * @throws IOException ...
@@ -325,7 +324,7 @@ public final class TreeEnsembleModel {
         CanceledExecutionException {
         // wrapping the (zip) output stream with a buffered stream reduces
         // the write operation from, e.g. 63s to 8s
-        DataOutputStream dataOutput = new DataOutputStream(new BufferedOutputStream(new NonClosableOutputStream(out)));
+        DataOutputStream dataOutput = new DataOutputStream(new BufferedOutputStream(out));
         // previous version numbers:
         // 20121019 - first public release
         // 20140201 - omit target distribution in each tree node
@@ -343,12 +342,12 @@ public final class TreeEnsembleModel {
             }
             dataOutput.writeByte((byte)0);
         }
-        dataOutput.close(); // does not close the method argument stream!!!
+        dataOutput.flush();
     }
 
     /**
      * Loads and returns new ensemble model, input is NOT closed afterwards.
-     * 
+     *
      * @param in ...
      * @param exec ...
      * @return ...

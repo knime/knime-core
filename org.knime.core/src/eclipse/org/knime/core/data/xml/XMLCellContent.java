@@ -198,14 +198,14 @@ public class XMLCellContent implements XMLValue {
 
     private static String serialize(final Document doc) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        XMLCellWriter writer = XMLCellWriterFactory.createXMLCellWriter(os);
-        writer.write(new XMLValue() {
-            @Override
-            public Document getDocument() {
-                return doc;
-            }
-        });
-        writer.close();
+        try (XMLCellWriter writer = XMLCellWriterFactory.createXMLCellWriter(os)) {
+            writer.write(new XMLValue() {
+                @Override
+                public Document getDocument() {
+                    return doc;
+                }
+            });
+        }
         return os.toString("UTF-8");
     }
 

@@ -140,8 +140,7 @@ public class PMMLPortObjectView extends JComponent {
 
     private void create() {
         // serialize port object
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             m_portObject.save(out);
             SAXParserFactory saxFac = SAXParserFactory.newInstance();
             SAXParser parser = saxFac.newSAXParser();

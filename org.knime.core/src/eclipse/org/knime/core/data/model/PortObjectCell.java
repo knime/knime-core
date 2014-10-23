@@ -56,7 +56,6 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.util.NonClosableInputStream;
-import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortUtil;
@@ -100,10 +99,8 @@ public class PortObjectCell extends DataCell implements PortObjectValue {
             @Override
             public void serialize(final PortObjectCell cell,
                     final DataCellDataOutput output) throws IOException {
-                OutputStream os = new NonClosableOutputStream(
-                        (OutputStream) output);
                 try {
-                    PortUtil.writeObjectToStream(cell.m_content, os, null);
+                    PortUtil.writeObjectToStream(cell.m_content, (OutputStream)output, null);
                 } catch (CanceledExecutionException cee) {
                     throw new IOException(cee);
                 }

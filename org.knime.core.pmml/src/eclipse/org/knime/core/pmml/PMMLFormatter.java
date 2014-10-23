@@ -46,6 +46,8 @@
  */
 package org.knime.core.pmml;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
@@ -135,12 +137,18 @@ public final class PMMLFormatter {
 
     /**
      * @param xml the XMLTokenSource to be written
-     * @param out the output stream to write to
+     * @param out the output stream to write to. The stream does not need to be buffered.
      * @throws IOException if the xml cannot be written to the stream
      */
     public static void save(final XmlTokenSource xml, final OutputStream out)
             throws IOException {
-        xml.save(out, TEXT_SAVE_XML_OPTIONS);
+        if ((out instanceof BufferedOutputStream) || (out instanceof ByteArrayOutputStream)) {
+            xml.save(out, TEXT_SAVE_XML_OPTIONS);
+        } else {
+            OutputStream os = new BufferedOutputStream(out);
+            xml.save(os, TEXT_SAVE_XML_OPTIONS);
+            os.flush();
+        }
     }
 
     /**

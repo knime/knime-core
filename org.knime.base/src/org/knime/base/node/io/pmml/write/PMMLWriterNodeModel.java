@@ -44,7 +44,6 @@
  */
 package org.knime.base.node.io.pmml.write;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -131,9 +130,9 @@ public class PMMLWriterNodeModel extends NodeModel {
 
     private static OutputStream openOutputStream(final Path localPath, final URL url) throws IOException {
         if (localPath != null) {
-            return new BufferedOutputStream(Files.newOutputStream(localPath));
+            return Files.newOutputStream(localPath);
         } else {
-            return new BufferedOutputStream(FileUtil.openOutputConnection(url, "PUT").getOutputStream());
+            return FileUtil.openOutputConnection(url, "PUT").getOutputStream();
         }
     }
 

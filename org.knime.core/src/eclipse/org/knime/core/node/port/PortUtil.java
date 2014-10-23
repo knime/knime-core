@@ -46,6 +46,7 @@ package org.knime.core.node.port;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -199,14 +200,29 @@ public final class PortUtil {
         writeObjectToStream(po, new FileOutputStream(file), exec);
     }
 
+    /**
+     * Write the given port object into the given output stream. The output stream does not need to be buffered and
+     * is not closed after calling this method.
+     *
+     * @param po any port object
+     * @param output any output stream, does not need to be buffered
+     * @param exec execution context for reporting progress and checking for cancelation
+     * @throws IOException if an I/O error occurs while serializing the port object
+     * @throws CanceledExecutionException if the user canceled the operation
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public static void writeObjectToStream(final PortObject po,
         final OutputStream output, final ExecutionMonitor exec)
                 throws IOException, CanceledExecutionException {
-        final ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(output));
-        out.setLevel(0);
+        final boolean originalOutputIsBuffered =
+                ((output instanceof BufferedOutputStream) || (output instanceof ByteArrayOutputStream));
+        OutputStream os = originalOutputIsBuffered ? output : new BufferedOutputStream(output);
+
+        final ZipOutputStream zipOut = new ZipOutputStream(os);
+        zipOut.setLevel(0);
 
         PortObjectSpec spec = po.getSpec();
-        out.putNextEntry(new ZipEntry("content.xml"));
+        zipOut.putNextEntry(new ZipEntry("content.xml"));
         ModelContent toc = new ModelContent("content");
         toc.addInt("version", 1);
         toc.addString("port_spec_class", spec.getClass().getName());
@@ -218,21 +234,23 @@ public final class PortUtil {
 //            ModelContentWO fileStoreModelContent = toc.addModelContent("port_file_store_key");
 //            fileStoreKey.save(fileStoreModelContent);
 //        }
-        toc.saveToXML(new NonClosableOutputStream.Zip(out));
+        toc.saveToXML(new NonClosableOutputStream.Zip(zipOut));
 
-        out.putNextEntry(new ZipEntry("objectSpec.file"));
-        PortObjectSpecZipOutputStream specOut = getPortObjectSpecZipOutputStream(new NonClosableOutputStream.Zip(out));
+        zipOut.putNextEntry(new ZipEntry("objectSpec.file"));
+        PortObjectSpecZipOutputStream specOut = getPortObjectSpecZipOutputStream(new NonClosableOutputStream.Zip(zipOut));
         PortObjectSpecSerializer specSer = getPortObjectSpecSerializer(spec.getClass());
         specSer.savePortObjectSpec(spec, specOut);
         specOut.close(); // will propagate as closeEntry
 
-        out.putNextEntry(new ZipEntry("object.file"));
-        PortObjectZipOutputStream objOut = getPortObjectZipOutputStream(new NonClosableOutputStream.Zip(out));
+        zipOut.putNextEntry(new ZipEntry("object.file"));
+        PortObjectZipOutputStream objOut = getPortObjectZipOutputStream(new NonClosableOutputStream.Zip(zipOut));
         PortObjectSerializer objSer = getPortObjectSerializer(po.getClass());
         objSer.savePortObject(po, objOut, exec);
         objOut.close(); // will propagate as closeEntry
-
-        out.close();
+        zipOut.finish();
+        if (!originalOutputIsBuffered) {
+            os.flush();
+        }
     }
 
     public static PortObject readObjectFromFile(final File file,

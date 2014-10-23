@@ -343,14 +343,13 @@ public final class PMMLPortObject implements PortObject {
     /*=======================================================================*/
 
     /**
-     * Writes the port object to valid PMML.
+     * Writes the port object to valid PMML. The stream is not closed by this method.
      *
      * @param out stream which reads the PMML file
      * @throws IOException if the file cannot be written to the stream
      */
     public final void save(final OutputStream out) throws IOException {
         PMMLFormatter.save(m_pmmlDoc, out);
-        out.close();
     }
 
    /**

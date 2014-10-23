@@ -168,13 +168,12 @@ public final class FileUtil {
         final int bufSize = 8192;
         final long size = file.length();
         byte[] cache = new byte[bufSize];
-        OutputStream copyOutStream = new FileOutputStream(destination);
-        InputStream copyInStream = new FileInputStream(file);
-        int read;
-        long processed = 0;
         CanceledExecutionException cee = null;
-        exec.setMessage("Copying \"" + file.getName() + "\"");
-        try {
+        try (OutputStream copyOutStream = new FileOutputStream(destination);
+                InputStream copyInStream = new FileInputStream(file)) {
+            int read;
+            long processed = 0;
+            exec.setMessage("Copying \"" + file.getName() + "\"");
             while ((read = copyInStream.read(cache, 0, bufSize)) > 0) {
                 copyOutStream.write(cache, 0, read);
                 processed += read;
@@ -185,12 +184,6 @@ public final class FileUtil {
                     cee = c;
                     break;
                 }
-            }
-        } finally {
-            try {
-                copyOutStream.close();
-            } finally {
-                copyInStream.close();
             }
         }
         // delete destination file if canceled.
@@ -765,14 +758,12 @@ public final class FileUtil {
                             + parentDir.getAbsolutePath() + "'.");
                 }
 
-                OutputStream out = new FileOutputStream(f);
-                try {
+
+                try (OutputStream out = new FileOutputStream(f)) {
                     int read;
                     while ((read = zipStream.read(buf)) >= 0) {
                         out.write(buf, 0, read);
                     }
-                } finally {
-                    out.close();
                 }
             }
         }

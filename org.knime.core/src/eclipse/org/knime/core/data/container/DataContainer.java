@@ -45,6 +45,7 @@
 package org.knime.core.data.container;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -980,10 +981,9 @@ public class DataContainer implements RowAppender {
     public static void writeToZip(final DataTable table, final File zipFile,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        OutputStream out =
-            new BufferedOutputStream(new FileOutputStream(zipFile));
-        writeToStream(table, out, exec);
-        out.close();
+        try (OutputStream out = new FileOutputStream(zipFile)) {
+            writeToStream(table, out, exec);
+        }
     }
 
     /** Writes a given DataTable permanently to an output stream. This includes
@@ -992,11 +992,10 @@ public class DataContainer implements RowAppender {
      *
      * <p>The content is saved by instantiating a {@link ZipOutputStream} on
      * the argument stream, saving the necessary information in respective
-     * zip entries and eventually closing the entire stream. If the stream
-     * should not be closed, consider to use a {@link NonClosableOutputStream}
-     * as argument stream.
+     * zip entries. The stream is not closed by this method.
+     *
      * @param table The table to write.
-     * @param out The stream to save to.
+     * @param out The stream to save to. It does not have to be buffered.
      * @param exec For progress info.
      * @throws IOException If writing fails.
      * @throws CanceledExecutionException If canceled.
@@ -1033,8 +1032,11 @@ public class DataContainer implements RowAppender {
             exec.setMessage("Closing zip file");
             e = exec.createSubProgress(0.2);
         }
-        ZipOutputStream zipOut =
-            new ZipOutputStream(new BufferedOutputStream(out));
+        final boolean originalOutputIsBuffered =
+            ((out instanceof BufferedOutputStream) || (out instanceof ByteArrayOutputStream));
+        OutputStream os = originalOutputIsBuffered ? out : new BufferedOutputStream(out);
+
+        ZipOutputStream zipOut = new ZipOutputStream(os);
         // (part of) bug fix #1141: spec must be put as first entry in order
         // for the table reader to peek it
         zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_SPEC));
@@ -1043,7 +1045,10 @@ public class DataContainer implements RowAppender {
         buf.getTableSpec().save(specSettings);
         settings.saveToXML(new NonClosableOutputStream.Zip(zipOut));
         buf.addToZipFile(zipOut, e);
-        zipOut.close();
+        zipOut.finish();
+        if (!originalOutputIsBuffered) {
+            os.flush();
+        }
     }
 
     /**

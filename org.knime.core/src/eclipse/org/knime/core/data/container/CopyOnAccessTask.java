@@ -186,18 +186,16 @@ final class CopyOnAccessTask {
         while ((entry = inStream.getNextEntry()) != null) {
             String name = entry.getName();
             if (name.equals(Buffer.ZIP_ENTRY_DATA)) {
-                OutputStream output = new BufferedOutputStream(
-                        new FileOutputStream(binFile));
-                FileUtil.copy(inStream, output);
+                try (OutputStream output = new BufferedOutputStream(new FileOutputStream(binFile))) {
+                    FileUtil.copy(inStream, output);
+                }
                 inStream.closeEntry();
-                output.close();
                 isDataFound = true;
             } else if (name.equals(Buffer.ZIP_ENTRY_META)) {
-                OutputStream output = new BufferedOutputStream(
-                        new FileOutputStream(metaTempFile));
-                FileUtil.copy(inStream, output);
+                try (OutputStream output = new BufferedOutputStream(new FileOutputStream(metaTempFile))) {
+                    FileUtil.copy(inStream, output);
+                }
                 inStream.closeEntry();
-                output.close();
                 isMetaFound = true;
             } else if (name.startsWith(Buffer.ZIP_ENTRY_BLOBS)) {
                 if (blobDir == null) {
@@ -300,11 +298,10 @@ final class CopyOnAccessTask {
                         + f.getName());
             }
         } else {
-            InputStream inStream = new BufferedInputStream(in);
-            OutputStream o = new BufferedOutputStream(new FileOutputStream(f));
-            FileUtil.copy(inStream, o);
-            o.close();
+            try (InputStream inStream = new BufferedInputStream(in);
+                    OutputStream o = new BufferedOutputStream(new FileOutputStream(f))) {
+                FileUtil.copy(inStream, o);
+            }
         }
     }
-
 }

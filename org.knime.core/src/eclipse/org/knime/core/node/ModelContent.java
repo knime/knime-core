@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   24.10.2005 (gabriel): created
  */
@@ -58,14 +58,14 @@ import org.knime.core.node.port.PortObject;
 
 /**
  * This ModelContent is used to store XML-like model settings.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class ModelContent extends Config 
+public final class ModelContent extends Config
     implements ModelContentRO, ModelContentWO {
 
     /**
-     * Creates new content object. 
+     * Creates new content object.
      * @param key The key for this ModelContent.
      */
     public ModelContent(final String key) {
@@ -81,13 +81,13 @@ public final class ModelContent extends Config
     }
 
     /**
-     * Reads <code>ModelContent</code> settings from the given XML stream 
+     * Reads <code>ModelContent</code> settings from the given XML stream
      * and returns a new <code>ModelContent</code> object.
-     * 
+     *
      * @param in XML input stream to read settings from.
      * @return A new settings object.
      * @throws IOException If the stream could not be read.
-     * @throws NullPointerException If one of the arguments is 
+     * @throws NullPointerException If one of the arguments is
      *         <code>null</code>.
      */
     public static synchronized ModelContentRO loadFromXML(
@@ -95,10 +95,11 @@ public final class ModelContent extends Config
         ModelContent tmpSettings = new ModelContent("ignored");
         return (ModelContent) Config.loadFromXML(tmpSettings, in);
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public void addModelContent(final ModelContent modelContent) {
         super.addConfig(modelContent);
     }
@@ -106,6 +107,7 @@ public final class ModelContent extends Config
     /**
      * {@inheritDoc}
      */
+    @Override
     public ModelContentWO addModelContent(final String key) {
         return (ModelContent) super.addConfig(key);
     }
@@ -113,26 +115,29 @@ public final class ModelContent extends Config
     /**
      * {@inheritDoc}
      */
+    @Override
     public ModelContent getModelContent(final String key)
             throws InvalidSettingsException {
         return (ModelContent) super.getConfig(key);
     }
 
-    /** Saves this object to an output stream. This method is used when 
-     * (derived) objects represent a {@link PortObject}.
+    /**
+     * Saves this object to an output stream. This method is used when (derived) objects represent a {@link PortObject}.
+     * <em>Note that the output stream is closed by this method.</em>
+     *
      * @param out Where to save to.
      * @param exec To report progress to.
      * @throws IOException If saving fails for IO problems.
      * @throws CanceledExecutionException If canceled.
      * @see #load(InputStream)
      */
-    final void save(final OutputStream out, final ExecutionMonitor exec) 
+    final void save(final OutputStream out, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         exec.setMessage("Saving model container to file");
         exec.checkCanceled();
         saveToXML(out);
     }
-    
+
     /** Load this object from a directory. This method is used when (derived)
      * objects represent a {@link PortObject}.
      * @param in Where to load from
@@ -141,11 +146,11 @@ public final class ModelContent extends Config
      * @throws CanceledExecutionException If canceled.
      * @see #save(OutputStream, ExecutionMonitor)
      */
-    final void load(final InputStream in, final ExecutionMonitor exec) 
+    final void load(final InputStream in, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         exec.setMessage("Loading model container from file");
         exec.checkCanceled();
         load(in);
     }
-    
+
 }

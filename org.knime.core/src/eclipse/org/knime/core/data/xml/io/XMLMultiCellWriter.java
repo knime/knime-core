@@ -231,9 +231,9 @@ class XMLMultiCellWriter implements XMLCellWriter {
 			m_writer.close();
 		} catch (XMLStreamException e) {
 			throw new IOException(e);
+		} finally {
+    	    // close stream since m_writer.close() does no necessarily do it
+    		m_os.close();
 		}
-	    // close stream since m_writer.close() does no necessarily do it
-		m_os.close();
 	}
-
 }

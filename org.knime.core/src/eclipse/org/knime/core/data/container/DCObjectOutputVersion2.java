@@ -58,7 +58,6 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.filestore.internal.FileStoreKey;
-import org.knime.core.data.util.NonClosableOutputStream;
 
 
 /**
@@ -127,10 +126,9 @@ class DCObjectOutputVersion2 implements KNIMEStreamConstants {
      * @throws IOException If any exception occur. */
     void writeDataCellPerJavaSerialization(final DataCell cell)
         throws IOException {
-        ObjectOutputStream oos = new ObjectOutputStream(
-                new NonClosableOutputStream(m_dataOut));
+        ObjectOutputStream oos = new ObjectOutputStream(m_dataOut);
         oos.writeObject(cell);
-        oos.close();
+        oos.flush();
     }
 
     /** Writes a given blob address to the stream.
