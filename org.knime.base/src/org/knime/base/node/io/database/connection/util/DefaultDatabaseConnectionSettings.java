@@ -129,10 +129,10 @@ public class DefaultDatabaseConnectionSettings extends DatabaseConnectionSetting
     public void saveConnection(final ConfigWO settings) {
         super.saveConnection(settings);
 
-        Config hiveConfig = settings.addConfig("default-connection");
-        hiveConfig.addString("hostname", m_host);
-        hiveConfig.addInt("port", m_port);
-        hiveConfig.addString("databaseName", m_databaseName);
+        Config conf = settings.addConfig("default-connection");
+        conf.addString("hostname", m_host);
+        conf.addInt("port", m_port);
+        conf.addString("databaseName", m_databaseName);
     }
 
     /**
@@ -143,10 +143,10 @@ public class DefaultDatabaseConnectionSettings extends DatabaseConnectionSetting
         throws InvalidSettingsException {
         super.validateConnection(settings, cp);
 
-        Config hiveConfig = settings.getConfig("default-connection");
-        hiveConfig.getString("hostname");
-        hiveConfig.getInt("port");
-        hiveConfig.getString("databaseName");
+        Config conf = settings.getConfig("default-connection");
+        conf.getString("hostname");
+        conf.getInt("port");
+        conf.getString("databaseName");
     }
 
     /**
@@ -157,10 +157,10 @@ public class DefaultDatabaseConnectionSettings extends DatabaseConnectionSetting
         throws InvalidSettingsException {
         boolean b = super.loadValidatedConnection(settings, cp);
 
-        Config hiveConfig = settings.getConfig("default-connection");
-        m_host = hiveConfig.getString("hostname");
-        m_port = hiveConfig.getInt("port");
-        m_databaseName = hiveConfig.getString("databaseName");
+        Config conf = settings.getConfig("default-connection");
+        m_host = conf.getString("hostname");
+        m_port = conf.getInt("port");
+        m_databaseName = conf.getString("databaseName");
 
         return b;
     }
