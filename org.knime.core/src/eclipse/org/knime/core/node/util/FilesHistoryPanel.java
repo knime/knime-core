@@ -358,7 +358,11 @@ public final class FilesHistoryPanel extends JPanel {
 
     private final LocationCheckLabel m_warnMsg;
 
+    private final FlowVariableModelButton m_flowVariableButton;
+
     private int m_selectMode = JFileChooser.FILES_ONLY;
+
+    private int m_dialogType = JFileChooser.OPEN_DIALOG;
 
     /**
      * Creates new instance, sets properties, for instance renderer,
@@ -512,19 +516,22 @@ public final class FilesHistoryPanel extends JPanel {
         c.weightx = 1;
         c.anchor = GridBagConstraints.NORTHWEST;
         c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(2, 5, 0, 0);
 
         add(m_textBox, c);
 
         c.gridx = 1;
         c.weightx = 0;
         c.fill = GridBagConstraints.NONE;
-        c.insets = new Insets(0, 5, 0, 0);
+        c.insets = new Insets(2, 5, 0, 5);
         add(m_chooseButton, c);
 
         if (fvm != null) {
+            m_flowVariableButton = new FlowVariableModelButton(fvm);
+
             c.gridx = 2;
-            c.insets = new Insets(0, 5, 0, 0);
-            add(new FlowVariableModelButton(fvm), c);
+            c.insets = new Insets(2, 0, 0, 5);
+            add(m_flowVariableButton, c);
             fvm.addChangeListener(new ChangeListener() {
                 @Override
                 public void stateChanged(final ChangeEvent evt) {
@@ -536,13 +543,15 @@ public final class FilesHistoryPanel extends JPanel {
                     fileLocationChanged();
                 }
             });
-
+        } else {
+            m_flowVariableButton = null;
         }
 
         if (validation != LocationValidation.None) {
             c.gridx = 0;
             c.gridy++;
             c.weightx = 1;
+            c.insets = new Insets(0, 5, 0, 5);
             c.fill = GridBagConstraints.HORIZONTAL;
             c.gridwidth = (fvm == null) ? 2 : 3;
             add(m_warnMsg, c);
@@ -583,8 +592,15 @@ public final class FilesHistoryPanel extends JPanel {
         // file chooser triggered by choose button
         final JFileChooser fileChooser = new JFileChooser();
         fileChooser.setAcceptAllFileFilterUsed(true);
-        fileChooser.setFileFilter(new SimpleFileFilter(m_suffixes));
+        List<SimpleFileFilter> filters = createFiltersFromSuffixes(m_suffixes);
+        for (SimpleFileFilter filter : filters) {
+            fileChooser.addChoosableFileFilter(filter);
+        }
+        if (filters.size() > 1) {
+            fileChooser.setFileFilter(filters.get(0));
+        }
         fileChooser.setFileSelectionMode(m_selectMode);
+        fileChooser.setDialogType(m_dialogType);
 
         try {
             URL url = FileUtil.toURL(getSelectedFile());
@@ -715,6 +731,17 @@ public final class FilesHistoryPanel extends JPanel {
     }
 
     /**
+     * Sets the type of brows dialog that is being opened.
+     *
+     * @param type one of {@link JFileChooser#OPEN_DIALOG} or {@link JFileChooser#SAVE_DIALOG}
+     * @see JFileChooser#setDialogType(int)
+     * @since 2.11
+     */
+    public void setDialogType(final int type) {
+        m_dialogType = type;
+    }
+
+    /**
      * Tries to create a file from the passed string.
      *
      * @param url the string to transform into a file
@@ -789,6 +816,19 @@ public final class FilesHistoryPanel extends JPanel {
         super.setEnabled(enabled);
         m_chooseButton.setEnabled(enabled);
         m_textBox.setEnabled(enabled);
+        if (m_flowVariableButton != null) {
+            m_flowVariableButton.setEnabled(enabled);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setToolTipText(final String text) {
+        super.setToolTipText(text);
+        m_textBox.setToolTipText(text);
+        m_chooseButton.setToolTipText(text);
     }
 
     private final ChangeListener m_checkIfExistsListener =
@@ -854,5 +894,18 @@ public final class FilesHistoryPanel extends JPanel {
     @Override
     public void requestFocus() {
         m_textBox.getEditor().getEditorComponent().requestFocus();
+    }
+
+    private static List<SimpleFileFilter> createFiltersFromSuffixes(final String... extensions) {
+        List<SimpleFileFilter> filters = new ArrayList<>(extensions.length);
+
+        for (final String extension : extensions) {
+            if (extension.indexOf('|') > 0) {
+                filters.add(new SimpleFileFilter(extension.split("\\|")));
+            } else {
+                filters.add(new SimpleFileFilter(extension));
+            }
+        }
+        return filters;
     }
 }

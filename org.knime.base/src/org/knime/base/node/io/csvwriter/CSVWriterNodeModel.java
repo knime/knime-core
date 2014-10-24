@@ -55,7 +55,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
@@ -217,18 +216,18 @@ public class CSVWriterNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws Exception {
-        DataTable in = data[0];
+        CheckUtils.checkDestinationFile(m_settings.getFileName(),
+            m_settings.getFileOverwritePolicy() != FileOverwritePolicy.Abort);
 
         URL url = FileUtil.toURL(m_settings.getFileName());
-        boolean writeColHeader = m_settings.writeColumnHeader();
-
-        OutputStream tempOut;
         Path localPath = FileUtil.resolveToPath(url);
+
+        DataTable in = data[0];
+        boolean writeColHeader = m_settings.writeColumnHeader();
+        OutputStream tempOut;
         URLConnection urlConnection = null;
         boolean appendToFile;
         if (localPath != null) {
-            CheckUtils.checkDestinationFile(localPath, m_settings.getFileOverwritePolicy() != FileOverwritePolicy.Abort);
-
             // figure out if the writer is actually supposed to write col headers
             if (Files.exists(localPath)) {
                 appendToFile = m_settings.getFileOverwritePolicy() == FileOverwritePolicy.Append;
@@ -420,28 +419,14 @@ public class CSVWriterNodeModel extends NodeModel {
         /*
          * check file access
          */
-        String fileName = m_settings.getFileName();
-        if (fileName == null || fileName.length() == 0) {
-            throw new InvalidSettingsException("No output file specified.");
-        }
-        try {
-            URL url = FileUtil.toURL(fileName);
-            Path localPath = FileUtil.resolveToPath(url);
-            if (localPath != null) {
-                String fileCheckWarning =
-                    CheckUtils.checkDestinationFile(localPath,
-                        m_settings.getFileOverwritePolicy() != FileOverwritePolicy.Abort);
-                if (fileCheckWarning != null) {
-                    if (m_settings.getFileOverwritePolicy() == FileOverwritePolicy.Append) {
-                        fileCheckWarning = fileCheckWarning.replace("overwritten", "appended");
-                    }
-                    warnMsg = fileCheckWarning + "\n";
-                }
+        String fileCheckWarning =
+                CheckUtils.checkDestinationFile(m_settings.getFileName(),
+                    m_settings.getFileOverwritePolicy() != FileOverwritePolicy.Abort);
+        if (fileCheckWarning != null) {
+            if (m_settings.getFileOverwritePolicy() == FileOverwritePolicy.Append) {
+                fileCheckWarning = fileCheckWarning.replace("overwritten", "appended");
             }
-        } catch (MalformedURLException | URISyntaxException ex) {
-            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
-        } catch (IOException ex) {
-            throw new InvalidSettingsException("I/O error while checking output:" + ex.getMessage(), ex);
+            warnMsg = fileCheckWarning + "\n";
         }
 
 

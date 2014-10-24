@@ -46,10 +46,15 @@
  */
 package org.knime.core.node.util;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.util.FileUtil;
 
 /**
  * Static check functions used during settings loading etc.
@@ -249,58 +254,90 @@ public final class CheckUtils {
     }
 
     /**
-     * Does several checks for the given destination file, e.g. it it's a file, if it's writable (if it exists).
-     * Warnings are returned as strings, error cause an {@link InvalidSettingsException}.
+     * Does several checks for the given destination location in case it's a local file, e.g. it it's a file, if it's
+     * writable (if it exists). Warnings are returned as strings, error cause an {@link InvalidSettingsException}. For
+     * remote URLs no checks are performed except if the URL is non-empty.
      *
-     * @param path the destination file
+     * @param urlOrPath the destination location, can be an URL or a file system path
      * @param allowOverwrite <code>true</code> if an existing file may be overwritten, <code>false</code> if overwriting
      *            is forbidden
      * @return <code>null</code> or a warning message
      * @throws InvalidSettingsException if there will be a problem when writing to the file
      * @since 2.11
      */
-    public static String checkDestinationFile(final Path path, final boolean allowOverwrite)
+    public static String checkDestinationFile(final String urlOrPath, final boolean allowOverwrite)
         throws InvalidSettingsException {
-        if (Files.exists(path)) {
-            if (Files.isDirectory(path)) {
-                throw new InvalidSettingsException("Output location '" + path + "' is a directory");
-            } else if (!Files.isWritable(path)) {
-                throw new InvalidSettingsException("Output file '" + path + "' is not writable");
-            } else if (allowOverwrite) {
-                return "Output file '" + path + "' exists and will be overwritten";
-            } else {
-                throw new InvalidSettingsException("Output file '" + path
-                    + "' exists and must not be overwritten due to user settings");
-            }
-        } else {
-            Path parent = path.getParent();
-            if (!Files.exists(parent)) {
-                throw new InvalidSettingsException("Directory '" + parent + "' of output file does not exist");
-            } else if (!Files.isWritable(path.getParent())) {
-                throw new InvalidSettingsException("Directory '" + parent + "' is not writable");
-            }
+        if ((urlOrPath == null) || urlOrPath.isEmpty()) {
+            throw new InvalidSettingsException("No destination location provided! Please enter a valid location.");
         }
+
+        try {
+            URL url = FileUtil.toURL(urlOrPath);
+            Path localPath = FileUtil.resolveToPath(url);
+            if (localPath != null) {
+                if (Files.exists(localPath)) {
+                    if (Files.isDirectory(localPath)) {
+                        throw new InvalidSettingsException("Output location '" + localPath + "' is a directory");
+                    } else if (!Files.isWritable(localPath)) {
+                        throw new InvalidSettingsException("Output file '" + localPath + "' is not writable");
+                    } else if (allowOverwrite) {
+                        return "Output file '" + localPath + "' exists and will be overwritten";
+                    } else {
+                        throw new InvalidSettingsException("Output file '" + localPath
+                            + "' exists and must not be overwritten due to user settings");
+                    }
+                } else {
+                    Path parent = localPath.getParent();
+                    if (!Files.exists(parent)) {
+                        throw new InvalidSettingsException("Directory '" + parent + "' of output file does not exist");
+                    } else if (!Files.isWritable(localPath.getParent())) {
+                        throw new InvalidSettingsException("Directory '" + parent + "' is not writable");
+                    }
+                }
+            }
+        } catch (MalformedURLException | URISyntaxException ex) {
+            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
+        } catch (IOException ex) {
+            throw new InvalidSettingsException("I/O error while checking output location:" + ex.getMessage(), ex);
+        }
+
+
         return null;
     }
 
     /**
-     * Does several checks for the given destination directory, e.g. it it's a directory and if it's writable.
-     * Warnings are returned as strings, error cause an {@link InvalidSettingsException}.
+     * Does several checks for the given destination location, e.g. it it's a directory and if it's writable. Warnings
+     * are returned as strings, error cause an {@link InvalidSettingsException}. For remote URLs no checks are performed
+     * except if the URL is non-empty.
      *
-     * @param path the destination directory
+     * @param urlOrPath the destination location, can be an URL or a file system path
      * @return <code>null</code> or a warning message
      * @throws InvalidSettingsException if there will be a problem when writing to the directory
      * @since 2.11
      */
-    public static String checkDestinationDirectory(final Path path) throws InvalidSettingsException {
-        if (Files.exists(path)) {
-            if (!Files.isDirectory(path)) {
-                throw new InvalidSettingsException("Output location '" + path + "' is not a directory");
-            } else if (!Files.isWritable(path)) {
-                throw new InvalidSettingsException("Output directory '" + path + "' is not writable");
+    public static String checkDestinationDirectory(final String urlOrPath) throws InvalidSettingsException {
+        if ((urlOrPath == null) || urlOrPath.isEmpty()) {
+            throw new InvalidSettingsException("No destination location provided! Please enter a valid location.");
+        }
+
+        try {
+            URL url = FileUtil.toURL(urlOrPath);
+            Path localPath = FileUtil.resolveToPath(url);
+            if (localPath != null) {
+                if (Files.exists(localPath)) {
+                    if (!Files.isDirectory(localPath)) {
+                        throw new InvalidSettingsException("Output location '" + localPath + "' is not a directory");
+                    } else if (!Files.isWritable(localPath)) {
+                        throw new InvalidSettingsException("Output directory '" + localPath + "' is not writable");
+                    }
+                } else {
+                    throw new InvalidSettingsException("Output directory '" + localPath + "' does not exist");
+                }
             }
-        } else {
-            throw new InvalidSettingsException("Output directory '" + path + "' does not exist");
+        } catch (MalformedURLException | URISyntaxException ex) {
+            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
+        } catch (IOException ex) {
+            throw new InvalidSettingsException("I/O error while checking output location:" + ex.getMessage(), ex);
         }
         return null;
     }

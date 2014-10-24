@@ -48,44 +48,22 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.text.Document;
-import javax.swing.text.JTextComponent;
 
 import org.knime.core.node.FlowVariableModel;
-import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.ConvenientComboBoxRenderer;
-import org.knime.core.node.util.StringHistory;
-import org.knime.core.util.SimpleFileFilter;
+import org.knime.core.node.util.FilesHistoryPanel;
+import org.knime.core.node.util.FilesHistoryPanel.LocationValidation;
 
 /**
  * A standard component allowing to choose a location(directory) and/or file
@@ -94,18 +72,9 @@ import org.knime.core.util.SimpleFileFilter;
  * @author M. Berthold, University of Konstanz
  */
 public class DialogComponentFileChooser extends DialogComponent {
-
-    private final JComboBox m_fileComboBox;
-
-    private final StringHistory m_fileHistory;
-
-    private final JButton m_browseButton;
-
     private final TitledBorder m_border;
 
-    private final List<SimpleFileFilter> m_fileFilter;
-
-    private FlowVariableModelButton m_fvmButton;
+    private final FilesHistoryPanel m_filesPanel;
 
     /**
      * Constructor that creates a file chooser with an
@@ -216,188 +185,44 @@ public class DialogComponentFileChooser extends DialogComponent {
         super(stringModel);
 
         getComponentPanel().setLayout(new FlowLayout());
-
-        final JPanel p = new JPanel();
-        m_fileHistory = StringHistory.getInstance(historyID);
-        m_fileComboBox = new JComboBox();
-        m_fileComboBox.setPreferredSize(new Dimension(300, m_fileComboBox
-                .getPreferredSize().height));
-        m_fileComboBox.setRenderer(new ConvenientComboBoxRenderer());
-        m_fileComboBox.setEditable(true);
-
-        for (final String fileName : m_fileHistory.getHistory()) {
-            m_fileComboBox.addItem(fileName);
+        int selectionMode;
+        LocationValidation locationValidation;
+        if (directoryOnly) {
+            selectionMode = JFileChooser.DIRECTORIES_ONLY;
+            if (dialogType == JFileChooser.SAVE_DIALOG) {
+                locationValidation = LocationValidation.DirectoryOutput;
+            } else {
+                locationValidation = LocationValidation.DirectoryInput;
+            }
+        } else {
+            selectionMode = JFileChooser.FILES_AND_DIRECTORIES;
+            if (dialogType == JFileChooser.SAVE_DIALOG) {
+                locationValidation = LocationValidation.FileOutput;
+            } else {
+                locationValidation = LocationValidation.FileInput;
+            }
         }
 
-        m_browseButton = new JButton("Browse...");
+        m_filesPanel = new FilesHistoryPanel(fvm, historyID, locationValidation, validExtensions);
+        m_filesPanel.setSelectMode(selectionMode);
+        m_filesPanel.setDialogType(dialogType);
+        m_filesPanel.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                try {
+                    ((SettingsModelString)getModel()).setStringValue(m_filesPanel.getSelectedFile());
+                } catch (Exception ex) {
+                    NodeLogger.getLogger(DialogComponentFileChooser.class).error(
+                        "Could not store selected file in settings: " + ex.getMessage(), ex);
+                }
+            }
+        });
 
-        final String title =
-            directoryOnly ? "Selected Directory:" : "Selected File:";
+
+        final String title = directoryOnly ? "Selected Directory:" : "Selected File:";
         m_border = BorderFactory.createTitledBorder(title);
-        p.setBorder(m_border);
-        p.add(m_fileComboBox);
-        p.add(m_browseButton);
-        getComponentPanel().add(p);
-
-        if (validExtensions != null) {
-            m_fileFilter =
-                new ArrayList<SimpleFileFilter>(validExtensions.length);
-            for (final String extension : validExtensions) {
-                if (extension.indexOf('|') > 0) {
-                    m_fileFilter.add(new SimpleFileFilter(
-                            extension.split("\\|")));
-                } else {
-                    m_fileFilter.add(new SimpleFileFilter(extension));
-                }
-            }
-        } else {
-            m_fileFilter = new ArrayList<SimpleFileFilter>(0);
-        }
-
-        m_browseButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent ae) {
-                // sets the path in the file text field.
-                final String selectedFile =
-                    m_fileComboBox.getEditor().getItem().toString();
-                final JFileChooser chooser = new JFileChooser(selectedFile);
-                chooser.setDialogType(dialogType);
-                if (directoryOnly) {
-                    chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                } else {
-                    // if extensions are defined
-                    if (m_fileFilter != null
-                            && m_fileFilter.size() > 0) {
-                        // disable "All Files" selection
-                        chooser.setAcceptAllFileFilterUsed(false);
-                        // set the file filter for the given extensions
-                        for (final FileFilter filter : m_fileFilter) {
-                            chooser.setFileFilter(filter);
-                        }
-                        //set the first filter as default filter
-                        chooser.setFileFilter(m_fileFilter.get(0));
-                    }
-                }
-                final int returnVal =
-                        chooser.showDialog(getComponentPanel().getParent(),
-                                null);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    String newFile;
-                    try {
-                        newFile =
-                                chooser.getSelectedFile().getAbsoluteFile()
-                                        .toString();
-                        //check if the user has added the extension
-                        if (!directoryOnly && m_fileFilter != null) {
-                            boolean extensionFound = false;
-                            for (final SimpleFileFilter filter : m_fileFilter) {
-                                final String[] extensions =
-                                    filter.getValidExtensions();
-                                for (final String extension : extensions) {
-                                    if (newFile.endsWith(extension)) {
-                                        extensionFound = true;
-                                        break;
-                                    }
-                                }
-                                if (extensionFound) {
-                                    break;
-                                }
-                            }
-                            //otherwise add the extension of the selected
-                            //FileFilter
-                            if (!extensionFound) {
-                                final FileFilter fileFilter =
-                                    chooser.getFileFilter();
-                                if (fileFilter != null
-                                        && fileFilter
-                                        instanceof SimpleFileFilter) {
-                                    final SimpleFileFilter filter =
-                                        (SimpleFileFilter)fileFilter;
-                                    final String[] extensions =
-                                        filter.getValidExtensions();
-                                    if (extensions != null
-                                            && extensions.length > 0) {
-                                        //append the first extension
-                                        newFile = newFile + extensions[0];
-                                    }
-                                }
-                            }
-                        }
-                    } catch (final SecurityException se) {
-                        newFile = "<Error: " + se.getMessage() + ">";
-                    }
-                    // avoid adding the same string twice...
-                    m_fileComboBox.removeItem(newFile);
-                    m_fileComboBox.addItem(newFile);
-                    m_fileComboBox.setSelectedItem(newFile);
-                    getComponentPanel().revalidate();
-                }
-            }
-        });
-
-        // add variable editor button if so desired
-        if (fvm != null) {
-            fvm.addChangeListener(new ChangeListener() {
-                @Override
-                public void stateChanged(final ChangeEvent evt) {
-                     getModel().setEnabled(!fvm.isVariableReplacementEnabled());
-                }
-            });
-            m_fvmButton = new FlowVariableModelButton(fvm);
-            p.add(m_fvmButton);
-        } else {
-            m_fvmButton = null;
-        }
-
-        m_fileComboBox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                filenameChanged();            }
-        });
-        m_fileComboBox.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                filenameChanged();
-            }
-        });
-
-        /* install action listeners */
-        // set stuff to update preview when file location changes
-        m_fileComboBox.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusLost(final FocusEvent e) {
-                filenameChanged();
-            }
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public void focusGained(final FocusEvent e) {
-                filenameChanged();
-            }
-        });
-        final Component editor =
-            m_fileComboBox.getEditor().getEditorComponent();
-        if (editor instanceof JTextComponent) {
-            final Document d = ((JTextComponent)editor).getDocument();
-            d.addDocumentListener(new DocumentListener() {
-                @Override
-                public void changedUpdate(final DocumentEvent e) {
-                    filenameChanged();
-                }
-
-                @Override
-                public void insertUpdate(final DocumentEvent e) {
-                    filenameChanged();
-                }
-
-                @Override
-                public void removeUpdate(final DocumentEvent e) {
-                    filenameChanged();
-                }
-            });
-        }
-
+        m_filesPanel.setBorder(m_border);
+        getComponentPanel().add(m_filesPanel);
 
         getModel().prependChangeListener(new ChangeListener() {
             @Override
@@ -410,90 +235,15 @@ public class DialogComponentFileChooser extends DialogComponent {
         updateComponent();
     }
 
-    // called by all action/change listeners to transfer the new filename into
-    // the settings model. (And ignore any invalid situations.)
-    private void filenameChanged() {
-        // transfer the new filename into the settings model
-        try {
-            clearError(m_fileComboBox);
-            updateModel(true); // don't color the combobox red.
-        } catch (final InvalidSettingsException ise) {
-            // ignore it here.
-        }
-    }
-
-    /**
-     * Transfers the value from the component into the settings model.
-     *
-     * @param noColoring if set true, the component will not be marked red, even
-     *            if the entered value was erroneous.
-     * @throws InvalidSettingsException if the entered filename is null or
-     *             empty.
-     */
-    private void updateModel(final boolean noColoring)
-            throws InvalidSettingsException {
-
-        final String file = m_fileComboBox.getEditor().getItem().toString();
-        if ((file != null) && (file.trim().length() > 0)) {
-
-            try {
-                ((SettingsModelString)getModel()).setStringValue(file);
-            } catch (final RuntimeException e) {
-                // if value was not accepted by setter method
-                if (!noColoring) {
-                    showError(m_fileComboBox);
-                }
-                throw new InvalidSettingsException(e);
-            }
-
-        } else {
-            if (!noColoring) {
-                showError(m_fileComboBox);
-            }
-            throw new InvalidSettingsException("Please specify a filename.");
-        }
-    }
-
-    /**
-     * Seems the super.showError doesn't work with comboboxes. This is to
-     * replace it with a working version.
-     *
-     * @param box the box to color red.
-     */
-    private void showError(final JComboBox box) {
-
-        if (!getModel().isEnabled()) {
-            // don't flag an error in disabled components.
-            return;
-        }
-        final String selection = box.getEditor().getItem().toString();
-
-        if ((selection == null) || (selection.length() == 0)) {
-            box.setBackground(Color.RED);
-        } else {
-            box.setForeground(Color.RED);
-        }
-        box.requestFocusInWindow();
-
-        // change the color back as soon as he changes something
-        box.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                box.setForeground(DEFAULT_FG);
-                box.setBackground(DEFAULT_BG);
-                box.removeItemListener(this);
-            }
-        });
-    }
-
     /**
      * Sets the coloring of the specified component back to normal.
      *
      * @param box the component to clear the error status for.
+     * @deprecated This method does nothing any more
      */
-    protected void clearError(final JComboBox box) {
-        box.setForeground(DEFAULT_FG);
-        box.setBackground(DEFAULT_BG);
+    @Deprecated
+    protected void clearError(final JComboBox<?> box) {
+       // does nothing
     }
 
     /**
@@ -501,24 +251,17 @@ public class DialogComponentFileChooser extends DialogComponent {
      */
     @Override
     protected void updateComponent() {
-
-        clearError(m_fileComboBox);
-
         // update the component only if model and component are out of sync
         final SettingsModelString model = (SettingsModelString)getModel();
         final String newValue = model.getStringValue();
         boolean update;
         if (newValue == null) {
-            update = (m_fileComboBox.getSelectedItem() != null);
+            update = !m_filesPanel.getSelectedFile().isEmpty();
         } else {
-            final String file = m_fileComboBox.getEditor().getItem().toString();
-            update = !newValue.equals(file);
+            update = !newValue.equals(m_filesPanel.getSelectedFile());
         }
         if (update) {
-            // to avoid multiply added items...
-            m_fileComboBox.removeItem(newValue);
-            m_fileComboBox.addItem(newValue);
-            m_fileComboBox.setSelectedItem(newValue);
+            m_filesPanel.setSelectedFile(newValue);
         }
 
         // also update the enable status
@@ -531,10 +274,7 @@ public class DialogComponentFileChooser extends DialogComponent {
     @Override
     protected void validateSettingsBeforeSave()
             throws InvalidSettingsException {
-        // just in case we didn't get notified about the last change...
-        updateModel(false); // mark the erroneous component red.
-        // store the saved filename in the history
-        m_fileHistory.add(((SettingsModelString)getModel()).getStringValue());
+        // nothing to validate, this component accepts all values in compliance with the noding guidelines
     }
 
     /**
@@ -551,8 +291,7 @@ public class DialogComponentFileChooser extends DialogComponent {
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
-        m_browseButton.setEnabled(enabled);
-        m_fileComboBox.setEnabled(enabled);
+        m_filesPanel.setEnabled(enabled);
     }
 
     /**
@@ -562,12 +301,11 @@ public class DialogComponentFileChooser extends DialogComponent {
      *
      * @param newTitle the new title to display in the border.
      *
-     * @throws NullPointerException if the new title is null.
+     * @throws IllegalArgumentException if the new title is <code>null</code>
      */
     public void setBorderTitle(final String newTitle) {
         if (newTitle == null) {
-            throw new NullPointerException("New title to display can't"
-                    + " be null.");
+            throw new IllegalArgumentException("New title to display must not be null.");
         }
         m_border.setTitle(newTitle);
     }
@@ -577,8 +315,7 @@ public class DialogComponentFileChooser extends DialogComponent {
      */
     @Override
     public void setToolTipText(final String text) {
-        m_browseButton.setToolTipText(text);
-        m_fileComboBox.setToolTipText(text);
+        m_filesPanel.setToolTipText(text);
     }
 
     /**
@@ -588,25 +325,6 @@ public class DialogComponentFileChooser extends DialogComponent {
      * @since 2.11
      */
     public void addChangeListener(final ChangeListener cl) {
-        ((JTextField) m_fileComboBox.getEditor().getEditorComponent()).addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(final KeyEvent e) {
-                cl.stateChanged(new ChangeEvent(e.getSource()));
-            }
-
-            @Override
-            public void keyReleased(final KeyEvent e) {
-            }
-
-            @Override
-            public void keyPressed(final KeyEvent e) {
-            }
-        });
-        m_fileComboBox.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                cl.stateChanged(new ChangeEvent(e.getSource()));
-            }
-        });
+        m_filesPanel.addChangeListener(cl);
     }
 }

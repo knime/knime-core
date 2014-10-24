@@ -50,10 +50,7 @@ package org.knime.base.node.io.table.write;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.knime.core.data.DataTableSpec;
@@ -68,6 +65,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 
 
@@ -137,8 +135,8 @@ public class WriteTableNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        checkFileAccess(m_fileName.getStringValue(), false);
         BufferedDataTable in = inData[0];
-        checkFileAccess(m_fileName.getStringValue());
 
         URL url = FileUtil.toURL(m_fileName.getStringValue());
         Path localPath = FileUtil.resolveToPath(url);
@@ -167,8 +165,7 @@ public class WriteTableNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-
-        checkFileAccess(m_fileName.getStringValue());
+        checkFileAccess(m_fileName.getStringValue(), true);
 
         return new DataTableSpec[0];
     }
@@ -179,38 +176,11 @@ public class WriteTableNodeModel extends NodeModel {
      * @param fileName The file to check
      * @throws InvalidSettingsException If that fails.
      */
-    private void checkFileAccess(final String fileName)
+    private void checkFileAccess(final String fileName, final boolean showWarnings)
             throws InvalidSettingsException {
-        if (fileName == null) {
-            throw new InvalidSettingsException("No output file specified.");
-        }
-
-
-        try {
-            URL url = FileUtil.toURL(fileName);
-            Path localPath = FileUtil.resolveToPath(url);
-            if (localPath != null) {
-                if (Files.isDirectory(localPath)) {
-                    throw new InvalidSettingsException("\"" + localPath + "\" is a directory.");
-                }
-                if (!Files.exists(localPath)) {
-                    // dunno how to check the write access to the directory. If we can't
-                    // create the file the execute of the node will fail. Well, too bad.
-                    return;
-                }
-                if (!m_overwriteOK.getBooleanValue()) {
-                    throw new InvalidSettingsException("File exists and can't be overwritten, check dialog settings");
-                }
-                if (!Files.isWritable(localPath)) {
-                    throw new InvalidSettingsException("Cannot write to file \"" + localPath + "\".");
-                }
-                // here it exists and we can write it: warn user!
-                setWarningMessage("Selected output file exists and will be overwritten!");
-            }
-        } catch (MalformedURLException | URISyntaxException ex) {
-            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
-        } catch (IOException ex) {
-            throw new InvalidSettingsException("I/O error while checking output location:" + ex.getMessage(), ex);
+        String warning = CheckUtils.checkDestinationFile(fileName, m_overwriteOK.getBooleanValue());
+        if ((warning != null) && showWarnings) {
+            setWarningMessage(warning);
         }
     }
 

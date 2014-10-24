@@ -52,8 +52,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -417,24 +415,9 @@ public class ARFFWriterNodeModel extends NodeModel {
      */
     private void checkFileAccess(final String fileName, final boolean showWarnings)
             throws InvalidSettingsException {
-        if ((fileName == null) || fileName.isEmpty()) {
-            throw new InvalidSettingsException("No file name provided! "
-                    + "Please enter a valid file name.");
-        }
-
-        try {
-            URL url = FileUtil.toURL(fileName);
-            Path localPath = FileUtil.resolveToPath(url);
-            if (localPath != null) {
-                String warning = CheckUtils.checkDestinationFile(localPath, m_overwriteOK);
-                if ((warning != null) && showWarnings) {
-                    setWarningMessage(warning);
-                }
-            }
-        } catch (MalformedURLException | URISyntaxException ex) {
-            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
-        } catch (IOException ex) {
-            throw new InvalidSettingsException("I/O error while checking output:" + ex.getMessage(), ex);
+        String warning = CheckUtils.checkDestinationFile(fileName, m_overwriteOK);
+        if ((warning != null) && showWarnings) {
+            setWarningMessage(warning);
         }
     }
 }
