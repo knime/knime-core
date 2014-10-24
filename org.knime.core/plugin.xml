@@ -203,6 +203,13 @@
                suggestAsDefault="false">
          </renderer>
       </dataValue>      
+      <dataValue
+            valueClass="org.knime.core.data.json.JSONValue">
+         <renderer
+               rendererFactoryClass="org.knime.core.data.json.JSONValueRenderer$Factory"
+               suggestAsDefault="true">
+         </renderer>
+      </dataValue>
    </extension>
    <extension
          point="org.knime.core.DatabaseUtility">

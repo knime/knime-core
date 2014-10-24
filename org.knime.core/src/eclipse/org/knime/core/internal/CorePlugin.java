@@ -50,11 +50,15 @@ package org.knime.core.internal;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 
+import org.knime.core.data.json.internal.KNIMEJsonProvider;
 import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.wiring.BundleWiring;
 
 /**
  * Plugin class that is initialized when the plugin project is started. It will
@@ -92,6 +96,18 @@ public class CorePlugin implements BundleActivator {
     @Override
     public void start(final org.osgi.framework.BundleContext context)
         throws Exception {
+        Bundle implBundle = null;
+        for (Bundle b : context.getBundles()) {
+            if ("org.glassfish.javax.json".equals(b.getSymbolicName())) {
+                implBundle = b;
+                break;
+            }
+        }
+        if (implBundle == null) {
+            throw new IllegalStateException("The glassfish implementation for the javax.json API could not be loaded.");
+        }
+        ClassLoader jsonProviderClassLoader = implBundle.adapt(BundleWiring.class).getClassLoader();
+        KNIMEJsonProvider.init(jsonProviderClassLoader);
 
         instance = this;
 
