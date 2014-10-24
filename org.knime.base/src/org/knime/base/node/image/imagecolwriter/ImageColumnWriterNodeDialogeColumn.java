@@ -80,7 +80,7 @@ public class ImageColumnWriterNodeDialogeColumn extends DefaultNodeSettingsPane 
     private final DialogComponentFileChooser m_dirChooser =
             new DialogComponentFileChooser(new SettingsModelString("directory",
                     null), ImageColumnWriterNodeDialogeColumn.class.getName(),
-                    JFileChooser.SAVE_DIALOG, true, (String[]) null);
+                    JFileChooser.SAVE_DIALOG, true);
 
     private final DialogComponentBoolean m_overwrite =
             new DialogComponentBoolean(new SettingsModelBoolean("overwrite",
