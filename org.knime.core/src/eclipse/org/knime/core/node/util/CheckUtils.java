@@ -267,6 +267,26 @@ public final class CheckUtils {
      */
     public static String checkDestinationFile(final String urlOrPath, final boolean allowOverwrite)
         throws InvalidSettingsException {
+        return checkDestinationFile(urlOrPath, allowOverwrite, false);
+    }
+
+
+    /**
+     * Does several checks for the given destination location in case it's a local file, e.g. it it's a file, if it's
+     * writable (if it exists). Warnings are returned as strings, error cause an {@link InvalidSettingsException}. For
+     * remote URLs no checks are performed except if the URL is non-empty.
+     *
+     * @param urlOrPath the destination location, can be an URL or a file system path
+     * @param allowOverwrite <code>true</code> if an existing file may be overwritten, <code>false</code> if overwriting
+     *            is forbidden
+     * @param mustExistForAppend <code>true</code> if the output location must already exist, e.g. for appending to an
+     *            existing file
+     * @return <code>null</code> or a warning message
+     * @throws InvalidSettingsException if there will be a problem when writing to the file
+     * @since 2.11
+     */
+    public static String checkDestinationFile(final String urlOrPath, final boolean allowOverwrite,
+        final boolean mustExistForAppend) throws InvalidSettingsException {
         if ((urlOrPath == null) || urlOrPath.isEmpty()) {
             throw new InvalidSettingsException("No destination location provided! Please enter a valid location.");
         }
@@ -280,12 +300,17 @@ public final class CheckUtils {
                         throw new InvalidSettingsException("Output location '" + localPath + "' is a directory");
                     } else if (!Files.isWritable(localPath)) {
                         throw new InvalidSettingsException("Output file '" + localPath + "' is not writable");
+                    } else if (mustExistForAppend) {
+                        return null; // everything OK
                     } else if (allowOverwrite) {
                         return "Output file '" + localPath + "' exists and will be overwritten";
                     } else {
                         throw new InvalidSettingsException("Output file '" + localPath
                             + "' exists and must not be overwritten due to user settings");
                     }
+                } else if (mustExistForAppend) {
+                    throw new InvalidSettingsException("Output location '" + localPath
+                        + "' does not exist, append not possible");
                 } else {
                     Path parent = localPath.getParent();
                     if (!Files.exists(parent)) {
@@ -300,7 +325,6 @@ public final class CheckUtils {
         } catch (IOException ex) {
             throw new InvalidSettingsException("I/O error while checking output location:" + ex.getMessage(), ex);
         }
-
 
         return null;
     }
