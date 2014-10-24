@@ -17,7 +17,7 @@
           the input table are retrieved.  
 	      <br/>
 	      The place holder in brackets for table name and table column must be
-	      replaced, while the possible value place holder in percent must not 
+	      replaced, while the possible value place holder enclosed in hashes must not 
 	      be edit and will be resolved during execution.
 	      <br/>
           <br />
