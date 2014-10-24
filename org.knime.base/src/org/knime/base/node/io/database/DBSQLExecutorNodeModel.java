@@ -124,8 +124,8 @@ final class DBSQLExecutorNodeModel extends DBNodeModel implements FlowVariablePr
         int i = 0;
         for (String statement : statements) {
             exec.checkCanceled();
-            exec.setProgress(i++ / max, "Executing '" + statement + "'");
             statement = statement.trim();
+            exec.setProgress(i++ / max, "Executing '" + statement + "'");
             if (!statement.isEmpty()) {
                 conn.execute(statement, getCredentialsProvider());
             }
