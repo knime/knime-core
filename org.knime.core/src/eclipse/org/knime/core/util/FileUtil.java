@@ -165,16 +165,15 @@ public final class FileUtil {
     public static void copy(final File file, final File destination,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        final int bufSize = 1 << 16; // 64kB
         final long size = file.length();
-        byte[] cache = new byte[bufSize];
+        byte[] cache = new byte[BUFF_SIZE];
         CanceledExecutionException cee = null;
         try (OutputStream copyOutStream = new FileOutputStream(destination);
                 InputStream copyInStream = new FileInputStream(file)) {
             int read;
             long processed = 0;
             exec.setMessage("Copying \"" + file.getName() + "\"");
-            while ((read = copyInStream.read(cache, 0, bufSize)) > 0) {
+            while ((read = copyInStream.read(cache, 0, cache.length)) > 0) {
                 copyOutStream.write(cache, 0, read);
                 processed += read;
                 exec.setProgress(processed / (double)size);
@@ -245,10 +244,9 @@ public final class FileUtil {
      */
     public static void copy(final InputStream input,
             final OutputStream destination) throws IOException {
-        final int bufSize = 1 << 16; // 64kB
-        byte[] cache = new byte[bufSize];
+        byte[] cache = new byte[BUFF_SIZE];
         int read;
-        while ((read = input.read(cache, 0, bufSize)) > 0) {
+        while ((read = input.read(cache, 0, cache.length)) > 0) {
             destination.write(cache, 0, read);
         }
     }
@@ -265,10 +263,9 @@ public final class FileUtil {
      */
     public static void copy(final Reader source, final Writer destination)
             throws IOException {
-        final int bufSize = 1 << 16; // 64kB
-        char[] cache = new char[bufSize];
+        char[] cache = new char[BUFF_SIZE];
         int read;
-        while ((read = source.read(cache, 0, bufSize)) > 0) {
+        while ((read = source.read(cache, 0, cache.length)) > 0) {
             destination.write(cache, 0, read);
         }
     }
