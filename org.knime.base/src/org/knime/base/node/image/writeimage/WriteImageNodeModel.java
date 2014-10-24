@@ -49,8 +49,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,6 +57,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.image.ImageContent;
 import org.knime.core.data.image.ImageValue;
+import org.knime.core.data.image.png.PNGImageValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -73,6 +72,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObject;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -99,53 +99,37 @@ final class WriteImageNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        // how ugly - we don't know the image extension upon execution, let's
-        // hope the user gave it the correct extension (e.g. ".png") already,
-        // otherwise the overwriteOK check may fail during configure
-        getOutputLocation("");
         ImagePortObjectSpec imageInObject = (ImagePortObjectSpec)inSpecs[0];
         DataType dataType = imageInObject.getDataType();
         if (!dataType.isCompatible(ImageValue.class)) {
             throw new InvalidSettingsException("Unsupported image type");
         }
+
+        // how ugly - we don't know the image extension upon execution, let's
+        // hope the user gave it the correct extension (e.g. ".png") already,
+        // otherwise the overwriteOK check may fail during configure
+        String guessedExtension;
+        if (dataType.isCompatible(PNGImageValue.class)) {
+            guessedExtension = ".png";
+        } else if (dataType.getPreferredValueClass().getSimpleName().equals("SvgImageValue")) {
+            guessedExtension = ".svg";
+        } else {
+            guessedExtension = "";
+        }
+
+        getOutputLocation(guessedExtension, true);
         return new PortObjectSpec[0];
     }
 
-    private String getOutputLocation(final String extension)
-        throws InvalidSettingsException {
+    private String getOutputLocation(final String extension, final boolean showWarnings) throws InvalidSettingsException {
         String outPath = m_fileOutSettings.getStringValue();
-        if (outPath == null || outPath.length() == 0) {
-            throw new InvalidSettingsException("No output path specified");
-        }
-        if (!outPath.endsWith(extension)) {
+        if ((outPath != null) && !outPath.endsWith(extension)) {
             outPath = outPath.concat(extension);
         }
-
-
-        try {
-            URL url = FileUtil.toURL(outPath);
-            Path localPath = FileUtil.resolveToPath(url);
-            if (localPath != null) {
-                Path parent = localPath.getParent();
-                if (Files.isDirectory(localPath) || (parent == null) || !Files.exists(parent)) {
-                    throw new InvalidSettingsException("File name \"" + localPath
-                        + "\" is not valid. Please enter a valid file name.");
-                }
-                if (Files.exists(localPath)) {
-                    if (m_overwriteOKBoolean.getBooleanValue()) {
-                        setWarningMessage("File exists and will be overwritten");
-                    } else {
-                        throw new InvalidSettingsException("File exists and can't be "
-                                + "overwritten, check dialog settings");
-                    }
-                }
-            }
-        } catch (MalformedURLException | URISyntaxException ex) {
-            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
-        } catch (IOException ex) {
-            throw new InvalidSettingsException("I/O error while checking output:" + ex.getMessage(), ex);
+        String warnings = CheckUtils.checkDestinationFile(outPath, m_overwriteOKBoolean.getBooleanValue());
+        if (showWarnings && (warnings != null)) {
+            setWarningMessage(warnings);
         }
-
         return outPath;
     }
 
@@ -165,11 +149,10 @@ final class WriteImageNodeModel extends NodeModel {
         ImageValue v = (ImageValue)imageCellDC;
         ImageContent content = v.getImageContent();
         final String imageExtension = v.getImageExtension();
-        String outputLocation = getOutputLocation("." + imageExtension);
+        String outputLocation = getOutputLocation("." + imageExtension, false);
 
         URL url = FileUtil.toURL(outputLocation);
         Path localPath = FileUtil.resolveToPath(url);
-
 
         try (OutputStream os = openOutputStream(localPath, url)) {
             content.save(os);
