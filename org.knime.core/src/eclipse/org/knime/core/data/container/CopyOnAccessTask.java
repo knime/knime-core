@@ -55,6 +55,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.text.NumberFormat;
 import java.util.Map;
 import java.util.TimerTask;
@@ -291,16 +292,13 @@ final class CopyOnAccessTask {
         if (path.startsWith(Buffer.ZIP_ENTRY_FILESTORES + "/")) {
             path = path.substring((Buffer.ZIP_ENTRY_FILESTORES + "/").length());
         }
+
         File f = new File(tempDir, path);
         if (entry.isDirectory()) {
-            if (!f.mkdirs()) {
-                throw new IOException("Unable to create temporary directory "
-                        + f.getName());
-            }
+            Files.createDirectories(f.toPath());
         } else {
-            try (InputStream inStream = new BufferedInputStream(in);
-                    OutputStream o = new BufferedOutputStream(new FileOutputStream(f))) {
-                FileUtil.copy(inStream, o);
+            try (OutputStream o = new FileOutputStream(f)) {
+                FileUtil.copy(in, o);
             }
         }
     }

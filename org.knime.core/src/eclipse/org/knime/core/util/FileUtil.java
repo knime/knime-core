@@ -165,7 +165,7 @@ public final class FileUtil {
     public static void copy(final File file, final File destination,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        final int bufSize = 8192;
+        final int bufSize = 1 << 16; // 64kB
         final long size = file.length();
         byte[] cache = new byte[bufSize];
         CanceledExecutionException cee = null;
@@ -238,14 +238,14 @@ public final class FileUtil {
      * <code>destination</code>. Neither <code>input</code> nor
      * <code>destination</code> get closed at the end!
      *
-     * @param input To read from
-     * @param destination To write to
+     * @param input any input stream from which data is read. The stream does not need to be buffered.
+     * @param destination any output stream to which data is written. The stream does not need to be buffered.
      * @throws IOException If that fails for any reason.
      * @throws NullPointerException If any argument is <code>null</code>.
      */
     public static void copy(final InputStream input,
             final OutputStream destination) throws IOException {
-        final int bufSize = 8192;
+        final int bufSize = 1 << 16; // 64kB
         byte[] cache = new byte[bufSize];
         int read;
         while ((read = input.read(cache, 0, bufSize)) > 0) {
@@ -265,7 +265,7 @@ public final class FileUtil {
      */
     public static void copy(final Reader source, final Writer destination)
             throws IOException {
-        final int bufSize = 8192;
+        final int bufSize = 1 << 16; // 64kB
         char[] cache = new char[bufSize];
         int read;
         while ((read = source.read(cache, 0, bufSize)) > 0) {
