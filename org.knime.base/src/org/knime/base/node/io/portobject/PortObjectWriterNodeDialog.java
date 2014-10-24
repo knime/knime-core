@@ -61,6 +61,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.util.FileUtil;
 
 
@@ -75,10 +76,10 @@ public class PortObjectWriterNodeDialog extends DefaultNodeSettingsPane {
      * the file chooser entry.
      */
     public PortObjectWriterNodeDialog() {
-        final DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(
-            new SettingsModelString(PortObjectWriterNodeModel.FILENAME, ""),
-            PortObjectWriterNodeDialog.class.getName(),
-            JFileChooser.SAVE_DIALOG, ".zip");
+        final DialogComponentFileChooser fileChooser =
+            new DialogComponentFileChooser(new SettingsModelString(PortObjectWriterNodeModel.FILENAME, ""),
+                PortObjectWriterNodeDialog.class.getName(), JFileChooser.SAVE_DIALOG, false, createFlowVariableModel(
+                    PortObjectWriterNodeModel.FILENAME, Type.STRING), ".zip");
 
         final DialogComponentBoolean overwriteOK = new DialogComponentBoolean(new SettingsModelBoolean(
             PortObjectWriterNodeModel.CFG_OVERWRITE_OK, false),
