@@ -50,8 +50,6 @@ package org.knime.base.node.io.portobject;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,6 +67,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
 
 
@@ -146,10 +145,9 @@ class PortObjectWriterNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] portObject,
             final ExecutionContext exec) throws Exception {
-        String fileName = m_fileName.getStringValue();
-        checkFileAccess(fileName);
+        CheckUtils.checkDestinationFile(m_fileName.getStringValue(), m_overwriteOK.getBooleanValue());
 
-        URL url = FileUtil.toURL(fileName);
+        URL url = FileUtil.toURL(m_fileName.getStringValue());
         Path localPath = FileUtil.resolveToPath(url);
 
         if (localPath != null) {
@@ -180,49 +178,11 @@ class PortObjectWriterNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        String fileName = m_fileName.getStringValue();
-        checkFileAccess(fileName);
+        String warning = CheckUtils.checkDestinationFile(m_fileName.getStringValue(), m_overwriteOK.getBooleanValue());
+        if (warning != null) {
+            setWarningMessage(warning);
+        }
         return new PortObjectSpec[0];
-    }
-
-    /**
-     * Helper that checks some properties for the file argument.
-     *
-     * @param fileName The file to check
-     * @throws InvalidSettingsException If that fails.
-     */
-    private void checkFileAccess(final String fileName) throws InvalidSettingsException {
-        if ((fileName == null) || fileName.isEmpty()) {
-            throw new InvalidSettingsException("No file name provided! "
-                    + "Please enter a valid file name.");
-        }
-
-        try {
-            URL url = FileUtil.toURL(fileName);
-            Path localPath = FileUtil.resolveToPath(url);
-            if (localPath != null) {
-                Path parent = localPath.getParent();
-                if (Files.isDirectory(localPath) || (parent == null) || !Files.exists(parent)) {
-                    throw new InvalidSettingsException("File name \"" + localPath
-                        + "\" is not valid. Please enter a valid file name.");
-                }
-                if (Files.exists(localPath)) {
-                    if (!m_overwriteOK.getBooleanValue()) {
-                        throw new InvalidSettingsException("File exists and can't be "
-                                + "overwritten, check dialog settings");
-                    } else if (!Files.isWritable(localPath)) {
-                        throw new InvalidSettingsException("Cannot write to file \""
-                                + localPath + "\".");
-                    } else {
-                        setWarningMessage("File exists and will be overwritten");
-                    }
-                }
-            }
-        } catch (MalformedURLException | URISyntaxException ex) {
-            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
-        } catch (IOException ex) {
-            throw new InvalidSettingsException("I/O error while checking output:" + ex.getMessage(), ex);
-        }
     }
 
     /**
