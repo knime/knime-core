@@ -363,7 +363,8 @@ final class DBGroupByNodeModel2 extends DBNodeModel {
                 columnBuf.append(", ");
             }
         }
-        buf.append("SELECT " + columnBuf.toString() + " FROM (" + selectQuery + ") " + tableName);
+        buf.append("SELECT " + columnBuf.toString() + " FROM (" + selectQuery + ") "
+                + manipulator.quoteIdentifier(tableName));
         // build GROUP BY clause
         if (!groupByCols.isEmpty()) {
             buf.append(" GROUP BY ");
