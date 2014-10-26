@@ -7337,6 +7337,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         UnsupportedWorkflowVersionException {
         final ReferencedFile refDirectory = persistor.getMetaPersistor().getNodeContainerDirectory();
         exec.setMessage("Loading workflow structure from \"" + refDirectory + "\"");
+        exec.checkCanceled();
         LoadVersion version = persistor.getLoadVersion();
         LOGGER.debug("Loading workflow from \"" + refDirectory + "\" (version \"" + version + "\" with loader class \""
             + persistor.getClass().getSimpleName() + "\")");
@@ -7368,6 +7369,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final FlowObjectStack ignoredStack, final ExecutionMonitor exec,
             final LoadResult loadResult, final boolean preserveNodeMessage)
         throws CanceledExecutionException {
+        exec.checkCanceled();
         if (!(nodePersistor instanceof WorkflowPersistor)) {
             throw new IllegalStateException("Expected " + WorkflowPersistor.class.getSimpleName()
                 + " persistor object, got " + nodePersistor.getClass().getSimpleName());
@@ -7393,8 +7395,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             persistorMap.put(id, p);
         }
         persistor.postLoad(this, loadResult);
-        postLoad(persistorMap, tblRep, persistor.mustWarnOnDataLoadError(),
-                exec, loadResult, preserveNodeMessage);
+        try {
+            postLoad(persistorMap, tblRep, persistor.mustWarnOnDataLoadError(),
+                    exec, loadResult, preserveNodeMessage);
+        } catch (CanceledExecutionException cee) {
+            for (NodeID insertedNodeID : translationMap.values()) {
+                removeNode(insertedNodeID);
+            }
+            throw cee;
+        }
         // set dirty if this wm should be reset (for instance when the state
         // of the workflow can't be properly read from the workflow.knime)
         if (persistor.needsResetAfterLoad() || persistor.isDirtyAfterLoad()) {
@@ -7481,6 +7490,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             NodeContainerPersistor persistor = persistorMap.get(bfsID);
             InternalNodeContainerState loadState = persistor.getMetaPersistor().getState();
             exec.setMessage(cont.getNameWithID());
+            exec.checkCanceled();
             // two steps below: loadNodeContainer and loadContent
             ExecutionMonitor sub1 = exec.createSubProgress(1.0 / (2 * m_workflow.getNrNodes()));
             ExecutionMonitor sub2 = exec.createSubProgress(1.0 / (2 * m_workflow.getNrNodes()));

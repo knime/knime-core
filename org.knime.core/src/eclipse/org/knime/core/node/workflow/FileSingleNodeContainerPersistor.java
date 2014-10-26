@@ -247,6 +247,7 @@ public abstract class FileSingleNodeContainerPersistor implements SingleNodeCont
         final NodeSettingsRO settingsForNode = loadSettingsForNode(result);
         m_settingsFailPolicy = translateToFailPolicy(m_metaPersistor.getState());
         m_sncSettings = new SingleNodeContainerSettings();
+        exec.checkCanceled();
         try {
             m_sncSettings.setMemoryPolicy(loadMemoryPolicySettings(m_nodeSettings));
         } catch (InvalidSettingsException e) {

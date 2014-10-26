@@ -720,6 +720,7 @@ public abstract class SingleNodeContainer extends NodeContainer {
                         + " persistor object, got "
                         + nodePersistor.getClass().getSimpleName());
             }
+            exec.checkCanceled();
             SingleNodeContainerPersistor persistor = (SingleNodeContainerPersistor)nodePersistor;
             InternalNodeContainerState state = persistor.getMetaPersistor().getState();
             setInternalState(state, false);

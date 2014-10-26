@@ -67,6 +67,7 @@ import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -89,21 +90,29 @@ public abstract class WorkflowTestCase extends TestCase {
         m_lock = new ReentrantLock();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setUp() throws Exception {
+        NodeLogger.setAppenderLevelRange(NodeLogger.STDOUT_APPENDER, LEVEL.DEBUG, LEVEL.WARN);
+        super.setUp();
+    }
+
     protected NodeID loadAndSetWorkflow() throws Exception {
         File workflowDir = getDefaultWorkflowDirectory();
         return loadAndSetWorkflow(workflowDir);
     }
 
     protected NodeID loadAndSetWorkflow(final File workflowDir) throws Exception {
-        WorkflowManager m = loadWorkflow(workflowDir);
+        WorkflowManager m = loadWorkflow(workflowDir, new ExecutionMonitor());
         setManager(m);
         return m.getID();
     }
 
-    protected WorkflowManager loadWorkflow(final File workflowDir) throws Exception {
-        WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(
-                workflowDir, new ExecutionMonitor(),
-                new WorkflowLoadHelper(workflowDir), false);
+    protected WorkflowManager loadWorkflow(final File workflowDir, final ExecutionMonitor exec) throws Exception {
+        WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(workflowDir, exec,
+            new WorkflowLoadHelper(workflowDir), false);
         WorkflowManager m = loadResult.getWorkflowManager();
         if (m == null) {
             throw new Exception("Errors reading workflow: "
@@ -196,9 +205,7 @@ public abstract class WorkflowTestCase extends TestCase {
             // don't use m_manager as corresponding project - some tests load 50+ workflows and
             // don't use the field in this superclass
             WorkflowManager project = nc instanceof WorkflowManager ? (WorkflowManager)nc : nc.getParent();
-            while (project.getParent() != WorkflowManager.ROOT) {
-                project = project.getParent();
-            }
+            project = project.getProjectWFM();
             dumpWorkflowToLog(project);
             fail(error);
         }

@@ -900,6 +900,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         final ReferencedFile workflowDirRef = workflowKNIMEFile.getParent();
         /* Load nodes */
         for (String nodeKey : nodes.keySet()) {
+            exec.checkCanceled();
             NodeSettingsRO nodeSetting;
             try {
                 nodeSetting = nodes.getNodeSettings(nodeKey);
@@ -1065,6 +1066,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             connections = EMPTY_SETTINGS;
         }
         for (String connectionKey : connections.keySet()) {
+            exec.checkCanceled();
             ConnectionContainerTemplate c;
             try {
                 c = loadConnection(connections.getNodeSettings(connectionKey));
@@ -1104,6 +1106,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
 
         for (Map.Entry<Integer, NodeFactoryUnknownException> missingNode : missingNodeIDMap.entrySet()) {
+            exec.checkCanceled();
             int missingNodeSuffix = missingNode.getKey();
             NodeAndBundleInformation nodeInfo = missingNode.getValue().getNodeAndBundleInformation();
             NodeSettingsRO additionalFactorySettings = missingNode.getValue().getAdditionalFactorySettings();
