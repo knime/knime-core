@@ -327,4 +327,15 @@ public class DialogComponentFileChooser extends DialogComponent {
     public void addChangeListener(final ChangeListener cl) {
         m_filesPanel.addChangeListener(cl);
     }
+
+    /**
+     * Sets if this file panel should allow remote URLs. In case they are not allowed and the user enters a non-local
+     * URL an error message is shown. The default is to allow remote URLs
+     *
+     * @param b <code>true</code> if remote URLs are allowed, <code>false</code> otherwise
+     * @since 2.11
+     */
+    public void setAllowRemoteURLs(final boolean b) {
+        m_filesPanel.setAllowRemoteURLs(b);
+    }
 }

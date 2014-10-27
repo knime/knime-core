@@ -155,6 +155,8 @@ public final class FilesHistoryPanel extends JPanel {
      */
     public static abstract class LocationCheckLabel extends JLabel {
         private static final long serialVersionUID = 6692875443028625895L;
+        /** <code>true</code> if remote URLs are allowed, <code>false</code> otherwise. */
+        protected boolean m_allowRemoteURLs = true;
 
         /**
          * Color for error messages.
@@ -177,6 +179,16 @@ public final class FilesHistoryPanel extends JPanel {
          * @param url URL of the location
          */
         public abstract void checkLocation(final URL url);
+
+        /**
+         * Sets if this file panel should allow remote URLs. In case they are not allowed and the user enters a non-local
+         * URL an error message is shown. The default is to allow remote URLs
+         *
+         * @param b <code>true</code> if remote URLs are allowed, <code>false</code> otherwise
+         */
+        public void setAllowRemoteURLs(final boolean b) {
+            m_allowRemoteURLs = b;
+        }
     }
 
     /**
@@ -216,6 +228,9 @@ public final class FilesHistoryPanel extends JPanel {
                             setForeground(ERROR);
                         }
                     }
+                } else if (!m_allowRemoteURLs) {
+                    setText("Error: remote locations are not supported");
+                    setForeground(ERROR);
                 } else {
                     setText("Info: remote output file will be overwritten if it exists");
                     setForeground(INFO);
@@ -254,6 +269,9 @@ public final class FilesHistoryPanel extends JPanel {
                         setText("Error: output directory does not exist");
                         setForeground(ERROR);
                     }
+                } else if (!m_allowRemoteURLs) {
+                    setText("Error: remote directories are not supported");
+                    setForeground(ERROR);
                 } else {
                     setText("Info: remote output directory will be overwritten if it exists");
                     setForeground(INFO);
@@ -302,6 +320,9 @@ public final class FilesHistoryPanel extends JPanel {
                         setText("Error: Input file does not exist");
                         setForeground(ERROR);
                     }
+                } else if (!m_allowRemoteURLs) {
+                    setText("Error: remote locations are not supported");
+                    setForeground(ERROR);
                 }
             } catch (IOException | URISyntaxException ex) {
                 // ignore it
@@ -338,6 +359,9 @@ public final class FilesHistoryPanel extends JPanel {
                         setText("Error: input directory does not exist");
                         setForeground(ERROR);
                     }
+                } else if (!m_allowRemoteURLs) {
+                    setText("Error: remote directories are not supported");
+                    setForeground(ERROR);
                 }
             } catch (IOException | URISyntaxException ex) {
                 // ignore it
@@ -886,6 +910,17 @@ public final class FilesHistoryPanel extends JPanel {
         } else {
             removeChangeListener(m_checkIfExistsListener);
         }
+    }
+
+    /**
+     * Sets if this file panel should allow remote URLs. In case they are not allowed and the user enters a non-local
+     * URL an error message is shown. The default is to allow remote URLs
+     *
+     * @param b <code>true</code> if remote URLs are allowed, <code>false</code> otherwise
+     * @since 2.11
+     */
+    public void setAllowRemoteURLs(final boolean b) {
+        m_warnMsg.setAllowRemoteURLs(b);
     }
 
     /**
