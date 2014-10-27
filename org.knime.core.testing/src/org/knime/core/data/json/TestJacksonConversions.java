@@ -44,53 +44,71 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   11 Sept. 2014 (Gabor): created
+ *   24 Oct. 2014 (Gabor): created
  */
-package org.knime.core.data.json.internal;
+package org.knime.core.data.json;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleActivator;
+import static org.junit.Assert.assertEquals;
+import static org.knime.core.data.json.TestJSONCell.norm;
+
+import javax.json.JsonValue;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.knime.core.data.json.internal.Activator;
+import org.knime.core.data.json.internal.JacksonConversionsImpl;
+import org.knime.core.data.json.internal.KNIMEJsonProvider;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
+ * Tests {@link JacksonConversions} implementation using the OSGi service.
  *
  * @author Gabor Bakos
  */
-public class Activator implements BundleActivator {
-    private static ClassLoader m_jsonProviderClassLoader;
+public class TestJacksonConversions {
+
+    private JacksonConversions m_conversions;
 
     /**
-     * {@inheritDoc}
+     * Finds the default implementation through OSGi service.
      */
-    @Override
-    public void start(final BundleContext ctx) throws Exception {
-        Bundle implBundle = null;
-        for (Bundle b : ctx.getBundles()) {
-            if ("org.glassfish.javax.json".equals(b.getSymbolicName())) {
-                implBundle = b;
-                break;
-            }
-        }
-        if (implBundle == null) {
-            throw new IllegalStateException("The glassfish implementation for the javax.json API could not be loaded.");
-        }
-        m_jsonProviderClassLoader = implBundle.adapt(BundleWiring.class).getClassLoader();
-        KNIMEJsonProvider.init(m_jsonProviderClassLoader);
+    @Before
+    public void serviceReference() {
+        BundleContext ctx = FrameworkUtil.getBundle(JSONValue.class).getBundleContext();
+        ServiceReference<JacksonConversions> ref = ctx.getServiceReference(JacksonConversions.class);
+        m_conversions = ctx.getService(ref);
+
     }
 
     /**
-     * {@inheritDoc}
+     * Test method for {@link org.knime.core.data.json.internal.JacksonConversionsImpl#toJackson(javax.json.JsonValue)}.
      */
-    @Override
-    public void stop(final BundleContext ctx) throws Exception {
+    @Test
+    public void testToJackson() {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(Activator.getJsonProviderClassLoader());
+            JsonValue input = new KNIMEJsonProvider().createObjectBuilder().add("hello", "world").build();
+            JsonNode node = m_conversions.toJackson(input);
+            assertEquals(norm(input.toString()), norm(node.toString()));
+        } finally {
+            Thread.currentThread().setContextClassLoader(cl);
+        }
     }
 
     /**
-     * @return the jsonProviderClassLoader
+     * Test method for
+     * {@link org.knime.core.data.json.internal.JacksonConversionsImpl#toJSR353(com.fasterxml.jackson.core.TreeNode)}.
      */
-    public static ClassLoader getJsonProviderClassLoader() {
-        return m_jsonProviderClassLoader;
+    @Test
+    public void testToJSR353() {
+        JsonNode input = JacksonConversionsImpl.newMapper().createObjectNode().put("hello", "world");
+        JsonValue node = m_conversions.toJSR353(input);
+        assertEquals(norm(input.toString()), norm(node.toString()));
     }
 
 }
