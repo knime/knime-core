@@ -384,7 +384,7 @@ public final class FilesHistoryPanel extends JPanel {
 
     private final FlowVariableModelButton m_flowVariableButton;
 
-    private int m_selectMode = JFileChooser.FILES_ONLY;
+    private int m_selectMode;
 
     private int m_dialogType = JFileChooser.OPEN_DIALOG;
 
@@ -440,6 +440,13 @@ public final class FilesHistoryPanel extends JPanel {
         }
         m_historyID = historyID;
         m_suffixes = suffixes;
+
+        if ((validation == LocationValidation.DirectoryInput) || (validation == LocationValidation.DirectoryOutput)) {
+            m_selectMode = JFileChooser.DIRECTORIES_ONLY;
+        } else {
+            m_selectMode = JFileChooser.FILES_AND_DIRECTORIES;
+        }
+
         m_textBox = new JComboBox<String>(new DefaultComboBoxModel<String>());
         m_textBox.setEditable(true);
         m_textBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
