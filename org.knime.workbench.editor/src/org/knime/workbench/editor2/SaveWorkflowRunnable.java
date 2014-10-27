@@ -61,6 +61,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowSaveHelper;
+import org.knime.core.util.FileUtil;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
 /**
@@ -123,6 +124,18 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
             } else {
                 wfm.save(workflowPath, m_saveHelper, exec);
             }
+            // copy report files, see bug 5717
+            if (m_saveHelper.isAutoSave() && oldWorkflowPath != null) {
+                File reportDesignFile = new File(oldWorkflowPath, "default_report.rptdesign");
+                File reportConfigFile = new File(oldWorkflowPath, "default_report.rptconfig");
+                if (reportDesignFile.isFile()) {
+                    FileUtil.copy(reportDesignFile, new File(workflowPath, reportDesignFile.getName()));
+                }
+                if (reportConfigFile.isFile()) {
+                    FileUtil.copy(reportConfigFile, new File(workflowPath, reportConfigFile.getName()));
+                }
+            }
+
             // the refresh used to take place in WorkflowEditor#saveTo but
             // was moved to this runnable as part of bug fix 3028
             IResource r = KnimeResourceUtil.getResourceForURI(workflowPath.toURI());
