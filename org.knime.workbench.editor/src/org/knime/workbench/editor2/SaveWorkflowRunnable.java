@@ -64,18 +64,16 @@ import org.knime.core.node.workflow.WorkflowSaveHelper;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
 /**
- * A runnable which is used by the {@link WorkflowEditor} to save a workflow
- * with a progress bar. NOTE: As the {@link UIManager} holds a reference to this
- * runnable an own class file is necessary sucht that all references to the
- * created workflow manager can be deleted, otherwise the manager can not be
- * deleted later and the memeory can not be freed.
+ * A runnable which is used by the {@link WorkflowEditor} to save a workflow with a progress bar. NOTE: As the
+ * {@link UIManager} holds a reference to this runnable an own class file is necessary sucht that all references to the
+ * created workflow manager can be deleted, otherwise the manager can not be deleted later and the memeory can not be
+ * freed.
  *
  * @author Christoph Sieb, University of Konstanz
  */
 class SaveWorkflowRunnable extends PersistWorkflowRunnable {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(SaveWorkflowRunnable.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(SaveWorkflowRunnable.class);
 
     private WorkflowEditor m_editor;
 
@@ -90,19 +88,14 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
     /**
      * Creates a runnable that saves the worfklow.
      *
-     * @param editor
-     *            the editor holding the workflow to save
-     * @param workflowFile
-     *            the file to save the workflow to
-     * @param exceptionMessage
-     *            holding an exception message
+     * @param editor the editor holding the workflow to save
+     * @param workflowFile the file to save the workflow to
+     * @param exceptionMessage holding an exception message
      * @param saveHelper Save options.
-     * @param monitor
-     *            the progress monitor to report the progress to
+     * @param monitor the progress monitor to report the progress to
      */
-    public SaveWorkflowRunnable(final WorkflowEditor editor,
-            final File workflowFile, final StringBuilder exceptionMessage,
-            final WorkflowSaveHelper saveHelper, final IProgressMonitor monitor) {
+    public SaveWorkflowRunnable(final WorkflowEditor editor, final File workflowFile,
+        final StringBuilder exceptionMessage, final WorkflowSaveHelper saveHelper, final IProgressMonitor monitor) {
         m_editor = editor;
         m_workflowFile = workflowFile;
         m_exceptionMessage = exceptionMessage;
@@ -115,8 +108,8 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
     public void run(final IProgressMonitor pm) {
         try {
             final WorkflowManager wfm = m_editor.getWorkflowManager();
-            ProgressHandler progressHandler = new ProgressHandler(pm, wfm.getNodeContainers().size(),
-                    "Saving workflow... (can not be canceled)");
+            ProgressHandler progressHandler =
+                new ProgressHandler(pm, wfm.getNodeContainers().size(), "Saving workflow... (can not be canceled)");
             final CheckCancelNodeProgressMonitor progressMonitor = new CheckCancelNodeProgressMonitor(pm);
 
             progressMonitor.addProgressListener(progressHandler);
@@ -132,8 +125,7 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
             }
             // the refresh used to take place in WorkflowEditor#saveTo but
             // was moved to this runnable as part of bug fix 3028
-            IResource r =
-                KnimeResourceUtil.getResourceForURI(workflowPath.toURI());
+            IResource r = KnimeResourceUtil.getResourceForURI(workflowPath.toURI());
             if (r != null) {
                 String pName = r.getName();
                 pm.setTaskName("Refreshing " + pName + "...");
@@ -141,18 +133,15 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
             }
         } catch (FileNotFoundException fnfe) {
             LOGGER.fatal("File not found", fnfe);
-            m_exceptionMessage.append("File access problems: "
-                    + fnfe.getMessage());
+            m_exceptionMessage.append("File access problems: " + fnfe.getMessage());
 
             m_monitor.setCanceled(true);
         } catch (IOException ioe) {
             if (m_workflowFile.length() == 0) {
                 LOGGER.info("New workflow created.");
             } else {
-                LOGGER.error("Could not save workflow: "
-                        + m_workflowFile.getName(), ioe);
-                m_exceptionMessage.append("File access problems: "
-                        + ioe.getMessage());
+                LOGGER.error("Could not save workflow: " + m_workflowFile.getName(), ioe);
+                m_exceptionMessage.append("File access problems: " + ioe.getMessage());
                 m_monitor.setCanceled(true);
             }
         } catch (CanceledExecutionException cee) {
@@ -162,15 +151,13 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
         } catch (Error e) {
             LOGGER.error("Could not save workflow", e);
 
-            m_exceptionMessage.append("Could not save workflow: "
-                    + e.getMessage());
+            m_exceptionMessage.append("Could not save workflow: " + e.getMessage());
             m_monitor.setCanceled(true);
 
         } catch (Exception e) {
             LOGGER.error("Could not save workflow", e);
 
-            m_exceptionMessage.append("Could not save workflow: "
-                    + e.getMessage());
+            m_exceptionMessage.append("Could not save workflow: " + e.getMessage());
             m_monitor.setCanceled(true);
         } finally {
             pm.subTask("Finished.");
