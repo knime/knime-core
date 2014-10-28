@@ -51,6 +51,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -320,6 +321,8 @@ public final class CheckUtils {
                     }
                 }
             }
+        } catch (InvalidPathException ex) {
+            throw new InvalidSettingsException("Invalid file system path: " + ex.getMessage(), ex);
         } catch (MalformedURLException | URISyntaxException ex) {
             throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
         } catch (IOException ex) {
@@ -358,6 +361,8 @@ public final class CheckUtils {
                     throw new InvalidSettingsException("Output directory '" + localPath + "' does not exist");
                 }
             }
+        } catch (InvalidPathException ex) {
+            throw new InvalidSettingsException("Invalid file system path: " + ex.getMessage(), ex);
         } catch (MalformedURLException | URISyntaxException ex) {
             throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
         } catch (IOException ex) {

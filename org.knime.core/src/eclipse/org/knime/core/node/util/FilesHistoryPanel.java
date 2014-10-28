@@ -67,6 +67,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -833,6 +834,9 @@ public final class FilesHistoryPanel extends JPanel {
             try {
                 URL url = FileUtil.toURL(selFile);
                 m_warnMsg.checkLocation(url);
+            } catch (InvalidPathException ex) {
+                m_warnMsg.setText("Invalid file system path: " + ex.getMessage());
+                m_warnMsg.setForeground(Color.RED);
             } catch (IOException ex) {
                 // ignore
             }
