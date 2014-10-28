@@ -279,8 +279,11 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
             @Override
             public void run() {
-                NodeView.super.callModelChanged();
-                setComponent(m_comp);
+                // only call modelChanged if view hasn't been closed by now (thread context switch)
+                if (m_comp != null) {
+                    NodeView.super.callModelChanged();
+                    setComponent(m_comp);
+                }
             }
         });
     }

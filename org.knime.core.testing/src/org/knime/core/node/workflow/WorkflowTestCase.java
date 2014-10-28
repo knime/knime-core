@@ -467,6 +467,13 @@ public abstract class WorkflowTestCase extends TestCase {
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
+        closeWorkflow();
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected void closeWorkflow() throws Exception {
         if (m_manager != null) {
             // in most cases we wait for individual nodes to finish. This
             // does not mean that the workflow state is also updated, give
