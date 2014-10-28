@@ -75,6 +75,8 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabaseConnectionPortObject;
+import org.knime.core.node.port.database.DatabaseConnectionPortObjectSpec;
+import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.util.MutableInteger;
 
@@ -133,17 +135,28 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                     + "' not found in input data.");
         }
 
-        m_settings.setValidateQuery(true);
+        if ((inSpecs.length > 1) || (inSpecs[1] instanceof DatabaseConnectionPortObjectSpec)) {
+            DatabaseConnectionSettings connSettings =
+                ((DatabaseConnectionPortObjectSpec)inSpecs[1]).getConnectionSettings(getCredentialsProvider());
+            m_settings.setValidateQuery(connSettings.getRetrieveMetadataInConfigure());
+        } else {
+            m_settings.setValidateQuery(true);
+        }
+
         final String oQuery = getQuery();
-        DataTableSpec spec = null;
+        PortObjectSpec[] spec = null;
         try {
             String newQuery = oQuery.replace(IN_PLACE_HOLDER, "");
             setQuery(newQuery);
-            spec = (DataTableSpec)super.configure(inSpecs)[0];
+            spec = super.configure(inSpecs);
         } finally {
             setQuery(oQuery);
         }
-        return new DataTableSpec[]{createSpec(spec, tableSpec.getColumnSpec(column))};
+        if (spec[0] == null) {
+            return spec;
+        } else {
+            return new DataTableSpec[]{createSpec((DataTableSpec)spec[0], tableSpec.getColumnSpec(column))};
+        }
     }
 
     /**
