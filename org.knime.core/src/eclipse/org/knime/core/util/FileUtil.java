@@ -108,8 +108,7 @@ public final class FileUtil {
     // timeout when connecting to or reading from URLs
     private static int urlTimeout = 1000;
 
-    private static final boolean IS_WINDOWS = System.getProperty("os.name")
-            .startsWith("Windows");
+    private static final boolean IS_WINDOWS = Platform.OS_WIN32.equals(Platform.getOS());
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -946,7 +945,7 @@ public final class FileUtil {
             result = result.substring(0, maxLength).trim();
         }
 
-        if (Platform.OS_WIN32.equals(Platform.getOS())) {
+        if (IS_WINDOWS) {
             m = FORBIDDEN_WINDOWS_NAMES.matcher(result);
             if (m.matches()) {
                 result = "_" + result.substring(1);
