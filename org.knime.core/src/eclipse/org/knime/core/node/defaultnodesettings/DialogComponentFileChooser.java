@@ -275,6 +275,7 @@ public class DialogComponentFileChooser extends DialogComponent {
     protected void validateSettingsBeforeSave()
             throws InvalidSettingsException {
         // nothing to validate, this component accepts all values in compliance with the noding guidelines
+        m_filesPanel.addToHistory();
     }
 
     /**

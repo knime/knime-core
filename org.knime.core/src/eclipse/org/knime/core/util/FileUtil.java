@@ -64,6 +64,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -1066,9 +1067,10 @@ public final class FileUtil {
      * @param path any path
      * @return a URL
      * @throws MalformedURLException if the path is neither a URL nor a proper filesystem path
+     * @throws InvalidPathException if the parameter looks like a file system path but is invalid
      * @since 2.11
      */
-    public static URL toURL(final String path) throws MalformedURLException {
+    public static URL toURL(final String path) throws MalformedURLException, InvalidPathException {
         try {
             return new URL(path.replace(" ", "%20")); // replacement of spaces is a fallback only
         } catch (MalformedURLException ex) {

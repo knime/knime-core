@@ -206,6 +206,7 @@ final class LineReaderNodeDialogPane extends NodeDialogPane {
             config.setLimitRowCount(-1);
         }
         config.saveConfiguration(settings);
+        m_filePanel.addToHistory();
     }
 
 }

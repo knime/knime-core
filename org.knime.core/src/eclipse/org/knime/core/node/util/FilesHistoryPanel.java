@@ -417,7 +417,7 @@ public final class FilesHistoryPanel extends JPanel {
     public FilesHistoryPanel(final FlowVariableModel fvm,
             final String historyID, final boolean showErrorMessage,
             final String... suffixes) {
-        this(fvm, historyID, showErrorMessage ? LocationValidation.FileOutput : LocationValidation.None, suffixes);
+        this(fvm, historyID, showErrorMessage ? LocationValidation.FileInput : LocationValidation.None, suffixes);
     }
     /**
      * Creates new instance, sets properties, for instance renderer,
@@ -953,5 +953,13 @@ public final class FilesHistoryPanel extends JPanel {
             }
         }
         return filters;
+    }
+
+    /**
+     * Adds the current location to the history.
+     * @since 2.11
+     */
+    public void addToHistory() {
+        StringHistory.getInstance(m_historyID).add(getSelectedFile());
     }
 }

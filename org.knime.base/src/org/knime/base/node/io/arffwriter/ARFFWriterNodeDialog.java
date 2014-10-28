@@ -157,6 +157,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
         settings.addString(ARFFWriterNodeModel.CFGKEY_FILENAME, m_url.getSelectedFile());
         settings.addBoolean(ARFFWriterNodeModel.CFGKEY_OVERWRITE_OK,
                 m_overwriteOKChecker.isSelected());
+        m_url.addToHistory();
     }
 
     /**

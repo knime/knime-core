@@ -108,6 +108,7 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
                 CSVReaderConfig.CFG_URL, FlowVariable.Type.STRING);
         FlowVariableModelButton button = new FlowVariableModelButton(varModel);
         varModel.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 FlowVariableModel wvm = (FlowVariableModel)(e.getSource());
                 m_filePanel.setEnabled(!wvm.isVariableReplacementEnabled());
@@ -295,6 +296,7 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
         int limitRows = (Integer)(m_limitRowsChecker.isSelected() ? m_limitRowsSpinner.getValue() : -1);
         config.setLimitRowsCount(limitRows);
         config.saveSettingsTo(settings);
+        m_filePanel.addToHistory();
     }
 
     private static String unescape(final String s) {
