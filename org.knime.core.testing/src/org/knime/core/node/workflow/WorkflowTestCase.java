@@ -67,7 +67,6 @@ import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -95,7 +94,8 @@ public abstract class WorkflowTestCase extends TestCase {
      */
     @Override
     protected void setUp() throws Exception {
-        NodeLogger.setAppenderLevelRange(NodeLogger.STDOUT_APPENDER, LEVEL.DEBUG, LEVEL.WARN);
+        // cannot be set as during jenkins testing "Appender 'stdout' does not exist"
+        // NodeLogger.setAppenderLevelRange(NodeLogger.STDOUT_APPENDER, LEVEL.DEBUG, LEVEL.WARN);
         super.setUp();
     }
 
