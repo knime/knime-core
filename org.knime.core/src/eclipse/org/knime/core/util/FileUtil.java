@@ -1086,6 +1086,9 @@ public final class FileUtil {
      * @since 2.11
      */
     public static URL toURL(final String path) throws MalformedURLException, InvalidPathException {
+        if (path.isEmpty()) {
+            throw new InvalidPathException("", "Empty path");
+        }
         try {
             return new URL(path.replace(" ", "%20")); // replacement of spaces is a fallback only
         } catch (MalformedURLException ex) {
