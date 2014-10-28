@@ -73,11 +73,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.output.NullOutputStream;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -923,6 +926,11 @@ public final class FileUtil {
         return createTempFile(prefix, suffix, true);
     }
 
+    private static Pattern FORBIDDEN_WINDOWS_NAMES = Pattern
+        .compile("^(?:(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\\.[^.]*)?|[ \\.])$");
+
+    private static Pattern ILLEGAL_PATH_CHARACTERS = Pattern.compile("[^a-zA-Z0-9 ]");
+
     /** For some suggested name the returned string can be used to create a file. All unsupported characters are
      * replaced by '_'. Used when a workflow is saved to derive the folder name for a node. The returned string
      * may change between version (as we allow more special characters).
@@ -932,9 +940,17 @@ public final class FileUtil {
      * @since 2.8
      */
     public static String getValidFileName(final String strWithWeirdChars, final int maxLength) {
-        String result = strWithWeirdChars.replaceAll("[^a-zA-Z0-9 ]", "_");
-        if (maxLength > 0 && result.length() > maxLength) {
+        Matcher m = ILLEGAL_PATH_CHARACTERS.matcher(strWithWeirdChars);
+        String result = m.replaceAll("_");
+        if ((maxLength > 0) && (result.length() > maxLength)) {
             result = result.substring(0, maxLength).trim();
+        }
+
+        if (Platform.OS_WIN32.equals(Platform.getOS())) {
+            m = FORBIDDEN_WINDOWS_NAMES.matcher(result);
+            if (m.matches()) {
+                result = "_" + result.substring(1);
+            }
         }
         return result;
     }
