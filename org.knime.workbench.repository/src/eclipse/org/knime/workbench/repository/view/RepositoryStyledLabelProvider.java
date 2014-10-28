@@ -48,9 +48,11 @@
  */
 package org.knime.workbench.repository.view;
 
+import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.StyledCellLabelProvider;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.ViewerCell;
+import org.eclipse.swt.graphics.Image;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.node.NodeFactory;
 import org.knime.workbench.repository.model.IContainerObject;
@@ -65,7 +67,7 @@ import org.osgi.framework.Constants;
  *
  * @author Marcel Hanser
  */
-final class RepositoryStyledLabelProvider extends StyledCellLabelProvider {
+final class RepositoryStyledLabelProvider extends StyledCellLabelProvider implements ILabelProvider {
 
     private RepositoryLabelProvider m_provider;
 
@@ -143,5 +145,24 @@ final class RepositoryStyledLabelProvider extends StyledCellLabelProvider {
         }
 
         return builder.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Image getImage(final Object element) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getText(final Object element) {
+        if (element instanceof IRepositoryObject) {
+            return ((IRepositoryObject)element).getName();
+        }
+        return element.toString();
     }
 }
