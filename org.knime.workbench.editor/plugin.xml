@@ -639,4 +639,13 @@
             id="org.knime.workbench.nodemonitorview.nodemonitorview"
             name="Node Monitor"/>
    </extension>
+     <extension
+           point="org.eclipse.ui.contexts">
+        <context
+              description="KNIME editor context, for key bindings for the knime perspective only"
+              id="org.knime.workbench.editor.context"
+              name="In KNIME perspective"
+              parentId="org.eclipse.ui.contexts.window">
+        </context>
+     </extension>
 </plugin>

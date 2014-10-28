@@ -38,6 +38,7 @@ a data &quot;workflow&quot;
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.knime.workbench.repository.view.QuickNodeInsertionHandler"
+            contextId="org.knime.workbench.editor.context"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+SPACE">
       </key>

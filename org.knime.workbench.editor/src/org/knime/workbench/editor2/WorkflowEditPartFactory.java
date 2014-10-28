@@ -49,6 +49,11 @@ package org.knime.workbench.editor2;
 
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartFactory;
+import org.eclipse.ui.IPartListener2;
+import org.eclipse.ui.IWorkbenchPartReference;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.contexts.IContextActivation;
+import org.eclipse.ui.contexts.IContextService;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeAnnotation;
@@ -76,13 +81,12 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**
- * This factory creates the GEF <code>EditPart</code>s instances (the
- * controller objects) for given model objects.
+ * This factory creates the GEF <code>EditPart</code>s instances (the controller objects) for given model objects.
  *
  * @author Florian Georg, University of Konstanz
  * @author Fabian Dill, University of Konstanz
  */
-public final class WorkflowEditPartFactory implements EditPartFactory {
+public final class WorkflowEditPartFactory implements EditPartFactory, IPartListener2 {
     /*
      * we need this flag to determine between the "root" workflow manager and
      * all subsequent meta nodes. This means that we implicitely assume that
@@ -97,23 +101,27 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
     private boolean m_isTop = true;
 
     /**
+     * Adds a part listener to activate the KNIME command context if the KNIME editor is visible.
+     */
+    public WorkflowEditPartFactory() {
+        PlatformUI.getWorkbench().getActiveWorkbenchWindow().getPartService().addPartListener(this);
+    }
+
+    /**
      * Creates the referring edit parts for the following parts of the model.
      * <ul>
-     *  <li>{@link WorkflowManager}: either {@link WorkflowRootEditPart} or
-     *  {@link NodeContainerEditPart} (depending on the currently displayed
-     *  level)</li>
-     *  <li>{@link SingleNodeContainer}: {@link NodeContainerEditPart}</li>
-     *  <li>{@link NodeInPort}: {@link NodeInPortEditPart}</li>
-     *  <li>{@link NodeOutPort}: {@link NodeOutPortEditPart}</li>
-     *  <li>{@link ConnectionContainer}: {@link ConnectionContainerEditPart}
-     *  </li>
-     *  <li>{@link WorkflowInPort}: {@link WorkflowInPortEditPart}</li>
-     *  <li>{@link WorkflowOutPort}: {@link WorkflowOutPortEditPart}</li>
+     * <li>{@link WorkflowManager}: either {@link WorkflowRootEditPart} or {@link NodeContainerEditPart} (depending on
+     * the currently displayed level)</li>
+     * <li>{@link SingleNodeContainer}: {@link NodeContainerEditPart}</li>
+     * <li>{@link NodeInPort}: {@link NodeInPortEditPart}</li>
+     * <li>{@link NodeOutPort}: {@link NodeOutPortEditPart}</li>
+     * <li>{@link ConnectionContainer}: {@link ConnectionContainerEditPart}</li>
+     * <li>{@link WorkflowInPort}: {@link WorkflowInPortEditPart}</li>
+     * <li>{@link WorkflowOutPort}: {@link WorkflowOutPortEditPart}</li>
      * </ul>
      *
-     * The {@link WorkflowRootEditPart} has its {@link NodeContainer}s and its
-     * {@link WorkflowInPort}s and {@link WorkflowOutPort}s as model children.
-     * The {@link NodeContainerEditPart} has its {@link NodePort}s as its
+     * The {@link WorkflowRootEditPart} has its {@link NodeContainer}s and its {@link WorkflowInPort}s and
+     * {@link WorkflowOutPort}s as model children. The {@link NodeContainerEditPart} has its {@link NodePort}s as its
      * children.
      *
      * @see WorkflowRootEditPart#getModelChildren()
@@ -121,7 +129,7 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
      *
      * @throws IllegalArgumentException if any other object is passed
      *
-     * {@inheritDoc}
+     *             {@inheritDoc}
      */
     @Override
     public EditPart createEditPart(final EditPart context, final Object model) {
@@ -164,8 +172,7 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
             // we have to test for WorkflowInPort first because it's a
             // subclass of NodeInPort (same holds for WorkflowOutPort and
             // NodeOutPort)
-        } else if (model instanceof WorkflowInPort
-                && context instanceof WorkflowInPortBarEditPart) {
+        } else if (model instanceof WorkflowInPort && context instanceof WorkflowInPortBarEditPart) {
             // WorkflowInPort and context WorkflowRootEditPart ->
             // WorkflowInPortEditPart
             /*
@@ -176,11 +183,8 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
              * NodeContainerEditPart and we look at it as a node in port.
              */
             WorkflowInPort inport = (WorkflowInPort)model;
-            part =
-                new WorkflowInPortEditPart(inport.getPortType(),
-                        inport.getPortIndex());
-        } else if (model instanceof WorkflowOutPort
-                && context instanceof WorkflowOutPortBarEditPart) {
+            part = new WorkflowInPortEditPart(inport.getPortType(), inport.getPortIndex());
+        } else if (model instanceof WorkflowOutPort && context instanceof WorkflowOutPortBarEditPart) {
             // WorkflowOutPort and context WorkflowRootEditPart ->
             // WorkflowOutPortEditPart
             /*
@@ -191,29 +195,23 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
              * NodeContainerEditPart and we look at it as a node out port.
              */
 
-         // TODO: return SubWorkFlowOutPortEditPart
+            // TODO: return SubWorkFlowOutPortEditPart
             WorkflowOutPort outport = (WorkflowOutPort)model;
 
-             part = new WorkflowOutPortEditPart(
-                        outport.getPortType(),
-                        outport.getPortIndex());
+            part = new WorkflowOutPortEditPart(outport.getPortType(), outport.getPortIndex());
         } else if (model instanceof WorkflowOutPort) {
-         // TODO: return SubWorkFlowOutPortEditPart
+            // TODO: return SubWorkFlowOutPortEditPart
             WorkflowOutPort outport = (WorkflowOutPort)model;
-            part = new MetaNodeOutPortEditPart(
-                    outport.getPortType(),
-                    outport.getPortIndex());
+            part = new MetaNodeOutPortEditPart(outport.getPortType(), outport.getPortIndex());
 
         } else if (model instanceof NodeInPort) {
             // NodeInPort -> NodeInPortEditPart
             NodePort port = (NodeInPort)model;
-            part = new NodeInPortEditPart(port.getPortType(),
-                    port.getPortIndex());
+            part = new NodeInPortEditPart(port.getPortType(), port.getPortIndex());
         } else if (model instanceof NodeOutPort) {
             // NodeOutPort -> NodeOutPortEditPart
             NodePort port = (NodeOutPort)model;
-            part = new NodeOutPortEditPart(port.getPortType(),
-                    port.getPortIndex());
+            part = new NodeOutPortEditPart(port.getPortType(), port.getPortIndex());
         } else if (model instanceof ConnectionContainer) {
             // ConnectionContainer -> ConnectionContainerEditPart
             part = new ConnectionContainerEditPart();
@@ -223,5 +221,80 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
         // associate the model with the part (= the controller)
         part.setModel(model);
         return part;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void partActivated(final IWorkbenchPartReference partRef) {
+        //NOOP
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void partBroughtToTop(final IWorkbenchPartReference partRef) {
+        //NOOP
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void partClosed(final IWorkbenchPartReference partRef) {
+        //NOOP
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void partDeactivated(final IWorkbenchPartReference partRef) {
+        //NOOP
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void partOpened(final IWorkbenchPartReference partRef) {
+        //NOOP
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void partHidden(final IWorkbenchPartReference partRef) {
+        //NOOP
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void partInputChanged(final IWorkbenchPartReference partRef) {
+        //NOOP
+    }
+
+    private IContextActivation m_activateContext;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void partVisible(final IWorkbenchPartReference partRef) {
+        boolean activated = WorkflowEditor.ID.equals(partRef.getId());
+        if (!activated && m_activateContext != null) {
+            m_activateContext.getContextService().deactivateContext(m_activateContext);
+            m_activateContext = null;
+        }
+        if (activated && m_activateContext == null) {
+            final IContextService contextService =
+                (IContextService)PlatformUI.getWorkbench().getService(IContextService.class);
+            m_activateContext = contextService.activateContext("org.knime.workbench.editor.context");
+        }
     }
 }
