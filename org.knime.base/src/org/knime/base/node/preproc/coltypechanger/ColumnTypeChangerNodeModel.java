@@ -50,6 +50,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -131,11 +132,13 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
 
         if (data.getRowCount() > 0) {
             // empty table check
+            SimpleDateFormat dateFormat = new SimpleDateFormat(m_dateFormat);
 
             for (DataRow row : data) {
                 for (int i = 0; i < incls.length; i++) {
                     // guess for each cell in each column the best matching datatype
-                    DataType newType = typeGuesser(row.getCell(data.getDataTableSpec().findColumnIndex(incls[i])));
+                    DataType newType =
+                        typeGuesser(row.getCell(data.getDataTableSpec().findColumnIndex(incls[i])), dateFormat);
                     if (types[i] != null) {
                         DataType toSet = setType(types[i], newType);
                         if (toSet.equals(newType) && !toSet.equals(types[i])) {
@@ -316,32 +319,36 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
      * @param cell
      * @return new DataType if string could be parsed else return old DataType
      */
-    private DataType typeGuesser(final DataCell cell) {
-        SimpleDateFormat date = new SimpleDateFormat(m_dateFormat);
+    private DataType typeGuesser(final DataCell cell, final DateFormat dateFormat) {
         if (!cell.isMissing()) {
             String str = cell.toString();
+
+            try {
+                dateFormat.parse(str);
+                return DateAndTimeCell.TYPE;
+            } catch (ParseException e1) {
+                // try another one
+            }
 
             try {
                 Integer.parseInt(str);
                 return IntCell.TYPE;
             } catch (NumberFormatException eInt) {
-                try {
-                    Long.parseLong(str);
-                    return LongCell.TYPE;
-                } catch (NumberFormatException eLong) {
-                    try {
-                        Double.parseDouble(str);
-                        return DoubleCell.TYPE;
+                // try another one
+            }
 
-                    } catch (NumberFormatException e) {
-                        try {
-                            date.parse(str);
-                            return DateAndTimeCell.TYPE;
-                        } catch (ParseException e1) {
-                            return cell.getType();
-                        }
-                    }
-                }
+            try {
+                Long.parseLong(str);
+                return LongCell.TYPE;
+            } catch (NumberFormatException eLong) {
+                // try another one
+            }
+
+            try {
+                Double.parseDouble(str);
+                return DoubleCell.TYPE;
+            } catch (NumberFormatException e) {
+                // too bad
             }
         }
         return cell.getType();
