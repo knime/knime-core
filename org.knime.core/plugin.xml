@@ -6,6 +6,7 @@
    <extension-point id="DataValueRenderer" name="DataValueRenderer" schema="schema/DataValueRenderer.exsd"/>
    <extension-point id="NodeFactoryClassMapper" name="Changes NodeFactory class names in saved workflows" schema="schema/NodeFactoryClassMapper.exsd"/>
    <extension-point id="DatabaseUtility" name="DatabaseUtility" schema="schema/DatabaseUtility.exsd"/>
+   <extension-point id="WizardNodeView" name="WizardNodeView" schema="schema/WizardNodeView.exsd"/>
    <extension
          point="org.knime.core.NodeExecutionJobManagerFactory">
       <NodeExecutionJobManagerFactory
@@ -237,5 +238,13 @@
             class="org.knime.core.node.port.database.DB2Utility"
             database="db2">
       </databaseUtility>
+   </extension>
+   <extension
+         point="org.knime.core.WizardNodeView">
+      <wizardNodeView
+            description="This browser uses the native system browser that SWT can use. In a typical environment this should be Internet Explorer on Windows and WebKit on Linux and Mac."
+            name="Internal Browser"
+            viewClass="org.knime.core.node.wizard.WizardNodeView">
+      </wizardNodeView>
    </extension>
 </plugin>

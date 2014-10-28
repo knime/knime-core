@@ -92,6 +92,12 @@ public interface WizardNode<REP extends WebViewContent, VAL extends WebViewConte
      */
     public String getJavascriptObjectID();
 
+    /**
+     * @return The path to the generated HTML containing the view or null if not applicable.
+     * @since 2.11
+     */
+    public String getViewHTMLPath();
+
     /** Property set in the configuration dialog to the node to skip this node in the wizard execution.
      * @return that property. */
     public boolean isHideInWizard();
