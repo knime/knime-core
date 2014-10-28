@@ -57,7 +57,7 @@ import org.knime.core.node.NodeLogger;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-final class SmilesTypeHelper {
+final public class SmilesTypeHelper {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(SmilesTypeHelper.class);
 

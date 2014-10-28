@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,91 +41,74 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   11.01.2006 (ohl): created
+ *   17.10.2014 (tibuch): created
  */
-package org.knime.base.node.io.filereader;
+package org.knime.base.node.io.fixedwidthfr;
 
+import java.io.IOException;
+
+import org.knime.base.node.io.filereader.FileReaderException;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.ExecutionContext;
 
 /**
- * The exception the {@link java.io.FileReader} (more specificaly the
- * {@link org.knime.base.node.io.filereader.FileRowIterator}) throws if
- * something goes wrong.
  *
- * This is a runtime exception for now.
- *
- * @author Peter Ohl, University of Konstanz
+ * @author Tim-Oliver Buchholz
  */
-public class FileReaderException extends RuntimeException {
+public class FixedWidthPreviewRowIterator extends FixedWidthRowIterator {
 
-    private final DataRow m_row;
+    private FixedWidthFRPreviewTable m_table;
 
-    private final int m_lineNumber;
-
-    private String m_detailsMsg;
+    // we end it after an error occurred, this flag indicates that.
+    private boolean m_done;
 
     /**
-     * Always provide a good user message why things go wrong.
+     * A new non-failing file row iterator. It wraps the passed iterator and catches its exceptions, converting them
+     * into rows with error messages.
      *
-     * @param msg the message to store in the exception
+     * @param nodeSettings the node settings
+     * @param tableSpec the tableSped
+     * @param exec the execution context
+     * @param previewTable the corresponding table this is the iterator from. Needed to pull the sprc from for creating
+     *            the row in case of an error/exception and to tell the table an error occurred.
+     * @throws IOException thrown if no buffered input reader can be created
      */
-    FileReaderException(final String msg) {
-        super(msg);
-        m_row = null;
-        m_lineNumber = -1;
-        m_detailsMsg = null;
+    FixedWidthPreviewRowIterator(final FixedWidthFRSettings nodeSettings, final DataTableSpec tableSpec,
+        final ExecutionContext exec, final FixedWidthFRPreviewTable previewTable) throws IOException {
+        super(nodeSettings, tableSpec, exec);
+        m_table = previewTable;
     }
 
     /**
-     * Constructor for an exception that stores the last (partial) row where
-     * things went wrong.
-     *
-     * @param msg the message what went wrong
-     * @param faultyRow the row as far as it got read
-     * @param lineNumber the lineNumber the error occurred
+     * {@inheritDoc}
      */
-    public FileReaderException(final String msg, final DataRow faultyRow,
-            final int lineNumber) {
-        super(msg);
-        m_row = faultyRow;
-        m_lineNumber = lineNumber;
+    @Override
+    public boolean hasNext() {
+        return !m_done && super.hasNext();
     }
 
     /**
-     * @return the row that was (possibly partially!) read before things went
-     *         wrong. Could be <code>null</code>, if not set.
+     * {@inheritDoc}
      */
-    public DataRow getErrorRow() {
-        return m_row;
+    @Override
+    public DataRow next() {
+        DataRow nextRow = null;
+
+        try {
+            nextRow = super.next();
+        } catch (FileReaderException fre) {
+            // after an error occurred all missing elements read would be
+            // junk. Thus we end the table after the first exception.
+            m_done = true;
+            m_table.setError(fre);
+            nextRow = fre.getErrorRow();
+
+        }
+
+        return nextRow;
     }
-
-    /**
-     * @return the line number where the error occurred in the file. Could be -1
-     *         if not set.
-     */
-    public int getErrorLineNumber() {
-        return m_lineNumber;
-    }
-
-    /**
-     * Sets an additional message.
-     *
-     * @param msg the additional message
-     */
-    void setDetailsMessage(final String msg) {
-        m_detailsMsg = msg;
-    }
-
-    /**
-     * @return the previously set message, or null.
-     */
-    public String getDetailedMessage() {
-        return m_detailsMsg;
-    }
-
-
 }
-
