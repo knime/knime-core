@@ -56,8 +56,9 @@ import org.knime.core.node.NodeLogger;
  * the base plugin, the necessary classes and fields are loaded via reflection.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @since 2.11
  */
-final public class SmilesTypeHelper {
+public final class SmilesTypeHelper {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(SmilesTypeHelper.class);
 

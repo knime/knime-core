@@ -85,6 +85,7 @@ public class FileReaderException extends RuntimeException {
      * @param msg the message what went wrong
      * @param faultyRow the row as far as it got read
      * @param lineNumber the lineNumber the error occurred
+     * @since 2.11
      */
     public FileReaderException(final String msg, final DataRow faultyRow,
             final int lineNumber) {
@@ -96,6 +97,7 @@ public class FileReaderException extends RuntimeException {
     /**
      * @return the row that was (possibly partially!) read before things went
      *         wrong. Could be <code>null</code>, if not set.
+     * @since 2.11
      */
     public DataRow getErrorRow() {
         return m_row;
@@ -104,6 +106,7 @@ public class FileReaderException extends RuntimeException {
     /**
      * @return the line number where the error occurred in the file. Could be -1
      *         if not set.
+     * @since 2.11
      */
     public int getErrorLineNumber() {
         return m_lineNumber;
@@ -120,11 +123,10 @@ public class FileReaderException extends RuntimeException {
 
     /**
      * @return the previously set message, or null.
+     * @since 2.11
      */
     public String getDetailedMessage() {
         return m_detailsMsg;
     }
-
-
 }
 
