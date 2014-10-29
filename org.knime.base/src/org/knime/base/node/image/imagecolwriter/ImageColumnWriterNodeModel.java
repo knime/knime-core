@@ -55,6 +55,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -72,6 +73,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.PathUtils;
 
 /**
  * This is the model for the Image writer node. It takes an image column from
@@ -146,8 +148,7 @@ public class ImageColumnWriterNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         CheckUtils.checkDestinationDirectory(m_directory.getStringValue());
 
-        double max = inData[0].getRowCount();
-        int count = 0;
+        int max = inData[0].getRowCount();
 
         URL remoteBaseUrl = FileUtil.toURL(m_directory.getStringValue());
         Path localDir = FileUtil.resolveToPath(remoteBaseUrl);
@@ -156,36 +157,48 @@ public class ImageColumnWriterNodeModel extends NodeModel {
                 inData[0].getDataTableSpec().findColumnIndex(
                         m_imageColumn.getStringValue());
 
+        int count = 0;
+        int missingCellCount = 0;
         for (DataRow row : inData[0]) {
             exec.checkCanceled();
-            ImageValue v = (ImageValue)row.getCell(colIndex);
-            final String ext = v.getImageExtension();
-            exec.setProgress(count++ / max, "Writing " + row.getKey() + "."
-                    + ext);
+            exec.setProgress(count++ / (double) max);
 
-            Path imageFile = null;
-            URL imageUrl = null;
-            if (localDir != null) {
-                String rowKey = row.getKey().getString();
-                imageFile =
-                    localDir.resolve((rowKey.startsWith(localDir.getFileSystem().getSeparator()) ? rowKey.substring(1)
-                        : rowKey) + "." + ext);
-                if (!m_overwrite.getBooleanValue() && Files.exists(imageFile)) {
-                    throw new IOException("Output file '" + imageFile
-                        + "' exists and must not be overwritten due to user settings");
-                }
-                // create parent directories in case the row key denotes a path (hidden feature, see bug #4537)
-                Path parentDir = imageFile.getParent();
-                Files.createDirectories(parentDir);
+            DataCell cell = row.getCell(colIndex);
+            if (cell.isMissing()) {
+                missingCellCount++;
+                getLogger().debug("Skipping row " + row.getKey() + " since the cell is missing.");
             } else {
-                imageUrl = new URL(remoteBaseUrl.toString() + row.getKey() + "." + ext);
-            }
+                ImageValue v = (ImageValue)cell;
+                final String ext = v.getImageExtension();
+                String name = row.getKey().getString() + "." + ext;
+
+                exec.setProgress(count / (double) max, "Writing " + name + " (" + count + " of " + max + ")");
+
+                Path imageFile = null;
+                URL imageUrl = null;
+                if (localDir != null) {
+                    imageFile = PathUtils.resolvePath(localDir, name);
+                    if (!m_overwrite.getBooleanValue() && Files.exists(imageFile)) {
+                        throw new IOException("Output file '" + imageFile
+                            + "' exists and must not be overwritten due to user settings");
+                    }
+                    // create parent directories in case the row key denotes a path (hidden feature, see bug #4537)
+                    Path parentDir = imageFile.getParent();
+                    Files.createDirectories(parentDir);
+                } else {
+                    imageUrl = new URL(remoteBaseUrl.toString() + name);
+                }
 
 
-            ImageContent content = v.getImageContent();
-            try (OutputStream os = openOutputStream(imageUrl, imageFile)) {
-                content.save(os);
+                ImageContent content = v.getImageContent();
+                try (OutputStream os = openOutputStream(imageUrl, imageFile)) {
+                    content.save(os);
+                }
             }
+        }
+
+        if (missingCellCount > 0) {
+            setWarningMessage("Skipped " + missingCellCount + " row(s) due to missing values.");
         }
 
         return new BufferedDataTable[0];
