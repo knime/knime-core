@@ -326,15 +326,15 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
     protected final void callOpenView(final String title) {
         NodeContext.pushContext(m_nodeContext);
         try {
-            onOpen();
-            getNodeModel().addWarningListener(this);
-            callModelChanged();
-            warningChanged(getNodeModel().getWarningMessage());
+            getNodeModel().addWarningListener(NodeView.this);
             // show frame, make sure to do this in EDT (GUI related task)
             Runnable runner = new Runnable() {
                 /** {@inheritDoc} */
                 @Override
                 public void run() {
+                    onOpen();
+                    callModelChanged();
+                    warningChanged(getNodeModel().getWarningMessage());
                     m_frame.setName(title);
                     setTitle(title);
                     if (m_comp != null) {
@@ -381,22 +381,22 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
      */
     @Override
     public final void callCloseView() {
-        NodeContext.pushContext(m_nodeContext);
-        try {
-            onClose();
-        } catch (Throwable t) {
-            getLogger().error(
-                "NodeView.onClose() caused an error during closing node view, reason: " + t.getMessage(), t);
-        } finally {
-            NodeContext.removeLastContext();
-        }
         getNodeModel().removeWarningListener(this);
         m_frame.getContentPane().firePropertyChange(PROP_CHANGE_CLOSE, 0, 1);
-        m_activeComp = null;
-        m_comp = null;
         Runnable runner = new Runnable() {
             @Override
             public void run() {
+                NodeContext.pushContext(m_nodeContext);
+                try {
+                    onClose();
+                } catch (Throwable t) {
+                    getLogger().error(
+                        "NodeView.onClose() caused an error during closing node view, reason: " + t.getMessage(), t);
+                } finally {
+                    NodeContext.removeLastContext();
+                }
+                m_activeComp = null;
+                m_comp = null;
                 m_frame.setVisible(false);
                 m_frame.removeWindowListener(m_windowListener);
                 m_alwaysOnTopMenu.removeActionListener(m_alwaysOnTopActionListener);
