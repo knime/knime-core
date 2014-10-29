@@ -155,17 +155,18 @@ final class CSVReaderNodeModel extends NodeModel {
         long limitRowsCount = m_config.getLimitRowsCount();
         settings.setMaximumNumberOfRowsToRead(limitRowsCount);
 
-        settings = FileAnalyzer.analyze(settings, null);
+        final ExecutionMonitor analyseExec = exec.createSubProgress(0.5);
+        final ExecutionContext readExec = exec.createSubExecutionContext(0.5);
+        exec.setMessage("Analyzing file");
+        settings = FileAnalyzer.analyze(settings, analyseExec);
         SettingsStatus status = settings.getStatusOfSettings();
         if (status.getNumOfErrors() > 0) {
             throw new IllegalStateException(status.getErrorMessage(0));
         }
 
-        FileTable fTable = new FileTable(
-                settings.createDataTableSpec(),
-                settings, exec.createSubExecutionContext(0.5));
-        BufferedDataTable table = exec.createBufferedDataTable(
-                fTable, exec.createSubProgress(0.5));
+        exec.setMessage("Buffering file");
+        FileTable fTable = new FileTable(settings.createDataTableSpec(), settings, readExec);
+        BufferedDataTable table = exec.createBufferedDataTable(fTable, exec.createSubExecutionContext(0.0));
 
         return new BufferedDataTable[] {table};
     }
