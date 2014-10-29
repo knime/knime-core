@@ -133,6 +133,7 @@ public class FixedWidthTokenizer {
             if (m_currentLine == 1 && m_nodeSettings.getHasColHeaders()) {
                 // skip first row if we have column headers
                 m_line = m_inputStream.readLine();
+                m_currentLine++;
                 if (m_line == null) {
                     // EOF
                     return null;
