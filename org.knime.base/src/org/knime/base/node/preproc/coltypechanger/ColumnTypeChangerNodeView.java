@@ -100,7 +100,12 @@ public class ColumnTypeChangerNodeView extends NodeView<ColumnTypeChangerNodeMod
         final String[][] reasons = nodeModel.getReasons();
         final String[] colNames = {"Column name", "Final column type", "First occurrence of final column type"};
 
+        DefaultTableModel m = new DefaultTableModel(reasons, colNames);
+
+
+
         m_table.setModel(new DefaultTableModel(reasons, colNames));
+        m_table.getColumn(colNames[2]).setMinWidth(150);
     }
 
 }
