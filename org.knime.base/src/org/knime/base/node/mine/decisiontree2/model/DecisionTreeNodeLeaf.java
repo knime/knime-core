@@ -80,8 +80,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
 
     private static final String CONFIG_KEY_PATTERN = "pattern";
 
-    private HashSet<RowKey> m_coveredPattern =
-        new HashSet<RowKey>();
+    private Set<RowKey> m_coveredPattern =  new HashSet<RowKey>();
 
     private boolean m_pureEnough = false;
 
@@ -228,10 +227,10 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     public void loadNodeInternalsFromPredParams(final ModelContentRO pConf)
             throws InvalidSettingsException {
 
-        // if the keys and colors are available for loadeding
+        // if the keys and colors are available for loading
         if (pConf.containsKey(CONFIG_KEY_PATTERNS)) {
             Config patternsConfig = pConf.getConfig(CONFIG_KEY_PATTERNS);
-            m_coveredPattern.clear();
+            Set<RowKey> coveredPatterns = new HashSet<>();
             for (String key : patternsConfig) {
                 RowKey keyCell;
                 try {
@@ -240,8 +239,9 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
                 } catch (InvalidSettingsException ise) {
                     keyCell = new RowKey(patternsConfig.getString(key));
                 }
-                m_coveredPattern.add(keyCell);
+                coveredPatterns.add(keyCell);
             }
+            m_coveredPattern = coveredPatterns;
         }
     }
 
