@@ -95,6 +95,9 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
         if ((m_settings.from() > m_settings.to()) ^ (m_settings.step() < 0)) {
             throw new InvalidSettingsException("From must be smaller than to");
         }
+        if ((m_settings.from() < m_settings.to()) ^ (m_settings.step() > 0)) {
+            throw new InvalidSettingsException("From must be bigger than to or step must be negativ.");
+        }
 
         m_value = m_settings.from();
         final String prefix = m_settings.prefix();
@@ -158,7 +161,14 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
      */
     @Override
     public boolean terminateLoop() {
-        return m_value > m_settings.to();
+        if(m_settings.step() > 0) {
+            return m_value > m_settings.to();
+        }else if (m_settings.step() < 0){
+            return m_value < m_settings.to();
+        }else{
+            // we never end up here --> step() == 0
+            return false;
+        }
     }
 
     /**
@@ -215,8 +225,11 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
         LoopStartIntervalSettings s = new LoopStartIntervalSettings();
         s.loadSettings(settings);
 
-        if ((s.from() > s.to()) ^ (s.step() < 0)) {
-            throw new InvalidSettingsException("From must be smaller than to");
+        if ((s.from() > s.to()) && (s.step() > 0)) {
+            throw new InvalidSettingsException("From must be smaller than to or step must be negativ.");
+        }
+        if ((s.from() < s.to()) && (s.step() < 0)) {
+            throw new InvalidSettingsException("From must be bigger than to or step must be positiv.");
         }
     }
 }
