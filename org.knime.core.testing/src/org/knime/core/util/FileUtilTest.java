@@ -48,7 +48,7 @@
  */
 package org.knime.core.util;
 
-import static org.hamcrest.core.AnyOf.anyOf;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
