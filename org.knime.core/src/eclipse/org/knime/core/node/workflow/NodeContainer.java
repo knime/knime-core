@@ -368,6 +368,7 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
             }
             // queue job if state change was successful
             NodeExecutionJobManager jobManager = findJobManager();
+            NodeContext.pushContext(this);
             try {
                 NodeExecutionJob job = jobManager.submitJob(this, inData);
                 setExecutionJob(job);
@@ -383,6 +384,8 @@ public abstract class NodeContainer implements NodeProgressListener, NodeContain
                 }
                 notifyParentPostExecuteStart(NodeContainerExecutionStatus.FAILURE);
                 notifyParentExecuteFinished(NodeContainerExecutionStatus.FAILURE);
+            } finally {
+                NodeContext.removeLastContext();
             }
         }
         return true;
