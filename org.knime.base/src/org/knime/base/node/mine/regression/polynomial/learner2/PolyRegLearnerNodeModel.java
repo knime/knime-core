@@ -322,11 +322,11 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         temp[temp.length - 1] = m_settings.getTargetColumn();
         FilterColumnTable filteredTable = new FilterColumnTable(inTable, temp);
 
-        m_rowContainer = new DefaultDataArray(filteredTable, 1, m_settings.getMaxRowsForView());
-        int ignore = m_rowContainer.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn());
+        DataArray rowContainer = new DefaultDataArray(filteredTable, 1, m_settings.getMaxRowsForView());
+        int ignore = rowContainer.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn());
 
         m_meanValues = new double[independentVariables];
-        rows: for (DataRow row : m_rowContainer) {
+        rows: for (DataRow row : rowContainer) {
             exec.checkCanceled();
             int k = 0;
             switch (m_settings.getMissingValueHandling()) {
@@ -386,6 +386,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             m_viewData =
                 new PolyRegViewData(m_meanValues, m_betas, stdErrors, tValues, pValues, m_squaredError, polyRegContent.getAdjustedRSquared(), m_columnNames, m_settings.getDegree(),
                     m_settings.getTargetColumn());
+            m_rowContainer = rowContainer;
             return bdt;
         } catch (ModelSpecificationException e) {
             final String origWarning = getWarningMessage();
@@ -409,6 +410,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             m_viewData =
                 new PolyRegViewData(m_meanValues, m_betas, nans, nans, nans, m_squaredError, Double.NaN, m_columnNames,
                     m_settings.getDegree(), m_settings.getTargetColumn());
+            m_rowContainer = rowContainer;
             empty.close();
             PortObject[] bdt = new PortObject[]{model, rearrangerTable, empty.getTable()};
             return bdt;

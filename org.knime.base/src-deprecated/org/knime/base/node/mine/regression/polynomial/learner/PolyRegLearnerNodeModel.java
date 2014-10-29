@@ -278,11 +278,11 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         temp[temp.length - 1] = m_settings.getTargetColumn();
         FilterColumnTable filteredTable = new FilterColumnTable(inTable, temp);
 
-        m_rowContainer = new DefaultDataArray(filteredTable, 1, m_settings.getMaxRowsForView());
-        int ignore = m_rowContainer.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn());
+        DataArray rowContainer = new DefaultDataArray(filteredTable, 1, m_settings.getMaxRowsForView());
+        int ignore = rowContainer.getDataTableSpec().findColumnIndex(m_settings.getTargetColumn());
 
         m_meanValues = new double[independentVariables];
-        for (DataRow row : m_rowContainer) {
+        for (DataRow row : rowContainer) {
             int k = 0;
             for (int i = 0; i < row.getNumCells(); i++) {
                 if (i != ignore) {
@@ -291,7 +291,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             }
         }
         for (int i = 0; i < m_meanValues.length; i++) {
-            m_meanValues[i] /= m_rowContainer.size();
+            m_meanValues[i] /= rowContainer.size();
         }
 
         ColumnRearranger crea = new ColumnRearranger(inTable.getDataTableSpec());
@@ -308,6 +308,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
         m_viewData =
             new PolyRegViewData(m_meanValues, m_betas, m_squaredError, m_columnNames, m_settings.getDegree(),
                 m_settings.getTargetColumn());
+        m_rowContainer = rowContainer;
         return bdt;
     }
 
