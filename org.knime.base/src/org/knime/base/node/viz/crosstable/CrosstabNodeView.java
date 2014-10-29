@@ -741,7 +741,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                     naming, propIndices).keySet()) {
                 propIndices.remove(key);
             }
-            Iterator<DataRow> iter = out.iterator();
+            Iterator<DataRow> iter = out.iteratorFailProve();
             DataRow row = iter.next();
             List<CrosstabRow> rows = new ArrayList<CrosstabRow>();
 
