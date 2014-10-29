@@ -103,9 +103,15 @@ public class Bug_5630_DelayedNodeViewNotification extends WorkflowTestCase {
         Logger.getRootLogger().addAppender(m_logAppender);
     }
 
+    /**
+     * Opens a view, executes the workflows, closes the workflow and checks whether view updates after closing the
+     * workflow are filtered.
+     *
+     * @throws Exception if an error occurs
+     */
     public void testExecuteAndClose() throws Exception {
         NativeNodeContainer crossTabNode = (NativeNodeContainer)findNodeContainer(m_crossTab2);
-        NodeView view = (NodeView)crossTabNode.getView(0);
+        NodeView<?> view = (NodeView<?>)crossTabNode.getView(0);
         Node.invokeOpenView(view, "Test View");
         ViewUtils.invokeLaterInEDT(new Runnable() {
             @Override
@@ -130,7 +136,13 @@ public class Bug_5630_DelayedNodeViewNotification extends WorkflowTestCase {
             }
         });
         if (!m_logEvents.isEmpty()) {
-            throw new Exception("Unexpected exception while executing test: " + m_logEvents.toString());
+            StringBuilder errors = new StringBuilder();
+            for (LoggingEvent ev : m_logEvents) {
+                errors.append(ev.getRenderedMessage()).append("; ");
+            }
+            errors.delete(errors.length() - 2, errors.length());
+
+            throw new Exception("Unexpected exception while executing test: " + errors.toString());
         }
     }
 
@@ -142,5 +154,4 @@ public class Bug_5630_DelayedNodeViewNotification extends WorkflowTestCase {
         Logger.getRootLogger().removeAppender(m_logAppender);
         super.tearDown();
     }
-
 }
