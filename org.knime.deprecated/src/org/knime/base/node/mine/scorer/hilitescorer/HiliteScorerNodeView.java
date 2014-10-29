@@ -77,10 +77,10 @@ import org.knime.core.node.property.hilite.KeyEvent;
 /**
  * This view displays the scoring results. It needs to be hooked up with a
  * scoring model.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
-final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel> 
+final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
         implements HiLiteListener {
     /*
      * Components displaying the scorer table, number of correct/wrong
@@ -98,15 +98,15 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
 
     private JLabel m_accuracy;
 
-    private boolean[][] m_cellHilited;
-    
+    private boolean[][] m_cellHilited = new boolean[0][0];
+
     /**
      * Creates a new ScorerNodeView displaying the table with the score.
-     * 
+     *
      * The view consists of the table with the example data and the appropriate
      * scoring in the upper part and the summary of correct and wrong classified
      * examples in the lower part.
-     * 
+     *
      * @param nodeModel
      *            the underlying <code>NodeModel</code>
      */
@@ -161,7 +161,7 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
 
     /**
      * Call this function to tell the view that the model has changed.
-     * 
+     *
      * @see NodeView#modelChanged()
      */
     @Override
@@ -199,17 +199,17 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
                 headerNames, rowHeaderDescription, columnHeaderDescription);
 
         m_tableView.setModel(dataModel);
-        
+
         NumberFormat nf = NumberFormat.getInstance();
         m_correct.setText(String.valueOf(nf.format(model.getCorrectCount())));
         m_wrong.setText(String.valueOf(nf.format(model.getFalseCount())));
         m_error.setText(String.valueOf(nf.format(model.getError())));
-        m_error.setToolTipText("Error: " 
+        m_error.setToolTipText("Error: "
                 + String.valueOf(model.getError()) + " %");
         double accurarcy = 100.0 * model.getCorrectCount()
             / (model.getCorrectCount() + model.getFalseCount());
         m_accuracy.setText(String.valueOf(nf.format(accurarcy)));
-        m_accuracy.setToolTipText("Accuracy: " 
+        m_accuracy.setToolTipText("Accuracy: "
                 + String.valueOf(accurarcy) + " %");
     }
 
@@ -233,7 +233,7 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
 
     /**
      * Get a new menu to control hiliting for this view.
-     * 
+     *
      * @return a new JMenu with hiliting buttons
      */
     private JMenu createHiLiteMenu() {
@@ -247,7 +247,7 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
 
     /**
      * Helper function to create new JMenuItems that are in the hilite menu.
-     * 
+     *
      * @return all those items in an array
      */
     Collection<JMenuItem> createHiLiteMenuItems() {
@@ -255,6 +255,7 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
         JMenuItem hsitem = new JMenuItem("Hilite Selected");
         hsitem.setMnemonic('S');
         hsitem.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 hiliteSelected();
             }
@@ -265,6 +266,7 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
         JMenuItem usitem = new JMenuItem("Unhilite Selected");
         usitem.setMnemonic('U');
         usitem.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 unHiliteSelected();
             }
@@ -275,6 +277,7 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
         JMenuItem chitem = new JMenuItem("Clear Hilite");
         chitem.setMnemonic('C');
         chitem.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 resetHilite();
             }
@@ -366,7 +369,7 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
 
         /**
          * Creates a cell renderer for the hilite scorer view.
-         * 
+         *
          */
         public AttributiveCellRenderer() {
             setOpaque(true);
@@ -417,8 +420,9 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void hiLite(final KeyEvent event) {
-        
+
         updateHilitedCells();
 
         m_tableView.repaint();
@@ -428,34 +432,35 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
         if (getNodeModel().getInHiLiteHandler(0) != null) {
             Set<RowKey> hilitedKeys = getNodeModel().getInHiLiteHandler(0)
                     .getHiLitKeys();
-        
-            Point[] completeHilitedCells = 
+
+            Point[] completeHilitedCells =
                 getNodeModel().getCompleteHilitedCells(hilitedKeys);
-        
+
             // hilite all cells given by the points
             for (Point cell : completeHilitedCells) {
                 m_cellHilited[cell.x][cell.y] = true;
             }
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     protected HiliteScorerNodeModel getNodeModel() {
-        return (HiliteScorerNodeModel) super.getNodeModel();
+        return super.getNodeModel();
     }
 
     /**
      * Checks for all hilit cells the model. If a key noted as unhilit in the
      * event occurs in a hilit cell the cell is unhilit (principle of
      * correctness!!)
-     * 
+     *
      * {@inheritDoc}
      */
+    @Override
     public void unHiLite(final KeyEvent event) {
-        
+
         for (int i = 0; i < m_cellHilited.length; i++) {
             for (int j = 0; j < m_cellHilited[i].length; j++) {
                 if (m_cellHilited[i][j]) {
@@ -473,6 +478,7 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void unHiLiteAll(final KeyEvent event) {
         clearHiliteBackgroundColor();
     }
