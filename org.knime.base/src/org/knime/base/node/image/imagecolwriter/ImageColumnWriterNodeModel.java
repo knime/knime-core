@@ -166,11 +166,17 @@ public class ImageColumnWriterNodeModel extends NodeModel {
             Path imageFile = null;
             URL imageUrl = null;
             if (localDir != null) {
-                imageFile = localDir.resolve(row.getKey() + "." + ext);
+                String rowKey = row.getKey().getString();
+                imageFile =
+                    localDir.resolve((rowKey.startsWith(localDir.getFileSystem().getSeparator()) ? rowKey.substring(1)
+                        : rowKey) + "." + ext);
                 if (!m_overwrite.getBooleanValue() && Files.exists(imageFile)) {
                     throw new IOException("Output file '" + imageFile
-                        + "' exists must not be overwritten due to user settings");
+                        + "' exists and must not be overwritten due to user settings");
                 }
+                // create parent directories in case the row key denotes a path (hidden feature, see bug #4537)
+                Path parentDir = imageFile.getParent();
+                Files.createDirectories(parentDir);
             } else {
                 imageUrl = new URL(remoteBaseUrl.toString() + row.getKey() + "." + ext);
             }
