@@ -50,8 +50,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.Collection;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitTaskMirror.JUnitTestRunnerMirror;
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitTest;
@@ -60,6 +65,7 @@ import org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
@@ -74,7 +80,19 @@ import org.knime.core.node.workflow.BatchExecutor;
 public class UnittestRunnerApplication implements IApplication {
     private volatile boolean m_stopped;
 
+    private volatile boolean m_leftDispatchLoop = false;
+
     private File m_destDir;
+
+    private void dispatchLoop(final Display display) {
+        while (!m_stopped) {
+            if (!display.readAndDispatch()) {
+                display.sleep();
+            }
+        }
+        m_leftDispatchLoop = true;
+    }
+
 
     @Override
     public Object start(final IApplicationContext context) throws Exception {
@@ -90,12 +108,40 @@ public class UnittestRunnerApplication implements IApplication {
             throw new IOException("Could not create destination directory '" + m_destDir + "'");
         }
 
-        Collection<Class<?>> allTests = AllJUnitTests.getAllJunitTests();
-        int maxNameLength = 0;
+        final Collection<Class<?>> allTests = AllJUnitTests.getAllJunitTests();
+        int l = 0;
         for (Class<?> testClass : allTests) {
-            maxNameLength = Math.max(maxNameLength, testClass.getName().length());
+            l = Math.max(l, testClass.getName().length());
         }
+        final int maxNameLength = l;
 
+        final Display display = Display.getCurrent();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Callable<Integer> callabale = new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                Thread.currentThread().setName("Unittest executor");
+                try {
+                    runAllTests(allTests, maxNameLength);
+                    return EXIT_OK;
+                } finally {
+                    stop();
+                    while (!m_leftDispatchLoop) {
+                        display.wake();
+                        Thread.sleep(100);
+                    }
+                }
+            }
+        };
+        Future<Integer> result = executor.submit(callabale);
+        dispatchLoop(display);
+
+        return result.get();
+    }
+
+
+    private void runAllTests(final Collection<Class<?>> allTests, final int maxNameLength) throws FileNotFoundException,
+        UnsupportedEncodingException, IOException {
         final PrintStream sysout = System.out; // we save and use the copy because some test may re-assign it
         final PrintStream syserr = System.err;
         // run the tests
@@ -181,8 +227,6 @@ public class UnittestRunnerApplication implements IApplication {
                     break;
             }
         }
-
-        return EXIT_OK;
     }
 
     @Override
