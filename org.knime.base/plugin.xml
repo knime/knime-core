@@ -1680,7 +1680,7 @@
             id="org.knime.base.node.preproc.coltypechanger.ColumnTypeChangerNodeFactory">
       </node>
            <node
-            category-path="io/reader"
+            category-path="/io/read"
             expert-flag="false"
             factory-class="org.knime.base.node.io.fixedwidthfr.FixedWidthFRNodeFactory"
             id="org.knime.base.node.io.fixedwidthfr.FixedWidthFRNodeFactory">
