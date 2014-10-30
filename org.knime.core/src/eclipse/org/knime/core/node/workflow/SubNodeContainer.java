@@ -991,14 +991,27 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         assert rawInObjects.length == m_inports.length;
         m_isPerformingActionCalledFromParent = true;
         try {
-            // and launch execute on entire sub workflow
+            // launch execute on entire sub workflow and then wait for inner workflow to finish -
+            // mark this thread as idle to avoid deadlock situation
             m_wfm.executeAll();
-            boolean isCanceled = false;
+            boolean isCanceled;
             try {
-                m_wfm.waitWhileInExecution(-1, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                m_wfm.cancelExecution();
-                isCanceled = true;
+                isCanceled = ThreadPool.currentPool().runInvisible(new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() throws Exception {
+                        try {
+                            m_wfm.waitWhileInExecution(-1, TimeUnit.SECONDS);
+                            return false;
+                        } catch (InterruptedException e) {
+                            m_wfm.cancelExecution();
+                            return true;
+                        }
+                    }
+                });
+            } catch (ExecutionException ee) {
+                isCanceled = false;
+                LOGGER.error(ee.getCause().getClass().getSimpleName()
+                    + " while waiting for inner workflow to complete", ee);
             }
             final InternalNodeContainerState internalState = m_wfm.getInternalState();
             boolean allExecuted = internalState.isExecuted();
