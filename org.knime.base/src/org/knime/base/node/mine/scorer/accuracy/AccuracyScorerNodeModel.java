@@ -168,7 +168,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
     /**
      * Stores the row keys for the confusion matrix fields to allow hiliting.
      */
-    private List<RowKey>[][] m_keyStore;
+    private List<RowKey>[][] m_keyStore = new List[0][0];
 
     /**
      * The confusion matrix as int 2-D array.
