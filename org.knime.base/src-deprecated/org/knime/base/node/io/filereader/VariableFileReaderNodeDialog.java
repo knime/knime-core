@@ -296,13 +296,6 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
                 + " have set are reset, if a new location is entered");
         m_preserveSettings.setSelected(false);
         m_preserveSettings.setEnabled(true);
-        m_preserveSettings.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                m_frSettings.setPreserveSettings(m_preserveSettings
-                        .isSelected());
-            }
-        });
         preserveBox.add(Box.createHorizontalGlue());
         preserveBox.add(m_preserveSettings);
         preserveBox.add(Box.createHorizontalGlue());
@@ -336,7 +329,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         try {
             fileChanged = takeOverNewFileLocation();
 
-            if (fileChanged && !m_frSettings.getPreserveSettings()) {
+            if (fileChanged && !m_preserveSettings.isSelected()) {
                 resetSettings();
             }
 
@@ -1190,6 +1183,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         }
         // after loading settings we can clear the analyze warning
         setAnalWarningText("");
+        m_preserveSettings.setSelected(false); // Reset flag when dialog opens
         updatePreview();
     }
 
@@ -1827,7 +1821,6 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         if (loadFileLocation) {
             analyzeDataFileAndUpdatePreview(true);
         }
-        m_preserveSettings.setSelected(m_frSettings.getPreserveSettings());
         loadRowHdrSettings();
         loadColHdrSettings();
         // dis/enable the select recent files button

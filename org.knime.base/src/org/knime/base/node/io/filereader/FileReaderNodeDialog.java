@@ -314,12 +314,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 + " have set are reset, if a new location is entered");
         m_preserveSettings.setSelected(false);
         m_preserveSettings.setEnabled(true);
-        m_preserveSettings.addItemListener(new ItemListener() {
-            public void itemStateChanged(final ItemEvent e) {
-                m_frSettings.setPreserveSettings(m_preserveSettings
-                        .isSelected());
-            }
-        });
         preserveBox.add(Box.createHorizontalGlue());
         preserveBox.add(m_preserveSettings);
         preserveBox.add(Box.createHorizontalGlue());
@@ -343,14 +337,17 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         if (editor instanceof JTextComponent) {
             Document d = ((JTextComponent)editor).getDocument();
             d.addDocumentListener(new DocumentListener() {
+                @Override
                 public void changedUpdate(final DocumentEvent e) {
                     setPreviewTable(null);
                 }
 
+                @Override
                 public void insertUpdate(final DocumentEvent e) {
                     setPreviewTable(null);
                 }
 
+                @Override
                 public void removeUpdate(final DocumentEvent e) {
                     setPreviewTable(null);
                 }
@@ -358,6 +355,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         }
 
         browse.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 // sets the path in the file text field.
                 String newFile =
@@ -383,7 +381,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         try {
             fileChanged = takeOverNewFileLocation();
 
-            if (fileChanged && !m_frSettings.getPreserveSettings()) {
+            if (fileChanged && !m_preserveSettings.isSelected()) {
                 resetSettings();
             }
 
@@ -410,6 +408,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      * @see java.awt.event.ItemListener
      *      #itemStateChanged(java.awt.event.ItemEvent)
      */
+    @Override
     public void itemStateChanged(final ItemEvent e) {
         if ((e.getSource() == m_urlCombo)
                 && (e.getStateChange() == ItemEvent.SELECTED)) {
@@ -439,6 +438,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         m_analyzeCancel.setToolTipText("Analyze the first "
                 + FileAnalyzer.NUMOFLINES + " lines only.");
         m_analyzeCancel.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_analyzeCancel.setEnabled(false);
                 m_analyzeCancel.setText("Scanning quickly");
@@ -527,6 +527,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         ptcv.addPropertyChangeListener(
                 PreviewTableContentView.PROPERTY_SPEC_CHANGED,
                 new PropertyChangeListener() {
+                    @Override
                     public void propertyChange(final PropertyChangeEvent evt) {
                         // thats the col idx the mouse was clicked on
                         Integer colNr = (Integer)evt.getNewValue();
@@ -620,46 +621,55 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         int componentsHeight = (2 * COMP_HEIGHT) + 30 + buttonHeight;
         panel.setMaximumSize(new Dimension(PANEL_WIDTH, componentsHeight));
         advanced.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 advancedSettings();
             }
         });
         m_hasRowHeaders.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 rowHeadersSettingsChanged();
             }
         });
         m_hasColHeaders.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 colHeadersSettingsChanged();
             }
         });
         m_cStyleComment.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 commentSettingsChanged();
             }
         });
         m_delimField.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 delimSettingsChanged();
             }
         });
 
         m_ignoreWS.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 ignoreWSChanged();
             }
         });
         m_singleLineComment.getDocument().addDocumentListener(
                 new DocumentListener() {
+                    @Override
                     public void changedUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
 
+                    @Override
                     public void insertUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
 
+                    @Override
                     public void removeUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
@@ -1205,6 +1215,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         }
         // after loading settings we can clear the analyze warning
         setAnalWarningText("");
+        m_preserveSettings.setSelected(false); // clear this flag when the dialog opens
         updatePreview();
     }
 
@@ -1387,6 +1398,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     private void showAnalyzeButton() {
 
         ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            @Override
             public void run() {
                 // first remove the preview panel
                 m_previewArea.removeAll();
@@ -1408,6 +1420,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      */
     private void showPreviewTable() {
         ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            @Override
             public void run() {
                 // first remove the analysis panel
                 m_previewArea.removeAll();
@@ -1477,10 +1490,12 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             m_analysisExecMonitor = new FileReaderExecutionMonitor();
             m_analysisExecMonitor.getProgressMonitor().addProgressListener(
                     new NodeProgressListener() {
+                        @Override
                         public void progressChanged(
                                 final NodeProgressEvent pEvent) {
                             if (pEvent.getNodeProgress().getMessage() != null) {
                                 ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+                                    @Override
                                     public void run() {
                                         Double p =
                                                 pEvent.getNodeProgress()
@@ -1669,6 +1684,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         // register a listener for error messages with the new table
         if (table != null) {
             table.addChangeListener(new ChangeListener() {
+                @Override
                 public void stateChanged(final ChangeEvent e) {
                     if (m_previewTable != null) {
                         setErrorLabelText(m_previewTable.getErrorMsg(),
@@ -1804,7 +1820,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             }
             analyzeDataFileAndUpdatePreview(true);
         }
-        m_preserveSettings.setSelected(m_frSettings.getPreserveSettings());
         loadRowHdrSettings();
         loadColHdrSettings();
         // dis/enable the select recent files button

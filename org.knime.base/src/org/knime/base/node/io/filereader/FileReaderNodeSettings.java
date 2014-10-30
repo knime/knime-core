@@ -115,8 +115,6 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     private boolean m_analyzedAllRows;
 
-    private boolean m_preserveSettings;
-
     /**
      * Creates a new settings object for the file reader note and initializes it
      * from the config object passed. If <code>null</code> is passed default
@@ -137,7 +135,6 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
         if (cfg != null) {
             m_numOfColumns = cfg.getInt(CFGKEY_NUMOFCOLS);
-            m_preserveSettings = cfg.getBoolean(CFG_KEY_PRESERVE, false);
             readColumnPropsFromConfig(cfg.getNodeSettings(CFGKEY_COLPROPS));
             m_delimsAtEOLUserValue =
                     cfg.getBoolean(CFGKEY_EOLDELIMUSERVAL,
@@ -197,8 +194,6 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_delimIsSet = clonee.m_delimIsSet;
         m_whiteIsSet = clonee.m_whiteIsSet;
         m_analyzedAllRows = clonee.m_analyzedAllRows;
-        m_preserveSettings = clonee.m_preserveSettings;
-
     }
 
     /**
@@ -220,8 +215,6 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_delimIsSet = false;
         m_whiteIsSet = false;
         m_analyzedAllRows = false;
-        m_preserveSettings = false;
-
     }
 
     /**
@@ -235,7 +228,6 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         super.saveToConfiguration(cfg);
         cfg.addBoolean(CFGKEY_EOLDELIMUSERVAL, m_delimsAtEOLUserValue);
         cfg.addInt(CFGKEY_NUMOFCOLS, m_numOfColumns);
-        cfg.addBoolean(CFG_KEY_PRESERVE, m_preserveSettings);
         saveColumnPropsToConfig(cfg.addNodeSettings(CFGKEY_COLPROPS));
     }
 
@@ -934,26 +926,5 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             res.append(m_columnProperties.get(c).toString());
         }
         return res.toString();
-    }
-
-    /**
-     * Checks the flag that indicates if settings will be reset at location
-     * change.
-     *
-     * @return true if settings are not reset on file location change.
-     */
-    boolean getPreserveSettings() {
-        return m_preserveSettings;
-    }
-
-    /**
-     * Sets the flag that determines if settings are reset if a new data
-     * location is entered in the dialog.
-     *
-     * @param preserveSettings set true to reset all dialog settings if the data
-     *            location changes, or false to preserve the current settings.
-     */
-    void setPreserveSettings(final boolean preserveSettings) {
-        m_preserveSettings = preserveSettings;
     }
 }
