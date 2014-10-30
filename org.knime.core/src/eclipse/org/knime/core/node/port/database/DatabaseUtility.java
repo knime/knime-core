@@ -100,7 +100,7 @@ public class DatabaseUtility {
         MaxDBAggregationFunction.getInstance(), MinDBAggregationFunction.getInstance(),
         SumDBAggregationFunction.getInstance()};
 
-    private final HashMap<String, DBAggregationFunction> m_aggregationFunctions;
+    private final Map<String, DBAggregationFunction> m_aggregationFunctions;
 
     private final String m_dbIdentifier;
 
@@ -244,6 +244,8 @@ public class DatabaseUtility {
     }
 
     /**
+     * Returns a list if all aggregation functions that the current database supports.
+     *
      * @return {@link Collection} of all supported {@link DBAggregationFunction}s
      * @since 2.11
      */
@@ -256,6 +258,9 @@ public class DatabaseUtility {
     }
 
     /**
+     * Returns the aggregation function with the given id, if the current database supports it.
+     * Otherwise a {@link InvalidDBAggregationFunction} is returned.
+     *
      * @param id the id as returned by {@link DBAggregationFunction#getId()}
      * @return the {@link DBAggregationFunction} for the given name or an instance of the
      * {@link InvalidDBAggregationFunction} that has the given id
