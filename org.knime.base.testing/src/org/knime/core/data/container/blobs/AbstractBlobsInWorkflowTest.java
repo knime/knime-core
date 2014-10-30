@@ -149,11 +149,11 @@ public abstract class AbstractBlobsInWorkflowTest extends TestCase {
     /** {@inheritDoc} */
     @Override
     protected void tearDown() throws Exception {
-        if (m_wfmDir != null) {
-            FileUtil.deleteRecursively(m_wfmDir);
-        }
         if (m_flow != null) {
             WorkflowManager.ROOT.removeProject(m_flow.getID());
+        }
+        if (m_wfmDir != null) {
+            FileUtil.deleteRecursively(m_wfmDir);
         }
     }
 
