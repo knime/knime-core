@@ -644,7 +644,7 @@ public final class FilesHistoryPanel extends JPanel {
                     fileChooser.setSelectedFile(localPath.toFile());
                 }
             }
-        } catch (IOException | URISyntaxException ex) {
+        } catch (IOException | URISyntaxException | InvalidPathException ex) {
             // ignore
         }
         int r = fileChooser.showDialog(FilesHistoryPanel.this, "OK");
