@@ -489,7 +489,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         new DataColumnSpecCreator("Recall", DoubleCell.TYPE).createSpec(),
         new DataColumnSpecCreator("Precision", DoubleCell.TYPE).createSpec(),
         new DataColumnSpecCreator("Sensitivity", DoubleCell.TYPE).createSpec(),
-        new DataColumnSpecCreator("Specificity", DoubleCell.TYPE).createSpec(),
+        new DataColumnSpecCreator("Specifity", DoubleCell.TYPE).createSpec(),
         new DataColumnSpecCreator("F-measure", DoubleCell.TYPE).createSpec(),
         new DataColumnSpecCreator("Accuracy", DoubleCell.TYPE).createSpec(),
         new DataColumnSpecCreator("Cohen's kappa", DoubleCell.TYPE).createSpec()};
