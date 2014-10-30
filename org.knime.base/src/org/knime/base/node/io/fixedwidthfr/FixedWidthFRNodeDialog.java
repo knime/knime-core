@@ -220,7 +220,7 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
                     // ignore
                 }
 
-                if (!m_nodeSettings.getPreserveSettings()) {
+                if (!m_preserveSettings.isSelected()) {
                     m_nodeSettings.reset();
                 }
                 m_hasColHeaders.setSelected(m_nodeSettings.getHasColHeaders());
@@ -239,12 +239,6 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
             + " have set are reset, if a new location is entered");
         m_preserveSettings.setSelected(false);
         m_preserveSettings.setEnabled(true);
-        m_preserveSettings.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                m_nodeSettings.setPreserveSettings(m_preserveSettings.isSelected());
-            }
-        });
         preserveBox.add(Box.createHorizontalGlue());
         preserveBox.add(m_preserveSettings);
         preserveBox.add(Box.createHorizontalGlue());
@@ -870,7 +864,6 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
 
         m_hasRowHeaders.setSelected(m_nodeSettings.getHasRowHeader());
         m_hasColHeaders.setSelected(m_nodeSettings.getHasColHeaders());
-        m_preserveSettings.setSelected(m_nodeSettings.getPreserveSettings());
 
         if (m_nodeSettings.getNumberOfColumns() > 0) {
 
@@ -886,6 +879,7 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
         } else {
             m_url.setSelectedFile(null);
         }
+        m_preserveSettings.setSelected(false);
         m_loadSettings = false;
     }
 

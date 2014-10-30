@@ -97,8 +97,6 @@ public class FixedWidthFRSettings {
 
     private boolean m_hasColHeader;
 
-    private boolean m_preserveSettings;
-
     /**
      * A new default fixed width file reader settings object.
      */
@@ -114,8 +112,6 @@ public class FixedWidthFRSettings {
         m_numberOfColumns = m_colProperties.size();
 
         m_hasRowHeader = false;
-
-        m_preserveSettings = false;
     }
 
     /**
@@ -131,8 +127,6 @@ public class FixedWidthFRSettings {
         m_hasRowHeader = clonee.getHasRowHeader();
 
         m_hasColHeader = clonee.getHasColHeaders();
-
-        m_preserveSettings = clonee.getPreserveSettings();
     }
 
     /**
@@ -158,13 +152,6 @@ public class FixedWidthFRSettings {
             } catch (InvalidSettingsException ice) {
                 throw new InvalidSettingsException("Illegal config object for " + "file reader settings! Key '"
                     + CFGKEY_URL + "' missing!", ice);
-            }
-
-            try {
-                m_preserveSettings = cfg.getBoolean(CFGKEY_PRESERVESETTINGS);
-            } catch (InvalidSettingsException ice) {
-                throw new InvalidSettingsException("Illegal config object for file reader settings! Key '"
-                    + CFGKEY_PRESERVESETTINGS + "'missing!", ice);
             }
 
             try {
@@ -208,7 +195,6 @@ public class FixedWidthFRSettings {
         } else {
             cfg.addString(CFGKEY_URL, null);
         }
-        cfg.addBoolean(CFGKEY_PRESERVESETTINGS, m_preserveSettings);
         cfg.addInt(CFGKEY_NUMBEROFCOLUMNS, m_numberOfColumns);
         cfg.addBoolean(CFGKEY_HASROWHEADER, m_hasRowHeader);
         cfg.addBoolean(CFGKEY_HASCOLHEADER, m_hasColHeader);
@@ -481,19 +467,4 @@ public class FixedWidthFRSettings {
 
         return i;
     }
-
-    /**
-     * @return preserve should the settings be preserved
-     */
-    public boolean getPreserveSettings() {
-        return m_preserveSettings;
-    }
-
-    /**
-     * @param preserveSettings if the settings should be preserved
-     */
-    public void setPreserveSettings(final boolean preserveSettings) {
-        m_preserveSettings = preserveSettings;
-    }
-
 }
