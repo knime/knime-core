@@ -49,6 +49,7 @@ package org.knime.base.node.stats.testing.ttest;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -142,7 +143,8 @@ public class NodeViewUtil {
         buffer.append("</tr>");
 
         int r = 0;
-        for (DataRow row : table) {
+        for (Iterator<DataRow> it = table.iteratorFailProve(); it.hasNext();) {
+            DataRow row = it.next();
             buffer.append("<tr class=\"");
             buffer.append(r % 2 == 0 ? "odd" : "even");
             buffer.append("\">");
