@@ -86,7 +86,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
             "// $string column name$ LIKE \"*blue*\" => FALSE\n" +
             "// TRUE => TRUE\n";
 
-    private RulePanel m_rulePanel;
+    private final RulePanel m_rulePanel;
 
     /**
      * Constructs a {@link RuleEngineNodeDialog}.

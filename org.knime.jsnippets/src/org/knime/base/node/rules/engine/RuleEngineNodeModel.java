@@ -130,7 +130,9 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
 
         final Map<String, FlowVariable> availableFlowVariables = getAvailableFlowVariables();
         //SimpleRuleParser ruleParser = new SimpleRuleParser(spec, availableFlowVariables);
-        RuleFactory factory = RuleFactory.getInstance(nodeType);
+        RuleFactory factory = RuleFactory.getInstance(nodeType).cloned();
+        factory.disableMissingComparisons();
+        factory.disableNaNComparisons();
         int line = 0;
         for (String s : m_settings.rules()) {
             ++line;
@@ -379,7 +381,6 @@ public class RuleEngineNodeModel extends NodeModel implements FlowVariableProvid
         try {
             List<Rule> rules = parseRules(inData[0].getDataTableSpec(), RuleNodeSettings.RuleEngine);
             ColumnRearranger crea = createRearranger(inData[0].getDataTableSpec(), rules, false);
-
             return new BufferedDataTable[]{exec.createColumnRearrangeTable(inData[0], crea, exec)};
         } finally {
             m_rowCount = -1;

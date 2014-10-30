@@ -95,27 +95,38 @@ $Col0$ > 5 => $${SCol1}$$
 				You can use either Ctrl+Space to insert predefined parts, or
 				select them from the upper controls.
 			</p>
+			
+			<p>
+			The following comparisons result true
+			(other values are neither less, nor greater or equal to missing and NaN values):
+			<ul>
+			<li><b>?</b> =,&lt;=,&gt;= <b>?</b></li>
+			<li><b>NaN</b> =,&lt;=,&gt;= <b>NaN</b></li>
+			</ul>
+			</p>
 		</intro>
 
-		<option name="Column List">Available columns, which can be used as variables
-			in a rule.
-		</option>
-		<option name="Flow Variable List">Available flow variables, which can be used as
-			variables in a rule.
-		</option>
-		<option name="Category">The operator categories.</option>
-		<option name="Function">A list of valid operators in the selected
-			category.
-		</option>
-		<option name="Description">Short help about the operator.</option>
-		<option name="Expression">The rule editor. You can complete the expressions
-			with Ctrl+Space. Each row represents a rule. A red background of the
-			line signals an error and the left side of the editor then shows an error icon.
-		</option>
-		<option name="Append Column">Name of the newly appended column,
-			which contains the outcome of the rules.
-		</option>
-		<option name="Replace Column">The column to replace</option>
+		<tab name="Rule Editor">
+			<option name="Column List">Available columns, which can be used as variables
+				in a rule.
+			</option>
+			<option name="Flow Variable List">Available flow variables, which can be used as
+				variables in a rule.
+			</option>
+			<option name="Category">The operator categories.</option>
+			<option name="Function">A list of valid operators in the selected
+				category.
+			</option>
+			<option name="Description">Short help about the operator.</option>
+			<option name="Expression">The rule editor. You can complete the expressions
+				with Ctrl+Space. Each row represents a rule. A red background of the
+				line signals an error and the left side of the editor then shows an error icon.
+			</option>
+			<option name="Append Column">Name of the newly appended column,
+				which contains the outcome of the rules.
+			</option>
+			<option name="Replace Column">The column to replace</option>
+		</tab>
 	</fullDescription>
 
 	<ports>

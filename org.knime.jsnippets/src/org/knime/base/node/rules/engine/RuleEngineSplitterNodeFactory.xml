@@ -94,6 +94,15 @@ $Col0$ MATCHES $${SFlowVar0}$$ OR $$ROWINDEX$$ &lt; $${IFlowVar1}$$ =>
 				You can use either Ctrl+Space to insert predefined parts, or
 				select them from the upper controls.
 			</p>
+			
+			<p>
+			The following comparisons result true
+			(other values are neither less, nor greater or equal to missing and NaN values):
+			<ul>
+			<li><b>?</b> =,&lt;=,&gt;= <b>?</b></li>
+			<li><b>NaN</b> =,&lt;=,&gt;= <b>NaN</b></li>
+			</ul>
+			</p>
 		</intro>
 
 		<option name="Column List">Available columns, which can be used as variables

@@ -65,6 +65,8 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.MissingValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.CollectionDataValue;
@@ -83,7 +85,7 @@ import org.knime.core.node.workflow.FlowVariable.Scope;
  * @since 2.8
  */
 public class ExpressionFactory implements RuleExpressionFactory<Expression, Expression>,
-    ReferenceExpressionFactory {
+    ReferenceExpressionFactory, Cloneable {
     /**
      * {@link Expression} for constants.
      *
@@ -313,12 +315,11 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
         }
     }
 
+    private boolean m_missingMatch = true, m_nanMatch = true;
+
     /** A constant to avoid type inference problems. */
     private static final Map<String, Map<String, String>> EMPTY_MAP = Collections
         .<String, Map<String, String>> emptyMap();
-
-    /** Static singleton instance. */
-    private static final ExpressionFactory INSTANCE = new ExpressionFactory();
 
     /** Private constructor. */
     private ExpressionFactory() {
@@ -329,7 +330,41 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
      * @return the instance
      */
     public static ExpressionFactory getInstance() {
-        return INSTANCE;
+        return new ExpressionFactory();
+    }
+
+    /**
+     * @return An {@link ExpressionFactory} that do not match on {@link Double#NaN} values for comparisons (except
+     *         equals).
+     */
+    public ExpressionFactory withNaNsDoNotMatch() {
+        ExpressionFactory ret = clone();
+        ret.m_nanMatch = false;
+        return ret;
+    }
+
+    /**
+     * @return An {@link ExpressionFactory} that do not match on missing values for comparisons (except equals).
+     */
+    public ExpressionFactory withMissingsDoNotMatch() {
+        ExpressionFactory ret = clone();
+        ret.m_missingMatch = false;
+        return ret;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected final ExpressionFactory clone() {
+        try {
+            return (ExpressionFactory)super.clone();
+        } catch (CloneNotSupportedException e) {
+            ExpressionFactory ret = new ExpressionFactory();
+            ret.m_missingMatch = m_missingMatch;
+            ret.m_nanMatch = m_nanMatch;
+            return ret;
+        }
     }
 
     /**
@@ -620,7 +655,7 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
                     ExpressionValue v = boolExpression.evaluate(row, provider);
                     DataCell cell = v.getValue();
                     if (cell.isMissing()) {
-                        return new ExpressionValue(ret, EMPTY_MAP);
+                        return new ExpressionValue(cell, EMPTY_MAP);
                     } else if (cell instanceof BooleanValue) {
                         BooleanValue bool = (BooleanValue)cell;
                         matchedObjects = Util.mergeObjects(matchedObjects, v.getMatchedObjects());
@@ -1237,15 +1272,39 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
             public ExpressionValue evaluate(final DataRow row, final VariableProvider provider) {
                 ExpressionValue leftValue = left.evaluate(row, provider);
                 ExpressionValue rightValue = right.evaluate(row, provider);
+                Map<String, Map<String, String>> mergedObjects = Util.mergeObjects(leftValue.getMatchedObjects(), rightValue.getMatchedObjects());
                 DataCell leftCell = leftValue.getValue();
                 DataCell rightCell = rightValue.getValue();
+                final boolean leftMissing = leftCell.isMissing(), rightMissing = rightCell.isMissing();
+                //Priority over NaNs
+                if (!m_missingMatch && (leftMissing || rightMissing)) {
+                    boolean bothMissingAndAllowEquals =
+                        leftMissing && rightMissing && Arrays.binarySearch(possibleValues, 0) >= 0;
+                    if (bothMissingAndAllowEquals) {
+                        if (leftCell instanceof MissingValue) {
+                            MissingValue lmc = (MissingValue)leftCell;
+                            if (rightCell instanceof MissingValue) {
+                                MissingValue rmc = (MissingValue)rightCell;
+                                //If the errors differ we do not consider them equal
+                                bothMissingAndAllowEquals = lmc.equals(rmc);
+                            }
+                        }
+                    }
+                    return new ExpressionValue(BooleanCell.get(bothMissingAndAllowEquals), mergedObjects);
+                }
+                //No missing values
+                final boolean leftNaN = isNaN(leftCell), rightNaN = isNaN(rightCell);
+                if (!m_nanMatch && (leftNaN || rightNaN)) {
+                    //NaNs are considered equals to each other even if it is not by the IEEE spec.
+                    boolean bothNaNAndAllowEquals = leftNaN && rightNaN && Arrays.binarySearch(possibleValues, 0) >= 0;
+                    return new ExpressionValue(BooleanCell.get(bothNaNAndAllowEquals), mergedObjects);
+                }
                 boolean found = false;
                 int compareResult = Util.signum(cmp.compare(leftCell, rightCell));
                 for (int possibleValue : possibleValues) {
                     found |= possibleValue == compareResult;
                 }
-                return new ExpressionValue(BooleanCell.get(found), Util.mergeObjects(leftValue.getMatchedObjects(),
-                    rightValue.getMatchedObjects()));
+                return new ExpressionValue(BooleanCell.get(found), mergedObjects);
             }
 
             /**
@@ -1299,6 +1358,18 @@ public class ExpressionFactory implements RuleExpressionFactory<Expression, Expr
                 throw new IllegalStateException("" + Arrays.toString(possibleValues));
             }
         };
+    }
+
+    /**
+     * @param cell A {@link DataCell}.
+     * @return {@code true} iff {@code cell} is a {@link DoubleValue} with a {@link Double#NaN} number.
+     */
+    protected final boolean isNaN(final DataCell cell) {
+        if (cell instanceof DoubleValue) {
+            DoubleValue dv = (DoubleValue)cell;
+            return Double.isNaN(dv.getDoubleValue());
+        }
+        return false;
     }
 
     /**

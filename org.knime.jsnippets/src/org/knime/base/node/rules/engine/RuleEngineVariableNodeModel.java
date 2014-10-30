@@ -111,6 +111,7 @@ public class RuleEngineVariableNodeModel extends NodeModel implements FlowVariab
         ArrayList<Rule> rules = new ArrayList<Rule>();
         final Map<String, FlowVariable> availableFlowVariables = getAvailableFlowVariables();
         final RuleFactory factory = RuleFactory.getInstance(RuleNodeSettings.VariableRule);
+        factory.disableNaNComparisons();
         final DataTableSpec spec = new DataTableSpec();
         int line = 0;
         for (String s : m_settings.rules()) {

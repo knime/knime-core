@@ -50,6 +50,7 @@ package org.knime.base.node.mine.decisiontree2;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Contains the operators that are specified in PMML for SimplePredicates.
@@ -136,17 +137,17 @@ public enum PMMLOperator {
     public boolean evaluate(final String a, final String b) {
         switch (this) {
             case EQUAL:
-                return a.equals(b);
+                return Objects.equals(a, b);
             case NOT_EQUAL:
-                return !a.equals(b);
+                return !Objects.equals(a, b);
             case LESS_THAN:
-                return a.compareTo(b) < 0;
+                return (a != null) && (b != null) && (a.compareTo(b) < 0);
             case LESS_OR_EQUAL:
-                return a.compareTo(b) <= 0;
+                return (a == b) || ((a != null) && (b != null) && (a.compareTo(b) <= 0));
             case GREATER_THAN:
-                return a.compareTo(b) > 0;
+                return (a != null) && (b != null) && (a.compareTo(b) > 0);
             case GREATER_OR_EQUAL:
-                return a.compareTo(b) >= 0;
+                return (a == b) || ((a != null) && (b != null) && (a.compareTo(b) >= 0));
             case IS_MISSING:
                 return a == null;
             case IS_NOT_MISSING:
@@ -168,17 +169,17 @@ public enum PMMLOperator {
     public boolean evaluate(final Double a, final Double b) {
         switch (this) {
             case EQUAL:
-                return a == b || a.equals(b);
+                return Objects.equals(a, b);
             case NOT_EQUAL:
-                return !a.equals(b);
+                return !Objects.equals(a, b);
             case LESS_THAN:
-                return a < b;
+                return ((a == null) || (b == null)) ? false : a < b;
             case LESS_OR_EQUAL:
-                return a <= b;
+                return (a == b) || ((a == null) || (b == null) ? false : a <= b);
             case GREATER_THAN:
-                return a > b;
+                return ((a == null) || (b == null)) ? false : a > b;
             case GREATER_OR_EQUAL:
-                return a >= b;
+                return (a == b) || (((a == null) || (b == null)) ? false : a >= b);
             case IS_MISSING:
                 return a == null;
             case IS_NOT_MISSING:

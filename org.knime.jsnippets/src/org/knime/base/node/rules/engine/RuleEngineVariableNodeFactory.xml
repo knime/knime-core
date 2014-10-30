@@ -87,6 +87,11 @@ $${SFlowVar10}$$ MATCHES $${SFlowVar0}$$ OR $${DFlowVar2}$$ &lt; $${IFlowVar1}$$
 				You can use either Ctrl+Space to insert predefined parts, or
 				select them from the upper controls.
 			</p>
+			
+			<p>
+				The NaNs equal to other NaN values (other values are neither less, nor
+				greater or equal to NaN values).
+			</p>
 		</intro>
 
 		<option name="Flow Variable List">Available flow variables, which can be used as

@@ -54,6 +54,7 @@ import java.util.Set;
 import org.knime.base.node.rules.engine.BaseRuleParser.ParseState;
 import org.knime.base.node.rules.engine.Rule.Operators;
 import org.knime.base.node.rules.engine.pmml.PMMLRuleParser;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.workflow.FlowVariable;
 
@@ -103,6 +104,8 @@ public class RuleFactory implements Cloneable {
 
     private boolean m_checkFlowVars = true;
 
+    private boolean m_missingMatch = true, m_nanMatch = true;
+
     private RuleFactory(final Boolean booleanOutcome, final boolean allowTableReference, final Set<Operators> operators) {
         super();
         this.m_booleanOutcome = booleanOutcome;
@@ -133,6 +136,32 @@ public class RuleFactory implements Cloneable {
     }
 
     /**
+     * Disables the comparisons to match on {@link DataCell#isMissing() missing values}, except when both are missing
+     * and the comparison is {@code =} .
+     *
+     * Be careful with this method, as the instance of this class might be shared across different callers, so please
+     * consider {@link #cloned() cloning} before calling this method.
+     *
+     * @see #cloned()
+     */
+    public void disableMissingComparisons() {
+        m_missingMatch = false;
+    }
+
+    /**
+     * Disables the comparisons to match on {@link Double#NaN} values, except when both are {@link Double#NaN}s and the
+     * comparison is {@code =}.
+     *
+     * Be careful with this method, as the instance of this class might be shared across different callers, so please
+     * consider {@link #cloned() cloning} before calling this method.
+     *
+     * @see #cloned()
+     */
+    public void disableNaNComparisons() {
+        m_nanMatch = false;
+    }
+
+    /**
      * Creates a new rule by parsing a rule string.
      *
      * @param rule the rule string
@@ -144,8 +173,15 @@ public class RuleFactory implements Cloneable {
      */
     public Rule parse(final String rule, final DataTableSpec spec, final Map<String, FlowVariable> flowVariables)
         throws ParseException {
-        SimpleRuleParser parser = new SimpleRuleParser(spec, flowVariables, ExpressionFactory.getInstance(),
-                ExpressionFactory.getInstance(), m_allowTableReference, m_operators);
+        ExpressionFactory expFactory = ExpressionFactory.getInstance();
+        if (!m_missingMatch) {
+            expFactory = expFactory.withMissingsDoNotMatch();
+        }
+        if (!m_nanMatch) {
+            expFactory = expFactory.withNaNsDoNotMatch();
+        }
+        SimpleRuleParser parser = new SimpleRuleParser(spec, flowVariables, expFactory,
+                expFactory, m_allowTableReference, m_operators);
         if (!m_checkColumns) {
             parser.disableColumnCheck();
         }
