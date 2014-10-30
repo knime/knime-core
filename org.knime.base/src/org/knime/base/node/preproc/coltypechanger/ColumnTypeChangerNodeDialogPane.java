@@ -44,13 +44,20 @@
  */
 package org.knime.base.node.preproc.coltypechanger;
 
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+import javax.swing.BoxLayout;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -75,11 +82,24 @@ public class ColumnTypeChangerNodeDialogPane extends NodeDialogPane {
      */
     private static final double M_WEIGHTX = 0.5;
     private static final int M_INSETS_TOP = 20;
+    private static final String CFGKEY_DATEFORMAT = "dateFormat";
+    private static final String CFGKEY_QUICKSANBOOLEAN = "doAQuickScan";
+    private static final String CFGKEY_QUICKSCANROWS = "numberOfRowsForQuickScan";
+    private static final String CFGKEY_MISSVALPAT = "missingValuePattern";
+
+    private static final String[] MISSING_VALUE_PATTERNS = new String[]{"<none>", "<empty>"};
+
     private final JPanel m_panel;
     private final DataColumnSpecFilterPanel m_filterPanel;
     private final JLabel m_dateBoxLabel;
     private final JComboBox<String> m_dateBox;
     private final String[] m_dateFormats;
+    private final JCheckBox m_quickScanCheckBox;
+    private final JLabel m_numberOfRowsLabel;
+    private final JSpinner m_numberOfRowsSpinner;
+    private JLabel m_missValueLabel;
+    private JComboBox<String> m_missValueChooser;
+
 
     /**
      * Creates a new {@link NodeDialogPane} for the column filter in order to
@@ -90,8 +110,35 @@ public class ColumnTypeChangerNodeDialogPane extends NodeDialogPane {
         m_filterPanel = new DataColumnSpecFilterPanel();
         m_dateFormats = new String[]{"dd.MM.yy", "dd.MM.yy HH:mm:ss", "dd.MM.yy HH:mm:ss:SSS", "HH:mm:ss"};
         m_dateBox = new JComboBox<String>(m_dateFormats);
+        Dimension prefDim = m_dateBox.getPreferredSize();
         m_dateBox.setEditable(true);
         m_dateBoxLabel = new JLabel("Choose a date format: ");
+
+        m_missValueLabel = new JLabel("Missing value pattern:");
+        m_missValueChooser = new JComboBox<String>(MISSING_VALUE_PATTERNS);
+        m_missValueChooser.setPreferredSize(prefDim);
+        m_missValueChooser.setEditable(true);
+        m_missValueChooser.setSelectedItem("<none>");
+
+        m_quickScanCheckBox = new JCheckBox("Do a quickscan.");
+        m_quickScanCheckBox.setToolTipText("Select if you want to do a quickscan. Node may fail in execute.");
+        m_quickScanCheckBox.addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                    m_numberOfRowsLabel.setEnabled(m_quickScanCheckBox.isSelected());
+                    m_numberOfRowsSpinner.setEnabled(m_quickScanCheckBox.isSelected());
+            }
+        });
+        m_numberOfRowsLabel = new JLabel("Number of rows to consider: ");
+        m_numberOfRowsLabel.setEnabled(false);
+        JPanel quickScanPanel = new JPanel();
+        quickScanPanel.setLayout(new BoxLayout(quickScanPanel, BoxLayout.X_AXIS));
+        quickScanPanel.add(m_quickScanCheckBox);
+        quickScanPanel.add(m_numberOfRowsLabel);
+        m_numberOfRowsSpinner = new JSpinner(new SpinnerNumberModel(1000, 1, Integer.MAX_VALUE, 10));
+        m_numberOfRowsSpinner.setPreferredSize(prefDim);
+        m_numberOfRowsSpinner.setEnabled(false);
 
         m_panel.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
@@ -118,6 +165,40 @@ public class ColumnTypeChangerNodeDialogPane extends NodeDialogPane {
         c.gridy = 1;
         m_panel.add(m_dateBox, c);
 
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = M_WEIGHTX;
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(M_INSETS_TOP, 0, 0, 0);
+        c.gridx = 0;
+        c.gridy = 2;
+        m_panel.add(m_missValueLabel, c);
+
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = M_WEIGHTX;
+        c.anchor = GridBagConstraints.WEST;
+        c.gridwidth = 1;
+        c.insets = new Insets(M_INSETS_TOP, 0, 0, 0);
+        c.gridx = 1;
+        c.gridy = 2;
+        m_panel.add(m_missValueChooser, c);
+
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = M_WEIGHTX;
+        c.anchor = GridBagConstraints.EAST;
+        c.insets = new Insets(M_INSETS_TOP, 0, 0, 0);
+        c.gridx = 0;
+        c.gridy = 3;
+        m_panel.add(quickScanPanel, c);
+
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = M_WEIGHTX;
+        c.anchor = GridBagConstraints.WEST;
+        c.gridwidth = 1;
+        c.insets = new Insets(M_INSETS_TOP, 0, 0, 0);
+        c.gridx = 1;
+        c.gridy = 3;
+        m_panel.add(m_numberOfRowsSpinner, c);
+
 
         super.addTab("Configuration", m_panel);
     }
@@ -141,7 +222,10 @@ public class ColumnTypeChangerNodeDialogPane extends NodeDialogPane {
         DataColumnSpecFilterConfiguration config = ColumnTypeChangerNodeModel.createDCSFilterConfiguration();
         config.loadConfigurationInDialog(settings, specs[0]);
         m_filterPanel.loadConfiguration(config, specs[0]);
-        m_dateBox.setSelectedItem(settings.getString("dateFormat", "dd.MM.yy"));
+        m_dateBox.setSelectedItem(settings.getString(CFGKEY_DATEFORMAT, "dd.MM.yy"));
+        m_missValueChooser.setSelectedItem(settings.getString(CFGKEY_MISSVALPAT, "<none>"));
+        m_quickScanCheckBox.setSelected(settings.getBoolean(CFGKEY_QUICKSANBOOLEAN, false));
+        m_numberOfRowsSpinner.setValue(settings.getInt(CFGKEY_QUICKSCANROWS, 1000));
 
     }
 
@@ -158,6 +242,9 @@ public class ColumnTypeChangerNodeDialogPane extends NodeDialogPane {
         m_filterPanel.saveConfiguration(config);
         config.saveConfiguration(settings);
 
-        settings.addString("dateFormat", m_dateBox.getEditor().getItem().toString());
+        settings.addString(CFGKEY_DATEFORMAT, m_dateBox.getEditor().getItem().toString());
+        settings.addString(CFGKEY_MISSVALPAT, m_missValueChooser.getEditor().getItem().toString());
+        settings.addBoolean(CFGKEY_QUICKSANBOOLEAN, m_quickScanCheckBox.isSelected());
+        settings.addInt(CFGKEY_QUICKSCANROWS, (int)m_numberOfRowsSpinner.getValue());
     }
 }

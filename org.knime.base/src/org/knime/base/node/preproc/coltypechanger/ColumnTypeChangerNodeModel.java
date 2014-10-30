@@ -63,7 +63,6 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.MissingCell;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
@@ -92,6 +91,14 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  */
 public class ColumnTypeChangerNodeModel extends NodeModel {
 
+    private static final String CFGKEY_DATEFORMAT = "dateFormat";
+
+    private static final String CFGKEY_QUICKSANBOOLEAN = "doAQuickScan";
+
+    private static final String CFGKEY_QUICKSCANROWS = "numberOfRowsForQuickScan";
+
+    private static final String CFGKEY_MISSVALPAT = "missingValuePattern";
+
     private static final String CFG_FILE = "config_file";
 
     private DataColumnSpecFilterConfiguration m_conf;
@@ -99,6 +106,12 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
     private String m_dateFormat = "dd.MM.yy";
 
     private String[][] m_reasons;
+
+    private boolean m_quickScan;
+
+    private int m_numberOfRows;
+
+    private String m_missValPat;
 
     /**
      * Creates a new node model with one in- and outport.
@@ -134,11 +147,19 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
             // empty table check
             SimpleDateFormat dateFormat = new SimpleDateFormat(m_dateFormat);
 
+            int numberOfRows = m_quickScan ? Math.min(m_numberOfRows, data.getRowCount()) : data.getRowCount();
             for (DataRow row : data) {
+                if (!(0 < numberOfRows--)) {
+                    data.iterator().close();
+                    break;
+                }
                 for (int i = 0; i < incls.length; i++) {
                     // guess for each cell in each column the best matching datatype
-                    DataType newType =
-                        typeGuesser(row.getCell(data.getDataTableSpec().findColumnIndex(incls[i])), dateFormat);
+                    DataCell c = row.getCell(data.getDataTableSpec().findColumnIndex(incls[i]));
+                    if (!c.isMissing() && c.toString().equals(m_missValPat)) {
+                        continue;
+                    }
+                    DataType newType = typeGuesser(c, dateFormat);
                     if (types[i] != null) {
                         DataType toSet = setType(types[i], newType);
                         if (toSet.equals(newType) && !toSet.equals(types[i])) {
@@ -172,29 +193,25 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
                 final int colIdx = data.getDataTableSpec().findColumnIndex(incls[i]);
                 final DataType type = types[i];
 
-                if (!type.equals(StringCell.TYPE)) {
-                    // convert only columns with a new type (not StringCell)
+                DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(incls[i], types[i]);
+                DataColumnSpec colSpec = colSpecCreator.createSpec();
 
-                    DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(incls[i], types[i]);
-                    DataColumnSpec colSpec = colSpecCreator.createSpec();
-
-                    if (type.equals(DateAndTimeCell.TYPE)) {
-                        arrange.replace(createDateAndTimeConverter(colIdx, colSpec), colIdx);
-                    } else if (type.equals(LongCell.TYPE)) {
-                        arrange.replace(createLongConverter(colIdx, colSpec), colIdx);
-                    } else {
-                        arrange.replace(createNumberConverter(colIdx, type, colSpec), colIdx);
-                    }
-
+                if (type.equals(DateAndTimeCell.TYPE)) {
+                    arrange.replace(createDateAndTimeConverter(colIdx, colSpec), colIdx);
+                } else if (type.equals(LongCell.TYPE)) {
+                    arrange.replace(createLongConverter(colIdx, colSpec), colIdx);
+                } else {
+                    arrange.replace(createNumberConverter(colIdx, type, colSpec), colIdx);
                 }
+
                 progress++;
                 exec.setProgress(progress / max);
                 exec.checkCanceled();
             }
 
             BufferedDataTable outTable = exec.createColumnRearrangeTable(data, arrange, exec);
-
             return new BufferedDataTable[]{outTable};
+
         } else {
             return inData;
         }
@@ -207,13 +224,20 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
 
             @Override
             public DataCell getCell(final DataRow row) {
-
+                m_fac.setMissingValuePattern(m_missValPat);
                 DataCell cell = row.getCell(colIdx);
                 if (!cell.isMissing()) {
                     String str = ((StringValue)cell).getStringValue();
 
                     // create String-, Int- or DoubleCell
-                    return m_fac.createDataCellOfType(type, str);
+
+                    DataCell c = m_fac.createDataCellOfType(type, str);
+                    if (c == null) {
+                        throw new NumberFormatException("Can't convert '" + str + "' to " + type.toString() + ". In "
+                            + row.getKey() + " Column" + colIdx + ". Disable " + "quickscan and try again.");
+                    }
+
+                    return c;
 
                 } else {
                     // create MissingCell
@@ -231,8 +255,18 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
                 DataCell cell = row.getCell(colIdx);
                 if (!cell.isMissing()) {
                     String str = ((StringValue)cell).getStringValue();
-                    // create LongCell
-                    return new LongCell(Long.parseLong(str));
+                    if (!str.equals(m_missValPat)) {
+                        // create LongCell
+                        try {
+                            return new LongCell(Long.parseLong(str));
+                        } catch (NumberFormatException nfe) {
+                            throw new NumberFormatException("Can't convert '" + str + "' to "
+                                + LongCell.TYPE.toString() + ". In " + row.getKey() + " Column" + colIdx + ". Disable "
+                                + "quickscan and try again.");
+                        }
+                    } else {
+                        return DataType.getMissingCell();
+                    }
                 } else {
                     // create MissingCell
                     return DataType.getMissingCell();
@@ -268,14 +302,17 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
                 DataCell cell = row.getCell(colIdx);
                 if (!cell.isMissing()) {
                     String str = ((StringValue)cell).getStringValue();
-
-                    try {
-                        m_cal.setTime(m_format.parse(str));
-                        return new DateAndTimeCell(m_cal.getTimeInMillis(), m_hasDate, m_hasTime, m_hasMillis);
-                    } catch (ParseException e) {
-                        getLogger()
-                            .warn("Date format parsing error in row: " + row.getKey() + ", column: " + colIdx, e);
-                        return new MissingCell(e.getMessage());
+                    if (!str.equals(m_missValPat)) {
+                        try {
+                            m_cal.setTime(m_format.parse(str));
+                            return new DateAndTimeCell(m_cal.getTimeInMillis(), m_hasDate, m_hasTime, m_hasMillis);
+                        } catch (ParseException e) {
+                            throw new IllegalArgumentException("Can't convert '" + str + "' to "
+                                + DateAndTimeCell.TYPE.toString() + ". In " + row.getKey() + " Column" + colIdx
+                                + ". Disable quickscan and try again.", e);
+                        }
+                    } else {
+                        return DataType.getMissingCell();
                     }
 
                 } else {
@@ -391,7 +428,15 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
         DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
         conf.loadConfigurationInModel(settings);
         m_conf = conf;
-        m_dateFormat = settings.getString("dateFormat");
+        m_dateFormat = settings.getString(CFGKEY_DATEFORMAT);
+        m_missValPat = settings.getString(CFGKEY_MISSVALPAT);
+        if (m_missValPat.equals("<none>")) {
+            m_missValPat = null;
+        } else if (m_missValPat.equals("<empty>")) {
+            m_missValPat = "";
+        }
+        m_quickScan = settings.getBoolean(CFGKEY_QUICKSANBOOLEAN);
+        m_numberOfRows = settings.getInt(CFGKEY_QUICKSCANROWS);
     }
 
     /**
@@ -404,6 +449,8 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
         File f = new File(nodeInternDir, CFG_FILE);
         try (ObjectOutputStream o = new ObjectOutputStream(new FileOutputStream(f))) {
             o.writeObject(m_reasons);
+        } catch (IOException ioe) {
+            getLogger().error("Can't save reasons to '" + f.getAbsolutePath() + "'.", ioe);
         }
     }
 
@@ -415,7 +462,15 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
         if (m_conf != null) {
             m_conf.saveConfiguration(settings);
         }
-        settings.addString("dateFormat", m_dateFormat);
+        settings.addString(CFGKEY_DATEFORMAT, m_dateFormat);
+        if (m_missValPat == null) {
+            m_missValPat = "<none>";
+        } else if (m_missValPat.equals("")) {
+            m_missValPat = "<empty>";
+        }
+        settings.addString(CFGKEY_MISSVALPAT, m_missValPat);
+        settings.addBoolean(CFGKEY_QUICKSANBOOLEAN, m_quickScan);
+        settings.addInt(CFGKEY_QUICKSCANROWS, m_numberOfRows);
     }
 
     /**
@@ -430,6 +485,19 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
             new SimpleDateFormat(tmpDateFormat);
         } catch (IllegalArgumentException e) {
             throw new InvalidSettingsException(e.getMessage(), e);
+        }
+        try {
+            settings.getBoolean(CFGKEY_QUICKSANBOOLEAN);
+        } catch (IllegalArgumentException e1) {
+            throw new InvalidSettingsException(e1.getMessage(), e1);
+        }
+        try {
+            int tmpQuickScanRows = settings.getInt(CFGKEY_QUICKSCANROWS);
+            if (tmpQuickScanRows < 1) {
+                throw new InvalidSettingsException("Number of rows for quickscan is to small.");
+            }
+        } catch (IllegalArgumentException e2) {
+            throw new InvalidSettingsException(e2.getMessage(), e2);
         }
     }
 
