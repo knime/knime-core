@@ -97,7 +97,9 @@ import org.knime.core.util.MutableInteger;
  * @author Thomas Gabriel, University of Konstanz
  * @author Gabor Bakos
  * @since 2.8
+ * @deprecated use the {@link StatisticCalculator} framework instead.
  */
+@Deprecated
 public class Statistics3Table {
     /** Specification for the stats in the columns. */
     private static final DataTableSpec STATISTICS_SPECIFICATION;

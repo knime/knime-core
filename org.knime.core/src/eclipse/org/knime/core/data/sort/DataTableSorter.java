@@ -73,7 +73,7 @@ import org.knime.core.node.NodeLogger;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class DataTableSorter extends TableSorter {
+public class DataTableSorter extends AbstractTableSorter {
 
     /** Inits sorter on argument table with given row comparator.
      * @param inputTable Table to sort.
@@ -126,6 +126,18 @@ public class DataTableSorter extends TableSorter {
             final Collection<String> inclList, final boolean[] sortAscending,
             final boolean sortMissingToEnd) {
         super(inputTable, rowsCount, inclList, sortAscending);
+    }
+
+    /**
+     * Package default constructor for the {@link AbstractColumnTableSorter}.
+     *
+     * @param rowCount the row count
+     * @param dataTableSpec the data table spec
+     * @param rowComparator the row comparator
+     */
+    DataTableSorter(final int rowCount, final DataTableSpec dataTableSpec,
+        final Comparator<DataRow> rowComparator) {
+        super(rowCount, dataTableSpec, rowComparator);
     }
 
     /** Sorts the table passed in the constructor according to the settings

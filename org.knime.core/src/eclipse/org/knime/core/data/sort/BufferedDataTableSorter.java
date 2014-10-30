@@ -60,80 +60,87 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 
 /**
- * Table sorter for sorting {@link BufferedDataTable} objects. The returned
- * table is also of class {@link BufferedDataTable}. In comparison to
- * {@link DataTableSorter} this class will take advantage of certain flow
- * properties when dealing with table objects, for instance it will respect
- * the node's memory policy or better handle blob objects (which will be
- * referenced in case of {@link BufferedDataTable} but copied for any other
- * type of table).
+ * Table sorter for sorting {@link BufferedDataTable} objects. The returned table is also of class
+ * {@link BufferedDataTable}. In comparison to {@link DataTableSorter} this class will take advantage of certain flow
+ * properties when dealing with table objects, for instance it will respect the node's memory policy or better handle
+ * blob objects (which will be referenced in case of {@link BufferedDataTable} but copied for any other type of table).
  *
- * <p>Usage: Client implementations will initialize this object with the table
- * to be sorted, set properties using the varies set-methods (defaults are
- * generally fine) and finally call the {@link #sort(ExecutionContext)} method.
+ * <p>
+ * Usage: Client implementations will initialize this object with the table to be sorted, set properties using the
+ * varies set-methods (defaults are generally fine) and finally call the {@link #sort(ExecutionContext)} method.
  *
- * <p>For details on the sorting mechanism see the <a href="package.html">
- * package description</a>.
+ * <p>
+ * For details on the sorting mechanism see the <a href="package.html"> package description</a>.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class BufferedDataTableSorter extends TableSorter {
+public class BufferedDataTableSorter extends AbstractTableSorter {
 
     /** Used to create temporary and final output table. */
     private ExecutionContext m_execContext;
 
-    /** Inits table sorter using the sorting according to
-     * {@link #setSortColumns(Collection, boolean[])}.
+    /**
+     * Inits table sorter using the sorting according to {@link #setSortColumns(Collection, boolean[])}.
      *
      * @param inputTable The table to sort
-     * @param inclList Passed on to
-     * {@link #setSortColumns(Collection, boolean[])}.
-     * @param sortAscending Passed on to
-     * {@link #setSortColumns(Collection, boolean[])}.
+     * @param inclList Passed on to {@link #setSortColumns(Collection, boolean[])}.
+     * @param sortAscending Passed on to {@link #setSortColumns(Collection, boolean[])}.
      * @throws NullPointerException If any argument is null.
      * @throws IllegalArgumentException If arguments are inconsistent.
      */
-    public BufferedDataTableSorter(final BufferedDataTable inputTable,
-            final Collection<String> inclList, final boolean[] sortAscending) {
+    public BufferedDataTableSorter(final BufferedDataTable inputTable, final Collection<String> inclList,
+        final boolean[] sortAscending) {
         super(inputTable, inputTable.getRowCount(), inclList, sortAscending);
     }
 
-    /** Inits table sorter using the sorting according to
-     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+    /**
+     * Inits table sorter using the sorting according to {@link #setSortColumns(Collection, boolean[], boolean)}.
      *
      * @param inputTable The table to sort
-     * @param inclList Passed on to
-     * {@link #setSortColumns(Collection, boolean[], boolean)}.
-     * @param sortAscending Passed on to
-     * {@link #setSortColumns(Collection, boolean[], boolean)}.
-     * @param sortMissingsToEnd Passed on to
-     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param inclList Passed on to {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortAscending Passed on to {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortMissingsToEnd Passed on to {@link #setSortColumns(Collection, boolean[], boolean)}.
      * @throws NullPointerException If any argument is null.
      * @throws IllegalArgumentException If arguments are inconsistent.
      * @since 2.6
      */
-    public BufferedDataTableSorter(final BufferedDataTable inputTable,
-            final Collection<String> inclList, final boolean[] sortAscending,
-            final boolean sortMissingsToEnd) {
-        super(inputTable, inputTable.getRowCount(), inclList,
-                sortAscending, sortMissingsToEnd);
+    public BufferedDataTableSorter(final BufferedDataTable inputTable, final Collection<String> inclList,
+        final boolean[] sortAscending, final boolean sortMissingsToEnd) {
+        super(inputTable, inputTable.getRowCount(), inclList, sortAscending, sortMissingsToEnd);
     }
 
-    /** Inits sorter on argument table with given row comparator.
+    /**
+     * Inits sorter on argument table with given row comparator.
+     *
      * @param inputTable Table to sort.
-     * @param rowComparator Passed to {@link #setRowComparator(Comparator)}. */
-    public BufferedDataTableSorter(final BufferedDataTable inputTable,
-            final Comparator<DataRow> rowComparator) {
+     * @param rowComparator Passed to {@link #setRowComparator(Comparator)}.
+     */
+    public BufferedDataTableSorter(final BufferedDataTable inputTable, final Comparator<DataRow> rowComparator) {
         super(inputTable, inputTable.getRowCount(), rowComparator);
     }
 
-    /** Sorts the table passed in the constructor according to the settings
-     * and returns the sorted output table.
+    /**
+     * Package default constructor for the {@link AbstractColumnTableSorter}.
+     *
+     * @param rowCount the row count
+     * @param dataTableSpec the data table spec
+     * @param rowComparator the row comparator
+     * @param ctx for creating the buffered data table instances
+     */
+    BufferedDataTableSorter(final int rowCount, final DataTableSpec dataTableSpec,
+        final Comparator<DataRow> rowComparator, final ExecutionContext ctx) {
+        super(rowCount, dataTableSpec, rowComparator);
+        m_execContext = ctx;
+    }
+
+    /**
+     * Sorts the table passed in the constructor according to the settings and returns the sorted output table.
+     *
      * @param ctx To report progress & create temporary and final output tables.
      * @return The sorted output.
-     * @throws CanceledExecutionException If canceled. */
-    public BufferedDataTable sort(final ExecutionContext ctx)
-            throws CanceledExecutionException {
+     * @throws CanceledExecutionException If canceled.
+     */
+    public BufferedDataTable sort(final ExecutionContext ctx) throws CanceledExecutionException {
         if (ctx == null) {
             throw new NullPointerException("Argument must not be null.");
         }
@@ -147,20 +154,17 @@ public class BufferedDataTableSorter extends TableSorter {
 
     /** {@inheritDoc} */
     @Override
-    DataContainer createDataContainer(final DataTableSpec spec,
-            final boolean forceOnDisk) {
-        return m_execContext.createDataContainer(
-                spec, true, forceOnDisk ? 0 : -1);
+    DataContainer createDataContainer(final DataTableSpec spec, final boolean forceOnDisk) {
+        return m_execContext.createDataContainer(spec, true, forceOnDisk ? 0 : -1);
     }
 
     /** {@inheritDoc} */
     @Override
     void clearTable(final DataTable table) {
         if (!(table instanceof BufferedDataTable)) {
-            NodeLogger.getLogger(getClass()).warn("Can't clear table instance "
-                    + "of \"" + table.getClass().getSimpleName()
-                    + "\" - expected \""
-                    + BufferedDataTable.class.getSimpleName() + "\"");
+            NodeLogger.getLogger(getClass()).warnWithFormat(
+                "Can't clear table instance of \"%s\" - expected \"%s\"", table.getClass().getSimpleName(),
+                BufferedDataTable.class.getSimpleName());
         } else {
             m_execContext.clearTable((BufferedDataTable)table);
         }

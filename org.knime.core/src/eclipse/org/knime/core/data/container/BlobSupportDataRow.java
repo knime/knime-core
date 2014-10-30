@@ -97,6 +97,35 @@ public final class BlobSupportDataRow implements DataRow {
     }
 
     /**
+     * Concatenates the given DataRows to a new blob supporting data row with a new row ID.
+     *
+     * @param key the key with the new row ID
+     * @param oldRows containers of the cells for the new row
+     * @since 2.11
+     */
+    public BlobSupportDataRow(final RowKey key, final Iterable<DataRow> oldRows) {
+        m_key = key;
+        int length = 0;
+        for (DataRow row : oldRows) {
+            length += row.getNumCells();
+        }
+
+        m_cells = new DataCell[length];
+        int offset = 0;
+        for (DataRow row : oldRows) {
+            if (row instanceof BlobSupportDataRow) {
+                BlobSupportDataRow blobRow = (BlobSupportDataRow)row;
+                System.arraycopy(blobRow.m_cells, 0, m_cells, offset, blobRow.getNumCells());
+                offset += blobRow.getNumCells();
+            } else {
+                for (DataCell cell : row) {
+                    m_cells[offset++] = cell;
+                }
+            }
+        }
+    }
+
+    /**
      * Creates a new data row with a new row ID.
      *
      * @param id the new row ID
@@ -110,6 +139,7 @@ public final class BlobSupportDataRow implements DataRow {
      * If the cell at index is a blob wrapper cell, it will fetch the content
      * and return it. {@inheritDoc}
      */
+    @Override
     public DataCell getCell(final int index) {
         DataCell c = m_cells[index];
         if (c instanceof BlobWrapperDataCell) {
@@ -131,6 +161,7 @@ public final class BlobSupportDataRow implements DataRow {
     /**
      * {@inheritDoc}
      */
+    @Override
     public RowKey getKey() {
         return m_key;
     }
@@ -138,6 +169,7 @@ public final class BlobSupportDataRow implements DataRow {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getNumCells() {
         return m_cells.length;
     }
@@ -145,6 +177,7 @@ public final class BlobSupportDataRow implements DataRow {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);
     }
