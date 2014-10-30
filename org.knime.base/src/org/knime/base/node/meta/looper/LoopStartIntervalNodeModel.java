@@ -92,11 +92,12 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        if ((m_settings.from() > m_settings.to()) ^ (m_settings.step() < 0)) {
-            throw new InvalidSettingsException("From must be smaller than to");
-        }
-        if ((m_settings.from() < m_settings.to()) ^ (m_settings.step() > 0)) {
-            throw new InvalidSettingsException("From must be bigger than to or step must be negativ.");
+        if ((m_settings.from() > m_settings.to()) && (m_settings.step() > 0)) {
+            throw new InvalidSettingsException("From must be smaller than to if step size is positive.");
+        } else if ((m_settings.from() < m_settings.to()) && (m_settings.step() < 0)) {
+            throw new InvalidSettingsException("From must be bigger than to if step size is negative.");
+        } else if (m_settings.step() == 0) {
+            throw new InvalidSettingsException("Step size is zero, this will lead to an endless loop");
         }
 
         m_value = m_settings.from();
@@ -226,10 +227,14 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
         s.loadSettings(settings);
 
         if ((s.from() > s.to()) && (s.step() > 0)) {
-            throw new InvalidSettingsException("From must be smaller than to or step must be negativ.");
+            throw new InvalidSettingsException("From must be smaller than to if step size is positive.");
         }
         if ((s.from() < s.to()) && (s.step() < 0)) {
-            throw new InvalidSettingsException("From must be bigger than to or step must be positiv.");
+            throw new InvalidSettingsException("From must be bigger than to if step size is negative.");
         }
+        if (s.step() == 0) {
+            throw new InvalidSettingsException("Step size is zero, this will lead to an endless loop");
+        }
+
     }
 }
