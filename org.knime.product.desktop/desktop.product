@@ -35,6 +35,8 @@ All other trademarks are the property of their respective owners.
 -XX:+UnlockDiagnosticVMOptions
 -XX:+UnsyncloadClass 
 -Dknime.enable.fastload=true</vmArgs>
+      <vmArgsLin>-Dorg.eclipse.swt.internal.gtk.cairoGraphics=false
+-Dorg.eclipse.swt.internal.gtk.useCairo=false</vmArgsLin>
       <vmArgsMac>-XstartOnFirstThread
 -Xdock:icon=../Resources/Knime.icns
 -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
