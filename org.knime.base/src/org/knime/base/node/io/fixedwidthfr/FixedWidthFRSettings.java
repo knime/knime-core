@@ -120,7 +120,10 @@ public class FixedWidthFRSettings {
     public FixedWidthFRSettings(final FixedWidthFRSettings clonee) {
         m_fileLocation = clonee.m_fileLocation;
 
-        m_colProperties = clonee.m_colProperties;
+        m_colProperties = new ArrayList<FixedWidthColProperty>();
+        for (FixedWidthColProperty f : clonee.m_colProperties) {
+            m_colProperties.add(new FixedWidthColProperty(f));
+        }
 
         m_numberOfColumns = clonee.m_numberOfColumns;
 

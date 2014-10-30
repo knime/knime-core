@@ -213,6 +213,7 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
 
             @Override
             public void stateChanged(final ChangeEvent e) {
+                if(!m_loadSettings){
                 try {
                     URL newUrl = FileUtil.toURL(m_url.getSelectedFile());
                     m_nodeSettings.setFileLocation(newUrl);
@@ -228,7 +229,7 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
                 updateColPropTable();
                 updatePreview();
                 updateEnables();
-
+                }
             }
         });
 
@@ -859,7 +860,6 @@ public class FixedWidthFRNodeDialog extends NodeDialogPane {
             m_nodeSettings = new FixedWidthFRSettings(settings);
         } catch (InvalidSettingsException ice) {
             m_nodeSettings = new FixedWidthFRSettings();
-            m_loadSettings = false;
         }
 
         m_hasRowHeaders.setSelected(m_nodeSettings.getHasRowHeader());

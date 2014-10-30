@@ -192,6 +192,20 @@ public class FixedWidthColProperty {
     }
 
     /**
+     * @param fixedWidthColProperty the ColProperty to clone
+     */
+    public FixedWidthColProperty(final FixedWidthColProperty fixedWidthColProperty) {
+
+        m_colSpec = fixedWidthColProperty.m_colSpec;
+
+        m_width = fixedWidthColProperty.m_width;
+
+        m_include = fixedWidthColProperty.m_include;
+
+        m_missingValuePattern = fixedWidthColProperty.m_missingValuePattern;
+    }
+
+    /**
      * @param cfg the settings object where we save our properties
      */
     public void saveToConfiguration(final NodeSettingsWO cfg) {
