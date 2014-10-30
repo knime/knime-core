@@ -53,6 +53,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ExtendedModifyEvent;
@@ -96,6 +97,18 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
 public class StyledTextEditor extends CellEditor {
+    private static final int TAB_SIZE;
+
+    static {
+        // set tab size for win and linux and mac differently (it even depends on the zoom level, yuk!)
+        if (Platform.OS_MACOSX.equals(Platform.getOS())) {
+            TAB_SIZE = 5;
+        } else if (Platform.OS_LINUX.equals(Platform.getOS())) {
+            TAB_SIZE = 8;
+        } else {
+            TAB_SIZE = 16;
+        }
+    }
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(StyledTextEditor.class);
 
@@ -199,8 +212,7 @@ public class StyledTextEditor extends CellEditor {
         m_styledText.setFont(AnnotationEditPart.getWorkflowAnnotationDefaultFont());
         m_styledText.setAlignment(SWT.LEFT);
         m_styledText.setText("");
-        // somehow that matches the tab indent of the figure...
-        m_styledText.setTabs(16);
+        m_styledText.setTabs(TAB_SIZE);
         m_styledText.addVerifyKeyListener(new VerifyKeyListener() {
             @Override
             public void verifyKey(final VerifyEvent event) {

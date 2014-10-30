@@ -86,12 +86,12 @@ public class AnnotationEditPolicy extends DirectEditPolicy {
             // the width and height grow with the text entered
             newAnnoData.setX(compositeEditor.getBounds().x);
             newAnnoData.setHeight(compositeEditor.getBounds().height - trim.height);
-            newAnnoData.setWidth(compositeEditor.getBounds().width - trim.width + 5);
+            newAnnoData.setWidth(compositeEditor.getBounds().width - trim.width);
         } else {
             // with workflow annotations only the height grows with the text
             newAnnoData.setX(oldFigBounds.x);
             newAnnoData.setHeight(compositeEditor.getBounds().height - trim.height);
-            newAnnoData.setWidth(oldFigBounds.width - trim.width + 5);
+            newAnnoData.setWidth(oldFigBounds.width - trim.width);
         }
 
         if (hasAnnotationDataChanged(oldAnno, newAnnoData)) {
