@@ -96,7 +96,10 @@ public final class VMFileLocker {
         if (DISABLE_VM_LOCKS) {
             return true;
         }
-        if (!dir.isDirectory()) {
+        if (!dir.exists()) {
+            LOGGER.warn("Directory '" + dir.getAbsolutePath() + "' does not exist, cannot lock it");
+            return false;
+        } else if (!dir.isDirectory()) {
             LOGGER.coding("Files should not be locked. Only directories. ("
                     + dir.getAbsolutePath() + " is not a dir.)");
             return false;
@@ -145,10 +148,16 @@ public final class VMFileLocker {
         if (DISABLE_VM_LOCKS) {
             return;
         }
-        if (!dir.isDirectory()) {
+        if (!dir.exists()) {
+            LOGGER.warn("Directory '" + dir.getAbsolutePath() + "' does not exist (any more), cannot unlock it");
+            COUNTS.remove(dir);
+            LOCKS.remove(dir);
+            return;
+        } else if (!dir.isDirectory()) {
             LOGGER.coding("Files should not be un/locked. Only directories.");
             return;
         }
+
         MutableInteger cnt = COUNTS.get(dir);
         FileLocker fl = LOCKS.get(dir);
         if (cnt == null) {
