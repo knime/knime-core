@@ -97,6 +97,25 @@ public class Bug_4423_saveDuringResetDeadlock extends WorkflowTestCase {
     }
 
     public void testExecAfterLoad() throws Exception {
+        final Pointer<Exception> throwablePointer = Pointer.newInstance(null);
+
+        Display.getDefault().syncExec(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    runTest(throwablePointer);
+                } catch (Exception ex) {
+                    throwablePointer.set(ex);
+                }
+            }
+        });
+        final Exception exception = throwablePointer.get();
+        if (exception != null) {
+            throw exception;
+        }
+    }
+
+    private void runTest(final Pointer<Exception> throwablePointer) throws Exception {
         final Display currentDisplay = Display.getCurrent();
         final Thread displayThread = currentDisplay.getThread();
         final Thread currentThread = Thread.currentThread();
@@ -106,11 +125,16 @@ public class Bug_4423_saveDuringResetDeadlock extends WorkflowTestCase {
         final WorkflowManager workflowManager = getManager();
         executeAllAndWait();
         final NodeContainer nc = findNodeContainer(m_tableView2);
-        final Pointer<Throwable> throwablePointer = Pointer.newInstance(null);
         final AtomicReference<Progress> saveProgressPointer = new AtomicReference<>(Progress.NotStarted);
-        AbstractNodeView<?> view = ((NativeNodeContainer)nc).getNode().getView(
-            0, "Programmatically opened in test flow");
-        Node.invokeOpenView(view, "Programmatically opened in test flow");
+
+        NodeContext.pushContext(nc);
+        try {
+            AbstractNodeView<?> view = ((NativeNodeContainer)nc).getNode().getView(
+                0, "Programmatically opened in test flow");
+            Node.invokeOpenView(view, "Programmatically opened in test flow");
+        } finally {
+            NodeContext.removeLastContext();
+        }
 
         final NodeLogger logger = NodeLogger.getLogger(getClass());
         Runnable saveRunnable = new Runnable() {
@@ -136,10 +160,19 @@ public class Bug_4423_saveDuringResetDeadlock extends WorkflowTestCase {
                     }
                 };
                 saveJob.schedule();
-                try {
-                    saveJob.join();
-                } catch (InterruptedException e) {
-                    throwablePointer.set(e);
+                long wait = 5000;
+                while ((saveJob.getResult() == null) && (wait > 0)) {
+                    try {
+                        Thread.sleep(250);
+                        wait -= 250;
+                    } catch (InterruptedException e) {
+                        throwablePointer.set(e);
+                    }
+                }
+                if (saveJob.getResult() == null) {
+                    saveJob.cancel();
+                    throwablePointer.set(new IllegalStateException(
+                        "Workflow save job has not finished within 5 secs, very likely because we have a deadlock"));
                 }
             }
         };
@@ -179,10 +212,6 @@ public class Bug_4423_saveDuringResetDeadlock extends WorkflowTestCase {
             if (!currentDisplay.readAndDispatch()) {
                 currentDisplay.sleep();
             }
-        }
-        final Throwable throwable = throwablePointer.get();
-        if (throwable != null) {
-            throw new RuntimeException(throwable);
         }
     }
 
