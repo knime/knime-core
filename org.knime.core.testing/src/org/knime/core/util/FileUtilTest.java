@@ -57,7 +57,6 @@ import static org.junit.Assume.assumeThat;
 import java.net.URL;
 
 import org.eclipse.core.runtime.Platform;
-import org.hamcrest.Matcher;
 import org.junit.Test;
 
 /**
@@ -73,7 +72,7 @@ public class FileUtilTest {
      */
     @Test
     public void testToUrlUnix() throws Exception {
-        assumeThat(Platform.getOS(), anyOf(new Matcher[] {is(Platform.OS_LINUX), is(Platform.OS_MACOSX)}));
+        assumeThat(Platform.getOS(), anyOf(is(Platform.OS_LINUX), is(Platform.OS_MACOSX), is("dummy")));
         URL url = FileUtil.toURL("/etc/passwd");
         assertThat("Unexpected URL", url.toString(), is("file:/etc/passwd"));
 
@@ -133,7 +132,7 @@ public class FileUtilTest {
      */
     @Test
     public void testResolveToPathUnix() throws Exception {
-        assumeThat(Platform.getOS(), anyOf(new Matcher[] {is(Platform.OS_LINUX), is(Platform.OS_MACOSX)}));
+        assumeThat(Platform.getOS(), anyOf(is(Platform.OS_LINUX), is(Platform.OS_MACOSX), is("dummy")));
         URL url = new URL("file:///etc/passwd");
         assertThat("Unexpected path", FileUtil.resolveToPath(url).toString(), is("/etc/passwd"));
 
