@@ -4271,7 +4271,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     void performStateTransitionEXECUTED(final NodeContainerExecutionStatus status) {
         assert !isLocalWFM() : "Execution of meta node not allowed for locally executing (sub-)flows";
-        synchronized (m_workflowMutex) {
+        synchronized (m_nodeMutex) {
             mimicRemoteExecuted(status);
             String stateList = printNodeSummary(getID(), 0);
             // this method is called from the parent's doAfterExecute
