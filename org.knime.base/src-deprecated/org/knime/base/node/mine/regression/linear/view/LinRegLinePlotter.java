@@ -48,6 +48,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.knime.base.node.mine.regression.linear.LinearRegressionContent;
+import org.knime.base.node.util.DataArray;
+import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 import org.knime.base.util.coordinate.NumericCoordinate;
@@ -82,12 +84,17 @@ public class LinRegLinePlotter extends ScatterPlotter {
      */
     @Override
     public void updatePaintModel() {
-        if (getDataProvider() == null
-                || getDataProvider().getDataArray(0) == null) {
+        DataProvider dataProvider = getDataProvider();
+        if (dataProvider == null) {
             return;
         }
+        DataArray data = dataProvider.getDataArray(0);
+        if (data == null) {
+            return;
+        }
+
         LinearRegressionContent params =
-                ((LinRegDataProvider)getDataProvider()).getParams();
+                ((LinRegDataProvider)dataProvider).getParams();
         if (params == null) {
             return;
         }
@@ -97,12 +104,15 @@ public class LinRegLinePlotter extends ScatterPlotter {
 
         // get the included columns
         String[] includedCols =
-                ((LinRegDataProvider)getDataProvider()).getLearningColumns();
+                ((LinRegDataProvider)dataProvider).getLearningColumns();
+        if (includedCols == null) {
+            return;
+        }
+
         ((LinRegLinePlotterProperties)getProperties())
                 .setIncludedColumns(includedCols);
         // update the combo boxes
-        DataTableSpec spec =
-                getDataProvider().getDataArray(0).getDataTableSpec();
+        DataTableSpec spec = data.getDataTableSpec();
         ((LinRegLinePlotterProperties)getProperties()).update(spec);
         super.updatePaintModel();
         double xMin =
@@ -139,12 +149,18 @@ public class LinRegLinePlotter extends ScatterPlotter {
             return;
         }
         super.updateSize();
-        if (getDataProvider() == null
-                || getDataProvider().getDataArray(0) == null) {
+
+        DataProvider dataProvider = getDataProvider();
+        if (dataProvider == null) {
             return;
         }
+        DataArray data = dataProvider.getDataArray(0);
+        if (data == null) {
+            return;
+        }
+
         LinearRegressionContent params =
-                ((LinRegDataProvider)getDataProvider()).getParams();
+                ((LinRegDataProvider)dataProvider).getParams();
         if (params == null) {
             return;
         }
@@ -156,7 +172,7 @@ public class LinRegLinePlotter extends ScatterPlotter {
                         .getMaxDomainValue();
         String xName = getSelectedXColumn().getName();
         List<String>includedCols = Arrays.asList(
-                ((LinRegDataProvider)getDataProvider())
+                ((LinRegDataProvider)dataProvider)
             .getLearningColumns());
 
         if (!xName.equals(params.getTargetColumnName())
