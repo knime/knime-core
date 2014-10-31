@@ -170,7 +170,9 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
                         types[i] = toSet;
                     } else {
                         types[i] = newType;
-                        m_reasons[i][2] = row.getKey().getString();
+                        String r = row.getKey().toString();
+                        r += m_quickScan ? (" based on a quickscan.") : "";
+                        m_reasons[i][2] = r;
                         m_reasons[i][1] = newType.toString();
                         m_reasons[i][0] = incls[i];
                     }

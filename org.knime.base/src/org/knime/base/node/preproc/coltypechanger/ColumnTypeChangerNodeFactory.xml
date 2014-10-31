@@ -41,6 +41,14 @@
 			in year, d: Day in month, H: Hour in day, m: Minute in hour, s:
 			Second in minute, S: Millisecond)
 		</option>
+		<option name="Missing value pattern">Choose or enter a missing value pattern. &lt;none&gt; is the default pattern 
+			and &lt;empty&gt; represents the empty string. The entered string pattern is applied to all included columns.		
+		</option>
+		<option name="Quickscan">Check this checkbox if you want to speed up the node. The node will determine the 
+			most specific type based on the first 1000 rows. 1000 is the default for the "number of rows to consider" 
+			field. <br/>
+			Note: With quickscan enabled this node could fail during execute. 
+		</option>
 	</fullDescription>
 
 
