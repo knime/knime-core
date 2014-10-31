@@ -242,9 +242,9 @@ public final class DecTreePredictorNodeModel extends NodeModel {
         }
         PMMLDecisionTreeTranslator trans = new PMMLDecisionTreeTranslator();
         port.initializeModelTranslator(trans);
-        m_decTree = trans.getDecisionTree();
+        DecisionTree decTree = trans.getDecisionTree();
 
-        m_decTree.resetColorInformation();
+        decTree.resetColorInformation();
         BufferedDataTable inData = (BufferedDataTable)inPorts[INDATAPORT];
         // get column with color information
         String colorColumn = null;
@@ -254,7 +254,7 @@ public final class DecTreePredictorNodeModel extends NodeModel {
                 break;
             }
         }
-        m_decTree.setColorColumn(colorColumn);
+        decTree.setColorColumn(colorColumn);
         exec.setMessage("Decision Tree Predictor: start execution.");
         PortObjectSpec[] inSpecs = new PortObjectSpec[] {
                 inPorts[0].getSpec(), inPorts[1].getSpec() };
@@ -271,7 +271,7 @@ public final class DecTreePredictorNodeModel extends NodeModel {
             LinkedHashMap<String, Double> classDistrib = null;
             try {
                 Pair<DataCell, LinkedHashMap<DataCell, Double>> pair
-                        = m_decTree.getWinnerAndClasscounts(
+                        = decTree.getWinnerAndClasscounts(
                                 thisRow, inData.getDataTableSpec());
                 cl = pair.getFirst();
                 LinkedHashMap<DataCell, Double> classCounts =
@@ -280,12 +280,12 @@ public final class DecTreePredictorNodeModel extends NodeModel {
                 classDistrib = getDistribution(classCounts);
                 if (coveredPattern < m_maxNumCoveredPattern.getIntValue()) {
                     // remember this one for HiLite support
-                    m_decTree.addCoveredPattern(thisRow, inData
+                    decTree.addCoveredPattern(thisRow, inData
                             .getDataTableSpec());
                     coveredPattern++;
                 } else {
                     // too many patterns for HiLite - at least remember color
-                    m_decTree.addCoveredColor(thisRow, inData
+                    decTree.addCoveredColor(thisRow, inData
                             .getDataTableSpec());
                 }
                 nrPattern++;
@@ -338,6 +338,7 @@ public final class DecTreePredictorNodeModel extends NodeModel {
                     + nrPattern + ") rows for HiLiting!");
         }
         outData.close();
+        m_decTree = decTree;
         exec.setMessage("Decision Tree Predictor: end execution.");
         return new BufferedDataTable[]{outData.getTable()};
     }
