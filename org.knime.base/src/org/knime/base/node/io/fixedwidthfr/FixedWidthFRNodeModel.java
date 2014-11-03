@@ -71,6 +71,7 @@ import org.knime.core.node.NodeSettingsWO;
 public class FixedWidthFRNodeModel extends NodeModel {
 
     private FixedWidthFRSettings m_nodeSettings = new FixedWidthFRSettings();
+    private FixedWidthFRSettings m_workSettings = new FixedWidthFRSettings();
 
     /**
      * No input port but one output port. it is a file reader
@@ -93,11 +94,11 @@ public class FixedWidthFRNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] data, final ExecutionContext exec)
         throws CanceledExecutionException, InvalidSettingsException {
 
-        getLogger().info("Preparing to read from '" + m_nodeSettings.getFileLocation().toString() + "'.");
+        getLogger().info("Preparing to read from '" + m_workSettings.getFileLocation().toString() + "'.");
 
-        DataTableSpec tSpec = m_nodeSettings.createDataTableSpec();
+        DataTableSpec tSpec = m_workSettings.createDataTableSpec();
 
-        try (FixedWidthFRTable fTable = new FixedWidthFRTable(tSpec, m_nodeSettings, exec)) {
+        try (FixedWidthFRTable fTable = new FixedWidthFRTable(tSpec, m_workSettings, exec)) {
 
             // create a DataContainer and fill it with the rows read. It is faster
             // then reading the file every time (for each row iterator), and it
@@ -131,12 +132,14 @@ public class FixedWidthFRNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         assert inSpecs.length == 0;
 
+        // create workSettings, because we only want to remove the last column for execution
+        m_workSettings = new FixedWidthFRSettings(m_nodeSettings);
         // remove 'remaining characters' column
-        m_nodeSettings.removeColAt(m_nodeSettings.getNumberOfColumns() - 1);
+        m_workSettings.removeColAt(m_nodeSettings.getNumberOfColumns() - 1);
 
-        m_nodeSettings.checkSettings();
+        m_workSettings.checkSettings();
 
-        return new DataTableSpec[]{m_nodeSettings.createDataTableSpec()};
+        return new DataTableSpec[]{m_workSettings.createDataTableSpec()};
 
     }
 
