@@ -213,7 +213,7 @@ public class TwoSampleTTestNodeView extends NodeView<TwoSampleTTestNodeModel> {
                 buffer);
         BufferedDataTable descStats = getNodeModel().getDescritiveStatistics();
         if (descStats.getRowCount() > 0) {
-            CloseableRowIterator iter = descStats.iterator();
+            CloseableRowIterator iter = descStats.iteratorFailProve();
             int ignoredIndex = descStats.getSpec().findColumnIndex(
                 TwoSampleTTestStatistics.IGNORED_COUNT_GROUP_COL);
             DataCell ignoredCell = iter.next().getCell(ignoredIndex);
