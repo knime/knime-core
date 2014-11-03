@@ -116,12 +116,9 @@ final class DecTreePredictorGraphView
      */
     public DecTreePredictorGraphView(final DecTreePredictorNodeModel model) {
         super(model);
-        DecisionTreeNode root =
-            null != model.getDecisionTree() ? model.getDecisionTree()
-                    .getRootNode() : null;
-        String colorColumn =
-            null != model.getDecisionTree() ? model.getDecisionTree()
-                    .getColorColumn() : null;
+        DecisionTree tree = model.getDecisionTree();
+        DecisionTreeNode root = (tree != null) ? tree.getRootNode() : null;
+        String colorColumn = (tree != null) ? tree.getColorColumn() : null;
         m_graph = new DecTreeGraphView(root, colorColumn);
         JPanel p = new JPanel(new GridLayout());
         p.setBackground(ColorAttr.BACKGROUND);
