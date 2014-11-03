@@ -297,18 +297,26 @@ public class BWElimLoopEndNodeModel extends NodeModel implements LoopEndNode {
         double sum = 0;
         for (DataRow row : table) {
             if (row.getCell(targetIndex).isMissing()) {
-                throw new RuntimeException(
-                        "This node cannot handle missing values");
+                throw new RuntimeException("Target value in row '" + row.getKey()
+                    + "' is missing, cannot compute error with missing values");
             }
             if (row.getCell(predictionIndex).isMissing()) {
-                throw new RuntimeException(
-                        "This node cannot handle missing values");
+                throw new RuntimeException("Prediction in row '" + row.getKey()
+                    + "' is missing, cannot compute error with missing values");
             }
 
-            double a =
-                    ((DoubleValue)row.getCell(predictionIndex))
-                            .getDoubleValue();
+            double a = ((DoubleValue)row.getCell(predictionIndex)).getDoubleValue();
+            if (Double.isNaN(a)) {
+                throw new RuntimeException("Prediction in row '" + row.getKey()
+                    + "' is NaN, cannot compute error with NaN");
+            }
+
             double b = ((DoubleValue)row.getCell(targetIndex)).getDoubleValue();
+            if (Double.isNaN(b)) {
+                throw new RuntimeException("Target value in row '" + row.getKey()
+                    + "' is NaN, cannot compute error with NaN");
+            }
+
             sum += (a - b) * (a - b);
         }
 
@@ -320,12 +328,12 @@ public class BWElimLoopEndNodeModel extends NodeModel implements LoopEndNode {
         int wrong = 0;
         for (DataRow row : table) {
             if (row.getCell(targetIndex).isMissing()) {
-                throw new RuntimeException(
-                        "This node cannot handle missing values");
+                throw new RuntimeException("Target value in row '" + row.getKey()
+                    + "' is missing, cannot compute error with missing values");
             }
             if (row.getCell(predictionIndex).isMissing()) {
-                throw new RuntimeException(
-                        "This node cannot handle missing values");
+                throw new RuntimeException("Prediction in row '" + row.getKey()
+                    + "' is missing, cannot compute error with missing values");
             }
             if (!row.getCell(predictionIndex).equals(row.getCell(targetIndex))) {
                 wrong++;
