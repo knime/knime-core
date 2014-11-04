@@ -290,20 +290,20 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
             root = new DefaultMutableTreeNode("No Model");
         } else { // check for empty cluster model before adding content to
             // tree
-            ClusterNodeModel myModel = getNodeModel();
-            if (!myModel.hasModel()) {
+            ClusterViewData viewData = getNodeModel().getViewData();
+            if (viewData == null) {
                 root = new DefaultMutableTreeNode("Empty Model");
             } else { // put cluster info into the tree
-                root = new DefaultMutableTreeNode(myModel.getNumClusters() + " Clusters");
+                root = new DefaultMutableTreeNode(viewData.getNrOfClusters() + " Clusters");
                 DefaultMutableTreeNode clusterParent; // TreeNode for cluster
                 // c
-                for (int c = 0; c < myModel.getNumClusters(); c++) {
+                for (int c = 0; c < viewData.getNrOfClusters(); c++) {
                     // add information about coverage and center vector
                     clusterParent = new ClusterMutableTreeNode(ClusterNodeModel.CLUSTER + c + " (coverage: "
-                                    + myModel.getClusterCoverage(c) + ")", new RowKey(ClusterNodeModel.CLUSTER + c));
-                    for (int i = 0; i < myModel.getNrUsedColumns(); i++) {
+                                    + viewData.getClusterCoverage(c) + ")", new RowKey(ClusterNodeModel.CLUSTER + c));
+                    for (int i = 0; i < viewData.getNrOfUsedColumns(); i++) {
                         clusterParent.add(new DefaultMutableTreeNode(
-                                  myModel.getFeatureName(i) + " = " + myModel.getClusterCenter(c)[i]));
+                                  viewData.getFeatureName(i) + " = " + viewData.getClusterCenter(c)[i]));
                     }
                     root.add(clusterParent);
                 }
