@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="y_scramble.png" type="Manipulator">
+    <name>Y-Scrambler</name>
+
+    <shortDescription>Randomly shuffles the values in one column</shortDescription>
+
+    <fullDescription>
+        <intro>This node performs y-scrambling by randomly permutating the values
+        in one column of the input table. This can be used to check if learned models
+        make sense: if the y-values are scrambled the prediction performance should
+        degrade drastically.
+        </intro>
+        <option name="Column name">Name of the column to scrambled</option>
+        <option name="Seed">
+			Enter a seed for the random number generator. Entering a seed 
+			will cause the node to shuffle the same input data always the 
+			same way (e.g. if you reset and execute the node). Disable
+			this option to have always a different seed, i.e. real randomness.
+		</option>
+    </fullDescription>
+
+    <ports>
+        <inPort name="Input data" index="0">Any datatable</inPort>
+        <outPort name="Y-scrambled data" index="0">Datatable with values scrambled in one column</outPort>
+    </ports>
+</knimeNode>
