@@ -1685,6 +1685,10 @@
             factory-class="org.knime.base.node.io.fixedwidthfr.FixedWidthFRNodeFactory"
             id="org.knime.base.node.io.fixedwidthfr.FixedWidthFRNodeFactory">
       </node>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.yscramble.YScrambleNodeFactory"
+            id="org.knime.base.node.preproc.yscramble.YScrambleNodeFactory"/>
    </extension>
    
       
