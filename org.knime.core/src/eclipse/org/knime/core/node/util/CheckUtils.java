@@ -370,4 +370,43 @@ public final class CheckUtils {
         }
         return null;
     }
+
+    /**
+     * Does several checks for the given source location, e.g. if it's a file and if it's readable. Warnings
+     * are returned as strings, error cause an {@link InvalidSettingsException}. For remote URLs no checks are performed
+     * except if the URL is non-empty.
+     *
+     * @param urlOrPath the source location, can be an URL or a file system path
+     * @return <code>null</code> or a warning message
+     * @throws InvalidSettingsException if there will be a problem when reading the file
+     * @since 2.11
+     */
+    public static String checkSourceFile(final String urlOrPath) throws InvalidSettingsException {
+        if ((urlOrPath == null) || urlOrPath.isEmpty()) {
+            throw new InvalidSettingsException("No source location provided! Please enter a valid location.");
+        }
+
+        try {
+            URL url = FileUtil.toURL(urlOrPath);
+            Path localPath = FileUtil.resolveToPath(url);
+            if (localPath != null) {
+                if (Files.exists(localPath)) {
+                    if (Files.isDirectory(localPath)) {
+                        throw new InvalidSettingsException("Input location '" + localPath + "' is a directory");
+                    } else if (!Files.isReadable(localPath)) {
+                        throw new InvalidSettingsException("Input file '" + localPath + "' is not readable");
+                    }
+                } else {
+                    throw new InvalidSettingsException("Input file '" + localPath + "' does not exist");
+                }
+            }
+        } catch (InvalidPathException ex) {
+            throw new InvalidSettingsException("Invalid file system path: " + ex.getMessage(), ex);
+        } catch (MalformedURLException | URISyntaxException ex) {
+            throw new InvalidSettingsException("Invalid filename or URL:" + ex.getMessage(), ex);
+        } catch (IOException ex) {
+            throw new InvalidSettingsException("I/O error while checking input location:" + ex.getMessage(), ex);
+        }
+        return null;
+    }
 }
