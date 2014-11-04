@@ -84,13 +84,13 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
      * The text field for the first column to compare The first column
      * represents the real classes of the data
      */
-    private final JComboBox m_firstColumns;
+    private final JComboBox<DataColumnSpec> m_firstColumns;
 
     /*
      * The text field for the second column to compare The second column
      * represents the predicted classes of the data
      */
-    private final JComboBox m_secondColumns;
+    private final JComboBox<DataColumnSpec> m_secondColumns;
 
     /*
      * The sorting option for the values.
@@ -121,9 +121,9 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
         JPanel p = new JPanel();
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
 
-        m_firstColumns = new JComboBox();
+        m_firstColumns = new JComboBox<DataColumnSpec>();
         m_firstColumns.setRenderer(new DataColumnSpecListCellRenderer());
-        m_secondColumns = new JComboBox();
+        m_secondColumns = new JComboBox<DataColumnSpec>();
         m_secondColumns.setRenderer(new DataColumnSpecListCellRenderer());
         m_sortingOptions = new SortingOptionPanel();
         m_sortingOptions.setBorder(new TitledBorder("Sorting of values in tables"));

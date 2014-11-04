@@ -169,13 +169,8 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
      */
     @Override
     public void modelChanged() {
-        AccuracyScorerNodeModel model = getNodeModel();
-
-        /*
-         * get the new scorer table and compute the numbers we display
-         */
-        int[][] scoreCount = model.getScorerCount();
-        if (scoreCount == null) {
+        ScorerViewData viewData = getNodeModel().getViewData();
+        if (viewData == null) {
             // model is not executed yet, or was reset.
             m_correct.setText(" n/a ");
             m_wrong.setText(" n/a ");
@@ -190,31 +185,28 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
             return;
         }
 
-        // now set the values in the components to get them displayed
-        String[] headerNames = model.getValues();
-
-        String rowHeaderDescription = model.getFirstCompareColumn();
-        String columnHeaderDescription = model.getSecondCompareColumn();
+        String rowHeaderDescription = viewData.getFirstCompareColumn();
+        String columnHeaderDescription = viewData.getSecondCompareColumn();
 
         // init the boolean array determining which cell is selected
-        m_cellHilited = new boolean[scoreCount.length][scoreCount.length];
+        m_cellHilited = new boolean[viewData.getScorerCount().length][viewData.getScorerCount().length];
         updateHilitedCells();
 
-        ConfusionTableModel dataModel = new ConfusionTableModel(scoreCount,
-                headerNames, rowHeaderDescription, columnHeaderDescription);
+        ConfusionTableModel dataModel = new ConfusionTableModel(viewData.getScorerCount(),
+            viewData.getTargetValues(), rowHeaderDescription, columnHeaderDescription);
 
         m_tableView.setModel(dataModel);
 
         NumberFormat nf = NumberFormat.getInstance();
-        m_correct.setText(nf.format(model.getCorrectCount()));
-        m_wrong.setText(nf.format(model.getFalseCount()));
-        double error = 100.0 * model.getError();
+        m_correct.setText(nf.format(viewData.getCorrectCount()));
+        m_wrong.setText(nf.format(viewData.getFalseCount()));
+        double error = 100.0 * viewData.getError();
         m_error.setText(nf.format(error));
         m_error.setToolTipText("Error: " + error + " %");
-        double accurarcy = 100.0 * model.getAccuracy();
+        double accurarcy = 100.0 * viewData.getAccuracy();
         m_accuracy.setText(nf.format(accurarcy));
         m_accuracy.setToolTipText("Accuracy: " + accurarcy + " %");
-        double cohenKappa = model.getCohenKappa();
+        double cohenKappa = viewData.getCohenKappa();
         m_cohenKappa.setText(nf.format(cohenKappa));
         m_cohenKappa.setToolTipText("Cohen's \u03BA: " + cohenKappa);
     }
@@ -261,31 +253,31 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
         JMenuItem hsitem = new JMenuItem("Hilite Selected");
         hsitem.setMnemonic('S');
         hsitem.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 hiliteSelected();
             }
         });
-        // hsitem.setEnabled(hasData());
         result.add(hsitem);
 
         JMenuItem usitem = new JMenuItem("Unhilite Selected");
         usitem.setMnemonic('U');
         usitem.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 unHiliteSelected();
             }
         });
-        // usitem.setEnabled(hasData());
         result.add(usitem);
 
         JMenuItem chitem = new JMenuItem("Clear Hilite");
         chitem.setMnemonic('C');
         chitem.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 resetHilite();
             }
         });
-        // chitem.setEnabled(hasData());
         result.add(chitem);
 
         return result;
@@ -307,6 +299,10 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
     }
 
     private void hiliteSelected() {
+        ScorerViewData viewData = getNodeModel().getViewData();
+        if (viewData == null) {
+            return;
+        }
 
         Point[] selectedCells = getSelectedCells();
 
@@ -318,8 +314,7 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
 
         // get the row keys from the model and put them into the hilite handler
         if (getNodeModel().getInHiLiteHandler(0) != null) {
-            getNodeModel().getInHiLiteHandler(0).fireHiLiteEvent(
-                    getNodeModel().getSelectedSet(selectedCells));
+            getNodeModel().getInHiLiteHandler(0).fireHiLiteEvent(viewData.getSelectedSet(selectedCells));
         }
 
         // repaint the table
@@ -327,6 +322,10 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
     }
 
     private void unHiliteSelected() {
+        ScorerViewData viewData = getNodeModel().getViewData();
+        if (viewData == null) {
+            return;
+        }
 
         Point[] selectedCells = getSelectedCells();
 
@@ -338,8 +337,7 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
 
         // get the row keys from the model and put them into the hilite handler
         if (getNodeModel().getInHiLiteHandler(0) != null) {
-            getNodeModel().getInHiLiteHandler(0).fireUnHiLiteEvent(
-                    getNodeModel().getSelectedSet(selectedCells));
+            getNodeModel().getInHiLiteHandler(0).fireUnHiLiteEvent(viewData.getSelectedSet(selectedCells));
         }
 
         m_tableView.repaint();
@@ -423,6 +421,7 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void hiLite(final KeyEvent event) {
 
         updateHilitedCells();
@@ -432,15 +431,16 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
 
     private void updateHilitedCells() {
         // fix: don't update hilite when the model is not executed
-        if (getNodeModel().getScorerCount() == null) {
+        ScorerViewData viewData = getNodeModel().getViewData();
+        if (viewData == null) {
             return;
         }
+
         if (getNodeModel().getInHiLiteHandler(0) != null) {
             Set<RowKey> hilitedKeys = getNodeModel().getInHiLiteHandler(0)
                     .getHiLitKeys();
 
-            Point[] completeHilitedCells =
-                getNodeModel().getCompleteHilitedCells(hilitedKeys);
+            Point[] completeHilitedCells = viewData.getCompleteHilitedCells(hilitedKeys);
 
             // hilite all cells given by the points
             for (Point cell : completeHilitedCells) {
@@ -458,9 +458,14 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
      */
     @Override
     public void unHiLite(final KeyEvent event) {
+        ScorerViewData viewData = getNodeModel().getViewData();
+        if (viewData == null) {
+            return;
+        }
+
         for (int i = 0; i < m_cellHilited.length; i++) {
             for (int j = 0; j < m_cellHilited[i].length; j++) {
-                if (m_cellHilited[i][j] && getNodeModel().containsConfusionMatrixKeys(i, j, event.keys())) {
+                if (m_cellHilited[i][j] && viewData.containsConfusionMatrixKeys(i, j, event.keys())) {
                     m_cellHilited[i][j] = false;
                 }
             }
