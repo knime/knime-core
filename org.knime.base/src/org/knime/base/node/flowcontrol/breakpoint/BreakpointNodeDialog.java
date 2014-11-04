@@ -51,6 +51,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
@@ -73,28 +74,28 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
     static final String VARIABLEMATCH = "variable matches value";
 
     private DialogComponentStringSelection m_variableName;
+    private DialogComponent m_choices;
+    private DialogComponent m_varvalue;
 
     /**
      *
      */
     public BreakpointNodeDialog() {
-        final SettingsModelBoolean smb = createEnableModel(); 
+        final SettingsModelBoolean smb = createEnableModel();
         DialogComponentBoolean enable = new DialogComponentBoolean(
                                smb, "Breakpoint Enabled");
         addDialogComponent(enable);
         final SettingsModelString sms = createChoiceModel();
-        final DialogComponentButtonGroup choices
-                      = new DialogComponentButtonGroup(sms,
+        m_choices = new DialogComponentButtonGroup(sms,
                                false, "Breakpoint active for:", EMTPYTABLE,
                                ACTIVEBRANCH, INACTIVEBRANCH, VARIABLEMATCH);
-        addDialogComponent(choices);
+        addDialogComponent(m_choices);
         m_variableName = new DialogComponentStringSelection(
                     createVarNameModel(),
                     "Select Variable: ",
                     new String[]{"no variables available"});
         m_variableName.getModel().setEnabled(false);
-        final DialogComponentString varvalue
-                  = new DialogComponentString(createVarValueModel(),
+        m_varvalue = new DialogComponentString(createVarValueModel(),
                     "Enter Variable Value: ");
         // the choice control enable-status of the variable entry fields.
         sms.addChangeListener(new ChangeListener() {
@@ -102,7 +103,7 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
             public void stateChanged(final ChangeEvent e) {
                 boolean useVar = VARIABLEMATCH.equals(sms.getStringValue());
                 m_variableName.getModel().setEnabled(useVar);
-                varvalue.getModel().setEnabled(useVar);
+                m_varvalue.getModel().setEnabled(useVar);
             }
         });
         // the enable button controls enable status of everything!
@@ -111,20 +112,20 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
             @Override
             public void stateChanged(final ChangeEvent e) {
                 if (smb.getBooleanValue()) {
-                    choices.getModel().setEnabled(true);
+                    m_choices.getModel().setEnabled(true);
                     boolean useVar = VARIABLEMATCH.equals(sms.getStringValue());
                     m_variableName.getModel().setEnabled(useVar);
-                    varvalue.getModel().setEnabled(useVar);
+                    m_varvalue.getModel().setEnabled(useVar);
                 } else {
-                    choices.getModel().setEnabled(false);
+                    m_choices.getModel().setEnabled(false);
                     m_variableName.getModel().setEnabled(false);
-                    varvalue.getModel().setEnabled(false);
+                    m_varvalue.getModel().setEnabled(false);
                 }
             }
         });
-        varvalue.getModel().setEnabled(false);
+        m_varvalue.getModel().setEnabled(false);
         addDialogComponent(m_variableName);
-        addDialogComponent(varvalue);
+        addDialogComponent(m_varvalue);
     }
 
     /** {@inheritDoc} */
@@ -138,10 +139,13 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
             m_variableName.getModel().setEnabled(false);
         } else {
             m_variableName.replaceListItems(availableVars, null);
+            m_choices.getModel().setEnabled(false);
+            m_variableName.getModel().setEnabled(false);
+            m_varvalue.getModel().setEnabled(false);
         }
         super.onOpen();
     }
-    
+
     /**
      * @return settings model (choice) for node and dialog.
      */

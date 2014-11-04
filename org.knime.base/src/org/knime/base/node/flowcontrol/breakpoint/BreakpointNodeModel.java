@@ -134,7 +134,7 @@ implements InactiveBranchConsumer {
                               BreakpointNodeDialog.INACTIVEBRANCH)) {
             if (inData[0] instanceof InactiveBranchPortObject) {
                 throw new Exception("Breakpoint halted "
-                            + "execution (branch is active)");
+                            + "execution (branch is inactive)");
             }
         }
         if (m_choice.getStringValue().equals(
