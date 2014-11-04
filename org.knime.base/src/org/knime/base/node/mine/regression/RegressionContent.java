@@ -722,7 +722,7 @@ public abstract class RegressionContent {
         if (buf.length() > 0) {
             buf.delete(buf.length() - 2, buf.length());
             String message = "The following columns are redundant and will not contribute to the model: "
-                    + buf.toString();
+                    + buf.toString() + ". Coefficient statistics will not be accurate and contain missing information.";
             if ((m_warningMessage == null) || m_warningMessage.isEmpty()) {
                 m_warningMessage = message;
             } else {
