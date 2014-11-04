@@ -47,10 +47,6 @@
  */
 package org.knime.base.node.io.csvreader;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -64,7 +60,7 @@ final class CSVReaderConfig {
     /** Config key for the URL property. */
     static final String CFG_URL = "url";
 
-    private URL m_url;
+    private String m_location;
     private String m_colDelimiter;
     private String m_rowDelimiter;
     private String m_quoteString;
@@ -97,14 +93,7 @@ final class CSVReaderConfig {
      * @param settings To load from.
      */
     public void loadSettingsInDialog(final NodeSettingsRO settings) {
-        String urlS = settings.getString(CFG_URL, null);
-        if (urlS != null) {
-            try {
-                m_url = new URL(urlS);
-            } catch (MalformedURLException e) {
-                m_url = null;
-            }
-        }
+        m_location = settings.getString(CFG_URL, null);
         m_colDelimiter = settings.getString("colDelimiter", m_colDelimiter);
         m_rowDelimiter = settings.getString("rowDelimiter", m_rowDelimiter);
         m_quoteString = settings.getString("quote", m_quoteString);
@@ -122,21 +111,7 @@ final class CSVReaderConfig {
      */
     public void loadSettingsInModel(final NodeSettingsRO settings)
         throws InvalidSettingsException {
-        String urlS = settings.getString(CFG_URL);
-        if (urlS == null) {
-            throw new InvalidSettingsException("URL must not be null");
-        }
-        try {
-            m_url = new URL(urlS);
-        } catch (MalformedURLException e) {
-            // might be a file, bug fix 3477
-            File file = new File(urlS);
-            try {
-                m_url = file.toURI().toURL();
-            } catch (Exception fileURLEx) {
-                throw new InvalidSettingsException("Invalid URL: " + e.getMessage(), e);
-            }
-        }
+        m_location = settings.getString(CFG_URL);
         m_colDelimiter = settings.getString("colDelimiter");
         m_rowDelimiter = settings.getString("rowDelimiter");
         m_quoteString = settings.getString("quote");
@@ -154,8 +129,8 @@ final class CSVReaderConfig {
      * @param settings To save to.
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_url != null) {
-            settings.addString(CFG_URL, m_url.toString());
+        if (m_location != null) {
+            settings.addString(CFG_URL, m_location.toString());
         }
         settings.addString("colDelimiter", m_colDelimiter);
         settings.addString("rowDelimiter", m_rowDelimiter);
@@ -168,14 +143,14 @@ final class CSVReaderConfig {
         settings.addInt("skipFirstLinesCount", m_skipFirstLinesCount);
     }
 
-    /** @return the url */
-    URL getUrl() {
-        return m_url;
+    /** @return the location */
+    String getLocation() {
+        return m_location;
     }
 
-    /** @param url the url to set */
-    void setUrl(final URL url) {
-        m_url = url;
+    /** @param location the location to set */
+    void setLocation(final String location) {
+        m_location = location;
     }
 
     /** @return the colDelimiter */

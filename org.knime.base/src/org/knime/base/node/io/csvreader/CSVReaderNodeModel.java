@@ -64,6 +64,8 @@ import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.tokenizer.SettingsStatus;
 
 /**
@@ -86,7 +88,7 @@ final class CSVReaderNodeModel extends NodeModel {
     CSVReaderNodeModel(final NodeCreationContext context) {
         this();
         m_config = new CSVReaderConfig();
-        m_config.setUrl(context.getUrl());
+        m_config.setLocation(context.getUrl().toString());
     }
 
 
@@ -97,10 +99,12 @@ final class CSVReaderNodeModel extends NodeModel {
         if (m_config == null) {
             throw new InvalidSettingsException("No settings available");
         }
-        URL url = m_config.getUrl();
-        if (url == null) {
-            throw new InvalidSettingsException("No URL provided");
+
+        String warning = CheckUtils.checkSourceFile(m_config.getLocation());
+        if (warning != null) {
+            setWarningMessage(warning);
         }
+
         return new DataTableSpec[] {null};
     }
 
@@ -111,7 +115,8 @@ final class CSVReaderNodeModel extends NodeModel {
         // prepare the settings for the file analyzer
         FileReaderNodeSettings settings = new FileReaderNodeSettings();
 
-        URL url = m_config.getUrl();
+        CheckUtils.checkSourceFile(m_config.getLocation());
+        URL url = FileUtil.toURL(m_config.getLocation());
         settings.setDataFileLocationAndUpdateTableName(url);
 
         String colDel = m_config.getColDelimiter();

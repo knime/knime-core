@@ -54,10 +54,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -66,18 +62,15 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.FlowVariableModel;
-import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.FilesHistoryPanel;
+import org.knime.core.node.util.FilesHistoryPanel.LocationValidation;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
@@ -103,18 +96,9 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
     /** Create new dialog, init layout. */
     CSVReaderNodeDialog() {
         JPanel panel = new JPanel(new BorderLayout());
-        m_filePanel = new FilesHistoryPanel("csv_read");
-        FlowVariableModel varModel = createFlowVariableModel(
-                CSVReaderConfig.CFG_URL, FlowVariable.Type.STRING);
-        FlowVariableModelButton button = new FlowVariableModelButton(varModel);
-        varModel.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                FlowVariableModel wvm = (FlowVariableModel)(e.getSource());
-                m_filePanel.setEnabled(!wvm.isVariableReplacementEnabled());
-            }
-        });
-        m_filePanel.setSuffixes(".csv", ".txt");
+        m_filePanel =
+            new FilesHistoryPanel(createFlowVariableModel(CSVReaderConfig.CFG_URL, FlowVariable.Type.STRING),
+                "csv_read", LocationValidation.FileInput, ".csv", ".txt");
         int col = 3;
         m_colDelimiterField = new JTextField("###", col);
         m_rowDelimiterField = new JTextField("###", col);
@@ -141,7 +125,7 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
             }
         });
         m_limitRowsChecker.doClick();
-        panel.add(getInFlowLayout(m_filePanel, button), BorderLayout.NORTH);
+        panel.add(m_filePanel, BorderLayout.NORTH);
         JPanel centerPanel = createPanel();
         panel.add(centerPanel, BorderLayout.CENTER);
         panel.add(new JLabel(" "), BorderLayout.WEST);
@@ -201,23 +185,8 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
             final DataTableSpec[] specs) throws NotConfigurableException {
         CSVReaderConfig config = new CSVReaderConfig();
         config.loadSettingsInDialog(settings);
-        URL url = config.getUrl();
-        String urlS;
-        if (url != null) {
-            if ("file".equals(url.getProtocol())) {
-                try {
-                    urlS = new File(url.toURI()).getAbsolutePath();
-                } catch (URISyntaxException e) {
-                    urlS = url.toString();
-                }
-            } else {
-                urlS = url.toString();
-            }
-        } else {
-            urlS = "";
-        }
         m_filePanel.updateHistory();
-        m_filePanel.setSelectedFile(urlS);
+        m_filePanel.setSelectedFile(config.getLocation());
         m_colDelimiterField.setText(escape(config.getColDelimiter()));
         m_rowDelimiterField.setText(escape(config.getRowDelimiter()));
         m_quoteStringField.setText(config.getQuoteString());
@@ -250,40 +219,7 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
             throws InvalidSettingsException {
         CSVReaderConfig config = new CSVReaderConfig();
         String fileS = m_filePanel.getSelectedFile().trim();
-        if (fileS == null || fileS.isEmpty()) {
-            throw new InvalidSettingsException("No input selected");
-        }
-        URL url;
-        try {
-            url = new URL(fileS);
-        } catch (Exception e) {
-            // see if they specified a file without giving the protocol
-            File tmp = new File(fileS);
-            try {
-                url = tmp.getAbsoluteFile().toURI().toURL();
-            } catch (MalformedURLException e1) {
-                throw new InvalidSettingsException("Invalid URL: "
-                        + e1.getMessage(), e1);
-            }
-        }
-        if ("file".equals(url.getProtocol())) {
-            File tmp;
-            try {
-                tmp = new File(url.toURI());
-                if (!tmp.exists()) {
-                    throw new InvalidSettingsException(
-                            "Specified input file doesn't exist.");
-                }
-                if (!tmp.isFile() || !tmp.canRead()) {
-                    throw new InvalidSettingsException(
-                            "Specified input file is not a readable file.");
-                }
-            } catch (URISyntaxException e) {
-                throw new InvalidSettingsException("Invalid URL: "
-                        + e.getMessage(), e);
-            }
-        }
-        config.setUrl(url);
+        config.setLocation(fileS);
         config.setColDelimiter(unescape(m_colDelimiterField.getText()));
         config.setRowDelimiter(unescape(m_rowDelimiterField.getText()));
         config.setQuoteString(m_quoteStringField.getText());
