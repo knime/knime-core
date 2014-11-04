@@ -75,8 +75,6 @@ public final class LinearRegressionContent extends RegressionContent {
         "Variable", "Coeff.", "Std. Err.", "t-value", "P>|t|"}, new DataType[]{StringCell.TYPE, DoubleCell.TYPE,
         DoubleCell.TYPE, DoubleCell.TYPE, DoubleCell.TYPE});
 
-    private transient String m_warningMessage;
-
     /**
      * Empty constructor used for serialization.
      */
@@ -213,13 +211,5 @@ public final class LinearRegressionContent extends RegressionContent {
     @Override
     protected DataTableSpec outputTableSpec() {
         return m_tableOutSpec;
-    }
-
-    /**
-     * @return the warningMessage
-     * @since 2.10
-     */
-    public String getWarningMessage() {
-        return m_warningMessage;
     }
 }

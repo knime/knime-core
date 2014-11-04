@@ -141,6 +141,12 @@ public abstract class RegressionContent {
     /** offset value (a user defined intercept). */
     protected double m_offsetValue;
 
+    /**
+     * Warnings message.
+     * @since 2.11
+     */
+    protected String m_warningMessage;
+
     /** Computes the standard error. */
     private Matrix getStdErrorMatrix() {
         // the standard error estimate
@@ -705,6 +711,32 @@ public abstract class RegressionContent {
             Collections.sort(domainValues, colSpec.getType().getComparator());
             m_factorDomainValues.put(factor, domainValues);
         }
+
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < m_beta.getColumnDimension(); i++) {
+            if (Double.isNaN(m_beta.get(0, i))) {
+                m_beta.set(0, i, 0);
+                buf.append(m_outSpec.getLearningFields().get(i - 1)).append(", ");
+            }
+        }
+        if (buf.length() > 0) {
+            buf.delete(buf.length() - 2, buf.length());
+            String message = "The following columns are redundant and will not contribute to the model: "
+                    + buf.toString();
+            if ((m_warningMessage == null) || m_warningMessage.isEmpty()) {
+                m_warningMessage = message;
+            } else {
+                m_warningMessage = "\n" + message;
+            }
+        }
+    }
+
+    /**
+     * @return the warningMessage
+     * @since 2.11
+     */
+    public String getWarningMessage() {
+        return m_warningMessage;
     }
 
 }
