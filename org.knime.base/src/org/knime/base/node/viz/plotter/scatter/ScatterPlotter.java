@@ -122,6 +122,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
                         /**
                          * {@inheritDoc}
                          */
+                        @Override
                         public void stateChanged(final ChangeEvent e) {
                             setDotSize(getScatterPlotterProperties()
                                     .getDotSize());
@@ -253,6 +254,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
             /**
              * {@inheritDoc}
              */
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_hide = false;
                 if (getDrawingPane() instanceof ScatterPlotterDrawingPane) {
@@ -283,6 +285,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
             /**
              * {@inheritDoc}
              */
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_hide = true;
                 if (getDrawingPane() instanceof ScatterPlotterDrawingPane) {
@@ -329,6 +332,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
             /**
              * {@inheritDoc}
              */
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 if (getDrawingPane() instanceof ScatterPlotterDrawingPane) {
                     getScatterPlotterDrawingPane().setFadeUnhilited(true);
@@ -479,8 +483,9 @@ public class ScatterPlotter extends TwoColumnPlotter {
             return;
         }
 
+        DataArray data = getDataProvider().getDataArray(getDataArrayIdx());
         // check whether there is a row container
-        if (getDataProvider().getDataArray(getDataArrayIdx()) == null) {
+        if (data == null) {
             return;
         }
         // get the coordinates from the headers
@@ -500,8 +505,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
             // therefore the row id is retrieved from the dot info
             int rowId = dots[i].getRowIndex();
 
-            DataRow row = getDataProvider().getDataArray(getDataArrayIdx())
-                .getRow(rowId);
+            DataRow row = data.getRow(rowId);
             DataCell xCell = row.getCell(getSelectedXColumnIndex());
             DataCell yCell = row.getCell(getSelectedYColumnIndex());
 
@@ -856,6 +860,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void unHiLiteAll(final KeyEvent event) {
         if (isScatterPlotterDrawingPane()) {
             DotInfoArray dotArray =
