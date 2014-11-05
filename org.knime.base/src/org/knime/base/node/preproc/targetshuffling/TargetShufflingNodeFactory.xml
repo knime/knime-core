@@ -6,7 +6,7 @@
     <shortDescription>Randomly shuffles the values in one column</shortDescription>
 
     <fullDescription>
-        <intro>This node performs y-scrambling by randomly permutating the values
+        <intro>This node performs y-scrambling by randomly permuting the values
         in one column of the input table. This can be used to check if learned models
         make sense: if the y-values are scrambled the prediction performance should
         degrade drastically.
@@ -21,7 +21,7 @@
     </fullDescription>
 
     <ports>
-        <inPort name="Input data" index="0">Any datatable</inPort>
-        <outPort name="Y-scrambled data" index="0">Datatable with values shuffled in one column</outPort>
+        <inPort name="Input data" index="0">Any data table</inPort>
+        <outPort name="Shuffled data" index="0">Input table with values shuffled in one column</outPort>
     </ports>
 </knimeNode>

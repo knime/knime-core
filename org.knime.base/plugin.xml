@@ -1687,8 +1687,8 @@
       </node>
       <node
             category-path="/manipulation/column"
-            factory-class="org.knime.base.node.preproc.yscramble.YScrambleNodeFactory"
-            id="org.knime.base.node.preproc.yscramble.YScrambleNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.targetshuffling.TargetShufflingNodeFactory"
+            id="org.knime.base.node.preproc.targetshuffling.TargetShufflingNodeFactory"/>
    </extension>
    
       
