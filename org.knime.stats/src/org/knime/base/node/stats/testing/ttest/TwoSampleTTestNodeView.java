@@ -217,19 +217,21 @@ public class TwoSampleTTestNodeView extends NodeView<TwoSampleTTestNodeModel> {
             int ignoredIndex = descStats.getSpec().findColumnIndex(
                 TwoSampleTTestStatistics.IGNORED_COUNT_GROUP_COL);
             DataCell ignoredCell = iter.next().getCell(ignoredIndex);
-            int ignoredCount = ((IntValue)ignoredCell).getIntValue();
-            if (ignoredCount > 0) {
-                buffer.append("<p>");
-                buffer.append(ignoredCount);
-                buffer.append(ignoredCount > 1
-                             ? " rows have been ignored. Their "
-                             : " row has been ignored. Its ");
-                buffer.append("value in the grouping column is neither \"");
-                buffer.append(getNodeModel().getSettings().getGroupOne());
-                buffer.append("\" nor \"");
-                buffer.append(getNodeModel().getSettings().getGroupTwo());
-                buffer.append("\".");
-                buffer.append("</p>");
+            if (!ignoredCell.isMissing()) {
+                int ignoredCount = ((IntValue)ignoredCell).getIntValue();
+                if (ignoredCount > 0) {
+                    buffer.append("<p>");
+                    buffer.append(ignoredCount);
+                    buffer.append(ignoredCount > 1
+                                 ? " rows have been ignored. Their "
+                                 : " row has been ignored. Its ");
+                    buffer.append("value in the grouping column is neither \"");
+                    buffer.append(getNodeModel().getSettings().getGroupOne());
+                    buffer.append("\" nor \"");
+                    buffer.append(getNodeModel().getSettings().getGroupTwo());
+                    buffer.append("\".");
+                    buffer.append("</p>");
+                }
             }
             iter.close();
         }
