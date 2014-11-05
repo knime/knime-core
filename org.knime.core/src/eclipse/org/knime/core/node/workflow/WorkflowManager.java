@@ -5048,13 +5048,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return that property
      * @since 2.10 */
     public boolean canExecuteAll() {
-        synchronized (m_workflowMutex) {
-            if (isLocalWFM()) {
+        if (isLocalWFM()) {
+            synchronized (m_workflowMutex) {
                 return hasExecutableNode();
-            } else {
-                WorkflowManager parent = getParent();
-                return parent != null && parent.canExecuteNode(getID());
             }
+        } else {
+            // unsynchronized as parent may be ROOT (different mutex), see
+            // bug 5722: Potential deadlock when a workflow is run with 3rd party executor
+            WorkflowManager parent = getParent();
+            return parent != null && parent.canExecuteNode(getID());
         }
     }
 
@@ -5063,48 +5065,50 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * returns immediately and does not wait for the execution to finish.
      * @see #executeAllAndWaitUntilDone() */
     public void executeAll() {
-        synchronized (m_workflowMutex) {
-            if (!isLocalWFM()) {
-                getParent().executeUpToHere(getID());
-                return;
-            }
-            Set<NodeID> endNodes = new HashSet<NodeID>();
-            for (NodeID id : m_workflow.getNodeIDs()) {
-                boolean hasNonParentSuccessors = false;
-                for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
-                    if (!cc.getDest().equals(this.getID())) {
-                        hasNonParentSuccessors = true;
-                        break;
+        if (isLocalWFM()) {
+            synchronized (m_workflowMutex) {
+                Set<NodeID> endNodes = new HashSet<NodeID>();
+                for (NodeID id : m_workflow.getNodeIDs()) {
+                    boolean hasNonParentSuccessors = false;
+                    for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
+                        if (!cc.getDest().equals(this.getID())) {
+                            hasNonParentSuccessors = true;
+                            break;
+                        }
+                    }
+                    if (!hasNonParentSuccessors) {
+                        endNodes.add(id);
                     }
                 }
-                if (!hasNonParentSuccessors) {
-                    endNodes.add(id);
-                }
-            }
-            // now use these "end nodes" to start executing all until we
-            // reach the beginning. Do NOT leave the workflow, though.
-            Set<NodeID> executedNodes = new HashSet<NodeID>();
-            while (endNodes.size() > 0) {
-                NodeID thisID = endNodes.iterator().next();
-                endNodes.remove(thisID);
-                // move all of the predecessors to the "end nodes"
-                for (ConnectionContainer cc : m_workflow.getConnectionsByDest(thisID)) {
-                    NodeID nextID = cc.getSource();
-                    if (!endNodes.contains(nextID) && !executedNodes.contains(nextID) && !nextID.equals(this.getID())) {
-                        endNodes.add(nextID);
+                // now use these "end nodes" to start executing all until we
+                // reach the beginning. Do NOT leave the workflow, though.
+                Set<NodeID> executedNodes = new HashSet<NodeID>();
+                while (endNodes.size() > 0) {
+                    NodeID thisID = endNodes.iterator().next();
+                    endNodes.remove(thisID);
+                    // move all of the predecessors to the "end nodes"
+                    for (ConnectionContainer cc : m_workflow.getConnectionsByDest(thisID)) {
+                        NodeID nextID = cc.getSource();
+                        if (!endNodes.contains(nextID) && !executedNodes.contains(nextID) && !nextID.equals(getID())) {
+                            endNodes.add(nextID);
+                        }
                     }
+                    // try to execute the current node
+                    NodeContainer nc = m_workflow.getNode(thisID);
+                    if (nc.isLocalWFM()) {
+                        assert nc instanceof WorkflowManager;
+                        ((WorkflowManager)nc).executeAll();
+                    } else {
+                        executeUpToHere(thisID);
+                    }
+                    // and finally move the current node to the other list
+                    executedNodes.add(thisID);
                 }
-                // try to execute the current node
-                NodeContainer nc = m_workflow.getNode(thisID);
-                if (nc.isLocalWFM()) {
-                    assert nc instanceof WorkflowManager;
-                    ((WorkflowManager)nc).executeAll();
-                } else {
-                    executeUpToHere(thisID);
-                }
-                // and finally move the current node to the other list
-                executedNodes.add(thisID);
             }
+        } else {
+            // unsynchronized as parent may be ROOT (different mutex), see
+            // bug 5722: Potential deadlock when a workflow is run with 3rd party executor
+            getParent().executeUpToHere(getID());
         }
     }
 
