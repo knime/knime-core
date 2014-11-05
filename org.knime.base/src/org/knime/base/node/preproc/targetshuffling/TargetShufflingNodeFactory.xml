@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="y_scramble.png" type="Manipulator">
-    <name>Y-Scrambler</name>
+<knimeNode icon="TargetShuffling.png" type="Manipulator">
+    <name>Target Shuffling</name>
 
     <shortDescription>Randomly shuffles the values in one column</shortDescription>
 
@@ -11,7 +11,7 @@
         make sense: if the y-values are scrambled the prediction performance should
         degrade drastically.
         </intro>
-        <option name="Column name">Name of the column to scrambled</option>
+        <option name="Column name">Name of the column to shuffle</option>
         <option name="Seed">
 			Enter a seed for the random number generator. Entering a seed 
 			will cause the node to shuffle the same input data always the 
@@ -22,6 +22,6 @@
 
     <ports>
         <inPort name="Input data" index="0">Any datatable</inPort>
-        <outPort name="Y-scrambled data" index="0">Datatable with values scrambled in one column</outPort>
+        <outPort name="Y-scrambled data" index="0">Datatable with values shuffled in one column</outPort>
     </ports>
 </knimeNode>

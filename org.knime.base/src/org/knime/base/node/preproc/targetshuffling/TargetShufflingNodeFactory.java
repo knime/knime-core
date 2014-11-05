@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.base.node.preproc.yscramble;
+package org.knime.base.node.preproc.targetshuffling;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -54,29 +54,29 @@ import org.knime.core.node.NodeView;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class YScrambleNodeFactory extends NodeFactory<YScrambleNodeModel> {
+public class TargetShufflingNodeFactory extends NodeFactory<TargetShufflingNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new YScrambleNodeDialog();
+        return new TargetShufflingNodeDialog();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public YScrambleNodeModel createNodeModel() {
-        return new YScrambleNodeModel();
+    public TargetShufflingNodeModel createNodeModel() {
+        return new TargetShufflingNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<YScrambleNodeModel> createNodeView(final int viewIndex,
-            final YScrambleNodeModel nodeModel) {
+    public NodeView<TargetShufflingNodeModel> createNodeView(final int viewIndex,
+            final TargetShufflingNodeModel nodeModel) {
         return null;
     }
 

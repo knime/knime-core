@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.base.node.preproc.yscramble;
+package org.knime.base.node.preproc.targetshuffling;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -54,7 +54,7 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Thorsten Meinl, University of Konstanz
  * @author Tim-Oliver Buchholz, University of Konstanz
  */
-class YScrambleSettings {
+class TargetShufflingSettings {
     private static final String CFGKEY_COLUMNNAME = "columnName";
     private static final String CFGKEY_SEED = "seed";
     private static final String CFGKEY_USESEED = "useSeed";

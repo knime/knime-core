@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.base.node.preproc.yscramble;
+package org.knime.base.node.preproc.targetshuffling;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -77,8 +77,8 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  * @author Thorsten Meinl, University of Konstanz
  * @author Tim-Oliver Buchholz, University of Konstanz
  */
-class YScrambleNodeDialog extends NodeDialogPane {
-    private final YScrambleSettings m_settings = new YScrambleSettings();
+class TargetShufflingNodeDialog extends NodeDialogPane {
+    private final TargetShufflingSettings m_settings = new TargetShufflingSettings();
 
     private final ColumnSelectionComboxBox m_column = new ColumnSelectionComboxBox((Border)null, DataValue.class);
 
@@ -91,7 +91,7 @@ class YScrambleNodeDialog extends NodeDialogPane {
     /**
      * Creates a new dialog for the y-scrambling node.
      */
-    public YScrambleNodeDialog() {
+    public TargetShufflingNodeDialog() {
 
         m_seed = new JFormattedTextField(new AbstractFormatter() {
             /**

@@ -42,7 +42,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  */
-package org.knime.base.node.preproc.yscramble;
+package org.knime.base.node.preproc.targetshuffling;
 
 import java.io.File;
 import java.io.IOException;
@@ -75,15 +75,15 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Thorsten Meinl, University of Konstanz
  * @author Tim-Oliver Buchholz, University of Konstanz
  */
-class YScrambleNodeModel extends NodeModel {
-    private final YScrambleSettings m_settings = new YScrambleSettings();
+class TargetShufflingNodeModel extends NodeModel {
+    private final TargetShufflingSettings m_settings = new TargetShufflingSettings();
 
     Random m_random;
 
     /**
      * Creates a new model with input and one output port.
      */
-    public YScrambleNodeModel() {
+    public TargetShufflingNodeModel() {
         super(1, 1);
     }
 
@@ -206,7 +206,7 @@ class YScrambleNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        YScrambleSettings s = new YScrambleSettings();
+        TargetShufflingSettings s = new TargetShufflingSettings();
         s.loadSettingsFrom(settings);
         if ((s.columnName() == null) || (s.columnName().length() < 1)) {
             throw new InvalidSettingsException("No column selected");
