@@ -82,6 +82,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
 /**
  * The column type changer node model which converts a string column to a numeric or date-type column iff all
@@ -229,7 +230,11 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
                 m_fac.setMissingValuePattern(m_missValPat);
                 DataCell cell = row.getCell(colIdx);
                 if (!cell.isMissing()) {
-                    String str = ((StringValue)cell).getStringValue();
+
+                    String str = cell.toString();
+                    if (str == null) {
+                        return DataType.getMissingCell();
+                    }
 
                     // create String-, Int- or DoubleCell
 
@@ -480,6 +485,8 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        DataColumnSpecFilterPanel test = new DataColumnSpecFilterPanel();
+
         DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
         conf.loadConfigurationInModel(settings);
         String tmpDateFormat = settings.getString("dateFormat");
@@ -513,7 +520,7 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
 
             @Override
             public boolean include(final DataColumnSpec name) {
-                return name.getType().equals(StringCell.TYPE);
+                return name.getType().getCellClass() == null || name.getType().equals(StringCell.TYPE);
             }
         }, NameFilterConfiguration.FILTER_BY_NAMEPATTERN);
     }
