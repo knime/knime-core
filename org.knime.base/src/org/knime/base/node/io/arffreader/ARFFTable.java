@@ -53,7 +53,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URL;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Vector;
 
 import org.knime.core.data.DataCell;
@@ -295,7 +297,7 @@ public class ARFFTable implements DataTable {
             if (!colNames.add(colSpecs.get(c).getName())) {
                 throw new InvalidSettingsException("Two attributes with equal names defined in header of file '"
                         + fileLoc + "'.");
-            } 
+            }
         }
         return new DataTableSpec(tableName, colSpecs
                 .toArray(new DataColumnSpec[colSpecs.size()]));
@@ -339,7 +341,7 @@ public class ARFFTable implements DataTable {
             final String fileName, final int lineNo)
             throws InvalidSettingsException {
 
-        Vector<DataCell> vals = new Vector<DataCell>();
+        Collection<DataCell> vals = new LinkedHashSet<DataCell>();
 
         // we must support quotes and stuff - let's use another tokenizer.
         StringReader strReader = new StringReader(valList);
