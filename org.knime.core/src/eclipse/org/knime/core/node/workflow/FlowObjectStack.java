@@ -58,6 +58,7 @@ import java.util.Vector;
 
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.util.Pair;
@@ -408,18 +409,24 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         return result;
     }
 
-
     /**
      * @param item FlowObject to be put onto stack.
      * @see java.util.Stack#push(java.lang.Object)
      */
     public void push(final FlowObject item) {
-        if ((item.getOwner() != null) && (!item.getOwner().equals(m_nodeID))) {
-            throw new IllegalArgumentException(
-                    "Can't put a FlowObject item onto stack, which already "
-                    + "has a different owner.");
-        }
+        CheckUtils.checkArgument(item.getOwner() == null || item.getOwner().equals(m_nodeID),
+            "Can't put a FlowObject item onto stack, which already has a different owner "
+                + "(existing owner %s, new owner %s)", item.getOwner(), m_nodeID);
         item.setOwner(m_nodeID);
+        pushWithOwner(item);
+    }
+
+    /** Adds element that has the owner set already. Usually the owner is null when new variables are pushed. It's not
+     * null for elements pushed by the sub node right after construction.
+     * @param item The null item to push.
+     */
+    void pushWithOwner(final FlowObject item) {
+        CheckUtils.checkArgument(item.getOwner() != null, "Item should have owner set at this point: %s", item);
         m_stack.add(item);
     }
 

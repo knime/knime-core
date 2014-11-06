@@ -231,7 +231,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     private FlowObjectStack m_incomingStack;
     private FlowObjectStack m_outgoingStack;
 
-    private final FlowSubnodeScopeContext m_subnodeScopeContext = new FlowSubnodeScopeContext();
+    private final FlowSubnodeScopeContext m_subnodeScopeContext;
 
     /** Helper flag to avoid state transitions as part callbacks from the inner wfm. These are ignored when execution
      * is triggered via {@link #performExecuteNode(PortObject[])} or reset via {@link #performReset()}. */
@@ -250,6 +250,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
      */
     SubNodeContainer(final WorkflowManager parent, final NodeID id, final SubNodeContainerPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
+        m_subnodeScopeContext = new FlowSubnodeScopeContext();
+        m_subnodeScopeContext.setOwner(id);
         WorkflowPersistor workflowPersistor = persistor.getWorkflowPersistor();
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), workflowPersistor,
             parent.getGlobalTableRepository(), parent.getFileStoreHandlerRepository());
@@ -290,6 +292,8 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         // Create new, internal workflow manager:
         m_wfm = new WorkflowManager(this, null, new NodeID(id, 0), new PortType[]{}, new PortType[]{}, false,
                 parent.getContext(), name, parent.getGlobalTableRepository(), parent.getFileStoreHandlerRepository());
+        m_subnodeScopeContext = new FlowSubnodeScopeContext();
+        m_subnodeScopeContext.setOwner(id);
         // and copy content
         WorkflowCopyContent c = new WorkflowCopyContent();
         c.setAnnotation(content.getWorkflowAnnotations().toArray(new WorkflowAnnotation[0]));
@@ -1784,7 +1788,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /** {@inheritDoc} */
     @Override
     public void pushWorkflowVariablesOnStack(final FlowObjectStack sos) {
-        sos.push(m_subnodeScopeContext);
+        sos.pushWithOwner(m_subnodeScopeContext);
     }
 
     /** {@inheritDoc} */
