@@ -94,7 +94,6 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.util.ViewUtils;
 
-
 /**
  * The main table of the spreadsheet component.
  *
@@ -102,19 +101,26 @@ import org.knime.core.node.util.ViewUtils;
  */
 class SpreadsheetTable extends JTable {
     private static final long serialVersionUID = 4270519208349907535L;
+
     /** Property fired when the focused row has changed. */
     static final String PROP_FOCUSED_ROW = "spreadsheet_focused_row";
+
     /** Property fired when the focused column has changed. */
     static final String PROP_FOCUSED_COLUMN = "spreadsheet_focused_column";
+
     /** the border for the focues cell. */
     private static final Color FOCUS_BORDER_COLOR = Color.DARK_GRAY;
 
     private ColumnHeaderRenderer m_colHeaderRenderer;
+
     private int m_focusedRow;
+
     private int m_focusedColumn;
 
     private JTextField m_editorTextField;
+
     private MyCellEditor m_cellEditor;
+
     private CellRenderer m_cellRenderer;
 
     /**
@@ -128,15 +134,12 @@ class SpreadsheetTable extends JTable {
         // Increase row height
         setRowHeight(getRowHeight() + 3);
 
-        getTableHeader().setPreferredSize(new Dimension(
-                getTableHeader().getPreferredSize().width,
-                getRowHeight()));
+        getTableHeader().setPreferredSize(new Dimension(getTableHeader().getPreferredSize().width, getRowHeight()));
 
         Color gridColor = getGridColor();
         // brighten the grid color
-        setGridColor(new Color((gridColor.getRed() + 255) / 2
-            , (gridColor.getGreen() + 255) / 2
-            , (gridColor.getBlue() + 255) / 2));
+        setGridColor(new Color((gridColor.getRed() + 255) / 2, (gridColor.getGreen() + 255) / 2,
+            (gridColor.getBlue() + 255) / 2));
 
         setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         getTableHeader().setReorderingAllowed(false);
@@ -148,9 +151,8 @@ class SpreadsheetTable extends JTable {
         // Workaround by bridgehajen (Submitted On 26-SEP-2002)
         m_editorTextField = new JTextField() {
             @Override
-            protected boolean processKeyBinding(final KeyStroke ks,
-                    final java.awt.event.KeyEvent e, final int condition,
-                    final boolean pressed) {
+            protected boolean processKeyBinding(final KeyStroke ks, final java.awt.event.KeyEvent e,
+                final int condition, final boolean pressed) {
                 if (hasFocus()) {
                     return super.processKeyBinding(ks, e, condition, pressed);
                 } else { // you get in this state when key was typed in a cell
@@ -175,8 +177,7 @@ class SpreadsheetTable extends JTable {
             }
         };
 
-        m_editorTextField.setBorder(
-                BorderFactory.createLineBorder(ColorAttr.BACKGROUND));
+        m_editorTextField.setBorder(BorderFactory.createLineBorder(ColorAttr.BACKGROUND));
 
         m_cellEditor = new MyCellEditor(m_editorTextField);
         setDefaultEditor(Object.class, m_cellEditor);
@@ -184,12 +185,12 @@ class SpreadsheetTable extends JTable {
         setDefaultRenderer(Object.class, m_cellRenderer);
 
         // set selection mode for contiguous  intervals
-        setSelectionMode(
-                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         setCellSelectionEnabled(true);
         getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
             public void valueChanged(final ListSelectionEvent e) {
-                int selected =  getSelectionModel().getLeadSelectionIndex();
+                int selected = getSelectionModel().getLeadSelectionIndex();
                 if (selected > -1 && m_focusedRow != selected) {
                     int editRow = m_focusedRow;
                     m_focusedRow = selected;
@@ -199,31 +200,28 @@ class SpreadsheetTable extends JTable {
                 }
             }
         });
-        getColumnModel().getSelectionModel().addListSelectionListener(
-          new ListSelectionListener() {
+        getColumnModel().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
             public void valueChanged(final ListSelectionEvent e) {
-                int selected = getColumnModel().getSelectionModel()
-                .getLeadSelectionIndex();
+                int selected = getColumnModel().getSelectionModel().getLeadSelectionIndex();
                 if (selected > -1 && m_focusedColumn != selected) {
                     int editCol = m_focusedColumn;
                     m_focusedColumn = selected;
                     repaint();
                     repaint(getCellRect(m_focusedRow, editCol, false));
-                    firePropertyChange(PROP_FOCUSED_COLUMN, editCol,
-                            m_focusedColumn);
+                    firePropertyChange(PROP_FOCUSED_COLUMN, editCol, m_focusedColumn);
                 }
             }
         });
 
-        getColumnModel().getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
+        getColumnModel().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
             public void valueChanged(final ListSelectionEvent e) {
                 getTableHeader().repaint();
             }
         });
         getTableHeader().addMouseListener(new ColHeaderMouseAdapter(this));
-        getTableHeader().addMouseMotionListener(
-                new ColHeaderMouseAdapter(this));
+        getTableHeader().addMouseMotionListener(new ColHeaderMouseAdapter(this));
         addMouseListener(new TableMouseAdapter(this));
 
         // see bug: http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4503845
@@ -246,7 +244,6 @@ class SpreadsheetTable extends JTable {
         m_colHeaderRenderer.showOutputTable(show);
         m_cellRenderer.showOutputTable(show);
     }
-
 
     /**
      * @return the editors text field
@@ -298,6 +295,7 @@ class SpreadsheetTable extends JTable {
      */
     private static class TableMouseAdapter extends MouseAdapter {
         private JTable m_table;
+
         private JPopupMenu m_popup;
 
         /**
@@ -323,15 +321,12 @@ class SpreadsheetTable extends JTable {
             }
             // click in selection
             if (m_table.getSelectionModel().isSelectedIndex(row)
-                  && m_table.getColumnModel().getSelectionModel()
-                      .isSelectedIndex(col)) {
+                && m_table.getColumnModel().getSelectionModel().isSelectedIndex(col)) {
                 m_popup.show(m_table, e.getX(), e.getY());
             } else {
                 if (!(e.isControlDown() || e.isShiftDown())) {
-                    m_table.getSelectionModel().setSelectionInterval(
-                            row, row);
-                    m_table.getColumnModel().getSelectionModel()
-                        .setSelectionInterval(col, col);
+                    m_table.getSelectionModel().setSelectionInterval(row, row);
+                    m_table.getColumnModel().getSelectionModel().setSelectionInterval(col, col);
                     m_popup.show(m_table, e.getX(), e.getY());
                 }
             }
@@ -377,27 +372,28 @@ class SpreadsheetTable extends JTable {
      */
     private static class MyCellEditor extends DefaultCellEditor {
         private JTextField m_editorField;
+
         private KeyListener m_keyListener;
+
         private MouseListener m_mouseListener;
+
         private JTable m_table;
+
         private int m_row;
+
         private int m_col;
 
         MyCellEditor(final JTextField editorField) {
             super(editorField);
             m_editorField = editorField;
-            m_keyListener = new KeyAdapter () {
+            m_keyListener = new KeyAdapter() {
                 @Override
                 public void keyPressed(final KeyEvent e) {
-                    if (e.getKeyCode() == KeyEvent.VK_RIGHT
-                            || e.getKeyCode() == KeyEvent.VK_KP_RIGHT) {
+                    if (e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_KP_RIGHT) {
                         stopCellEditing();
-                        int col = Math.min(
-                                m_table.getModel().getColumnCount() - 1,
-                                m_col + 1);
+                        int col = Math.min(m_table.getModel().getColumnCount() - 1, m_col + 1);
                         m_table.changeSelection(m_row, col, false, false);
-                    } else if (e.getKeyCode() == KeyEvent.VK_LEFT
-                            || e.getKeyCode() == KeyEvent.VK_KP_LEFT) {
+                    } else if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_KP_LEFT) {
                         stopCellEditing();
                         int col = Math.max(0, m_col - 1);
                         m_table.changeSelection(m_row, col, false, false);
@@ -420,8 +416,7 @@ class SpreadsheetTable extends JTable {
                 public void keyPressed(final KeyEvent e) {
                     if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                         if (m_row < m_table.getRowCount()) {
-                            m_table.changeSelection(m_row + 1, m_col,
-                                    false, false);
+                            m_table.changeSelection(m_row + 1, m_col, false, false);
                         }
                     }
                 }
@@ -452,9 +447,8 @@ class SpreadsheetTable extends JTable {
          * {@inheritDoc}
          */
         @Override
-        public Component getTableCellEditorComponent(final JTable table,
-                final Object value, final boolean isSelected, final int row,
-                final int column) {
+        public Component getTableCellEditorComponent(final JTable table, final Object value, final boolean isSelected,
+            final int row, final int column) {
             m_table = table;
             m_row = row;
             m_col = column;
@@ -464,21 +458,19 @@ class SpreadsheetTable extends JTable {
             } else {
                 stringVal = value.toString();
             }
-            Component c =
-                    super.getTableCellEditorComponent(table, stringVal,
-                            isSelected, row, column);
+            Component c = super.getTableCellEditorComponent(table, stringVal, isSelected, row, column);
             return c;
         }
     }
 
     /**
-     * Does column selection when clicking on the tables header. Show the
-     * popup menu of the tables header.
+     * Does column selection when clicking on the tables header. Show the popup menu of the tables header.
      *
      * @author Heiko Hofer
      */
     private static class ColHeaderMouseAdapter extends MouseAdapter {
         private SpreadsheetTable m_table;
+
         private JPopupMenu m_popup;
 
         /**
@@ -490,6 +482,7 @@ class SpreadsheetTable extends JTable {
             JMenu changeType = new JMenu("Change Type");
             JMenuItem doubleType = new JMenuItem("Double");
             doubleType.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(final ActionEvent e) {
                     changeSelectedColumnsType(DoubleCell.TYPE);
                 }
@@ -497,6 +490,7 @@ class SpreadsheetTable extends JTable {
             changeType.add(doubleType);
             JMenuItem intType = new JMenuItem("Integer");
             intType.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(final ActionEvent e) {
                     changeSelectedColumnsType(IntCell.TYPE);
                 }
@@ -504,6 +498,7 @@ class SpreadsheetTable extends JTable {
             changeType.add(intType);
             JMenuItem stringType = new JMenuItem("String");
             stringType.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(final ActionEvent e) {
                     changeSelectedColumnsType(StringCell.TYPE);
                 }
@@ -512,9 +507,9 @@ class SpreadsheetTable extends JTable {
             if (SmilesTypeHelper.INSTANCE.isSmilesAvailable()) {
                 JMenuItem smilesType = new JMenuItem("Smiles");
                 smilesType.addActionListener(new ActionListener() {
+                    @Override
                     public void actionPerformed(final ActionEvent e) {
-                        changeSelectedColumnsType(
-                                SmilesTypeHelper.INSTANCE.getSmilesType());
+                        changeSelectedColumnsType(SmilesTypeHelper.INSTANCE.getSmilesType());
                     }
                 });
                 changeType.add(smilesType);
@@ -532,27 +527,22 @@ class SpreadsheetTable extends JTable {
 
         private void changeSelectedColumnsType(final DataType type) {
             SpreadsheetTableModel model = m_table.getSpreadsheetModel();
-            Map<Integer, ColProperty> changedProps =
-                new HashMap<Integer, ColProperty>();
+            Map<Integer, ColProperty> changedProps = new HashMap<Integer, ColProperty>();
 
             Map<Integer, ColProperty> props = model.getColumnProperties();
-            for (int col :  m_table.getColumnModel().getSelectedColumns()) {
+            for (int col : m_table.getColumnModel().getSelectedColumns()) {
                 if (props.containsKey(col)) {
                     DataType colType = props.get(col).getColumnSpec().getType();
                     if (!colType.equals(type)) {
-                        ColProperty newProp =
-                            (ColProperty)props.get(col).clone();
+                        ColProperty newProp = (ColProperty)props.get(col).clone();
                         newProp.changeColumnType(type);
                         changedProps.put(col, newProp);
                     }
                 } else {
-                    SortedMap<Integer, ColProperty> allProps =
-                        new TreeMap<Integer, ColProperty>();
+                    SortedMap<Integer, ColProperty> allProps = new TreeMap<Integer, ColProperty>();
                     allProps.putAll(props);
                     allProps.putAll(changedProps);
-                    ColProperty newProp =
-                        PropertyColumnsAction.createDefaultColumnProperty(
-                                allProps);
+                    ColProperty newProp = PropertyColumnsAction.createDefaultColumnProperty(allProps);
                     newProp.changeColumnType(type);
                     changedProps.put(col, newProp);
                 }
@@ -568,26 +558,21 @@ class SpreadsheetTable extends JTable {
             if (col == -1) {
                 return false;
             }
-            boolean isSelected = m_table.getColumnModel().
-                getSelectionModel().isSelectedIndex(col);
+            boolean isSelected = m_table.getColumnModel().getSelectionModel().isSelectedIndex(col);
             if (!isSelected) {
-                m_table.changeSelection(0, col, e.isControlDown(),
-                                    e.isShiftDown());
+                m_table.changeSelection(0, col, e.isControlDown(), e.isShiftDown());
             }
             // isSelEmpty==false may happen with e.isControlDown() on a
             // selected column
-            boolean isSelEmpty = m_table.getColumnModel().
-                getSelectionModel().isSelectionEmpty();
+            boolean isSelEmpty = m_table.getColumnModel().getSelectionModel().isSelectionEmpty();
             if (!isSelEmpty) {
-                m_table.getSelectionModel().setSelectionInterval(
-                    m_table.getRowCount() - 1, 0);
+                m_table.getSelectionModel().setSelectionInterval(m_table.getRowCount() - 1, 0);
                 return true;
             } else {
                 m_table.getSelectionModel().clearSelection();
                 return false;
             }
         }
-
 
         /**
          * {@inheritDoc}
@@ -604,25 +589,24 @@ class SpreadsheetTable extends JTable {
             // One windows the popup is usually displayed on mouseReleased
             // event. To support this we would have to use platform specific
             // code.
-            boolean isPopupTrigger = e.isPopupTrigger()
-                || SwingUtilities.isRightMouseButton(e);
+            boolean isPopupTrigger = e.isPopupTrigger() || SwingUtilities.isRightMouseButton(e);
 
             if (!isPopupTrigger) {
                 int col = m_table.getTableHeader().columnAtPoint(e.getPoint());
 
-                m_table.changeSelection(0, col, e.isControlDown(),
-                                        e.isShiftDown());
+                m_table.changeSelection(0, col, e.isControlDown(), e.isShiftDown());
                 // isSelEmpty==false may happen with e.isControlDown() on a
                 // selected column
-                boolean isSelEmpty = m_table.getColumnModel().
-                    getSelectionModel().isSelectionEmpty();
+                boolean isSelEmpty = m_table.getColumnModel().getSelectionModel().isSelectionEmpty();
                 if (!isSelEmpty) {
-                    m_table.getSelectionModel().setSelectionInterval(
-                        m_table.getRowCount() - 1, 0);
+                    m_table.getSelectionModel().setSelectionInterval(m_table.getRowCount() - 1, 0);
                 } else {
                     m_table.getSelectionModel().clearSelection();
                 }
             } else {
+                if (m_table.getSelectedColumns().length == 0) {
+                    m_table.changeSelection(0, m_table.getTableHeader().columnAtPoint(e.getPoint()), false, false);
+                }
                 m_popup.show(m_table.getTableHeader(), e.getX(), e.getY());
             }
         }
@@ -634,7 +618,6 @@ class SpreadsheetTable extends JTable {
         public void mouseReleased(final MouseEvent e) {
         }
 
-
         /**
          * {@inheritDoc}
          */
@@ -644,7 +627,6 @@ class SpreadsheetTable extends JTable {
                 new PropertyColumnsAction(m_table).actionPerformed(null);
             }
         }
-
 
         /**
          * {@inheritDoc}
@@ -660,7 +642,6 @@ class SpreadsheetTable extends JTable {
             m_table.changeSelection(0, col, e.isControlDown(), true);
         }
 
-
     }
 
     /**
@@ -670,6 +651,7 @@ class SpreadsheetTable extends JTable {
      */
     private static class ColumnHeaderRenderer extends HeaderRenderer {
         private JTable m_table;
+
         private ListSelectionModel m_selectionModel;
 
         /**
@@ -685,14 +667,12 @@ class SpreadsheetTable extends JTable {
          */
         @Override
         boolean isInOutputTable(final int row, final int column) {
-            SpreadsheetTableModel model =
-                (SpreadsheetTableModel)m_table.getModel();
+            SpreadsheetTableModel model = (SpreadsheetTableModel)m_table.getModel();
             int maxRow = model.getMaxRow();
             int maxColumn = model.getMaxColumn();
             boolean skipped = false;
             if (model.getColumnProperties().containsKey(column)) {
-                skipped = model.getColumnProperties().get(column)
-                                        .getSkipThisColumn();
+                skipped = model.getColumnProperties().get(column).getSkipThisColumn();
             }
             return !(skipped || row >= maxRow || column >= maxColumn);
         }
@@ -701,19 +681,17 @@ class SpreadsheetTable extends JTable {
          * {@inheritDoc}
          */
         @Override
-        public Component getTableCellRendererComponent(final JTable table,
-                final Object value, final boolean selected,
-                final boolean focused, final int row, final int column) {
-            ColProperty prop = (ColProperty) value;
+        public Component getTableCellRendererComponent(final JTable table, final Object value, final boolean selected,
+            final boolean focused, final int row, final int column) {
+            ColProperty prop = (ColProperty)value;
             Object v;
             if (null != prop) {
                 v = prop.getColumnSpec().getName();
             } else {
                 v = "";
             }
-            super.getTableCellRendererComponent(table,
-                    v, m_selectionModel.isSelectedIndex(column), focused,
-                    row, column);
+            super.getTableCellRendererComponent(table, v, m_selectionModel.isSelectedIndex(column), focused, row,
+                column);
             if (null != prop) {
                 setIcon(prop.getColumnSpec().getType().getIcon());
             } else {
@@ -725,7 +703,8 @@ class SpreadsheetTable extends JTable {
 
     /**
      * Getter for the focused column
-     * @return  the focused column
+     *
+     * @return the focused column
      */
     public int getFocusedColumn() {
         return m_focusedColumn;
@@ -733,7 +712,8 @@ class SpreadsheetTable extends JTable {
 
     /**
      * Getter for the focused row
-     * @return  the focused row
+     *
+     * @return the focused row
      */
     public int getFocusedRow() {
         return m_focusedRow;
@@ -763,11 +743,9 @@ class SpreadsheetTable extends JTable {
     }
 
     /**
-     * Overriden to prevent the clearance of selection when columns are added
-     * or removed. This is not perfect since the table column model recreates
-     * the columns which resets the selection as well. However, with this code
-     * the editing cell is displayed correctly.
-     * {@inheritDoc}
+     * Overriden to prevent the clearance of selection when columns are added or removed. This is not perfect since the
+     * table column model recreates the columns which resets the selection as well. However, with this code the editing
+     * cell is displayed correctly. {@inheritDoc}
      */
     @Override
     public void tableChanged(final TableModelEvent e) {
