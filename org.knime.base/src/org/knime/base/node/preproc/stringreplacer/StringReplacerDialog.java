@@ -238,6 +238,7 @@ public class StringReplacerDialog extends NodeDialogPane {
         m_caseSensitiv.setSelected(m_settings.caseSensitive());
         m_colName.update(specs[0], m_settings.columnName());
         m_createNewCol.setSelected(m_settings.createNewColumn());
+        m_newColName.setEnabled(m_createNewCol.isSelected());
         if (m_settings.newColumnName() != null) {
             m_newColName.setText(m_settings.newColumnName());
         } else {
