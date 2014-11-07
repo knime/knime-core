@@ -108,7 +108,7 @@ public class LiftChartNodeModel extends NodeModel implements DataProvider {
     private final SettingsModelString m_intervalWidth =
             createIntervalWidthModel();
 
-    private DataArray[] m_dataArray;
+    private DataArray[] m_dataArray = new DataArray[2];
 
     /**
      * Creates a new lift chart node model.
@@ -143,7 +143,7 @@ public class LiftChartNodeModel extends NodeModel implements DataProvider {
                 || !inSpecs[0].getColumnSpec(m_responseColumn.getStringValue())
                 .getType().isCompatible(NominalValue.class)) {
             // auto-configure makes no sense here, since guessing the true label
-            // is maybe a bit too much 
+            // is maybe a bit too much
             throw new InvalidSettingsException(
                     "Selected response column contains no string values or"
                             + " domain is not set."
@@ -185,8 +185,6 @@ public class LiftChartNodeModel extends NodeModel implements DataProvider {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-
-        m_dataArray = new DataArray[2];
 
         int predColIndex =
                 inData[0].getDataTableSpec().findColumnIndex(
@@ -355,7 +353,7 @@ public class LiftChartNodeModel extends NodeModel implements DataProvider {
      */
     @Override
     protected void reset() {
-
+        m_dataArray = new DataArray[2];
     }
 
     /**
@@ -439,6 +437,7 @@ public class LiftChartNodeModel extends NodeModel implements DataProvider {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataArray getDataArray(final int index) {
         if (index == 0 || index == 1) {
             return m_dataArray[index];
