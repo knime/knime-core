@@ -55,7 +55,6 @@ import javax.json.JsonValue;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.knime.core.data.json.internal.Activator;
 import org.knime.core.data.json.internal.JacksonConversionsImpl;
 import org.knime.core.data.json.internal.KNIMEJsonProvider;
 import org.osgi.framework.BundleContext;
@@ -89,15 +88,10 @@ public class TestJacksonConversions {
      */
     @Test
     public void testToJackson() {
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        try {
-            Thread.currentThread().setContextClassLoader(Activator.getJsonProviderClassLoader());
-            JsonValue input = new KNIMEJsonProvider().createObjectBuilder().add("hello", "world").build();
-            JsonNode node = m_conversions.toJackson(input);
-            assertEquals(norm(input.toString()), norm(node.toString()));
-        } finally {
-            Thread.currentThread().setContextClassLoader(cl);
-        }
+        // JsonValue input = JsonProvider.provider().createObjectBuilder().add("hello", "world").build();
+        JsonValue input = new KNIMEJsonProvider().createObjectBuilder().add("hello", "world").build();
+        JsonNode node = m_conversions.toJackson(input);
+        assertEquals(norm(input.toString()), norm(node.toString()));
     }
 
     /**
