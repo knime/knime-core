@@ -108,11 +108,11 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
 
     private String[][] m_reasons;
 
-    private boolean m_quickScan;
+    private boolean m_quickScan = false;
 
-    private int m_numberOfRows;
+    private int m_numberOfRows = 1000;
 
-    private String m_missValPat;
+    private String m_missValPat = null;
 
     /**
      * Creates a new node model with one in- and outport.
