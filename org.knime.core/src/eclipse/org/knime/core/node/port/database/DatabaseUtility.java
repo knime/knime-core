@@ -320,7 +320,7 @@ public class DatabaseUtility {
     public boolean tableExists(final Connection conn, final String tableName) throws SQLException {
         final NodeLogger logger = NodeLogger.getLogger(getClass());
         logger.debug("Checking if table " + tableName + " exists");
-        String sql = getStatementManipulator().forMetadataOnly("SELECT 1 FROM " + tableName);
+        String sql = getStatementManipulator().forMetadataOnly("SELECT 1 as tmpcol FROM " + tableName);
         logger.debug("Execute query: " + sql);
         try (ResultSet rs = conn.createStatement().executeQuery(sql)) {
         	logger.debug("Table " + tableName + " exists");
