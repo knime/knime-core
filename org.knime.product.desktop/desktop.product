@@ -40,6 +40,7 @@ All other trademarks are the property of their respective owners.
       <vmArgsMac>-XstartOnFirstThread
 -Xdock:icon=../Resources/Knime.icns
 -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
+      <vmArgsWin>-Dorg.eclipse.swt.browser.IEVersion=10001</vmArgsWin>
    </launcherArgs>
 
    <windowImages i16="/org.knime.product/icons/png/knime_16.png" i32="/org.knime.product/icons/png/knime_32.png" i48="/org.knime.product/icons/png/knime_48.png" i64="/org.knime.product/icons/png/knime_64.png" i128="/org.knime.product/icons/png/knime_128.png"/>
