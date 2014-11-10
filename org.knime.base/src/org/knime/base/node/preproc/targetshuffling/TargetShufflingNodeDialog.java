@@ -179,6 +179,7 @@ class TargetShufflingNodeDialog extends NodeDialogPane {
         m_column.update(specs[0], m_settings.columnName());
 
         m_seed.setText(Long.toString(m_settings.getSeed()));
+        m_useSeed.setSelected(m_settings.getUseSeed());
 
     }
 

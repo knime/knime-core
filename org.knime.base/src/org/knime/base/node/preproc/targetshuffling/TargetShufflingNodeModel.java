@@ -78,7 +78,7 @@ import org.knime.core.node.NodeSettingsWO;
 class TargetShufflingNodeModel extends NodeModel {
     private final TargetShufflingSettings m_settings = new TargetShufflingSettings();
 
-    Random m_random;
+    private Random m_random;
 
     /**
      * Creates a new model with input and one output port.
@@ -101,6 +101,7 @@ class TargetShufflingNodeModel extends NodeModel {
         } else {
             m_random = new Random();
         }
+
         return inSpecs;
     }
 
