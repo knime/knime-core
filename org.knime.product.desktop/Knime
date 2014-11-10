@@ -99,4 +99,6 @@ RET=$?
 cd "$LAST_PWD"
 if [[ $RET -eq 23 ]]; then
 	exec $0 "$@"
+else
+	exit $RET
 fi
