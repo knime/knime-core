@@ -35,4 +35,85 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/rules/engine/pmml/PMMLExpressionFactory.java" type="org.knime.base.node.rules.engine.pmml.PMMLExpressionFactory">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.rules.engine.pmml.PMMLExpressionFactory"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/rules/engine/pmml/PMMLRuleCompoundPredicate.java" type="org.knime.base.node.rules.engine.pmml.PMMLRuleCompoundPredicate">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.rules.engine.pmml.PMMLRuleCompoundPredicate"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/rules/engine/pmml/PMMLRuleEditorNodeDialog.java" type="org.knime.base.node.rules.engine.pmml.PMMLRuleEditorNodeDialog">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.rules.engine.pmml.PMMLRuleEditorNodeDialog"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/rules/engine/pmml/PMMLRuleEditorNodeFactory.java" type="org.knime.base.node.rules.engine.pmml.PMMLRuleEditorNodeFactory">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.rules.engine.pmml.PMMLRuleEditorNodeFactory"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/rules/engine/pmml/PMMLRuleEditorNodeModel.java" type="org.knime.base.node.rules.engine.pmml.PMMLRuleEditorNodeModel">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.rules.engine.pmml.PMMLRuleEditorNodeModel"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/rules/engine/pmml/PMMLRuleParser.java" type="org.knime.base.node.rules.engine.pmml.PMMLRuleParser">
+        <filter id="1108344834">
+            <message_arguments>
+                <message_argument value="2.9"/>
+                <message_argument value="2.11"/>
+                <message_argument value="org.knime.base.node.rules.engine.pmml.PMMLRuleParser"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/rules/engine/pmml/PMMLRuleSetPredictorNodeDialog.java" type="org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeDialog">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeDialog"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/rules/engine/pmml/PMMLRuleSetPredictorNodeFactory.java" type="org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeFactory">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeFactory"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/rules/engine/pmml/PMMLRuleSetPredictorNodeModel.java" type="org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeModel">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.rules.engine.pmml.PMMLRuleSetPredictorNodeModel"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/rules/engine/pmml/PMMLRuleSimplePredicate.java" type="org.knime.base.node.rules.engine.pmml.PMMLRuleSimplePredicate">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.rules.engine.pmml.PMMLRuleSimplePredicate"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/rules/engine/pmml/PMMLRuleTranslator.java" type="org.knime.base.node.rules.engine.pmml.PMMLRuleTranslator">
+        <filter id="1108344834">
+            <message_arguments>
+                <message_argument value="2.9"/>
+                <message_argument value="2.11"/>
+                <message_argument value="org.knime.base.node.rules.engine.pmml.PMMLRuleTranslator"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

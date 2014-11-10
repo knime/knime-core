@@ -8,6 +8,7 @@ Bundle-ClassPath: knime-jsnippets.jar,
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.base.node.preproc.stringmanipulation,
  org.knime.base.node.preproc.stringmanipulation.manipulator,
+ org.knime.base.node.rules.engine.pmml,
  org.knime.base.node.rules.engine.rsyntax;x-friends:="org.fife.rsyntaxtextarea",
  org.knime.base.node.util
 Require-Bundle: org.eclipse.core.resources;bundle-version="[3.6.0,4.0.0)",

@@ -101,6 +101,7 @@ public class PMMLUtils {
     private static final String PMML_V4_NS = "http://www.dmg.org/PMML-4_0";
     private static final String PMML_V41_NS = "http://www.dmg.org/PMML-4_1";
     private static final String PMML_V42_NS = "http://www.dmg.org/PMML-4_2";
+    private static final String PMML_CURRENT_VERSION_NS = PMML_V42_NS;
 
     private static final String PMML_V41 = "4.1";
 
@@ -259,6 +260,12 @@ public class PMMLUtils {
         }
         Node version = pmmlNode.getAttributes().getNamedItem("version");
         version.setNodeValue(PMML_V42);
+    }
+
+    /** @return name space of current PMML version {@value #PMML_CURRENT_VERSION_NS}.
+     * @since 2.11 */
+    public static String getPMMLCurrentVersionNamespace() {
+        return PMML_CURRENT_VERSION_NS;
     }
 
     /**
