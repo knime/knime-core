@@ -47,6 +47,7 @@ package org.knime.base.node.mine.regression.linear2.view;
 import java.util.List;
 
 import org.knime.base.node.mine.regression.RegressionContent;
+import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 import org.knime.base.util.coordinate.NumericCoordinate;
@@ -81,11 +82,11 @@ public class LinReg2LinePlotter extends ScatterPlotter {
      */
     @Override
     public void updatePaintModel() {
-        if (getDataProvider() == null
-                || getDataProvider().getDataArray(0) == null) {
+        DataProvider dataProvider = getDataProvider();
+        if (dataProvider == null) {
             return;
         }
-        RegressionContent content = ((LinReg2DataProvider)getDataProvider()).getLinRegContent();
+        RegressionContent content = ((LinReg2DataProvider)dataProvider).getLinRegContent();
         if (content == null) {
             return;
         }
@@ -109,8 +110,8 @@ public class LinReg2LinePlotter extends ScatterPlotter {
 
 
         if (!xName.equals(target) && includedList.contains(xName)) {
-            double yMin = getApproximationFor(xName, xMin);
-            double yMax = getApproximationFor(xName, xMax);
+            double yMin = getApproximationFor(xName, xMin, content);
+            double yMax = getApproximationFor(xName, xMax, content);
             ((LinReg2LineDrawingPane)getDrawingPane()).setLineFirstPoint(
                     getMappedXValue(new DoubleCell(xMin)),
                     getMappedYValue(new DoubleCell(yMin)));
@@ -131,11 +132,11 @@ public class LinReg2LinePlotter extends ScatterPlotter {
             return;
         }
         super.updateSize();
-        if (getDataProvider() == null
-            || getDataProvider().getDataArray(0) == null) {
+        DataProvider dataProvider = getDataProvider();
+        if (dataProvider == null) {
             return;
         }
-        RegressionContent content = ((LinReg2DataProvider)getDataProvider()).getLinRegContent();
+        RegressionContent content = ((LinReg2DataProvider)dataProvider).getLinRegContent();
         if (content == null) {
             return;
         }
@@ -149,8 +150,8 @@ public class LinReg2LinePlotter extends ScatterPlotter {
         String target = content.getSpec().getTargetCols().get(0).getName();
 
         if (!xName.equals(target) && includedList.contains(xName)) {
-            double yMin = getApproximationFor(xName, xMin);
-            double yMax = getApproximationFor(xName, xMax);
+            double yMin = getApproximationFor(xName, xMin, content);
+            double yMax = getApproximationFor(xName, xMax, content);
             ((LinReg2LineDrawingPane)getDrawingPane()).setLineFirstPoint(
                     getMappedXValue(new DoubleCell(xMin)),
                     getMappedYValue(new DoubleCell(yMin)));
@@ -170,6 +171,22 @@ public class LinReg2LinePlotter extends ScatterPlotter {
      */
     public double getApproximationFor(final String variable, final double v) {
         RegressionContent content = ((LinReg2DataProvider)getDataProvider()).getLinRegContent();
+        if (content != null) {
+            return getApproximationFor(variable, v, content);
+        } else {
+            return Double.NaN;
+        }
+    }
+
+    /**
+     * Does a prediction when the given variable has the value v and all other
+     * variables have their mean value. Used to determine the line in a 2D plot.
+     *
+     * @param variable the variable currently shown on x
+     * @param v its value
+     * @return the value of the linear regression line
+     */
+    private double getApproximationFor(final String variable, final double v, final RegressionContent content) {
         double approx = content.getIntercept();
         double[] means = content.getMeans();
 
