@@ -53,6 +53,7 @@ import java.io.ObjectOutputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -185,8 +186,8 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
             }
 
             for (int i = 0; i < types.length; i++) {
-                // if one column only contains missingCells than set column type to StringCell
-                if (types[i].equals(DataType.getMissingCell().getType())) {
+               // if one column only contains missingCells than set column type to StringCell
+               if (types[i].equals(DataType.getMissingCell().getType())) {
                     types[i] = StringCell.TYPE;
                 }
             }
@@ -389,7 +390,12 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
             }
 
             try {
-                Double.parseDouble(str);
+                double d = Double.parseDouble(str);
+                if (Double.isInfinite(d) && str.matches("[01]+")) {
+                    // if every cell above matched [01]+ and this cell matches to, we assume this column (until now) is a
+                    // bit-vector column. Bit-Vectors are stored in string representation.
+                    return StringCell.TYPE;
+                }
                 return DoubleCell.TYPE;
             } catch (NumberFormatException e) {
                 // too bad
