@@ -105,7 +105,7 @@ import org.knime.core.node.util.ColumnSelectionSearchableListPanel.Configuration
  * @since 2.10
  */
 @SuppressWarnings("serial")
-public final class ColumnSelectionSearchableListPanel extends JPanel {
+public class ColumnSelectionSearchableListPanel extends JPanel {
 
     private static final int DEFAULT_LIST_WIDTH = 70;
 
@@ -815,6 +815,12 @@ public final class ColumnSelectionSearchableListPanel extends JPanel {
                 throw new IllegalStateException("Modifier is not longer valid, a new has already been created");
             }
         }
+    }
+
+    /** @return the columnList
+     * @since 2.11 */
+    protected ColumnSelectionList getColumnList() {
+        return m_columnList;
     }
 
     /**

@@ -1508,6 +1508,11 @@
       </node>
       <node
             category-path="/misc"
+            factory-class="org.knime.base.node.preproc.datavalidator.DataValidatorNodeFactory"
+            id="org.knime.base.node.preproc.datavalidator.DataValidatorNodeFactory">
+      </node>
+      <node
+            category-path="/misc"
             expert-flag="false"
             factory-class="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory"
             id="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory">
