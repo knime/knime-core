@@ -57,6 +57,7 @@ import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceData;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceDialog;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
+import org.knime.core.util.CLibrary;
 import org.knime.core.util.MutableBoolean;
 import org.knime.product.ProductPlugin;
 import org.knime.product.p2.RepositoryUpdater;
@@ -95,6 +96,8 @@ public class KNIMEApplication implements IApplication {
      */
     @Override
     public Object start(final IApplicationContext appContext) throws Exception {
+        // don't use GTK3, it does not work in this version of Eclipse
+        CLibrary.getInstance().setenv("SWT_GTK3", "0");
         Display display = createDisplay();
 
         try {
