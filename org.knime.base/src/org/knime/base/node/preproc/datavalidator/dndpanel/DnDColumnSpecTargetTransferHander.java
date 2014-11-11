@@ -1,4 +1,4 @@
-package org.knime.base.node.preproc.datavalidator.tosortincore;
+package org.knime.base.node.preproc.datavalidator.dndpanel;
 
 import java.util.List;
 

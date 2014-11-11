@@ -46,7 +46,7 @@
  * History
  *   04.10.2014 (Marcel): created
  */
-package org.knime.base.node.preproc.datavalidator.tosortincore;
+package org.knime.base.node.preproc.datavalidator.dndpanel;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -84,7 +84,7 @@ import javax.swing.Scrollable;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
 
-import org.knime.base.node.preproc.datavalidator.tosortincore.DnDConfigurationPanel.DnDConfigurationSubPanel;
+import org.knime.base.node.preproc.datavalidator.dndpanel.DnDConfigurationPanel.DnDConfigurationSubPanel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ViewUtils;

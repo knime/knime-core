@@ -46,31 +46,49 @@
  * History
  *   17.10.2014 (Marcel Hanser): created
  */
-package org.knime.base.node.preproc.datavalidator.tosortincore;
+package org.knime.base.node.preproc.datavalidator.dndpanel;
 
+import static org.knime.core.node.util.CheckUtils.checkArgumentNotNull;
+
+import java.awt.datatransfer.Transferable;
 import java.util.List;
+
+import javax.swing.JComponent;
+import javax.swing.TransferHandler;
 
 import org.knime.core.data.DataColumnSpec;
 
 /**
- * DnDListener which is called if. Clients may consider to use the {@link DnDConfigurationPanel} instead of implementing
- * this interface directly.
+ * Extension of the {@link DnDTransferHandlerProxy}, for transferring {@link DataColumnSpec}s. See
+ * {@link DnDTransferHandlerProxy} for the usage model.
  *
  * @author Marcel Hanser
  */
-public interface DnDDropListener {
+@SuppressWarnings("serial")
+public abstract class DnDColumnSpecSourceTransferHandler extends DnDTransferHandlerProxy {
 
     /**
-     * @param extractColumnSpecs the columns to be dropped
-     * @return <code>true</code> if the given {@link DataColumnSpec}s can be dropped onto this component
+     * @param parentHandler usually the TransferHandler of the source component. See
+     *            {@link JComponent#getTransferHandler()}.
+     * @param dragAndDropStateListener called on start and stop events
      */
-    boolean isDropable(List<DataColumnSpec> extractColumnSpecs);
+    public DnDColumnSpecSourceTransferHandler(final TransferHandler parentHandler,
+        final DnDStateListener dragAndDropStateListener) {
+        super(parentHandler, dragAndDropStateListener);
+    }
 
     /**
-     * Only called if {@link #isDropable(List)} returned <code>true</code>.
-     *
-     * @param extractColumnSpecs the columns to be dropped
-     * @return <code>true</code> if the update was successful
+     * {@inheritDoc}
      */
-    boolean update(List<DataColumnSpec> extractColumnSpecs);
+    @Override
+    protected final Transferable getTransferable() {
+        List<DataColumnSpec> columnsSpecsToDrag =
+            checkArgumentNotNull(getColumnsSpecsToDrag(), "coding error, getColumnsSpecs may never be null.");
+        return new DnDColumnSpecTransferable(columnsSpecsToDrag);
+    }
+
+    /**
+     * @return creates the list of {@link DataColumnSpec}s to be transfered
+     */
+    protected abstract List<DataColumnSpec> getColumnsSpecsToDrag();
 }

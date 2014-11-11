@@ -46,12 +46,12 @@
  * History
  *   04.10.2014 (Marcel): created
  */
-package org.knime.base.node.preproc.datavalidator.tosortincore;
+package org.knime.base.node.preproc.datavalidator.dndpanel;
 
 import java.awt.Point;
 import java.awt.datatransfer.Transferable;
 
-import org.knime.base.node.preproc.datavalidator.tosortincore.DnDConfigurationPanel.DnDConfigurationSubPanel;
+import org.knime.base.node.preproc.datavalidator.dndpanel.DnDConfigurationPanel.DnDConfigurationSubPanel;
 
 /**
  * Listener that gets notified if a DragAndDrop transfer gets started and stopped.

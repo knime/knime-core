@@ -46,7 +46,7 @@
  * History
  *   04.10.2014 (Marcel): created
  */
-package org.knime.base.node.preproc.datavalidator.tosortincore;
+package org.knime.base.node.preproc.datavalidator.dndpanel;
 
 import static org.knime.core.node.util.CheckUtils.checkArgument;
 

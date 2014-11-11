@@ -46,7 +46,7 @@
  * History
  *   17.10.2014 (Marcel Hanser): created
  */
-package org.knime.base.node.preproc.datavalidator.tosortincore;
+package org.knime.base.node.preproc.datavalidator.dndpanel;
 
 import java.awt.Image;
 import java.awt.Point;

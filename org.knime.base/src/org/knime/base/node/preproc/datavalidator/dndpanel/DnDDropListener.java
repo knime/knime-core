@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -42,57 +43,34 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 29.10.2013 by NanoTec
+ * History
+ *   17.10.2014 (Marcel Hanser): created
  */
-package org.knime.base.node.preproc.datavalidator.tosortincore;
+package org.knime.base.node.preproc.datavalidator.dndpanel;
 
 import java.util.List;
 
-import javax.swing.TransferHandler;
-
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.util.ColumnSelectionList;
-import org.knime.core.node.util.ColumnSelectionSearchableListPanel;
 
 /**
- * A panel comprising a column list, search field and some search customizers for the user. The list should be
- * initialized using {@link #update(DataTableSpec)} afterwards the returned {@link ListModifier} can be used to
- * add/remove additional {@link DataColumnSpec}s. Usually additional columns are used to add 'invalid' columns, for
- * which a model specific configuration does exist but which does actually not exist any more in the input table. See
- * {@link ListModifier} to get more information about additional columns.
+ * DnDListener which is called if. Clients may consider to use the {@link DnDConfigurationPanel} instead of implementing
+ * this interface directly.
  *
  * @author Marcel Hanser
- * @since 2.10
  */
-@SuppressWarnings("serial")
-public final class DnDColumnSelectionSearchableListPanel extends ColumnSelectionSearchableListPanel {
+public interface DnDDropListener {
 
     /**
-     * @param searchedItemsSelectionMode
-     * @param configuredColumnDeterminer
+     * @param extractColumnSpecs the columns to be dropped
+     * @return <code>true</code> if the given {@link DataColumnSpec}s can be dropped onto this component
      */
-    public DnDColumnSelectionSearchableListPanel(final SearchedItemsSelectionMode searchedItemsSelectionMode,
-        final ConfiguredColumnDeterminer configuredColumnDeterminer) {
-        super(searchedItemsSelectionMode, configuredColumnDeterminer);
-    }
+    boolean isDropable(List<DataColumnSpec> extractColumnSpecs);
 
     /**
-     * Convenient method to enable the drag and drop support of the list view at the left side.
+     * Only called if {@link #isDropable(List)} returned <code>true</code>.
      *
-     * @param dndStateListener notified if drag is started and finished
-     * @since 2.11
+     * @param extractColumnSpecs the columns to be dropped
+     * @return <code>true</code> if the update was successful
      */
-    public void enableDragAndDropSupport(final DnDStateListener dndStateListener) {
-        ColumnSelectionList columnList = getColumnList();
-        columnList.setDragEnabled(true);
-        final TransferHandler handler = columnList.getTransferHandler();
-        columnList.setTransferHandler(new DnDColumnSpecSourceTransferHandler(handler, dndStateListener) {
-
-            @Override
-            protected List<DataColumnSpec> getColumnsSpecsToDrag() {
-                return getSelectedColumns();
-            }
-        });
-    }
+    boolean update(List<DataColumnSpec> extractColumnSpecs);
 }
