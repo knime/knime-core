@@ -270,7 +270,7 @@
             description="nodes for loops, switches and other flow control operations"
             icon="icons/16x16/flow_control.png"
             level-id="flowcontrol"
-            name="Flow Control"
+            name="Workflow Control"
             path="/">
       </category>
       <category
