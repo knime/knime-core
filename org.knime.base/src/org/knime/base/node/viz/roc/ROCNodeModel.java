@@ -257,7 +257,7 @@ public class ROCNodeModel extends NodeModel {
             // these contain the coordinates for the plot
             double[] xValues = new double[size + 1];
             double[] yValues = new double[size + 1];
-            int k = 1;
+            int k = 0;
             final int scoreColIndex =
                     sortedTable.getDataTableSpec().findColumnIndex(c);
             DataCell lastScore = null;
@@ -269,25 +269,25 @@ public class ROCNodeModel extends NodeModel {
                 } else {
                     fp++;
                 }
-                // if values differ (if they are equal we can't prefer one
-                // value over the other as they are indifferent; for a sequence
-                // of equal probabilities, think of what would happen if we
-                // first encounter all TP and then the FP and the other way
-                // around ... the following lines circumvent this)
+
+                // Only add a new line point if probability values differ. If they are equal we can't prefer one
+                // value over the other as they are indifferent; for a sequence of equal probabilities, think of what
+                // would happen if we first encounter all TP and then the FP and the other way
+                // around ... the following lines circumvent this.
                 if (!row.getCell(scoreColIndex).equals(lastScore)) {
-                    xValues[k] = fp;
-                    yValues[k] = tp;
                     k++;
                     lastScore = row.getCell(scoreColIndex);
                 }
+                xValues[k] = fp;
+                yValues[k] = tp;
             }
 
             xValues = Arrays.copyOf(xValues, k + 1);
             yValues = Arrays.copyOf(yValues, k + 1);
 
-            while (--k >= 0) {
-                xValues[k] /= fp;
-                yValues[k] /= tp;
+            for (int j = 0; j <= k; j++) {
+                xValues[j] /= fp;
+                yValues[j] /= tp;
             }
             xValues[xValues.length - 1] = 1;
             yValues[yValues.length - 1] = 1;
