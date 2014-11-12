@@ -47,6 +47,7 @@
  */
 package org.knime.testing.core.ng;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,6 +57,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.node.AbstractNodeView;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -81,6 +83,8 @@ public class WorkflowTestContext {
 
     private final List<Pair<Thread, Throwable>> m_uncaughtExceptions = new ArrayList<Pair<Thread, Throwable>>();
 
+    private TestflowConfiguration m_flowConfiguration;
+
     private WorkflowManager m_manager;
 
     /**
@@ -103,14 +107,18 @@ public class WorkflowTestContext {
     }
 
     /**
-     * Sets the workflow manager and records the nodes (executed and loaded) in the workflow.
+     * Sets the workflow manager and records the nodes (executed and loaded) in the workflow. In addition also the
+     * testflow configuration is read.
      *
      * @param manager a workflow manager
+     * @throws IOException if an I/O error occurs while reading the testflow configuration
+     * @throws InvalidSettingsException if the settings of the Testflow Configuration node are invalid
      */
-    public void setWorkflowManager(final WorkflowManager manager) {
+    public void setWorkflowManager(final WorkflowManager manager) throws InvalidSettingsException, IOException {
         if (manager != null) {
             recordNodes(manager);
         }
+        m_flowConfiguration = new TestflowConfiguration(manager);
         m_manager = manager;
     }
 
@@ -131,6 +139,16 @@ public class WorkflowTestContext {
      */
     public boolean isPreExecutedNode(final NodeContainer node) {
         return m_preExecutedNodes.contains(node.getID());
+    }
+
+    /**
+     * Returns the configuration for this test workflow. Maybe <code>null</code> until the the workflow manager has been
+     * set via {@link #setWorkflowManager(WorkflowManager)}.
+     *
+     * @return a testflow configuration or <code>null</code>
+     */
+    public TestflowConfiguration getTestflowConfiguration() {
+        return m_flowConfiguration;
     }
 
     /**

@@ -78,8 +78,7 @@ class WorkflowNodeMessagesTest extends WorkflowTest {
         result.startTest(this);
 
         try {
-            TestflowConfiguration flowConfiguration = new TestflowConfiguration(m_context.getWorkflowManager());
-            checkNodeMessages(result, m_context.getWorkflowManager(), flowConfiguration);
+            checkNodeMessages(result, m_context.getWorkflowManager(), m_context.getTestflowConfiguration());
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {

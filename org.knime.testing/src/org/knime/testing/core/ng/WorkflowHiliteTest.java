@@ -89,8 +89,7 @@ public class WorkflowHiliteTest extends WorkflowTest {
         result.startTest(this);
 
         try {
-            TestflowConfiguration flowConfiguration = new TestflowConfiguration(m_context.getWorkflowManager());
-            hiliteRows(result, m_context.getWorkflowManager(), flowConfiguration);
+            hiliteRows(result, m_context.getWorkflowManager(), m_context.getTestflowConfiguration());
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {

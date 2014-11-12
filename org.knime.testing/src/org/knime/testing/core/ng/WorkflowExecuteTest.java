@@ -96,7 +96,7 @@ class WorkflowExecuteTest extends WorkflowTest {
 
         TimerTask watchdog = null;
         try {
-            final TestflowConfiguration flowConfiguration = new TestflowConfiguration(m_context.getWorkflowManager());
+            final TestflowConfiguration flowConfiguration = m_context.getTestflowConfiguration();
 
             watchdog = new TimerTask() {
                 private final long timeout = ((flowConfiguration.getTimeout() > 0) ? flowConfiguration.getTimeout()

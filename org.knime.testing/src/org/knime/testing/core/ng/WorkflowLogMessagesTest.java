@@ -120,9 +120,8 @@ class WorkflowLogMessagesTest extends WorkflowTest {
         result.startTest(this);
 
         try {
-            TestflowConfiguration flowConfiguration = new TestflowConfiguration(m_context.getWorkflowManager());
             Logger.getRootLogger().removeAppender(m_logAppender);
-            checkLogMessages(result, flowConfiguration);
+            checkLogMessages(result, m_context.getTestflowConfiguration());
         } catch (Throwable t) {
             result.addError(this, t);
         } finally {
