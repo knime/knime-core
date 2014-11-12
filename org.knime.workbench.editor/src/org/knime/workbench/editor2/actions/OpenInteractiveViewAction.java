@@ -54,6 +54,8 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.wizard.AbstractWizardNodeView;
 import org.knime.core.node.wizard.WizardNodeView;
 import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -117,6 +119,7 @@ public class OpenInteractiveViewAction extends Action {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("rawtypes")
     @Override
     public void run() {
         LOGGER.debug("Open Interactive Node View " + m_nodeContainer.getName());
@@ -128,11 +131,12 @@ public class OpenInteractiveViewAction extends Action {
                 NodeContext.pushContext(m_nodeContainer);
                 try {
                     // TODO: this needs to be changed to also work for SubNodeContainers
-                    view = new WizardNodeView(((NativeNodeContainer)m_nodeContainer).getNodeModel());
+                    NodeModel nodeModel = ((NativeNodeContainer)m_nodeContainer).getNodeModel();
+                    view = getConfiguredWizardNodeView(nodeModel);
                 } finally {
                     NodeContext.removeLastContext();
                 }
-                ((WizardNodeView)view).setWorkflowManagerAndNodeID(m_nodeContainer.getParent(),
+                ((AbstractWizardNodeView)view).setWorkflowManagerAndNodeID(m_nodeContainer.getParent(),
                                                                            m_nodeContainer.getID());
             } else {
                 Assert.isNotNull(view, "Interactive view could not be instantiated. Probably a coding error.");
@@ -147,6 +151,33 @@ public class OpenInteractiveViewAction extends Action {
             LOGGER.error("The interactive view for node '" + m_nodeContainer.getNameWithID() + "' has thrown a '"
                     + t.getClass().getSimpleName() + "'. That is most likely an implementation error.", t);
         }
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private AbstractWizardNodeView getConfiguredWizardNodeView(final NodeModel nodeModel) {
+        //TODO uncomment for 2.12, make view interchangeable
+        //TODO get preference key
+        /*String viewID = "org.knime.ext.chromedriver.ChromeWizardNodeView";
+        try {
+            IExtensionRegistry registry = Platform.getExtensionRegistry();
+            IConfigurationElement[] configurationElements =
+                registry.getConfigurationElementsFor("org.knime.core.WizardNodeView");
+            for (IConfigurationElement element : configurationElements) {
+                if (viewID.equals(element.getAttribute("viewClass"))) {
+                    try {
+                        return (AbstractWizardNodeView)element.createExecutableExtension("viewClass");
+                    } catch (Throwable e) {
+                        LOGGER.error("Can't load view class for " + element.getAttribute("name")
+                            + ". Switching to default. - " + e.getMessage(), e);
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            LOGGER.error(
+                "JS view set in preferences (" + viewID + ") can't be loaded. Switching to default. - "
+                    + e.getMessage(), e);
+        }*/
+        return new WizardNodeView(nodeModel);
     }
 
     /**
