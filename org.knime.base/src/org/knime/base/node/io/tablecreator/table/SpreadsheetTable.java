@@ -604,9 +604,8 @@ class SpreadsheetTable extends JTable {
                     m_table.getSelectionModel().clearSelection();
                 }
             } else {
-                if (m_table.getSelectedColumns().length == 0) {
-                    m_table.changeSelection(0, m_table.getTableHeader().columnAtPoint(e.getPoint()), false, false);
-                }
+                int col = m_table.getTableHeader().columnAtPoint(e.getPoint());
+                m_table.changeSelection(0, col, false, false);
                 m_popup.show(m_table.getTableHeader(), e.getX(), e.getY());
             }
         }
