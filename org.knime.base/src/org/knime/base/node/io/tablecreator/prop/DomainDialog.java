@@ -50,6 +50,7 @@ package org.knime.base.node.io.tablecreator.prop;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -581,6 +582,7 @@ public class DomainDialog extends JDialog {
 
         pack();
         centerDialog();
+
         setVisible(true);
         /* --- won't return before dialog is disposed ------------- */
         /* --- m_result is set, if user pressed okay -------------- */
@@ -616,13 +618,23 @@ public class DomainDialog extends JDialog {
     }
 
     /**
-     * Sets this dialog in the center of the screen observing the current screen size.
+     * Sets this dialog in the center of its parent component or the screen if it does not have a parent.
      */
     private void centerDialog() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        Container parent = getParent();
+        Rectangle parentBounds;
+        if (parent != null) {
+            parentBounds = parent.getBounds();
+        } else {
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            parentBounds = new Rectangle(0, 0, screenSize.width, screenSize.height);
+        }
+
         Dimension size = getSize();
-        setBounds(Math.max(0, (screenSize.width - size.width) / 2), Math.max(0, (screenSize.height - size.height) / 2),
-            Math.min(screenSize.width, size.width), Math.min(screenSize.height, size.height));
+        int x = Math.max(0, parentBounds.x + (parentBounds.width / 2) - (size.width / 2));
+        int y = Math.max(0, parentBounds.y + (parentBounds.height / 2) - (size.height / 2));
+
+        setBounds(x, y, size.width, size.height);
     }
 
     /**
