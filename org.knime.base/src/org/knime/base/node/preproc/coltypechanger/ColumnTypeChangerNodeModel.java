@@ -168,9 +168,9 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
                     DataType newType = typeGuesser(c, dateFormat);
                     if (types[i] != null) {
                         DataType toSet = setType(types[i], newType);
-                        if (toSet.equals(newType) && !toSet.equals(types[i])) {
+                        if (!toSet.equals(types[i])) {
                             m_reasons[i][2] = row.getKey().getString();
-                            m_reasons[i][1] = newType.toString();
+                            m_reasons[i][1] = toSet.toString();
                             m_reasons[i][0] = incls[i];
                         }
                         types[i] = toSet;
@@ -219,7 +219,7 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
 
             outTable = exec.createColumnRearrangeTable(data, arrange, exec);
 
-            for (int i = 0; i < m_reasons.length; i++) {
+             for (int i = 0; i < m_reasons.length; i++) {
                 DataCell[] row = new DataCell[m_reasons[i].length];
                 for (int j = 0; j < m_reasons[i].length; j++) {
                     row[j] = new StringCell(m_reasons[i][j]);
