@@ -71,13 +71,13 @@ public class ColumnTypeChangerNodeFactory
     @Override
     public NodeView<ColumnTypeChangerNodeModel> createNodeView(
             final int viewIndex, final ColumnTypeChangerNodeModel nodeModel) {
-        return new ColumnTypeChangerNodeView(nodeModel);
+        return null;
     }
 
     /** {@inheritDoc} */
     @Override
     protected int getNrNodeViews() {
-        return 1;
+        return 0;
     }
 
     /** {@inheritDoc} */

@@ -54,9 +54,10 @@
 
 	<ports>
 		<inPort index="0" name="Input">Arbitrary input data.</inPort>
-		<outPort index="0" name="Input with converted columns.">
-			Input data with converted columns.
+		<outPort index="0" name="Type-casted columns">
+			Input data with type-casted columns.
 		</outPort>
+		<outPort index="1" name="Type information">Information about the chosen type casting.</outPort>
 	</ports>
 
 	<views>

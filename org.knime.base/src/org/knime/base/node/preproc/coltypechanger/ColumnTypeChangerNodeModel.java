@@ -45,15 +45,10 @@
 package org.knime.base.node.preproc.coltypechanger;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -64,14 +59,17 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.date.DateAndTimeCell;
+import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -119,7 +117,7 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
      * Creates a new node model with one in- and outport.
      */
     public ColumnTypeChangerNodeModel() {
-        super(1, 1);
+        super(1, 2);
     }
 
     /**
@@ -186,8 +184,8 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
             }
 
             for (int i = 0; i < types.length; i++) {
-               // if one column only contains missingCells than set column type to StringCell
-               if (types[i].equals(DataType.getMissingCell().getType())) {
+                // if one column only contains missingCells than set column type to StringCell
+                if (types[i].equals(DataType.getMissingCell().getType())) {
                     types[i] = StringCell.TYPE;
                 }
             }
@@ -213,8 +211,26 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
                 exec.checkCanceled();
             }
 
+
+            final String[] colNames = {"Column name", "Final column type", "Row determining final column type"};
+            final DataType[] colTypes = new DataType[]{StringCell.TYPE, StringCell.TYPE,
+                StringCell.TYPE};
+
+            BufferedDataContainer con =
+                exec.createDataContainer(new DataTableSpec(colNames, colTypes));
+
+            for (int i = 0; i < m_reasons.length; i++) {
+                DataCell[] row = new DataCell[m_reasons[i].length];
+                for (int j = 0; j < m_reasons[i].length; j++) {
+                    row[j] = new StringCell(m_reasons[i][j]);
+                }
+                con.addRowToTable(new DefaultRow(RowKey.createRowKey(i), row));
+            }
+            con.close();
+
+            BufferedDataTable outReasons = con.getTable();
             BufferedDataTable outTable = exec.createColumnRearrangeTable(data, arrange, exec);
-            return new BufferedDataTable[]{outTable};
+            return new BufferedDataTable[]{outTable, outReasons};
 
         } else {
             return inData;
@@ -423,12 +439,6 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException {
-        File f = new File(nodeInternDir, CFG_FILE);
-        try (ObjectInputStream o = new ObjectInputStream(new FileInputStream(f));) {
-            m_reasons = (String[][])o.readObject();
-        } catch (ClassNotFoundException e) {
-            throw new IOException("Error by reading internals.", e);
-        }
     }
 
     /**
@@ -458,13 +468,6 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException {
-
-        File f = new File(nodeInternDir, CFG_FILE);
-        try (ObjectOutputStream o = new ObjectOutputStream(new FileOutputStream(f))) {
-            o.writeObject(m_reasons);
-        } catch (IOException ioe) {
-            getLogger().error("Can't save reasons to '" + f.getAbsolutePath() + "'.", ioe);
-        }
     }
 
     /**
