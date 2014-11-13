@@ -182,9 +182,13 @@ public class ImageColumnWriterNodeModel extends NodeModel {
                         throw new IOException("Output file '" + imageFile
                             + "' exists and must not be overwritten due to user settings");
                     }
-                    // create parent directories in case the row key denotes a path (hidden feature, see bug #4537)
+
+                    // create parent directories in case the row key denotes a path
                     Path parentDir = imageFile.getParent();
-                    Files.createDirectories(parentDir);
+                    if (!Files.isDirectory(parentDir)) {
+                        // if parentDir is a symlink pointing to a directory, createDirectories will fail
+                        Files.createDirectories(parentDir);
+                    }
                 } else {
                     imageUrl = new URL(remoteBaseUrl.toString() + name);
                 }
