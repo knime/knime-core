@@ -210,7 +210,7 @@ final class CollectionSplitNodeModel extends NodeModel {
                 newName = baseName + "(#" + (uniquifier++) + ")";
             }
             newColSpec[j] = new DataColumnSpecCreator(
-                    baseName, elementType).createSpec();
+                    newName, elementType).createSpec();
         }
         return newColSpec;
     }
