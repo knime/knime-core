@@ -137,9 +137,15 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
 
         double progress = 0;
         final BufferedDataTable data = inData[0];
+        BufferedDataTable outTable = inData[0];
         final String[] incls = m_conf.applyTo(data.getDataTableSpec()).getIncludes();
         final DataType[] types = new DataType[incls.length];
         final double max = incls.length + data.getRowCount();
+
+        final String[] colNames = {"Column name", "Final column type", "Row determining final column type"};
+        final DataType[] colTypes = new DataType[]{StringCell.TYPE, StringCell.TYPE, StringCell.TYPE};
+
+        BufferedDataContainer reasonsCon = exec.createDataContainer(new DataTableSpec(colNames, colTypes));
 
         setReasons(new String[incls.length][3]);
 
@@ -211,30 +217,22 @@ public class ColumnTypeChangerNodeModel extends NodeModel {
                 exec.checkCanceled();
             }
 
-
-            final String[] colNames = {"Column name", "Final column type", "Row determining final column type"};
-            final DataType[] colTypes = new DataType[]{StringCell.TYPE, StringCell.TYPE,
-                StringCell.TYPE};
-
-            BufferedDataContainer con =
-                exec.createDataContainer(new DataTableSpec(colNames, colTypes));
+            outTable = exec.createColumnRearrangeTable(data, arrange, exec);
 
             for (int i = 0; i < m_reasons.length; i++) {
                 DataCell[] row = new DataCell[m_reasons[i].length];
                 for (int j = 0; j < m_reasons[i].length; j++) {
                     row[j] = new StringCell(m_reasons[i][j]);
                 }
-                con.addRowToTable(new DefaultRow(RowKey.createRowKey(i), row));
+                reasonsCon.addRowToTable(new DefaultRow(RowKey.createRowKey(i), row));
             }
-            con.close();
-
-            BufferedDataTable outReasons = con.getTable();
-            BufferedDataTable outTable = exec.createColumnRearrangeTable(data, arrange, exec);
-            return new BufferedDataTable[]{outTable, outReasons};
-
-        } else {
-            return inData;
         }
+
+        reasonsCon.close();
+
+        BufferedDataTable outReasons = reasonsCon.getTable();
+        return new BufferedDataTable[]{outTable, outReasons};
+
     }
 
     private SingleCellFactory
