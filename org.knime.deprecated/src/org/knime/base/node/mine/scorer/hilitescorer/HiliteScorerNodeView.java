@@ -172,7 +172,13 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
          * get the new scorer table and compute the numbers we display
          */
         int[][] scoreCount = model.getScorerCount();
-        if (scoreCount == null) {
+        String[] headerNames = model.getValues();
+
+        String rowHeaderDescription = model.getFirstCompareColumn();
+        String columnHeaderDescription = model.getSecondCompareColumn();
+
+        if ((scoreCount == null) || (headerNames == null) || (rowHeaderDescription == null)
+            || (columnHeaderDescription == null)) {
             // model is not executed yet, or was reset.
             m_correct.setText(" n/a ");
             m_wrong.setText(" n/a ");
@@ -186,10 +192,6 @@ final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel>
         }
 
         // now set the values in the components to get them displayed
-        String[] headerNames = model.getValues();
-
-        String rowHeaderDescription = model.getFirstCompareColumn();
-        String columnHeaderDescription = model.getSecondCompareColumn();
 
         // init the boolean array determining which cell is selected
         m_cellHilited = new boolean[scoreCount.length][scoreCount.length];
