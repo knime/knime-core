@@ -59,10 +59,4 @@
 		</outPort>
 		<outPort index="1" name="Type information">Information about the chosen type casting.</outPort>
 	</ports>
-
-	<views>
-		<view name="Changed Types" index="0">Table view showing the column
-			names with the final column type and the row id of the first
-			occurrence of the final type.</view>
-	</views>
 </knimeNode>
