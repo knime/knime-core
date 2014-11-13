@@ -600,10 +600,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             assert factory != null;
             // insert node
             NodeID newID = m_workflow.createUniqueID();
-            NodeContainer container = new NativeNodeContainer(this,
+            NativeNodeContainer container = new NativeNodeContainer(this,
                 new Node((NodeFactory<NodeModel>)factory, context), newID);
             addNodeContainer(container, true);
             configureNodeAndSuccessors(newID, true);
+            if (context != null) { // save node settings if source URL/context was provided (bug 5772)
+                container.saveNodeSettingsToDefault();
+            }
             LOGGER.debug("Added new node " + newID);
             setDirty();
             return newID;
