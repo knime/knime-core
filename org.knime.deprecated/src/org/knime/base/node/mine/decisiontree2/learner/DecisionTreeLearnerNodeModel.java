@@ -490,25 +490,25 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         }
 
         // the decision tree model saved as PMML at the second out-port
-        m_decisionTree = new DecisionTree(root,
+        DecisionTree decisionTree = new DecisionTree(root,
                 m_classifyColumn.getStringValue(),
                 /* strategy has to be set explicitly as the default in PMML is
                     none, which means rows with missing values are not
                     classified. */
                 PMMLMissingValueStrategy.LAST_PREDICTION);
-        m_decisionTree.setColorColumn(colorColumn);
+        decisionTree.setColorColumn(colorColumn);
 
 
         // prune the tree
         exec.setMessage("Prune tree with "
                 + m_pruningMethod.getStringValue() + "...");
-        pruneTree();
+        pruneTree(decisionTree);
 
         // add highlight patterns and color information
         exec.setMessage("Adding hilite and color info to tree...");
-        addHiliteAndColorInfo(inData);
+        addHiliteAndColorInfo(inData, decisionTree);
         LOGGER.info("Decision tree consisting of "
-                + m_decisionTree.getNumberNodes()
+                + decisionTree.getNumberNodes()
                 + " nodes created with pruning method "
                 + m_pruningMethod.getStringValue());
         // set the warning message if available
@@ -532,8 +532,9 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         PMMLPortObject outPMMLPort = new PMMLPortObject(outPortSpec,
                 inPMMLPort, inData.getSpec());
         outPMMLPort.addModelTranslater(new PMMLDecisionTreeTranslator(
-                m_decisionTree));
+                decisionTree));
 
+        m_decisionTree = decisionTree;
         return new PortObject[]{outPMMLPort};
     }
 
@@ -561,7 +562,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         return pmmlSpecCreator.createSpec();
     }
 
-    private void addHiliteAndColorInfo(final BufferedDataTable inData) {
+    private void addHiliteAndColorInfo(final BufferedDataTable inData, final DecisionTree decisionTree) {
         try {
             // add the maximum number covered patterns for highliting
             int maxRowsForHiliting = m_numberRecordsStoredForView.getIntValue();
@@ -575,7 +576,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 if (row.getCell(classColumnIndex).isMissing()) {
                     continue;
                 }
-                m_decisionTree.addCoveredPattern(row,
+                decisionTree.addCoveredPattern(row,
                         inData.getDataTableSpec());
                 count++;
             }
@@ -585,7 +586,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 if (row.getCell(classColumnIndex).isMissing()) {
                     continue;
                 }
-                m_decisionTree.addCoveredColor(row, inData.getDataTableSpec());
+                decisionTree.addCoveredColor(row, inData.getDataTableSpec());
             }
         } catch (Exception e) {
             LOGGER.error("Error during adding patterns for histogram coloring",
@@ -593,16 +594,16 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         }
     }
 
-    private void pruneTree() {
+    private void pruneTree(final DecisionTree decisionTree) {
         // the tree is pruned according to the training error any way
         // i.e. if the error rate in the subtree is as high as the error
         // rate in a given node, the subtree is pruned (this means if there
         // is no improvement according to the training data)
-        Pruner.trainingErrorPruning(m_decisionTree);
+        Pruner.trainingErrorPruning(decisionTree);
 
         // now prune according to the selected pruning method
         if (m_pruningMethod.getStringValue().equals(PRUNING_MDL)) {
-            Pruner.mdlPruning(m_decisionTree);
+            Pruner.mdlPruning(decisionTree);
             // TODO } else if (m_pruningMethod.equals(PRUNING_ESTIMATED_ERROR))
             // {
             // Pruner.estimatedErrorPruning(m_decisionTree,
