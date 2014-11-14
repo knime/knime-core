@@ -191,6 +191,7 @@ public class WorkflowTestContext {
         m_uncaughtExceptions.clear();
         m_preExecutedNodes.clear();
         m_manager = null;
+        m_flowConfiguration = null;
         // m_nodesUnderTest is deliberately not cleared since the values are used later on
     }
 }
