@@ -51,6 +51,7 @@ import java.nio.charset.Charset;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -201,6 +202,21 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
             @Override
             public void run() {
                 setBrowserURL();
+                m_browser.addProgressListener(new ProgressListener() {
+
+                    @Override
+                    public void completed(final ProgressEvent event) {
+                        if (!m_browser.getUrl().isEmpty()) {
+                            String initCall = wrapInTryCatch(createInitJSViewMethodCall());
+                            m_browser.execute(initCall);
+                        }
+                    }
+
+                    @Override
+                    public void changed(final ProgressEvent event) {
+                        // do nothing
+                    }
+                });
             }
         });
 
@@ -222,18 +238,6 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
     public final void closeView() {
         m_shell = null;
         m_browser = null;
-    }
-
-    /**
-     * @param jsonViewContent
-     * @return
-     */
-    private String wrapInTryCatch(final String jsCode) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("try {");
-        builder.append(jsCode);
-        builder.append("} catch(err) {if (err.stack) {alert(err.stack);} else {alert (err);}}");
-        return builder.toString();
     }
 
     private void applyTriggered(final Browser browser, final boolean useAsDefault) {

@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.wizard;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -129,8 +130,9 @@ public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<RE
     }
 
     /**
-     * @param e
-     * @return
+     * Creates a minimal HTML string to display a message.
+     * @param message The message to display.
+     * @return The created HTML string
      */
     protected String createMessageHTML(final String message) {
         String setIEVersion = "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">";
@@ -148,6 +150,65 @@ public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<RE
     }
 
     /**
+     * Wraps a given JavaScript code in a try/catch block.
+     * On error an alert dialog is shown.
+     * @param jsCode the code to wrap.
+     * @return the wrapped JavaScript code
+     */
+    protected String wrapInTryCatch(final String jsCode) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("try {");
+        builder.append(jsCode);
+        builder.append("} catch(err) {if (err.stack) {alert(err.stack);} else {alert (err);}}");
+        return builder.toString();
+    }
+
+    /**
+     * Creates a method call to initialize the JavaScript view, including view representation and value.
+     * @return The generated method call as string.
+     */
+    protected String createInitJSViewMethodCall() {
+        String jsonViewRepresentation = getViewRepresentationJSONString(getNodeModel().getViewRepresentation());
+        String jsonViewValue = getViewValueJSONString(getNodeModel().getViewValue());
+        StringBuilder builder = new StringBuilder();
+        String escapedRepresentation = jsonViewRepresentation.replace("\\", "\\\\").replace("'", "\\'");
+        String escapedValue = jsonViewValue.replace("\\", "\\\\").replace("'", "\\'");
+        String repParseCall = "var parsedRepresentation = JSON.parse('" + escapedRepresentation + "');";
+        builder.append(repParseCall);
+        String valParseCall = "var parsedValue = JSON.parse('" + escapedValue + "');";
+        builder.append(valParseCall);
+        String initMethod = m_template.getInitMethodName();
+        String initCall = getNamespacePrefix() + initMethod + "(parsedRepresentation, parsedValue);";
+        builder.append(initCall);
+        return builder.toString();
+    }
+
+    private String getViewRepresentationJSONString(final REP rep) {
+        try {
+            if (rep != null) {
+                return ((ByteArrayOutputStream)rep.saveToStream()).toString("UTF-8");
+            } else {
+                return "null";
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("No view representation available!", e);
+        }
+
+    }
+
+    private String getViewValueJSONString(final VAL val) {
+        try {
+            if (val != null) {
+                return ((ByteArrayOutputStream)val.saveToStream()).toString("UTF-8");
+            } else {
+                return "null";
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("No view value available!", e);
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -156,6 +217,9 @@ public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<RE
         closeView();
     }
 
+    /**
+     * Called on view close.
+     */
     protected abstract void closeView();
 
     protected String getNamespacePrefix() {
