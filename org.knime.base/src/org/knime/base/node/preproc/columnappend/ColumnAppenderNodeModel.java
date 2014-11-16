@@ -54,7 +54,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -66,8 +65,6 @@ import org.knime.core.util.UniqueNameGenerator;
  * @author Aaron Hart, Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class ColumnAppenderNodeModel extends NodeModel {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(ColumnAppenderNodeModel.class);
 
     /**
      * Constructor for the node model.
@@ -82,8 +79,6 @@ final class ColumnAppenderNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData, final ExecutionContext exec)
             throws Exception {
-
-        LOGGER.info("Executing Column Append");
         DataTableSpec[] inSpecs = {inData[0].getDataTableSpec(), inData[1].getDataTableSpec()};
         DataTableSpec newSpec = createOutSpec(inSpecs);
         BufferedDataTable uniquifiedTable = exec.createSpecReplacerTable(inData[1], newSpec);
@@ -154,7 +149,7 @@ final class ColumnAppenderNodeModel extends NodeModel {
         UniqueNameGenerator nameGenerator = new UniqueNameGenerator(inSpecs[0]);
         for (int i = 0; i < inSpecs[1].getNumColumns(); i++) {
             DataColumnSpec oldSpec = inSpecs[1].getColumnSpec(i);
-            cspecs[i] = nameGenerator.newColumn(oldSpec.getName(), oldSpec.getType());
+            cspecs[i] = nameGenerator.newCreator(oldSpec).createSpec();
         }
 
         DataTableSpec outSpec = new DataTableSpec(cspecs);
