@@ -56,8 +56,8 @@ import org.knime.timeseries.util.DialogComponentCalendar;
 import org.knime.timeseries.util.SettingsModelCalendar;
 
 /**
- * This dialog lets the user choose the column that contains the string values
- * that should be converted into Smiles values.
+ * This dialog for the node that extracts data from timestampFrom
+ * to timestampTo from the input table.
  *
  * @author Rosaria Silipo
  * @author Fabian Dill, KNIME.com AG

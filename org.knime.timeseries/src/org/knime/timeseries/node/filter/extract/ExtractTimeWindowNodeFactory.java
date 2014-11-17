@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 4, 2006 (rs): created
  */
@@ -52,12 +52,12 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * This factory creates all necessary objects for the String->SLN converter
- * node.
- * 
+ * This factory creates all necessary objects for the for the node that extracts data from timestampFrom
+ * to timestampTo from the input table.
+ *
  * @author M. Berthold, University of Konstanz
  */
-public class ExtractTimeWindowNodeFactory 
+public class ExtractTimeWindowNodeFactory
     extends NodeFactory<ExtractTimeWindowNodeModel> {
 
     /**
