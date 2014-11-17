@@ -4,7 +4,8 @@
 # 
 
 SOURCE="$0"
-APP_DIR="$(cd -P "${SOURCE%/*}" && pwd)"
+SOURCE_DIR="$(dirname "$SOURCE")"
+APP_DIR="$(cd -P "$SOURCE_DIR" && pwd)"
 SOURCE="$APP_DIR/${SOURCE##*/}"
 while [[ -h "$SOURCE" ]]; do
     SOURCE="$(readlink "$SOURCE")"
@@ -83,6 +84,8 @@ readArguments "${ALL_ARGUMENTS[@]}"
 # add command line parameters, they should override the parameters from the ini file
 readArguments "$@"
 
+VM_ARGS+=("-Declipse.vm=\"$JAVA\"")
+
 if [[ $APPLICATION_OR_PRODUCT_SET -eq 0 ]]; then
     APP_ARGS+=("-product" "org.knime.product.KNIME_PRODUCT" "-name" "KNIME" "-showsplash" "600")
 fi
@@ -97,8 +100,8 @@ cd "$APP_DIR"
 "$JAVA" "${VM_ARGS[@]}" -classpath "$CLASSPATH" org.eclipse.equinox.launcher.Main "${APP_ARGS[@]}"
 RET=$?
 cd "$LAST_PWD"
-if [[ $RET -eq 23 ]]; then
-	exec $0 "$@"
+if [[ $RET -eq 23 ]] || [[ $RET -eq 24 ]]; then
+	exec "$ECLIPSE_DIR/$SOURCE" "$@"
 else
 	exit $RET
 fi
