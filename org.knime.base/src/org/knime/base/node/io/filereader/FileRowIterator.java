@@ -332,6 +332,8 @@ class FileRowIterator extends RowIterator {
         }
         // we made sure before that there is at least one token in the stream
         assert rowHeader != null;
+        boolean lastTokenWasDelimited = false; // if the last token ended with the delimiter (and not a LF)
+
         // Now, read the columns until we have enough or see a row delimiter
         while (readCols < colsToRead) {
 
@@ -343,6 +345,11 @@ class FileRowIterator extends RowIterator {
                         + ") source: '" + m_frSettings.getDataFileLocation()
                         + "')", m_tokenizer.getLineNumber(), rowHeader, row);
             }
+            if (token != null) {
+                // remember the delimiter of the last token before the EOF
+                lastTokenWasDelimited = m_tokenizer.lastTokenWasDelimited();
+            }
+
             // row delims are returned as token
             if ((token == null) || m_frSettings.isRowDelimiter(token, m_tokenizer.lastTokenWasQuoted())) {
                 // line ended early.
@@ -374,10 +381,13 @@ class FileRowIterator extends RowIterator {
         } // end of while(readCols < colsToRead)
 
         // seen EOF in the last column of the last row - insert missing value as item for this column (bug4262)
-        if (token == null && readCols == colsToRead - 1) {
+        // but only if the last token was actually delimited (with a swallowed delimiter - not LF)
+        if (token == null && readCols == colsToRead - 1 && lastTokenWasDelimited) {
             if (!m_skipColumns[readCols]) {
                 row[createdCols++] = DataType.getMissingCell();
             }
+            // we consumed this last delimiter:
+            lastTokenWasDelimited = false;
         }
 
         int lineNr = m_tokenizer.getLineNumber();
@@ -422,10 +432,11 @@ class FileRowIterator extends RowIterator {
                         + m_frSettings.getDataFileLocation() + "')", lineNr,
                         rowHeader, row);
             }
+            lastTokenWasDelimited = false;
         }
         // now read the row delimiter from the file, and in case there are more
         // data items in the file than we needed for one row: barf and die.
-        if (!m_frSettings.isRowDelimiter(token, m_tokenizer.lastTokenWasQuoted())) {
+        if (!m_frSettings.isRowDelimiter(token, m_tokenizer.lastTokenWasQuoted()) || lastTokenWasDelimited) {
             FileReaderException ex =
                     prepareForException("Too many data elements " + "(line: "
                             + lineNr + " (" + rowHeader + "), source: '"

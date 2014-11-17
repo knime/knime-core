@@ -203,6 +203,9 @@ public class Tokenizer {
     /* the flag which identifies if the last token is a delimiter or not */
     private boolean m_tokenWasDelimiter = false;
 
+    /* helps to detect a delimiter if it is not returned but swallowed by the tokenizer */
+    private boolean m_lastTokenWasDelimited = false;
+
     /**
      * Creates a new tokenizer with the default behaviour.
      *
@@ -283,6 +286,13 @@ public class Tokenizer {
     }
 
     /**
+     * @return true, if the last token was terminated by a swallowed delimiter
+     */
+    public boolean lastTokenWasDelimited() {
+        return m_lastTokenWasDelimited;
+    }
+
+    /**
      * Reads the next token from the stream and returns it as string. Or
      * <code>null</code> if no more token can be read.
      *
@@ -304,6 +314,7 @@ public class Tokenizer {
             m_lastDelimiter = null;
             m_lastToken = tmp;
             m_tokenWasDelimiter = true;
+            m_lastTokenWasDelimited = false; // a delimiter is not delimited
             m_lastQuotes = null; // delimiters are not quoted
             return tmp;
         }
@@ -322,6 +333,7 @@ public class Tokenizer {
         m_newToken.setLength(0);
         m_lastQuotes = null;
         m_tokenWasDelimiter = false;
+        m_lastTokenWasDelimited = false;
 
         int lastEndQuoteIdx = -1; // the idx of the end quote last seen or added
         int c = getNextChar();
@@ -392,6 +404,7 @@ public class Tokenizer {
                     // need to strip off any whitespaces at the end.
                     cutOffWhiteSpaces(m_newToken, lastEndQuoteIdx);
                     m_newToken.append(delim);
+                    m_lastTokenWasDelimited = delim.isEmpty() && m_lastDelimiter == null; // swallowed delimiter
                     // the token is complete after reading a delimiter.
                     break;
                 } else {

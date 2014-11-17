@@ -1429,6 +1429,7 @@ public final class FileAnalyzer {
         int maxNumOfCols = -1; // num of cols incl. some empty tokens at EOR
         boolean useSettings = false; // set it true to use these settings.
         int consEmptyTokens = 0; // consecutive empty tokens read
+        boolean lastTokenWasDelimited = false;
 
         while (true) {
             if ((settings.getMaximumNumberOfRowsToRead() > -1)
@@ -1443,6 +1444,7 @@ public final class FileAnalyzer {
             if (!settings.isRowDelimiter(token, tokenizer.lastTokenWasQuoted())) {
 
                 columns++;
+                lastTokenWasDelimited = tokenizer.lastTokenWasDelimited();
 
                 // keep track of the empty tokens read.
                 if (token.equals("") && !tokenizer.lastTokenWasQuoted()) {
@@ -1467,6 +1469,9 @@ public final class FileAnalyzer {
                         throw iee;
                     }
 
+                    if (token == null && lastTokenWasDelimited) {
+                        columns++;
+                    }
                     if (linesRead > 1) {
                         if (numOfCols < 1) {
                             // this is the first line we are counting columns
@@ -1537,6 +1542,7 @@ public final class FileAnalyzer {
                 }
                 consEmptyTokens = 0;
                 columns = 0;
+                lastTokenWasDelimited = false;
 
                 if (token == null) {
                     // seen end of file.
@@ -1569,6 +1575,7 @@ public final class FileAnalyzer {
         int colCount = 0; // the counter per line
         int numOfCols = 0; // the maximum
         int consEmptyTokens = 0; // consecutive empty tokens
+        boolean lastTokenWasDelimited = false; // remember it, in case the last token in the file has no delimiter
 
         try {
             while (true) {
@@ -1578,6 +1585,7 @@ public final class FileAnalyzer {
                 if (!settings.isRowDelimiter(token, tokenizer.lastTokenWasQuoted())) {
 
                     colCount++;
+                    lastTokenWasDelimited = tokenizer.lastTokenWasDelimited();
 
                     // keep track of the empty tokens read.
                     if (token.equals("") && !tokenizer.lastTokenWasQuoted()) {
@@ -1591,7 +1599,7 @@ public final class FileAnalyzer {
                         // ignore empty lines
                         dataLinesRead++;
                     }
-                    if (token == null && colCount >= numOfCols) {
+                    if (token == null && colCount < numOfCols && lastTokenWasDelimited) {
                         // if the last line has no LF, EOF is delimits the last column
                         colCount++;
                     }
