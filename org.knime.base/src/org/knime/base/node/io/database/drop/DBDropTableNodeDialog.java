@@ -63,7 +63,9 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.workflow.FlowVariable;
@@ -76,6 +78,9 @@ public class DBDropTableNodeDialog extends NodeDialogPane {
 
     private final SettingsModelString m_tableNameModel = DBDropTableNodeModel.createTableNameModel();
     private final DialogComponentString m_tableNameComp = new DialogComponentString(m_tableNameModel, null, true, 35);
+    private SettingsModelBoolean m_cascadeModel = DBDropTableNodeModel.createCascadeModel();
+    private DialogComponentBoolean m_cascadeComp = new DialogComponentBoolean(m_cascadeModel,
+        "cascade (WARNING: This removes dependent views and foreign-key constraints!!!)");
 
     /**
      * Constructor.
@@ -113,6 +118,9 @@ public class DBDropTableNodeDialog extends NodeDialogPane {
         c.weightx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         root.add(new JLabel(), c);
+        c.gridx = 0;
+        c.gridy++;
+        root.add(m_cascadeComp.getComponentPanel(), c);
         addTab(" Settings ", root);
     }
 
@@ -123,6 +131,7 @@ public class DBDropTableNodeDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
             throws NotConfigurableException {
         m_tableNameComp.loadSettingsFrom(settings, specs);
+        m_cascadeComp.loadSettingsFrom(settings, specs);
     }
 
     /**
@@ -131,5 +140,6 @@ public class DBDropTableNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         m_tableNameComp.saveSettingsTo(settings);
+        m_cascadeComp.saveSettingsTo(settings);
     }
 }

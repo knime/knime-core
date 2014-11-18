@@ -12,6 +12,11 @@
         <option name="Table name">
             The name of the table to drop.
         </option>
+        <option name="Cascade">
+            Select this option to drop the table even if it is referenced by other objects in the database e.g. 
+            foreign key reference. This is not supported by all databases.
+            <p><b>WARNING: This removes dependent views and foreign-key constraints!!!</b></p>
+        </option>
     </fullDescription>
 
     <ports>

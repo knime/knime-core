@@ -60,6 +60,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -78,6 +79,7 @@ public class DBDropTableNodeModel extends NodeModel {
     /**Table name config key. */
     static final String CFG_TABLE_NAME = "tableName";
     private final SettingsModelString m_tableName = createTableNameModel();
+    private final SettingsModelBoolean m_cascade = createCascadeModel();
 
     /**
      * Constructor.
@@ -91,6 +93,10 @@ public class DBDropTableNodeModel extends NodeModel {
      */
     static SettingsModelString createTableNameModel() {
         return new SettingsModelString(CFG_TABLE_NAME, null);
+    }
+
+    static SettingsModelBoolean createCascadeModel() {
+        return new SettingsModelBoolean("cascade", false);
     }
 
     /**
@@ -113,7 +119,7 @@ public class DBDropTableNodeModel extends NodeModel {
         final StatementManipulator manipulator = connSettings.getUtility().getStatementManipulator();
         final String table2Drop = m_tableName.getStringValue();
         try {
-            connSettings.execute(manipulator.dropTable(table2Drop), cp);
+            connSettings.execute(manipulator.dropTable(table2Drop, m_cascade.getBooleanValue()), cp);
         } catch (SQLException ex) {
             Throwable cause = ExceptionUtils.getRootCause(ex);
             if (cause == null) {
@@ -132,6 +138,7 @@ public class DBDropTableNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_tableName.saveSettingsTo(settings);
+        m_cascade.saveSettingsTo(settings);
     }
 
     /**
@@ -144,6 +151,7 @@ public class DBDropTableNodeModel extends NodeModel {
         if (tableName == null || tableName.isEmpty()) {
             throw new InvalidSettingsException("Please provide the table name to drop");
         }
+        m_cascade.validateSettings(settings);
     }
 
     /**
@@ -152,6 +160,7 @@ public class DBDropTableNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_tableName.loadSettingsFrom(settings);
+        m_cascade.loadSettingsFrom(settings);
     }
 
     /**
