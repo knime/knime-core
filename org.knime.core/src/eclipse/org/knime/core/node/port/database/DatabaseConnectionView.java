@@ -111,6 +111,7 @@ final class DatabaseConnectionView extends JPanel {
         textArea.setContentType("text/html");
         textArea.setEditable(false);
         textArea.setText(buf.toString());
+        textArea.setCaretPosition(0);
         final JScrollPane jsp = new JScrollPane(textArea);
         jsp.setPreferredSize(new Dimension(300, 300));
         final GridBagConstraints c = new GridBagConstraints();
