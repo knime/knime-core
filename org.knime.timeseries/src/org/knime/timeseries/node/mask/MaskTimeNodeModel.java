@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   29.09.2009 (Fabian Dill): created
  */
@@ -70,60 +70,89 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * Node to mask/remove time or date fields of existing 
+ * Node to mask/remove time or date fields of existing
  * {@link DateAndTimeValue}s.
- * 
+ *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
 public class MaskTimeNodeModel extends NodeModel {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             MaskTimeNodeModel.class);
-    
+
     /** Radio button label and identifier for masking the date. */
     static final String MASK_DATE = "Date";
-    /** 
-     * Radio button label and identifier for masking the time 
-     * (with milliseconds). 
+    /**
+     * Radio button label and identifier for masking the time
+     * (with milliseconds).
      */
     static final String MASK_TIME = "Time (including milliseconds)";
     /** Radio button label and identifier for masking only the milliseconds. */
     static final String MASK_MILLIS = "Milliseconds only";
 
+    private static final String CFG_REPLACE_COL = "replace.column";
+
+    private static final String CFG_NEW_COL_NAME = "new.column.name";
+
     /**
-     * 
+     *
      * @return settings model to store the mask selection
      */
     static SettingsModelString createMaskSelectionModel() {
         return new SettingsModelString("mask.time.selection", MASK_MILLIS);
     }
-    
+
     /**
-     * 
-     * @return the settings model for the selected column containing the 
+     *
+     * @return settings model to store the replace column setting
+     */
+    static SettingsModelBoolean createReplaceColumnModel() {
+        return new SettingsModelBoolean(CFG_REPLACE_COL, true);
+    }
+
+    /**
+     *
+     * @return settings model to store the mask selection
+     */
+    static SettingsModelString createNewColumnNameModel() {
+        SettingsModelString sm = new SettingsModelString(CFG_NEW_COL_NAME, "MaskedTime");
+        sm.setEnabled(false);
+        return sm;
+    }
+
+    /**
+     *
+     * @return the settings model for the selected column containing the
      *  {@link DateAndTimeValue}s to be masked
      */
     static SettingsModelString createColumnSelectionModel() {
         return new SettingsModelString("mask.time.selected.column", "");
     }
-    
+
     private void resetMilliSeconds(final Calendar time) {
         time.clear(Calendar.MILLISECOND);
     }
-    
-    private final SettingsModelString m_maskSelection 
+
+    private final SettingsModelString m_maskSelection
         = createMaskSelectionModel();
-    
-    private final SettingsModelString m_selectedColumn 
+
+    private final SettingsModelString m_selectedColumn
         = createColumnSelectionModel();
-    
+
+    private final SettingsModelBoolean m_replaceColumn
+        = createReplaceColumnModel();
+
+    private final SettingsModelString m_newColName
+        = createNewColumnNameModel();
+
     private int m_nrInvalids;
-    
+
     private boolean m_onlyInvalids;
-    
+
     /**
      * One in-port with a table containing {@link DateAndTimeValue}s to mask and
      * one out-port containing the masked {@link DateAndTimeValue}s.
@@ -131,9 +160,9 @@ public class MaskTimeNodeModel extends NodeModel {
     public MaskTimeNodeModel() {
         super(1, 1);
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -143,16 +172,16 @@ public class MaskTimeNodeModel extends NodeModel {
         // check if there is a date and tme column in niput spec
         if (!inSpec.containsCompatibleType(DateAndTimeValue.class)) {
             throw new InvalidSettingsException(
-                    "Input table must contain at least one column " 
+                    "Input table must contain at least one column "
                     + "containing time!");
         }
         // do we have a selected column?
-        String selectedCol = m_selectedColumn.getStringValue(); 
-        if (selectedCol != null 
+        String selectedCol = m_selectedColumn.getStringValue();
+        if (selectedCol != null
                 && !selectedCol.isEmpty()) {
             // if yes -> exists in input spec?
             if (!inSpec.containsName(selectedCol)) {
-                throw new InvalidSettingsException("Selected column " 
+                throw new InvalidSettingsException("Selected column "
                         + selectedCol + "not found in input table!");
             }
         } else {
@@ -161,43 +190,82 @@ public class MaskTimeNodeModel extends NodeModel {
                 if (colSpec.getType().isCompatible(DateAndTimeValue.class)) {
                     String colName = colSpec.getName();
                     m_selectedColumn.setStringValue(colName);
-                    setWarningMessage("Auto-configure: selected column " 
+                    setWarningMessage("Auto-configure: selected column "
                             + colName + "!");
                 }
             }
         }
-        // return input spec, since appending the new column is not supported
-        return inSpecs;
+
+        return new DataTableSpec[]{createOutputSpec(inSpec)};
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         BufferedDataTable in = inData[0];
-        // get the selected column index
-        final int colIdx = in.getDataTableSpec().findColumnIndex(
-                m_selectedColumn.getStringValue());
+
+        ColumnRearranger rearranger = createRearranger(in.getDataTableSpec());
+        BufferedDataTable out = exec.createColumnRearrangeTable(in, rearranger,
+                exec);
+        if (m_nrInvalids > 0) {
+            String warningMessage = "Produced " + m_nrInvalids
+                + " missing values due to "
+                + "masking of the only existing field!";
+            if (m_onlyInvalids) {
+                // only invalids -> different message
+                warningMessage = "Produced only missing values "
+                        + "-> wrong field masked?";
+            }
+            setWarningMessage(warningMessage);
+        }
+        return new BufferedDataTable[] {out};
+    }
+
+    private ColumnRearranger createRearranger(final DataTableSpec inSpec) {
+     // get the selected column index
+        final int colIdx = inSpec.findColumnIndex(
+            m_selectedColumn.getStringValue());
         if (colIdx < 0) {
-            throw new IllegalArgumentException("Column " 
-                    + m_selectedColumn.getStringValue() 
+            throw new IllegalArgumentException("Column "
+                    + m_selectedColumn.getStringValue()
                     + " not found in input table!");
         }
-        // create the column spec
-        DataColumnSpec existing = in.getDataTableSpec().getColumnSpec(colIdx);
-        DataColumnSpecCreator specCreator = new DataColumnSpecCreator(existing);
-        // reset the domin in order to prevent unmasked timestamps appear as
-        // lower or upper bounds
-        specCreator.setDomain(null);
-        ColumnRearranger rearranger = new ColumnRearranger(in.getSpec());
+        ColumnRearranger rearranger = new ColumnRearranger(inSpec);
         final String maskMode = m_maskSelection.getStringValue();
         m_nrInvalids = 0;
         m_onlyInvalids = true;
-        rearranger.replace(new SingleCellFactory(specCreator.createSpec()) {
+        DataColumnSpec existing = inSpec.getColumnSpec(colIdx);
+        SingleCellFactory fac = createCellFactory(createNewColumnSpec(existing), colIdx, maskMode);
 
+        if (m_replaceColumn.getBooleanValue()) {
+            rearranger.replace(fac, colIdx);
+        } else {
+            rearranger.append(fac);
+        }
+        return rearranger;
+    }
+
+    private DataTableSpec createOutputSpec(final DataTableSpec inSpec) {
+        return createRearranger(inSpec).createSpec();
+    }
+
+    private DataColumnSpec createNewColumnSpec(final DataColumnSpec sourceSpec) {
+        DataColumnSpecCreator specCreator = new DataColumnSpecCreator(sourceSpec);
+        // reset the domain in order to prevent unmasked timestamps appear as
+        // lower or upper bounds
+        specCreator.setDomain(null);
+        if (!m_replaceColumn.getBooleanValue()) {
+            specCreator.setName(m_newColName.getStringValue());
+        }
+        return specCreator.createSpec();
+    }
+
+    private SingleCellFactory createCellFactory(final DataColumnSpec spec, final int colIdx, final String maskMode) {
+        return new SingleCellFactory(spec) {
             @Override
             public DataCell getCell(final DataRow row) {
                 DataCell dc = row.getCell(colIdx);
@@ -216,7 +284,7 @@ public class MaskTimeNodeModel extends NodeModel {
                         }
                         m_onlyInvalids = false;
                         return new DateAndTimeCell(
-                                time.getTimeInMillis(), false, 
+                                time.getTimeInMillis(), false,
                                 v.hasTime(), v.hasMillis());
                     } else if (maskMode.equals(MASK_TIME)) {
                         DateAndTimeCell.resetTimeFields(time);
@@ -227,34 +295,20 @@ public class MaskTimeNodeModel extends NodeModel {
                         }
                         m_onlyInvalids = false;
                         return new DateAndTimeCell(
-                                time.getTimeInMillis(), v.hasDate(), false, 
+                                time.getTimeInMillis(), v.hasDate(), false,
                                 false);
                     } else if (maskMode.equals(MASK_MILLIS)) {
                         resetMilliSeconds(time);
                         m_onlyInvalids = false;
-                        return new DateAndTimeCell(time.getTimeInMillis(), 
+                        return new DateAndTimeCell(time.getTimeInMillis(),
                                 v.hasDate(), v.hasTime(), false);
                     }
                 }
                 LOGGER.error("Unsupported data type: " + dc.getType() + "!");
                 return DataType.getMissingCell();
             }
-            
-        }, colIdx);
-        BufferedDataTable out = exec.createColumnRearrangeTable(in, rearranger, 
-                exec);
-        if (m_nrInvalids > 0) {
-            String warningMessage = "Produced " + m_nrInvalids 
-                + " missing values due to " 
-                + "masking of the only existing field!";
-            if (m_onlyInvalids) {
-                // only invalids -> different message
-                warningMessage = "Produced only missing values " 
-                        + "-> wrong field masked?";
-            } 
-            setWarningMessage(warningMessage);
-        }
-        return new BufferedDataTable[] {out};
+
+        };
     }
 
     /**
@@ -264,7 +318,7 @@ public class MaskTimeNodeModel extends NodeModel {
     protected void reset() {
         // nothing to do
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -273,6 +327,12 @@ public class MaskTimeNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_maskSelection.validateSettings(settings);
         m_selectedColumn.validateSettings(settings);
+        if (settings.containsKey(CFG_REPLACE_COL)) {
+            m_replaceColumn.validateSettings(settings);
+        }
+        if (settings.containsKey(CFG_NEW_COL_NAME)) {
+            m_newColName.validateSettings(settings);
+        }
     }
 
     /**
@@ -283,9 +343,15 @@ public class MaskTimeNodeModel extends NodeModel {
     throws InvalidSettingsException {
         m_maskSelection.loadSettingsFrom(settings);
         m_selectedColumn.loadSettingsFrom(settings);
+        if (settings.containsKey(CFG_REPLACE_COL)) {
+            m_replaceColumn.loadSettingsFrom(settings);
+        }
+        if (settings.containsKey(CFG_NEW_COL_NAME)) {
+            m_newColName.loadSettingsFrom(settings);
+        }
     }
-    
-    
+
+
     /**
      * {@inheritDoc}
      */
@@ -293,13 +359,15 @@ public class MaskTimeNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_maskSelection.saveSettingsTo(settings);
         m_selectedColumn.saveSettingsTo(settings);
+        m_replaceColumn.saveSettingsTo(settings);
+        m_newColName.saveSettingsTo(settings);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // no internals
@@ -309,7 +377,7 @@ public class MaskTimeNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // no internals

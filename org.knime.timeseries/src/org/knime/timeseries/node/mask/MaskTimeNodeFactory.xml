@@ -11,11 +11,13 @@
         </intro>
         <option name="Column containing date/time">
         Select the input column containing date/time that should be masked.</option>
-        <option name="date">Select if the date fields (year, month, day) should be masked.
+        <option name="Replace selected column">If checked the selected date/time
+         column will be replaced by a column containing the masked times/dates.</option>        
+        <option name="Date">Select if the date fields (year, month, day) should be masked.
         </option>
-        <option name="time">Select if the time fields (hour, minute, second and 
+        <option name="Time">Select if the time fields (hour, minute, second and 
         millisecond) should be masked.</option>
-        <option name="milliseconds">Select if only the milliseconds should be masked.</option>
+        <option name="Milliseconds">Select if only the milliseconds should be masked.</option>
     </fullDescription>
     <ports>
         <inPort index="0" name="Input column">
