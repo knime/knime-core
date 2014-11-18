@@ -1029,13 +1029,13 @@ public final class Node implements NodeModelWarningListener {
             return false;
         }
 
-        // there might be previous internal tables in a loop (tables are kept between loop iterations)
-        // they can be discarded if no longer needed (i.e. they are not part of the internal tables after
-        // this execution)
-        // used, for instance in group by loop start node
+        // there might be previous internal tables in a loop  (tables kept between loop iterations: eg group loop start)
+        // or for interactive nodes that get re-executed (javascript table view)
+        // they can be discarded if no longer needed; they are not part of the internal tables after this execution
         PortObject[] previousInternalHeldTables = m_internalHeldPortObjects;
         if (previousInternalHeldTables != null
-                && !(this.isModelCompatibleTo(LoopStartNode.class) || this.isModelCompatibleTo(LoopEndNode.class))) {
+                && !(this.isModelCompatibleTo(LoopStartNode.class) || this.isModelCompatibleTo(LoopEndNode.class))
+                && !((exEnv != null) && (exEnv.reExecute()))) {
             m_logger.coding("Found internal tables for non loop node: " + getName());
         }
 
