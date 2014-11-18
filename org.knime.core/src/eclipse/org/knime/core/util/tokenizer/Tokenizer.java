@@ -287,6 +287,7 @@ public class Tokenizer {
 
     /**
      * @return true, if the last token was terminated by a swallowed delimiter
+     * @since 2.11
      */
     public boolean lastTokenWasDelimited() {
         return m_lastTokenWasDelimited;
