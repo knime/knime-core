@@ -25,6 +25,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnDBAggregationFunction;
 
 /**
@@ -33,6 +34,26 @@ import org.knime.core.node.port.database.aggregation.function.column.AbstractCol
  * @since 2.11
  */
 public class RegrAvgYDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+
+    private static final String ID = "REGR_AVGY";
+    /**Factory for parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            return new RegrAvgYDBAggregationFunction();
+        }
+    }
 
     /**
      * Constructor.
@@ -64,16 +85,8 @@ public class RegrAvgYDBAggregationFunction extends AbstractColumnDBAggregationFu
      * {@inheritDoc}
      */
     @Override
-    public DBAggregationFunction createInstance() {
-        return new RegrAvgYDBAggregationFunction();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getLabel() {
-        return "REGR_AVGX";
+        return getId();
     }
 
     /**
@@ -81,7 +94,7 @@ public class RegrAvgYDBAggregationFunction extends AbstractColumnDBAggregationFu
      */
     @Override
     public String getId() {
-        return getLabel();
+        return ID;
     }
 
     /**
@@ -97,6 +110,6 @@ public class RegrAvgYDBAggregationFunction extends AbstractColumnDBAggregationFu
      */
     @Override
     public String getDescription() {
-        return "The function regr_avgx(Y, X) returns the average of the independent variable (sum(X)/N).";
+        return "The function regr_avgy(Y, X) returns the average of the independent variable (sum(Y)/N).";
     }
 }

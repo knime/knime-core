@@ -25,6 +25,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnDBAggregationFunction;
 
 /**
@@ -33,6 +34,26 @@ import org.knime.core.node.port.database.aggregation.function.column.AbstractCol
  * @since 2.11
  */
 public class RegrSXYDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+
+    private static final String ID = "REGR_SXY";
+    /**Factory for parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            return new RegrSXYDBAggregationFunction();
+        }
+    }
 
     /**
      * Constructor.
@@ -64,16 +85,8 @@ public class RegrSXYDBAggregationFunction extends AbstractColumnDBAggregationFun
      * {@inheritDoc}
      */
     @Override
-    public DBAggregationFunction createInstance() {
-        return new RegrSXYDBAggregationFunction();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getLabel() {
-        return "REGR_SXY";
+        return getId();
     }
 
     /**
@@ -81,7 +94,7 @@ public class RegrSXYDBAggregationFunction extends AbstractColumnDBAggregationFun
      */
     @Override
     public String getId() {
-        return getLabel();
+        return ID;
     }
 
     /**

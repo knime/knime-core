@@ -49,6 +49,8 @@
 package org.knime.core.node.port.database.aggregation.function.sqlite;
 
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
@@ -60,23 +62,35 @@ public final class TotalDBAggregationFunction extends SimpleDBAggregationFunctio
 
     private static volatile TotalDBAggregationFunction instance;
 
-    private TotalDBAggregationFunction() {
-        super("TOTAL", "Returns the sum of the values per group. "
-            + "If there are no non-NULL input rows then total() returns 0.0.", null, DoubleValue.class);
-    }
+    private static final String ID = "TOTAL";
+    /**Factory for the parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
 
-    /**
-     * Returns the only instance of this class.
-     * @return the only instance
-     */
-    public static TotalDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (TotalDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new TotalDBAggregationFunction();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            if (instance == null) {
+                synchronized (TotalDBAggregationFunction.class) {
+                    if (instance == null) {
+                        instance = new TotalDBAggregationFunction();
+                    }
                 }
             }
+            return instance;
         }
-        return instance;
+    }
+
+    private TotalDBAggregationFunction() {
+        super(ID, "Returns the sum of the values per group. "
+            + "If there are no non-NULL input rows then total() returns 0.0.", null, DoubleValue.class);
     }
 }

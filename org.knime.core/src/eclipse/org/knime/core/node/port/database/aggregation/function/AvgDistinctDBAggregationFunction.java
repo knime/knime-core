@@ -53,6 +53,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 
 /**
  *
@@ -60,6 +61,26 @@ import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
  * @since 2.11
  */
 public final class AvgDistinctDBAggregationFunction extends AbstractDistinctDBAggregationFunction {
+
+    private static final String LABEL = "AVG";
+    /**Factory for parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return LABEL + AbstractDistinctDBAggregationFunction.LABEL_POSTIX;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            return new AvgDistinctDBAggregationFunction();
+        }
+    }
 
     /**
      * Constructor.
@@ -77,7 +98,7 @@ public final class AvgDistinctDBAggregationFunction extends AbstractDistinctDBAg
      */
     @Override
     public String getLabel() {
-        return "AVG";
+        return LABEL;
     }
 
     /**
@@ -110,13 +131,5 @@ public final class AvgDistinctDBAggregationFunction extends AbstractDistinctDBAg
     public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
         final String colName) {
         return buildSQLFragment("AVG", manipulator, tableName, colName);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DBAggregationFunction createInstance() {
-        return new AvgDistinctDBAggregationFunction(isSelected());
     }
 }

@@ -65,6 +65,7 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.InvalidDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.AvgDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.CountDBAggregationFunction;
@@ -94,13 +95,13 @@ public class DatabaseUtility {
 
     private static final StatementManipulator DEFAULT_MANIPULATOR = new StatementManipulator();
 
-    private static final DBAggregationFunction[] DEFAULT_AGGREGATION_FUNCTIONS = new DBAggregationFunction[] {
-        AvgDBAggregationFunction.getInstance(), CountDBAggregationFunction.getInstance(),
-        FirstDBAggregationFunction.getInstance(), LastDBAggregationFunction.getInstance(),
-        MaxDBAggregationFunction.getInstance(), MinDBAggregationFunction.getInstance(),
-        SumDBAggregationFunction.getInstance()};
+    private static final DBAggregationFunctionFactory[] DEFAULT_AGGREGATION_FUNCTIONS =
+            new DBAggregationFunctionFactory[] {new AvgDBAggregationFunction.Factory(),
+        new CountDBAggregationFunction.Factory(), new FirstDBAggregationFunction.Factory(),
+        new LastDBAggregationFunction.Factory(), new MaxDBAggregationFunction.Factory(),
+        new MinDBAggregationFunction.Factory(), new SumDBAggregationFunction.Factory()};
 
-    private final Map<String, DBAggregationFunction> m_aggregationFunctions;
+    private final Map<String, DBAggregationFunctionFactory> m_aggregationFunctions;
 
     private final String m_dbIdentifier;
 
@@ -189,7 +190,7 @@ public class DatabaseUtility {
      */
     @Deprecated
     public DatabaseUtility() {
-        this(null, null, (DBAggregationFunction[]) null);
+        this(null, null, (DBAggregationFunctionFactory[]) null);
     }
 
     /**
@@ -200,18 +201,19 @@ public class DatabaseUtility {
      * @since 2.11
      */
     public DatabaseUtility(final String dbIdentifier, final StatementManipulator stmtManipulator,
-        final DBAggregationFunction... aggregationFunctions) {
+        final DBAggregationFunctionFactory... aggregationFunctions) {
         m_dbIdentifier = dbIdentifier != null ? dbIdentifier : DEFAULT_DATABASE_IDENTIFIER;
         m_stmtManipulator = stmtManipulator != null ? stmtManipulator : DEFAULT_MANIPULATOR;
-        final DBAggregationFunction[] f;
+        final DBAggregationFunctionFactory[] f;
         if (aggregationFunctions != null) {
             f = aggregationFunctions;
         } else {
             f = DEFAULT_AGGREGATION_FUNCTIONS;
         }
         m_aggregationFunctions = new HashMap<>(f.length);
-        for (DBAggregationFunction function : f) {
-            final DBAggregationFunction duplicateFunction = m_aggregationFunctions.put(function.getId(), function);
+        for (DBAggregationFunctionFactory function : f) {
+            final DBAggregationFunctionFactory duplicateFunction =
+                    m_aggregationFunctions.put(function.getId(), function);
             if (duplicateFunction != null) {
                 NodeLogger.getLogger(DatabaseUtility.class).error(
                     "Duplicate aggregation function found for id: " + function.getId()
@@ -221,7 +223,7 @@ public class DatabaseUtility {
         }
         //add the custom function if it does not exists since it is of use to all databases
         if (!m_aggregationFunctions.containsKey(CustomDBAggregationFunction.ID)) {
-            final CustomDBAggregationFunction customFunction = new CustomDBAggregationFunction();
+            final DBAggregationFunctionFactory customFunction = new CustomDBAggregationFunction.Factory();
             m_aggregationFunctions.put(customFunction.getId(), customFunction);
         }
     }
@@ -251,7 +253,7 @@ public class DatabaseUtility {
      */
     public Collection<DBAggregationFunction> getAggregationFunctions() {
         final List<DBAggregationFunction> clone = new ArrayList<>(m_aggregationFunctions.size());
-        for (DBAggregationFunction function: m_aggregationFunctions.values()) {
+        for (DBAggregationFunctionFactory function: m_aggregationFunctions.values()) {
             clone.add(function.createInstance());
         }
         return clone;
@@ -267,7 +269,7 @@ public class DatabaseUtility {
      * @since 2.11
      */
     public DBAggregationFunction getAggregationFunction(final String id) {
-        final DBAggregationFunction function = m_aggregationFunctions.get(id);
+        final DBAggregationFunctionFactory function = m_aggregationFunctions.get(id);
         if (function != null) {
             return function.createInstance();
         }
@@ -323,7 +325,7 @@ public class DatabaseUtility {
         String sql = getStatementManipulator().forMetadataOnly("SELECT 1 as tmpcol FROM " + tableName);
         logger.debug("Execute query: " + sql);
         try (ResultSet rs = conn.createStatement().executeQuery(sql)) {
-        	logger.debug("Table " + tableName + " exists");
+            logger.debug("Table " + tableName + " exists");
             return true;
         } catch (SQLException ex) {
             logger.debug(

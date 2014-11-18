@@ -47,7 +47,7 @@
  */
 package org.knime.core.node.port.database;
 
-import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 
 
 /**
@@ -92,6 +92,19 @@ public class OracleUtility extends DatabaseUtility {
             return quoteColumn(identifier);
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String dropTable(final String tableName, final boolean cascade) {
+            final StringBuilder buf = new StringBuilder("DROP TABLE ");
+            buf.append(quoteIdentifier(tableName));
+            if (cascade) {
+                buf.append(" CASCADE CONSTRAINTS");
+            }
+            return buf.toString();
+        }
+
 //        /**
 //         * {@inheritDoc}
 //         */
@@ -114,6 +127,6 @@ public class OracleUtility extends DatabaseUtility {
      * Constructor.
      */
     public OracleUtility() {
-        super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunction[]) null);
+        super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunctionFactory[]) null);
     }
 }

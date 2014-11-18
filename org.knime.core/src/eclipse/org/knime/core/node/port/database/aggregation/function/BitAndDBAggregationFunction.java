@@ -49,6 +49,8 @@
 package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.LongValue;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
@@ -60,22 +62,34 @@ public final class BitAndDBAggregationFunction extends SimpleDBAggregationFuncti
 
     private static volatile BitAndDBAggregationFunction instance;
 
-    private BitAndDBAggregationFunction() {
-        super("BIT_AND", "The bitwise AND of all non-null input values, or null if none.", null, LongValue.class);
-    }
+    private static final String ID = "BIT_AND";
+    /**Factory for the parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
 
-    /**
-     * Returns the only instance of this class.
-     * @return the only instance
-     */
-    public static BitAndDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (BitAndDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new BitAndDBAggregationFunction();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            if (instance == null) {
+                synchronized (BitAndDBAggregationFunction.class) {
+                    if (instance == null) {
+                        instance = new BitAndDBAggregationFunction();
+                    }
                 }
             }
+            return instance;
         }
-        return instance;
+    }
+
+    private BitAndDBAggregationFunction() {
+        super(ID, "The bitwise AND of all non-null input values, or null if none.", null, LongValue.class);
     }
 }

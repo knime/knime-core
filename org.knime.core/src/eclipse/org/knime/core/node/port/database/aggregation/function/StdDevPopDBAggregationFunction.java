@@ -22,6 +22,8 @@ package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
@@ -33,24 +35,36 @@ public final class StdDevPopDBAggregationFunction extends SimpleDBAggregationFun
 
     private static volatile StdDevPopDBAggregationFunction instance;
 
-    private StdDevPopDBAggregationFunction() {
-        super("STDDEV_POP", "The function computes the population standard deviation, respectively, of the input "
-                + "values. The function evaluates all input rows matched by the query and is scaled by 1/N",
-                DoubleCell.TYPE, DoubleValue.class);
-    }
+    private static final String ID = "STDDEV_POP";
+    /**Factory for the parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
 
-    /**
-     * Returns the only instance of this class.
-     * @return the only instance
-     */
-    public static StdDevPopDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (StdDevPopDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new StdDevPopDBAggregationFunction();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            if (instance == null) {
+                synchronized (StdDevPopDBAggregationFunction.class) {
+                    if (instance == null) {
+                        instance = new StdDevPopDBAggregationFunction();
+                    }
                 }
             }
+            return instance;
         }
-        return instance;
+    }
+
+    private StdDevPopDBAggregationFunction() {
+        super(ID, "The function computes the population standard deviation, respectively, of the input "
+                + "values. The function evaluates all input rows matched by the query and is scaled by 1/N",
+                DoubleCell.TYPE, DoubleValue.class);
     }
 }

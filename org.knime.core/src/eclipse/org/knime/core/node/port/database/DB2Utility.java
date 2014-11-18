@@ -48,7 +48,7 @@
  */
 package org.knime.core.node.port.database;
 
-import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 
 
 /**
@@ -87,6 +87,6 @@ public class DB2Utility extends DatabaseUtility {
      * Constructor.
      */
     public DB2Utility() {
-        super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunction[]) null);
+        super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunctionFactory[]) null);
     }
 }

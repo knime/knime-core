@@ -48,7 +48,7 @@
  */
 package org.knime.core.node.port.database;
 
-import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 
 
 /**
@@ -75,6 +75,15 @@ public class SQLServerUtility extends DatabaseUtility {
             return new String[] {"SELECT * INTO " + quoteIdentifier(tableName) + " FROM (" + query + ") as "
                     + getTempTableName()};
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String dropTable(final String tableName, final boolean cascade) {
+            //sql server does not support the cascade option
+            return super.dropTable(tableName, false);
+        }
     }
 
     private static final StatementManipulator MANIPULATOR = new SQLServerStatementManipulator();
@@ -87,6 +96,6 @@ public class SQLServerUtility extends DatabaseUtility {
      * Constructor.
      */
     public SQLServerUtility() {
-        super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunction[]) null);
+        super(DATABASE_IDENTIFIER, MANIPULATOR, (DBAggregationFunctionFactory[]) null);
     }
 }

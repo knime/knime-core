@@ -49,6 +49,8 @@
 package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataValue;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
@@ -60,22 +62,34 @@ public final class LastDBAggregationFunction extends SimpleDBAggregationFunction
 
     private static volatile LastDBAggregationFunction instance;
 
-    private LastDBAggregationFunction() {
-        super("LAST", "Returns the last value of each group.", null, DataValue.class);
-    }
+    private static final String ID = "LAST";
+    /**Factory for the parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
 
-    /**
-     * Returns the only instance of this class.
-     * @return the only instance
-     */
-    public static LastDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (LastDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new LastDBAggregationFunction();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            if (instance == null) {
+                synchronized (LastDBAggregationFunction.class) {
+                    if (instance == null) {
+                        instance = new LastDBAggregationFunction();
+                    }
                 }
             }
+            return instance;
         }
-        return instance;
+    }
+
+    private LastDBAggregationFunction() {
+        super(ID, "Returns the last value of each group.", null, DataValue.class);
     }
 }

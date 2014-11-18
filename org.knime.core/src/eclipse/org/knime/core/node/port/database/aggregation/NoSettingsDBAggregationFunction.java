@@ -80,15 +80,6 @@ public abstract class NoSettingsDBAggregationFunction implements DBAggregationFu
      * {@inheritDoc}
      */
     @Override
-    public DBAggregationFunction createInstance() {
-        //since the  method has no settings we can return the same instance
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getId() {
         return getLabel();
     }

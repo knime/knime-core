@@ -49,6 +49,8 @@
 package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataValue;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
@@ -60,22 +62,34 @@ public final class MaxDBAggregationFunction extends SimpleDBAggregationFunction 
 
     private static volatile MaxDBAggregationFunction instance;
 
-    private MaxDBAggregationFunction() {
-        super("MAX", "Returns the maximum value of each group.", null, DataValue.class);
-    }
+    private static final String ID = "MAX";
+    /**Factory for the parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
 
-    /**
-     * Returns the only instance of this class.
-     * @return the only instance
-     */
-    public static MaxDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (MaxDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new MaxDBAggregationFunction();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            if (instance == null) {
+                synchronized (MaxDBAggregationFunction.class) {
+                    if (instance == null) {
+                        instance = new MaxDBAggregationFunction();
+                    }
                 }
             }
+            return instance;
         }
-        return instance;
+    }
+
+    private MaxDBAggregationFunction() {
+        super(ID, "Returns the maximum value of each group.", null, DataValue.class);
     }
 }

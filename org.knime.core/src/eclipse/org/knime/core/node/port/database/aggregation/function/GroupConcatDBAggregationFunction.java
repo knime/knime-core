@@ -26,6 +26,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.function.concatenate.AbstractConcatDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.concatenate.ConcatDBAggregationFuntionSettings;
 
@@ -35,16 +36,74 @@ import org.knime.core.node.port.database.aggregation.function.concatenate.Concat
  * @since 2.11
  */
 public final class GroupConcatDBAggregationFunction extends AbstractConcatDBAggregationFunction {
-
     private final String m_name;
     private final String m_function;
     private final Class<? extends DataValue> m_supportedValueClass;
+
+    private static final String ID = "GROUP_CONCAT";
+    /**Factory for parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+
+        private final String m_name;
+        private final String m_function;
+        private final Class<? extends DataValue> m_supportedValueClass;
+        /**
+         * Constructor.
+         */
+        public Factory() {
+            this(DataValue.class);
+        }
+
+        /**
+         * Constructor.
+         * @param compatibleClasses the supported {@link DataValue} class
+         */
+        public Factory(final Class<? extends DataValue> compatibleClasses) {
+            this(ID, compatibleClasses);
+        }
+
+        /**
+         * @param id the id, name and function at the same time
+         * @param compatibleClasses the supported {@link DataValue} class
+         */
+        public Factory(final String id, final Class<? extends DataValue> compatibleClasses) {
+            this(id, id, compatibleClasses);
+        }
+
+        /**
+         * @param name the name to display
+         * @param function the function to use in the sql fragment
+         * @param compatibleClasses the supported {@link DataValue} class
+         */
+        public Factory(final String name, final String function,
+            final Class<? extends DataValue> compatibleClasses) {
+            m_name = name;
+            m_function = function;
+            m_supportedValueClass = compatibleClasses;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return m_name;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            return new GroupConcatDBAggregationFunction(m_name, m_function, m_supportedValueClass);
+        }
+    }
 
     /**
      * Constructor.
      */
     public GroupConcatDBAggregationFunction() {
-        this("GROUP_CONCAT", DataValue.class);
+        this(DataValue.class);
     }
 
     /**
@@ -52,7 +111,7 @@ public final class GroupConcatDBAggregationFunction extends AbstractConcatDBAggr
      * @param compatibleClasses the supported {@link DataValue} class
      */
     public GroupConcatDBAggregationFunction(final Class<? extends DataValue> compatibleClasses) {
-        this("GROUP_CONCAT", compatibleClasses);
+        this(ID, compatibleClasses);
     }
 
     /**
@@ -141,13 +200,5 @@ public final class GroupConcatDBAggregationFunction extends AbstractConcatDBAggr
      */
     protected String quoteSeparator(final String separator) {
         return "'" + separator + "'";
-    }
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DBAggregationFunction createInstance() {
-        //here we have to pass the original id to have a valid clone
-        return new GroupConcatDBAggregationFunction(getId(), m_supportedValueClass);
     }
 }

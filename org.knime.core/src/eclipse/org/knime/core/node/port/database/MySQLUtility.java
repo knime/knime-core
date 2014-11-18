@@ -154,12 +154,12 @@ public class MySQLUtility extends DatabaseUtility {
      *
      */
     public MySQLUtility() {
-        super(DATABASE_IDENTIFIER, MANIPULATOR, new AvgDistinctDBAggregationFunction(),
-            BitAndDBAggregationFunction.getInstance(), BitOrDBAggregationFunction.getInstance(),
-            BitXOrDBAggregationFunction.getInstance(), new CountDistinctDBAggregationFunction(),
-            new GroupConcatDBAggregationFunction(), MaxDBAggregationFunction.getInstance(),
-            MinDBAggregationFunction.getInstance(), StdDevPopDBAggregationFunction.getInstance(),
-            StdDevSampDBAggregationFunction.getInstance(), new SumDistinctDBAggregationFunction(),
-            VarPopDBAggregationFunction.getInstance(), VarSampDBAggregationFunction.getInstance());
+        super(DATABASE_IDENTIFIER, MANIPULATOR, new AvgDistinctDBAggregationFunction.Factory(),
+            new BitAndDBAggregationFunction.Factory(), new BitOrDBAggregationFunction.Factory(),
+            new BitXOrDBAggregationFunction.Factory(), new CountDistinctDBAggregationFunction.Factory(),
+            new GroupConcatDBAggregationFunction.Factory(), new MaxDBAggregationFunction.Factory(),
+            new MinDBAggregationFunction.Factory(), new StdDevPopDBAggregationFunction.Factory(),
+            new StdDevSampDBAggregationFunction.Factory(), new SumDistinctDBAggregationFunction.Factory(),
+            new VarPopDBAggregationFunction.Factory(), new VarSampDBAggregationFunction.Factory());
     }
 }

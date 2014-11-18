@@ -49,6 +49,8 @@
 package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.LongValue;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
@@ -60,22 +62,34 @@ public final class BitXOrDBAggregationFunction extends SimpleDBAggregationFuncti
 
     private static volatile BitXOrDBAggregationFunction instance;
 
-    private BitXOrDBAggregationFunction() {
-        super("BIT_XOR", "The bitwise XOR of all non-null input values, or null if none.", null, LongValue.class);
-    }
+    private static final String ID = "BIT_XOR";
+    /**Factory for the parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
 
-    /**
-     * Returns the only instance of this class.
-     * @return the only instance
-     */
-    public static BitXOrDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (BitXOrDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new BitXOrDBAggregationFunction();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            if (instance == null) {
+                synchronized (BitXOrDBAggregationFunction.class) {
+                    if (instance == null) {
+                        instance = new BitXOrDBAggregationFunction();
+                    }
                 }
             }
+            return instance;
         }
-        return instance;
+    }
+
+    private BitXOrDBAggregationFunction() {
+        super(ID, "The bitwise XOR of all non-null input values, or null if none.", null, LongValue.class);
     }
 }

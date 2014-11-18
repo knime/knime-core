@@ -127,11 +127,17 @@ public class StatementManipulator {
 
     /**
      * @param tableName the name of the table to drop
+     * @param cascade <code>true</code> if the cascade option should be used
      * @return the statement to drop the given table
      * @since 2.11
      */
-    public String dropTable(final String tableName) {
-        return "DROP TABLE " + quoteIdentifier(tableName);
+    public String dropTable(final String tableName, final boolean cascade) {
+        final StringBuilder buf = new StringBuilder("DROP TABLE ");
+        buf.append(quoteIdentifier(tableName));
+        if (cascade) {
+            buf.append(" CASCADE");
+        }
+        return buf.toString();
     }
 
     /**

@@ -25,6 +25,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnDBAggregationFunction;
 
 /**
@@ -33,6 +34,26 @@ import org.knime.core.node.port.database.aggregation.function.column.AbstractCol
  * @since 2.11
  */
 public class RegrCountDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+
+    private static final String ID = "REGR_COUNT";
+    /**Factory for parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            return new RegrCountDBAggregationFunction();
+        }
+    }
 
     /**
      * Constructor.
@@ -64,16 +85,8 @@ public class RegrCountDBAggregationFunction extends AbstractColumnDBAggregationF
      * {@inheritDoc}
      */
     @Override
-    public DBAggregationFunction createInstance() {
-        return new RegrCountDBAggregationFunction();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getLabel() {
-        return "REGR_COUNT";
+        return getId();
     }
 
     /**
@@ -81,7 +94,7 @@ public class RegrCountDBAggregationFunction extends AbstractColumnDBAggregationF
      */
     @Override
     public String getId() {
-        return getLabel();
+        return ID;
     }
 
     /**

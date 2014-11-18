@@ -74,11 +74,6 @@ public interface DBAggregationFunction extends AggregationFunction {
     public String getSQLFragment(StatementManipulator manipulator, String tableName, String columnName);
 
     /**
-     * @return a new instance of this {@link AggregationFunction}
-     */
-    public DBAggregationFunction createInstance();
-
-    /**
      * @return the name of the function used in the column name
      */
     public String getColumnName();

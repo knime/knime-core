@@ -60,6 +60,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
 /**
+ * Methods are not thread safe since they might have internal state.
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11

@@ -22,6 +22,8 @@ package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
@@ -33,24 +35,36 @@ public final class VariancePopDBAggregationFunction extends SimpleDBAggregationF
 
     private static volatile VariancePopDBAggregationFunction instance;
 
-    private VariancePopDBAggregationFunction() {
-        super("VARIANCE_POP", "The function computes the population variance, respectively, of the input values."
-                + "The function evaluates all input rows matched by the query and is scaled by 1/N", DoubleCell.TYPE,
-                DoubleValue.class);
-    }
+    private static final String ID = "VARIANCE_POP";
+    /**Factory for the parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
 
-    /**
-     * Returns the only instance of this class.
-     * @return the only instance
-     */
-    public static VariancePopDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (VariancePopDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new VariancePopDBAggregationFunction();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            if (instance == null) {
+                synchronized (VariancePopDBAggregationFunction.class) {
+                    if (instance == null) {
+                        instance = new VariancePopDBAggregationFunction();
+                    }
                 }
             }
+            return instance;
         }
-        return instance;
+    }
+
+    private VariancePopDBAggregationFunction() {
+        super(ID, "The function computes the population variance, respectively, of the input values."
+                + "The function evaluates all input rows matched by the query and is scaled by 1/N", DoubleCell.TYPE,
+                DoubleValue.class);
     }
 }

@@ -53,6 +53,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.function.column.AbstractColumnDBAggregationFunction;
 
 /**
@@ -60,12 +61,32 @@ import org.knime.core.node.port.database.aggregation.function.column.AbstractCol
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public class CorrDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+public final class CorrDBAggregationFunction extends AbstractColumnDBAggregationFunction {
+
+    private static final String ID = "CORR";
+    /**Factory for parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            return new CorrDBAggregationFunction();
+        }
+    }
 
     /**
      * Constructor.
      */
-    public CorrDBAggregationFunction() {
+    private CorrDBAggregationFunction() {
         super("Second column: ", null, DoubleValue.class);
     }
     /**
@@ -91,16 +112,8 @@ public class CorrDBAggregationFunction extends AbstractColumnDBAggregationFuncti
      * {@inheritDoc}
      */
     @Override
-    public DBAggregationFunction createInstance() {
-        return new CorrDBAggregationFunction();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getLabel() {
-        return "CORR";
+        return getId();
     }
 
     /**
@@ -108,7 +121,7 @@ public class CorrDBAggregationFunction extends AbstractColumnDBAggregationFuncti
      */
     @Override
     public String getId() {
-        return getLabel();
+        return ID;
     }
 
     /**

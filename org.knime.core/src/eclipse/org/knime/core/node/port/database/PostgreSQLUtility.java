@@ -51,7 +51,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.knime.core.data.StringValue;
-import org.knime.core.node.port.database.aggregation.function.AvgDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.AvgDistinctDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.BitAndDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.BitOrDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.CorrDBAggregationFunction;
@@ -72,7 +72,7 @@ import org.knime.core.node.port.database.aggregation.function.RegrSYYDBAggregati
 import org.knime.core.node.port.database.aggregation.function.RegrSlopeDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.StdDevPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.StdDevSampDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.SumDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.SumDistinctDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.postgresql.ArrayAggDBAggregationFunction;
@@ -117,19 +117,19 @@ public class PostgreSQLUtility extends DatabaseUtility {
      *
      */
     public PostgreSQLUtility() {
-        super(DATABASE_IDENTIFIER, MANIPULATOR, ArrayAggDBAggregationFunction.getInstance(),
-            AvgDBAggregationFunction.getInstance(), BitAndDBAggregationFunction.getInstance(),
-            BitOrDBAggregationFunction.getInstance(), new CountDistinctDBAggregationFunction(),
-            MaxDBAggregationFunction.getInstance(), MinDBAggregationFunction.getInstance(),
-            SumDBAggregationFunction.getInstance(),
-            new GroupConcatDBAggregationFunction("STRING_AGG", StringValue.class),
-            new CorrDBAggregationFunction(), new CovarPopDBAggregationFunction(),
-            new CovarSampDBAggregationFunction(), new RegrAvgXDBAggregationFunction(),
-            new RegrAvgYDBAggregationFunction(), new RegrCountDBAggregationFunction(),
-            new RegrInterceptDBAggregationFunction(), new RegrR2DBAggregationFunction(),
-            new RegrSlopeDBAggregationFunction(), new RegrSXXDBAggregationFunction(),
-            new RegrSXYDBAggregationFunction(), new RegrSYYDBAggregationFunction(),
-            StdDevPopDBAggregationFunction.getInstance(), StdDevSampDBAggregationFunction.getInstance(),
-            VarPopDBAggregationFunction.getInstance(), VarSampDBAggregationFunction.getInstance());
+        super(DATABASE_IDENTIFIER, MANIPULATOR, new ArrayAggDBAggregationFunction.Factory(),
+            new AvgDistinctDBAggregationFunction.Factory(), new BitAndDBAggregationFunction.Factory(),
+            new BitOrDBAggregationFunction.Factory(), new CountDistinctDBAggregationFunction.Factory(),
+            new MaxDBAggregationFunction.Factory(), new MinDBAggregationFunction.Factory(),
+            new SumDistinctDBAggregationFunction.Factory(),
+            new GroupConcatDBAggregationFunction.Factory("STRING_AGG", StringValue.class),
+            new CorrDBAggregationFunction.Factory(), new CovarPopDBAggregationFunction.Factory(),
+            new CovarSampDBAggregationFunction.Factory(), new RegrAvgXDBAggregationFunction.Factory(),
+            new RegrAvgYDBAggregationFunction.Factory(), new RegrCountDBAggregationFunction.Factory(),
+            new RegrInterceptDBAggregationFunction.Factory(), new RegrR2DBAggregationFunction.Factory(),
+            new RegrSlopeDBAggregationFunction.Factory(), new RegrSXXDBAggregationFunction.Factory(),
+            new RegrSXYDBAggregationFunction.Factory(), new RegrSYYDBAggregationFunction.Factory(),
+            new StdDevPopDBAggregationFunction.Factory(), new StdDevSampDBAggregationFunction.Factory(),
+            new VarPopDBAggregationFunction.Factory(), new VarSampDBAggregationFunction.Factory());
     }
 }

@@ -50,6 +50,8 @@ package org.knime.core.node.port.database.aggregation.function.postgresql;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
@@ -61,23 +63,36 @@ public final class ArrayAggDBAggregationFunction extends SimpleDBAggregationFunc
 
     private static volatile ArrayAggDBAggregationFunction instance;
 
+    private static final String ID = "ARRAY_AGG";
+    /**Factory for {@link ArrayAggDBAggregationFunction}.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            if (instance == null) {
+                synchronized (ArrayAggDBAggregationFunction.class) {
+                    if (instance == null) {
+                        instance = new ArrayAggDBAggregationFunction();
+                    }
+                }
+            }
+            return instance;
+        }
+    }
+
     private ArrayAggDBAggregationFunction() {
-        super("ARRAY_AGG", "Return the input values, including nulls, concatenated into an array.", StringCell.TYPE,
+        super(ID, "Return the input values, including nulls, concatenated into an array.", StringCell.TYPE,
             DataValue.class);
     }
 
-    /**
-     * Returns the only instance of this class.
-     * @return the only instance
-     */
-    public static ArrayAggDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (ArrayAggDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new ArrayAggDBAggregationFunction();
-                }
-            }
-        }
-        return instance;
-    }
 }

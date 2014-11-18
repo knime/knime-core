@@ -49,6 +49,8 @@
 package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DataValue;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
@@ -59,22 +61,34 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
 public final class FirstDBAggregationFunction extends SimpleDBAggregationFunction {
     private static volatile FirstDBAggregationFunction instance;
 
-    private FirstDBAggregationFunction() {
-        super("FIRST", "Returns the first value of each group.", null, DataValue.class);
-    }
+    private static final String ID = "FIRST";
+    /**Factory for the parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
 
-    /**
-     * Returns the only instance of this class.
-     * @return the only instance
-     */
-    public static FirstDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (FirstDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new FirstDBAggregationFunction();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            if (instance == null) {
+                synchronized (FirstDBAggregationFunction.class) {
+                    if (instance == null) {
+                        instance = new FirstDBAggregationFunction();
+                    }
                 }
             }
+            return instance;
         }
-        return instance;
+    }
+
+    private FirstDBAggregationFunction() {
+        super(ID, "Returns the first value of each group.", null, DataValue.class);
     }
 }

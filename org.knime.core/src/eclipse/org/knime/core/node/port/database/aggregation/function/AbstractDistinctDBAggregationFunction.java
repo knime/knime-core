@@ -60,6 +60,9 @@ import org.knime.core.node.port.database.aggregation.function.booleanoption.Abst
  */
 public abstract class AbstractDistinctDBAggregationFunction extends AbstractBooleanDBAggregationFunction {
 
+    /**The string that is attached to the label as returned by the {@link #getLabel()} method to generate the id.*/
+    protected static final String LABEL_POSTIX = "_DISTINCT";
+
     /**
      * @param distinct <code>true</code> for distinct
      */
@@ -72,7 +75,7 @@ public abstract class AbstractDistinctDBAggregationFunction extends AbstractBool
      */
     @Override
     public String getId() {
-        return getLabel() + "_DISTINCT";
+        return getLabel() + LABEL_POSTIX;
     }
 
     /**
@@ -81,7 +84,7 @@ public abstract class AbstractDistinctDBAggregationFunction extends AbstractBool
     @Override
     public String getColumnName() {
         if (isSelected()) {
-            return getLabel() + "_DISTINCT";
+            return getLabel() + LABEL_POSTIX;
         }
         return getLabel();
     }

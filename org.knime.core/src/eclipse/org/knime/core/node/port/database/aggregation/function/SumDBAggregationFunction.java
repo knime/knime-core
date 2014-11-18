@@ -49,6 +49,8 @@
 package org.knime.core.node.port.database.aggregation.function;
 
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction;
 
 /**
@@ -60,22 +62,34 @@ public final class SumDBAggregationFunction extends SimpleDBAggregationFunction 
 
     private static volatile SumDBAggregationFunction instance;
 
-    private SumDBAggregationFunction() {
-        super("SUM", "Returns the sum of the values per group.", null, DoubleValue.class);
-    }
+    private static final String ID = "SUM";
+    /**Factory for the parent class.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
 
-    /**
-     * Returns the only instance of this class.
-     * @return the only instance
-     */
-    public static SumDBAggregationFunction getInstance() {
-        if (instance == null) {
-            synchronized (SumDBAggregationFunction.class) {
-                if (instance == null) {
-                    instance = new SumDBAggregationFunction();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            if (instance == null) {
+                synchronized (SumDBAggregationFunction.class) {
+                    if (instance == null) {
+                        instance = new SumDBAggregationFunction();
+                    }
                 }
             }
+            return instance;
         }
-        return instance;
+    }
+
+    private SumDBAggregationFunction() {
+        super(ID, "Returns the sum of the values per group.", null, DoubleValue.class);
     }
 }

@@ -58,17 +58,37 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 
 /**
- * Database aggregation function that allows the user to manualy specify the aggregation function to use.
+ * Database aggregation function that allows the user to manually specify the aggregation function to use.
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
  */
 public class CustomDBAggregationFunction implements DBAggregationFunction {
-    private CustomDBAggregationFuntionSettingsPanel m_settingsPanel;
-    private final CustomDBAggregationFuntionSettings m_settings;
 
     /**The id of the custom aggregation function.*/
     public static final String ID = "custom";
+    /**Factory for {@link CustomDBAggregationFunction}.*/
+    public static final class Factory implements DBAggregationFunctionFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getId() {
+            return ID;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DBAggregationFunction createInstance() {
+            return new CustomDBAggregationFunction();
+        }
+    }
+
+    private CustomDBAggregationFuntionSettingsPanel m_settingsPanel;
+    private final CustomDBAggregationFuntionSettings m_settings;
 
     /**
      * Constructor.
@@ -85,8 +105,16 @@ public class CustomDBAggregationFunction implements DBAggregationFunction {
      * {@inheritDoc}
      */
     @Override
-    public String getLabel() {
+    public String getId() {
         return ID;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getLabel() {
+        return getId();
     }
 
     /**
@@ -110,15 +138,7 @@ public class CustomDBAggregationFunction implements DBAggregationFunction {
      */
     @Override
     public String getDescription() {
-        return "This function allows you to call any custom function by defining the sql fragment manualy.";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getId() {
-        return ID;
+        return "This function allows you to call any custom function by defining the sql fragment.";
     }
 
     /**
@@ -136,14 +156,6 @@ public class CustomDBAggregationFunction implements DBAggregationFunction {
     public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
         final String colName) {
         return m_settings.getSQLFragment(manipulator, tableName, colName);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DBAggregationFunction createInstance() {
-        return new CustomDBAggregationFunction(getSettings().createClone());
     }
 
     /**

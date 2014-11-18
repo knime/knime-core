@@ -44,93 +44,30 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   27.08.2014 (koetter): created
+ *   18.11.2014 (koetter): created
  */
-package org.knime.core.node.port.database.aggregation.function;
+package org.knime.core.node.port.database.aggregation;
 
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.def.LongCell;
-import org.knime.core.node.port.database.StatementManipulator;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.DBAggregationFunctionFactory;
 
 /**
+ * Factory for creating {@link DBAggregationFunction}.
  *
  * @author Tobias Koetter, KNIME.com, Zurich, Switzerland
- * @since 2.11
+ *@since 2.11
  */
-public class CountDistinctDBAggregationFunction extends AbstractDistinctDBAggregationFunction {
-
-    private static final String LABEL = "COUNT";
-    /**Factory for parent class.*/
-    public static final class Factory implements DBAggregationFunctionFactory {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getId() {
-            return LABEL + AbstractDistinctDBAggregationFunction.LABEL_POSTIX;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DBAggregationFunction createInstance() {
-            return new CountDistinctDBAggregationFunction();
-        }
-    }
+public interface DBAggregationFunctionFactory {
 
     /**
-     * Constructor.
+     * The unique identifier of the function that is used for registration and
+     * identification of the aggregation method. The id is an internal
+     * used variable that is not displayed to the user.
+     *
+     * @return the unique id of this function
      */
-    public CountDistinctDBAggregationFunction() {
-        this(false);
-    }
-
-    private CountDistinctDBAggregationFunction(final boolean distinct) {
-        super(distinct);
-    }
+    String getId();
 
     /**
-     * {@inheritDoc}
+     * @return a new instance of this {@link DBAggregationFunction}
      */
-    @Override
-    public DataType getType(final DataType originalType) {
-        return LongCell.TYPE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getSQLFragment(final StatementManipulator manipulator, final String tableName,
-        final String colName) {
-        return buildSQLFragment("COUNT", manipulator, tableName, colName);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getLabel() {
-        return LABEL;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isCompatible(final DataType type) {
-        return type.isCompatible(DataValue.class);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Counts the number of (distinct) returned values.";
-    }
+    public DBAggregationFunction createInstance();
 }
