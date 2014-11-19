@@ -261,6 +261,7 @@ public final class DatabaseWriterConnection {
                     }
                 }
             } else {
+                LOGGER.debug("Append not enabled. Table " + table + " will be dropped if exists.");
                 mapping = new int[spec.getNumColumns()];
                 for (int k = 0; k < mapping.length; k++) {
                     mapping[k] = k;
@@ -277,7 +278,8 @@ public final class DatabaseWriterConnection {
                         throw new SQLException("Could not create SQL statement,"
                             + " reason: " + t.getMessage(), t);
                     }
-                    LOGGER.info("Can't drop table \"" + table + "\", will create new table.");
+                    LOGGER.info("Exception droping table \"" + table + "\": " + t.getMessage()
+                        + ". Will create new table.");
                 }
                 // and create new table
                 final String query =
