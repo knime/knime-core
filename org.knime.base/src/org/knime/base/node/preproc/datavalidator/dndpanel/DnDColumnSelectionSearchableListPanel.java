@@ -46,14 +46,21 @@
  */
 package org.knime.base.node.preproc.datavalidator.dndpanel;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.TransferHandler;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.util.ColumnSelectionList;
 import org.knime.core.node.util.ColumnSelectionSearchableListPanel;
+import org.knime.core.node.util.ColumnSelectionSearchableListPanel.ConfigurationRequestEvent.Type;
 
 /**
  * A panel comprising a column list, search field and some search customizers for the user. The list should be
@@ -68,13 +75,16 @@ import org.knime.core.node.util.ColumnSelectionSearchableListPanel;
 @SuppressWarnings("serial")
 public final class DnDColumnSelectionSearchableListPanel extends ColumnSelectionSearchableListPanel {
 
+    private final ConfiguredColumnDeterminer m_configuredColumnDeterminer;
+
     /**
-     * @param searchedItemsSelectionMode
-     * @param configuredColumnDeterminer
+     * @param searchedItemsSelectionMode mode
+     * @param configuredColumnDeterminer determiner
      */
     public DnDColumnSelectionSearchableListPanel(final SearchedItemsSelectionMode searchedItemsSelectionMode,
         final ConfiguredColumnDeterminer configuredColumnDeterminer) {
         super(searchedItemsSelectionMode, configuredColumnDeterminer);
+        m_configuredColumnDeterminer = configuredColumnDeterminer;
     }
 
     /**
@@ -86,6 +96,38 @@ public final class DnDColumnSelectionSearchableListPanel extends ColumnSelection
     public void enableDragAndDropSupport(final DnDStateListener dndStateListener) {
         ColumnSelectionList columnList = getColumnList();
         columnList.setDragEnabled(true);
+        JPopupMenu popup = new JPopupMenu();
+        final JMenuItem jMenuItem = new JMenuItem("New Configuration", DnDConfigurationPanel.ADD_ICON_16);
+        popup.add(jMenuItem);
+        popup.addPopupMenuListener(new PopupMenuListener() {
+
+            @Override
+            public void popupMenuWillBecomeVisible(final PopupMenuEvent e) {
+                boolean enable = true;
+                for (DataColumnSpec col : getSelectedColumns()) {
+                    if (m_configuredColumnDeterminer.isConfiguredColumn(col)) {
+                        enable = false;
+                        break;
+                    }
+                }
+                jMenuItem.setEnabled(enable);
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(final PopupMenuEvent e) {
+            }
+
+            @Override
+            public void popupMenuCanceled(final PopupMenuEvent e) {
+            }
+        });
+        jMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                fireConfigurationRequested(Type.CREATION);
+            }
+        });
+        columnList.setComponentPopupMenu(popup);
         final TransferHandler handler = columnList.getTransferHandler();
         columnList.setTransferHandler(new DnDColumnSpecSourceTransferHandler(handler, dndStateListener) {
 
@@ -94,5 +136,6 @@ public final class DnDColumnSelectionSearchableListPanel extends ColumnSelection
                 return getSelectedColumns();
             }
         });
+
     }
 }

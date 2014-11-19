@@ -52,7 +52,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -73,9 +72,7 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -83,6 +80,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.Scrollable;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
 
 import org.knime.base.node.preproc.datavalidator.dndpanel.DnDConfigurationPanel.DnDConfigurationSubPanel;
 import org.knime.core.data.DataColumnSpec;
@@ -142,8 +140,6 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
 
     private final JScrollPane m_scroller;
 
-    private JFrame m_currentDragAddPanel;
-
     /** Set box layout. */
     public DnDConfigurationPanel() {
 
@@ -153,24 +149,30 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
             new JScrollPane(m_configPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
-        JPanel scrollP = new JPanel(new FlowLayout());
-        scrollP.add(m_scroller);
+        //        JPanel scrollP = new JPanel(new FlowLayout());
 
         setLayout(new BorderLayout());
 
         m_helpPanel = new JPanel(new BorderLayout());
-        m_helpPanel.setPreferredSize(getDefaultPreferredSize());
         JPanel inner = new JPanel();
         inner.setLayout(new BorderLayout());
-        inner.add(new JLabel("<html><center>Drag columns<br><center>"), BorderLayout.NORTH);
+        inner.add(new JLabel("<html><center>Drop columns to add a new configuration<br><center>"), BorderLayout.NORTH);
         JLabel jLabel = new JLabel(ADD_ICON_16);
         //        jLabel.setEnabled(false);
         inner.add(jLabel, BorderLayout.CENTER);
         inner.setBorder(BorderFactory.createTitledBorder(""));
         m_helpPanel.add(ViewUtils.getInFlowLayout(inner), BorderLayout.CENTER);
         m_helpPanel.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
+        m_helpPanel.setTransferHandler(new DnDColumnSpecTargetTransferHander(this));
 
-        add(m_helpPanel, BorderLayout.CENTER);
+        try {
+            m_helpPanel.getDropTarget().addDropTargetListener(new BorderingDnDListener(m_helpPanel, this));
+        } catch (TooManyListenersException e) {
+            //NOOP
+        }
+
+        add(m_helpPanel, BorderLayout.NORTH);
+        add(m_scroller, BorderLayout.CENTER);
     }
 
     /**
@@ -193,8 +195,8 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
      */
     public void addConfigurationPanel(final T panel) {
         m_configPanel.add(panel);
-        checkForHelpPanel();
         m_scroller.revalidate();
+        ensureConfigurationPanelVisible(panel);
         firePropertyChange(CONFIGURATION_CHANGED, null, null);
     }
 
@@ -205,7 +207,6 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
      */
     public void removeConfigurationPanel(final T panel) {
         m_configPanel.remove(panel);
-        checkForHelpPanel();
         m_scroller.revalidate();
         firePropertyChange(CONFIGURATION_CHANGED, null, null);
     }
@@ -215,7 +216,6 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
      */
     public void removeAllConfigurationPanels() {
         m_configPanel.removeAll();
-        checkForHelpPanel();
     }
 
     /**
@@ -241,53 +241,14 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
     }
 
     /**
-     * @return the panel opened on a dropable
-     */
-    protected JPanel createNewConfigPanel() {
-        JPanel creatorPanel = new JPanel(new BorderLayout());
-        JButton addButton = new JButton(ADD_ICON_48);
-        creatorPanel.add(new JLabel("New configuration"), BorderLayout.NORTH);
-        creatorPanel.add(addButton, BorderLayout.CENTER);
-        creatorPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        return creatorPanel;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     public final void dragStoppedAt() {
-        if (m_currentDragAddPanel != null) {
-            m_currentDragAddPanel.setVisible(false);
-            m_currentDragAddPanel = null;
-        }
     }
 
     @Override
     public void dragStartedAt(final Point location, final Transferable transferable) {
-        if (isDropable(DnDColumnSpecTransferable.extractColumnSpecs(transferable))) {
-            m_currentDragAddPanel = new JFrame();
-            m_currentDragAddPanel.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Already there
-            m_currentDragAddPanel.setUndecorated(true);
-            m_currentDragAddPanel.setAlwaysOnTop(true);
-            JPanel creatorPanel = createNewConfigPanel();
-
-            creatorPanel.setTransferHandler(new DnDColumnSpecTargetTransferHander(this));
-
-            try {
-                creatorPanel.getDropTarget().addDropTargetListener(new BorderingDnDListener(creatorPanel, this));
-            } catch (TooManyListenersException e) {
-                LOGGER.coding("Too many listeners on own created panel... should not happen", e);
-            }
-
-            Point locationOnScreen = getLocationOnScreen();
-            locationOnScreen.y = location.y;
-            m_currentDragAddPanel.add(creatorPanel);
-            m_currentDragAddPanel.pack();
-            locationOnScreen.y -= m_currentDragAddPanel.getPreferredSize().getHeight() / 2;
-            m_currentDragAddPanel.setLocation(locationOnScreen);
-            m_currentDragAddPanel.setVisible(true);
-        }
     }
 
     /**
@@ -297,24 +258,6 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
     public final boolean update(final List<DataColumnSpec> extractColumnSpecs) {
         addConfigurationPanel(createConfigurationPanel(extractColumnSpecs));
         return true;
-    }
-
-    private void checkForHelpPanel() {
-        if (m_configPanel.getComponents().length == 0) {
-            if (getComponent(0) != m_helpPanel) {
-                removeAll();
-                add(m_helpPanel);
-                revalidate();
-                repaint();
-            }
-        } else {
-            if (getComponent(0) != m_scroller) {
-                removeAll();
-                add(m_scroller);
-                revalidate();
-                repaint();
-            }
-        }
     }
 
     /**
@@ -374,7 +317,10 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
                     DnDColumnSpecTransferable.extractColumnSpecs(dtde.getTransferable());
 
                 if (extractColumnSpecs != null && m_dropListener.isDropable(extractColumnSpecs)) {
-                    m_componentToBorder.setBorder(BorderFactory.createLineBorder(Color.green));
+                    Border toSet =
+                        m_borderBackup instanceof LineBorder ? BorderFactory.createLineBorder(Color.green)
+                            : BorderFactory.createBevelBorder(BevelBorder.LOWERED, Color.green, Color.green);
+                    m_componentToBorder.setBorder(toSet);
                 }
             }
         }
@@ -389,6 +335,7 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
 
         private void restoreBackup() {
             m_componentToBorder.setBorder(m_borderBackup);
+            m_componentToBorder.repaint();
         }
 
         /**
@@ -396,7 +343,8 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
          */
         @Override
         public void drop(final DropTargetDropEvent dtde) {
-
+            m_componentToBorder.setBorder(m_borderBackup);
+            m_componentToBorder.repaint();
         }
     }
 
