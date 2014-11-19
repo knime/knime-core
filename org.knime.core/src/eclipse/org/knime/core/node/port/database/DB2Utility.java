@@ -75,6 +75,15 @@ public class DB2Utility extends DatabaseUtility {
             return new String[] {"CREATE TABLE  " + quoteIdentifier(tableName) + " AS (" + query + ") WITH NO DATA",
                 "INSERT INTO " + quoteIdentifier(tableName) + " (" + query + ")"};
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String dropTable(final String tableName, final boolean cascade) {
+            //db2 does not support the cascade option
+            return super.dropTable(tableName, false);
+        }
     }
 
     private static final StatementManipulator MANIPULATOR = new DB2StatementManipulator();

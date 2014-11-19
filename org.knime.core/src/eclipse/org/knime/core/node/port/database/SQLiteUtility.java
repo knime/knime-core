@@ -91,6 +91,15 @@ public class SQLiteUtility extends DatabaseUtility {
          * {@inheritDoc}
          */
         @Override
+        public String dropTable(final String tableName, final boolean cascade) {
+            //sqlite does not support the cascade option
+            return super.dropTable(tableName, false);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public String[] createTableAsSelect(final String tableName, final String query) {
             return new String[] {"CREATE TABLE " + quoteIdentifier(tableName) + " AS " + query};
         }

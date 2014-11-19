@@ -80,7 +80,7 @@ public class DBDropTableNodeDialog extends NodeDialogPane {
     private final DialogComponentString m_tableNameComp = new DialogComponentString(m_tableNameModel, null, true, 35);
     private SettingsModelBoolean m_cascadeModel = DBDropTableNodeModel.createCascadeModel();
     private DialogComponentBoolean m_cascadeComp = new DialogComponentBoolean(m_cascadeModel,
-        "cascade (WARNING: This removes dependent views and foreign-key constraints!!!)");
+        "<html>cascade <b>(WARNING: This might drop dependent objects!!!)</b></html>");
 
     /**
      * Constructor.
@@ -118,8 +118,10 @@ public class DBDropTableNodeDialog extends NodeDialogPane {
         c.weightx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         root.add(new JLabel(), c);
+        c.anchor = GridBagConstraints.LINE_START;
         c.gridx = 0;
         c.gridy++;
+        c.gridwidth = 2;
         root.add(m_cascadeComp.getComponentPanel(), c);
         addTab(" Settings ", root);
     }

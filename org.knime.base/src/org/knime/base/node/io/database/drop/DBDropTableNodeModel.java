@@ -95,6 +95,9 @@ public class DBDropTableNodeModel extends NodeModel {
         return new SettingsModelString(CFG_TABLE_NAME, null);
     }
 
+    /**
+     * @return the drop cascade model
+     */
     static SettingsModelBoolean createCascadeModel() {
         return new SettingsModelBoolean("cascade", false);
     }
@@ -125,7 +128,6 @@ public class DBDropTableNodeModel extends NodeModel {
             if (cause == null) {
                 cause = ex;
             }
-
             throw new InvalidSettingsException("Error while validating drop statement: " + cause.getMessage(), ex);
         }
         exec.setMessage("Table " + table2Drop + " sucessful droped");
