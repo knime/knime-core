@@ -455,7 +455,7 @@ DBDataTypeAggregationFunctionRow, DataType> {
         if (provider != null) {
             defaultFunction = provider.getDefaultFunction(type);
         } else {
-            defaultFunction = CountDBAggregationFunction.getInstance();
+            defaultFunction = new CountDBAggregationFunction.Factory().createInstance();
         }
         return new DBDataTypeAggregationFunctionRow(type, defaultFunction);
     }

@@ -469,7 +469,7 @@ DBColumnAggregationFunctionRow, DataColumnSpec> {
         if (provider != null) {
             defaultFunction = provider.getDefaultFunction(colSpec.getType());
         } else {
-            defaultFunction = CountDBAggregationFunction.getInstance();
+            defaultFunction = new CountDBAggregationFunction.Factory().createInstance();
         }
         return new DBColumnAggregationFunctionRow(colSpec, defaultFunction);
     }
