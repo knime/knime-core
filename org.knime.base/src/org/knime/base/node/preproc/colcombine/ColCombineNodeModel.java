@@ -66,8 +66,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
-import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
 /**
  * This is the model implementation of ColCombine. Takes the contents of a set
@@ -92,15 +92,13 @@ public class ColCombineNodeModel extends NodeModel {
     /** Config identifier: delimiter replacement string. */
     static final String CFG_REPLACE_DELIMITER_STRING = "replace_delimiter";
 
-    private DataColumnSpecFilterConfiguration m_conf;
-
-    private String[] m_columns;
     private String m_newColName;
     private String m_delimString;
     private char m_quoteChar;
     private boolean m_isQuoting;
     private boolean m_isQuotingAlways;
     private String m_replaceDelimString;
+    private DataColumnSpecFilterConfiguration m_conf;
 
     /**
      * Constructor for the node model.
@@ -133,12 +131,15 @@ public class ColCombineNodeModel extends NodeModel {
             m_conf = createDCSFilterConfiguration();
             // auto-configure
             m_conf.loadDefaults(inSpecs[0], true);
+            throw new InvalidSettingsException("No settings available!");
         }
+
         if (inSpecs[0].containsName(m_newColName)) {
             throw new InvalidSettingsException(
                     "Column already exits: " + m_newColName);
         }
-        return null;
+        ColumnRearranger arranger = createColumnRearranger(inSpecs[0]);
+        return new DataTableSpec[]{arranger.createSpec()};
     }
 
     private ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
@@ -147,10 +148,9 @@ public class ColCombineNodeModel extends NodeModel {
                 m_newColName, StringCell.TYPE);
         dcsc.setElementNames(new String[]{m_newColName});
         DataColumnSpec append = dcsc.createSpec();
-
-        m_columns = m_conf.applyTo(spec).getIncludes();
-        final int[] indices = new int[m_columns.length];
-        List<String> colNames = Arrays.asList(m_columns);
+        String[] incls = m_conf.applyTo(spec).getIncludes();
+        final int[] indices = new int[incls.length];
+        List<String> colNames = Arrays.asList(incls);
         int j = 0;
         for (int k = 0; k < spec.getNumColumns(); k++) {
             DataColumnSpec cs = spec.getColumnSpec(k);
@@ -231,27 +231,40 @@ public class ColCombineNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_conf != null) {
-            m_conf.saveConfiguration(settings);
-            settings.addString(CFG_DELIMITER_STRING, m_delimString);
-            settings.addBoolean(CFG_IS_QUOTING, m_isQuoting);
-            if (m_isQuoting) {
-                settings.addChar(CFG_QUOTE_CHAR, m_quoteChar);
-                settings.addBoolean(CFG_IS_QUOTING_ALWAYS, m_isQuotingAlways);
-            } else {
-                settings.addString(
-                        CFG_REPLACE_DELIMITER_STRING, m_replaceDelimString);
-            }
-            settings.addString(CFG_NEW_COLUMN_NAME, m_newColName);
+
+        m_conf.saveConfiguration(settings);
+
+        settings.addString(CFG_DELIMITER_STRING, m_delimString);
+        settings.addBoolean(CFG_IS_QUOTING, m_isQuoting);
+        if (m_isQuoting) {
+            settings.addChar(CFG_QUOTE_CHAR, m_quoteChar);
+            settings.addBoolean(CFG_IS_QUOTING_ALWAYS, m_isQuotingAlways);
+        } else {
+            settings.addString(
+                    CFG_REPLACE_DELIMITER_STRING, m_replaceDelimString);
         }
+        settings.addString(CFG_NEW_COLUMN_NAME, m_newColName);
     }
 
     /** {@inheritDoc} */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        String[] columns = null;
+        try {
+            columns = settings.getStringArray(CFG_COLUMNS);
+        } catch (InvalidSettingsException ise) {
+            // no old settings available
+
+        }
+
         DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
-        conf.loadConfigurationInModel(settings);
+        try {
+            conf.loadConfigurationInModel(settings);
+        } catch (InvalidSettingsException ise) {
+            conf.loadDefaults(columns, true);
+            conf.setEnforceOption(EnforceOption.EnforceInclusion);
+        }
         m_conf = conf;
         m_newColName = settings.getString(CFG_NEW_COLUMN_NAME);
         m_delimString = settings.getString(CFG_DELIMITER_STRING);
@@ -269,10 +282,11 @@ public class ColCombineNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        DataColumnSpecFilterPanel test = new DataColumnSpecFilterPanel();
-
-        DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
-        conf.loadConfigurationInModel(settings);
+        if (!settings.containsKey(CFG_COLUMNS)) {
+            // old included columns
+            DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
+            conf.loadConfigurationInModel(settings);
+        }
         String newColName = settings.getString(CFG_NEW_COLUMN_NAME);
         if (newColName == null || newColName.trim().length() == 0) {
             throw new InvalidSettingsException(
@@ -342,6 +356,6 @@ public class ColCombineNodeModel extends NodeModel {
      * @return ...
      */
     static final DataColumnSpecFilterConfiguration createDCSFilterConfiguration() {
-        return new DataColumnSpecFilterConfiguration("column-filter", CFG_COLUMNS);
+        return new DataColumnSpecFilterConfiguration("column-filter");
     }
 }

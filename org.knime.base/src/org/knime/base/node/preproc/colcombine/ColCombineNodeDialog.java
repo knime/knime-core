@@ -51,8 +51,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
@@ -63,9 +61,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.text.DefaultFormatter;
 
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -192,15 +188,9 @@ public class ColCombineNodeDialog extends NodeDialogPane {
         if (in.getNumColumns() == 0) {
             throw new NotConfigurableException("No input data available");
         }
-        List<String> defIncludes = new ArrayList<String>();
-        for (DataColumnSpec s : in) {
-            if (s.getType().isCompatible(StringValue.class)) {
-                defIncludes.add(s.getName());
-            }
-        }
         DataColumnSpecFilterConfiguration config = ColCombineNodeModel.createDCSFilterConfiguration();
-        config.loadConfigurationInDialog(settings, in);
-        m_colFilterPanel.loadConfiguration(config, in);
+        config.loadConfigurationInDialog(settings, specs[0]);
+        m_colFilterPanel.loadConfiguration(config, specs[0]);
         String delimiter = settings.getString(
                 ColCombineNodeModel.CFG_DELIMITER_STRING, ",");
         boolean isQuoting = settings.getBoolean(
@@ -237,6 +227,7 @@ public class ColCombineNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(
             final NodeSettingsWO settings) throws InvalidSettingsException {
+
         DataColumnSpecFilterConfiguration config = ColCombineNodeModel.createDCSFilterConfiguration();
         m_colFilterPanel.saveConfiguration(config);
         config.saveConfiguration(settings);
