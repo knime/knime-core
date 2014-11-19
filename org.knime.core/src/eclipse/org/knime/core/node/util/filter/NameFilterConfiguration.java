@@ -118,11 +118,6 @@ public class NameFilterConfiguration implements Cloneable {
      */
     private final boolean m_patternFilterEnabled;
 
-    /**
-     * Name of the old config entry for the included column names.
-     */
-    private String m_oldConfigIncludeName = null;
-
     /** Enforce inclusion/exclusion options. */
     public enum EnforceOption {
         /** Option to enforce inclusion for all new, additional names. */
@@ -232,19 +227,6 @@ public class NameFilterConfiguration implements Cloneable {
     }
 
     /**
-     * Creates a new name filter configuration with the given settings name. Also enables the name pattern filter.
-     *
-     * @param configRootName the config name to used to store the settings
-     * @param oldConfigIncludeName the config name of the old included column names in the old settings
-     * @throws IllegalArgumentException If config name is null or empty
-     * @since 2.11
-     */
-    public NameFilterConfiguration(final String configRootName, final String oldConfigIncludeName) {
-        this(configRootName, FILTER_BY_NAMEPATTERN);
-        m_oldConfigIncludeName = oldConfigIncludeName;
-    }
-
-    /**
      * Creates a new name filter configuration with the given settings name. The flags argument enables or
      * disables certain filter types. Currently, this filter only supports {@link #FILTER_BY_NAMEPATTERN}.
      *
@@ -273,43 +255,25 @@ public class NameFilterConfiguration implements Cloneable {
      * @throws InvalidSettingsException If inconsistent/missing.
      */
     public final void loadConfigurationInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        if (settings.containsKey(m_configRootName)) {
-            NodeSettingsRO subSettings = settings.getNodeSettings(m_configRootName);
-            String type = subSettings.getString(KEY_FILTER_TYPE);
-            if (type == null || !verifyType(type)) {
-                throw new InvalidSettingsException("Invalid type: " + type);
-            }
-            m_type = type;
-            m_enforceOption = EnforceOption.parse(subSettings.getString(KEY_ENFORCE_OPTION));
-            m_includeList = subSettings.getStringArray(KEY_INCLUDED_NAMES);
-            m_excludeList = subSettings.getStringArray(KEY_EXCLUDED_NAMES);
-            try {
-                NodeSettingsRO configSettings = subSettings.getNodeSettings(PatternFilterConfigurationImpl.TYPE);
-                m_patternConfig.loadConfigurationInModel(configSettings);
-            } catch (InvalidSettingsException e) {
-                if (PatternFilterConfigurationImpl.TYPE.equals(m_type)) {
-                    throw e;
-                }
-                // Otherwise leave at default settings as pattern matcher is not active (might be prior 2.9)
-            }
-            loadConfigurationInModelChild(subSettings);
-        } else if (settings.containsKey(m_oldConfigIncludeName)) {
-
-            m_type = TYPE;
-
-            m_includeList = settings.getStringArray(m_oldConfigIncludeName);
-            m_excludeList = new String[0];
-
-            m_enforceOption = EnforceOption.EnforceExclusion;
-
-            NodeSettingsRO patternMatchSettings = new NodeSettings("empty");
-
-            m_patternConfig.loadConfigurationInDialog(patternMatchSettings);
-
-        } else {
-            // throw a nice exception if none of the settings is available
-            settings.getNodeSettings(m_configRootName);
+        NodeSettingsRO subSettings = settings.getNodeSettings(m_configRootName);
+        String type = subSettings.getString(KEY_FILTER_TYPE);
+        if (type == null || !verifyType(type)) {
+            throw new InvalidSettingsException("Invalid type: " + type);
         }
+        m_type = type;
+        m_enforceOption = EnforceOption.parse(subSettings.getString(KEY_ENFORCE_OPTION));
+        m_includeList = subSettings.getStringArray(KEY_INCLUDED_NAMES);
+        m_excludeList = subSettings.getStringArray(KEY_EXCLUDED_NAMES);
+        try {
+            NodeSettingsRO configSettings = subSettings.getNodeSettings(PatternFilterConfigurationImpl.TYPE);
+            m_patternConfig.loadConfigurationInModel(configSettings);
+        } catch (InvalidSettingsException e) {
+            if (PatternFilterConfigurationImpl.TYPE.equals(m_type)) {
+                throw e;
+            }
+            // Otherwise leave at default settings as pattern matcher is not active (might be prior 2.9)
+        }
+        loadConfigurationInModelChild(subSettings);
     }
 
     /** Method call by {@link #loadConfigurationInModel(NodeSettingsRO)} to allow subclasses to read child elements.

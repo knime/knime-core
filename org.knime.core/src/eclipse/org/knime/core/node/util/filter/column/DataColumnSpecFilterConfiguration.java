@@ -96,20 +96,6 @@ public final class DataColumnSpecFilterConfiguration extends NameFilterConfigura
     }
 
     /**
-     * New instance with hard coded root name. This constructor enable a pattern and type filter.
-     *
-     * @param configRootName Non null name that is used as identifier when saved to a NodeSettings object during save
-     *            (and load).
-     * @param oldConfigIncludeNames the config name of the old included column names in the old settings
-     */
-    public DataColumnSpecFilterConfiguration(final String configRootName, final String oldConfigIncludeNames) {
-        super(configRootName, oldConfigIncludeNames);
-        m_filter = null;
-        m_typeConfig = new TypeFilterConfigurationImpl(null);
-        m_typeFilterEnabled = true;
-    }
-
-    /**
      * New instance with hard coded root name. This constructor enables only a name pattern filter (as a
      * data value class filter is applied).
      * @param configRootName Non null name that is used as identifier when saved to a NodeSettings object during save
