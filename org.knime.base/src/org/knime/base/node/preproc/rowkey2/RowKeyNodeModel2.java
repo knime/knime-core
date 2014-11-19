@@ -46,8 +46,15 @@
  */
 package org.knime.base.node.preproc.rowkey2;
 
-import org.knime.base.data.append.column.AppendedColumnTable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -68,14 +75,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 /**
  * The node model of the row key manipulation node. The node allows the user
@@ -253,6 +252,9 @@ public class RowKeyNodeModel2 extends NodeModel {
         }
         final BufferedDataTable data = inData[DATA_IN_PORT];
         BufferedDataTable outData = null;
+        final boolean ensureUniqueness = m_ensureUniqueness.isEnabled() && m_ensureUniqueness.getBooleanValue();
+        final boolean handleMissing = m_handleMissingVals.isEnabled() && m_handleMissingVals.getBooleanValue();
+        final boolean removeRowKeyCol = m_removeRowKeyCol.isEnabled() && m_removeRowKeyCol.getBooleanValue();
         if (m_replaceKey.getBooleanValue()) {
             LOGGER.debug("The user wants to replace the row ID with the"
                     + " column " + m_newColumnName.getStringValue()
@@ -277,9 +279,7 @@ public class RowKeyNodeModel2 extends NodeModel {
             outData = util.changeRowKey(data, exec,
                     m_newRowKeyColumn.getStringValue(),
                     m_appendRowKey.getBooleanValue(), newColSpec,
-                    m_ensureUniqueness.getBooleanValue(),
-                    m_handleMissingVals.getBooleanValue(),
-                    m_removeRowKeyCol.getBooleanValue(),
+                    ensureUniqueness, handleMissing, removeRowKeyCol,
                     m_enableHilite.getBooleanValue());
             if (m_enableHilite.getBooleanValue()) {
                 m_hilite.setMapper(new DefaultHiLiteMapper(
