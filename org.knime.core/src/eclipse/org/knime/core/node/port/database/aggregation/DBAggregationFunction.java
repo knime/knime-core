@@ -63,7 +63,7 @@ public interface DBAggregationFunction extends AggregationFunction {
      * @param originalType Type of the column that will be aggregated
      * @return The type of the aggregated column
      */
-    public DataType getType(final DataType originalType);
+    DataType getType(final DataType originalType);
 
     /**
      * @param manipulator {@link StatementManipulator} for quoting the column name if necessary
@@ -71,10 +71,10 @@ public interface DBAggregationFunction extends AggregationFunction {
      * @param tableName the name of the table the column belongs to
      * @return the sql fragment to use in the sql query e.g. SUM(colName)
      */
-    public String getSQLFragment(StatementManipulator manipulator, String tableName, String columnName);
+    String getSQLFragment(StatementManipulator manipulator, String tableName, String columnName);
 
     /**
      * @return the name of the function used in the column name
      */
-    public String getColumnName();
+    String getColumnName();
 }

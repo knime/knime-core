@@ -59,12 +59,12 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
  * @since 2.11
  */
 public final class BitXOrDBAggregationFunction extends SimpleDBAggregationFunction {
-
-    private static volatile BitXOrDBAggregationFunction instance;
-
     private static final String ID = "BIT_XOR";
+
     /**Factory for the parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
+        private static final BitXOrDBAggregationFunction INSTANCE = new BitXOrDBAggregationFunction();
+
         /**
          * {@inheritDoc}
          */
@@ -78,14 +78,7 @@ public final class BitXOrDBAggregationFunction extends SimpleDBAggregationFuncti
          */
         @Override
         public DBAggregationFunction createInstance() {
-            if (instance == null) {
-                synchronized (BitXOrDBAggregationFunction.class) {
-                    if (instance == null) {
-                        instance = new BitXOrDBAggregationFunction();
-                    }
-                }
-            }
-            return instance;
+            return INSTANCE;
         }
     }
 

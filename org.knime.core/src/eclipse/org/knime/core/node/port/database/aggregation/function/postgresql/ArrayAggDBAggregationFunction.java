@@ -60,12 +60,12 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
  * @since 2.11
  */
 public final class ArrayAggDBAggregationFunction extends SimpleDBAggregationFunction {
-
-    private static volatile ArrayAggDBAggregationFunction instance;
-
     private static final String ID = "ARRAY_AGG";
+
     /**Factory for {@link ArrayAggDBAggregationFunction}.*/
     public static final class Factory implements DBAggregationFunctionFactory {
+        private static final ArrayAggDBAggregationFunction INSTANCE = new ArrayAggDBAggregationFunction();
+
         /**
          * {@inheritDoc}
          */
@@ -79,14 +79,7 @@ public final class ArrayAggDBAggregationFunction extends SimpleDBAggregationFunc
          */
         @Override
         public DBAggregationFunction createInstance() {
-            if (instance == null) {
-                synchronized (ArrayAggDBAggregationFunction.class) {
-                    if (instance == null) {
-                        instance = new ArrayAggDBAggregationFunction();
-                    }
-                }
-            }
-            return instance;
+            return INSTANCE;
         }
     }
 

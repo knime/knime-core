@@ -60,12 +60,12 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
  * @since 2.11
  */
 public final class CountDBAggregationFunction extends SimpleDBAggregationFunction {
-
-    private static volatile CountDBAggregationFunction instance;
-
     private static final String ID = "COUNT";
+
     /**Factory for the parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
+        private static final CountDBAggregationFunction INSTANCE = new CountDBAggregationFunction();
+
         /**
          * {@inheritDoc}
          */
@@ -79,14 +79,7 @@ public final class CountDBAggregationFunction extends SimpleDBAggregationFunctio
          */
         @Override
         public DBAggregationFunction createInstance() {
-            if (instance == null) {
-                synchronized (CountDBAggregationFunction.class) {
-                    if (instance == null) {
-                        instance = new CountDBAggregationFunction();
-                    }
-                }
-            }
-            return instance;
+            return INSTANCE;
         }
     }
 

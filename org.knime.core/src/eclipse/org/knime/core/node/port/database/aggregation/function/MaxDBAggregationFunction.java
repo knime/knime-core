@@ -59,12 +59,12 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
  * @since 2.11
  */
 public final class MaxDBAggregationFunction extends SimpleDBAggregationFunction {
-
-    private static volatile MaxDBAggregationFunction instance;
-
     private static final String ID = "MAX";
+
     /**Factory for the parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
+        private static final MaxDBAggregationFunction INSTANCE = new MaxDBAggregationFunction();
+
         /**
          * {@inheritDoc}
          */
@@ -78,14 +78,7 @@ public final class MaxDBAggregationFunction extends SimpleDBAggregationFunction 
          */
         @Override
         public DBAggregationFunction createInstance() {
-            if (instance == null) {
-                synchronized (MaxDBAggregationFunction.class) {
-                    if (instance == null) {
-                        instance = new MaxDBAggregationFunction();
-                    }
-                }
-            }
-            return instance;
+            return INSTANCE;
         }
     }
 

@@ -59,12 +59,12 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
  * @since 2.11
  */
 public final class MinDBAggregationFunction extends SimpleDBAggregationFunction {
-
-    private static volatile MinDBAggregationFunction instance;
-
     private static final String ID = "MIN";
+
     /**Factory for the parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
+        private static final MinDBAggregationFunction INSTANCE = new MinDBAggregationFunction();
+
         /**
          * {@inheritDoc}
          */
@@ -78,14 +78,7 @@ public final class MinDBAggregationFunction extends SimpleDBAggregationFunction 
          */
         @Override
         public DBAggregationFunction createInstance() {
-            if (instance == null) {
-                synchronized (MinDBAggregationFunction.class) {
-                    if (instance == null) {
-                        instance = new MinDBAggregationFunction();
-                    }
-                }
-            }
-            return instance;
+            return INSTANCE;
         }
     }
 

@@ -60,12 +60,12 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
  * @since 2.11
  */
 public final class AvgDBAggregationFunction extends SimpleDBAggregationFunction {
-
-    private static volatile AvgDBAggregationFunction instance;
-
     private static final String ID = "AVG";
+
     /**Factory for the parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
+        private static final AvgDBAggregationFunction INSTANCE = new AvgDBAggregationFunction();
+
         /**
          * {@inheritDoc}
          */
@@ -79,14 +79,7 @@ public final class AvgDBAggregationFunction extends SimpleDBAggregationFunction 
          */
         @Override
         public DBAggregationFunction createInstance() {
-            if (instance == null) {
-                synchronized (AvgDBAggregationFunction.class) {
-                    if (instance == null) {
-                        instance = new AvgDBAggregationFunction();
-                    }
-                }
-            }
-            return instance;
+            return INSTANCE;
         }
     }
 

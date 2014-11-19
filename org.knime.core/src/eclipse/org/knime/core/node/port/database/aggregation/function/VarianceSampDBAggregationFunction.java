@@ -32,12 +32,12 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
  * @since 2.11
  */
 public final class VarianceSampDBAggregationFunction extends SimpleDBAggregationFunction {
-
-    private static volatile VarianceSampDBAggregationFunction instance;
-
     private static final String ID = "VARIANCE_SAMP";
+
     /**Factory for the parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
+        private static final VarianceSampDBAggregationFunction INSTANCE = new VarianceSampDBAggregationFunction();
+
         /**
          * {@inheritDoc}
          */
@@ -51,14 +51,7 @@ public final class VarianceSampDBAggregationFunction extends SimpleDBAggregation
          */
         @Override
         public DBAggregationFunction createInstance() {
-            if (instance == null) {
-                synchronized (VarianceSampDBAggregationFunction.class) {
-                    if (instance == null) {
-                        instance = new VarianceSampDBAggregationFunction();
-                    }
-                }
-            }
-            return instance;
+            return INSTANCE;
         }
     }
 

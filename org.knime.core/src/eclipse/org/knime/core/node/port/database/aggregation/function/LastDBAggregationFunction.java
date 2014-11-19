@@ -59,12 +59,12 @@ import org.knime.core.node.port.database.aggregation.SimpleDBAggregationFunction
  * @since 2.11
  */
 public final class LastDBAggregationFunction extends SimpleDBAggregationFunction {
-
-    private static volatile LastDBAggregationFunction instance;
-
     private static final String ID = "LAST";
+
     /**Factory for the parent class.*/
     public static final class Factory implements DBAggregationFunctionFactory {
+        private static final LastDBAggregationFunction INSTANCE = new LastDBAggregationFunction();
+
         /**
          * {@inheritDoc}
          */
@@ -78,14 +78,7 @@ public final class LastDBAggregationFunction extends SimpleDBAggregationFunction
          */
         @Override
         public DBAggregationFunction createInstance() {
-            if (instance == null) {
-                synchronized (LastDBAggregationFunction.class) {
-                    if (instance == null) {
-                        instance = new LastDBAggregationFunction();
-                    }
-                }
-            }
-            return instance;
+            return INSTANCE;
         }
     }
 

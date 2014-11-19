@@ -189,7 +189,7 @@ public interface AggregationFunction {
      * {@link AggregationFunction} before saving it.
      * @throws InvalidSettingsException if the internal state is invalid
      */
-    public void validate() throws InvalidSettingsException;
+    void validate() throws InvalidSettingsException;
 
     /**
      * This method is called from {@link NodeModel} in the <code>configure()</code> in
