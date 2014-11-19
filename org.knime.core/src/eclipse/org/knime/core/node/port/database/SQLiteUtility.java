@@ -47,13 +47,11 @@
  */
 package org.knime.core.node.port.database;
 
-import org.knime.core.node.port.database.aggregation.function.AvgDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.AvgDistinctDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.CountDistinctDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.GroupConcatDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.MaxDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.MinDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.SumDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.SumDistinctDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.sqlite.TotalDBAggregationFunction;
 
@@ -118,7 +116,6 @@ public class SQLiteUtility extends DatabaseUtility {
      */
     public SQLiteUtility() {
         super(DATABASE_IDENTIFIER, MANIPULATOR,  new AvgDistinctDBAggregationFunction.Factory(),
-            new AvgDBAggregationFunction.Factory(), new SumDBAggregationFunction.Factory(),
             new CountDistinctDBAggregationFunction.Factory(), new GroupConcatDBAggregationFunction.Factory(),
             new MaxDBAggregationFunction.Factory(), new MinDBAggregationFunction.Factory(),
             new SumDistinctDBAggregationFunction.Factory(), new TotalDBAggregationFunction.Factory());

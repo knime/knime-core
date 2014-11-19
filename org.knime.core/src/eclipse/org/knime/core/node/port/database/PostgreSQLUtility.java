@@ -51,12 +51,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.knime.core.data.StringValue;
-import org.knime.core.node.port.database.aggregation.function.AvgDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.AvgDistinctDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.BitAndDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.BitOrDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.CorrDBAggregationFunction;
-import org.knime.core.node.port.database.aggregation.function.CountDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.CountDistinctDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.CovarPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.CovarSampDBAggregationFunction;
@@ -120,7 +118,6 @@ public class PostgreSQLUtility extends DatabaseUtility {
      */
     public PostgreSQLUtility() {
         super(DATABASE_IDENTIFIER, MANIPULATOR, new ArrayAggDBAggregationFunction.Factory(),
-            new AvgDBAggregationFunction.Factory(), new CountDBAggregationFunction.Factory(),
             new AvgDistinctDBAggregationFunction.Factory(), new BitAndDBAggregationFunction.Factory(),
             new BitOrDBAggregationFunction.Factory(), new CountDistinctDBAggregationFunction.Factory(),
             new MaxDBAggregationFunction.Factory(), new MinDBAggregationFunction.Factory(),
