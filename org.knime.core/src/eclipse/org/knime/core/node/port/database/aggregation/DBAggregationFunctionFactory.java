@@ -56,7 +56,6 @@ package org.knime.core.node.port.database.aggregation;
  *@since 2.11
  */
 public interface DBAggregationFunctionFactory {
-
     /**
      * The unique identifier of the function that is used for registration and
      * identification of the aggregation method. The id is an internal
@@ -69,5 +68,5 @@ public interface DBAggregationFunctionFactory {
     /**
      * @return a new instance of this {@link DBAggregationFunction}
      */
-    public DBAggregationFunction createInstance();
+    DBAggregationFunction createInstance();
 }
