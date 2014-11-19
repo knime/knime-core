@@ -238,16 +238,27 @@ class DataValidatorColPanel extends DnDConfigurationSubPanel {
 
         final JPanel centerPanel = new JPanel(new BorderLayout());
         createCenterLayout(m_setting, centerPanel);
-        createWestLayout(m_setting, parentPanel, spec);
-        //centerPanel.add(createSpacer(1));
-        JPanel northPanel = new JPanel(new BorderLayout());
-        northPanel.add(removeButtons, BorderLayout.EAST);
-        centerPanel.add(northPanel, BorderLayout.NORTH);
+        if (m_parent != null) {
+            createWestLayout(m_setting, parentPanel, spec);
+            JPanel northPanel = new JPanel(new BorderLayout());
+            northPanel.add(removeButtons, BorderLayout.EAST);
+            centerPanel.add(northPanel, BorderLayout.NORTH);
+            setBorder(border);
+        } else {
+            setBorder(BorderFactory.createTitledBorder("Column Settings"));
+        }
         parentPanel.add(centerPanel, BorderLayout.CENTER);
-        setBorder(border);
         add(parentPanel);
 
         updateUiElements(spec);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setBorder(final Border border) {
+        super.setBorder(border);
     }
 
     private void createCenterLayout(final DataValidatorColConfiguration setting, final JPanel panel) {

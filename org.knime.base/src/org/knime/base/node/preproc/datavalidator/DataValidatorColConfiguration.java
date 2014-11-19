@@ -58,7 +58,6 @@ import java.util.List;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
@@ -285,13 +284,11 @@ final class DataValidatorColConfiguration {
     /**
      * Loads settings from a NodeSettings object, used in {@link org.knime.core.node.NodeModel}.
      *
-     * @param specToValidate spec to validate the settings against
      * @param settings the (sub-) config to load from
      * @return a new {@link DataValidatorColConfiguration} containing the contents of the settings object
      * @throws InvalidSettingsException if any setting is missing
      */
-    static DataValidatorColConfiguration load(final DataTableSpec specToValidate, final NodeSettingsRO settings)
-        throws InvalidSettingsException {
+    static DataValidatorColConfiguration load(final NodeSettingsRO settings) throws InvalidSettingsException {
 
         DataValidatorColConfiguration dataValidatorColConfiguration =
             new DataValidatorColConfiguration(checkSettingNotNull(settings.getStringArray(CFG_COL_NAMES),

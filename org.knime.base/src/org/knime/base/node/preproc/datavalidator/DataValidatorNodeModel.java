@@ -79,7 +79,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 
 /**
@@ -88,13 +87,23 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObject;
  * @author Marcel Hansert, University of Konstanz
  * @since 2.10
  */
-public class DataValidatorNodeModel extends NodeModel {
+class DataValidatorNodeModel extends NodeModel {
 
     private DataValidatorConfiguration m_config;
 
     /** One input, two optional output. */
-    public DataValidatorNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE});
+    DataValidatorNodeModel() {
+        this(1, 2);
+    }
+
+    /**
+     * One input, two optional output.
+     *
+     * @param input the input count
+     * @param output the output count
+     * */
+    DataValidatorNodeModel(final int input, final int output) {
+        super(input, output);
     }
 
     /**
@@ -305,13 +314,13 @@ public class DataValidatorNodeModel extends NodeModel {
 
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        DataValidatorConfiguration dataValidatorConfiguration = new DataValidatorConfiguration();
+        DataValidatorConfiguration dataValidatorConfiguration = createConfig();
         dataValidatorConfiguration.loadConfigurationInModel(settings);
     }
 
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        DataValidatorConfiguration dataValidatorConfiguration = new DataValidatorConfiguration();
+        DataValidatorConfiguration dataValidatorConfiguration = createConfig();
         dataValidatorConfiguration.loadConfigurationInModel(settings);
         m_config = dataValidatorConfiguration;
     }
@@ -331,5 +340,19 @@ public class DataValidatorNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
         CanceledExecutionException {
         // no op
+    }
+
+    /**
+     * @return the config
+     */
+    protected DataValidatorConfiguration getConfig() {
+        return m_config;
+    }
+
+    /**
+     * @return the config
+     */
+    protected DataValidatorConfiguration createConfig() {
+        return new DataValidatorConfiguration();
     }
 }

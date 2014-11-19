@@ -72,7 +72,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * The configuration object for the {@link DataValidatorNodeModel}.
+ * The configuration object for the DataValidatorNodeModel.
  *
  * @author Marcel Hanser
  */
@@ -98,6 +98,24 @@ final class DataValidatorConfiguration {
     private UnknownColumnHandling m_removeUnkownColumns;
 
     private List<DataValidatorColConfiguration> m_individualConfigurations;
+
+    private final boolean m_referenceSpecNeedet;
+
+    /**
+     * Constructor.
+     *
+     * @param referenceSpecNeedet <code>true</code> if a reference spec is expected on load and save
+     */
+    DataValidatorConfiguration(final boolean referenceSpecNeedet) {
+        m_referenceSpecNeedet = referenceSpecNeedet;
+    }
+
+    /**
+     * Default Constructor, reference spec enforced.
+     */
+    DataValidatorConfiguration() {
+        this(true);
+    }
 
     /**
      * @return the referenceTableSpec
@@ -174,8 +192,7 @@ final class DataValidatorConfiguration {
             NodeSettingsRO nodeSettings = settings.getNodeSettings(CFG_INDIVDUALS);
             for (String s : nodeSettings) {
                 try {
-                    m_individualConfigurations.add(DataValidatorColConfiguration.load(m_referenceTableSpec,
-                        nodeSettings.getNodeSettings(s)));
+                    m_individualConfigurations.add(DataValidatorColConfiguration.load(nodeSettings.getNodeSettings(s)));
                 } catch (InvalidSettingsException e) {
                     LOGGER.info("Error while reading reading data validation settings of key: '" + s + "'", e);
                 }
@@ -195,15 +212,15 @@ final class DataValidatorConfiguration {
      * @throws InvalidSettingsException if the settings are invalid
      */
     void loadConfigurationInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
-        m_referenceTableSpec = DataTableSpec.load(settings.getNodeSettings(CFG_SPEC));
-
+        if (m_referenceSpecNeedet) {
+            m_referenceTableSpec = DataTableSpec.load(settings.getNodeSettings(CFG_SPEC));
+        }
         m_individualConfigurations = new ArrayList<>();
 
         if (settings.containsKey(CFG_INDIVDUALS)) {
             NodeSettingsRO nodeSettings = settings.getNodeSettings(CFG_INDIVDUALS);
             for (String s : nodeSettings) {
-                m_individualConfigurations.add(DataValidatorColConfiguration.load(m_referenceTableSpec,
-                    nodeSettings.getNodeSettings(s)));
+                m_individualConfigurations.add(DataValidatorColConfiguration.load(nodeSettings.getNodeSettings(s)));
             }
         }
         m_removeUnkownColumns = getEnum(settings, CFG_REMOVE_UNKOWN_COLUMNS, UnknownColumnHandling.class);
@@ -224,7 +241,9 @@ final class DataValidatorConfiguration {
         }
         addEnum(settings, CFG_REMOVE_UNKOWN_COLUMNS, m_removeUnkownColumns);
         addEnum(settings, CFG_REJECTING_BEHAVIOR, m_failingBehavior);
-        m_referenceTableSpec.save(settings.addNodeSettings(CFG_SPEC));
+        if (m_referenceSpecNeedet) {
+            m_referenceTableSpec.save(settings.addNodeSettings(CFG_SPEC));
+        }
     }
 
     /**
