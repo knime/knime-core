@@ -744,8 +744,11 @@ public class DatabaseConnectionSettings {
     }
 
     /**
+     * Returns the unique database identifier. Never returns <code>null</code>. if the database identifier
+     * is not specified the method return the identifier based on the url.
      * @return the dbIdentifier the unique database identifier usually the second part of the JDBC url
      * @see #getDatabaseIdentifierFromJDBCUrl(String)
+     * @see #setDatabaseIdentifier(String)
      * @since 2.11
      */
     public String getDatabaseIdentifier() {
@@ -756,14 +759,21 @@ public class DatabaseConnectionSettings {
     }
 
     /**
-     * @param databaseIdentifier the unique database identifier if not specified the second part of the JDBC url
+     * @return the value of the database identifier. Might be <code>null</code> id the identifier should be
+     * determined based on the connection url.
+     * @see #getDatabaseIdentifierFromJDBCUrl(String)
+     * @since 2.11
+     */
+    public String getDatabaseIdentifierValue() {
+        return m_dbIdentifier;
+    }
+
+    /**
+     * @param databaseIdentifier the unique database identifier if <code>null</code> the second part of the JDBC url
      * is used (see {@link #getDatabaseIdentifierFromJDBCUrl(String)}.
      * @since 2.11
      */
     public void setDatabaseIdentifier(final String databaseIdentifier) {
-        if (databaseIdentifier == null || databaseIdentifier.isEmpty()) {
-            throw new IllegalArgumentException("databaseIdentifier must not be empty");
-        }
         m_dbIdentifier = databaseIdentifier;
     }
 

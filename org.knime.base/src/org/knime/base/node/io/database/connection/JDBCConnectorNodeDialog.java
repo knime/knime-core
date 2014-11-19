@@ -53,6 +53,7 @@ import java.awt.Insets;
 
 import javax.swing.JPanel;
 
+import org.knime.base.node.io.database.connection.util.DBAdvancedPanel;
 import org.knime.base.node.io.database.connection.util.DBAuthenticationPanel;
 import org.knime.base.node.io.database.connection.util.DBGenericConnectionPanel;
 import org.knime.base.node.io.database.connection.util.DBMiscPanel;
@@ -70,6 +71,7 @@ import org.knime.core.node.port.database.DatabaseConnectionSettings;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 class JDBCConnectorNodeDialog extends NodeDialogPane {
+
     private final DatabaseConnectionSettings m_settings = new DatabaseConnectionSettings();
 
     private final DBGenericConnectionPanel<DatabaseConnectionSettings> m_connectionPanel =
@@ -82,6 +84,11 @@ class JDBCConnectorNodeDialog extends NodeDialogPane {
 
     private final DBMiscPanel<DatabaseConnectionSettings> m_miscPanel = new DBMiscPanel<>(m_settings, true);
 
+    private final DBAdvancedPanel<DatabaseConnectionSettings> m_advancedPanel = new DBAdvancedPanel<>(m_settings);
+
+    /**
+     * Constructor.
+     */
     JDBCConnectorNodeDialog() {
         JPanel p = new JPanel(new GridBagLayout());
 
@@ -101,6 +108,7 @@ class JDBCConnectorNodeDialog extends NodeDialogPane {
         p.add(m_miscPanel, c);
 
         addTab("Connection settings", p);
+        addTab("Advanced", m_advancedPanel);
     }
 
     /**
@@ -119,6 +127,7 @@ class JDBCConnectorNodeDialog extends NodeDialogPane {
         m_authPanel.loadSettings(specs, getCredentialsProvider());
         m_tzPanel.loadSettings(specs);
         m_miscPanel.loadSettings(specs);
+        m_advancedPanel.loadSettings(specs);
     }
 
     /**
@@ -130,6 +139,7 @@ class JDBCConnectorNodeDialog extends NodeDialogPane {
         m_authPanel.saveSettings();
         m_tzPanel.saveSettings();
         m_miscPanel.saveSettings(getCredentialsProvider());
+        m_advancedPanel.saveSettings();
 
         m_settings.saveConnection(settings);
     }

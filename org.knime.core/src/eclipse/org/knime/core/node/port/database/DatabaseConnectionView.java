@@ -82,7 +82,8 @@ final class DatabaseConnectionView extends JPanel {
         buf.append("<tt>" + sett.getString("driver", "") + "</tt>");
         buf.append("<br/><br/>");
         buf.append("<strong>Database URL:</strong><br/>");
-        buf.append("<tt>" + sett.getString("database", "") + "</tt>");
+        final String databaseURL = sett.getString("database", "");
+        buf.append("<tt>" + databaseURL + "</tt>");
         buf.append("<br/><br/>");
         boolean useCredential = sett.containsKey("credential_name");
         if (useCredential) {
@@ -93,12 +94,13 @@ final class DatabaseConnectionView extends JPanel {
             buf.append("<strong>User Name:</strong>&nbsp;&nbsp;");
             buf.append("<tt>" + sett.getString("user", "") + "</tt>");
         }
-        final String dbIdentifier = sett.getString("databaseIdentifier", null);
-        if (dbIdentifier != null) {
-            buf.append("<br/><br/>");
-            buf.append("<strong>Database Identifier:</strong>&nbsp;&nbsp;");
-            buf.append("<tt>" + dbIdentifier + "</tt>");
+        String dbIdentifier = sett.getString("databaseIdentifier", null);
+        if (dbIdentifier == null) {
+            dbIdentifier = DatabaseConnectionSettings.getDatabaseIdentifierFromJDBCUrl(databaseURL);
         }
+        buf.append("<br/><br/>");
+        buf.append("<strong>Database Type:</strong>&nbsp;&nbsp;");
+        buf.append("<tt>" + dbIdentifier + "</tt>");
         final String sql = sett.getString("statement", null);
         if (sql != null) {
             buf.append("<br/><br/>");
