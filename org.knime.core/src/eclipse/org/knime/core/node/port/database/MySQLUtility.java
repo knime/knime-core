@@ -53,6 +53,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.database.aggregation.function.AvgDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.AvgDistinctDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.BitAndDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.BitOrDBAggregationFunction;
@@ -63,6 +64,7 @@ import org.knime.core.node.port.database.aggregation.function.MaxDBAggregationFu
 import org.knime.core.node.port.database.aggregation.function.MinDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.StdDevPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.StdDevSampDBAggregationFunction;
+import org.knime.core.node.port.database.aggregation.function.SumDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.SumDistinctDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarPopDBAggregationFunction;
 import org.knime.core.node.port.database.aggregation.function.VarSampDBAggregationFunction;
@@ -155,6 +157,7 @@ public class MySQLUtility extends DatabaseUtility {
      */
     public MySQLUtility() {
         super(DATABASE_IDENTIFIER, MANIPULATOR, new AvgDistinctDBAggregationFunction.Factory(),
+            new AvgDBAggregationFunction.Factory(), new SumDBAggregationFunction.Factory(),
             new BitAndDBAggregationFunction.Factory(), new BitOrDBAggregationFunction.Factory(),
             new BitXOrDBAggregationFunction.Factory(), new CountDistinctDBAggregationFunction.Factory(),
             new GroupConcatDBAggregationFunction.Factory(), new MaxDBAggregationFunction.Factory(),
