@@ -81,6 +81,7 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
     ColumnAggregationTableModel, NamedAggregationOperator, AggregationMethod> {
 
     private DataType m_type = null;
+    private NamedAggregationMethodNameTableCellEditor m_columnNameCellEditor;
 
     /**
      * @return the number of compatible methods
@@ -158,8 +159,8 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
     protected void adaptTableColumnModel(final TableColumnModel columnModel) {
         columnModel.getColumn(0).setCellRenderer(
                 new NamedAggregationMethodNameTableCellRenderer());
-        columnModel.getColumn(0).setCellEditor(
-                new NamedAggregationMethodNameTableCellEditor());
+        m_columnNameCellEditor = new NamedAggregationMethodNameTableCellEditor();
+        columnModel.getColumn(0).setCellEditor(m_columnNameCellEditor);
         columnModel.getColumn(0).setPreferredWidth(120);
         columnModel.getColumn(1).setPreferredWidth(45);
     }
@@ -271,5 +272,15 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
     @Deprecated
     protected NamedAggregationOperator getOperator(final AggregationMethod selectedListElement) {
         return createRow(selectedListElement);
+    }
+
+    /**
+     * Forces the cell editor to stop the editing mode.
+     * @since 2.11
+     */
+    public void stopCellEditing() {
+        if (m_columnNameCellEditor != null) {
+            m_columnNameCellEditor.stopCellEditing();
+        }
     }
 }

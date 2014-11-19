@@ -301,6 +301,13 @@ public class ColumnAggregatorNodeDialog  extends NodeDialogPane {
         for (final DialogComponent component : m_components) {
             component.saveSettingsTo(settings);
         }
+        // Commit editing - This is a workaround for a bug in the Dialog
+        // since the table does not loose focus when OK or Apply is pressed.
+        try {
+            m_aggrMethodsPanel.stopCellEditing();
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
         m_aggrMethodsPanel.saveSettingsTo(settings.addNodeSettings(
                 ColumnAggregatorNodeModel.CFG_AGGREGATION_METHODS));
 
