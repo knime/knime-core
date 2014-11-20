@@ -51,7 +51,6 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.Set;
 
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -67,8 +66,9 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.ColumnFilterPanel;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
 /**
  * Dialog to Column-to-Grid node. Shows spinner for grid count column and
@@ -79,7 +79,7 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 final class ColumnToGridNodeDialogPane extends NodeDialogPane {
 
     private final JSpinner m_gridColSpinner;
-    private final ColumnFilterPanel m_colFilterPanel;
+    private final DataColumnSpecFilterPanel m_colFilterPanel;
     private final JCheckBox m_enableGroupingChecker;
     private final ColumnSelectionComboxBox m_groupColumnCombo;
 
@@ -88,7 +88,7 @@ final class ColumnToGridNodeDialogPane extends NodeDialogPane {
     public ColumnToGridNodeDialogPane() {
         m_gridColSpinner = new JSpinner(new SpinnerNumberModel(
                 4, 1, Integer.MAX_VALUE, 1));
-        m_colFilterPanel = new ColumnFilterPanel(false);
+        m_colFilterPanel = new DataColumnSpecFilterPanel();
         m_groupColumnCombo = new ColumnSelectionComboxBox(
                 (Border)null, NominalValue.class);
         m_enableGroupingChecker = new JCheckBox("Enable Grouping");
@@ -119,11 +119,13 @@ final class ColumnToGridNodeDialogPane extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
+        DataColumnSpecFilterConfiguration filterConf = ColumnToGridConfiguration.createColumnFilterConfiguration();
+        m_colFilterPanel.saveConfiguration(filterConf);
+        filterConf.saveConfiguration(settings);
+
         ColumnToGridConfiguration config = new ColumnToGridConfiguration();
+        config.setColumnFilterConfiguration(filterConf);
         config.setColCount((Integer)m_gridColSpinner.getValue());
-        Set<String> inclSet = m_colFilterPanel.getIncludedColumnSet();
-        String[] includes = inclSet.toArray(new String[inclSet.size()]);
-        config.setIncludes(includes);
         if (m_enableGroupingChecker.isSelected()) {
             config.setGroupColumn(m_groupColumnCombo.getSelectedColumn());
         }
@@ -134,9 +136,9 @@ final class ColumnToGridNodeDialogPane extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        ColumnToGridConfiguration config = new ColumnToGridConfiguration();
+        ColumnToGridConfiguration config = new ColumnToGridConfiguration(specs[0]);
         config.loadSettings(settings, specs[0]);
-        m_colFilterPanel.update(specs[0], false, config.getIncludes());
+        m_colFilterPanel.loadConfiguration(config.getColumnFilterConfiguration(), specs[0]);
         m_gridColSpinner.setValue(config.getColCount());
         String groupCol = config.getGroupColumn();
         if (m_enableGroupingChecker.isSelected() != (groupCol != null)) {
