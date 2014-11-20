@@ -185,7 +185,11 @@ public class TestConfigNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
+        final double max = m_janitors.size();
+        int i = 0;
         for (TestrunJanitor j : m_janitors) {
+            exec.checkCanceled();
+            exec.setProgress((i++ / max), "Executing janitor " + j.getName());
             j.before();
             pushFlowVariables(j.getFlowVariables());
         }

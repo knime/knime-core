@@ -66,7 +66,7 @@ import org.knime.core.node.workflow.FlowVariable;
 /**
  * Interface for a class that executes certain operation before and after all testflows are executed.
  *
- *
+ * <b>This class is not part of the API and my change without notice!</b>
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */

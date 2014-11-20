@@ -63,44 +63,62 @@ import org.knime.core.node.port.database.DatabaseDriverLoader;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
+ * Abstract base class for janitors that create test databases.
+ *
+ * <b>This class is not part of the API and my change without notice!</b>
  *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  */
 public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
     private static final SecureRandom RAND = new SecureRandom();
 
-    protected final String m_driverName;
+    private final String m_driverName;
 
-    protected final String m_url;
+    private final String m_initialDatabase;
 
-    protected final String m_host;
+    private final String m_host;
 
-    protected final String m_username;
+    private final int m_port;
 
-    protected final String m_password;
+    private final String m_username;
 
-    protected final String m_variablePrefix;
+    private final String m_password;
 
     private String m_dbName;
 
     private boolean m_databaseCreated;
 
     /**
-     * @param driverName
-     * @param url
-     * @param host
-     * @param username
-     * @param password
+     * Creates a new database janitor.
+     *
+     * @param driverName the JDBC driver's class name
+     * @param initialDatabase the name of the database to which the initial connection is made
+     * @param host the database host
+     * @param port the database port
+     * @param username the user's name
+     * @param password the password
      */
-    protected AbstractDatabaseJanitor(final String driverName, final String url, final String host,
-        final String username, final String password) {
+    protected AbstractDatabaseJanitor(final String driverName, final String initialDatabase, final String host,
+        final int port, final String username, final String password) {
         m_driverName = driverName;
-        m_url = url;
+        m_initialDatabase = initialDatabase;
         m_host = host;
+        m_port = port;
         m_username = username;
         m_password = password;
-        m_variablePrefix = "test.db." + url.split(":")[1] + ".";
         m_dbName = "knime_testing_" + Long.toHexString(RAND.nextLong()) + Long.toHexString(RAND.nextLong());
+    }
+
+    /**
+     * Returns a JDBC URL for the given database.
+     *
+     * @param dbName the database's name
+     * @return a JDBC URL
+     */
+    protected abstract String getJDBCUrl(String dbName);
+
+    private String getVariablePrefix() {
+        return getJDBCUrl("db").split(":")[1] + ".";
     }
 
     /**
@@ -108,13 +126,16 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
      */
     @Override
     public List<FlowVariable> getFlowVariables() {
+        String variablePrefix = getVariablePrefix();
+
         List<FlowVariable> flowVariables = new ArrayList<>();
-        flowVariables.add(new FlowVariable(m_variablePrefix + "db-name", m_dbName));
-        flowVariables.add(new FlowVariable(m_variablePrefix + "driver-name", m_driverName));
-        flowVariables.add(new FlowVariable(m_variablePrefix + "host", m_host));
-        flowVariables.add(new FlowVariable(m_variablePrefix + "username", m_username));
-        flowVariables.add(new FlowVariable(m_variablePrefix + "password", m_password));
-        flowVariables.add(new FlowVariable(m_variablePrefix + "jdbc-url", m_url));
+        flowVariables.add(new FlowVariable(variablePrefix + "db-name", m_dbName));
+        flowVariables.add(new FlowVariable(variablePrefix + "driver-name", m_driverName));
+        flowVariables.add(new FlowVariable(variablePrefix + "host", m_host));
+        flowVariables.add(new FlowVariable(variablePrefix + "port", m_port));
+        flowVariables.add(new FlowVariable(variablePrefix + "username", m_username));
+        flowVariables.add(new FlowVariable(variablePrefix + "password", m_password));
+        flowVariables.add(new FlowVariable(variablePrefix + "jdbc-url", getJDBCUrl(m_dbName)));
         return flowVariables;
     }
 
@@ -125,7 +146,7 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
     public void before() throws Exception {
         DatabaseDriverLoader.registerDriver(m_driverName);
 
-        try (Connection conn = DriverManager.getConnection(m_url, m_username, m_password)) {
+        try (Connection conn = DriverManager.getConnection(getJDBCUrl(m_initialDatabase), m_username, m_password)) {
             Statement stmt = conn.createStatement();
             String sql = "CREATE DATABASE " + m_dbName;
             stmt.execute(sql);
@@ -148,12 +169,12 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
             mapField.setAccessible(true);
             Map<?, Connection> connectionMap = (Map<?, Connection>)mapField.get(null);
             for (Connection conn : connectionMap.values()) {
-                if (!conn.isClosed() && conn.getMetaData().getURL().equals(m_url)) {
+                if (!conn.isClosed() && conn.getMetaData().getURL().equals(getJDBCUrl(m_dbName))) {
                     conn.close();
                 }
             }
 
-            try (Connection conn = DriverManager.getConnection(m_url, m_username, m_password)) {
+            try (Connection conn = DriverManager.getConnection(getJDBCUrl(m_initialDatabase), m_username, m_password)) {
                 Statement stmt = conn.createStatement();
                 String sql = "DROP DATABASE " + m_dbName;
                 stmt.execute(sql);
@@ -169,7 +190,7 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
      */
     @Override
     public String getDescription() {
-        return "Sets up a test database at " + m_host
-            + " and exports several flow variables prefixed with '" + m_variablePrefix +  "'.";
+        return "Sets up a test database at " + m_host + " and exports several flow variables prefixed with '"
+            + getVariablePrefix() + "'.";
     }
 }
