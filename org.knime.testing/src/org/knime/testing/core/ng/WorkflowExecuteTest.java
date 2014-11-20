@@ -62,6 +62,7 @@ import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NativeNodeContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
@@ -69,6 +70,7 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.testing.core.TestrunConfiguration;
+import org.knime.testing.node.config.TestConfigNodeModel;
 
 /**
  * Executed a workflows and checks if all nodes are executed (except nodes that are supposed to fail). The workflow is
@@ -96,6 +98,8 @@ class WorkflowExecuteTest extends WorkflowTest {
 
         TimerTask watchdog = null;
         try {
+            resetTestflowConfigNode();
+
             final TestflowConfiguration flowConfiguration = m_context.getTestflowConfiguration();
 
             watchdog = new TimerTask() {
@@ -157,6 +161,17 @@ class WorkflowExecuteTest extends WorkflowTest {
             }
         }
 
+    }
+
+    private void resetTestflowConfigNode() {
+        WorkflowManager wfm = m_context.getWorkflowManager();
+
+        for (NodeContainer cont : wfm.getNodeContainers()) {
+            if ((cont instanceof NativeNodeContainer)
+                    && (((NativeNodeContainer)cont).getNodeModel() instanceof TestConfigNodeModel)) {
+                wfm.resetAndConfigureNode(cont.getID());
+            }
+        }
     }
 
     private static String createStacktrace() {

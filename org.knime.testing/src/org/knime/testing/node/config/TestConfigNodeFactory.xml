@@ -14,7 +14,9 @@
             <br />
             The execution of the node does nothing, only the settings entered
             in the dialog will be read later-on by the
-            testing framework.
+            testing framework. When the workflow is execute as a test workflow, this node is always reset prior to
+            execution. By using flow variable connections from this node you can ensure that certain nodes are always
+            reset, even if they are (accidently) saved in executed state.
         </intro>
 
         <tab name="Workflow settings">
