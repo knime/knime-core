@@ -57,6 +57,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.collection.ListCell;
@@ -124,15 +125,15 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
+        final DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
 
         String column = m_columnModel.getStringValue();
         if (column == null) {
             throw new InvalidSettingsException("No column selected.");
         }
-        if (!tableSpec.containsName(column)) {
-            throw new InvalidSettingsException("Column '" + column
-                    + "' not found in input data.");
+        final int colIdx = tableSpec.findColumnIndex(column);
+        if (colIdx < 0) {
+            throw new InvalidSettingsException("Column '" + column + "' not found in input data.");
         }
 
         if ((inSpecs.length > 1) || (inSpecs[1] instanceof DatabaseConnectionPortObjectSpec)) {
@@ -146,7 +147,13 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         final String oQuery = getQuery();
         PortObjectSpec[] spec = null;
         try {
-            String newQuery = oQuery.replace(IN_PLACE_HOLDER, "");
+            final String newQuery;
+            if (tableSpec.getColumnSpec(colIdx).getType().isCompatible(DoubleValue.class)) {
+                //this is a numeric column use 0 instead of empty string
+                newQuery = oQuery.replace(IN_PLACE_HOLDER, "0");
+            } else {
+                newQuery = oQuery.replace(IN_PLACE_HOLDER, "");
+            }
             setQuery(newQuery);
             spec = super.configure(inSpecs);
         } finally {
@@ -165,16 +172,19 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        BufferedDataTable inputTable = (BufferedDataTable)inData[0];
+        final BufferedDataTable inputTable = (BufferedDataTable)inData[0];
         final int rowCount = inputTable.getRowCount();
 
-        String column = m_columnModel.getStringValue();
-        DataTableSpec spec = inputTable.getDataTableSpec();
-        int colIdx = spec.findColumnIndex(column);
-        HashSet<DataCell> values = new HashSet<DataCell>();
+        final String column = m_columnModel.getStringValue();
+        final DataTableSpec spec = inputTable.getDataTableSpec();
+        final int colIdx = spec.findColumnIndex(column);
+        if (colIdx < 0) {
+            throw new InvalidSettingsException("Column " + column + " not found in input table.");
+        }
+        final Set<DataCell> values = new HashSet<>();
         BufferedDataContainer buf = null;
         final String oQuery = getQuery();
-        final Collection<DataCell> curSet = new LinkedHashSet<DataCell>();
+        final Collection<DataCell> curSet = new LinkedHashSet<>();
         try {
             final int noValues = m_noValues.getIntValue();
             MutableInteger rowCnt = new MutableInteger(0);
@@ -267,7 +277,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         for (final DataRow resRow : table) {
             for (int i = 0; i < values.length; i++) {
                 if (values[i] == null) {
-                    values[i] = new LinkedHashSet<DataCell>(1);
+                    values[i] = new LinkedHashSet<>(1);
                 }
                 values[i].add(resRow.getCell(i));
             }
