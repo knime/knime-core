@@ -1686,7 +1686,7 @@
       <node
             category-path="/manipulation/column/column-convert+replace"
             expert-flag="false"
-            factory-class="org.knime.base.node.preproc.coltypechanger.ColumnTypeChangerNodeFactory"
+            factory-class="org.knime.base.node.preproc.colautotypecast.ColumnAutoTypeCasterNodeFactory"
             id="org.knime.base.node.preproc.coltypechanger.ColumnTypeChangerNodeFactory">
       </node>
            <node
