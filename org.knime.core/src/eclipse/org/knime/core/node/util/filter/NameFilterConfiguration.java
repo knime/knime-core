@@ -398,11 +398,11 @@ public class NameFilterConfiguration implements Cloneable {
         } else {
             StringBuilder includes = new StringBuilder();
             for (String include : m_includeList) {
-                includes.append(", " + include);
+                includes.append(", ").append(include);
             }
             StringBuilder excludes = new StringBuilder();
             for (String exclude : m_excludeList) {
-                excludes.append(", " + exclude);
+                excludes.append(", ").append(exclude);
             }
             return "Includes: " + includes.toString().replaceFirst(", ", "") + "\nExcludes: "
                 + excludes.toString().replaceFirst(", ", "");
@@ -422,7 +422,7 @@ public class NameFilterConfiguration implements Cloneable {
     /**
      * Sets default names into include list and sets enforce option.
      * This method is used in auto-configure of a node when no settings are available.
-     * 
+     *
      * Use this method only if you are absolutely sure what you are doing. For example if you are replacing an old
      * column filter panel.
      *
@@ -430,6 +430,7 @@ public class NameFilterConfiguration implements Cloneable {
      * @param includeByDefault If <code>true</code>, all elements will be put into the include list and the
      *            "enforce exclusion" will be set. Otherwise all elements are put into the exclude list and the
      *            "enforce inclusion" is set. If in doubt, pass <code>true</code> here.
+     * @since 2.11
      */
     public void loadDefaults(final String[] names, final boolean includeByDefault) {
         String[] copy = Arrays.copyOf(names, names.length);
@@ -623,8 +624,9 @@ public class NameFilterConfiguration implements Cloneable {
 
     /**
      * @return selected option to enabled inclusion or exclusion
+     * @since 2.11
      */
-    protected EnforceOption getEnforceOption() {
+    public EnforceOption getEnforceOption() {
         return m_enforceOption;
     }
 
@@ -632,6 +634,7 @@ public class NameFilterConfiguration implements Cloneable {
      * Set a new enforce option.
      *
      * @param enforceOption the new in-/exclusion option
+     * @since 2.11
      */
     public void setEnforceOption(final EnforceOption enforceOption) {
         m_enforceOption = enforceOption;
@@ -639,6 +642,7 @@ public class NameFilterConfiguration implements Cloneable {
 
     /**
      * @return true, if inclusion is on
+     * @since 2.11
      */
     public boolean isEnforceInclusion() {
         return m_enforceOption == EnforceOption.EnforceInclusion;
@@ -646,6 +650,7 @@ public class NameFilterConfiguration implements Cloneable {
 
     /**
      * @return true, if exclusion is on
+     * @since 2.11
      */
     public boolean isEnforceExclusion() {
         return m_enforceOption == EnforceOption.EnforceExclusion;
