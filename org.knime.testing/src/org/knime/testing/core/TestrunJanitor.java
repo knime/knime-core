@@ -48,29 +48,99 @@
  */
 package org.knime.testing.core;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.port.database.StatementManipulator;
+import org.knime.core.node.workflow.FlowVariable;
+
 
 /**
  * Interface for a class that executes certain operation before and after all testflows are executed.
  *
+ *
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.11
  */
-public interface TestrunJanitor {
+public abstract class TestrunJanitor {
     /**
-     * This method is executed before the first testflow is executed. The implementation may prepare an expected
-     * environment and also modify the testrun configuration.
+     * Returns a list of workflow variables that should be injected into the workflow. The number and values may be
+     * changed by {@link #before()} and {@link #after()}.
      *
-     * @param config the testrun configuration
-     * @throws Exception in an exception occurs
+     * @return a (possibly empty) list with flow variables
      */
-    public void before(TestrunConfiguration config) throws Exception;
+    public abstract List<FlowVariable> getFlowVariables();
 
     /**
-     * This method is executed after the last testflow has been executed. The implementation should roll back any
-     * changes that it has made in {@link #before(TestrunConfiguration)}.
+     * This method is executed by the Testflow configuration node when it is executed. Implementations can e.g.
+     * set up databases.
      *
-     * @param config the testrun configuration
      * @throws Exception in an exception occurs
      */
-    public void after(TestrunConfiguration config) throws Exception;
+    public abstract void before() throws Exception;
+
+    /**
+     * This method is executed when the Testflow configuration node is disposed, i.e. either deleted or when the
+     * workflow is closed. Implementations can e.g. delete databases.
+     *
+     * @throws Exception in an exception occurs
+     */
+    public abstract void after() throws Exception;
+
+    /**
+     * Returns a descriptive name for this janitor.
+     *
+     * @return a name, never <code>null</code>
+     */
+    public abstract String getName();
+
+    /**
+     * Returns a unique ID for this janitor. The ID should never change after a janitor has been released. Users of
+     * janitors should use this ID to reference them.
+     *
+     * @return a unique ID, never <code>null</code>
+     */
+    public abstract String getID();
+
+    /**
+     * Returns a short description about what this janitor does.
+     *
+     * @return a description, never null
+     */
+    public abstract String getDescription();
+
+    /**
+     * Returns a list with all registered testrun janitors. Each call will create new instances.
+     *
+     * @return a (possibly empty) collection with testrun janitors
+     */
+    public static Collection<TestrunJanitor> getJanitors() {
+        List<TestrunJanitor> janitors = new ArrayList<>();
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        IExtensionPoint point = registry.getExtensionPoint("org.knime.testing.TestrunJanitor");
+
+        for (IExtension ext : point.getExtensions()) {
+            IConfigurationElement[] elements = ext.getConfigurationElements();
+            for (IConfigurationElement janitorElement : elements) {
+                try {
+                    janitors.add((TestrunJanitor)janitorElement.createExecutableExtension("class"));
+                } catch (CoreException ex) {
+                    NodeLogger.getLogger(StatementManipulator.class).error(
+                        "Could not create testrun janitor " + janitorElement.getAttribute("class")
+                            + " from plug-in " + janitorElement.getNamespaceIdentifier() + ": " + ex.getMessage(),
+                        ex);
+                }
+            }
+        }
+
+        return janitors;
+    }
 }

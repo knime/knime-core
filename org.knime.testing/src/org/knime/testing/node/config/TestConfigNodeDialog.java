@@ -58,8 +58,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -92,6 +94,7 @@ import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.SubNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.testing.core.TestrunJanitor;
 
 /**
  * This is the dialog for the testflow configuration node.
@@ -103,15 +106,15 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
     private final JTextField m_owner = new JTextField(15);
 
-    private final DefaultListModel m_allNodesModel = new DefaultListModel();
+    private final DefaultListModel<NodeContainer> m_allNodesModel = new DefaultListModel<>();
 
-    private final DefaultListModel m_logErrorsModel = new DefaultListModel();
+    private final DefaultListModel<String> m_logErrorsModel = new DefaultListModel<>();
 
-    private final DefaultListModel m_logWarningsModel = new DefaultListModel();
+    private final DefaultListModel<String> m_logWarningsModel = new DefaultListModel<>();
 
-    private final DefaultListModel m_logInfosModel = new DefaultListModel();
+    private final DefaultListModel<String> m_logInfosModel = new DefaultListModel<>();
 
-    private final JList m_allNodes = new JList(m_allNodesModel);
+    private final JList<NodeContainer> m_allNodes = new JList<>(m_allNodesModel);
 
     private final JCheckBox m_mustFail = new JCheckBox();
 
@@ -125,6 +128,8 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
     private int m_lastSelectedIndex = -1;
 
+    private final Map<String, JCheckBox> m_usedJanitors = new HashMap<>();
+
     /**
      * Creates a new dialog.
      */
@@ -135,7 +140,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
              * {@inheritDoc}
              */
             @Override
-            public Component getListCellRendererComponent(final JList list,
+            public Component getListCellRendererComponent(final JList<?> list,
                     final Object value, final int index,
                     final boolean isSelected, final boolean cellHasFocus) {
                 if (value != null) {
@@ -152,6 +157,9 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
         addTab("Workflow settings", createWorkflowSettingsPanel());
         addTab("Node settings", createNodeSettingsPanel());
+        if (!TestrunJanitor.getJanitors().isEmpty()) {
+            addTab("Testrun janitors", createJanitorsTab());
+        }
     }
 
     private JPanel createWorkflowSettingsPanel() {
@@ -204,7 +212,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         return p;
     }
 
-    private JPanel createLogLevelTab(final DefaultListModel listModel) {
+    private JPanel createLogLevelTab(final DefaultListModel<String> listModel) {
         JPanel p = new JPanel(new GridBagLayout());
 
         GridBagConstraints c = new GridBagConstraints();
@@ -233,7 +241,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         c.gridwidth = 2;
         c.fill = GridBagConstraints.BOTH;
         c.weighty = 1;
-        final JList list = new JList(listModel);
+        final JList<String> list = new JList<>(listModel);
         p.add(new JScrollPane(list), c);
 
         add.addActionListener(new ActionListener() {
@@ -343,8 +351,31 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         return p;
     }
 
+
+    private JPanel createJanitorsTab() {
+        JPanel p = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.gridx = 0;
+        c.gridy = 0;
+        c.fill = GridBagConstraints.NONE;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(0, 2, 0, 2);
+
+        for (TestrunJanitor j : TestrunJanitor.getJanitors()) {
+            JCheckBox cb = new JCheckBox(j.getName());
+            cb.setToolTipText(j.getDescription());
+            p.add(cb, c);
+            c.gridy++;
+
+            m_usedJanitors.put(j.getID(), cb);
+        }
+
+        return p;
+    }
+
     private void storeNodeConfiguration(final int index) {
-        NodeContainer cont = (NodeContainer)m_allNodesModel.get(index);
+        NodeContainer cont = m_allNodesModel.get(index);
         String nodeID =
                 TestConfigSettings.getNodeIDWithoutRootPrefix(getNodeContext().getWorkflowManager(), cont);
 
@@ -370,7 +401,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
     }
 
     private void updateNodeConfigurationFields(final int index) {
-        NodeContainer cont = (NodeContainer)m_allNodesModel.get(index);
+        NodeContainer cont = m_allNodesModel.get(index);
         String nodeID =
                 TestConfigSettings.getNodeIDWithoutRootPrefix(getNodeContext().getWorkflowManager(), cont);
 
@@ -413,21 +444,29 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
         List<String> temp = new ArrayList<String>();
         for (int i = 0; i < m_logErrorsModel.getSize(); i++) {
-            temp.add((String)m_logErrorsModel.get(i));
+            temp.add(m_logErrorsModel.get(i));
         }
         m_settings.requiredLogErrors(temp);
 
         temp.clear();
         for (int i = 0; i < m_logWarningsModel.getSize(); i++) {
-            temp.add((String)m_logWarningsModel.get(i));
+            temp.add(m_logWarningsModel.get(i));
         }
         m_settings.requiredLogWarnings(temp);
 
         temp.clear();
         for (int i = 0; i < m_logInfosModel.getSize(); i++) {
-            temp.add((String)m_logInfosModel.get(i));
+            temp.add(m_logInfosModel.get(i));
         }
         m_settings.requiredLogInfos(temp);
+
+        List<String> janitorIds = new ArrayList<>(m_usedJanitors.size());
+        for (Map.Entry<String, JCheckBox> e : m_usedJanitors.entrySet()) {
+            if (e.getValue().isSelected()) {
+                janitorIds.add(e.getKey());
+            }
+        }
+        m_settings.usedJanitors(janitorIds);
 
         m_settings.saveSettings(settings);
     }
@@ -459,6 +498,11 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         }
 
         fillNodeList();
+
+        List<String> janitorIds = m_settings.usedJanitors();
+        for (Map.Entry<String, JCheckBox> e : m_usedJanitors.entrySet()) {
+            e.getValue().setSelected(janitorIds.contains(e.getKey()));
+        }
     }
 
 

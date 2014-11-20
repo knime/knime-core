@@ -60,28 +60,18 @@ import java.util.regex.Pattern;
 
 import javax.xml.transform.TransformerException;
 
-import junit.framework.TestCase;
-
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.workflow.BatchExecutor;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.FileUtil;
 import org.knime.testing.core.TestrunConfiguration;
-import org.knime.testing.core.TestrunJanitor;
 import org.knime.workbench.core.util.ImageRepository;
 import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.repository.RepositoryManager;
@@ -245,16 +235,6 @@ public class TestflowRunnerApplication implements IApplication {
         final PrintStream syserr = System.err; // we save and use the copy because some test may re-assign it
         resultWriter.startSuites();
 
-        Collection<TestrunJanitor> janitors = getJanitors();
-        for (TestrunJanitor j : janitors) {
-            try {
-                j.before(m_runConfiguration);
-            } catch (Exception ex) {
-                resultWriter.addError(new TestCase(j.getClass().getName() + ".before") {}, ex);
-            }
-        }
-
-
         for (WorkflowTestSuite testFlow : allTestFlows) {
             if (m_stopped) {
                 syserr.println("Tests aborted");
@@ -286,14 +266,6 @@ public class TestflowRunnerApplication implements IApplication {
             result.addListener(resultWriter);
             m_untestedNodesTest.run(result);
             resultWriter.addResult(result);
-        }
-
-        for (TestrunJanitor j : janitors) {
-            try {
-                j.after(m_runConfiguration);
-            } catch (Exception ex) {
-                resultWriter.addError(new TestCase(j.getClass().getName() + ".after") {}, ex);
-            }
         }
 
         resultWriter.endSuites();
@@ -333,8 +305,8 @@ public class TestflowRunnerApplication implements IApplication {
             if (stringArgs[i] == null) {
                 i++;
             } else if (stringArgs[i].equals("-pattern")) {
-                System.err.println("-pattern is now depreacted try using -include instead which matches against the " +
-                		"path from the workflow root of each workflow");
+                System.err.println("-pattern is now depreacted try using -include instead which matches against the "
+                    + "path from the workflow root of each workflow");
                 if ((m_workflowNamePattern != null) || (m_workflowPathPattern != null)) {
                     System.err.println("Multiple -pattern/-include arguments not allowed");
                     return false;
@@ -555,25 +527,5 @@ public class TestflowRunnerApplication implements IApplication {
                             "Workflow download from server not available, it seems no server client is installed", err);
             throw new CoreException(status);
         }
-    }
-
-    private Collection<TestrunJanitor> getJanitors() {
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-        IExtensionPoint point = registry.getExtensionPoint("org.knime.testing.TestrunJanitor");
-
-        Collection<TestrunJanitor> janitors = new ArrayList<>();
-        for (IExtension ext : point.getExtensions()) {
-            IConfigurationElement[] elements = ext.getConfigurationElements();
-            for (IConfigurationElement janitorElement : elements) {
-                try {
-                    janitors.add((TestrunJanitor)janitorElement.createExecutableExtension("class"));
-                } catch (CoreException ex) {
-                    NodeLogger.getLogger(StatementManipulator.class).error(
-                        "Could not create testrun janitor " + janitorElement.getAttribute("class") + " from plug-in "
-                            + janitorElement.getNamespaceIdentifier() + ": " + ex.getMessage(), ex);
-                }
-            }
-        }
-        return janitors;
     }
 }

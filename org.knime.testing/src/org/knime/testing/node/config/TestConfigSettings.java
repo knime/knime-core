@@ -92,6 +92,8 @@ public class TestConfigSettings {
 
     private static final String[] EMPTY = new String[0];
 
+    private List<String> m_usedJanitors = new ArrayList<>();
+
     /**
      * Returns the email address of the workflow owner. Multiple addresses are
      * separated by comma.
@@ -290,6 +292,27 @@ public class TestConfigSettings {
     }
 
     /**
+     * Sets the janitors that are used by this workflow. The passed collection has to contain their IDs.
+     *
+     * @param janitors a collection with janitor IDs
+     */
+    public void usedJanitors(final Collection<String> janitors) {
+        m_usedJanitors.clear();
+        m_usedJanitors.addAll(janitors);
+    }
+
+
+    /**
+     * Returns the janitors that are used by this workflow. The returned list contains their IDs.
+     *
+     * @return a list with janitor IDs
+     */
+    public List<String> usedJanitors() {
+        return Collections.unmodifiableList(m_usedJanitors);
+    }
+
+
+    /**
      * Loads the settings from the given settings object.
      *
      * @param settings a node settings object
@@ -350,6 +373,13 @@ public class TestConfigSettings {
 
         // since 2.10
         m_maxHiliteRows = settings.getInt("maxHilitedRows", 2500);
+
+        // since 2.11
+        String[] janitors = settings.getStringArray("usedJanitors", new String[0]);
+        m_usedJanitors.clear();
+        for (String j : janitors) {
+            m_usedJanitors.add(j);
+        }
     }
 
     /**
@@ -422,6 +452,13 @@ public class TestConfigSettings {
 
         m_timeout = settings.getInt("timeout", TestrunConfiguration.DEFAULT_TIMEOUT);
         m_maxHiliteRows = settings.getInt("maxHilitedRows", 2500);
+
+        String[] janitors = settings.getStringArray("usedJanitors", new String[0]);
+        m_usedJanitors.clear();
+        for (String j : janitors) {
+            m_usedJanitors.add(j);
+        }
+
     }
 
     /**
@@ -459,6 +496,7 @@ public class TestConfigSettings {
 
         settings.addInt("timeout", m_timeout);
         settings.addInt("maxHilitedRows", m_maxHiliteRows);
+        settings.addStringArray("usedJanitors", m_usedJanitors.toArray(new String[m_usedJanitors.size()]));
     }
 
     /**

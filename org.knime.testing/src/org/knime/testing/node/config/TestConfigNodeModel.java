@@ -49,6 +49,11 @@ package org.knime.testing.node.config;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -59,6 +64,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.FlowVariable;
+import org.knime.testing.core.TestrunJanitor;
 
 /**
  * This is the node model for the testflow configuration node. The model
@@ -69,6 +76,8 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class TestConfigNodeModel extends NodeModel {
     private final TestConfigSettings m_settings = new TestConfigSettings();
+
+    private final List<TestrunJanitor> m_janitors = new ArrayList<>();
 
     /**
      * Creates a new node model.
@@ -132,7 +141,41 @@ public class TestConfigNodeModel extends NodeModel {
                 || (m_settings.owner().trim().length() < 1)) {
             throw new InvalidSettingsException("No workflow owner set");
         }
+
+        Map<String, TestrunJanitor> janitors = new HashMap<>();
+        for (TestrunJanitor j : TestrunJanitor.getJanitors()) {
+            janitors.put(j.getID(), j);
+        }
+
+        for (String jid : m_settings.usedJanitors()) {
+            TestrunJanitor j = janitors.get(jid);
+            if (j != null) {
+                m_janitors.add(j);
+            } else {
+                throw new InvalidSettingsException("Configured testrun janitor '" + jid + "' not found");
+            }
+        }
+
+        for (TestrunJanitor j : m_janitors) {
+            pushFlowVariables(j.getFlowVariables());
+        }
+
         return new DataTableSpec[0];
+    }
+
+    private void pushFlowVariables(final Collection<FlowVariable> flowVariables) throws InvalidSettingsException {
+        for (FlowVariable fv : flowVariables) {
+            if (fv.getType() == FlowVariable.Type.DOUBLE) {
+                pushFlowVariableDouble(fv.getName(), fv.getDoubleValue());
+            } else if (fv.getType() == FlowVariable.Type.INTEGER) {
+                pushFlowVariableInt(fv.getName(), fv.getIntValue());
+            } else if (fv.getType() == FlowVariable.Type.STRING) {
+                pushFlowVariableString(fv.getName(), fv.getStringValue());
+            } else {
+                throw new InvalidSettingsException("Unsupported flow variable type for '" + fv.getName() + "': "
+                        + fv.getType());
+            }
+        }
     }
 
     /**
@@ -141,6 +184,12 @@ public class TestConfigNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+
+        for (TestrunJanitor j : m_janitors) {
+            j.before();
+            pushFlowVariables(j.getFlowVariables());
+        }
+
         return new BufferedDataTable[0];
     }
 
@@ -149,5 +198,26 @@ public class TestConfigNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        runAfterJanitors();
+        m_janitors.clear();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void onDispose() {
+        runAfterJanitors();
+        super.onDispose();
+    }
+
+    private void runAfterJanitors() {
+        for (TestrunJanitor j : m_janitors) {
+            try {
+                j.after();
+            } catch (Exception ex) {
+                getLogger().error("Error while executing testrun janitor '" + j.getID() + "': " + ex.getMessage(), ex);
+            }
+        }
     }
 }
