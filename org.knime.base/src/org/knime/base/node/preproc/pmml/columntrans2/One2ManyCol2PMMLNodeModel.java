@@ -48,10 +48,12 @@ package org.knime.base.node.preproc.pmml.columntrans2;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.knime.base.node.preproc.columntrans2.One2ManyCellFactory;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.container.CellFactory;
@@ -84,6 +86,8 @@ public class One2ManyCol2PMMLNodeModel extends NodeModel {
     /** Config key for the columns 2 be transformed. */
     public static final String CFG_COLUMNS = "columns2Btransformed";
 
+    public static final String CFG_REMOVESOURCES = "removeSources";
+
     @SuppressWarnings("unchecked")
     private final SettingsModelColumnFilter2 m_includedColumns = new SettingsModelColumnFilter2(CFG_COLUMNS,
         NominalValue.class);
@@ -93,6 +97,8 @@ public class One2ManyCol2PMMLNodeModel extends NodeModel {
     // of them overlap the original column names is appended to
     // distinguish them
     private boolean m_appendOrgColName = false;
+
+    private boolean m_removeSources = false;
 
     private final boolean m_pmmlEnabled;
 
@@ -123,6 +129,7 @@ public class One2ManyCol2PMMLNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_includedColumns.saveSettingsTo(settings);
+        settings.addBoolean(CFG_REMOVESOURCES, m_removeSources);
     }
 
     /**
@@ -132,6 +139,8 @@ public class One2ManyCol2PMMLNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_includedColumns.validateSettings(settings);
+        // added in 2.11
+        //settings.getBoolean(CFG_REMOVESOURCES);
     }
 
     /**
@@ -141,6 +150,8 @@ public class One2ManyCol2PMMLNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_includedColumns.loadSettingsFrom(settings);
+        // added in 2.11
+        m_removeSources = settings.getBoolean(CFG_REMOVESOURCES, false);
     }
 
     /**
@@ -253,6 +264,14 @@ public class One2ManyCol2PMMLNodeModel extends NodeModel {
     private ColumnRearranger createRearranger(final DataTableSpec spec,
             final CellFactory cellFactory) {
         ColumnRearranger rearranger = new ColumnRearranger(spec);
+        if (m_removeSources) {
+            List<String> includes = Arrays.asList(m_includedColumns.applyTo(spec).getIncludes());
+            for (DataColumnSpec s : spec) {
+                if (includes.contains(s.getName())) {
+                    rearranger.remove(s.getName());
+                }
+            }
+        }
         rearranger.append(cellFactory);
         return rearranger;
     }

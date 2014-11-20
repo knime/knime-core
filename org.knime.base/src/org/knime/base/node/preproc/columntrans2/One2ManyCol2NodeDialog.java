@@ -48,7 +48,9 @@ package org.knime.base.node.preproc.columntrans2;
 import org.knime.base.node.preproc.pmml.columntrans2.One2ManyCol2PMMLNodeModel;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 
 /**
@@ -59,6 +61,8 @@ public class One2ManyCol2NodeDialog extends DefaultNodeSettingsPane {
 
     private DialogComponentColumnFilter2 m_columnFilter;
 
+    private DialogComponentBoolean m_removeSourceCol;
+
     /**
      * A node dialog with one column filter to select those columns, which should be transformed into many columns.
      *
@@ -66,9 +70,17 @@ public class One2ManyCol2NodeDialog extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
     public One2ManyCol2NodeDialog() {
         super();
-        m_columnFilter = new DialogComponentColumnFilter2(new SettingsModelColumnFilter2(
-                One2ManyCol2PMMLNodeModel.CFG_COLUMNS, NominalValue.class), 0);
+        m_columnFilter =
+            new DialogComponentColumnFilter2(new SettingsModelColumnFilter2(One2ManyCol2PMMLNodeModel.CFG_COLUMNS,
+                NominalValue.class), 0);
         setDefaultTabTitle("Columns to transform");
+
+        SettingsModelBoolean b = new SettingsModelBoolean(One2ManyCol2PMMLNodeModel.CFG_REMOVESOURCES, false);
+
+        m_removeSourceCol = new DialogComponentBoolean(b, "Remove included columns from output");
+
         addDialogComponent(m_columnFilter);
+        addDialogComponent(m_removeSourceCol);
+
     }
 }

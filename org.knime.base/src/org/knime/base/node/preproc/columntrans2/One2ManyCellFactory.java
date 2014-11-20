@@ -120,6 +120,7 @@ public class One2ManyCellFactory implements CellFactory {
                     }
                     final DataColumnSpecCreator creator = uniqueNameGenerator.newCreator(newColumnName, IntCell.TYPE);
                     creator.setDomain(domainCreator.createDomain());
+                    creator.setElementNames(new String[]{newColumnName});
                     colSpecs.add(creator.createSpec());
                     linkedCols.add(new Pair<String, String>(newColumnName, value));
 

@@ -31,6 +31,9 @@
 				transformation. For each included column extra columns are 
 				appended, one for each possible value.
 			</option>
+			<option name="Remove included columns from output">
+			Included columns are replaced by the new generated columns. 
+			</option>
 	</fullDescription>
 	
 	<ports>
