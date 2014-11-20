@@ -12,6 +12,8 @@
 			Converts doubles in a column (or a set of columns) to integers. 
 		</intro>
 		<option name="Column Selection">Move the columns of interest into the &quot;Include&quot; list</option>
+        <option name="Create long values">Use this option to generate 64bit long values instead of 32bit integer values. This is useful if
+        double values in the input are too big to fit into an integer.</option>
 		<option name="Rounding type">The type of rounding applied to the selected double cells. (round: standard rounding, floor: next smaller integer, ceil: next bigger integer)</option>
 
 

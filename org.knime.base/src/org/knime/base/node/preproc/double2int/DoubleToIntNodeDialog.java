@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------
- * 
+ *
  * History
  *   03.07.2007 (cebron): created
  *   01.09.2009 (adae): expanded
@@ -53,8 +53,10 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.ColumnFilter;
@@ -62,19 +64,19 @@ import org.knime.core.node.util.ColumnFilter;
 /**
  * Dialog for the double to integer Node.
  * Lets the user choose the columns to use. And the type of rounding.
- * 
+ *
  * @author cebron, University of Konstanz
  * @author adae, University of Konstanz
  */
 public class DoubleToIntNodeDialog extends DefaultNodeSettingsPane {
-    
+
     /**
      * Constructor.
      */
     public DoubleToIntNodeDialog() {
     	ColumnFilter filter = new ColumnFilter() {
     		/**
-    		 * @return true, if the given column type is compatible with double 
+    		 * @return true, if the given column type is compatible with double
     		 *         but not with int values
     	     */
     		@Override
@@ -89,20 +91,23 @@ public class DoubleToIntNodeDialog extends DefaultNodeSettingsPane {
     			return "No double-type columns available.";
     		}
     	};
+
         addDialogComponent(new DialogComponentButtonGroup(getCalcTypeModel(),
                 false, "Rounding type", DoubleToIntNodeModel.CFG_ROUND,
                 DoubleToIntNodeModel.CFG_FLOOR, DoubleToIntNodeModel.CFG_CEIL));
+        addDialogComponent(new DialogComponentBoolean(
+            new SettingsModelBoolean(DoubleToIntNodeModel.CFG_LONG, false), "Create long values"));
         addDialogComponent(new DialogComponentColumnFilter(
                 new SettingsModelFilterString(
                         DoubleToIntNodeModel.CFG_INCLUDED_COLUMNS), 0, filter));
-        
+
     }
 
     /**
      * @return the model for the rounding type.
      */
     public static SettingsModelString getCalcTypeModel() {
-        return new SettingsModelString(DoubleToIntNodeModel.CFG_TYPE_OF_ROUND, 
+        return new SettingsModelString(DoubleToIntNodeModel.CFG_TYPE_OF_ROUND,
                     DoubleToIntNodeModel.CFG_ROUND);
     }
 }

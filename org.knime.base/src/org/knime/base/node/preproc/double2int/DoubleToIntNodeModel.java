@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------
- * 
+ *
  * History
  *   03.07.2007 (cebron): created
  *   01.09.2009 (adae): expanded
@@ -65,6 +65,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -74,18 +75,19 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * The NodeModel for the Number to String Node that converts doubles 
+ * The NodeModel for the Number to String Node that converts doubles
  * to integers.
- * 
+ *
  * @author cebron, University of Konstanz
  * @author adae, University of Konstanz
  */
 public class DoubleToIntNodeModel extends NodeModel {
-  
+
     /* Node Logger of this class. */
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DoubleToIntNodeModel.class);
@@ -110,21 +112,35 @@ public class DoubleToIntNodeModel extends NodeModel {
     public static final String CFG_ROUND = "round";
 
     /**
-     * Key for the type of rounding. 
+     * Key for setting whether to produce long or int.
+     * @since 2.11
+     */
+    public static final String CFG_LONG = "long";
+
+    /**
+     * Key for the type of rounding.
      */
     public static final String CFG_TYPE_OF_ROUND = "typeofround";
+
+    /*
+     * If true, long instead of integer is produced from the double values.
+     */
+    private SettingsModelBoolean m_prodLong =
+            new SettingsModelBoolean(CFG_LONG, false);
 
     /*
      * The included columns.
      */
     private SettingsModelFilterString m_inclCols =
             new SettingsModelFilterString(CFG_INCLUDED_COLUMNS);
-    
-    private SettingsModelString m_calctype 
+
+    private SettingsModelString m_calctype
                     = DoubleToIntNodeDialog.getCalcTypeModel();
 
+    private String m_warningMessage;
+
     /**
-     * Constructor with one inport and one outport. 
+     * Constructor with one inport and one outport.
      */
     public DoubleToIntNodeModel() {
         super(1, 1);
@@ -143,7 +159,7 @@ public class DoubleToIntNodeModel extends NodeModel {
         }
         // find indices to work on.
         Vector<Integer> indicesvec = new Vector<Integer>();
-        
+
         for (int i = 0; i < inclcols.size(); i++) {
             int colIndex = inSpecs[0].findColumnIndex(inclcols.get(i));
             if (colIndex >= 0) {
@@ -168,7 +184,7 @@ public class DoubleToIntNodeModel extends NodeModel {
             indices[i] = indicesvec.get(i);
         }
         ConverterFactory converterFac =
-                new ConverterFactory(indices, inSpecs[0]);
+                new ConverterFactory(indices, m_prodLong.getBooleanValue(), inSpecs[0]);
         ColumnRearranger colre = new ColumnRearranger(inSpecs[0]);
         colre.replace(converterFac, indices);
         DataTableSpec newspec = colre.createSpec();
@@ -216,24 +232,22 @@ public class DoubleToIntNodeModel extends NodeModel {
         ConverterFactory converterFac;
         String calctype = m_calctype.getStringValue();
         if (calctype.equals(CFG_CEIL)) {
-            converterFac = new CeilConverterFactory(indices, inspec);
+            converterFac = new CeilConverterFactory(indices, m_prodLong.getBooleanValue(), inspec);
         } else if (calctype.equals(CFG_FLOOR)) {
-            converterFac = new FloorConverterFactory(indices, inspec);
+            converterFac = new FloorConverterFactory(indices,  m_prodLong.getBooleanValue(), inspec);
         } else {
-            converterFac = new ConverterFactory(indices, inspec);
+            converterFac = new ConverterFactory(indices, m_prodLong.getBooleanValue(), inspec);
         }
         ColumnRearranger colre = new ColumnRearranger(inspec);
         colre.replace(converterFac, indices);
 
         BufferedDataTable resultTable =
                 exec.createColumnRearrangeTable(inData[0], colre, exec);
-        String errorMessage = converterFac.getErrorMessage();
 
-        if (errorMessage.length() > 0) {
-            warnings.append("Problems occurred, see NodeLogger messages.\n");
+        if (m_warningMessage != null) {
+            warnings.append(m_warningMessage);
         }
         if (warnings.length() > 0) {
-            LOGGER.warn(errorMessage);
             setWarningMessage(warnings.toString());
         }
         return new BufferedDataTable[]{resultTable};
@@ -244,6 +258,7 @@ public class DoubleToIntNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
+        m_warningMessage = null;
     }
 
     /**
@@ -254,6 +269,13 @@ public class DoubleToIntNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_inclCols.loadSettingsFrom(settings);
         m_calctype.loadSettingsFrom(settings);
+
+        try {
+            m_prodLong.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ex) {
+            // option add in 2.11, older workflows don't have this option
+            m_prodLong.setBooleanValue(false);
+        }
     }
 
     /**
@@ -263,6 +285,7 @@ public class DoubleToIntNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_inclCols.saveSettingsTo(settings);
         m_calctype.saveSettingsTo(settings);
+        m_prodLong.saveSettingsTo(settings);
     }
 
     /**
@@ -273,6 +296,9 @@ public class DoubleToIntNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_inclCols.validateSettings(settings);
         m_calctype.validateSettings(settings);
+
+        // added in 2.11, is not present in existing workflows
+        // m_prodLong.validateSettings(settings);
     }
 
     /**
@@ -296,7 +322,7 @@ public class DoubleToIntNodeModel extends NodeModel {
     /**
      * The CellFactory to produce the new converted cells.
      * Standard rounding.
-     * 
+     *
      * @author cebron, University of Konstanz
      * @author adae, University of Konstanz
      */
@@ -313,33 +339,60 @@ public class DoubleToIntNodeModel extends NodeModel {
         private DataTableSpec m_spec;
 
         /*
+         * Whether long or int should be created.
+         */
+        private boolean m_createLong;
+
+        /*
          * Error messages.
          */
         private StringBuilder m_error;
 
-        /** 
+
+        /**
          * @param colindices the column indices to use.
          * @param spec the original DataTableSpec.
          */
-        ConverterFactory(final int[] colindices, final DataTableSpec spec) {
+        ConverterFactory(final int[] colindices, final boolean createLong, final DataTableSpec spec) {
             m_colindices = colindices;
             m_spec = spec;
+            m_createLong = createLong;
             m_error = new StringBuilder();
         }
 
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataCell[] getCells(final DataRow row) {
             DataCell[] newcells = new DataCell[m_colindices.length];
             for (int i = 0; i < newcells.length; i++) {
                 DataCell dc = row.getCell(m_colindices[i]);
+
                 // handle integers separately
                 if (dc instanceof IntValue) {
+                    if (m_createLong) {
+                        newcells[i] = new LongCell(((IntValue)dc).getIntValue());
+                    } else {
+                        newcells[i] = dc;
+                    }
+                } else if (dc instanceof LongCell && m_createLong) {
                     newcells[i] = dc;
                 } else if (dc instanceof DoubleValue) {
-                        double d = ((DoubleValue)dc).getDoubleValue();
+                    double d = ((DoubleValue)dc).getDoubleValue();
+                    if (m_createLong) {
+                        if ((d > Long.MAX_VALUE) || (d < Long.MIN_VALUE)) {
+                            m_warningMessage = "The table contains double values greater than the maximum long"
+                                + " value.";
+                        }
+                        newcells[i] = new LongCell(getRoundedLongValue(d));
+                    } else {
+                        if ((d > Integer.MAX_VALUE) || (d < Integer.MIN_VALUE)) {
+                            m_warningMessage = "The table contains double values greater than the maximum integer"
+                                + " value. Consider enabling long values in the dialog.";
+                        }
                         newcells[i] = new IntCell(getRoundedValue(d));
+                    }
                 } else {
                     newcells[i] = DataType.getMissingCell();
                 }
@@ -350,6 +403,7 @@ public class DoubleToIntNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataColumnSpec[] getColumnSpecs() {
             DataColumnSpec[] newcolspecs =
                     new DataColumnSpec[m_colindices.length];
@@ -359,7 +413,7 @@ public class DoubleToIntNodeModel extends NodeModel {
                 // change DataType to IntCell
                 colspeccreator =
                         new DataColumnSpecCreator(colspec.getName(),
-                                IntCell.TYPE);
+                                m_createLong ? LongCell.TYPE : IntCell.TYPE);
                 newcolspecs[i] = colspeccreator.createSpec();
             }
             return newcolspecs;
@@ -368,21 +422,12 @@ public class DoubleToIntNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void setProgress(final int curRowNr, final int rowCount,
                 final RowKey lastKey, final ExecutionMonitor exec) {
             exec.setProgress((double)curRowNr / (double)rowCount, "Converting");
         }
 
-        /**
-         * Error messages that occur during execution , i.e.
-         * NumberFormatException.
-         * 
-         * @return error message
-         */
-        public String getErrorMessage() {
-            return m_error.toString();
-        }
-        
         /**
          * @param val the value to be rounded
          * @return the rounded value
@@ -391,50 +436,68 @@ public class DoubleToIntNodeModel extends NodeModel {
             return (int)Math.round(val);
         }
 
+        /**
+         * @param val the value to be rounded
+         * @return the rounded value
+         */
+        public long getRoundedLongValue(final double val) {
+            return Math.round(val);
+        }
+
     } // end ConverterFactory
-    
+
     /**
-     * This Factory produces integer cells rounded to floor 
+     * This Factory produces integer cells rounded to floor
      * (next smaller int).
-     * 
+     *
      * @author adae, University of Konstanz
      */
     private class FloorConverterFactory extends ConverterFactory {
-        /** 
+        /**
          * @param colindices the column indices to use.
          * @param spec the original DataTableSpec.
          */
-        FloorConverterFactory(final int[] colindices, 
+        FloorConverterFactory(final int[] colindices, final boolean createLong,
                             final DataTableSpec spec) {
-            super(colindices, spec);
+            super(colindices, createLong, spec);
         }
 
-        
+
         @Override
         public int getRoundedValue(final double val) {
             return (int)Math.floor(val);
-        }        
+        }
+
+        @Override
+        public long getRoundedLongValue(final double val) {
+            return (long)Math.floor(val);
+        }
     }
-    
+
     /**
-     * This Factory produces integer cells rounded to ceil 
+     * This Factory produces integer cells rounded to ceil
      * (next bigger int).
-     * 
+     *
      * @author adae, University of Konstanz
      */
     private class CeilConverterFactory extends ConverterFactory {
-        /** 
+        /**
          * @param colindices the column indices to use.
          * @param spec the original DataTableSpec.
          */
-        CeilConverterFactory(final int[] colindices, 
+        CeilConverterFactory(final int[] colindices, final boolean createLong,
                                 final DataTableSpec spec) {
-            super(colindices, spec);
+            super(colindices, createLong, spec);
         }
-        
+
         @Override
         public int getRoundedValue(final double val) {
             return (int)Math.ceil(val);
-        }        
+        }
+
+        @Override
+        public long getRoundedLongValue(final double val) {
+            return (long)Math.ceil(val);
+        }
     }
 }
