@@ -195,7 +195,7 @@ public class PngHistogramDifferenceChecker extends AbstractDifferenceChecker<PNG
                     new DialogComponentNumber(m_allowedDifference, "Allowed difference in %", 1);
         }
         if (m_binsDialogComponent == null) {
-            m_binsDialogComponent = new DialogComponentNumber(m_numberOfBins, "Bins per color", 1);
+            m_binsDialogComponent = new DialogComponentNumber(m_numberOfBins, "Bins per primary color", 1);
         }
 
         List<DialogComponent> l = new ArrayList<DialogComponent>(super.getDialogComponents());
