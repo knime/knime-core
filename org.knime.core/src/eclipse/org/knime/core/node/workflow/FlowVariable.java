@@ -349,7 +349,8 @@ public final class FlowVariable extends FlowObject {
         return m_name + "\" (" + m_type + ": " + value + ")";
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * Only compares type and value, not the owner and not the scope. */
     @Override
     public boolean equals(final Object obj) {
         if (obj == this) {

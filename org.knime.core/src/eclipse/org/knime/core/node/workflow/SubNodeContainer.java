@@ -420,6 +420,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
     /** Called by listener on inner workflow. */
     private void onWFMStateChange(final NodeStateEvent state) {
         if (!m_isPerformingActionCalledFromParent) {
+            setNodeMessage(NodeMessage.NONE);
             final WorkflowManager parent = getParent();
             assert Thread.holdsLock(parent.getWorkflowMutex()) : "Unsynchronized workflow state event";
             final InternalNodeContainerState oldState = getInternalState();
@@ -976,7 +977,7 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                     setInternalState(InternalNodeContainerState.EXECUTED);
                 } else {
                     // don't reset and configure (like a NativeNodeContainer) for easier error inspection
-                    setInternalState(InternalNodeContainerState.IDLE);
+                    setInternalState(m_wfm.getInternalState());
                 }
                 setExecutionJob(null);
                 break;
@@ -1073,6 +1074,11 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
         changed = m_outputs[0].setObject(object) || changed;
 
         final FlowObjectStack outgoingFlowObjectStack = getOutgoingFlowObjectStack();
+        // only send flow variables downstream if the subnode is executed - otherwise there may be inconsistencies
+        // between a previous #configure and the subsequent #execute (nodes turn inactive and don't publish variables
+        // anymore -- check test case org.knime.core.node.workflow.TestSubnode_VariableScopeDuringExecution)
+        // this can be fixed by...
+        // TODO API to remove variables from stack, then remove variables no longer in output node and update "changed"
         if (publishObjects && !isInactive) {
             for (FlowVariable f : outputExchange.getFlowVariables()) {
                 outgoingFlowObjectStack.push(f.cloneAndUnsetOwner());
