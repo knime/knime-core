@@ -48,7 +48,6 @@
  */
 package org.knime.core.node.wizard;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,10 +63,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.InteractiveViewDelegate;
 import org.knime.core.node.interactive.ReexecutionCallback;
-import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WizardExecutionController;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -78,14 +75,14 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @param <VAL> the {@link WebViewContent} implementation used as view value
  * @since 2.11
  */
-public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<REP, VAL>, REP extends WebViewContent, VAL extends WebViewContent>
-    extends AbstractNodeView<T> implements InteractiveView<T, REP, VAL> {
+public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
+    REP extends WebViewContent, VAL extends WebViewContent> extends AbstractNodeView<T>
+    implements InteractiveView<T, REP, VAL> {
 
     private static final String EXT_POINT_ID = "org.knime.core.WizardNodeView";
 
     private final InteractiveViewDelegate<VAL> m_delegate;
     private File m_viewHTML;
-    private WebTemplate m_template;
 
     /**
      * @param nodeModel
@@ -97,7 +94,6 @@ public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<RE
         if (viewPath != null && !viewPath.isEmpty()) {
             m_viewHTML = new File(nodeModel.getViewHTMLPath());
         }
-        m_template = WizardExecutionController.getWebTemplateFromJSObjectID(nodeModel.getJavascriptObjectID());
     }
 
     @Override
@@ -119,119 +115,31 @@ public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<RE
     }
 
     /**
-     * @return
+     * @return The current html file object.
      */
     protected File getViewSource() {
         return m_viewHTML;
     }
 
-    protected WebTemplate getWebTemplate() {
-        return m_template;
-    }
-
-    /**
-     * Creates a minimal HTML string to display a message.
-     * @param message The message to display.
-     * @return The created HTML string
-     */
-    protected String createMessageHTML(final String message) {
-        String setIEVersion = "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">";
-
-        StringBuilder pageBuilder = new StringBuilder();
-        pageBuilder.append("<!doctype html><html><head>");
-        pageBuilder.append(setIEVersion);
-        pageBuilder.append("</head><body>");
-        // content
-        pageBuilder.append(message);
-        // content end
-        pageBuilder.append("</body></html>");
-
-        return pageBuilder.toString();
-    }
-
-    /**
-     * Wraps a given JavaScript code in a try/catch block.
-     * On error an alert dialog is shown.
-     * @param jsCode the code to wrap.
-     * @return the wrapped JavaScript code
-     */
-    protected String wrapInTryCatch(final String jsCode) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("try {");
-        builder.append(jsCode);
-        builder.append("} catch(err) {if (err.stack) {alert(err.stack);} else {alert (err);}}");
-        return builder.toString();
-    }
-
-    /**
-     * Creates a method call to initialize the JavaScript view, including view representation and value.
-     * @return The generated method call as string.
-     */
-    protected String createInitJSViewMethodCall() {
-        String jsonViewRepresentation = getViewRepresentationJSONString(getNodeModel().getViewRepresentation());
-        String jsonViewValue = getViewValueJSONString(getNodeModel().getViewValue());
-        StringBuilder builder = new StringBuilder();
-        String escapedRepresentation = jsonViewRepresentation.replace("\\", "\\\\").replace("'", "\\'");
-        String escapedValue = jsonViewValue.replace("\\", "\\\\").replace("'", "\\'");
-        String repParseCall = "var parsedRepresentation = JSON.parse('" + escapedRepresentation + "');";
-        builder.append(repParseCall);
-        String valParseCall = "var parsedValue = JSON.parse('" + escapedValue + "');";
-        builder.append(valParseCall);
-        String initMethod = m_template.getInitMethodName();
-        String initCall = getNamespacePrefix() + initMethod + "(parsedRepresentation, parsedValue);";
-        builder.append(initCall);
-        return builder.toString();
-    }
-
-    private String getViewRepresentationJSONString(final REP rep) {
-        try {
-            if (rep != null) {
-                return ((ByteArrayOutputStream)rep.saveToStream()).toString("UTF-8");
-            } else {
-                return "null";
-            }
-        } catch (Exception e) {
-            throw new IllegalArgumentException("No view representation available!", e);
-        }
-
-    }
-
-    private String getViewValueJSONString(final VAL val) {
-        try {
-            if (val != null) {
-                return ((ByteArrayOutputStream)val.saveToStream()).toString("UTF-8");
-            } else {
-                return "null";
-            }
-        } catch (Exception e) {
-            throw new IllegalArgumentException("No view value available!", e);
-        }
-    }
-
-    /**
+     /**
      * {@inheritDoc}
      */
     @Override
     protected void callCloseView() {
-        m_template = null;
         closeView();
+    }
+
+    /**
+     * @return The node views creator instance.
+     */
+    protected WizardViewCreator<REP, VAL> getViewCreator() {
+        return getNodeModel().getViewCreator();
     }
 
     /**
      * Called on view close.
      */
     protected abstract void closeView();
-
-    protected String getNamespacePrefix() {
-        String namespace = m_template.getNamespace();
-        if (namespace != null && !namespace.isEmpty()) {
-            namespace += ".";
-        } else {
-            namespace = "";
-        }
-        return namespace;
-    }
-
 
     /**
      * Queries extension point for additional {@link AbstractWizardNodeView} implementations.

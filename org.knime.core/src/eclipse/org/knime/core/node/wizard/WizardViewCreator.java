@@ -1,5 +1,6 @@
 /*
  * ------------------------------------------------------------------------
+ *
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -42,69 +43,69 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 08.10.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * History
+ *   21.11.2014 (Christian Albrecht, KNIME.com AG, Zurich, Switzerland): created
  */
 package org.knime.core.node.wizard;
 
-import org.knime.core.node.dialog.ValueControlledNode;
-import org.knime.core.node.interactive.InteractiveNode;
+import java.io.IOException;
+
+import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
 
 /**
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
- * @param <REP> The concrete class of the {@link WebViewContent} acting as representation of the view.
- * @param <VAL> The concrete class of the {@link WebViewContent} acting as value of the view.
- * @since 2.9
+ * @param <REP> the {@link WebViewContent} implementation used as view representation
+ * @param <VAL> the {@link WebViewContent} implementation used as view value
  */
-public interface WizardNode<REP extends WebViewContent, VAL extends WebViewContent>
-        extends InteractiveNode<REP, VAL>, ValueControlledNode {
+public interface WizardViewCreator<REP extends WebViewContent, VAL extends WebViewContent> {
 
     /**
-     * Create content which can be used by the web view implementation.
-     * @return Content required for the web view.
-     * @since 2.10
+     * @return The {@link WebTemplate} object created by the view creator.
      */
-    @Override
-    public REP getViewRepresentation();
+    public WebTemplate getWebTemplate();
 
     /**
-     * {@inheritDoc}
-     * @since 2.10
+     * Creates all web resources, returns path to the created HTML file which contains the JS view.
+     *
+     * @param viewRepresentation the view representation
+     * @param viewValue the view value
+     * @param viewTitle the view title
+     * @return the path to the view HTML
+     * @throws IOException on IO error
      */
-    @Override
-    public VAL getViewValue();
+    public String createWebResources(final String viewTitle, final REP viewRepresentation, final VAL viewValue)
+            throws IOException;
 
     /**
-     * @return an empty instance of the concrete {@link WebViewContent} implementation
-     * @since 2.10
+     * Creates the JavaScript code to initialize the view implementation with the respective
+     * view representation and value objects.
+     *
+     * @param viewRepresentation The view representation.
+     * @param viewValue The view value.
+     * @return The JavaScript code to initialize the view.
      */
-    public REP createEmptyViewRepresentation();
+    public String createInitJSViewMethodCall(final REP viewRepresentation, final VAL viewValue);
 
     /**
-     * @return an empty instance of the concrete {@link WebViewContent} implementation
-     * @since 2.10
+     * @return The namespace prefix for all method calls of the respective view implementation.
      */
-    public VAL createEmptyViewValue();
+    public String getNamespacePrefix();
 
     /**
-     * @return The object id used in the javascript implementation of the view.
+     * Creates a minimal HTML string to display a message.
+     * @param message The message to display.
+     * @return The created HTML string
      */
-    public String getJavascriptObjectID();
+    public String createMessageHTML(final String message);
 
     /**
-     * @return The path to the generated HTML containing the view or null if not applicable.
-     * @since 2.11
+     * Wraps a JavaScript code block in a try/catch block.
+     * In the catch block an alert with the error message and stack trace is shown.
+     * @param jsCode The code block to wrap.
+     * @return The resulting JavaScript as string.
      */
-    public String getViewHTMLPath();
+    public String wrapInTryCatch(final String jsCode);
 
-    /**
-     * @return A view creator object, used to construct the web view.
-     * @since 2.11
-     */
-    public WizardViewCreator<REP, VAL> getViewCreator();
-
-    /** Property set in the configuration dialog to the node to skip this node in the wizard execution.
-     * @return that property. */
-    public boolean isHideInWizard();
 }

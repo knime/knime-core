@@ -68,6 +68,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.interactive.DefaultReexecutionCallback;
+import org.knime.core.node.web.WebTemplate;
 import org.knime.core.node.web.WebViewContent;
 
 /**
@@ -82,19 +83,19 @@ import org.knime.core.node.web.WebViewContent;
  * @since 2.9
  */
 public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
-        REP extends WebViewContent, VAL extends WebViewContent> extends AbstractWizardNodeView<T, REP, VAL> {
+        REP extends WebViewContent, VAL extends WebViewContent>
+        extends AbstractWizardNodeView<T, REP, VAL> {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(WizardNodeView.class);
 
     private Shell m_shell;
+
     private Browser m_browser;
+
     private String m_title;
-    private ProgressListener m_completedListener;
 
     /**
      * @param nodeModel the underlying model
-     * @param viewHTML
-     * @param template
      * @since 2.10
      */
     public WizardNodeView(final T nodeModel) {
@@ -153,7 +154,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
 
         m_browser = new Browser(m_shell, SWT.NONE);
         m_browser.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
-        m_browser.setText(createMessageHTML("Loading view..."), true);
+        m_browser.setText(getViewCreator().createMessageHTML("Loading view..."), true);
 
         Composite buttonComposite = new Composite(m_shell, SWT.NONE);
         buttonComposite.setLayoutData(new GridData(GridData.END, GridData.END, false, false));
@@ -201,13 +202,16 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
 
             @Override
             public void run() {
-                setBrowserURL();
                 m_browser.addProgressListener(new ProgressListener() {
 
                     @Override
                     public void completed(final ProgressEvent event) {
                         if (!m_browser.getUrl().isEmpty()) {
-                            String initCall = wrapInTryCatch(createInitJSViewMethodCall());
+                            T model = getNodeModel();
+                            WizardViewCreator<REP, VAL> creator = getViewCreator();
+                            String initCall =
+                                creator.createInitJSViewMethodCall(model.getViewRepresentation(), model.getViewValue());
+                            initCall = creator.wrapInTryCatch(initCall);
                             m_browser.execute(initCall);
                         }
                     }
@@ -217,6 +221,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
                         // do nothing
                     }
                 });
+                setBrowserURL();
             }
         });
 
@@ -226,7 +231,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
         try {
             m_browser.setUrl(getViewSource().getAbsolutePath());
         } catch (Exception e) {
-            m_browser.setText(createMessageHTML(e.getMessage()));
+            m_browser.setText(getViewCreator().createMessageHTML(e.getMessage()));
             LOGGER.error(e.getMessage(), e);
         }
     }
@@ -242,15 +247,20 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
 
     private void applyTriggered(final Browser browser, final boolean useAsDefault) {
         boolean valid = true;
-        String validateMethod = getWebTemplate().getValidateMethodName();
+        WizardViewCreator<REP, VAL> creator = getViewCreator();
+        WebTemplate template = creator.getWebTemplate();
+        String validateMethod = template.getValidateMethodName();
         if (validateMethod != null && !validateMethod.isEmpty()) {
-            String evalCode = wrapInTryCatch("return JSON.stringify(" + getNamespacePrefix() + validateMethod + "());");
+            String evalCode =
+                creator.wrapInTryCatch("return JSON.stringify(" + creator.getNamespacePrefix() + validateMethod
+                    + "());");
             String jsonString = (String)browser.evaluate(evalCode);
             valid = Boolean.parseBoolean(jsonString);
         }
         if (valid) {
-            String pullMethod = getWebTemplate().getPullViewContentMethodName();
-            String evalCode = wrapInTryCatch("return JSON.stringify(" + getNamespacePrefix() + pullMethod + "());");
+            String pullMethod = template.getPullViewContentMethodName();
+            String evalCode =
+                creator.wrapInTryCatch("return JSON.stringify(" + creator.getNamespacePrefix() + pullMethod + "());");
             String jsonString = (String)browser.evaluate(evalCode);
             try {
                 VAL viewValue = getNodeModel().createEmptyViewValue();
