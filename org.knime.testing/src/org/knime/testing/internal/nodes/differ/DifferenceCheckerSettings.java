@@ -73,6 +73,8 @@ class DifferenceCheckerSettings {
 
     private final Map<String, NodeSettings> m_perColumnConfig = new HashMap<String, NodeSettings>();
 
+    private boolean m_ignoreRowIds;
+
     /**
      * Returns a collection with all configured columns.
      *
@@ -159,6 +161,25 @@ class DifferenceCheckerSettings {
     }
 
     /**
+     * Returns if the row IDs should be ignored when comparing the tables.
+     *
+     * @return <code>true</code> if row IDs should be ignored, <code>false</code> otherwise
+     */
+    public boolean ignoreRowIds() {
+        return m_ignoreRowIds;
+    }
+
+    /**
+     * Sets if the row IDs should be ignored when comparing the tables.
+     *
+     * @param ignore <code>true</code> if row IDs should be ignored, <code>false</code> otherwise
+     */
+    public void ignoreRowIds(final boolean ignore) {
+        m_ignoreRowIds = ignore;
+    }
+
+
+    /**
      * Loads the settings from the given settings object.
      *
      * @param settings a node settings object
@@ -182,6 +203,9 @@ class DifferenceCheckerSettings {
                 }
             }
         }
+
+        // added in 2.11
+        m_ignoreRowIds = settings.getBoolean("ignoreRowIds", false);
     }
 
     /**
@@ -224,6 +248,8 @@ class DifferenceCheckerSettings {
                 m_perColumnConfig.put(colName, new NodeSettings("internals"));
             }
         }
+
+        m_ignoreRowIds = settings.getBoolean("ignoreRowIds", false);
     }
 
     /**
@@ -241,5 +267,7 @@ class DifferenceCheckerSettings {
                 columnConfig.addNodeSettings(internals);
             }
         }
+
+        settings.addBoolean("ignoreRowIds", m_ignoreRowIds);
     }
 }

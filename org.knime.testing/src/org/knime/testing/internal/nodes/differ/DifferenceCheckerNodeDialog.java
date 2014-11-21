@@ -56,6 +56,7 @@ import java.util.Map;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultListCellRenderer;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -250,6 +251,8 @@ class DifferenceCheckerNodeDialog extends NodeDialogPane {
 
     private final JTable m_columnCheckerTable = new MyTable(m_tableModel);
 
+    private final JCheckBox m_ignoreRowsIds = new JCheckBox("Ignore row IDs (use with caution!)");
+
     private final JScrollPane m_columnConfigPanel = new JScrollPane();
 
     private final DifferenceCheckerSettings m_settings = new DifferenceCheckerSettings();
@@ -283,6 +286,12 @@ class DifferenceCheckerNodeDialog extends NodeDialogPane {
         c.gridy++;
         c.weighty = 0.2;
         p.add(m_columnConfigPanel, c);
+
+        c.gridy++;
+        c.weightx = 0;
+        c.weighty = 0;
+        c.fill = GridBagConstraints.NONE;
+        p.add(m_ignoreRowsIds, c);
 
         addTab("Column Configuration", p);
     }
@@ -328,6 +337,8 @@ class DifferenceCheckerNodeDialog extends NodeDialogPane {
 
         updateInternalsPanel(-1);
         m_tableModel.fireTableDataChanged();
+
+        m_ignoreRowsIds.setSelected(m_settings.ignoreRowIds());
     }
 
     /**
@@ -339,6 +350,7 @@ class DifferenceCheckerNodeDialog extends NodeDialogPane {
             e.getValue().saveSettings(m_settings.internalsForColumn(e.getKey().getName()));
         }
 
+        m_settings.ignoreRowIds(m_ignoreRowsIds.isSelected());
         m_settings.saveSettings(settings);
     }
 }

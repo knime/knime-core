@@ -38,6 +38,10 @@
                 the panel below the column table.
             </p>
         </intro>
+        <option name="Ignore row IDs">Select this option if you want to ignore the row IDs of the two tables. Use this
+        option only if you know what you are doing. Row IDs are an integral part of any data table and they should not
+        change during the lifetime of a node because this may break existing workflows.
+        </option>
     </fullDescription>
 
     <ports>

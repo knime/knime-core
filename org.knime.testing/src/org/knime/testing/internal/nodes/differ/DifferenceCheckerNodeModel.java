@@ -169,7 +169,7 @@ class DifferenceCheckerNodeModel extends NodeModel {
     }
 
     private void compareRow(final DataTableSpec spec, final DataRow testRow, final DataRow refRow, final int rowIndex) {
-        if (!refRow.getKey().equals(testRow.getKey())) {
+        if (!m_settings.ignoreRowIds() && !refRow.getKey().equals(testRow.getKey())) {
             throw new IllegalStateException("Wrong row key in row " + rowIndex + ": expected '" + refRow.getKey()
                     + "', got '" + testRow.getKey() + "'");
         }
