@@ -419,20 +419,24 @@ class FileRowIterator extends RowIterator {
         }
 
         token = m_tokenizer.nextToken();
+        if (!m_frSettings.isRowDelimiter(token, m_tokenizer.lastTokenWasQuoted())) {
+            // flag for real data tokens
+            lastTokenWasDelimited = m_tokenizer.lastTokenWasDelimited();
+        }
 
         // eat all empty tokens til the end of the row, if we're supposed to
-        while (m_frSettings.ignoreEmptyTokensAtEndOfRow()
-                && !m_frSettings.isRowDelimiter(token, m_tokenizer.lastTokenWasQuoted())
-                && token.equals("") && (!m_tokenizer.lastTokenWasQuoted())) {
-            try {
-                token = m_tokenizer.nextToken();
-            } catch (TokenizerException fte) {
-                throw prepareForException(fte.getMessage() + "(line: " + lineNr
-                        + " (" + rowHeader + "), source: '"
-                        + m_frSettings.getDataFileLocation() + "')", lineNr,
-                        rowHeader, row);
-            }
+        if (m_frSettings.ignoreEmptyTokensAtEndOfRow()) {
             lastTokenWasDelimited = false;
+
+            while (!m_frSettings.isRowDelimiter(token, m_tokenizer.lastTokenWasQuoted()) && token.equals("")
+                && (!m_tokenizer.lastTokenWasQuoted())) {
+                try {
+                    token = m_tokenizer.nextToken();
+                } catch (TokenizerException fte) {
+                    throw prepareForException(fte.getMessage() + "(line: " + lineNr + " (" + rowHeader + "), source: '"
+                        + m_frSettings.getDataFileLocation() + "')", lineNr, rowHeader, row);
+                }
+            }
         }
         // now read the row delimiter from the file, and in case there are more
         // data items in the file than we needed for one row: barf and die.
