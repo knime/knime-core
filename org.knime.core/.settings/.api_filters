@@ -77,6 +77,12 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.wizard.WizardNode"/>
+                <message_argument value="getViewCreator()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.wizard.WizardNode"/>
                 <message_argument value="getViewHTMLPath()"/>
             </message_arguments>
         </filter>

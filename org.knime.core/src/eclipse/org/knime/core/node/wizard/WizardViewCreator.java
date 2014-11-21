@@ -58,6 +58,7 @@ import org.knime.core.node.web.WebViewContent;
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @param <REP> the {@link WebViewContent} implementation used as view representation
  * @param <VAL> the {@link WebViewContent} implementation used as view value
+ * @since 2.11
  */
 public interface WizardViewCreator<REP extends WebViewContent, VAL extends WebViewContent> {
 
