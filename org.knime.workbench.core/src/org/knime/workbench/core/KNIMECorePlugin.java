@@ -58,8 +58,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.SWTError;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -485,8 +483,6 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
             return new ThreadsafeImageRegistry(PlatformUI.getWorkbench().getDisplay());
         }
 
-        //Invalid thread access if it is not the UI Thread
-        //and the workbench is not created.
-        throw new SWTError(SWT.ERROR_THREAD_INVALID_ACCESS);
+        return new ThreadsafeImageRegistry(Display.getDefault());
     }
 }
