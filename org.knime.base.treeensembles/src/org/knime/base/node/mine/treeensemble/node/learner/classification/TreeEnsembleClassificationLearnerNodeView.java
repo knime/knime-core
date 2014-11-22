@@ -49,6 +49,7 @@ package org.knime.base.node.mine.treeensemble.node.learner.classification;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -102,7 +103,7 @@ import org.knime.core.util.SwingWorkerWithContext;
 
 /**
  * The view of the Decision Tree to Image node.
- * 
+ *
  * @author Heiko Hofer
  */
 final class TreeEnsembleClassificationLearnerNodeView extends NodeView<TreeEnsembleClassificationLearnerNodeModel>
@@ -131,7 +132,7 @@ final class TreeEnsembleClassificationLearnerNodeView extends NodeView<TreeEnsem
 
     /**
      * Default constructor, taking the model as argument.
-     * 
+     *
      * @param model the underlying NodeModel
      */
     public TreeEnsembleClassificationLearnerNodeView(final TreeEnsembleClassificationLearnerNodeModel model) {
@@ -229,6 +230,12 @@ final class TreeEnsembleClassificationLearnerNodeView extends NodeView<TreeEnsem
                 }
             }
         });
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected Container getExportComponent() {
+        return m_graph.getView();
     }
 
     /* Create the Panel with the outline view and the controls */
@@ -396,7 +403,7 @@ final class TreeEnsembleClassificationLearnerNodeView extends NodeView<TreeEnsem
 
     /**
      * Create menu to control hiliting.
-     * 
+     *
      * @return A new JMenu with hiliting buttons
      */
     private JMenu createHiLiteMenu() {
@@ -412,7 +419,7 @@ final class TreeEnsembleClassificationLearnerNodeView extends NodeView<TreeEnsem
 
     /**
      * Create menu to control tree.
-     * 
+     *
      * @return A new JMenu with tree operation buttons
      */
     private JMenu createTreeMenu() {
