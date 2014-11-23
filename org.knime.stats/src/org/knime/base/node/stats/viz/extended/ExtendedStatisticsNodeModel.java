@@ -465,31 +465,33 @@ class ExtendedStatisticsNodeModel extends NodeModel {
      * @return columns used to count co-occurrences
      */
     String[] getNominalColumnNames() {
-        if (getStatTable() == null) {
+        Statistics3Table statTable = getStatTable();
+        if (statTable == null) {
             return null;
         }
-        return getStatTable().extractNominalColumns(
-                nominalColumns(m_statTable.getSpec()));
+        return statTable.extractNominalColumns(nominalColumns(statTable.getSpec()));
     }
 
     /**
      * @return all column names
      */
     protected String[] getColumnNames() {
-        if (getStatTable() == null) {
+        Statistics3Table statTable = getStatTable();
+        if (statTable == null) {
             return null;
         }
-        return getStatTable().getColumnNames();
+        return statTable.getColumnNames();
     }
 
     /**
      * @return number of missing values
      */
     int[] getNumMissingValues() {
-        if (getStatTable() == null) {
+        Statistics3Table statTable = getStatTable();
+        if (statTable == null) {
             return null;
         }
-        return getStatTable().getNumberMissingValues();
+        return statTable.getNumberMissingValues();
     }
 
     /** @return number of nominal values computed */
@@ -504,7 +506,8 @@ class ExtendedStatisticsNodeModel extends NodeModel {
 
     /** @return nominal value and frequency for each column */
     List<Map<DataCell, Integer>> getNominals() {
-        return getStatTable().getNominalValues();
+        Statistics3Table statTable = getStatTable();
+        return statTable != null ? statTable.getNominalValues() : Collections.<Map<DataCell, Integer>>emptyList();
     }
 
     /**

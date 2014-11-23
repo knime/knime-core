@@ -60,6 +60,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.swing.JEditorPane;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -597,11 +598,19 @@ class ExtendedStatisticsHTMLNodeView extends NodeView<ExtendedStatisticsNodeMode
          */
         @Override
         protected Component createComponent(final int colId, final HistogramColumn hc) {
-            ExtendedStatisticsNodeModel model = getModel();
-            return hc.createComponent(model.getHistograms().get(colId), model.getHistogramWidth().getIntValue(), model
-                .getHistogramHeight().getIntValue(),
-                model.getEnableHiLite().getBooleanValue() ? model.getInHiLiteHandler(0) : new HiLiteHandler(), model
-                    .getBuckets().get(colId), model.numOfNominalValues());
+            final ExtendedStatisticsNodeModel model = getModel();
+            if (model == null) {
+                return new JLabel("No model");
+            }
+            final Map<Integer, ?> histograms = model.getHistograms();
+            final Map<Integer, Map<Integer, Set<RowKey>>> buckets = model.getBuckets();
+            final HiLiteHandler inHiLiteHandler = model.getInHiLiteHandler(0);
+            if (histograms == null || buckets == null || inHiLiteHandler == null) {
+                return new JLabel("No model");
+            }
+            return hc.createComponent(histograms.get(colId), model.getHistogramWidth().getIntValue(), model
+                .getHistogramHeight().getIntValue(), model.getEnableHiLite().getBooleanValue() ? inHiLiteHandler
+                : new HiLiteHandler(), buckets.get(colId), model.numOfNominalValues());
         }
     }
 
