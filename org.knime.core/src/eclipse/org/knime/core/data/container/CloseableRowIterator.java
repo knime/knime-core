@@ -41,11 +41,13 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 5, 2008 (wiswedel): created
  */
 package org.knime.core.data.container;
+
+import java.io.Closeable;
 
 import org.knime.core.data.RowIterator;
 
@@ -57,18 +59,19 @@ import org.knime.core.data.RowIterator;
  * the table, the input stream is not closed, which can cause system failures.
  * This iterator allows the user to close the stream early on (before reaching
  * the end of the table in which case the stream is closed anyway).
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public abstract class CloseableRowIterator extends RowIterator {
+public abstract class CloseableRowIterator extends RowIterator implements Closeable {
 
     /** Closes this iterator. Subsequent calls of {@link RowIterator#hasNext()}
      * will return <code>false</code>. This method does not need to be called
-     * if the iterator was pushed to the end (stream will be closed 
+     * if the iterator was pushed to the end (stream will be closed
      * automatically). It's meant to be used in cases where the iterator might
-     * not advance to the end of the table. 
-     * 
+     * not advance to the end of the table.
+     *
      * <p>This method does nothing if the table is already closed (multiple
      * invocations are ignored). */
+    @Override
     public abstract void close();
 }
