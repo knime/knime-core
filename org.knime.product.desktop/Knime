@@ -101,7 +101,7 @@ cd "$APP_DIR"
 RET=$?
 cd "$LAST_PWD"
 if [[ $RET -eq 23 ]] || [[ $RET -eq 24 ]]; then
-	exec "$ECLIPSE_DIR/$SOURCE" "$@"
+	exec "$SOURCE" "$@"
 else
 	exit $RET
 fi
