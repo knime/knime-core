@@ -82,7 +82,6 @@ public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<RE
     private static final String EXT_POINT_ID = "org.knime.core.WizardNodeView";
 
     private final InteractiveViewDelegate<VAL> m_delegate;
-    private File m_viewHTML;
 
     /**
      * @param nodeModel
@@ -90,10 +89,6 @@ public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<RE
     protected AbstractWizardNodeView(final T nodeModel) {
         super(nodeModel);
         m_delegate = new InteractiveViewDelegate<VAL>();
-        String viewPath = nodeModel.getViewHTMLPath();
-        if (viewPath != null && !viewPath.isEmpty()) {
-            m_viewHTML = new File(nodeModel.getViewHTMLPath());
-        }
     }
 
     @Override
@@ -118,7 +113,11 @@ public abstract class AbstractWizardNodeView<T extends NodeModel & WizardNode<RE
      * @return The current html file object.
      */
     protected File getViewSource() {
-        return m_viewHTML;
+        String viewPath = getNodeModel().getViewHTMLPath();
+        if (viewPath != null && !viewPath.isEmpty()) {
+            return new File(viewPath);
+        }
+        return null;
     }
 
      /**

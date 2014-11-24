@@ -47,6 +47,7 @@
 package org.knime.core.node.wizard;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.nio.charset.Charset;
 
 import org.eclipse.swt.SWT;
@@ -91,7 +92,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
     private Shell m_shell;
 
     private Browser m_browser;
-
+    private boolean m_viewSet = false;
     private String m_title;
 
     /**
@@ -206,7 +207,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
 
                     @Override
                     public void completed(final ProgressEvent event) {
-                        if (!m_browser.getUrl().isEmpty()) {
+                        if (m_viewSet) {
                             T model = getNodeModel();
                             WizardViewCreator<REP, VAL> creator = getViewCreator();
                             String initCall =
@@ -229,9 +230,17 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
 
     private void setBrowserURL() {
         try {
-            m_browser.setUrl(getViewSource().getAbsolutePath());
+            File src = getViewSource();
+            if (src != null && src.exists()) {
+                m_browser.setUrl(getViewSource().getAbsolutePath());
+                m_viewSet = true;
+            } else {
+                m_browser.setText(getViewCreator().createMessageHTML("No data to display"));
+                m_viewSet = false;
+            }
         } catch (Exception e) {
             m_browser.setText(getViewCreator().createMessageHTML(e.getMessage()));
+            m_viewSet = false;
             LOGGER.error(e.getMessage(), e);
         }
     }
@@ -243,6 +252,7 @@ public final class WizardNodeView<T extends NodeModel & WizardNode<REP, VAL>,
     public final void closeView() {
         m_shell = null;
         m_browser = null;
+        m_viewSet = false;
     }
 
     private void applyTriggered(final Browser browser, final boolean useAsDefault) {
