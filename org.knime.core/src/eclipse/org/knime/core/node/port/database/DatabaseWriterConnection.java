@@ -54,6 +54,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TimeZone;
@@ -68,6 +69,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.blob.BinaryObjectDataValue;
 import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.BufferedDataTable;
@@ -289,6 +291,16 @@ public final class DatabaseWriterConnection {
                 statement.close();
             }
 
+            // this is a (temporary) workaround for bug #5802: if there is a DataValue column in the input table
+            // we need to use the SQL type for creating the insert statements.
+            Map<Integer, Integer> columnTypes = null;
+            for (DataColumnSpec cs : spec) {
+                if (cs.getType().getPreferredValueClass() == null) {
+                    columnTypes = getColumnTypes(conn, table);
+                    break;
+                }
+            }
+
             // creates the wild card string based on the number of columns
             // this string it used every time an new row is inserted into the db
             final StringBuilder wildcard = new StringBuilder("(");
@@ -340,7 +352,7 @@ public final class DatabaseWriterConnection {
                         }
                         final DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
                         final DataCell cell = row.getCell(mapping[i]);
-                        fillStatement(stmt, dbIdx, cspec, cell, timezone);
+                        fillStatement(stmt, dbIdx, cspec, cell, timezone, columnTypes);
                     }
                     // if batch mode
                     if (batchSize > 1) {
@@ -398,6 +410,36 @@ public final class DatabaseWriterConnection {
                 stmt.close();
             }
         }
+    }
+
+    private static Map<Integer, Integer> getColumnTypes(final Connection conn, final String table) throws SQLException {
+        // TODO move this block to DatabaseUtility
+        Map<Integer, Integer> columnTypes = new HashMap<>();
+        try (ResultSet metaDataRs = conn.getMetaData().getColumns(conn.getCatalog(), null, table, null)) {
+            while (metaDataRs.next()) {
+                columnTypes.put(metaDataRs.getInt("ORDINAL_POSITION"), metaDataRs.getInt("DATA_TYPE"));
+            }
+        }
+
+        if (columnTypes.isEmpty()) {
+            // e.g. PostgreSQL converts all table names to lower case by default
+            try (ResultSet metaDataRs =
+                conn.getMetaData().getColumns(conn.getCatalog(), null, table.toLowerCase(), null)) {
+                while (metaDataRs.next()) {
+                    columnTypes.put(metaDataRs.getInt("ORDINAL_POSITION"), metaDataRs.getInt("DATA_TYPE"));
+                }
+            }
+        }
+        if (columnTypes.isEmpty()) {
+            // e.g. Oracle converts all table names to upper case by default
+            try (ResultSet metaDataRs =
+                conn.getMetaData().getColumns(conn.getCatalog(), null, table.toUpperCase(), null)) {
+                while (metaDataRs.next()) {
+                    columnTypes.put(metaDataRs.getInt("ORDINAL_POSITION"), metaDataRs.getInt("DATA_TYPE"));
+                }
+            }
+        }
+        return columnTypes;
     }
 
     /** Create connection to update table in database.
@@ -478,7 +520,7 @@ public final class DatabaseWriterConnection {
                         final int columnIndex = spec.findColumnIndex(setColumns[i]);
                         final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
                         final DataCell cell = row.getCell(columnIndex);
-                        fillStatement(stmt, dbIdx, cspec, cell, timezone);
+                        fillStatement(stmt, dbIdx, cspec, cell, timezone, null);
                     }
                     // WHERE columns
                     for (int i = 0; i < whereColumns.length; i++) {
@@ -486,7 +528,7 @@ public final class DatabaseWriterConnection {
                         final int columnIndex = spec.findColumnIndex(whereColumns[i]);
                         final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
                         final DataCell cell = row.getCell(columnIndex);
-                        fillStatement(stmt, dbIdx, cspec, cell, timezone);
+                        fillStatement(stmt, dbIdx, cspec, cell, timezone, null);
                     }
 
                     // if batch mode
@@ -620,7 +662,7 @@ public final class DatabaseWriterConnection {
                         final int columnIndex = spec.findColumnIndex(whereColumns[i]);
                         final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
                         final DataCell cell = row.getCell(columnIndex);
-                        fillStatement(stmt, dbIdx, cspec, cell, timezone);
+                        fillStatement(stmt, dbIdx, cspec, cell, timezone, null);
                     }
 
                     // if batch mode
@@ -694,7 +736,7 @@ public final class DatabaseWriterConnection {
      * @throws SQLException if the value can't be set
      */
     private static void fillStatement(final PreparedStatement stmt, final int dbIdx,
-            final DataColumnSpec cspec, final DataCell cell, final TimeZone tz)
+            final DataColumnSpec cspec, final DataCell cell, final TimeZone tz, final Map<Integer, Integer> columnTypes)
             throws SQLException {
         if (cspec.getType().isCompatible(BooleanValue.class)) {
             if (cell.isMissing()) {
@@ -769,11 +811,21 @@ public final class DatabaseWriterConnection {
                     stmt.setNull(dbIdx, Types.BLOB);
                 }
             }
-        } else {
+        } else if ((columnTypes == null) || cspec.getType().isCompatible(StringValue.class)) {
             if (cell.isMissing()) {
                 stmt.setNull(dbIdx, Types.VARCHAR);
             } else {
                 stmt.setString(dbIdx, cell.toString());
+            }
+        } else {
+            Integer sqlType = columnTypes.get(dbIdx);
+            if (sqlType == null) {
+                sqlType = Types.VARCHAR;
+            }
+            if (cell.isMissing()) {
+                stmt.setNull(dbIdx, sqlType);
+            } else {
+                stmt.setObject(dbIdx, cell.toString(), sqlType);
             }
         }
     }
