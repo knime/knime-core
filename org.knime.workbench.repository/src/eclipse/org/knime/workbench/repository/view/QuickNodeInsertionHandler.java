@@ -127,6 +127,7 @@ public class QuickNodeInsertionHandler extends AbstractHandler {
                 public void create() {
                     setShellStyle(getShellStyle() | SWT.RESIZE);
                     super.create();
+                    getShell().setText("Node Repository");
                     setTitle("Quick Node Insertion");
                     setMessage("Type in the node name", IMessageProvider.INFORMATION);
                 }
