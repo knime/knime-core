@@ -63,6 +63,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -78,7 +79,8 @@ public class WriteTableNodeDialogPane extends DefaultNodeSettingsPane {
     public WriteTableNodeDialogPane() {
         final DialogComponentFileChooser fileChooser = new DialogComponentFileChooser(
             new SettingsModelString(WriteTableNodeModel.CFG_FILENAME, ""),
-            ReadTableNodeDialogPane.class.getName(), JFileChooser.SAVE_DIALOG,
+            ReadTableNodeDialogPane.class.getName(), JFileChooser.SAVE_DIALOG, false,
+            createFlowVariableModel(WriteTableNodeModel.CFG_FILENAME, Type.STRING),
             ReadTableNodeModel.PREFERRED_FILE_EXTENSION);
 
         final DialogComponentBoolean overwriteOK = new DialogComponentBoolean(new SettingsModelBoolean(
