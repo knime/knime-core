@@ -305,14 +305,11 @@ public final class DataColumnSpecCreator {
     }
 
     /**
-     * Set names of elements when this column contains a vector type. By default
-     * (i.e. non-vector types) the array has length 1 and contains the name of
-     * the column. If the argument is <code>null</code>, a default name array
-     * will be used when the final {@link DataColumnSpec} is created (the array
-     * will contain the then-actual name of the column).
+     * Set names of elements when this column contains a vector type. The default value is an empty array as
+     * per {@link DataColumnSpec#getElementNames()}. If this method is call with argument <code>null</code>, an
+     * empty array will be passed on to the {@link DataColumnSpec} constructor.
      * @param elNames The elements names/identifiers to set.
-     * @throws NullPointerException If the argument contains <code>null</code>
-     * elements.
+     * @throws NullPointerException If the argument contains <code>null</code> elements.
      * @see DataColumnSpec#getElementNames()
      */
     public void setElementNames(final String[] elNames) {
