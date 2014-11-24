@@ -86,6 +86,7 @@ public class One2ManyCol2PMMLNodeModel extends NodeModel {
     /** Config key for the columns 2 be transformed. */
     public static final String CFG_COLUMNS = "columns2Btransformed";
 
+    /** Config key which stores if the source columns should be removed. */
     public static final String CFG_REMOVESOURCES = "removeSources";
 
     @SuppressWarnings("unchecked")
