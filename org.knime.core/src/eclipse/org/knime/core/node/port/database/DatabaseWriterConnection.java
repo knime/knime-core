@@ -733,6 +733,7 @@ public final class DatabaseWriterConnection {
      * @param dbIdx database index to update/write
      * @param cspec column spec to check type
      * @param cell the data cell to write into the statement
+     * @param tz the {@link TimeZone} to use
      * @throws SQLException if the value can't be set
      */
     private static void fillStatement(final PreparedStatement stmt, final int dbIdx,
