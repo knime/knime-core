@@ -82,9 +82,8 @@ public final class CheckUtils {
      * @throws NullPointerException if template is <code>null</code>
      * @param <T> the type of the object
      */
-    public static <T> T
-        checkArgumentNotNull(final T toCheck, final String template, final Object... templateArgs)
-            throws IllegalArgumentException {
+    public static <T> T checkArgumentNotNull(final T toCheck, final String template, final Object... templateArgs)
+        throws IllegalArgumentException {
         return checkArgumentNotNull(toCheck, stringFormatSupplier(template, templateArgs));
     }
 
@@ -95,8 +94,7 @@ public final class CheckUtils {
      * @param message the exception message
      * @throws IllegalArgumentException if predicate is <code>false</code>
      */
-    public static void checkArgument(final boolean predicate, final String message)
-        throws IllegalArgumentException {
+    public static void checkArgument(final boolean predicate, final String message) throws IllegalArgumentException {
         checkArgument(predicate, stringSupplier(message));
     }
 
@@ -111,10 +109,38 @@ public final class CheckUtils {
      * @throws IllegalArgumentException if predicate is <code>false</code>
      * @throws NullPointerException if the template is <code>null</code>
      */
-    public static void
-        checkArgument(final boolean predicate, final String template, final Object... templateArgs)
-            throws IllegalArgumentException {
+    public static void checkArgument(final boolean predicate, final String template, final Object... templateArgs)
+        throws IllegalArgumentException {
         checkArgument(predicate, stringFormatSupplier(template, templateArgs));
+    }
+
+    /**
+     * Checks the given predicate to be <code>true</code>.
+     *
+     * @param predicate is checked to be <code>true</code>
+     * @param message the exception message
+     * @throws IllegalStateException if predicate is <code>false</code>
+     * @since 2.11
+     */
+    public static void checkState(final boolean predicate, final String message) throws IllegalStateException {
+        checkState(predicate, stringSupplier(message));
+    }
+
+    /**
+     * Checks the given predicate to be <code>true</code>. If the check fails the exception is thrown containing the
+     * message resulting from {@link String#format(String, Object...)} with the given template and arguments. <br/>
+     * <b>Note: the string is only formatted if the exception is actually thrown.</b>
+     *
+     * @param predicate is checked to be <code>true</code>
+     * @param template the string template which determines the exception message
+     * @param templateArgs the arguments for the string formating
+     * @throws IllegalStateException if predicate is <code>false</code>
+     * @throws NullPointerException if the template is <code>null</code>
+     * @since 2.11
+     */
+    public static void checkState(final boolean predicate, final String template, final Object... templateArgs)
+            throws IllegalStateException {
+        checkState(predicate, stringFormatSupplier(template, templateArgs));
     }
 
     /**
@@ -209,6 +235,13 @@ public final class CheckUtils {
         throws IllegalArgumentException {
         if (!predicate) {
             throw new IllegalArgumentException(supplier.get());
+        }
+    }
+
+    private static void checkState(final boolean predicate, final Supplier<String> supplier)
+        throws IllegalStateException {
+        if (!predicate) {
+            throw new IllegalStateException(supplier.get());
         }
     }
 
