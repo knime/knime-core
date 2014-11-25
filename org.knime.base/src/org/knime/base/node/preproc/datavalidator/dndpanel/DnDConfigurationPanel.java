@@ -52,6 +52,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -69,7 +71,6 @@ import java.util.TooManyListenersException;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
@@ -147,11 +148,11 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
 
         m_scroller =
             new JScrollPane(m_configPanel, ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
         //        JPanel scrollP = new JPanel(new FlowLayout());
 
-        setLayout(new BorderLayout());
+        setLayout(new GridBagLayout());
 
         m_helpPanel = new JPanel(new BorderLayout());
         JPanel inner = new JPanel();
@@ -171,8 +172,19 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
             //NOOP
         }
 
-        add(m_helpPanel, BorderLayout.NORTH);
-        add(m_scroller, BorderLayout.CENTER);
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.NORTH;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+        c.gridx = 0;
+        c.gridy = 0;
+        add(m_helpPanel, c);
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.CENTER;
+        c.weighty = 1;
+        c.gridx = 0;
+        c.gridy = 1;
+        add(m_scroller, c);
     }
 
     /**
@@ -194,7 +206,11 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
      * @param panel to add
      */
     public void addConfigurationPanel(final T panel) {
-        m_configPanel.add(panel);
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+        c.gridy = m_configPanel.getComponentCount();
+        m_configPanel.add(panel, c);
         m_scroller.revalidate();
         ensureConfigurationPanelVisible(panel);
         firePropertyChange(CONFIGURATION_CHANGED, null, null);
@@ -356,8 +372,8 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
     private final class InnerConfigurationPanel extends JPanel implements Scrollable {
 
         private InnerConfigurationPanel() {
-            BoxLayout layout = new BoxLayout(this, BoxLayout.Y_AXIS);
-            setLayout(layout);
+            setLayout(new GridBagLayout());
+
         }
 
         /** {@inheritDoc} */
@@ -402,7 +418,7 @@ public abstract class DnDConfigurationPanel<T extends DnDConfigurationSubPanel> 
         /** {@inheritDoc} */
         @Override
         public boolean getScrollableTracksViewportWidth() {
-            return false;
+            return true;
         }
 
         /** {@inheritDoc} */

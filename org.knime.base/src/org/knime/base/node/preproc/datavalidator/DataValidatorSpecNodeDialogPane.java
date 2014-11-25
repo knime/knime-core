@@ -129,7 +129,7 @@ public class DataValidatorSpecNodeDialogPane extends NodeDialogPane {
             columnSpecs.add(s);
         }
 
-        m_dataValidatorColPanel = new DataValidatorColPanel(null, toSet, columnSpecs);
+        m_dataValidatorColPanel = new DataValidatorColPanel(null, false, toSet, columnSpecs);
         m_dataValidatorColPanel.setPreferredSize(new Dimension(0, 253));
         m_tabPanel.add(m_dataValidatorColPanel, BorderLayout.CENTER);
         m_failBehavior.setSelectedValue(dataValidatorConfiguration.getFailingBehavior());

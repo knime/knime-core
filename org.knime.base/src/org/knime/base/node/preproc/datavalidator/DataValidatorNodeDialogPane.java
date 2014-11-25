@@ -49,6 +49,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -128,17 +130,37 @@ public class DataValidatorNodeDialogPane extends NodeDialogPane {
     @SuppressWarnings("serial")
     public DataValidatorNodeDialogPane() {
         super();
+        GridBagConstraints c = new GridBagConstraints();
+
 
         m_applyDataTableSpecPanel = createApplyDataTableSpecPanel();
 
         m_failBehavior = new RadionButtonPanel<>("Behavior on validation issue", RejectBehavior.values());
         m_unkownColumnsHandling = new RadionButtonPanel<>("Handling of unkown columns", UnknownColumnHandling.values());
 
+        Dimension failBehPrefSize = m_failBehavior.getPreferredSize();
+        Dimension unknownColPrefSize = m_unkownColumnsHandling.getPreferredSize();
+        int width = Math.max(failBehPrefSize.width, unknownColPrefSize.width);
+        int height = Math.max(failBehPrefSize.height, unknownColPrefSize.height);
+
+        Dimension d = new Dimension(width, height);
+        m_failBehavior.setPreferredSize(d);
+        m_unkownColumnsHandling.setPreferredSize(d);
+
+
         JPanel southernPanel = new JPanel(new BorderLayout());
 
-        JPanel generalConfigPanel = new JPanel(new GridLayout(0, 2));
-        generalConfigPanel.add(m_failBehavior);
-        generalConfigPanel.add(m_unkownColumnsHandling);
+        JPanel generalConfigPanel = new JPanel(new GridBagLayout());
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 0.5;
+        c.gridx = 0;
+        c.gridy = 0;
+        generalConfigPanel.add(m_failBehavior, c);
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 0.5;
+        c.gridx = 1;
+        c.gridy = 0;
+        generalConfigPanel.add(m_unkownColumnsHandling, c);
         generalConfigPanel.setBorder(BorderFactory.createTitledBorder("General settings"));
 
         southernPanel.add(generalConfigPanel, BorderLayout.NORTH);
@@ -184,14 +206,20 @@ public class DataValidatorNodeDialogPane extends NodeDialogPane {
 
         });
 
-        final JPanel tabPanel = new JPanel(new BorderLayout());
-        tabPanel.add(m_searchableListPanel, BorderLayout.CENTER);
+        final JPanel tabPanel = new JPanel(new GridBagLayout());
+        c.fill = GridBagConstraints.BOTH;
+        c.weighty = 1;
+        c.weightx = 0.4;
+        c.gridx = 0;
+        c.gridy = 0;
+        tabPanel.add(m_searchableListPanel, c);
 
         m_individualsPanel = new DnDConfigurationPanel<DataValidatorColPanel>() {
 
             @Override
             protected Dimension getDefaultPreferredSize() {
                 return DUMMY_PANEL.getPreferredSize();
+                //return new Dimension(800,120);
             }
 
             @Override
@@ -219,8 +247,20 @@ public class DataValidatorNodeDialogPane extends NodeDialogPane {
 
         m_searchableListPanel.enableDragAndDropSupport(m_individualsPanel);
 
-        tabPanel.add(m_individualsPanel, BorderLayout.EAST);
-        tabPanel.add(southernPanel, BorderLayout.SOUTH);
+
+        c.fill = GridBagConstraints.BOTH;
+        c.weighty = 1;
+        c.weightx = 0.6;
+        c.gridx = 1;
+        c.gridy = 0;
+        tabPanel.add(m_individualsPanel, c);
+        c.fill = GridBagConstraints.BOTH;
+        c.weighty = 0;
+        c.weightx = 1;
+        c.gridwidth = 2;
+        c.gridx = 0;
+        c.gridy = 1;
+        tabPanel.add(southernPanel, c);
 
         addTab("Validation Settings", tabPanel);
         m_refTableSpecTab = new JPanel(new GridLayout(0, 1));
@@ -326,7 +366,7 @@ public class DataValidatorNodeDialogPane extends NodeDialogPane {
                 }
             }
             if (!colSpecs.isEmpty()) {
-                final DataValidatorColPanel p = new DataValidatorColPanel(this, currentColConfig, colSpecs);
+                final DataValidatorColPanel p = new DataValidatorColPanel(this, true, currentColConfig, colSpecs);
 
                 p.registerMouseListener(new MouseAdapter() {
                     /** {@inheritDoc} */

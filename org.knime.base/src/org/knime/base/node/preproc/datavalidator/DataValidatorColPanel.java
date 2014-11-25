@@ -50,9 +50,10 @@ import static org.knime.core.node.util.DataColumnSpecListCellRenderer.isInvalid;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -128,22 +129,14 @@ class DataValidatorColPanel extends DnDConfigurationSubPanel {
 
     private CheckedRadioButtonPanel<ColumnExistenceHandling> m_checkColumnExistence;
 
+    private boolean m_forceColListToBeShown;
+
     /**
      * Default constructor.
      */
     DataValidatorColPanel() {
-        this(null, Collections.<DataColumnSpec> emptyList());
-    }
-
-    /**
-     * Constructor for one individual column, invoked when Add in dialog was pressed.
-     *
-     * @param parent the parent dialog pane
-     * @param spec the spec to that column
-     */
-    DataValidatorColPanel(final DataValidatorNodeDialogPane parent, final DataColumnSpec spec) {
-        this(parent, new DataValidatorColConfiguration(Collections.singletonList(spec)), Collections
-            .singletonList(spec));
+        this(null, true, new DataValidatorColConfiguration(Collections.<DataColumnSpec> emptyList()),
+            Collections.<DataColumnSpec> emptyList());
     }
 
     /**
@@ -153,7 +146,7 @@ class DataValidatorColPanel extends DnDConfigurationSubPanel {
      * @param specs list of column specs
      */
     DataValidatorColPanel(final DataValidatorNodeDialogPane parent, final List<DataColumnSpec> specs) {
-        this(parent, new DataValidatorColConfiguration(specs), specs);
+        this(parent, false, new DataValidatorColConfiguration(specs), specs);
     }
 
     /**
@@ -161,14 +154,16 @@ class DataValidatorColPanel extends DnDConfigurationSubPanel {
      * ColSetting is a meta-config.
      *
      * @param parent the parent dialog pane
+     * @param forceColListToBeShown the list of columns (west-layout)
      * @param setting to get settings from
      * @param specs data columns specs
      */
-    public DataValidatorColPanel(final DataValidatorNodeDialogPane parent, final DataValidatorColConfiguration setting,
-        final List<DataColumnSpec> specs) {
-        setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
+    public DataValidatorColPanel(final DataValidatorNodeDialogPane parent, final boolean forceColListToBeShown,
+        final DataValidatorColConfiguration setting, final List<DataColumnSpec> specs) {
+        setLayout(new GridBagLayout());
         m_parent = parent;
         m_setting = setting;
+        m_forceColListToBeShown = forceColListToBeShown;
         createContent(specs);
     }
 
@@ -178,7 +173,8 @@ class DataValidatorColPanel extends DnDConfigurationSubPanel {
     private void createContent(final List<DataColumnSpec> spec) {
         final List<String> warningMessages = new ArrayList<String>();
 
-        JPanel parentPanel = new JPanel(new BorderLayout(0, 5));
+        JPanel parentPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
         final Border border;
         final JComponent removeButtons;
 
@@ -231,24 +227,60 @@ class DataValidatorColPanel extends DnDConfigurationSubPanel {
         if (!warningMessages.isEmpty()) {
             LOGGER.warn("get warnings during panel validation: " + warningMessages);
             border = BorderFactory.createLineBorder(Color.RED, 2);
-            parentPanel.add(createWarningLabel(warningMessages), BorderLayout.NORTH);
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.insets = new Insets(10, 10, 10, 10);
+            c.anchor = GridBagConstraints.NORTH;
+            c.gridx = 0;
+            c.gridy = 0;
+            c.gridwidth = 2;
+            parentPanel.add(createWarningLabel(warningMessages), c);
         } else {
             border = BorderFactory.createLineBorder(Color.BLACK);
         }
 
         final JPanel centerPanel = new JPanel(new BorderLayout());
         createCenterLayout(m_setting, centerPanel);
-        if (m_parent != null) {
-            createWestLayout(m_setting, parentPanel, spec);
+        int xOffset = 0;
+        if (m_parent != null || m_forceColListToBeShown) {
+            createWestLayout(parentPanel, spec);
             JPanel northPanel = new JPanel(new BorderLayout());
             northPanel.add(removeButtons, BorderLayout.EAST);
             centerPanel.add(northPanel, BorderLayout.NORTH);
             setBorder(border);
+            xOffset += 1;
         } else {
             setBorder(BorderFactory.createTitledBorder("Column Settings"));
         }
-        parentPanel.add(centerPanel, BorderLayout.CENTER);
-        add(parentPanel);
+
+        c.fill = GridBagConstraints.NONE;
+        c.insets = new Insets(10, 10, 10, 10);
+        c.gridx = xOffset;
+        c.gridy = 1;
+        c.gridwidth = 1;
+        c.weightx = 0;
+        parentPanel.add(centerPanel, c);
+
+        if (m_forceColListToBeShown) {
+            // Table Validator Configuration
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.anchor = GridBagConstraints.EAST;
+            c.insets = new Insets(0, 0, 0, 0);
+            c.gridx = 0;
+            c.gridy = 0;
+            c.gridwidth = 1;
+            c.weightx = 1;
+            add(parentPanel, c);
+        } else {
+            // Table Validator (Reference) Configuration
+            c.fill = GridBagConstraints.NONE;
+            c.anchor = GridBagConstraints.WEST;
+            c.insets = new Insets(0, 0, 0, 0);
+            c.gridx = 0;
+            c.gridy = 0;
+            c.gridwidth = 1;
+            c.weightx = 1;
+            add(parentPanel, c);
+        }
 
         updateUiElements(spec);
     }
@@ -306,14 +338,13 @@ class DataValidatorColPanel extends DnDConfigurationSubPanel {
     }
 
     /**
-     * @param setting
      * @param tabPanel
+     * @param spec
+     * @param setting
      * @param icon
      * @param name
-     * @param spec
      */
-    private void createWestLayout(final DataValidatorColConfiguration setting, final JPanel tabPanel,
-        final List<DataColumnSpec> spec) {
+    private void createWestLayout(final JPanel tabPanel, final List<DataColumnSpec> spec) {
         m_defaultListModel = new DefaultListModel<>();
         for (DataColumnSpec s : spec) {
             m_defaultListModel.addElement(s);
@@ -373,11 +404,19 @@ class DataValidatorColPanel extends DnDConfigurationSubPanel {
                 }
             }
         });
-        JScrollPane columns = new JScrollPane(jList);
-        columns.setMaximumSize(new Dimension(150, 150));
-        columns.setPreferredSize(new Dimension(100, 150));
 
-        tabPanel.add(columns, BorderLayout.WEST);
+        JScrollPane columns = new JScrollPane(jList);
+
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(10, 10, 10, 10);
+        c.gridx = 0;
+        c.gridy = 1;
+        c.gridheight = 2;
+        c.weightx = 1;
+        tabPanel.add(columns, c);
     }
 
     /**
