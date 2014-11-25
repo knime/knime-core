@@ -378,7 +378,7 @@ public final class DatabaseReaderConnection {
         DataTableSpec spec = null;
         for (int i = 0; i < cols; i++) {
             int dbIdx = i + 1;
-            String name =  manipulator.unquoteColumn(meta.getColumnName(dbIdx));
+            String name =  manipulator.unquoteColumn(meta.getColumnLabel(dbIdx));
             int type = meta.getColumnType(dbIdx);
             DataType newType;
             switch (type) {
