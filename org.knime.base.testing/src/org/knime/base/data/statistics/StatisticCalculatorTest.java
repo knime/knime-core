@@ -1,6 +1,7 @@
 package org.knime.base.data.statistics;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -165,14 +166,12 @@ public class StatisticCalculatorTest {
             String colName = "" + i;
             assertEquals(statistics3Table.getMean(i), mean.getResult(colName), 0.0001);
             assertEquals(statistics3Table.getKurtosis(i), kurtosis.getResult(colName), 0.0001);
-            assertEquals(statistics3Table.getMin()[i], ((DoubleValue)minMax.getMin(colName)).getDoubleValue(), 0.0001);
+            checkValueOrMissingIfNaN(statistics3Table.getMin()[i], minMax.getMin(colName));
             assertEquals(statistics3Table.getMinCells()[i], minMax.getMin(colName));
-            assertEquals(((DoubleValue)statistics3Table.getNonInfMin(i)).getDoubleValue(),
-                doubleMinMax.getMin(colName), 0.0001);
-            assertEquals(statistics3Table.getMax()[i], ((DoubleValue)minMax.getMax(colName)).getDoubleValue(), 0.0001);
+            checkValueOrMissingIfNaN(doubleMinMax.getMin(colName), statistics3Table.getNonInfMin(i) );
+            checkValueOrMissingIfNaN(statistics3Table.getMax()[i], minMax.getMax(colName));
             assertEquals(statistics3Table.getMaxCells()[i], minMax.getMax(colName));
-            assertEquals(((DoubleValue)statistics3Table.getNonInfMax(i)).getDoubleValue(),
-                doubleMinMax.getMax(colName), 0.0001);
+            checkValueOrMissingIfNaN(doubleMinMax.getMax(colName),statistics3Table.getNonInfMax(i) );
             assertEquals(statistics3Table.getVariance(i), variance.getResult(colName), 0.0001);
             assertEquals(statistics3Table.getStandardDeviation(i), sDev.getResult(colName), 0.0001);
             assertEquals(statistics3Table.getNumberMissingValues(i), missingValue.getNumberMissingValues(colName),
@@ -182,6 +181,19 @@ public class StatisticCalculatorTest {
             assertEquals(statistics3Table.getNumberPositiveInfiniteValues(i),
                 sdc.getNumberPositiveInfiniteValues(colName), 0.0001);
             assertEquals(statistics3Table.getNumberNaNValues(i), sdc.getNumberNaNValues(colName), 0.0001);
+        }
+    }
+
+    /**
+     * Ensures that the given value is either identical or NaN and missing.
+     * @param d the value to test against
+     * @param dataCell the data cell to test
+     */
+    private void checkValueOrMissingIfNaN(final double d, final DataCell dataCell) {
+        if (dataCell.isMissing()) {
+            assertTrue(Double.isNaN(d));
+        } else {
+            assertEquals(d, ((DoubleValue)dataCell).getDoubleValue(), 0.0001);
         }
     }
 
