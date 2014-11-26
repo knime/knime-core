@@ -143,7 +143,8 @@
     </tab>
   </fullDescription>
   <ports>
-    <inPort index="0" name="Table to validate"> Table to be validated.</inPort>
+    <inPort index="0" name="Table to validate">Table to be validated.</inPort>
+    <inPort index="1" name="Reference Table">Table that is used as the reference.</inPort>
     <outPort index="0" name="Validated table">
       Table with corrected and validated structure. Depending on the validation result and the
       <i>Behavior if validation fails</i>
