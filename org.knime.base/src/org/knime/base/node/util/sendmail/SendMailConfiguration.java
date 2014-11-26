@@ -170,7 +170,7 @@ final class SendMailConfiguration {
             settings.addBoolean("useCredentials", m_useCredentials);
             settings.addString("credentialsId", m_credentialsId);
             settings.addString("smtpUser", m_smtpUser);
-            settings.addString("smtpPassword", m_smtpPassword);
+            settings.addPassword("smtpPasswordWeaklyEncrypted", "0=d#Fs64h", m_smtpPassword);
             settings.addString("connectionSecurity", m_connectionSecurity.name());
             settings.addString("emailFormat", m_format.name());
             settings.addString("emailPriority", m_priority.name());
@@ -205,7 +205,11 @@ final class SendMailConfiguration {
         m_useCredentials = settings.getBoolean("useCredentials", false);
         m_credentialsId = settings.getString("credentialsId", "");
         m_smtpUser = settings.getString("smtpUser", getLastUsedHistoryElement(getSmtpUserStringHistoryID()));
-        m_smtpPassword = settings.getString("smtpPassword", "");
+        if (settings.containsKey("smtpPassword")) { // until v2.11 (excl)
+            m_smtpPassword = settings.getString("smtpPassword", "");
+        } else {
+            m_smtpPassword = settings.getPassword("smtpPasswordWeaklyEncrypted", "0=d#Fs64h", "");
+        }
         String connectionSecurityS = settings.getString("connectionSecurity", ConnectionSecurity.NONE.name());
         ConnectionSecurity connectionSecurity;
         try {
@@ -268,7 +272,12 @@ final class SendMailConfiguration {
         m_useCredentials = settings.getBoolean("useCredentials");
         m_credentialsId = settings.getString("credentialsId");
         m_smtpUser = settings.getString("smtpUser");
-        m_smtpPassword = settings.getString("smtpPassword");
+        try {
+            // until v2.11 (excl)
+            m_smtpPassword = settings.getString("smtpPassword");
+        } catch (InvalidSettingsException ise) {
+            m_smtpPassword = settings.getPassword("smtpPasswordWeaklyEncrypted", "0=d#Fs64h");
+        }
         m_from = settings.getString("from");
         String connectionSecurityS = settings.getString("connectionSecurity");
         try {
