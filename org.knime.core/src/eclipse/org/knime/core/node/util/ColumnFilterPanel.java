@@ -97,8 +97,11 @@ import org.knime.core.data.util.ListModelFilterUtils;
  * You can add a property change listener to this class that is notified when
  * the include list changes.
  *
+ * @deprecated A new column filter panel with more options is available in
+ * {@link org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel}
  * @author Thomas Gabriel, University of Konstanz
  */
+@Deprecated
 @SuppressWarnings("serial")
 public class ColumnFilterPanel extends JPanel {
 
