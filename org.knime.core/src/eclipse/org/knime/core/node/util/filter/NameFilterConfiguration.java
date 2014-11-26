@@ -46,8 +46,10 @@ package org.knime.core.node.util.filter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.knime.core.node.InvalidSettingsException;
@@ -55,6 +57,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.CheckUtils;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * Configuration for a generic filter that can includes and excludes names and takes care on additional/missing names
@@ -282,7 +286,7 @@ public class NameFilterConfiguration implements Cloneable {
      * @since 2.9
      */
     protected void loadConfigurationInModelChild(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // implemetned in subclass
+        // implementned in subclass
     }
 
     /**
@@ -441,6 +445,31 @@ public class NameFilterConfiguration implements Cloneable {
             m_excludeList = copy;
             setEnforceOption(EnforceOption.EnforceInclusion);
         }
+    }
+
+    /** Sets the include and exclude list and force the filter type to be "standard".
+     * @param includes Include list, may be null but must not contain null, duplicates or elements in the exclude.
+     * @param excludes Similar to include list... just for exclude.
+     * @param enforceOption The new enforce option.
+     * @since 2.11
+     */
+    public void loadDefaults(final String[] includes, final String[] excludes, final EnforceOption enforceOption) {
+        CheckUtils.checkArgumentNotNull(enforceOption, "must not be null");
+        String[] includesCopy = includes == null ? new String[0] : Arrays.copyOf(includes, includes.length);
+        String[] excludesCopy = excludes == null ? new String[0] : Arrays.copyOf(excludes, excludes.length);
+        Set<String> includesHash = new HashSet<String>(Arrays.asList(includesCopy));
+        Set<String> excludesHash = new HashSet<String>(Arrays.asList(excludesCopy));
+        CheckUtils.checkArgument(includesHash.size() == includesCopy.length,
+                "Include list contains duplicates: %s", Arrays.toString(includesCopy));
+        CheckUtils.checkArgument(!includesHash.contains(null), "Include list mut not contain null");
+        CheckUtils.checkArgument(!excludesHash.contains(null), "Exclude list mut not contain null");
+        includesHash.retainAll(Arrays.asList(excludesCopy));
+        CheckUtils.checkArgument(includesHash.isEmpty(), "Arrays not disjoint: %s",
+            ConvenienceMethods.getShortStringFrom(includesHash, 3));
+        m_includeList = includesCopy;
+        m_excludeList = excludesCopy;
+        m_enforceOption = enforceOption;
+        m_type = TYPE;
     }
 
     /**
