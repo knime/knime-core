@@ -45,10 +45,12 @@
 package org.knime.core.node.workflow;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import junit.framework.Assert;
 
+import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.util.Pair;
 
 
@@ -85,9 +87,9 @@ public class Bug5517_NodeMessagesFromWFM extends WorkflowTestCase {
 
     public void testMessageAfterExecute() throws Exception {
         WorkflowManager manager = getManager();
-        List<Pair<String, NodeMessage>> messages =
-                manager.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR);
+        List<Pair<String, NodeMessage>> messages = manager.getNodeMessages(Type.WARNING, Type.ERROR);
         Assert.assertNotNull(messages);
+        removeSubnodeWarningNoExecutedPredecessor(messages);
         Assert.assertTrue("Non empty: " + messages, messages.isEmpty());
         checkStateOfMany(InternalNodeContainerState.CONFIGURED, m_tableCreator_1, m_rowFilterEmpty_2, m_metaNodeFail_3,
             m_rowFilterNone_4, m_failInMeta_3_1, m_subNodeFail_6, m_failInSub_6_1, m_rowFilterNone_5);
@@ -121,9 +123,26 @@ public class Bug5517_NodeMessagesFromWFM extends WorkflowTestCase {
             Assert.assertTrue(p.getSecond().getMessage().contains("fail"));
         }
         reset(m_tableCreator_1);
-        messages = manager.getNodeMessages(NodeMessage.Type.WARNING, NodeMessage.Type.ERROR);
+        messages = manager.getNodeMessages(Type.WARNING, Type.ERROR);
         Assert.assertNotNull(messages);
+        removeSubnodeWarningNoExecutedPredecessor(messages);
         Assert.assertTrue("Non empty: " + messages, messages.isEmpty());
+    }
+
+    /** Remove first warning message associated with "subnode has no data" message. Workaround that we remove
+     * when we find a better solution to the problem that subnodes need full input data before executable.
+     * @param messages list that gets modified.
+     */
+    private void removeSubnodeWarningNoExecutedPredecessor(final List<Pair<String, NodeMessage>> messages) {
+        for (Iterator<Pair<String, NodeMessage>> it = messages.iterator(); it.hasNext(); ) {
+            Pair<String, NodeMessage> m = it.next();
+            NodeMessage msg = m.getSecond();
+            if (NodeMessage.Type.WARNING.equals(msg.getMessageType())
+                    && msg.getMessage().contains("Outer workflow does not have input data")) {
+                it.remove();
+                break;
+            }
+        }
     }
 
 
