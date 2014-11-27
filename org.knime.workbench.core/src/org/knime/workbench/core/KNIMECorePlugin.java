@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageRegistry;
@@ -477,12 +478,21 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
         //If we are in the UI Thread use that
         if (Display.getCurrent() != null) {
             return new ThreadsafeImageRegistry(Display.getCurrent());
+        } else {
+            Display display;
+            if (PlatformUI.isWorkbenchRunning()) {
+                display = PlatformUI.getWorkbench().getDisplay();
+            } else {
+                display = Display.getDefault();
+            }
+            final AtomicReference<ImageRegistry> ref = new AtomicReference<>();
+            display.syncExec(new Runnable() {
+                @Override
+                public void run() {
+                    ref.set(new ThreadsafeImageRegistry(Display.getCurrent()));
+                }
+            });
+            return ref.get();
         }
-
-        if (PlatformUI.isWorkbenchRunning()) {
-            return new ThreadsafeImageRegistry(PlatformUI.getWorkbench().getDisplay());
-        }
-
-        return new ThreadsafeImageRegistry(Display.getDefault());
     }
 }
