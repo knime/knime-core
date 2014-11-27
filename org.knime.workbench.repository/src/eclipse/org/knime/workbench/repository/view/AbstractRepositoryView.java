@@ -385,6 +385,14 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
     }
 
     /**
+     * Requests the focus on the search field.
+     * @since 2.11
+     */
+    protected void setFocusOnSearchfield() {
+        m_toolbarFilterCombo.getCombo().setFocus();
+    }
+
+    /**
      * This method may be overridden by subclasses in order to transform the current repository into a different
      * structure. The method gets the current repository (its root) as argument and should return a new repository (its
      * root). The default implementation does not change the repository.
