@@ -260,7 +260,8 @@ public class StringReplacerNodeModel extends NodeModel {
             throw new InvalidSettingsException("No replacement string given");
         }
 
-        if (s.replaceAllOccurrences() && s.patternIsRegex() && s.pattern().contains("*")) {
+        // check if the '*' quantifier occurs in the regex, but not the escaped quantifier \*
+        if (s.replaceAllOccurrences() && s.patternIsRegex() && s.pattern().matches(".*[^\\\\](?!\\\\)\\*.*")) {
             throw new InvalidSettingsException(
                     "'*' is not allowed when all occurrences of the "
                             + "pattern should be replaced");
