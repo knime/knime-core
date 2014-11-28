@@ -49,7 +49,9 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.TimeZone;
 
 import org.knime.base.node.io.filereader.DataCellFactory;
@@ -78,10 +80,10 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
-import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
 /**
  * The column type changer node model which converts a string column to a numeric or date-type column iff all
@@ -98,8 +100,6 @@ public class ColumnAutoTypeCasterNodeModel extends NodeModel {
     private static final String CFGKEY_QUICKSCANROWS = "numberOfRowsForQuickScan";
 
     private static final String CFGKEY_MISSVALPAT = "missingValuePattern";
-
-    private static final String CFG_FILE = "config_file";
 
     private DataColumnSpecFilterConfiguration m_conf;
 
@@ -406,8 +406,8 @@ public class ColumnAutoTypeCasterNodeModel extends NodeModel {
             try {
                 double d = Double.parseDouble(str);
                 if (Double.isInfinite(d) && str.matches("[01]+")) {
-                    // if every cell above matched [01]+ and this cell matches to, we assume this column (until now) is a
-                    // bit-vector column. Bit-Vectors are stored in string representation.
+                    // if every cell above matched [01]+ and this cell matches to, we assume this column (until now) is
+                    // a bit-vector column. Bit-Vectors are stored in string representation.
                     return StringCell.TYPE;
                 }
                 return DoubleCell.TYPE;
@@ -420,13 +420,20 @@ public class ColumnAutoTypeCasterNodeModel extends NodeModel {
 
     /**
      * {@inheritDoc}
+     * @throws InvalidSettingsException thrown if some input columns are not available during execution.
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) {
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         if (m_conf == null) {
             m_conf = createDCSFilterConfiguration();
             // auto-configure
             m_conf.loadDefaults(inSpecs[0], true);
+        }
+        String[] removedFromIncludes = m_conf.applyTo(inSpecs[0]).getRemovedFromIncludes();
+        if (m_conf.isEnforceInclusion() && (removedFromIncludes.length != 0)) {
+            throw new InvalidSettingsException("Input table does not match "
+                + "selected include columns, unable to find column(s): "
+                + ConvenienceMethods.getShortStringFrom(new HashSet<String>(Arrays.asList(removedFromIncludes)), 3));
         }
         return null;
     }
@@ -492,8 +499,6 @@ public class ColumnAutoTypeCasterNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        DataColumnSpecFilterPanel test = new DataColumnSpecFilterPanel();
-
         DataColumnSpecFilterConfiguration conf = createDCSFilterConfiguration();
         conf.loadConfigurationInModel(settings);
         String tmpDateFormat = settings.getString("dateFormat");
