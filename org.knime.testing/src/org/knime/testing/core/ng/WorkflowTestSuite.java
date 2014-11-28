@@ -50,7 +50,9 @@ package org.knime.testing.core.ng;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
+import java.lang.management.OperatingSystemMXBean;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
@@ -179,6 +181,11 @@ public class WorkflowTestSuite extends WorkflowTest {
     public void run(final TestResult result) {
         m_progressMonitor.beginTask(getName(), countTestCases());
         m_logger.info("================= Starting testflow " + getName() + " =================");
+
+        OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
+        Formatter format = new Formatter();
+        format.format("================= Average load: %02.2f =================", osBean.getSystemLoadAverage());
+        m_logger.info(format.out());
 
         result.startTest(this);
         try {
