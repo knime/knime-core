@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   25.02.2007 (wiswedel): created
  */
@@ -71,14 +71,14 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 
 /**
- * Dialog for low variance filter node. Shows a double value chooser and a 
+ * Dialog for low variance filter node. Shows a double value chooser and a
  * filter panel.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class LowVarFilter2NodeDialogPane extends NodeDialogPane {
-    
+
     private final JSpinner m_varianceSpinner;
-    
+
     /**
      * Using {@link DataColumnSpecFilterPanel} instead of deprecated
      * {@link ColumnFilterPanel}.
@@ -91,11 +91,11 @@ public class LowVarFilter2NodeDialogPane extends NodeDialogPane {
         m_varianceSpinner = new JSpinner(new SpinnerNumberModel(
                 0.0, 0.0, Double.POSITIVE_INFINITY, 0.1));
         m_varianceSpinner.setEditor(new JSpinner.NumberEditor(m_varianceSpinner,
-                "0.0#########"));        
+                "0.0#########"));
         JSpinner.DefaultEditor editor =
             (JSpinner.DefaultEditor)m_varianceSpinner.getEditor();
         editor.getTextField().setColumns(10);
-        m_colFilterPanel = new DataColumnSpecFilterPanel(DoubleValue.class);
+        m_colFilterPanel = new DataColumnSpecFilterPanel();
         JPanel p = new JPanel(new BorderLayout());
         JPanel northPanel = new JPanel(new FlowLayout());
         northPanel.add(new JLabel("Variance Upper Bound"));
@@ -104,17 +104,17 @@ public class LowVarFilter2NodeDialogPane extends NodeDialogPane {
         p.add(m_colFilterPanel, BorderLayout.CENTER);
         addTab("Options", p);
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings, 
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         final DataTableSpec spec = specs[0];
         if (spec == null || spec.getNumColumns() == 0) {
             throw new NotConfigurableException("No columns available for "
                     + "selection.");
         }
-        
+
         List<String> defIncludes = new ArrayList<String>();
         for (DataColumnSpec s : specs[0]) {
             if (s.getType().isCompatible(DoubleValue.class)) {
@@ -129,22 +129,22 @@ public class LowVarFilter2NodeDialogPane extends NodeDialogPane {
         config.loadConfigurationInDialog(settings, spec);
         m_colFilterPanel.loadConfiguration(config, spec);
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) 
+    protected void saveSettingsTo(final NodeSettingsWO settings)
         throws InvalidSettingsException {
         double threshold = ((Number)m_varianceSpinner.getValue()).doubleValue();
         settings.addDouble(
                 LowVarFilter2NodeModel.CFG_KEY_MAX_VARIANCE, threshold);
-        
+
         DataColumnSpecFilterConfiguration config = createColFilterConf();
         m_colFilterPanel.saveConfiguration(config);
         config.saveConfiguration(settings);
     }
 
     /**
-     * @return creates and returns configuration instance for column filter 
+     * @return creates and returns configuration instance for column filter
      * panel.
      */
     @SuppressWarnings("unchecked")
