@@ -219,10 +219,12 @@ public class QuickNodeInsertionHandler extends AbstractHandler {
                             String str = m_text.getText();
 
                             if (m_lastString == null || !m_lastString.equals(str)) {
+                                m_lastString = str;
                                 m_repositoryViewFilter.setQueryString(str);
                                 m_viewer.setComparator(new ViewerComparator(m_repositoryViewFilter.createComparator()));
                                 m_viewer.getControl().setRedraw(true);
                                 m_viewer.refresh();
+                                m_viewer.setSelection(null);
                             }
                         }
 
