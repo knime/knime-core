@@ -424,19 +424,14 @@ public class NameFilterConfiguration implements Cloneable {
     }
 
     /**
-     * Sets default names into include list and sets enforce option.
-     * This method is used in auto-configure of a node when no settings are available.
-     *
-     * Use this method only if you are absolutely sure what you are doing. For example if you are replacing an old
-     * column filter panel.
+     * Sets default names, used in auto-configure of a node when no settings are available.
      *
      * @param names The input names
      * @param includeByDefault If <code>true</code>, all elements will be put into the include list and the
      *            "enforce exclusion" will be set. Otherwise all elements are put into the exclude list and the
      *            "enforce inclusion" is set. If in doubt, pass <code>true</code> here.
-     * @since 2.11
      */
-    public void loadDefaults(final String[] names, final boolean includeByDefault) {
+    protected void loadDefaults(final String[] names, final boolean includeByDefault) {
         String[] copy = Arrays.copyOf(names, names.length);
         if (includeByDefault) {
             m_includeList = copy;
@@ -653,9 +648,8 @@ public class NameFilterConfiguration implements Cloneable {
 
     /**
      * @return selected option to enabled inclusion or exclusion
-     * @since 2.11
      */
-    public EnforceOption getEnforceOption() {
+    protected EnforceOption getEnforceOption() {
         return m_enforceOption;
     }
 
@@ -663,9 +657,8 @@ public class NameFilterConfiguration implements Cloneable {
      * Set a new enforce option.
      *
      * @param enforceOption the new in-/exclusion option
-     * @since 2.11
      */
-    public void setEnforceOption(final EnforceOption enforceOption) {
+    protected void setEnforceOption(final EnforceOption enforceOption) {
         m_enforceOption = enforceOption;
     }
 
