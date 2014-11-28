@@ -236,8 +236,10 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
             } else if (e.getValue() instanceof DialogNode) {
                 DialogNodePanel nodePanel = m_dialogNodePanels.get(key);
                 DialogNodeValue nodeValue = nodePanel.getNodeValue();
-                NodeSettingsWO subSettings = settings.addNodeSettings((Integer.toString(key.getIndex())));
-                nodeValue.saveToNodeSettings(subSettings);
+                if (nodeValue != null) {
+                    NodeSettingsWO subSettings = settings.addNodeSettings((Integer.toString(key.getIndex())));
+                    nodeValue.saveToNodeSettings(subSettings);
+                }
             }
         }
     }
