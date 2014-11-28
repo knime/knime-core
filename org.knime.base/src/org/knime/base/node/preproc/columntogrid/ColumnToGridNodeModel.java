@@ -109,7 +109,7 @@ final class ColumnToGridNodeModel extends org.knime.core.node.NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        String[] includes = m_configuration.getIncludes(inData[0].getDataTableSpec());
+        String[] includes = m_configuration.getIncludes();
         String groupColumn = m_configuration.getGroupColumn();
         final ExecutionMonitor mainExec;
         final BufferedDataTable inputTable;
@@ -205,9 +205,9 @@ final class ColumnToGridNodeModel extends org.knime.core.node.NodeModel {
         if (m_configuration == null) {
             m_configuration = new ColumnToGridConfiguration(spec);
             setWarningMessage("Guessed \"" + Arrays.toString(
-                    m_configuration.getIncludes(spec)) + "\" as target column");
+                    m_configuration.getIncludes()) + "\" as target column");
         }
-        String[] includes = m_configuration.getIncludes(spec);
+        String[] includes = m_configuration.getIncludes();
         if (includes == null || includes.length == 0) {
             throw new InvalidSettingsException("No column(s) selected");
         }
@@ -279,7 +279,7 @@ final class ColumnToGridNodeModel extends org.knime.core.node.NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        new ColumnToGridConfiguration().validateSettings(settings);
+        new ColumnToGridConfiguration().loadSettings(settings);
     }
 
     /** {@inheritDoc} */

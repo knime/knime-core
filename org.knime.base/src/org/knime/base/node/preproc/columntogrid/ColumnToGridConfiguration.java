@@ -56,8 +56,6 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.util.filter.NameFilterConfiguration.EnforceOption;
-import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
  * Configuration to the node, contains grid count column number and included
@@ -68,36 +66,39 @@ final class ColumnToGridConfiguration {
 
     private static final int DEF_COL_COUNT = 4;
 
+    private String[] m_includes;
     private String m_groupColumn;
     private int m_colCount;
-
-    private DataColumnSpecFilterConfiguration m_columnFilterConfiguration;
 
     /** Creates new config, auto-guessing defaults if possible (prefers
      * unknown type columns over string columns).
      * @param spec The input spec.
+     * @throws InvalidSettingsException If no config possible (only numbers)
      */
-    public ColumnToGridConfiguration(final DataTableSpec spec) {
+    public ColumnToGridConfiguration(final DataTableSpec spec)
+        throws InvalidSettingsException {
         m_colCount = DEF_COL_COUNT;
-
-        m_columnFilterConfiguration = createColumnFilterConfiguration();
-        // auto-configure
-        m_columnFilterConfiguration.loadDefaults(spec, true);
+        m_includes = autoGuessIncludeColumns(spec);
+        if (m_includes == null) {
+            throw new InvalidSettingsException(
+                    "No reasonable auto-configuration possible");
+        }
     }
 
     /** Default constructor, inits field empty. */
     public ColumnToGridConfiguration() {
         // nothing to do
-
     }
 
     /** Saves current settings to argument.
      * @param settings To save to.
      */
     void saveSettingsTo(final NodeSettingsWO settings) {
-        getColumnFilterConfiguration().saveConfiguration(settings);
-        settings.addInt("grid_col_count", m_colCount);
-        settings.addString("groupColumn", m_groupColumn);
+        if (m_includes != null) {
+            settings.addStringArray("includes", m_includes);
+            settings.addInt("grid_col_count", m_colCount);
+            settings.addString("groupColumn", m_groupColumn);
+        }
     }
 
     /** Loads settings in model.
@@ -106,41 +107,9 @@ final class ColumnToGridConfiguration {
      */
     void loadSettings(final NodeSettingsRO settings)
         throws InvalidSettingsException {
-        String[] incls = null;
-        try{
-            incls = settings.getStringArray("includes");
-
-        } catch (InvalidSettingsException ise) {
-            // do nothing
-        }
-        DataColumnSpecFilterConfiguration conf = createColumnFilterConfiguration();
-        try {
-            conf.loadConfigurationInModel(settings);
-        } catch (InvalidSettingsException ise) {
-            conf.loadDefaults(incls, true);
-            conf.setEnforceOption(EnforceOption.EnforceInclusion);
-        }
-        setColumnFilterConfiguration(conf);
-        m_colCount = settings.getInt("grid_col_count");
-        if (m_colCount <= 0) {
-            throw new InvalidSettingsException(
-                    "Invalid grid col count: " + m_colCount);
-        }
-        // added in v2.4
-        m_groupColumn = settings.getString("groupColumn", null);
-    }
-
-    /**
-     * Validates settings.
-     * @param settings to load from
-     * @throws InvalidSettingsException if settings are invalid
-     */
-    void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-     try {
-            settings.getStringArray("includes");
-        } catch (InvalidSettingsException ise) {
-            DataColumnSpecFilterConfiguration conf = createColumnFilterConfiguration();
-            conf.loadConfigurationInModel(settings);
+        m_includes = settings.getStringArray("includes");
+        if (m_includes == null || m_includes.length == 0) {
+            throw new InvalidSettingsException("No column(s) selected");
         }
         m_colCount = settings.getInt("grid_col_count");
         if (m_colCount <= 0) {
@@ -156,8 +125,8 @@ final class ColumnToGridConfiguration {
      * @param spec The input spec.
      */
     void loadSettings(final NodeSettingsRO settings, final DataTableSpec spec) {
-
-        getColumnFilterConfiguration().loadConfigurationInDialog(settings, spec);
+        String[] includes = autoGuessIncludeColumns(spec);
+        m_includes = settings.getStringArray("includes", includes);
         m_colCount = settings.getInt("grid_col_count", DEF_COL_COUNT);
         if (m_colCount <= 0) {
             m_colCount = DEF_COL_COUNT;
@@ -166,10 +135,16 @@ final class ColumnToGridConfiguration {
     }
 
     /** @return the includes */
-    String[] getIncludes(final DataTableSpec spec) {
-        return getColumnFilterConfiguration().applyTo(spec).getIncludes();
+    String[] getIncludes() {
+        if (m_includes == null) {
+            return new String[0];
+        }
+        return m_includes;
     }
-
+    /** @param includes the includes to set */
+    void setIncludes(final String[] includes) {
+        m_includes = includes;
+    }
     /** @return the colCount */
     int getColCount() {
         return m_colCount;
@@ -224,29 +199,5 @@ final class ColumnToGridConfiguration {
         }
         return new String[] {sel};
     }
-
-    /**
-     * A new configuration to store the settings. Only Columns of Type String are available.
-     *
-     * @return ...
-     */
-    static final DataColumnSpecFilterConfiguration createColumnFilterConfiguration() {
-        return new DataColumnSpecFilterConfiguration("column-filter");
-    }
-
-    /**
-     * @return the conf
-     */
-    public DataColumnSpecFilterConfiguration getColumnFilterConfiguration() {
-        return m_columnFilterConfiguration;
-    }
-
-    /**
-     * @param conf the conf to set
-     */
-    public void setColumnFilterConfiguration(final DataColumnSpecFilterConfiguration conf) {
-        m_columnFilterConfiguration = conf;
-    }
-
 
 }
