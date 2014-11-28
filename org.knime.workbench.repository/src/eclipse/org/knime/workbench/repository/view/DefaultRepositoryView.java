@@ -51,29 +51,29 @@ import java.io.File;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.service.datalocation.Location;
-import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.IViewSite;
-import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.repository.model.CustomRepositoryManager;
 import org.knime.workbench.repository.model.Root;
 
 /**
- * The standard node repository view. It shows all available nodes, except if a custom node repository definition file
- * has been placed into the KNIME installation directory (see {@link #DEFINITION_FILE}). In this case the repository is
- * transformed according to the definition file. There is no way for the use to get access the repository any more!
+ * The standard node repository view. It shows all available nodes, except if a
+ * custom node repository definition file has been placed into the KNIME
+ * installation directory (see {@link #DEFINITION_FILE}). In this case the
+ * repository is transformed according to the definition file. There is no way
+ * for the use to get access the repository any more!
  *
  * @author Thorsten Meinl, University of Konstanz
  * @since 2.6
  */
 public class DefaultRepositoryView extends AbstractRepositoryView {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(DefaultRepositoryView.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(DefaultRepositoryView.class);
 
     /**
-     * Name of the custom node repository definition file ({@value} ). The file must be placed directly into the KNIME
-     * installation directory.
-     *
+     * Name of the custom node repository definition file ({@value} ). The file
+     * must be placed directly into the KNIME installation directory.
      * @since 2.6
      */
     public static final String DEFINITION_FILE = "customNodeRepository.xml";
@@ -102,35 +102,10 @@ public class DefaultRepositoryView extends AbstractRepositoryView {
                 m_manager = new CustomRepositoryManager(customDefinition);
                 setPartName(m_manager.getCustomName());
             } catch (Exception ex) {
-                throw new PartInitException("Could not load custom repository content", ex);
+                throw new PartInitException(
+                        "Could not load custom repository content", ex);
             }
         }
-        // Bug#5807 set the initial focus on the search field.
-        site.getPage().addPartListener(new IPartListener() {
-
-            @Override
-            public void partOpened(final IWorkbenchPart part) {
-            }
-
-            @Override
-            public void partDeactivated(final IWorkbenchPart part) {
-            }
-
-            @Override
-            public void partClosed(final IWorkbenchPart part) {
-            }
-
-            @Override
-            public void partBroughtToTop(final IWorkbenchPart part) {
-            }
-
-            @Override
-            public void partActivated(final IWorkbenchPart part) {
-                if (part == DefaultRepositoryView.this) {
-                    setFocusOnSearchfield();
-                }
-            }
-        });
     }
 
     /**

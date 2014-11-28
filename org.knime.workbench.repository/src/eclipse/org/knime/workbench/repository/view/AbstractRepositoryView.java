@@ -73,7 +73,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IPartListener;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.views.properties.IPropertySource;
@@ -125,6 +129,40 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
      * The constructor.
      */
     public AbstractRepositoryView() {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void init(final IViewSite site) throws PartInitException {
+        super.init(site);
+        // Bug#5807 set the initial focus on the search field.
+        site.getPage().addPartListener(new IPartListener() {
+
+            @Override
+            public void partOpened(final IWorkbenchPart part) {
+            }
+
+            @Override
+            public void partDeactivated(final IWorkbenchPart part) {
+            }
+
+            @Override
+            public void partClosed(final IWorkbenchPart part) {
+            }
+
+            @Override
+            public void partBroughtToTop(final IWorkbenchPart part) {
+            }
+
+            @Override
+            public void partActivated(final IWorkbenchPart part) {
+                if (part == AbstractRepositoryView.this) {
+                    m_toolbarFilterCombo.getCombo().setFocus();
+                }
+            }
+        });
     }
 
     /**
@@ -382,14 +420,6 @@ public abstract class AbstractRepositoryView extends ViewPart implements Reposit
                 }
             }
         });
-    }
-
-    /**
-     * Requests the focus on the search field.
-     * @since 2.11
-     */
-    protected void setFocusOnSearchfield() {
-        m_toolbarFilterCombo.getCombo().setFocus();
     }
 
     /**
