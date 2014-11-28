@@ -269,6 +269,10 @@ public final class WorkflowEditPartFactory implements EditPartFactory, IPartList
     @Override
     public void partHidden(final IWorkbenchPartReference partRef) {
         //NOOP
+        if (WorkflowEditor.ID.equals(partRef.getId()) && m_activateContext != null) {
+            m_activateContext.getContextService().deactivateContext(m_activateContext);
+            m_activateContext = null;
+        }
     }
 
     /**
@@ -286,12 +290,7 @@ public final class WorkflowEditPartFactory implements EditPartFactory, IPartList
      */
     @Override
     public void partVisible(final IWorkbenchPartReference partRef) {
-        boolean activated = WorkflowEditor.ID.equals(partRef.getId());
-        if (!activated && m_activateContext != null) {
-            m_activateContext.getContextService().deactivateContext(m_activateContext);
-            m_activateContext = null;
-        }
-        if (activated && m_activateContext == null) {
+        if (WorkflowEditor.ID.equals(partRef.getId()) && m_activateContext == null) {
             final IContextService contextService =
                 (IContextService)PlatformUI.getWorkbench().getService(IContextService.class);
             m_activateContext = contextService.activateContext("org.knime.workbench.editor.context");
