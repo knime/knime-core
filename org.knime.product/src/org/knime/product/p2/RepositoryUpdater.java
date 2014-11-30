@@ -239,12 +239,12 @@ public class RepositoryUpdater implements ProvisioningListener {
         .compile("/knid=[0-9a-fA-F]{2,2}-[0-9a-fA-F]{16,16}(?:-[0-9a-fA-F]+){0,}/");
 
     private static boolean urlContainsID(final URI uri) {
-        return KNID_PATTERN.matcher(uri.getPath()).find();
+        return (uri.getPath() != null) && KNID_PATTERN.matcher(uri.getPath()).find();
     }
 
     private static final Pattern KNIME_HOST_PATTERN = Pattern.compile("^(?:www|tech|update)\\.knime\\.(?:org|com)$");
 
     private static boolean isKnimeURI(final URI uri) {
-        return KNIME_HOST_PATTERN.matcher(uri.getHost()).matches();
+        return (uri.getHost() != null) && KNIME_HOST_PATTERN.matcher(uri.getHost()).matches();
     }
 }
