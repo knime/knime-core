@@ -106,7 +106,7 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
         m_port = port;
         m_username = username;
         m_password = password;
-        m_dbName = "knime_testing_" + Long.toHexString(RAND.nextLong()) + Long.toHexString(RAND.nextLong());
+        m_dbName = "knime_testing_" + System.currentTimeMillis() + "_" + Long.toHexString(RAND.nextLong());
     }
 
     /**
@@ -182,7 +182,7 @@ public abstract class AbstractDatabaseJanitor extends TestrunJanitor {
             }
         }
 
-        m_dbName = "knime_testing_" + Long.toHexString(RAND.nextLong()) + Long.toHexString(RAND.nextLong());
+        m_dbName = "knime_testing_" + System.currentTimeMillis() + "_" + Long.toHexString(RAND.nextLong());
     }
 
     /**
