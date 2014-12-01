@@ -134,9 +134,11 @@ public class FileReaderAdvancedDialog extends JDialog {
      * This method initializes this.
      */
     private void initialize() {
-        this.setSize(520, 425);
+        //this.setSize(520, 425);
         this.setTitle("File Reader: Advanced Settings");
         this.setContentPane(getJContentPane());
+        this.pack();
+        this.setLocationRelativeTo(getParent());
     }
 
     /**
@@ -302,6 +304,7 @@ public class FileReaderAdvancedDialog extends JDialog {
             m_okButton = new JButton();
             m_okButton.setText("Ok");
             m_okButton.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(final ActionEvent e) {
                     final String errMsg = checkSettings();
                     if (errMsg != null) {
@@ -329,6 +332,7 @@ public class FileReaderAdvancedDialog extends JDialog {
             m_cancelButton = new JButton();
             m_cancelButton.setText("Cancel");
             m_cancelButton.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(final ActionEvent e) {
                     setVisible(false);
                 }
@@ -347,6 +351,7 @@ public class FileReaderAdvancedDialog extends JDialog {
             m_xmlButton = new JButton();
             m_xmlButton.setText("Read from XML file...");
             m_xmlButton.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(final ActionEvent e) {
                     if (JOptionPane.showConfirmDialog(
                             FileReaderAdvancedDialog.this,

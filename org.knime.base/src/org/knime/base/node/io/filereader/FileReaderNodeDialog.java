@@ -1918,7 +1918,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         // pop open the advanced settings dialog with our current settings
         FileReaderAdvancedDialog advDlg =
                 new FileReaderAdvancedDialog(f, m_frSettings);
-        advDlg.setModal(true);
+
         advDlg.setVisible(true);
         // will not continue until user closes the dialog
 
