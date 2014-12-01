@@ -40,7 +40,7 @@ a data &quot;workflow&quot;
             commandId="org.knime.workbench.repository.view.QuickNodeInsertionHandler"
             contextId="org.knime.workbench.editor.context"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M1+SPACE">
+            sequence="CTRL+SPACE">
       </key>
    </extension>
    <extension
