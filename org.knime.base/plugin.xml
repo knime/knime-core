@@ -946,14 +946,14 @@
       </node>
       <node
             category-path="/manipulation/column/column-split+combine"
-            factory-class="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory"
-            id="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory">
+            factory-class="org.knime.base.node.preproc.colcombine2.ColCombine2NodeFactory"
+            id="org.knime.base.node.preproc.colcombine2.ColCombine2NodeFactory">
       </node>
       <node
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.columnmerge.ColumnMergerNodeFactory"
             id="org.knime.base.node.preproc.columnmerge.ColumnMergerNodeFactory"
-            after="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory">
+            after="org.knime.base.node.preproc.colcombine2.ColCombine2NodeFactory">
       </node>
       <node
             category-path="/mining/clustering"
@@ -1356,8 +1356,8 @@
             <node
             after="org.knime.base.node.preproc.split2.SplitNodeFactory2"
             category-path="/manipulation/column/column-split+combine"
-            factory-class="org.knime.base.node.preproc.columntogrid.ColumnToGridNodeFactory"
-            id="org.knime.base.node.preproc.columntogrid.ColumnToGridNodeFactory">
+            factory-class="org.knime.base.node.preproc.columntogrid2.ColumnToGrid2NodeFactory"
+            id="org.knime.base.node.preproc.columntogrid2.ColumnToGrid2NodeFactory">
       </node>
       <node
             category-path="/io/io-other"
