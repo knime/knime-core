@@ -159,6 +159,10 @@ public final class LinReg2LearnerNodeModel extends NodeModel implements LinReg2D
         LinReg2Learner learner = new LinReg2Learner(new PortObjectSpec[] {tableSpec, inPMMLSpec}, m_settings);
         m_content = learner.execute(new PortObject[] {data, inPMMLPort}, exec);
 
+        if (learner.getWarningMessage() != null && learner.getWarningMessage().length() > 0) {
+            setWarningMessage(learner.getWarningMessage());
+        }
+
         // third argument is ignored since we provide a port
         PMMLPortObject outPMMLPort = new PMMLPortObject((PMMLPortObjectSpec)learner.getOutputSpec()[0],
             inPMMLPort, null);
