@@ -200,7 +200,7 @@ public class AutoHiLiteNodeFactory extends NodeFactory<NodeModel> {
     protected NodeDialogPane createNodeDialogPane() {
         return new DefaultNodeSettingsPane() {
             {
-                addDialogComponent(new DialogComponentBoolean(createClearHilitesModel(), "Clear HiLiting: "));
+                addDialogComponent(new DialogComponentBoolean(createClearHilitesModel(), "Clear HiLiting"));
             }
         };
     }
