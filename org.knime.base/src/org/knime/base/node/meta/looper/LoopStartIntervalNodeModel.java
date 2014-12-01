@@ -162,11 +162,11 @@ public class LoopStartIntervalNodeModel extends NodeModel implements
      */
     @Override
     public boolean terminateLoop() {
-        if(m_settings.step() > 0) {
+        if (m_settings.step() > 0) {
             return m_value > m_settings.to();
-        }else if (m_settings.step() < 0){
+        } else if (m_settings.step() < 0) {
             return m_value < m_settings.to();
-        }else{
+        } else {
             // we never end up here --> step() == 0
             return false;
         }
