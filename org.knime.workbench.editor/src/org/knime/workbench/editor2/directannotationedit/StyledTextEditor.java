@@ -102,7 +102,7 @@ public class StyledTextEditor extends CellEditor {
     static {
         // set tab size for win and linux and mac differently (it even depends on the zoom level, yuk!)
         if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-            TAB_SIZE = 5;
+            TAB_SIZE = 8;
         } else if (Platform.OS_LINUX.equals(Platform.getOS())) {
             TAB_SIZE = 8;
         } else {
