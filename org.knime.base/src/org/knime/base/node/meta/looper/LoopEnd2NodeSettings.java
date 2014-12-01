@@ -65,6 +65,12 @@ public class LoopEnd2NodeSettings extends AbstractLoopEndNodeSettings {
     /** @since 2.9 */
     private boolean m_ignoreEmptyTables2 = true;
 
+    /** @since 2.11 */
+    private boolean m_tolerateColumnTypes1 = false;
+
+    /** @since 2.11 */
+    private boolean m_tolerateColumnTypes2 = false;
+
     /**
      * Sets if iterations with empty tables are ignored in the first output port.
      *
@@ -110,6 +116,47 @@ public class LoopEnd2NodeSettings extends AbstractLoopEndNodeSettings {
     }
 
     /**
+     * Sets if column types in different tables at port 1 are merged.
+     * @param tolerate <code>true</code> merge columns types,
+     *                 <code>false</code> don't merge column types.
+     * @since 2.11
+     */
+    public void tolerateColumnTypes1(final boolean tolerate) {
+        m_tolerateColumnTypes1 = tolerate;
+    }
+
+    /**
+     * Returns if column types in different tables at port 1 are merged.
+     * @return tolerate <code>true</code> merge columns types,
+     *                  <code>false</code> don't merge column types.
+     * @since 2.11
+     */
+    public boolean tolerateColumnTypes1() {
+        return m_tolerateColumnTypes1;
+    }
+
+    /**
+     * Sets if column types in different tables at port 2 are merged.
+     * @param tolerate <code>true</code> merge columns types,
+     *                 <code>false</code> don't merge column types.
+     * @since 2.11
+     */
+    public void tolerateColumnTypes2(final boolean tolerate) {
+        m_tolerateColumnTypes2 = tolerate;
+    }
+
+    /**
+     * Returns if column types in different tables at port 2 are merged.
+     * @return tolerate <code>true</code> merge columns types,
+     *                  <code>false</code> don't merge column types.
+     * @since 2.11
+     */
+    public boolean tolerateColumnTypes2() {
+        return m_tolerateColumnTypes2;
+    }
+
+
+    /**
      * Writes the settings into the node settings object.
      *
      * @param settings a node settings object
@@ -119,6 +166,8 @@ public class LoopEnd2NodeSettings extends AbstractLoopEndNodeSettings {
         super.saveSettings(settings);
         settings.addBoolean("ignoreEmptyTables1", m_ignoreEmptyTables1);
         settings.addBoolean("ignoreEmptyTables2", m_ignoreEmptyTables2);
+        settings.addBoolean("tolerateColumnTypes1", m_tolerateColumnTypes1);
+        settings.addBoolean("tolerateColumnTypes2", m_tolerateColumnTypes2);
     }
 
     /**
@@ -131,5 +180,7 @@ public class LoopEnd2NodeSettings extends AbstractLoopEndNodeSettings {
         super.loadSettings(settings);
         m_ignoreEmptyTables1 = settings.getBoolean("ignoreEmptyTables1", true);
         m_ignoreEmptyTables2 = settings.getBoolean("ignoreEmptyTables2", true);
+        m_tolerateColumnTypes1 = settings.getBoolean("tolerateColumnTypes1", false);
+        m_tolerateColumnTypes2 = settings.getBoolean("tolerateColumnTypes2", false);
     }
 }

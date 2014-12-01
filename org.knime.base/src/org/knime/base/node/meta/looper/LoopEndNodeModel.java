@@ -51,10 +51,12 @@ import java.io.File;
 import java.io.IOException;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
@@ -91,9 +93,10 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
     // store the first table in case all data tables are empty
     private BufferedDataTable m_emptyTable = null;
 
-    /**
-     * Creates a new model.
-     */
+    // array with most common super types throughout all tables
+    private DataType[] m_commonDataTypes;
+
+    /** Creates a new model. */
     public LoopEndNodeModel() {
         super(1, 1);
     }
@@ -112,22 +115,30 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
     }
 
     private DataTableSpec createSpec(final DataTableSpec inSpec) {
-        if (m_settings.addIterationColumn()) {
-            DataColumnSpecCreator crea =
-                    new DataColumnSpecCreator(
-                            DataTableSpec.getUniqueColumnName(inSpec,
-                                    "Iteration"), IntCell.TYPE);
-            DataTableSpec newSpec = new DataTableSpec(crea.createSpec());
-
-            return new DataTableSpec(inSpec, newSpec);
+        final DataTableSpec outSpec;
+        if (m_settings.tolerateColumnTypes()) {
+            DataColumnSpec[] commonSpecs = new DataColumnSpec[inSpec.getNumColumns()];
+            for (int i = 0; i < commonSpecs.length; i++) {
+                DataColumnSpecCreator cr = new DataColumnSpecCreator(inSpec.getColumnSpec(i));
+                // init with most common types
+                cr.setType(DataType.getType(DataCell.class));
+                commonSpecs[i] = cr.createSpec();
+            }
+            outSpec = new DataTableSpec(commonSpecs);
         } else {
-            return inSpec;
+            outSpec = inSpec;
+        }
+        if (m_settings.addIterationColumn()) {
+            DataColumnSpecCreator crea = new DataColumnSpecCreator(
+                            DataTableSpec.getUniqueColumnName(outSpec, "Iteration"), IntCell.TYPE);
+            DataTableSpec newSpec = new DataTableSpec(crea.createSpec());
+            return new DataTableSpec(outSpec, newSpec);
+        } else {
+            return outSpec;
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
@@ -138,25 +149,34 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
                     + " are trying to create an infinite loop!");
         }
         BufferedDataTable in = inData[0];
+        DataTableSpec inSpec = in.getSpec();
+        if (m_commonDataTypes == null) {
+            m_commonDataTypes = new DataType[inSpec.getNumColumns()];
+        }
+        for (int i = 0; i < m_commonDataTypes.length; i++) {
+            final DataType type = inSpec.getColumnSpec(i).getType();
+            if (m_commonDataTypes[i] == null) {
+                m_commonDataTypes[i] = type;
+            } else {
+                m_commonDataTypes[i] = DataType.getCommonSuperType(m_commonDataTypes[i], type);
+            }
+        }
         if (m_settings.ignoreEmptyTables() && in.getRowCount() < 1) {
             if (m_emptyTable == null) {
-                BufferedDataContainer cont = exec.createDataContainer(createSpec(in.getDataTableSpec()));
+                BufferedDataContainer cont = exec.createDataContainer(createSpec(inSpec));
                 cont.close();
                 m_emptyTable = cont.getTable();
             }
         } else {
-            DataTableSpec amendedSpec = createSpec(in.getDataTableSpec());
+            DataTableSpec amendedSpec = createSpec(inSpec);
             if (m_resultContainer == null) {
                 // first time we are getting to this: open container
                 m_startTime = System.currentTimeMillis();
                 m_resultContainer = exec.createDataContainer(amendedSpec);
-            } else if (!amendedSpec
-                    .equalStructure(m_resultContainer.getTableSpec())) {
+            } else if (!amendedSpec.equalStructure(m_resultContainer.getTableSpec())) {
                 DataTableSpec predSpec = m_resultContainer.getTableSpec();
-                StringBuilder error =
-                        new StringBuilder(
-                                "Input table's structure differs from reference "
-                                        + "(first iteration) table: ");
+                StringBuilder error = new StringBuilder(
+                    "Input table's structure differs from reference (first iteration) table: ");
                 if (amendedSpec.getNumColumns() != predSpec.getNumColumns()) {
                     error.append("different column counts ");
                     error.append(amendedSpec.getNumColumns());
@@ -178,8 +198,7 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
             if (m_settings.addIterationColumn()) {
                 IntCell currIterCell = new IntCell(m_count);
                 for (DataRow row : in) {
-                    AppendedColumnRow newRow = new AppendedColumnRow(
-                            createNewRow(row), currIterCell);
+                    AppendedColumnRow newRow = new AppendedColumnRow(createNewRow(row), currIterCell);
                     m_resultContainer.addRowToTable(newRow);
                 }
             } else {
@@ -189,9 +208,7 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
             }
         }
 
-        boolean terminateLoop =
-                ((LoopStartNodeTerminator)this.getLoopStartNode())
-                        .terminateLoop();
+        boolean terminateLoop = ((LoopStartNodeTerminator)this.getLoopStartNode()).terminateLoop();
         if (terminateLoop) {
             if (m_settings.ignoreEmptyTables() && m_resultContainer == null) {
                 return new BufferedDataTable[]{m_emptyTable};
@@ -199,10 +216,23 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
                 // this was the last iteration - close container and continue
                 m_resultContainer.close();
                 BufferedDataTable outTable = m_resultContainer.getTable();
+                if (m_settings.tolerateColumnTypes()) {
+                    DataTableSpec outSpec = outTable.getSpec();
+                    DataColumnSpec[] cspecs = new DataColumnSpec[outSpec.getNumColumns()];
+                    for (int i = 0; i < m_commonDataTypes.length; i++) {
+                        DataColumnSpecCreator cr = new DataColumnSpecCreator(outSpec.getColumnSpec(i));
+                        cr.setType(m_commonDataTypes[i]);
+                        cspecs[i] = cr.createSpec();
+                    }
+                    // add iteration column spec as last column
+                    if (m_settings.addIterationColumn()) {
+                        cspecs[cspecs.length - 1] = outSpec.getColumnSpec(cspecs.length - 1);
+                    }
+                    outTable = exec.createSpecReplacerTable(outTable, new DataTableSpec(cspecs));
+                }
                 m_resultContainer = null;
                 m_count = 0;
-                LOGGER.debug("Total loop execution time: "
-                        + (System.currentTimeMillis() - m_startTime) + "ms");
+                LOGGER.debug("Total loop execution time: " + (System.currentTimeMillis() - m_startTime) + "ms");
                 m_startTime = 0;
                 return new BufferedDataTable[]{outTable};
             }
@@ -249,6 +279,7 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
     protected void reset() {
         m_resultContainer = null;
         m_emptyTable = null;
+        m_commonDataTypes = null;
         m_count = 0;
         m_startTime = 0;
     }

@@ -58,6 +58,9 @@ public class LoopEnd2NodeDialog extends AbstractLoopEndNodeDialog<LoopEnd2NodeSe
     private final JCheckBox m_ignoreEmptyTables1 = new JCheckBox("Ignore empty input tables at port 1");
     private final JCheckBox m_ignoreEmptyTables2 = new JCheckBox("Ignore empty input tables at port 2");
 
+    private final JCheckBox m_tolerateColumnTypes1 = new JCheckBox("Assign most common column type at port 1");
+    private final JCheckBox m_tolerateColumnTypes2 = new JCheckBox("Assign most common column type at port 2");
+
     /**
      *
      */
@@ -65,6 +68,8 @@ public class LoopEnd2NodeDialog extends AbstractLoopEndNodeDialog<LoopEnd2NodeSe
         super(new LoopEnd2NodeSettings());
         addComponent(m_ignoreEmptyTables1);
         addComponent(m_ignoreEmptyTables2);
+        addComponent(m_tolerateColumnTypes1);
+        addComponent(m_tolerateColumnTypes2);
     }
 
     /**
@@ -74,6 +79,8 @@ public class LoopEnd2NodeDialog extends AbstractLoopEndNodeDialog<LoopEnd2NodeSe
     protected void addToSettings(final LoopEnd2NodeSettings settings) {
         settings.ignoreEmptyTables1(m_ignoreEmptyTables1.isSelected());
         settings.ignoreEmptyTables2(m_ignoreEmptyTables2.isSelected());
+        settings.tolerateColumnTypes1(m_tolerateColumnTypes1.isSelected());
+        settings.tolerateColumnTypes2(m_tolerateColumnTypes2.isSelected());
     }
 
     /**
@@ -83,6 +90,8 @@ public class LoopEnd2NodeDialog extends AbstractLoopEndNodeDialog<LoopEnd2NodeSe
     protected void loadFromSettings(final LoopEnd2NodeSettings settings) {
         m_ignoreEmptyTables1.setSelected(settings.ignoreEmptyTables1());
         m_ignoreEmptyTables2.setSelected(settings.ignoreEmptyTables2());
+        m_tolerateColumnTypes1.setSelected(settings.tolerateColumnTypes1());
+        m_tolerateColumnTypes2.setSelected(settings.tolerateColumnTypes2());
     }
 
 }

@@ -61,6 +61,9 @@ public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
     /** @since 2.9 */
     private boolean m_ignoreEmptyTables = true;
 
+    /** @since 2.11 */
+    private boolean m_tolerateColumnTypes = false;
+
     /**
      * Sets if iterations with empty tables are ignored in the output.
      *
@@ -84,6 +87,26 @@ public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
     }
 
     /**
+     * Sets if column types in different tables are merged.
+     * @param tolerate <code>true</code> merge columns types,
+     *                 <code>false</code> don't merge column types.
+     * @since 2.11
+     */
+    public void tolerateColumnTypes(final boolean tolerate) {
+        m_tolerateColumnTypes = tolerate;
+    }
+
+    /**
+     * Returns if column types in different tables are merged.
+     * @return tolerate <code>true</code> merge columns types,
+     *                  <code>false</code> don't merge column types.
+     * @since 2.11
+     */
+    public boolean tolerateColumnTypes() {
+        return m_tolerateColumnTypes;
+    }
+
+    /**
      * Writes the settings into the node settings object.
      *
      * @param settings a node settings object
@@ -92,6 +115,7 @@ public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
     public void saveSettings(final NodeSettingsWO settings) {
         super.saveSettings(settings);
         settings.addBoolean("ignoreEmptyTables", m_ignoreEmptyTables);
+        settings.addBoolean("tolerateColumnTypes", m_tolerateColumnTypes);
     }
 
     /**
@@ -103,5 +127,6 @@ public class LoopEndNodeSettings extends AbstractLoopEndNodeSettings {
     public void loadSettings(final NodeSettingsRO settings) {
         super.loadSettings(settings);
         m_ignoreEmptyTables = settings.getBoolean("ignoreEmptyTables", false);
+        m_tolerateColumnTypes = settings.getBoolean("tolerateColumnTypes", false);
     }
 }
