@@ -1142,11 +1142,11 @@
       <node
             after="org.knime.base.node.meta.looper.chunk.LoopStartChunkNodeFactory"
             category-path="/flowcontrol/loopsupport"
-            factory-class="org.knime.base.node.meta.looper.columnlist.ColumnListLoopStartNodeFactory"
-            id="org.knime.base.node.meta.looper.columnlist.ColumnListLoopStartNodeFactory">
+            factory-class="org.knime.base.node.meta.looper.columnlist2.ColumnListLoopStartNodeFactory"
+            id="org.knime.base.node.meta.looper.columnlist2.ColumnListLoopStartNodeFactory">
       </node>  
       <node
-            after="org.knime.base.node.meta.looper.columnlist.ColumnListLoopStartNodeFactory"
+            after="org.knime.base.node.meta.looper.columnlist2.ColumnListLoopStartNodeFactory"
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory"
             id="org.knime.base.node.meta.looper.condition.LoopStartGenericNodeFactory">
