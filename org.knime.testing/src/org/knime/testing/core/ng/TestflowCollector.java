@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -181,6 +182,8 @@ public class TestflowCollector {
                 logger.error("I/O error accessing '" + currentDir + "'. Does it exist?!?");
                 return;
             }
+            Arrays.sort(dirList);
+
             for (int i = 0; i < dirList.length; i++) {
                 searchDirectory(dirList[i], rootDir, tests, runConfiguration);
             }
@@ -191,6 +194,7 @@ public class TestflowCollector {
                 logger.error("I/O error accessing '" + currentDir + "'. Does it exist?!?");
                 return;
             }
+            Arrays.sort(zipList);
             for (int i = 0; i < zipList.length; i++) {
                 String workflowName = zipList[i].getName();
                 String workflowPath = zipList[i].getAbsolutePath().substring(rootDir.getAbsolutePath().length());
