@@ -876,10 +876,24 @@ public final class SubNodeContainer extends SingleNodeContainer implements NodeC
                 }
             }
             // and launch a configure on entire sub workflow
+            InternalNodeContainerState oldState = getInternalState();
             m_wfm.reconfigureAllNodesOnlyInThisWFM();
             final InternalNodeContainerState internalState = m_wfm.getInternalState();
-            setVirtualOutputIntoOutport(internalState);
-            setInternalState(internalState);
+            InternalNodeContainerState newState;
+            switch (internalState) {
+                case IDLE:
+                    newState = oldState.isExecutionInProgress()
+                        ? InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC : InternalNodeContainerState.IDLE;
+                    break;
+                case CONFIGURED:
+                    newState = oldState.isExecutionInProgress()
+                        ? InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC : InternalNodeContainerState.CONFIGURED;
+                    break;
+                default:
+                    newState = internalState;
+            }
+            setVirtualOutputIntoOutport(newState);
+            setInternalState(newState);
             if (nch != null) {
                 try {
                     nch.postConfigure(rawInSpecs, null);
