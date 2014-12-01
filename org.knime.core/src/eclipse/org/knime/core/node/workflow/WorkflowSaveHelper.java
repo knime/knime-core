@@ -63,6 +63,7 @@ public final class WorkflowSaveHelper {
 
     private boolean m_saveData;
     private boolean m_isAutoSave;
+    private boolean m_isSaveWizardController;
 
     /**
      * @param saveData ...
@@ -71,6 +72,7 @@ public final class WorkflowSaveHelper {
     public WorkflowSaveHelper(final boolean saveData, final boolean isAutoSave) {
         m_saveData = saveData;
         m_isAutoSave = isAutoSave;
+        m_isSaveWizardController = false;
     }
 
     /** @return the saveData */
@@ -91,6 +93,18 @@ public final class WorkflowSaveHelper {
      * @return this (for method chaining). */
     public WorkflowSaveHelper setAutoSave(final boolean isAutoSave) {
         m_isAutoSave = isAutoSave;
+        return this;
+    }
+    /** @return the isSaveWizardController
+     * @since 2.11 */
+    public boolean isSaveWizardController() {
+        return m_isSaveWizardController;
+    }
+    /** @param value the isSaveWizardController to set
+     * @return this (for method chaining).
+     * @since 2.11 */
+    public WorkflowSaveHelper setSaveWizardController(final boolean value) {
+        m_isSaveWizardController = value;
         return this;
     }
 

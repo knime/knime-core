@@ -2358,9 +2358,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.10
      */
     public WizardExecutionController getWizardExecutionController() {
-        if (!isProject()) {
-            throw new IllegalStateException(String.format("Workflow '%s' is not a project", getNameWithID()));
-        }
+        CheckUtils.checkState(isProject(), "Workflow '%s' is not a project", getNameWithID());
         synchronized (m_workflowMutex) {
             if (m_wizardExecutionController == null) {
                 m_wizardExecutionController = new WizardExecutionController(this);
@@ -7411,6 +7409,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             throw cee;
         }
+        NodeSettingsRO wizardState = persistor.getWizardExecutionControllerState();
+        if (wizardState != null) {
+            try {
+                m_wizardExecutionController = new WizardExecutionController(this, wizardState);
+            } catch (InvalidSettingsException e1) {
+                String msg = "Failed to restore wizard controller from file: " + e1.getMessage();
+                LOGGER.debug(msg, e1);
+                loadResult.addError(msg);
+            }
+        }
         // set dirty if this wm should be reset (for instance when the state
         // of the workflow can't be properly read from the workflow.knime)
         if (persistor.needsResetAfterLoad() || persistor.isDirtyAfterLoad()) {
@@ -7557,8 +7565,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (needsReset) {
                 failedNodes.add(bfsID);
             }
-            if (!isExecuted && cont instanceof NativeNodeContainer) {
-                configureSingleNodeContainer((NativeNodeContainer)cont, keepNodeMessage);
+            if (!isExecuted && cont instanceof SingleNodeContainer) {
+                configureSingleNodeContainer((SingleNodeContainer)cont, keepNodeMessage);
             }
             if (persistor.mustComplainIfStateDoesNotMatch() && !cont.getInternalState().equals(loadState)
                     && !hasPredecessorFailed) {

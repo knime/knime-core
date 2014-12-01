@@ -269,6 +269,8 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     private List<WorkflowAnnotation> m_workflowAnnotations;
 
+    private NodeSettingsRO m_wizardState;
+
     private boolean m_needsResetAfterLoad;
 
     private boolean m_isDirtyAfterLoad;
@@ -473,6 +475,12 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
 
     /** {@inheritDoc} */
     @Override
+    public NodeSettingsRO getWizardExecutionControllerState() {
+        return m_wizardState;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public List<ReferencedFile> getObsoleteNodeDirectories() {
         return m_obsoleteNodeDirectories;
     }
@@ -670,6 +678,16 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
             setDirtyAfterLoad();
             loadResult.addError(error);
             m_workflowAnnotations = Collections.emptyList();
+        }
+
+        try {
+            m_wizardState = loadWizardState(m_workflowSett);
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load wizard state: " + e.getMessage();
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            loadResult.addError(error);
+            m_wizardState = null;
         }
 
         NodeSettingsRO metaFlowParentSettings = new NodeSettings("fake_parent_settings");
@@ -1662,6 +1680,13 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         }
     }
 
+    /** @return the wizard state saved in the file or null (often null).
+     * @param settings ...
+     * @throws InvalidSettingsException ... */
+    NodeSettingsRO loadWizardState(final NodeSettingsRO settings) throws InvalidSettingsException {
+        return settings.containsKey("wizard") ? settings.getNodeSettings("wizard") : null;
+    }
+
     /**
      * Sub class hook o read port settings.
      *
@@ -1886,6 +1911,7 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
         NodeSettings preFilledSettings = new NodeSettings(name);
         saveHeader(preFilledSettings);
         wm.getTemplateInformation().save(preFilledSettings);
+        saveWizardState(wm, preFilledSettings, saveHelper);
         saveContent(wm, preFilledSettings, rawWorkflowDirRef, execMon, saveHelper);
         return name;
     }
@@ -2050,6 +2076,23 @@ public class FileWorkflowPersistor implements WorkflowPersistor, TemplateNodeCon
     static void saveHeader(final NodeSettings settings) {
         settings.addString(WorkflowManager.CFG_CREATED_BY, KNIMEConstants.VERSION);
         settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion().getVersionString());
+    }
+
+    /** Saves the status of the wizard if set so in the save-helper.
+     * @param wm ...
+     * @param preFilledSettings ...
+     * @param saveHelper ...
+     */
+    private static void saveWizardState(final WorkflowManager wm, final NodeSettings preFilledSettings,
+        final WorkflowSaveHelper saveHelper) {
+        if (!saveHelper.isSaveWizardController() || !wm.isProject()) {
+            return;
+        }
+        NodeSettingsWO wizardSettings = preFilledSettings.addNodeSettings("wizard");
+        final WizardExecutionController wizardController = wm.getWizardExecutionController();
+        if (wizardController != null) {
+            wizardController.save(wizardSettings);
+        }
     }
 
     protected static void saveWorkflowName(final NodeSettingsWO settings, final String name) {

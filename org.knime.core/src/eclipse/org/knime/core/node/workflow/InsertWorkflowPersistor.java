@@ -59,6 +59,7 @@ import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.CheckUtils;
 import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
 
@@ -175,6 +176,12 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     @Override
     public List<WorkflowAnnotation> getWorkflowAnnotations() {
         return Collections.emptyList();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeSettingsRO getWizardExecutionControllerState() {
+        return null;
     }
 
     /** {@inheritDoc} */
