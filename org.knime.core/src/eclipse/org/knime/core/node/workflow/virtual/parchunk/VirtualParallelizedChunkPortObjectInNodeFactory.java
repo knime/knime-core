@@ -51,6 +51,7 @@ package org.knime.core.node.workflow.virtual.parchunk;
 import java.util.Arrays;
 import java.util.Set;
 
+import org.knime.core.node.DelegateNodeDescription;
 import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDescription;
@@ -88,7 +89,16 @@ public class VirtualParallelizedChunkPortObjectInNodeFactory extends DynamicNode
     /** {@inheritDoc} */
     @Override
     protected NodeDescription createNodeDescription() {
-        return super.parseNodeDescriptionFromFile();
+        return new DelegateNodeDescription(super.parseNodeDescriptionFromFile()) {
+            @Override
+            public String getOutportDescription(final int index) {
+                return "The data chunk for the current branch - forwarded from loop start.";
+            }
+            @Override
+            public String getOutportName(final int index) {
+                return String.format("Virtual Input %d", index + 1);
+            }
+        };
     }
 	/**
 	 * {@inheritDoc}

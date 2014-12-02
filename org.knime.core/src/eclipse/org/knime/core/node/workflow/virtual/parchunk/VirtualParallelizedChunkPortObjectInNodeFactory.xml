@@ -10,8 +10,6 @@
     </intro>
     </fullDescription>
     <ports>
-        <outPort index="0" name="Output Data">
-            Data for current chunk.
-        </outPort>
+        <!-- Filled in java code -->
     </ports>
 </knimeNode>
