@@ -61,6 +61,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
@@ -284,6 +285,7 @@ public class NumberToStringNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataCell[] getCells(final DataRow row) {
             DataCell[] newcells = new DataCell[m_colindices.length];
             for (int i = 0; i < newcells.length; i++) {
@@ -292,6 +294,9 @@ public class NumberToStringNodeModel extends NodeModel {
                 if (dc instanceof IntValue) {
                     int iVal = ((IntValue)dc).getIntValue();
                     newcells[i] = new StringCell(Integer.toString(iVal));
+                } else if (dc instanceof LongValue) {
+                    long l = ((LongValue)dc).getLongValue();
+                    newcells[i] = new StringCell(Long.toString(l));
                 } else if (dc instanceof DoubleValue) {
                     double d = ((DoubleValue)dc).getDoubleValue();
                     newcells[i] = new StringCell(Double.toString(d));
@@ -305,6 +310,7 @@ public class NumberToStringNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataColumnSpec[] getColumnSpecs() {
             DataColumnSpec[] newcolspecs =
                     new DataColumnSpec[m_colindices.length];
@@ -323,6 +329,7 @@ public class NumberToStringNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void setProgress(final int curRowNr, final int rowCount,
                 final RowKey lastKey, final ExecutionMonitor exec) {
             exec.setProgress((double)curRowNr / (double)rowCount, "Converting");
