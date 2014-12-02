@@ -51,6 +51,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.knime.base.node.util.DoubleFormat;
+import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -128,7 +129,11 @@ public class PMMLSimplePredicate extends PMMLPredicate {
             }
             return null;
         }
-        if (cell.getType().isCompatible(DoubleValue.class)) {
+        // Fix for bug 3308: If we have a boolean cell, we have to compare strings
+        // before we check if it is compatible to double, because bool is compatible to double, too.
+        if (cell.getType().isCompatible(BooleanValue.class)) {
+            return getOperator().evaluate(cell.toString(), m_threshold);
+        } else if (cell.getType().isCompatible(DoubleValue.class)) {
             if (m_threshold == null || m_threshold.isEmpty()) {
                 return getOperator().evaluate(((DoubleValue)cell).getDoubleValue(), null);
             }
