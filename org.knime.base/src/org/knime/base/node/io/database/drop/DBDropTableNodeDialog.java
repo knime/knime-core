@@ -79,8 +79,11 @@ public class DBDropTableNodeDialog extends NodeDialogPane {
     private final SettingsModelString m_tableNameModel = DBDropTableNodeModel.createTableNameModel();
     private final DialogComponentString m_tableNameComp = new DialogComponentString(m_tableNameModel, null, true, 35);
     private SettingsModelBoolean m_cascadeModel = DBDropTableNodeModel.createCascadeModel();
+    private SettingsModelBoolean m_failIfNotExistsModel = DBDropTableNodeModel.createFailIfNotExistsModel();
+    private DialogComponentBoolean m_failIfNotExistsComp = new DialogComponentBoolean(m_failIfNotExistsModel,
+            "Fail if table does not exist");
     private DialogComponentBoolean m_cascadeComp = new DialogComponentBoolean(m_cascadeModel,
-        "<html>cascade <b>(WARNING: This might drop dependent objects!!!)</b></html>");
+        "<html>cascade <b>(WARNING: This might drop dependent objects!)</b></html>");
 
     /**
      * Constructor.
@@ -118,11 +121,35 @@ public class DBDropTableNodeDialog extends NodeDialogPane {
         c.weightx = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
         root.add(new JLabel(), c);
+
         c.anchor = GridBagConstraints.LINE_START;
         c.gridx = 0;
         c.gridy++;
-        c.gridwidth = 2;
+        c.gridwidth = 3;
+        c.weightx = 0;
+        c.fill = GridBagConstraints.NONE;
         root.add(m_cascadeComp.getComponentPanel(), c);
+        //add a dummy label that stretches itself
+        c.gridx++;
+        c.weightx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        root.add(new JLabel(), c);
+
+
+
+        c.anchor = GridBagConstraints.LINE_START;
+        c.gridx = 0;
+        c.gridy++;
+        c.gridwidth = 3;
+        c.weightx = 0;
+        c.fill = GridBagConstraints.NONE;
+        root.add(m_failIfNotExistsComp.getComponentPanel(), c);
+        //add a dummy label that stretches itself
+        c.gridx++;
+        c.weightx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        root.add(new JLabel(), c);
+
         addTab(" Settings ", root);
     }
 
@@ -134,6 +161,7 @@ public class DBDropTableNodeDialog extends NodeDialogPane {
             throws NotConfigurableException {
         m_tableNameComp.loadSettingsFrom(settings, specs);
         m_cascadeComp.loadSettingsFrom(settings, specs);
+        m_failIfNotExistsComp.loadSettingsFrom(settings, specs);
     }
 
     /**
@@ -143,5 +171,6 @@ public class DBDropTableNodeDialog extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         m_tableNameComp.saveSettingsTo(settings);
         m_cascadeComp.saveSettingsTo(settings);
+        m_failIfNotExistsComp.saveSettingsTo(settings);
     }
 }

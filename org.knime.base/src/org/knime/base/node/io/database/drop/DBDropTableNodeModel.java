@@ -67,6 +67,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabaseConnectionPortObject;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
+import org.knime.core.node.port.database.DatabaseUtility;
 import org.knime.core.node.port.database.StatementManipulator;
 import org.knime.core.node.workflow.CredentialsProvider;
 
@@ -80,6 +81,7 @@ public class DBDropTableNodeModel extends NodeModel {
     static final String CFG_TABLE_NAME = "tableName";
     private final SettingsModelString m_tableName = createTableNameModel();
     private final SettingsModelBoolean m_cascade = createCascadeModel();
+    private final SettingsModelBoolean m_failIfNotExists = createFailIfNotExistsModel();
 
     /**
      * Constructor.
@@ -103,6 +105,13 @@ public class DBDropTableNodeModel extends NodeModel {
     }
 
     /**
+     * @return the if exists model
+     */
+    static SettingsModelBoolean createFailIfNotExistsModel() {
+        return new SettingsModelBoolean("failIfNotExists", false);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -119,10 +128,17 @@ public class DBDropTableNodeModel extends NodeModel {
         final DatabaseConnectionPortObject incomingConnection = (DatabaseConnectionPortObject)inObjects[0];
         final CredentialsProvider cp = getCredentialsProvider();
         final DatabaseConnectionSettings connSettings = incomingConnection.getConnectionSettings(cp);
-        final StatementManipulator manipulator = connSettings.getUtility().getStatementManipulator();
+        final DatabaseUtility dbUtility = connSettings.getUtility();
+        final StatementManipulator manipulator = dbUtility.getStatementManipulator();
         final String table2Drop = m_tableName.getStringValue();
         try {
-            connSettings.execute(manipulator.dropTable(table2Drop, m_cascade.getBooleanValue()), cp);
+            if (m_failIfNotExists.getBooleanValue()
+                    || dbUtility.tableExists(connSettings.createConnection(cp), table2Drop)) {
+                connSettings.execute(manipulator.dropTable(table2Drop, m_cascade.getBooleanValue()), cp);
+                exec.setMessage("Table " + table2Drop + " sucessful droped");
+            } else {
+                exec.setMessage("Table " + table2Drop + " does not exist in db");
+            }
         } catch (SQLException ex) {
             Throwable cause = ExceptionUtils.getRootCause(ex);
             if (cause == null) {
@@ -130,7 +146,6 @@ public class DBDropTableNodeModel extends NodeModel {
             }
             throw new InvalidSettingsException("Error while validating drop statement: " + cause.getMessage(), ex);
         }
-        exec.setMessage("Table " + table2Drop + " sucessful droped");
         return inObjects;
     }
 
@@ -141,6 +156,7 @@ public class DBDropTableNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_tableName.saveSettingsTo(settings);
         m_cascade.saveSettingsTo(settings);
+        m_failIfNotExists.saveSettingsTo(settings);
     }
 
     /**
@@ -154,6 +170,7 @@ public class DBDropTableNodeModel extends NodeModel {
             throw new InvalidSettingsException("Please provide the table name to drop");
         }
         m_cascade.validateSettings(settings);
+        m_failIfNotExists.validateSettings(settings);
     }
 
     /**
@@ -163,6 +180,7 @@ public class DBDropTableNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         m_tableName.loadSettingsFrom(settings);
         m_cascade.loadSettingsFrom(settings);
+        m_failIfNotExists.loadSettingsFrom(settings);
     }
 
     /**
