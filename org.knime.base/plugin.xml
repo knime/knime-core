@@ -1507,12 +1507,12 @@
             id="org.knime.base.node.util.sendmail.SendMailNodeFactory">
       </node>
       <node
-            category-path="/misc"
+            category-path="/manipulation/column/"
             factory-class="org.knime.base.node.preproc.datavalidator.DataValidatorNodeFactory"
             id="org.knime.base.node.preproc.datavalidator.DataValidatorNodeFactory">
       </node>
       <node
-            category-path="/misc"
+            category-path="/manipulation/column/"
             factory-class="org.knime.base.node.preproc.datavalidator.DataValidatorSpecNodeFactory"
             id="org.knime.base.node.preproc.datavalidator.DataValidatorSpecNodeFactory">
       </node>
@@ -1696,7 +1696,7 @@
             id="org.knime.base.node.io.fixedwidthfr.FixedWidthFRNodeFactory">
       </node>
       <node
-            category-path="/manipulation/column"
+            category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.targetshuffling.TargetShufflingNodeFactory"
             id="org.knime.base.node.preproc.targetshuffling.TargetShufflingNodeFactory"/>
    </extension>
