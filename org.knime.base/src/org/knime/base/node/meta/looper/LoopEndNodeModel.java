@@ -150,17 +150,6 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
         }
         BufferedDataTable in = inData[0];
         DataTableSpec inSpec = in.getSpec();
-        if (m_commonDataTypes == null) {
-            m_commonDataTypes = new DataType[inSpec.getNumColumns()];
-        }
-        for (int i = 0; i < m_commonDataTypes.length; i++) {
-            final DataType type = inSpec.getColumnSpec(i).getType();
-            if (m_commonDataTypes[i] == null) {
-                m_commonDataTypes[i] = type;
-            } else {
-                m_commonDataTypes[i] = DataType.getCommonSuperType(m_commonDataTypes[i], type);
-            }
-        }
         if (m_settings.ignoreEmptyTables() && in.getRowCount() < 1) {
             if (m_emptyTable == null) {
                 BufferedDataContainer cont = exec.createDataContainer(createSpec(inSpec));
@@ -168,6 +157,17 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
                 m_emptyTable = cont.getTable();
             }
         } else {
+            if (m_commonDataTypes == null) {
+                m_commonDataTypes = new DataType[inSpec.getNumColumns()];
+            }
+            for (int i = 0; i < inSpec.getNumColumns(); i++) {
+                final DataType type = inSpec.getColumnSpec(i).getType();
+                if (m_commonDataTypes[i] == null) {
+                    m_commonDataTypes[i] = type;
+                } else {
+                    m_commonDataTypes[i] = DataType.getCommonSuperType(m_commonDataTypes[i], type);
+                }
+            }
             DataTableSpec amendedSpec = createSpec(inSpec);
             if (m_resultContainer == null) {
                 // first time we are getting to this: open container

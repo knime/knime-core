@@ -158,27 +158,6 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
         final DataTableSpec inSpec1 = inData[0].getDataTableSpec();
         final DataTableSpec inSpec2 = inData[1].getDataTableSpec();
 
-        if (m_commonDataTypes1 == null || m_commonDataTypes2 == null) {
-            m_commonDataTypes1 = new DataType[inSpec1.getNumColumns()];
-            m_commonDataTypes2 = new DataType[inSpec2.getNumColumns()];
-        }
-        for (int i = 0; i < m_commonDataTypes1.length; i++) {
-            final DataType type = inSpec1.getColumnSpec(i).getType();
-            if (m_commonDataTypes1[i] == null) {
-                m_commonDataTypes1[i] = type;
-            } else {
-                m_commonDataTypes1[i] = DataType.getCommonSuperType(m_commonDataTypes1[i], type);
-            }
-        }
-        for (int i = 0; i < m_commonDataTypes2.length; i++) {
-            final DataType type = inSpec2.getColumnSpec(i).getType();
-            if (m_commonDataTypes2[i] == null) {
-                m_commonDataTypes2[i] = type;
-            } else {
-                m_commonDataTypes2[i] = DataType.getCommonSuperType(m_commonDataTypes2[i], type);
-            }
-        }
-
         if (m_settings.ignoreEmptyTables1() && inData[0].getRowCount() < 1) {
             if (m_emptyTable[0] == null) {
                 BufferedDataContainer cont = exec.createDataContainer(createSpec(inSpec1, tolerate1));
@@ -200,6 +179,17 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
 
         final IntCell currIterCell = new IntCell(m_count);
         if (!m_settings.ignoreEmptyTables1() || inData[0].getRowCount() > 0) {
+            if (m_commonDataTypes1 == null) {
+                m_commonDataTypes1 = new DataType[inSpec1.getNumColumns()];
+            }
+            for (int i = 0; i < inSpec1.getNumColumns(); i++) {
+                final DataType type = inSpec1.getColumnSpec(i).getType();
+                if (m_commonDataTypes1[i] == null) {
+                    m_commonDataTypes1[i] = type;
+                } else {
+                    m_commonDataTypes1[i] = DataType.getCommonSuperType(m_commonDataTypes1[i], type);
+                }
+            }
             checkSpec(createSpec(inSpec1, tolerate1), m_resultContainer[0].getTableSpec());
             if (m_settings.addIterationColumn()) {
                 for (DataRow row : inData[0]) {
@@ -214,6 +204,17 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
             }
         }
         if (!m_settings.ignoreEmptyTables2() || inData[1].getRowCount() > 0) {
+            if (m_commonDataTypes2 == null) {
+                m_commonDataTypes2 = new DataType[inSpec2.getNumColumns()];
+            }
+            for (int i = 0; i < inSpec2.getNumColumns(); i++) {
+                final DataType type = inSpec2.getColumnSpec(i).getType();
+                if (m_commonDataTypes2[i] == null) {
+                    m_commonDataTypes2[i] = type;
+                } else {
+                    m_commonDataTypes2[i] = DataType.getCommonSuperType(m_commonDataTypes2[i], type);
+                }
+            }
             checkSpec(createSpec(inSpec2, tolerate2), m_resultContainer[1].getTableSpec());
             if (m_settings.addIterationColumn()) {
                 for (DataRow row : inData[1]) {
