@@ -6,18 +6,17 @@
    <aboutInfo>
       <image path="/org.knime.product/icons/png/knime_about.png"/>
       <text>
-         Welcome to the KNIME Analytics Platform v2.10.0
+         Welcome to the KNIME Analytics Platform 2.11.0
 Copyright by KNIME GmbH, Konstanz, Germany 
 email: contact@knime.org
 
 This version of KNIME is licensed under the GNU General Public License, Version 3.
 Please see the license file in the installation directory and 
 contact us if you cannot locate it. More details can be found at
-http://www.knime.org
+http://www.knime.org/
 
 
-Based on Eclipse, www.eclipse.org 
-Uses: Java, GEF, Log4J
+Based on Eclipse, http://www.eclipse.org/
 
 KNIME is a registered trademark of KNIME GmbH, Konstanz, Germany.
 All other trademarks are the property of their respective owners.
@@ -71,7 +70,7 @@ All other trademarks are the property of their respective owners.
 
    <license>
         <text>
-      GNU GENERAL PUBLIC LICENSE with Additional Permissions according to Sec. 7
+   GNU GENERAL PUBLIC LICENSE with Additional Permissions according to Sec. 7
 *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** 
 Please see below the General Public License (GPL), Version 3, 
 and the Additional Permissions according to Sec. 7 
