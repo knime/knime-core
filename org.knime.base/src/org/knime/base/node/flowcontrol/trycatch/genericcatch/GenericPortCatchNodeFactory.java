@@ -65,7 +65,7 @@ public class GenericPortCatchNodeFactory extends NodeFactory<GenericCatchNodeMod
     /** {@inheritDoc} */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return null;
+        return new GenericCatchNodeDialog();
     }
 
     /** {@inheritDoc} */
@@ -90,7 +90,7 @@ public class GenericPortCatchNodeFactory extends NodeFactory<GenericCatchNodeMod
     /** {@inheritDoc} */
     @Override
     protected boolean hasDialog() {
-        return false;
+        return true;
     }
 
 }

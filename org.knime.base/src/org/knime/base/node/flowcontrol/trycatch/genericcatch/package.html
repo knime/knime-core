@@ -1,5 +1,5 @@
-/*
- * ------------------------------------------------------------------------
+<!--
+========================================================================
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
  *
@@ -40,58 +40,8 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   Sept 30, 2010 (mb): created
- */
-package org.knime.base.node.flowcontrol.trycatch.genericcatch;
-
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-
-/**
- * @author M. Berthold, University of Konstanz
- */
-public class DataPortCatchNodeFactory extends NodeFactory<GenericCatchNodeModel> {
-
-    /**
-     * Create factory, that instantiates nodes.
-     */
-    public DataPortCatchNodeFactory() {
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new GenericCatchNodeDialog();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public GenericCatchNodeModel createNodeModel() {
-        return new GenericCatchNodeModel(BufferedDataTable.TYPE);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeView<GenericCatchNodeModel> createNodeView(final int index,
-            final GenericCatchNodeModel model) {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
-
-}
+====================================================================
+-->
+<body>
+Package for all try catch nodes.
+</body>

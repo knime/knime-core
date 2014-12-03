@@ -12,6 +12,11 @@
         second port will be forwarded and the second variable outport will contain
         information about the observed error.
         </intro>
+        <option name="Always populate error variables">If selected, the variables will also be generated when the node is not failing
+        with the default values as selected.</option>
+        <option name="Default for FailingNode variable:">Default value for the FailingNode variable, if no node is failing.</option>
+        <option name="Default for FailingNodeMessage variable:">Default value for the FailingNodeMessage variable, if no node is failing.</option>
+        <option name="Default for FailingNodeStackTrace variable:">Default value for the FailingNodeStackTrace variable, if no node is failing.</option>
     </fullDescription>
     
     <ports>

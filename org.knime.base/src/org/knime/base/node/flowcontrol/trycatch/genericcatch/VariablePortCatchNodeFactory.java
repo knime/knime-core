@@ -66,7 +66,7 @@ public class VariablePortCatchNodeFactory extends NodeFactory<GenericCatchNodeMo
     /** {@inheritDoc} */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return null;
+        return new GenericCatchNodeDialog();
     }
 
     /** {@inheritDoc} */
@@ -91,7 +91,7 @@ public class VariablePortCatchNodeFactory extends NodeFactory<GenericCatchNodeMo
     /** {@inheritDoc} */
     @Override
     protected boolean hasDialog() {
-        return false;
+        return true;
     }
 
 }
