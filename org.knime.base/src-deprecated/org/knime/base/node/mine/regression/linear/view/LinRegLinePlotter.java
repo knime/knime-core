@@ -171,9 +171,11 @@ public class LinRegLinePlotter extends ScatterPlotter {
                 ((NumericCoordinate)getXAxis().getCoordinate())
                         .getMaxDomainValue();
         String xName = getSelectedXColumn().getName();
-        List<String>includedCols = Arrays.asList(
-                ((LinRegDataProvider)dataProvider)
-            .getLearningColumns());
+        String[] temp = ((LinRegDataProvider)dataProvider).getLearningColumns();
+        if (temp == null) {
+            return;
+        }
+        List<String>includedCols = Arrays.asList(temp);
 
         if (!xName.equals(params.getTargetColumnName())
                 && includedCols.contains(xName)) {
