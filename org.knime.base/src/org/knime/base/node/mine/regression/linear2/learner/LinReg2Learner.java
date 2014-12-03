@@ -145,7 +145,7 @@ final class LinReg2Learner {
 
             @Override
             public boolean dropDomain(final DataColumnSpec colSpec) {
-                return false;
+                return true;
             }
 
             @Override
@@ -171,7 +171,9 @@ final class LinReg2Learner {
         BufferedDataTable newDataTable = exec.createSpecReplacerTable(data, spec);
 
 
-        // bug fix 5793, similar to 5580 in LogReg2Learner - ignore columns with too many different values
+        // bug fix 5793, similar to 5580 in LogReg2Learner - ignore columns with too many different values.
+        // But because this would change behavior, we cannot drop the domain, which means that even
+        // prepending a domain calculator to this node will node help when the column has too many values.
         Set<String> columnWithTooManyDomainValues = new LinkedHashSet<>();
         for (String learningField : m_pmmlOutSpec.getLearningFields()) {
             DataColumnSpec columnSpec = spec.getColumnSpec(learningField);
@@ -185,7 +187,7 @@ final class LinReg2Learner {
             warning.append(ConvenienceMethods.getShortStringFrom(columnWithTooManyDomainValues, 5));
             warning.append(columnWithTooManyDomainValues.size() == 1 ? " has " : " have ");
             warning.append("too many different values - will be ignored during training ");
-            warning.append("(enforce inclusion by using a domain calculator node before)");
+            //warning.append("(enforce inclusion by using a domain calculator node before)");
             LOGGER.warn(warning.toString());
             m_warningMessage = (m_warningMessage == null ? "" : m_warningMessage + "\n") + warning.toString();
         }
@@ -261,7 +263,7 @@ final class LinReg2Learner {
 
         // remove all columns that should not be used
         inputCols.removeAll(exclude);
-        
+
         if (inputCols.isEmpty()) {
             throw new InvalidSettingsException("At least one column must be included.");
         }
