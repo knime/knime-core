@@ -58,8 +58,8 @@ public class LoopEnd2NodeDialog extends AbstractLoopEndNodeDialog<LoopEnd2NodeSe
     private final JCheckBox m_ignoreEmptyTables1 = new JCheckBox("Ignore empty input tables at port 1");
     private final JCheckBox m_ignoreEmptyTables2 = new JCheckBox("Ignore empty input tables at port 2");
 
-    private final JCheckBox m_tolerateColumnTypes1 = new JCheckBox("Assign most common column type at port 1");
-    private final JCheckBox m_tolerateColumnTypes2 = new JCheckBox("Assign most common column type at port 2");
+    private final JCheckBox m_tolerateColumnTypes1 = new JCheckBox("Allow variable column types at port 1");
+    private final JCheckBox m_tolerateColumnTypes2 = new JCheckBox("Allow variable column types at port 2");
 
     /**
      *
