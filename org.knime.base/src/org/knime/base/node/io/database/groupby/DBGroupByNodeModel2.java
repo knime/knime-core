@@ -227,6 +227,7 @@ final class DBGroupByNodeModel2 extends DBNodeModel {
             m_settings, DBGroupByNodeModel2.CFG_AGGREGATION_FUNCTIONS, dbIdentifier, tableSpec);
         final ArrayList<DBColumnAggregationFunctionRow> invalidColAggrs = new ArrayList<>(1);
         final Set<String> usedColNames = new HashSet<>(tableSpec.getNumColumns());
+        usedColNames.addAll(m_groupByCols.getIncludeList());
         m_aggregationFunction2Use.clear();
         for (DBColumnAggregationFunctionRow row : columnFunctions) {
             final DataColumnSpec columnSpec = row.getColumnSpec();
