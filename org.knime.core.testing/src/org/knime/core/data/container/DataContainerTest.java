@@ -58,7 +58,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
-import org.apache.commons.lang3.SystemUtils;
+import org.eclipse.core.runtime.Platform;
 import org.junit.Assume;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -689,7 +689,7 @@ public class DataContainerTest extends TestCase {
 
     public void testAsyncWriteLimits() throws Exception {
         Assume.assumeTrue(!DataContainer.SYNCHRONOUS_IO);
-        final int limit = "x86".equals(SystemUtils.OS_ARCH) ? 10 : 50;
+        final int limit = Platform.ARCH_X86.equals(Platform.getOSArch()) ? 10 : 50;
         Assert.assertEquals(limit, DataContainer.MAX_ASYNC_WRITE_THREADS);
         RowIterator infinitIterator = generateRows(Integer.MAX_VALUE);
         List<DataContainer> containerList = new ArrayList<DataContainer>();

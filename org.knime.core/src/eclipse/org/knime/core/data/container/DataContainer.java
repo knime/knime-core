@@ -73,7 +73,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.lang3.SystemUtils;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -245,7 +245,7 @@ public class DataContainer implements RowAppender {
         }
 
         // enh 5835: Number of asynchronous write threads to have different limits on different architectures
-        MAX_ASYNC_WRITE_THREADS = "x86".equals(SystemUtils.OS_ARCH) ? 10 : 50;
+        MAX_ASYNC_WRITE_THREADS = Platform.ARCH_X86.equals(Platform.getOSArch()) ? 10 : 50;
     }
 
 
