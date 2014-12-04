@@ -302,8 +302,7 @@ public final class NodeLogger {
                 + ("Welcome to KNIME v" + KNIMEConstants.VERSION + " (Build "
                         + KNIMEConstants.BUILD_DATE
                         + ")                        ").substring(0, 62) + " #");
-        l.info("# Based on Eclipse, www.eclipse.org                         #");
-        l.info("# Uses: Java, GEF, Log4J                                    #");
+        l.info("# Based on Eclipse, http://www.eclipse.org                  #");
         l.info("#                                                           #");
         l.info("#############################################################");
         l.info("#                                                           #");
@@ -344,9 +343,9 @@ public final class NodeLogger {
     /** Write copyright message. */
     private static void copyrightMessage() {
         NodeLogger l = getLogger(NodeLogger.class);
-        l.info("# Copyrighty by KNIME GmbH, Konstanz, Germany               #");
-        l.info("# website: http://www.knime.org                             #");
-        l.info("# email: contact@knime.org                                  #");
+        l.info("# Copyright by KNIME GmbH, Konstanz, Germany               #");
+        l.info("# Website: http://www.knime.org                            #");
+        l.info("# E-mail: contact@knime.org                                #");
     }
 
     /** The Log4J logger to which all messages are logged. */
