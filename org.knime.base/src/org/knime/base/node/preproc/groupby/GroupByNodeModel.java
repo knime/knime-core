@@ -847,7 +847,7 @@ public class GroupByNodeModel extends NodeModel {
      * @return the list of all {@link ColumnAggregator}s to use based on the given aggregator
      * @since 2.11
      */
-    protected static List<ColumnAggregator> getAggregators(final DataTableSpec inputSpec,
+    public static List<ColumnAggregator> getAggregators(final DataTableSpec inputSpec,
         final Collection<String> groupColumns, final List<ColumnAggregator> columnAggregators,
         final Collection<PatternAggregator> patternAggregators,
         final Collection<DataTypeAggregator> dataTypeAggregators, final List<ColumnAggregator> invalidColAggrs) {
