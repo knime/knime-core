@@ -181,6 +181,10 @@ final class LinReg2Learner {
                 columnWithTooManyDomainValues.add(learningField);
             }
         }
+        // initialize m_learner so that it has the correct DataTableSpec of
+        // the input
+        init(newDataTable.getDataTableSpec(), inPMMLSpec, columnWithTooManyDomainValues);
+
         if (!columnWithTooManyDomainValues.isEmpty()) {
             StringBuilder warning = new StringBuilder();
             warning.append(columnWithTooManyDomainValues.size() == 1 ? "Column " : "Columns ");
@@ -192,9 +196,6 @@ final class LinReg2Learner {
             m_warningMessage = (m_warningMessage == null ? "" : m_warningMessage + "\n") + warning.toString();
         }
 
-        // initialize m_learner so that it has the correct DataTableSpec of
-        // the input
-        init(newDataTable.getDataTableSpec(), inPMMLSpec, columnWithTooManyDomainValues);
         return newDataTable;
     }
 
@@ -227,7 +228,7 @@ final class LinReg2Learner {
     private void init(final DataTableSpec inSpec,
             final PMMLPortObjectSpec pmmlSpec, final Set<String> exclude)
             throws InvalidSettingsException {
-
+        m_warningMessage = null;
         // Auto configuration when target is not set
         if (m_settings.getTargetColumn() == null) {
             List<DataColumnSpec> possibleTargets = new ArrayList<DataColumnSpec>();
@@ -251,8 +252,10 @@ final class LinReg2Learner {
 
         FilterResult colFilter = m_settings.getFilterConfiguration().applyTo(inSpec);
         if (colFilter.getRemovedFromIncludes().length > 0) {
-            String warning = "Input does not contain all learning columns. "
-                    + "Proceed with the remaining learning columns.";
+            String warning =
+                "Input does not contain all learning columns ("
+                    + ConvenienceMethods.getShortStringFrom(Arrays.asList(colFilter.getRemovedFromIncludes()), 3)
+                    + "). " + "Proceeding with the remaining learning columns.";
             m_warningMessage = (m_warningMessage == null ? "" : m_warningMessage + "\n") + warning;
             LOGGER.warn(warning);
         }
