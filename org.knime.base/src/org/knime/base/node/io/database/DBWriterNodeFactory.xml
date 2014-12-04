@@ -70,6 +70,10 @@
         <b>Note, if this box is unchecked an existing table is dropped before 
         execution of this node.</b>
       </option>
+      <option name="Insert null for missing columns">
+        Check this option to force KNIME to insert null into all database columns that are not present in the KNIME 
+        input table. This option is only available if the append data option is selected.
+      </option>
     </tab>
     <tab name="SQL Types">
 	  <option name="Types">
