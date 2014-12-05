@@ -286,7 +286,7 @@ public class Statistics2Table {
                     m_varianceValues[j] = 0.0;
                 }
                 assert m_varianceValues[j] >= 0.0
-                        : "Variance can not be negative (column \""
+                        : "Variance cannot be negative (column \""
                         + m_spec.getColumnSpec(j).getName()
                         + "\": "
                         + m_varianceValues[j];

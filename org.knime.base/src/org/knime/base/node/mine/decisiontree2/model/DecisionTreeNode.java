@@ -253,7 +253,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         if (type.equals("Discrete")) {
             return new DecisionTreeNodeSplitNominal(xmlNode, mapper);
         }
-        LOGGER.error("c4.5 Tree Builder, can not handle node of type '" + type
+        LOGGER.error("c4.5 Tree Builder, cannot handle node of type '" + type
                 + "'");
         return null;
     }

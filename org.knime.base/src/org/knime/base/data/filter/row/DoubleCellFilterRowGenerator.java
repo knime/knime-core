@@ -53,7 +53,7 @@ import org.knime.core.data.DoubleValue;
  * {@link FilterRowGenerator} interface for
  * {@link org.knime.core.data.def.DoubleCell} objects and checks if they
  * are within a certain interval.
- * 
+ *
  * <p>
  * It provides two options, one uses a single border the other one a two border
  * interval. In general, each type allows to define if the border is included or
@@ -61,7 +61,7 @@ import org.knime.core.data.DoubleValue;
  * possible to define if the range on the <code>LEFT</code> and/or on the
  * <code>RIGHT</code> is included to the interval. E.g., <code>LEFT+IN</code>,
  * <code>LEFT+OUT</code>, <code>RIGHT+IN</code>, <code>RIGHT+OUT</code>.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DoubleCellFilterRowGenerator implements FilterRowGenerator {
@@ -123,7 +123,7 @@ public class DoubleCellFilterRowGenerator implements FilterRowGenerator {
 
     /**
      * Creates a new single border row filter.
-     * 
+     *
      * @param columnIndex the column's index
      * @param doubleValue the double value border
      * @param mask the interval mask
@@ -137,7 +137,7 @@ public class DoubleCellFilterRowGenerator implements FilterRowGenerator {
         // check for negative column index
         if (columnIndex < 0) {
             throw new IllegalArgumentException("Column index " + columnIndex
-                    + " can not be negative.");
+                    + " cannot be negative.");
         }
         m_columnIndex = columnIndex;
         // init and set double array whereby the second value is not obmitted
@@ -170,7 +170,7 @@ public class DoubleCellFilterRowGenerator implements FilterRowGenerator {
     }
 
     /**
-     * 
+     *
      * @param columnIndex the column's index
      * @param doubleLeft the left border value
      * @param maskLeft the left mask
@@ -187,7 +187,7 @@ public class DoubleCellFilterRowGenerator implements FilterRowGenerator {
         // check for negative column index
         if (columnIndex < 0) {
             throw new IllegalArgumentException("Column index " + columnIndex
-                    + " can not be negative.");
+                    + " cannot be negative.");
         }
         // keep column index
         m_columnIndex = columnIndex;
@@ -217,20 +217,21 @@ public class DoubleCellFilterRowGenerator implements FilterRowGenerator {
         if ((maskLeft & LEFT) == LEFT && (maskRight & LEFT) == LEFT
                 || (maskLeft & RIGHT) == RIGHT && (maskRight & RIGHT) == RIGHT) {
             throw new IllegalArgumentException(
-                    "Conflicting boundary masks. Can not be the same side.");
+                    "Conflicting boundary masks. Cannot be the same side.");
         }
         m_mask = new int[]{maskLeft, maskRight};
     }
 
     /**
      * Checks if the given row lies within the define interval borders.
-     * 
+     *
      * @param row the row which should be checked for being inside the interval
      * @return <code>true</code> if inside the define interval
      * @throws NullPointerException if the given row is <code>null</code>
      * @throws ClassCastException if the row's cell is not of type
      *             {@link org.knime.core.data.def.DoubleCell}
      */
+    @Override
     public boolean isIn(final DataRow row) {
         DataCell cell = row.getCell(m_columnIndex);
         if (cell.isMissing()) {

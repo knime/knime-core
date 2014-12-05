@@ -168,7 +168,7 @@ public class DoubleCoordinate extends NumericCoordinate {
             // if there is no domain a coordinate makes no sense
             throw new IllegalArgumentException(
                     "The domain of the set column spec is null. "
-                            + "Coordinate can not be created.");
+                            + "Coordinate cannot be created.");
         }
 
         DataCell lowerBound = domain.getLowerBound();
@@ -177,7 +177,7 @@ public class DoubleCoordinate extends NumericCoordinate {
             // if there is no lower bound a coordinate makes no sense
             throw new IllegalArgumentException(
                     "The lower bound of the set column spec is null. "
-                            + "Coordinate can not be created.");
+                            + "Coordinate cannot be created.");
         } else {
             setMinDomainValue(((DoubleValue)lowerBound).getDoubleValue());
         }
@@ -188,7 +188,7 @@ public class DoubleCoordinate extends NumericCoordinate {
             // if there is no upper bound a coordinate makes no sense
             throw new IllegalArgumentException(
                     "The upper bound of the set column spec is null. "
-                            + "Coordinate can not be created.");
+                            + "Coordinate cannot be created.");
         } else {
             setMaxDomainValue(((DoubleValue)upperBound).getDoubleValue());
         }

@@ -456,7 +456,7 @@ public class Statistics3Table {
                 if (m_varianceValues[j] < 0.0 && m_varianceValues[j] > -1.0E8) {
                     m_varianceValues[j] = 0.0;
                 }
-                assert Double.isNaN(m_varianceValues[j]) || m_varianceValues[j] >= 0.0 : "Variance can not be "
+                assert Double.isNaN(m_varianceValues[j]) || m_varianceValues[j] >= 0.0 : "Variance cannot be "
                     + "negative (column \"" + m_spec.getColumnSpec(j).getName() + "\": " + m_varianceValues[j] + ")";
             }
         }

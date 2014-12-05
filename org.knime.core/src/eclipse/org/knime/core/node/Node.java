@@ -1902,7 +1902,7 @@ public final class Node implements NodeModelWarningListener {
         for (int i = 1; i < inSpecs.length; i++) {
             if (inSpecs[i] instanceof InactiveBranchPortObjectSpec) {
                 if (!isInactiveBranchConsumer()) {
-                    throw new NotConfigurableException("Can not configure nodes in inactive branches.");
+                    throw new NotConfigurableException("Cannot configure nodes in inactive branches.");
                 }
             }
             PortType t = getInputType(i);

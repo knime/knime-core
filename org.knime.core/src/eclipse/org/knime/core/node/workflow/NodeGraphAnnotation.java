@@ -283,7 +283,7 @@ public final class NodeGraphAnnotation implements Comparable<NodeGraphAnnotation
                     addRestOf = 1;
                     addUntil = oldStacks[0].get(pointer[0]);
                 } else {
-                    m_error = "Node can not be part of different (nested) loops.";
+                    m_error = "Node cannot be part of different (nested) loops.";
                     m_startNodeStack = newStack;
                     return changesMade;
                 }

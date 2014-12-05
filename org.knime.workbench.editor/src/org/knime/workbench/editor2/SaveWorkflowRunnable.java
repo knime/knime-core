@@ -110,7 +110,7 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
         try {
             final WorkflowManager wfm = m_editor.getWorkflowManager();
             ProgressHandler progressHandler =
-                new ProgressHandler(pm, wfm.getNodeContainers().size(), "Saving workflow... (can not be canceled)");
+                new ProgressHandler(pm, wfm.getNodeContainers().size(), "Saving workflow... (cannot be canceled)");
             final CheckCancelNodeProgressMonitor progressMonitor = new CheckCancelNodeProgressMonitor(pm);
 
             progressMonitor.addProgressListener(progressHandler);
