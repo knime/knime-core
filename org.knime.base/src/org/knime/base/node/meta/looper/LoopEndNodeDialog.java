@@ -56,7 +56,7 @@ public class LoopEndNodeDialog extends AbstractLoopEndNodeDialog<LoopEndNodeSett
 
     private final JCheckBox m_ignoreEmptyTables = new JCheckBox("Ignore empty input tables");
 
-    private final JCheckBox m_tolerateColumnTypes = new JCheckBox("Assign most common column type");
+    private final JCheckBox m_tolerateColumnTypes = new JCheckBox("Allow variable column types");
 
     /** Create a new dialog.  */
     public LoopEndNodeDialog() {

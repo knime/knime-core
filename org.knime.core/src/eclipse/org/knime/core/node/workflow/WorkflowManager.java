@@ -661,7 +661,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // check to make sure we can safely remove this node
             if (!canRemoveNode(nodeID)) {
-                throw new IllegalStateException("Node can not be removed");
+                throw new IllegalStateException("Node cannot be removed");
             }
             // remove lists of in- and outgoing connections.
             while (!m_workflow.getConnectionsByDest(nodeID).isEmpty()) {
@@ -839,7 +839,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeContainer destNC;
         synchronized (m_workflowMutex) {
             if (!canAddConnection(source, sourcePort, dest, destPort, true, currentlyLoadingFlow)) {
-                throw new IllegalArgumentException("Can not add connection!");
+                throw new IllegalArgumentException("Cannot add connection!");
             }
             // check for existence of a connection to the destNode/Port
             Set<ConnectionContainer> scc = m_workflow.getConnectionsByDest(dest);
@@ -1130,12 +1130,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 } else {
                     // this should never happen - only one direction exists
                     assert false;
-                    throw new IllegalArgumentException("Can not remove partially existing connection!");
+                    throw new IllegalArgumentException("Cannot remove partially existing connection!");
                 }
             }
             // now check if other reasons forbit to delete this connection:
             if (!canRemoveConnection(cc)) {
-                throw new IllegalStateException("Can not remove connection!");
+                throw new IllegalStateException("Cannot remove connection!");
             }
             // check type and underlying nodes
             NodeID source = cc.getSource();
@@ -3420,14 +3420,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public String canExpandSubNode(final NodeID subNodeID) {
         synchronized (m_workflowMutex) {
             if (!(getNodeContainer(subNodeID) instanceof SubNodeContainer)) {
-                return "Can not expand selected node (not a subnode).";
+                return "Cannot expand selected node (not a subnode).";
             }
             if (!canRemoveNode(subNodeID)) {
-                return "Can not move subnode or nodes inside subnode (node(s) or successor still executing?)";
+                return "Cannot move subnode or nodes inside subnode (node(s) or successor still executing?)";
             }
             WorkflowManager wfm = ((SubNodeContainer)getNodeContainer(subNodeID)).getWorkflowManager();
             if (wfm.containsExecutedNode()) {
-                return "Can not expand executed sub node (reset first).";
+                return "Cannot expand executed sub node (reset first).";
             }
             return null;
         }
@@ -3448,14 +3448,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 return "No node with id \"" + wfmID + "\"";
             }
             if (!(nc instanceof WorkflowManager)) {
-                return "Can not expand selected node (not a metanode).";
+                return "Cannot expand selected node (not a metanode).";
             }
             if (!canRemoveNode(wfmID)) {
-                return "Can not move metanode or nodes inside metanode (node(s) or successor still executing?)";
+                return "Cannot move metanode or nodes inside metanode (node(s) or successor still executing?)";
             }
             WorkflowManager wfm = (WorkflowManager)(getNodeContainer(wfmID));
             if (wfm.containsExecutedNode()) {
-                return "Can not expand executed meta node (reset first).";
+                return "Cannot expand executed meta node (reset first).";
             }
             return null;
         }
@@ -3713,7 +3713,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (NodeID id : orgIDs) {
                 if (!canRemoveNode(id)) {
                     // we can not - bail!
-                    return "Can not move all selected nodes (successor executing?).";
+                    return "Cannot move all selected nodes (successor executing?).";
                 }
             }
             // Check if any of those nodes are executed
@@ -3721,7 +3721,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContainer nc = getNodeContainer(id);
                 if (InternalNodeContainerState.EXECUTED.equals(nc.getInternalState())) {
                     // we can not - bail!
-                    return "Can not move executed nodes (reset first).";
+                    return "Cannot move executed nodes (reset first).";
                 }
             }
             // Check if move will create loops in WFM connected to new Metanode
@@ -3746,7 +3746,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if (!this.getID().equals(destID)) {
                         if (orgIDsHash.contains(destID)) {
                             // successor is in our original list - bail!
-                            return "Can not move nodes - selected set is not closed!";
+                            return "Cannot move nodes - selected set is not closed!";
                         }
                         ncNodes.add(destID);
                     }
@@ -4568,7 +4568,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     void resetAndConfigureNodeAndSuccessors(final NodeID id, final boolean resetMyself) {
         synchronized (m_workflowMutex) {
             if (hasSuccessorInProgress(id)) {
-                throw new IllegalStateException("Can not reset node (wrong state of node or successors) " + id);
+                throw new IllegalStateException("Cannot reset node (wrong state of node or successors) " + id);
             }
             if (resetMyself) {
                 resetNodeAndSuccessors(id);

@@ -563,7 +563,7 @@ public abstract class NodeModel {
             } else if (this instanceof LoopStartNode) {
                 outData = execute(data, exec);
             } else {
-                m_logger.coding("Can not re-execute non interactive node. Using normal execute instead.");
+                m_logger.coding("Cannot re-execute non interactive node. Using normal execute instead.");
                 outData = execute(data, exec);
             }
         }

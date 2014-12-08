@@ -107,7 +107,7 @@ public class LoopEndNodeModel extends NodeModel implements LoopEndNode {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_settings.ignoreEmptyTables()) {
+        if (m_settings.ignoreEmptyTables() || m_settings.tolerateColumnTypes()) {
             return new DataTableSpec[]{null};
         } else {
             return new DataTableSpec[]{createSpec(inSpecs[0])};

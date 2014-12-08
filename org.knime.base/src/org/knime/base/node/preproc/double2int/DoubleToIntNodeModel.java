@@ -61,6 +61,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
@@ -71,7 +72,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -87,11 +87,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author adae, University of Konstanz
  */
 public class DoubleToIntNodeModel extends NodeModel {
-
-    /* Node Logger of this class. */
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(DoubleToIntNodeModel.class);
-
     /**
      * Key for the included columns in the NodeSettings.
      */
@@ -343,12 +338,6 @@ public class DoubleToIntNodeModel extends NodeModel {
          */
         private boolean m_createLong;
 
-        /*
-         * Error messages.
-         */
-        private StringBuilder m_error;
-
-
         /**
          * @param colindices the column indices to use.
          * @param spec the original DataTableSpec.
@@ -357,7 +346,6 @@ public class DoubleToIntNodeModel extends NodeModel {
             m_colindices = colindices;
             m_spec = spec;
             m_createLong = createLong;
-            m_error = new StringBuilder();
         }
 
         /**
@@ -382,16 +370,21 @@ public class DoubleToIntNodeModel extends NodeModel {
                     double d = ((DoubleValue)dc).getDoubleValue();
                     if (m_createLong) {
                         if ((d > Long.MAX_VALUE) || (d < Long.MIN_VALUE)) {
-                            m_warningMessage = "The table contains double values greater than the maximum long"
-                                + " value.";
+                            m_warningMessage =
+                                "The table contains double values that are outside the value range for longs.";
+                            newcells[i] = new MissingCell("Double value " + d + " is out of long range");
+                        } else {
+                            newcells[i] = new LongCell(getRoundedLongValue(d));
                         }
-                        newcells[i] = new LongCell(getRoundedLongValue(d));
                     } else {
                         if ((d > Integer.MAX_VALUE) || (d < Integer.MIN_VALUE)) {
-                            m_warningMessage = "The table contains double values greater than the maximum integer"
-                                + " value. Consider enabling long values in the dialog.";
+                            m_warningMessage =
+                                "The table contains double values that are outside the value range for"
+                                    + " integers. Consider enabling long values in the dialog.";
+                            newcells[i] = new MissingCell("Double value " + d + " is out of integer range");
+                        } else {
+                            newcells[i] = new IntCell(getRoundedValue(d));
                         }
-                        newcells[i] = new IntCell(getRoundedValue(d));
                     }
                 } else {
                     newcells[i] = DataType.getMissingCell();

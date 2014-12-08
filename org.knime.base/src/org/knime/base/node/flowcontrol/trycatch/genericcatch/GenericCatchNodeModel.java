@@ -57,6 +57,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -82,6 +84,12 @@ implements ScopeEndNode, InactiveBranchConsumer {
 //    private static final NodeLogger LOGGER = NodeLogger
 //            .getLogger(GenericCatchNodeModel.class);
 
+    // new since 2.11
+    private SettingsModelBoolean m_alwaysPop = GenericCatchNodeDialog.getAlwaysPopulate();
+    private SettingsModelString m_defaultText = GenericCatchNodeDialog.getDefaultMessage();
+    private SettingsModelString m_defaultVariable = GenericCatchNodeDialog.getDefaultVariable();
+    private SettingsModelString m_defaultStackTrace = GenericCatchNodeDialog.getDefaultStackTrace();
+
     /**
      * Two inputs, one output.
      *
@@ -104,6 +112,12 @@ implements ScopeEndNode, InactiveBranchConsumer {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        if (m_alwaysPop.getBooleanValue()) {
+            pushFlowVariableString("FailingNode", m_defaultVariable.getStringValue());
+            pushFlowVariableString("FailingNodeMessage", m_defaultText.getStringValue());
+            pushFlowVariableString("FailingNodeStackTrace", m_defaultStackTrace.getStringValue());
+        }
+
         if (!(inSpecs[0] instanceof InactiveBranchPortObjectSpec)) {
             // main branch is active - no failure so far...
             return new PortObjectSpec[]{inSpecs[0], FlowVariablePortObjectSpec.INSTANCE};
@@ -131,6 +145,10 @@ implements ScopeEndNode, InactiveBranchConsumer {
             pushFlowVariableString("FailingNodeMessage", peekFlowVariableString(FlowTryCatchContext.ERROR_REASON));
             pushFlowVariableString("FailingNodeStackTrace",
                                    peekFlowVariableString(FlowTryCatchContext.ERROR_STACKTRACE));
+        } else if (m_alwaysPop.getBooleanValue()) {
+            pushFlowVariableString("FailingNode", m_defaultVariable.getStringValue());
+            pushFlowVariableString("FailingNodeMessage", m_defaultText.getStringValue());
+            pushFlowVariableString("FailingNodeStackTrace", m_defaultStackTrace.getStringValue());
         }
         return new PortObject[]{inData[1], FlowVariablePortObject.INSTANCE};
     }
@@ -140,6 +158,10 @@ implements ScopeEndNode, InactiveBranchConsumer {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_alwaysPop.saveSettingsTo(settings);
+        m_defaultText.saveSettingsTo(settings);
+        m_defaultVariable.saveSettingsTo(settings);
+        m_defaultStackTrace.saveSettingsTo(settings);
     }
 
     /**
@@ -148,6 +170,12 @@ implements ScopeEndNode, InactiveBranchConsumer {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        if (settings.containsKey(m_defaultText.getKey())) {
+            m_alwaysPop.validateSettings(settings);
+            m_defaultText.validateSettings(settings);
+            m_defaultVariable.validateSettings(settings);
+            m_defaultStackTrace.validateSettings(settings);
+        }
     }
 
     /**
@@ -156,6 +184,12 @@ implements ScopeEndNode, InactiveBranchConsumer {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        if (settings.containsKey(m_defaultText.getKey())) {
+            m_alwaysPop.loadSettingsFrom(settings);
+            m_defaultText.loadSettingsFrom(settings);
+            m_defaultVariable.loadSettingsFrom(settings);
+            m_defaultStackTrace.loadSettingsFrom(settings);
+        }
     }
 
     /**

@@ -73,6 +73,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -242,6 +243,9 @@ public class DataContainer implements RowAppender {
         } else {
             SYNCHRONOUS_IO = false;
         }
+
+        // enh 5835: Number of asynchronous write threads to have different limits on different architectures
+        MAX_ASYNC_WRITE_THREADS = Platform.ARCH_X86.equals(Platform.getOSArch()) ? 10 : 50;
     }
 
 
@@ -264,20 +268,19 @@ public class DataContainer implements RowAppender {
     /** Size of buffers. */
     static final int ASYNC_CACHE_SIZE;
 
-    /** The executor, which runs the IO tasks. This includes adding rows to
-     * the Buffer and reading from a file iterator. */
-    private static final ThreadPoolExecutor ASYNC_EXECUTORS =
-        // see also Executors.newCachedThreadPool(ThreadFactory)
-        new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
-                new SynchronousQueue<Runnable>(), new ThreadFactory() {
-            private final AtomicInteger m_threadCount = new AtomicInteger();
-           /** {@inheritDoc} */
-            @Override
-            public Thread newThread(final Runnable r) {
-                return new Thread(r, "KNIME-TableIO-"
-                        + m_threadCount.incrementAndGet());
-            }
-        });
+    /** The executor, which runs the IO tasks. Currently used only while writing rows. */
+    static final ThreadPoolExecutor ASYNC_EXECUTORS =
+            // see also Executors.newCachedThreadPool(ThreadFactory)
+        new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+            new ThreadFactory() {
+                private final AtomicInteger m_threadCount = new AtomicInteger();
+
+                /** {@inheritDoc} */
+                @Override
+                public Thread newThread(final Runnable r) {
+                    return new Thread(r, "KNIME-TableIO-" + m_threadCount.incrementAndGet());
+                }
+            });
 
     /** Whether to use synchronous IO while adding rows to a buffer or reading
      * from an file iterator. This is by default <code>false</code> but can be
@@ -286,7 +289,7 @@ public class DataContainer implements RowAppender {
 
     /** the maximum number of asynchronous write threads, each additional
      * container will switch to synchronous mode. */
-    private static final int MAX_ASYNC_WRITE_THREADS = 50;
+    static final int MAX_ASYNC_WRITE_THREADS;
 
     /** Put into write queue to signal end of writing process. */
     private static final Object CONTAINER_CLOSE = new Object();
@@ -914,6 +917,12 @@ public class DataContainer implements RowAppender {
             m_localMap = new HashMap<Integer, ContainerTable>();
         }
         return m_localMap;
+    }
+
+    /** @return the isSynchronousWrite whether the data is written in the same thread that calls addRow. Property
+     * depends on system property {@link #SYNCHRONOUS_IO} and the number of concurrent writes. */
+    boolean isSynchronousWrite() {
+        return m_isSynchronousWrite;
     }
 
     /** Convenience method that will buffer the entire argument table. This is

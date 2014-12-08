@@ -101,16 +101,16 @@ public class LoopEnd2NodeModel extends NodeModel implements LoopEndNode {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         final DataTableSpec spec0;
-        if (m_settings.ignoreEmptyTables1()) {
+        if (m_settings.ignoreEmptyTables1() || m_settings.tolerateColumnTypes1()) {
             spec0 = null;
         } else {
-            spec0 = createSpec(inSpecs[0], m_settings.tolerateColumnTypes1());
+            spec0 = createSpec(inSpecs[0], false);
         }
         final DataTableSpec spec1;
-        if (m_settings.ignoreEmptyTables2()) {
+        if (m_settings.ignoreEmptyTables2() || m_settings.tolerateColumnTypes2()) {
             spec1 = null;
         } else {
-            spec1 = createSpec(inSpecs[1], m_settings.tolerateColumnTypes2());
+            spec1 = createSpec(inSpecs[1], false);
         }
         return new DataTableSpec[]{spec0, spec1};
     }

@@ -526,7 +526,7 @@ public class GroupByNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_columnAggregators2Use.clear();
         final ArrayList<ColumnAggregator> invalidColAggrs = new ArrayList<>(1);
-        m_columnAggregators2Use.addAll(GroupByNodeModel.getAggregators(origSpec,
+        m_columnAggregators2Use.addAll(GroupByNodeModel.getAggregators(origSpec, groupByCols,
             m_columnAggregators, m_patternAggregators, m_dataTypeAggregators, invalidColAggrs));
         if (m_columnAggregators2Use.isEmpty()) {
             setWarningMessage("No aggregation column defined");
@@ -838,6 +838,7 @@ public class GroupByNodeModel extends NodeModel {
      * pattern and data type based aggregator all columns that are handled by one of the pattern based aggregators
      * is ignored by the data type based aggregators.
      * @param inputSpec the {@link DataTableSpec} of the input table
+     * @param groupColumns the columns to group by
      * @param columnAggregators the manually added {@link ColumnAggregator}s
      * @param patternAggregators the {@link PatternAggregator}s
      * @param dataTypeAggregators the {@link DataTypeAggregator}s
@@ -847,10 +848,12 @@ public class GroupByNodeModel extends NodeModel {
      * @since 2.11
      */
     public static List<ColumnAggregator> getAggregators(final DataTableSpec inputSpec,
-        final List<ColumnAggregator> columnAggregators, final Collection<PatternAggregator> patternAggregators,
+        final Collection<String> groupColumns, final List<ColumnAggregator> columnAggregators,
+        final Collection<PatternAggregator> patternAggregators,
         final Collection<DataTypeAggregator> dataTypeAggregators, final List<ColumnAggregator> invalidColAggrs) {
         final List<ColumnAggregator> columnAggregators2Use = new ArrayList<>(columnAggregators.size());
         final Set<String> usedColNames = new HashSet<>(inputSpec.getNumColumns());
+        usedColNames.addAll(groupColumns);
         for (final ColumnAggregator colAggr : columnAggregators) {
             final String originalColName = colAggr.getOriginalColName();
             final DataColumnSpec colSpec = inputSpec.getColumnSpec(originalColName);

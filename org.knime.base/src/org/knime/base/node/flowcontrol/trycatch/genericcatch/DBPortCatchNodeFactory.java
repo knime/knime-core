@@ -66,7 +66,7 @@ public class DBPortCatchNodeFactory extends NodeFactory<GenericCatchNodeModel> {
     /** {@inheritDoc} */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return null;
+        return new GenericCatchNodeDialog();
     }
 
     /** {@inheritDoc} */
@@ -91,7 +91,7 @@ public class DBPortCatchNodeFactory extends NodeFactory<GenericCatchNodeModel> {
     /** {@inheritDoc} */
     @Override
     protected boolean hasDialog() {
-        return false;
+        return true;
     }
 
 }

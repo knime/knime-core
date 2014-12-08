@@ -611,7 +611,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 throw new IOException("No such data file: " + fileRef);
             }
             if (!file.isFile() || !file.canRead()) {
-                throw new IOException("Can not read file " + fileRef);
+                throw new IOException("Cannot read file " + fileRef);
             }
         } else {
             // for instance for a column filter node this is null.

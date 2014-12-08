@@ -563,7 +563,7 @@ public final class WizardExecutionController {
                 newViewValue.loadFromStream(new ByteArrayInputStream(entry.getValue().getBytes()));
                 wizardNode.loadViewValue(newViewValue, false);
             } catch (Exception e) {
-                // do nothing
+                LOGGER.error("Failed to load view value into node \"" + id + "\" although validation succeeded", e);
             }
         }
         m_manager.executeUpToHere(currentID);

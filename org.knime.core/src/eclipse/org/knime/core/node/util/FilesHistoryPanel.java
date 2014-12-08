@@ -628,7 +628,7 @@ public final class FilesHistoryPanel extends JPanel {
         for (SimpleFileFilter filter : filters) {
             fileChooser.addChoosableFileFilter(filter);
         }
-        if (filters.size() > 1) {
+        if (filters.size() > 0) {
             fileChooser.setFileFilter(filters.get(0));
         }
         fileChooser.setFileSelectionMode(m_selectMode);

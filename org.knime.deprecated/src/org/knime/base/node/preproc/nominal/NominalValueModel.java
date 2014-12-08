@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   12.01.2006 (gabriel): created
  */
@@ -66,9 +66,9 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * Collects and sets all nominal values for a number of selected columns during
  * execute.
- * 
+ *
  * @see NominalTable
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 class NominalValueModel extends NodeModel {
@@ -78,7 +78,7 @@ class NominalValueModel extends NodeModel {
 
     /**
      * Creates a new model with one in- and output.
-     * 
+     *
      * @param ins Number of inputs.
      * @param outs Number of inputs.
      */
@@ -108,7 +108,7 @@ class NominalValueModel extends NodeModel {
             for (int i = 0; i < m_columns.length; i++) {
                 if (m_columns[i] == null) {
                     throw new InvalidSettingsException(
-                            "Column can not be null.");
+                            "Column cannot be null.");
                 }
                 if (!inSpecs[0].containsName(m_columns[i])) {
                     throw new InvalidSettingsException("Column " + m_columns[i]

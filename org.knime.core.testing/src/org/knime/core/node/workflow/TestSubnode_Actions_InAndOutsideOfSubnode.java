@@ -47,6 +47,7 @@ package org.knime.core.node.workflow;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
 import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC;
 import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
+import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTING;
 import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 import static org.knime.core.node.workflow.InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC;
 
@@ -71,8 +72,8 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
     private NodeID m_blockOuter8;
     private NodeID m_subnode12;
     private NodeID m_javaEditInner_12_9;
-    private NodeID m_subnodeInput_12_12;
     private NodeID m_subnodeOutput_12_13;
+    private NodeID m_dataGenInner_12_14;
     private NodeID m_blockInner_12_10;
 
     /** {@inheritDoc} */
@@ -91,9 +92,9 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
         m_subnode12 = new NodeID(baseID, 12);
         NodeID subnodeWFM = new NodeID(m_subnode12, 0);
         m_javaEditInner_12_9 = new NodeID(subnodeWFM, 9);
-        m_subnodeInput_12_12 = new NodeID(subnodeWFM, 12);
         m_subnodeOutput_12_13 = new NodeID(subnodeWFM, 13);
         m_blockInner_12_10 = new NodeID(subnodeWFM, 10);
+        m_dataGenInner_12_14 = new NodeID(subnodeWFM, 14);
     }
 
     public void testInit() throws Exception {
@@ -107,7 +108,7 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
             m_javaEditOutput6, m_javaEditInner_12_9, m_blockOuter8, m_blockInner_12_10);
         reset(m_javaEditInput2);
         checkState(m_javaEditInput2, CONFIGURED);
-        checkStateOfMany(IDLE, m_subnode12, m_blockInner_12_10, m_blockOuter8);
+        checkStateOfMany(IDLE, m_subnode12, m_blockInner_12_10, m_blockOuter8, m_dataGenInner_12_14);
     }
 
     public void testExecuteOneEndAndReset() throws Exception {
@@ -118,92 +119,69 @@ public class TestSubnode_Actions_InAndOutsideOfSubnode extends WorkflowTestCase 
 
     public void testBlockInnerAndExecuteEnd() throws Exception {
         WorkflowManager m = getManager();
-        ReentrantLock execLock = BlockingRepository.get(INNER_LOCK_ID);
-        execLock.lock();
+        ReentrantLock innerLock = BlockingRepository.get(INNER_LOCK_ID);
+        ReentrantLock outerLock = BlockingRepository.get(OUTER_LOCK_ID);
+        innerLock.lock();
+        outerLock.lock();
         try {
             m.executeUpToHere(m_tableView7);
-            InternalNodeContainerState subnodeOutputNodeState = findNodeContainer(m_subnodeOutput_12_13).getInternalState();
-            assertTrue("should be in-execution: " + subnodeOutputNodeState, subnodeOutputNodeState.isExecutionInProgress());
+            InternalNodeContainerState subnodeNodeState = findNodeContainer(m_subnode12).getInternalState();
+            assertTrue("should be in-execution: " + subnodeNodeState, subnodeNodeState.isExecutionInProgress());
 
-            waitWhileNodeInExecution(m_subnodeOutput_12_13);
+            final SubNodeContainer subNC = m.getNodeContainer(m_subnode12, SubNodeContainer.class, true);
+            final NodeContainer snOutputNode = findNodeContainer(m_subnodeOutput_12_13);
+
+            waitWhile(snOutputNode, new Hold() {
+                @Override
+                protected boolean shouldHold() {
+                    return !snOutputNode.getNodeContainerState().isExecuted();
+                }
+            });
+            checkState(snOutputNode, EXECUTED);
+            checkState(m_subnode12, EXECUTING);
+
+            checkState(m_dataGen1, EXECUTED);
             checkState(m_tableView7, CONFIGURED_MARKEDFOREXEC, UNCONFIGURED_MARKEDFOREXEC);
-            checkState(m_subnodeOutput_12_13, EXECUTED);
+
             InternalNodeContainerState blockerNodeState = findNodeContainer(m_blockInner_12_10).getInternalState();
             assertTrue("should be in-execution: " + blockerNodeState, blockerNodeState.isExecutionInProgress());
-            checkState(m_dataGen1, EXECUTED);
-            assertFalse(m.canAddConnection(m_dataGen1, 2, m_blockOuter8, 1));
 
-            assertFalse(((SubNodeContainer)findNodeContainer(m_subnode12)).canResetContainedNodes());
-            final NodeContainer subNC = m.getNodeContainer(m_subnode12);
-            assertNull(subNC.getOutPort(2).getPortObject());
+            innerLock.unlock();
+            waitWhileNodeInExecution(m_subnode12);
+
+            checkState(m_subnode12, EXECUTED);
+
+            checkState(m_tableView7, CONFIGURED_MARKEDFOREXEC, UNCONFIGURED_MARKEDFOREXEC);
+
+            assertFalse(m.canAddConnection(m_dataGen1, 2, m_blockOuter8, 1));
+            assertFalse(subNC.canResetContainedNodes());
+            assertFalse(subNC.getWorkflowManager().canResetNode(m_blockInner_12_10));
+            assertFalse(subNC.getWorkflowManager().canRemoveConnection(findInConnection(m_blockInner_12_10, 1)));
+
+            assertNotNull(subNC.getOutPort(2).getPortObject());
             assertFalse(m.canRemoveConnection(m.getIncomingConnectionFor(m_tableView7, 1)));
-            m.cancelExecution(subNC);
-            checkStateOfMany(CONFIGURED, m_tableView7, m_blockInner_12_10, m_subnode12);
-            m.executeUpToHere(m_tableView7);
+
+            outerLock.unlock();
+            waitWhileInExecution();
+
+            checkStateOfMany(EXECUTED, m_tableView7, m_subnode12);
+
+            reset(m_dataGen1);
+            checkStateOfMany(IDLE, m_subnode12, m_blockInner_12_10, m_blockOuter8, m_dataGenInner_12_14);
         } finally {
-            execLock.unlock();
+            if (innerLock.isHeldByCurrentThread()) {
+                innerLock.unlock();
+            }
+            if (outerLock.isHeldByCurrentThread()) {
+                outerLock.unlock();
+            }
         }
-        waitWhileInExecution();
-        checkState(m_tableView7, EXECUTED);
     }
 
     public void testShutdownBeforeExecute() throws Exception {
         long time = System.currentTimeMillis();
         WorkflowManager m = getManager();
         m.shutdown();
-        time = System.currentTimeMillis() - time;
-        assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
-    }
-
-    public void testCanXYZWhileStartIsExecuting() throws Exception {
-        deleteConnection(m_javaEditInput2, 1);
-        WorkflowManager m = getManager();
-        m.addConnection(m_dataGen1, 1, m_javaEditOutput6, 1);
-        m.addConnection(m_javaEditOutput6, 1, m_javaEditInput2, 1);
-        checkState(m_dataGen1, InternalNodeContainerState.CONFIGURED);
-        checkState(m_tableView7, InternalNodeContainerState.CONFIGURED);
-        ReentrantLock execLock = BlockingRepository.get(INNER_LOCK_ID);
-        execLock.lock();
-        try {
-            m.executeUpToHere(m_tableView7);
-            // can't tell about the data generator, but the remaining three
-            // should be in some executing state
-            checkState(m_tableView7, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
-            long time = System.currentTimeMillis();
-            assertFalse(m.canAddConnection(m_dataGen1, 1, m_tableView7, 1));
-            assertFalse(m.canExecuteNode(m_dataGen1));
-            assertFalse(m.canExecuteNode(m_tableView7));
-            assertFalse(m.canResetNode(m_dataGen1));
-            assertFalse(m.canResetNode(m_tableView7));
-            assertFalse(m.canRemoveConnection(m.getIncomingConnectionFor(m_tableView7, 1)));
-            assertFalse(m.canRemoveConnection(m.getIncomingConnectionFor(m_javaEditInput2, 1)));
-            assertFalse(m.canExecuteNode(m_tableView7));
-            assertNotNull(m.canCollapseNodesIntoMetaNode(new NodeID[] {m_dataGen1, m_javaEditInput2}));
-            assertFalse(m.canRemoveNode(m_dataGen1));
-            assertFalse(m.canRemoveNode(m_javaEditInput2));
-            m.cancelExecution(m.getNodeContainer(m_tableView7));
-            m.cancelExecution(m.getNodeContainer(m_javaEditInput2));
-            time = System.currentTimeMillis() - time;
-            assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
-        } finally {
-            execLock.unlock();
-        }
-        waitWhileInExecution();
-    }
-
-    public void testCanXYZAfterStartHasFailed() throws Exception {
-        deleteConnection(m_javaEditInput2, 1);
-        WorkflowManager m = getManager();
-        m.addConnection(m_dataGen1, 1, m_subnode12, 1);
-        m.addConnection(m_subnode12, 1, m_javaEditInput2, 1);
-        checkState(m_dataGen1, InternalNodeContainerState.CONFIGURED);
-        checkState(m_tableView7, InternalNodeContainerState.CONFIGURED);
-        long time = System.currentTimeMillis();
-        m.executeUpToHere(m_tableView7);
-        waitWhileNodeInExecution(m_tableView7);
-        waitWhileNodeInExecution(m_subnode12);
-        checkState(m_tableView7, InternalNodeContainerState.CONFIGURED);
-        checkState(m_dataGen1, InternalNodeContainerState.EXECUTED);
         time = System.currentTimeMillis() - time;
         assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
     }

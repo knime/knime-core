@@ -63,6 +63,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentFileChooser;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.workflow.FlowVariable.Type;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -80,7 +81,7 @@ public class ImageColumnWriterNodeDialogeColumn extends DefaultNodeSettingsPane 
     private final DialogComponentFileChooser m_dirChooser =
             new DialogComponentFileChooser(new SettingsModelString("directory",
                     null), ImageColumnWriterNodeDialogeColumn.class.getName(),
-                    JFileChooser.SAVE_DIALOG, true);
+                    JFileChooser.SAVE_DIALOG, true, createFlowVariableModel("directory", Type.STRING));
 
     private final DialogComponentBoolean m_overwrite =
             new DialogComponentBoolean(new SettingsModelBoolean("overwrite",

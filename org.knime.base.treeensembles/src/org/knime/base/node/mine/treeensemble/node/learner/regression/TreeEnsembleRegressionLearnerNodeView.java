@@ -497,7 +497,11 @@ final class TreeEnsembleRegressionLearnerNodeView extends NodeView<TreeEnsembleR
     }
 
     private void recreateHiLite() {
-        Set<RowKey> hilited = m_hiLiteHdl.getHiLitKeys();
+        HiLiteHandler handler = m_hiLiteHdl;
+        if (handler == null) {
+            return;
+        }
+        Set<RowKey> hilited = handler.getHiLitKeys();
         Set<DecisionTreeNode> toHilite = new HashSet<DecisionTreeNode>();
         DecisionTreeNode root = m_graph.getRootNode();
 

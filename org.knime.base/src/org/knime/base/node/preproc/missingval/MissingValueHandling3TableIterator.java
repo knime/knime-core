@@ -51,6 +51,7 @@ import java.util.NoSuchElementException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
@@ -198,11 +199,20 @@ class MissingValueHandling3TableIterator extends RowIterator {
                         // in contrast to the above, it will return
                         // a newly generate value, thus, only a double
                         double mean = m_table.getMean(i);
+
                         if (colset.getType() == MissingValueHandling2ColSetting.TYPE_DOUBLE) {
-                            newCell = new DoubleCell(mean);
+                            if (Double.isNaN(mean) && m_table.getNumberNaNValues(i) == 0) {
+                                newCell = new MissingCell("Calculated mean is not a number");
+                            } else {
+                                newCell = new DoubleCell(mean);
+                            }
                         } else {
                             assert colset.getType() == MissingValueHandling2ColSetting.TYPE_INT;
-                            newCell = new IntCell((int)Math.round(mean));
+                            if (Double.isNaN(mean)) {
+                                newCell = new MissingCell("Calculated mean is not a number");
+                            } else {
+                                newCell = new IntCell((int)Math.round(mean));
+                            }
                         }
                         break;
                     case MissingValueHandling2ColSetting.METHOD_IGNORE_ROWS:

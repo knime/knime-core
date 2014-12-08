@@ -112,6 +112,30 @@ public final class DatabaseWriterConnection {
             final Map<String, String> sqlTypes,
             final CredentialsProvider cp,
             final int batchSize) throws Exception {
+        return writeData(dbConn, table, data, appendData, exec, sqlTypes, cp, batchSize, true);
+    }
+
+    /** Create connection to write into database.
+     * @param dbConn a database connection object
+     * @param data The data to write.
+     * @param table name of table to write
+     * @param appendData if checked the data is appended to an existing table
+     * @param exec Used the cancel writing.
+     * @param sqlTypes A mapping from column name to SQL-type.
+     * @param cp {@link CredentialsProvider} providing user/password
+     * @param batchSize number of rows written in one batch
+     * @param insertNullForMissingCols <code>true</code> if <code>null</code> should be inserted for missing columns
+     * @return error string or null, if non
+     * @throws Exception if connection could not be established
+     * @since 2.11
+     */
+    public static final String writeData(
+            final DatabaseConnectionSettings dbConn,
+            final String table, final BufferedDataTable data,
+            final boolean appendData, final ExecutionMonitor exec,
+            final Map<String, String> sqlTypes,
+            final CredentialsProvider cp,
+            final int batchSize, final boolean insertNullForMissingCols) throws Exception {
         final Connection conn = dbConn.createConnection(cp);
         exec.setMessage("Waiting for free database connection...");
 
@@ -139,11 +163,15 @@ public final class DatabaseWriterConnection {
                         ArrayList<String> columnNotInSpec = new ArrayList<String>(
                                 columnNames.keySet());
                         for (int i = 0; i < rsmd.getColumnCount(); i++) {
-                            String colName = replaceColumnName(rsmd.getColumnName(i + 1), dbConn);
-                            if (columnNames.containsKey(colName.toLowerCase())) {
-                                columnNotInSpec.remove(colName.toLowerCase());
+                            String dbColName = replaceColumnName(rsmd.getColumnName(i + 1), dbConn);
+                            if (columnNames.containsKey(dbColName.toLowerCase())) {
+                                columnNotInSpec.remove(dbColName.toLowerCase());
+                                columnNamesForInsertStatement.append(dbColName).append(',');
+                            } else if (insertNullForMissingCols) {
+                                //append the column name of a missing column only if the insert null for missing
+                                //column option is enabled
+                                columnNamesForInsertStatement.append(dbColName).append(',');
                             }
-                            columnNamesForInsertStatement.append(colName).append(',');
                         }
                         if (rsmd.getColumnCount() > 0) {
                             columnNamesForInsertStatement.deleteCharAt(columnNamesForInsertStatement.length() - 1);
@@ -304,13 +332,16 @@ public final class DatabaseWriterConnection {
             // creates the wild card string based on the number of columns
             // this string it used every time an new row is inserted into the db
             final StringBuilder wildcard = new StringBuilder("(");
-
+            boolean first = true;
             for (int i = 0; i < mapping.length; i++) {
-
-
-                if (i > 0) {
-                    wildcard.append(", ?");
-                } else {
+                if (mapping[i] >= 0 || insertNullForMissingCols) {
+                        //insert only a ? if the column is available in the input table or the insert null for missing 
+                	    //columns option is enabled
+                    if (first) {
+                        first = false;
+                    } else {
+                        wildcard.append(", ");
+                    }
                     wildcard.append("?");
                 }
             }
@@ -344,15 +375,18 @@ public final class DatabaseWriterConnection {
                     exec.checkCanceled();
                     exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
                     final DataRow row = it.next();
+                    int dbIdx = 1;
                     for (int i = 0; i < mapping.length; i++) {
-                        final int dbIdx = i + 1;
                         if (mapping[i] < 0) {
-                            stmt.setNull(dbIdx, Types.NULL);
-                            continue;
+                            if (insertNullForMissingCols) {
+                                //insert only null if the insert null for missing col option is enabled
+                                stmt.setNull(dbIdx++, Types.NULL);
+                            }
+                        } else {
+                            final DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
+                            final DataCell cell = row.getCell(mapping[i]);
+                            fillStatement(stmt, dbIdx++, cspec, cell, timezone, columnTypes);
                         }
-                        final DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
-                        final DataCell cell = row.getCell(mapping[i]);
-                        fillStatement(stmt, dbIdx, cspec, cell, timezone, columnTypes);
                     }
                     // if batch mode
                     if (batchSize > 1) {

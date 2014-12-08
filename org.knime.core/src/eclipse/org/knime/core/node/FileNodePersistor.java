@@ -625,7 +625,7 @@ public class FileNodePersistor implements NodePersistor {
                 ReferencedFile portDirRef = new ReferencedFile(subDirFile, location);
                 File portDir = portDirRef.getFile();
                 if (!portDir.isDirectory() || !portDir.canRead()) {
-                    throw new IOException("Can not read table directory " + portDir.getAbsolutePath());
+                    throw new IOException("Cannot read table directory " + portDir.getAbsolutePath());
                 }
                 BufferedDataTable t =
                     loadBufferedDataTable(portDirRef, subProgress, loadTblRep, tblRep, fileStoreHandlerRepository);
@@ -669,7 +669,7 @@ public class FileNodePersistor implements NodePersistor {
                     ReferencedFile portDirRef = new ReferencedFile(subDirFile, location);
                     File portDir = portDirRef.getFile();
                     if (!portDir.isDirectory() || !portDir.canRead()) {
-                        throw new IOException("Can not read table directory " + portDir.getAbsolutePath());
+                        throw new IOException("Cannot read table directory " + portDir.getAbsolutePath());
                     }
                     BufferedDataTable t = loadBufferedDataTable(
                         portDirRef, subProgress, loadTblRep, tblRep, fileStoreHandlerRepository);
@@ -755,7 +755,7 @@ public class FileNodePersistor implements NodePersistor {
             ReferencedFile dirRef = new ReferencedFile(dataDirRef, dataName);
             File dir = dirRef.getFile();
             if (!(dir.isDirectory() && dir.canRead())) {
-                throw new IOException("Can not read directory " + dir.getAbsolutePath());
+                throw new IOException("Cannot read directory " + dir.getAbsolutePath());
             }
             BufferedDataTable t = BufferedDataTable.loadFromFile(dirRef,
             /* ignored in 1.2.0+ */
@@ -802,7 +802,7 @@ public class FileNodePersistor implements NodePersistor {
                 ReferencedFile dirRef = new ReferencedFile(dataDirRef, dataName);
                 File dir = dirRef.getFile();
                 if (!(dir.isDirectory() && dir.canRead())) {
-                    throw new IOException("Can not read directory " + dir.getAbsolutePath());
+                    throw new IOException("Cannot read directory " + dir.getAbsolutePath());
                 }
                 outSpec = BufferedDataTable.loadSpec(dirRef);
                 if (portSettings.containsKey(CFG_HAS_SPEC_FILE) && outSpec == null) {
@@ -1278,14 +1278,14 @@ public class FileNodePersistor implements NodePersistor {
                 subProgress.setMessage("Cleaning directory " + portDir.getAbsolutePath());
                 FileUtil.deleteRecursively(portDir);
                 if (!portDir.mkdir() && !portDir.isDirectory()) {
-                    throw new IOException("Can not create port directory " + portDir.getAbsolutePath() + " ("
+                    throw new IOException("Cannot create port directory " + portDir.getAbsolutePath() + " ("
                         + "exists: " + portDir.exists() + ", isDir: " + portDir.isDirectory() + ", "
                         + "parent permissions: " + (portDir.getParentFile().canRead() ? "r" : "-")
                         + (portDir.getParentFile().canWrite() ? "w" : "-")
                         + (portDir.getParentFile().canExecute() ? "x" : "-") + ")");
                 }
                 if (!portDir.canWrite()) {
-                    throw new IOException("Can not write to port directory " + portDir.getAbsolutePath());
+                    throw new IOException("Cannot write to port directory " + portDir.getAbsolutePath());
                 }
                 savePort(node, portDir, singlePortSetting, savedTableIDs, subProgress, i, saveData);
             } else {
@@ -1328,7 +1328,7 @@ public class FileNodePersistor implements NodePersistor {
                 File portDir = portDirRef.getFile();
                 portDir.mkdir();
                 if (!portDir.isDirectory() || !portDir.canWrite()) {
-                    throw new IOException("Can not write table directory " + portDir.getAbsolutePath());
+                    throw new IOException("Cannot write table directory " + portDir.getAbsolutePath());
                 }
                 saveBufferedDataTable(table, savedTableIDs, portDir, exec);
                 singlePortSetting.addString("type", "table");

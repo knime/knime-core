@@ -219,6 +219,14 @@ public final class MissingValueHandling3Table implements DataTable {
     }
 
     /**
+     * The number of observed NaN values for each column.
+     * @return number of observed NaN values
+     */
+    int getNumberNaNValues(final int colIdx) {
+        return m_statisticsTable.getNumberNaNValues(colIdx);
+    }
+
+    /**
      * Get the DataTableSpec that is created when creating a MissingValueHandling with the settings <code>sets</code>.
      *
      * @param spec the spec of the original input table

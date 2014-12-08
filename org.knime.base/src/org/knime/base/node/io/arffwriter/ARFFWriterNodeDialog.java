@@ -64,6 +64,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.FilesHistoryPanel;
 import org.knime.core.node.util.FilesHistoryPanel.LocationValidation;
+import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
  * Contains the dialog for the ARFF file writer.
@@ -115,7 +116,8 @@ public class ARFFWriterNodeDialog extends NodeDialogPane {
         sumOfCompHeigth += COMPONENT_HEIGHT;
 
         m_url =
-            new FilesHistoryPanel(null, "org.knime.base.node.io.arffwriter", LocationValidation.FileOutput, ".arff");
+            new FilesHistoryPanel(createFlowVariableModel(ARFFWriterNodeModel.CFGKEY_FILENAME, Type.STRING),
+                "org.knime.base.node.io.arffwriter", LocationValidation.FileOutput, ".arff");
         m_url.setBorder(null);
         fileBox.add(m_url);
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));

@@ -265,8 +265,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         // reset was called, must be cleared
         final BufferedDataTable data = (BufferedDataTable)inData[0];
         final DataTableSpec spec = data.getDataTableSpec();
-        String[] includes = computeIncludes(spec);
-        m_actualUsedColumns = includes;
+        final String[] includes = computeIncludes(spec);
         final int nrUnknown = includes.length + 1;
         double[] means = new double[includes.length];
         // indices of the columns in m_includes
@@ -399,7 +398,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         // may be lost (filtering out the "colored" column)
         m_rowContainer = new DefaultDataArray(data, m_firstRowPaint,
                 m_rowCountPaint);
-
+        m_actualUsedColumns = includes;
 
         return new PortObject[]{m_params.createPortObject(inPMMLPort, spec,
                 outSpec)};

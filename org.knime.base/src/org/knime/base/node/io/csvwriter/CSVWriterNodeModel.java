@@ -238,8 +238,11 @@ public class CSVWriterNodeModel extends NodeModel {
             } else {
                 appendToFile = false;
             }
-            tempOut =
-                Files.newOutputStream(localPath, appendToFile ? StandardOpenOption.APPEND : StandardOpenOption.CREATE);
+            if (appendToFile) {
+                tempOut = Files.newOutputStream(localPath, StandardOpenOption.APPEND);
+            } else {
+                tempOut = Files.newOutputStream(localPath);
+            }
         } else {
             urlConnection = FileUtil.openOutputConnection(url, "PUT");
             tempOut = urlConnection.getOutputStream();

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *  Copyright by KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -41,7 +41,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   15.04.2005 (cebron): created
  */
@@ -80,12 +80,12 @@ import org.knime.core.node.ExecutionMonitor;
  * {@link #calculateAllMoments(ExecutionMonitor)}-method first for a faster
  * processing speed.
  * @deprecated use {@link Statistics3Table}
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 @Deprecated
 public class StatisticsTable implements DataTable {
-    
+
     /** Table to be wrapped. */
     private final DataTable m_table;
 
@@ -94,13 +94,13 @@ public class StatisticsTable implements DataTable {
 
     /** Used to 'cache' the variance values. */
     private final double[] m_varianceValues;
-    
+
     /** Used to cache the sum of each column. */
     private final double[] m_sum;
-    
+
     /** Used to cache the number of missing values per columns. */
     private final int[] m_missingValueCnt;
-    
+
     /** Used to 'cache' the minimum values. */
     private final DataCell[] m_minValues;
 
@@ -112,7 +112,7 @@ public class StatisticsTable implements DataTable {
 
     /** A table spec created with ranges added to all numerical columns. */
     private DataTableSpec m_tSpec;
-    
+
     /** To be used in derived classes that do additional calculations. Please
      * do call calculateAllMoments when done!
      * @param table To wrap.
@@ -142,7 +142,7 @@ public class StatisticsTable implements DataTable {
      * calculates all values. It needs to traverse (twice) through the entire
      * specified table. User can cancel action if an execution monitor is
      * passed.
-     * 
+     *
      * @param table table to be wrapped
      * @param exec an object to check with if user canceled operation
      * @throws CanceledExecutionException if user canceled
@@ -157,7 +157,7 @@ public class StatisticsTable implements DataTable {
     /**
      * Produces a DataTableSpec for the statistics table which contains the
      * range values calculated here.
-     * 
+     *
      * @return a table spec with ranges set in column. If the spec of the
      *         underlying table had ranges set nothing will change.
      */
@@ -172,7 +172,7 @@ public class StatisticsTable implements DataTable {
 
     /**
      * Returns the row iterator of the original data table.
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
     @Override
     public RowIterator iterator() {
@@ -181,13 +181,13 @@ public class StatisticsTable implements DataTable {
 
     /**
      * Computes the number of rows of the data table.
-     * 
+     *
      * @return number of rows
      */
     public int getNrRows() {
         return m_nrRows;
     }
-    
+
     /**
      * Getter for the underlying table.
      * @return Table as passed in constructor.
@@ -200,7 +200,7 @@ public class StatisticsTable implements DataTable {
      * Calculates <b>all the statistical moments in one pass </b>. After the
      * call of this operation, the statistical moments can be obtained very fast
      * from all the other methods.
-     * 
+     *
      * @param exec object to check with if user canceled the operation
      * @throws CanceledExecutionException if user canceled
      */
@@ -212,20 +212,20 @@ public class StatisticsTable implements DataTable {
         } else {
             nrRows = Double.NaN;
         }
-        calculateAllMoments(nrRows, exec); 
+        calculateAllMoments(nrRows, exec);
     }
-    
+
     /**
      * Calculates <b>all the statistical moments in one pass </b>. After the
      * call of this operation, the statistical moments can be obtained very fast
      * from all the other methods.
-     * 
+     *
      * @param rowCount Row count of table for progress, may be NaN if unknown.
      * @param exec object to check with if user canceled the operation
      * @throws CanceledExecutionException if user canceled
      * @throws IllegalArgumentException if rowCount argument < 0
      */
-    protected void calculateAllMoments(final double rowCount, 
+    protected void calculateAllMoments(final double rowCount,
             final ExecutionMonitor exec) throws CanceledExecutionException {
 
         if (rowCount < 0.0) {
@@ -247,9 +247,9 @@ public class StatisticsTable implements DataTable {
             comp[i] = origSpec.getColumnSpec(i).getType().getComparator();
             assert comp[i] != null;
         }
-                
+
         int nrRows = 0;
-        for (RowIterator rowIt = m_table.iterator(); 
+        for (RowIterator rowIt = m_table.iterator();
             rowIt.hasNext(); nrRows++) {
             DataRow row = rowIt.next();
             if (exec != null) {
@@ -262,7 +262,7 @@ public class StatisticsTable implements DataTable {
                 final DataCell cell = row.getCell(c);
                 if (!(cell.isMissing())) {
                     // keep the min and max for each column
-                    if ((m_minValues[c] == null) 
+                    if ((m_minValues[c] == null)
                             || (comp[c].compare(cell, m_minValues[c]) < 0)) {
                         m_minValues[c] = cell;
                     }
@@ -289,7 +289,7 @@ public class StatisticsTable implements DataTable {
             calculateMomentInSubClass(row);
         }
         m_nrRows = nrRows;
-        
+
         for (int j = 0; j < numOfCols; j++) {
             // in case we got an empty table or columns that contain only
             // missing values
@@ -307,16 +307,16 @@ public class StatisticsTable implements DataTable {
                 } else {
                     m_varianceValues[j] = 0.0;
                 }
-                // unreported bug fix: in cases in which a column contains 
-                // almost only one value (for instance 1.0) but one single 
-                // 'outlier' whose value is, for instance 0.9999998, we get 
+                // unreported bug fix: in cases in which a column contains
+                // almost only one value (for instance 1.0) but one single
+                // 'outlier' whose value is, for instance 0.9999998, we get
                 // round-off errors resulting in negative variance values
                 if (m_varianceValues[j] < 0.0 && m_varianceValues[j] > -1.0E8) {
                     m_varianceValues[j] = 0.0;
                 }
-                assert m_varianceValues[j] >= 0.0 
-                    : "Variance can not be negative (column \"" 
-                        + origSpec.getColumnSpec(j).getName() + "\": " 
+                assert m_varianceValues[j] >= 0.0
+                    : "Variance cannot be negative (column \""
+                        + origSpec.getColumnSpec(j).getName() + "\": "
                         + m_varianceValues[j];
             }
         }
@@ -344,7 +344,7 @@ public class StatisticsTable implements DataTable {
         }
         m_tSpec = new DataTableSpec(cSpec);
     }
-    
+
     /**
      * Derived classes may do additional calculations here. This method
      * is called from {@link #calculateAllMoments(ExecutionMonitor)} with
@@ -361,7 +361,7 @@ public class StatisticsTable implements DataTable {
      * specified column is not compatible to DoubleValue. Returns
      * {@link Double#NaN} if the specified column contains only missing cells or
      * if the table is empty.
-     * 
+     *
      * @param colIdx the column index for which the mean is calculated
      * @return mean value or {@link Double#NaN}
      */
@@ -372,7 +372,7 @@ public class StatisticsTable implements DataTable {
     /**
      * Returns the means for all columns. Returns {@link Double#NaN} if the
      * column type is not of type {@link DoubleValue}.
-     * 
+     *
      * @return an array of mean values with an item for each column, which is
      *         {@link Double#NaN} if the column type is not {@link DoubleValue}
      */
@@ -381,13 +381,13 @@ public class StatisticsTable implements DataTable {
         System.arraycopy(m_meanValues, 0, result, 0, result.length);
         return result;
     }
-    
+
     /**
      * Returns the sum for the desired column. Throws an exception if the
      * specified column is not compatible to DoubleValue. Returns
      * {@link Double#NaN} if the specified column contains only missing cells or
      * if the table is empty.
-     * 
+     *
      * @param colIdx the column index for which the mean is calculated
      * @return sum value or {@link Double#NaN}
      */
@@ -398,7 +398,7 @@ public class StatisticsTable implements DataTable {
     /**
      * Returns the sum values for all columns. Returns {@link Double#NaN} if the
      * column type is not of type {@link DoubleValue}.
-     * 
+     *
      * @return an array of sum values with an item for each column, which is
      *         {@link Double#NaN} if the column type is not {@link DoubleValue}
      */
@@ -407,7 +407,7 @@ public class StatisticsTable implements DataTable {
         System.arraycopy(m_sum, 0, result, 0, result.length);
         return result;
     }
-    
+
     /**
      * Returns an array of the number of missing values for each dimension.
      * @return number missing values for each dimensions
@@ -417,7 +417,7 @@ public class StatisticsTable implements DataTable {
         System.arraycopy(m_missingValueCnt, 0, result, 0, result.length);
         return result;
     }
-    
+
     /**
      * Returns the number of missing values for the given column index.
      * @param colIdx column index to consider
@@ -426,13 +426,13 @@ public class StatisticsTable implements DataTable {
     public int getNumberMissingValues(final int colIdx) {
         return m_missingValueCnt[colIdx];
     }
-    
+
     /**
      * Returns the variance for the desired column. Throws an exception if the
      * specified column is not compatible to {@link DoubleValue}. Returns
      * {@link Double#NaN} if the specified column contains only missing cells or
      * if the table is empty.
-     * 
+     *
      * @param colIdx the column index for which the variance is calculated
      * @return variance or {@link Double#NaN}
      */
@@ -444,7 +444,7 @@ public class StatisticsTable implements DataTable {
      * Returns the variance for all columns. Returns {@link Double#NaN} if the
      * column type is not of type {@link DoubleValue}, if the entire column
      * contains missing cells, or if the table is empty.
-     * 
+     *
      * @return variance values
      */
     public double[] getVariance() {
@@ -458,7 +458,7 @@ public class StatisticsTable implements DataTable {
      * exception if the column type is not compatible to {@link DoubleValue}.
      * Will return zero if the column contains only missing cells or the table
      * was empty.
-     * 
+     *
      * @param colIdx the index of the column for which the standard deviation is
      *            to be calculated
      * @return standard deviation or zero if its a column of missing values of
@@ -472,7 +472,7 @@ public class StatisticsTable implements DataTable {
      * Returns the standard deviation for all columns. The returned array
      * contains no valid value (i.e. {@link Double#NaN}) for column that are
      * not compatible to {@link DoubleValue}.
-     * 
+     *
      * @return standard deviation values
      */
     public double[] getStandardDeviation() {
@@ -488,7 +488,7 @@ public class StatisticsTable implements DataTable {
     /**
      * Returns the minimum for the desired column. Returns a missing cell, if
      * the column contains only missing cells or if the table is empty.
-     * 
+     *
      * @param colIdx the index of the column for which the minimum is calculated
      * @return minimum or a missing cell if the column contains only missing
      *         cells, or if the table is empty
@@ -500,7 +500,7 @@ public class StatisticsTable implements DataTable {
     /**
      * Returns the minimum for all columns. Will be a missing cell for columns
      * that only contain missing cells or for empty data tables.
-     * 
+     *
      * @return the minimum values
      */
     public DataCell[] getMin() {
@@ -512,7 +512,7 @@ public class StatisticsTable implements DataTable {
     /**
      * Returns the minimum for all columns. Will be {@link Double#NaN} for
      * columns that only contain missing cells or for empty data tables.
-     * 
+     *
      * @return the minimum values
      */
     public double[] getdoubleMin() {
@@ -530,7 +530,7 @@ public class StatisticsTable implements DataTable {
     /**
      * Returns the maximum for the desired column. Returns a missing cell, if
      * the column contains only missing cells or if the table is empty.
-     * 
+     *
      * @param colIdx the index of the column for which the maximum is calculated
      * @return maximum or a missing cell if the column contains only missing
      *         cells, or if the table is empty
@@ -542,7 +542,7 @@ public class StatisticsTable implements DataTable {
     /**
      * Returns the maximum for all columns. Will be a missing cell for columns
      * that only contain missing cells or for empty data tables.
-     * 
+     *
      * @return the maximum values
      */
     public DataCell[] getMax() {
@@ -554,7 +554,7 @@ public class StatisticsTable implements DataTable {
     /**
      * Returns the maximum for all columns. Will be {@link Double#NaN} for
      * columns that only contain missing cells or for empty data tables.
-     * 
+     *
      * @return the maximum values
      */
     public double[] getdoubleMax() {

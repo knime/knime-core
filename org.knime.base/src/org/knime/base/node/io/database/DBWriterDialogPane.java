@@ -58,6 +58,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.io.database.util.DBDialogPane;
 import org.knime.core.data.DataTableSpec;
@@ -82,6 +84,8 @@ final class DBWriterDialogPane extends NodeDialogPane {
     private final JTextField m_table = new JTextField("");
 
     private final JCheckBox m_append = new JCheckBox("... to existing table (if any!)");
+
+    private final JCheckBox m_insertNullForMissing = new JCheckBox("Insert null for missing columns");
 
     private final DBSQLTypesPanel m_typePanel;
 
@@ -112,10 +116,18 @@ final class DBWriterDialogPane extends NodeDialogPane {
         c.gridy++;
         p = new JPanel(new GridLayout());
         p.add(m_append);
+        m_append.addChangeListener(new ChangeListener() {
+
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                m_insertNullForMissing.setEnabled(m_append.isSelected());
+            }
+        });
+        m_append.setToolTipText("Data columns from input and database table must match!");
+        p.add(m_insertNullForMissing);
         p.setBorder(BorderFactory.createTitledBorder(" Append Data "));
-        m_append.setToolTipText("Table structure from input and database table"
-                + " must match!");
         tableAndConnectionPanel.add(p, c);
+
         super.addTab("Settings", tableAndConnectionPanel);
 
 // add SQL Types tab
@@ -144,7 +156,11 @@ final class DBWriterDialogPane extends NodeDialogPane {
         // table name
         m_table.setText(settings.getString(DBWriterNodeModel.KEY_TABLE_NAME, ""));
         // append data flag
-        m_append.setSelected(settings.getBoolean(DBWriterNodeModel.KEY_APPEND_DATA, false));
+        m_append.setSelected(settings.getBoolean(DBWriterNodeModel.KEY_APPEND_DATA, true));
+
+        m_insertNullForMissing.setSelected(
+            settings.getBoolean(DBWriterNodeModel.KEY_INSERT_NULL_FOR_MISSING_COLS, false));
+        m_insertNullForMissing.setEnabled(m_append.isSelected());
 
         // load SQL Types for each column
         try {
@@ -176,6 +192,7 @@ final class DBWriterDialogPane extends NodeDialogPane {
 
         settings.addString(DBWriterNodeModel.KEY_TABLE_NAME, m_table.getText().trim());
         settings.addBoolean(DBWriterNodeModel.KEY_APPEND_DATA, m_append.isSelected());
+        settings.addBoolean(DBWriterNodeModel.KEY_INSERT_NULL_FOR_MISSING_COLS, m_insertNullForMissing.isSelected());
 
         // save SQL Types for each column
         NodeSettingsWO typeSett = settings.addNodeSettings(DBWriterNodeModel.CFG_SQL_TYPES);

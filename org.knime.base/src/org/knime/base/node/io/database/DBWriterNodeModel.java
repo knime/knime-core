@@ -95,7 +95,11 @@ final class DBWriterNodeModel extends NodeModel {
 
     /** Config key for the append data. */
     static final String KEY_APPEND_DATA = "append_data";
-    private boolean m_append = false;
+    private boolean m_append = true;
+
+    /** Config key for the insert null for missing columns. */
+    static final String KEY_INSERT_NULL_FOR_MISSING_COLS = "insert_null_for_missing_cols";
+    private boolean m_insertNullForMissingCols = false;
 
     private final Map<String, String> m_types =
         new LinkedHashMap<String, String>();
@@ -136,6 +140,7 @@ final class DBWriterNodeModel extends NodeModel {
         m_conn.saveConnection(settings);
         settings.addString(KEY_TABLE_NAME, m_tableName);
         settings.addBoolean(KEY_APPEND_DATA, m_append);
+        settings.addBoolean(KEY_INSERT_NULL_FOR_MISSING_COLS, m_insertNullForMissingCols);
         // save SQL Types mapping
         NodeSettingsWO typeSett = settings.addNodeSettings(CFG_SQL_TYPES);
         for (Map.Entry<String, String> e : m_types.entrySet()) {
@@ -168,7 +173,7 @@ final class DBWriterNodeModel extends NodeModel {
     private void loadSettings(
             final NodeSettingsRO settings, final boolean write)
             throws InvalidSettingsException {
-        boolean append = settings.getBoolean(KEY_APPEND_DATA, false);
+        boolean append = settings.getBoolean(KEY_APPEND_DATA, true);
         final String table = settings.getString(KEY_TABLE_NAME);
         if (table == null || table.trim().isEmpty()) {
             throw new InvalidSettingsException(
@@ -197,6 +202,8 @@ final class DBWriterNodeModel extends NodeModel {
             // load batch size
             m_batchSize = batchSize;
         }
+        //introduced in KNIME 2.11 default behavior before was inserting null
+        m_insertNullForMissingCols = settings.getBoolean(KEY_INSERT_NULL_FOR_MISSING_COLS, true);
     }
 
     /**
@@ -217,7 +224,7 @@ final class DBWriterNodeModel extends NodeModel {
 
         // write entire data
         final String error = DatabaseWriterConnection.writeData(connSettings, m_tableName, (BufferedDataTable)inData[0],
-            m_append, exec, m_types, getCredentialsProvider(), m_batchSize);
+            m_append, exec, m_types, getCredentialsProvider(), m_batchSize, m_insertNullForMissingCols);
         // set error message generated during writing rows
         if (error != null) {
             super.setWarningMessage(error);

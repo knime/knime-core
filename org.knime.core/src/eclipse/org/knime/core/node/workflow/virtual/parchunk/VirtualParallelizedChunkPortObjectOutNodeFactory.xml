@@ -10,8 +10,6 @@
     </intro>
     </fullDescription>
     <ports>
-        <inPort index="0" name="Input Data">
-            The data chunk arriving from the current execution branch.
-        </inPort>
+        <!-- port definition defined in java code -->
     </ports>
 </knimeNode>

@@ -8,31 +8,4 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/CopyNodePersistor.java" type="org.knime.core.node.CopyNodePersistor">
-        <filter id="643842064">
-            <message_arguments>
-                <message_argument value="IFileStoreHandler"/>
-                <message_argument value="CopyNodePersistor"/>
-                <message_argument value="getFileStoreHandler()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/NodeContentPersistor.java" type="org.knime.core.node.NodeContentPersistor">
-        <filter id="643842064">
-            <message_arguments>
-                <message_argument value="IFileStoreHandler"/>
-                <message_argument value="NodeContentPersistor"/>
-                <message_argument value="getFileStoreHandler()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/execresult/NodeExecutionResult.java" type="org.knime.core.node.workflow.execresult.NodeExecutionResult">
-        <filter id="643842064">
-            <message_arguments>
-                <message_argument value="IFileStoreHandler"/>
-                <message_argument value="NodeExecutionResult"/>
-                <message_argument value="getFileStoreHandler()"/>
-            </message_arguments>
-        </filter>
-    </resource>
 </component>

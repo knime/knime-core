@@ -248,11 +248,11 @@ public class DecisionTree implements Serializable {
         // added in v2.3
         m_colorColumn = pConf.getString("color_column", null);
         if (!type.equals("DecisionTree")) {
-            throw new InvalidSettingsException("DecisionTree can not load"
+            throw new InvalidSettingsException("DecisionTree cannot load"
                     + " information of type '" + type + "'!");
         }
         if (!version.equals("0.0")) {
-            throw new InvalidSettingsException("DecisionTree v0.0 can not"
+            throw new InvalidSettingsException("DecisionTree v0.0 cannot"
                     + " load information of version '" + type + "'!");
         }
         ModelContentRO newNodeConf = pConf.getModelContent("rootNode");

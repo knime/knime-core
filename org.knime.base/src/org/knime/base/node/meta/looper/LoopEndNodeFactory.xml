@@ -20,7 +20,7 @@
         <option name="Ignore empty input tables">
         	If this option is checked empty input tables and there structure are ignored and will not cause the node to fail.
         </option>
-        <option name="Assign most common column type">
+        <option name="Allow variable column types">
         	If checked, the loop does not fail when the column types between different table iterations change.
         </option>
         

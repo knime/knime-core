@@ -195,6 +195,7 @@ public class MovingAggregationNodeModel extends NodeModel {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) throws InvalidSettingsException {
         if (inSpecs == null || inSpecs.length != 1)  {
@@ -203,7 +204,7 @@ public class MovingAggregationNodeModel extends NodeModel {
         final DataTableSpec inputSpec = inSpecs[0];
         m_columnAggregators2Use.clear();
         final ArrayList<ColumnAggregator> invalidColAggrs = new ArrayList<>(1);
-        m_columnAggregators2Use.addAll(GroupByNodeModel.getAggregators(inputSpec,
+        m_columnAggregators2Use.addAll(GroupByNodeModel.getAggregators(inputSpec, Collections.EMPTY_LIST,
             m_columnAggregators, m_patternAggregators, m_dataTypeAggregators, invalidColAggrs));
         if (m_columnAggregators2Use.isEmpty()) {
             setWarningMessage("No aggregation column defined");
